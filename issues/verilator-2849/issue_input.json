@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2849,
+  "issue_url": "https://github.com/verilator/verilator/issues/2849",
+  "title": "Dubious WIDTHCONCAT warning with 32-bit type cast",
+  "body": "Consider the following example:\r\n```systemverilog\r\nmodule foo (input logic         a,\r\n            output logic [33:0] b33,\r\n            output logic [32:0] b32,\r\n            output logic [31:0] b31);\r\n\r\n  assign b33 = {33'(0), a};\r\n  assign b32 = {32'(0), a};\r\n  assign b31 = {31'(0), a};\r\n\r\nendmodule\r\n```\r\nWhen run with `verilator --lint-only`, you get this:\r\n```\r\n$ /opt/verilator-test/bin/verilator --lint-only concat.sv\r\n%Warning-WIDTHCONCAT: concat.sv:7:21: Unsized numbers/parameters not allowed in concatenations.\r\n                                    : ... In instance foo\r\n    7 |   assign b32 = {32'(0), a};\r\n      |                     ^\r\n                      ... Use \"/* verilator lint_off WIDTHCONCAT */\" and lint_on around source to disable this message.\r\n%Warning-WIDTHCONCAT: concat.sv:7:23: Unsized numbers/parameters not allowed in replications.\r\n                                    : ... In instance foo\r\n    7 |   assign b32 = {32'(0), a};\r\n      |                       ^\r\n%Error: Exiting due to 2 warning(s)\r\n\r\n```\r\nI assume that what's happening is that the cast from `0` (a 32-bit int) to `32'(0)` is being optimised away and then some downstream pass is seeing a bare zero in the concatenation? The second warning also looks a bit odd, since this isn't a replication.\r\n\r\nI've reproduced this with the tip of master:\r\n```\r\n$ /opt/verilator-test/bin/verilator --version\r\nVerilator 4.201 devel rev v4.200-38-g2e158d88\r\n```\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-23",
+  "closed_at": "2021-03-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

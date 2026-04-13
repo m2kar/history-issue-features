@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8979,
+  "issue_url": "https://github.com/llvm/circt/pull/8979",
+  "title": "[ImportVerilog][Moore] Add support for %t format specifier, introduce `moore.fmt.time`",
+  "body": "This PR adds support for using the `%t` format specifier in format strings by mapping them to the newly introduced `moore.fmt.time / moore::TimeFormatOp` in the ImportVerilog string formatter.\r\n\r\nAccording to the system verilog spec IEEE 1800-2023 § 20.4.3 \"$timeformat\", the exact formatting for any time value is dictated by the last `$timeformat` system task invoked within the scope or parent scopes of the format string, or alternatively, by a mix of constant default values and \r\n> The smallest time precision argument of all the `timescale compiler directives in the source description.\r\n\r\nBecause of the formatting relying on context (who came up with this anyway? seems like a bad idea), and use of `$timeformat` is permitted in conditional settings, meaning it can't always be determined statically, I decided to not add a format attribute to `moore::FormatTimeOp`. I only added the `width` attribute, which may be defined in the formatter expression, e.g. `%4t`. Instead the semantics for implementing `moore.fmt.time` should rely on querying some global state that models the configuration set by the latest `$timeformat` system call within the scope.\r\n\r\nWhat's not fully clear to me is whether the System Verilog spec allows non-\"time typed\" values to be formatted with `%t`; I didn't find an explicit description of allowed values, but all examples in the spec I could find explicitly use the return value of a time-typed system task (e.g. `$time`) or a time-type parameter (e.g. `parameter time _time = 100ns;`).\r\nWhile it seems reasonable to suppose that also integer values are allowed (per the spec `$time` returns a 64-bit *integer* representing time), some examples in the doc also allow the use of `$realtime` (which returns a `real` value) with `%t`, so potentially any numeric value is allowed? In either case I didn't add this in the current implementation and instead only allow `TimeType` values, which in the context of Moore looked like the sanest option to me. Maybe someone has a clearer view on this.",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-17",
+  "closed_at": "2025-09-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

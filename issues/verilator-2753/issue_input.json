@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2753,
+  "issue_url": "https://github.com/verilator/verilator/issues/2753",
+  "title": "Incorrect range inheritance in port declaration",
+  "body": "Verilator 4.109 devel rev v4.108-9-gab5d4bd5\r\n\r\nRunning `verilator --lint-only --Wall` for the code below:\r\n\r\n```systemverilog\r\n`default_nettype none\r\n\r\nmodule pwm #(dutyBits = 2) (\r\n\tinput\r\n\t\twire [dutyBits-1:0] duty,\r\n\t\twire                clk,\r\n\toutput\r\n\t\tlogic               out\r\n);\r\n\tlogic [dutyBits-1:0] cnt;\r\n\r\n\talways_ff @(posedge clk) begin\r\n\t\tcnt <= cnt + 1'b1;\r\n\tend\r\n\r\n\tassign out = (cnt < duty);\r\nendmodule\r\n\r\nmodule ledpwm (input wire clk, output wire led);\r\n\tlocalparam dutyBits = 8;\r\n\r\n\twire [dutyBits-1:0] duty = 123;\r\n\r\n\tpwm #(dutyBits) pwm1 (.clk, .duty, .out(led));\r\nendmodule\r\n```\r\n\r\ngives the following warning:\r\n\r\n```\r\n%Warning-WIDTH: pwm.sv:26:25: Input port connection 'clk' expects 8 bits on the pin connection, but pin connection's VARREF 'clk' generates 1 bits.\r\n                            : ... In instance ledpwm\r\n   26 |  pwm #(dutyBits) pwm1 (.clk, .duty, .out(led));\r\n      |                         ^~~\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error-UNSUPPORTED: pwm.sv:14:14: Unsupported: Non-single bit wide signal pos/negedge sensitivity: 'ledpwm.__Vcellinp__pwm1__clk'\r\n   14 |  always_ff @(posedge clk) begin\r\n      |              ^~~~~~~\r\n%Error-UNSUPPORTED: pwm.sv:8:24: Unsupported: Clock edge on non-single bit signal: 'ledpwm.__Vcellinp__pwm1__clk'\r\n    8 |   wire                 clk,\r\n      |                        ^~~\r\n%Error: Exiting due to 2 error(s), 1 warning(s)\r\n```\r\n\r\nIt seems the `clk` port in `pwm` module inherited the width from `duty` port. If you swap the order of `pwm` input ports the lint ends with success.\r\n\r\nThe *IEEE Std 1800-2017* in *23.2.2.3 Rules for determining port kind, data type, and direction* says:\r\n\r\n> For subsequent ports in an ANSI style port list:\r\n  —    If the direction, port kind and data type are all omitted, then they shall be inherited from the previous\r\n       port. If the previous port was an interconnect port, this port shall also be an interconnect port.\r\n  Otherwise:\r\n  —    If the direction is omitted, it shall be inherited from the previous port.\r\n  —    If the port kind is omitted, it shall be determined as previously specified.\r\n  —    If the data type is omitted, it shall default to logic except for interconnect ports that have no\r\n       data type.\r\n\r\nThe `clk` should be simply `wire logic` not `wire logic [dutyBits-1:0]`.",
+  "labels": [
+    "resolution: fixed",
+    "area: parser",
+    "effort: hours"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-14",
+  "closed_at": "2021-02-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

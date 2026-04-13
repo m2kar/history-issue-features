@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1385,
+  "issue_url": "https://github.com/verilator/verilator/issues/1385",
+  "title": "Uninitialized data written to dependency file, if executable is found from PATH",
+  "body": "---\n\n\nAuthor Name: **Al Grant**\nOriginal Redmine Issue: 1385 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe Perl script (i.e. \"verilator\") tries various ways to find the executable (\"verilator_bin\") one of which is to fall back to PATH:\r\n```\r\n$bin = $basename;  # Find in PATH\r\n\n```\r\nWhen this happens, verilator_bin is called with argv[0] set to just \"verilator_bin\". This adds \"verilator_bin\" as a dependency and then when V3FileDependImp::writeTimes() is called, loadStats() will try to stat(\"verilator_bin\") and fail (stat doesn't search PATH), but this failure isn't checked and writeTimes() will write data from uninitialized memory to the dependency file.\r\n\r\nIt's simple enough to check for failure but it would be good to write the correct dependency. One way would be to do the PATH lookup explicitly, either in the Perl wrapper or in the executable, but a neater solution under Linux might be to ignore argv[0] and use readlink(\"/proc/self/exe\") to get the actual executable name.\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-01-04",
+  "closed_at": "2019-01-28",
+  "code_blocks": [
+    "$bin = $basename;  # Find in PATH"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

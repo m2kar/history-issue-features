@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2140,
+  "issue_url": "https://github.com/verilator/verilator/issues/2140",
+  "title": "Output more friendly to incremental compilation",
+  "body": "I have been using icecream + ccache to speed up builds of the C++ output by Verilator. This works to some extent when running with -Oi to disable module inlining in order to give ccache a chance. The caching however becomes useless after moderate changes or if any module has the properties (name, size) of any named port/state/signal changed, which causes a full re-build. Reading the output of Verilator, I see at least 2 reasons why the compiler cache has a hard time:\r\n1. There are internal implementation functions declared in the .h files of modules, which change as the internals change. \r\n2. The fully enumerated design hierarchy in the *__Syms symbol table holds all instances as members, and its definition is itself included in the sources of every module.\r\n\r\nI wonder if it would be reasonable to attempt to remedy this (under a new Verilator switch), by:\r\n1. Emitting all implementation functions as static (passing explicit instances instead of `this` as needed), in companion *__Internals.{h,cpp} files.\r\n2. Holding the instances in *__Syms.h via forward declared pointers.\r\n3. In implementation files, include only the header files of the required moduels, rather than everything (which we do today via *__Syms.h)\r\n\r\nTheory is then that the only C++ that would need to be re-compiled are the modules that changed, their dependencies (which are limited to everything below in the hierarchy unless there are interface changes or hierarchical references), and the top level _eval and friends, but not all the other modules. I am sure I am missing a lot of detail, can you think of anything that would make this whole idea a non-starter? I would also be interested to know if you think this would not be as useful as I think it would for any reason.",
+  "labels": [
+    "area: performance",
+    "area: usability",
+    "effort: weeks",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2020-01-26",
+  "closed_at": "2022-10-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

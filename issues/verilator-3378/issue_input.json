@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3378,
+  "issue_url": "https://github.com/verilator/verilator/issues/3378",
+  "title": "Hierarchical compile fails with structs as IO",
+  "body": "When compiling with --hierarchical modules marked as /*verilator hierarchical_blocks*/ can't have IO ports that are of type struct.\r\n\r\nCode Example:\r\n\r\n```\r\ntypedef struct packed {\r\n  logic        vld;\r\n  logic [31:0] count;\r\n} sts_t;\r\n\r\nmodule submodule (\r\n  input wire logic       clk_i,\r\n  input wire logic       rst_n_i,\r\n  output var sts_t       sts_o\r\n); /*verilator hier_block*/ \r\n\r\n  logic[31:0] counter_q;\r\n\r\n  always_ff @(posedge clk_i or negedge rst_n_i) begin\r\n    if (!rst_n_i) begin\r\n      counter_q <= 32'b0;\r\n    end\r\n    else begin\r\n      counter_q <= counter_q + 1;\r\n\r\n      $display(\"%m: Counter = 0x%x\", counter_q);\r\n\r\n      if (counter_q >= 32'hffff)\r\n        $finish;\r\n    end\r\n  end\r\n\r\n  always_comb sts_o.vld   = |counter_q;\r\n  always_comb sts_o.count =  counter_q;\r\n\r\n\r\nendmodule\r\n\r\nmodule dut (\r\n  input wire logic       clk_i,\r\n  input wire logic       rst_n_i\r\n);\r\n\r\n  submodule s_u (.clk_i(clk_i),\r\n                 .rst_n_i(rst_n_i),\r\n                 .sts_o()\r\n                );\r\nendmodule\r\n````\r\n\r\n\r\n```\r\n#ifdef ENV_SIM_VERILATOR\r\n#include <verilated.h>\r\n#include \"Vdut.h\"\r\n#include \"Vdut___024root.h\"\r\n#ifdef WAVES\r\n#include \"verilated_vcd_c.h\"\r\n#endif\r\n\r\nint main(int argc, char** argv, char** env) {\r\n    // Prevent unused variable warnings\r\n    if (false && argc && argv && env) {}\r\n    const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};\r\n\r\n    Vdut*             dut  = new Vdut(\"dut\");\r\n\r\n#ifdef WAVES\r\n    Verilated::traceEverOn(true);\r\n    VerilatedVcdC* tfp = new VerilatedVcdC;\r\n    dut->trace(tfp, 99);  // Trace 99 levels of hierarchy (or see below)\r\n    tfp->open(\"waves.vcd\");\r\n#endif\r\n\r\n    dut->rootp->rst_n_i = 0;\r\n    dut->rootp->clk_i   = 0;\r\n\r\n    // Simulate until $finish\r\n    while (!Verilated::gotFinish()) {\r\n\r\n        contextp->timeInc(1);\r\n\r\n        dut->rootp->clk_i = !dut->clk_i;\r\n\r\n        if (!dut->rootp->clk_i) {\r\n            if (contextp->time() > 1 && contextp->time() < 10) {\r\n                dut->rootp->rst_n_i = !1;  // Assert reset\r\n            } else {\r\n                dut->rootp->rst_n_i = !0;  // Deassert reset\r\n            }\r\n        }\r\n        // Evaluate model\r\n        dut->eval();\r\n#ifdef WAVES\r\n        tfp->dump(contextp->time());\r\n#endif\r\n    }\r\n\r\n    // Final model cleanup\r\n    dut->final();\r\n\r\n    // Destroy model\r\n    delete dut;\r\n\r\n    // Return good completion status\r\n    return 0;\r\n}\r\n#endif\r\n````\r\n\r\n```\r\nnon_hier: dut.sv tb.cpp\r\n\tverilator --exe -cc -CFLAGS \"-DENV_SIM_VERILATOR\" -timescale 1ns/1ps dut.sv tb.cpp\r\n\tmake -C obj_dir/ -f Vdut.mk\r\n\t./obj_dir/Vdut\r\n\r\nhier: dut.sv tb.cpp\r\n\tverilator --exe -cc -hierarchical -CFLAGS \"-DENV_SIM_VERILATOR\" -timescale 1ns/1ps dut.sv tb.cpp\r\n\tmake -C obj_dir/ -f Vdut.mk\r\n\t./obj_dir/Vdut\r\n\r\nclean:\r\n\trm -rf obj_dir\r\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-11",
+  "closed_at": "2023-01-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

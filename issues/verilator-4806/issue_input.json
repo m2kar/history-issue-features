@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4806,
+  "issue_url": "https://github.com/verilator/verilator/issues/4806",
+  "title": "A top level parent module overrides a lower level child modules timeunit ",
+  "body": "I have two modules top and bot (bot is instantiated under top).\r\nWhen they have different timeunit definitions, the definition in top overrides bot.\r\n\r\n(The ifdef will hide the problem for now)\r\n\r\n```\r\nmodule top ();\r\n`ifdef DIFFERENT_TIMEUNIT\r\n   timeunit 1ns;\r\n`else\r\n   timeunit 1s;\r\n`endif\r\n   timeprecision 1ps;\r\n\r\n   logic \t\t clkb, clk;\r\n\r\n   initial\r\n     begin\r\n\tclkb = 0;\r\n     end\r\n\r\n   always @(clk)\r\n     begin\r\n\tclkb <= ~clk;\r\n     end\r\n   \r\n   bot bot (.clkb(clkb), .clk(clk));\r\nendmodule\r\n\r\nmodule bot (input logic clkb, output logic clk);\r\n   timeunit 1s;\r\n   timeprecision 1fs;\r\n\r\n   integer count;\r\n   real    delay;\r\n   \r\n   initial\r\n     begin\r\n\tcount = 0;\r\n\tdelay = 500e-9;\r\n\tclk = clkb;\r\n\t#(3.5 * delay) $display(\"Initial finishing at %g, clkb = %b\",\r\n\t\t\t $realtime(), clkb);\r\n     end\r\n\r\n   always @(clkb)\r\n     begin\r\n\t$display(\"clkb is %b at %g\", clkb, $realtime());\r\n\tcount++;\r\n\t#(delay) clk = clkb;\r\n     end\r\n\r\n   always @(count)\r\n     begin\r\n\tif (count > 20)\r\n\t  begin\r\n\t     $display(\"Finishing at time %g (%m)\", $realtime());\r\n\t     $finish(1);\r\n\t \r\n\t     if ($realtime() < (delay * 20))\r\n\t       begin\r\n\t\t  $display(\"%%Error: That was too quick! (%g)\", $realtime());\r\n\t       end\r\n\t  end\r\n     end\r\n\r\n   final\r\n     begin\r\n\t$display(\"Count was %0d at %g (%m)\", count, $realtime());\r\n     end\r\n   \r\nendmodule // bot\r\n\r\n```\r\n\r\nCompile and run the above:\r\n\r\n```\r\nverilator -exe -timing -cc -build top.sv -main --top-module top\r\n./obj_dir/Vtop\r\n\r\n```\r\n\r\nWith the ifdef hiding the problem, all is well.\r\n\r\n```\r\nclkb is 1 at 0\r\nclkb is 0 at 5e-07\r\nclkb is 1 at 1e-06\r\nclkb is 0 at 1.5e-06\r\nInitial finishing at 1.75e-06, clkb = 0\r\nclkb is 1 at 2e-06\r\nclkb is 0 at 2.5e-06\r\nclkb is 1 at 3e-06\r\nclkb is 0 at 3.5e-06\r\nclkb is 1 at 4e-06\r\nclkb is 0 at 4.5e-06\r\nclkb is 1 at 5e-06\r\nclkb is 0 at 5.5e-06\r\nclkb is 1 at 6e-06\r\nclkb is 0 at 6.5e-06\r\nclkb is 1 at 7e-06\r\nclkb is 0 at 7.5e-06\r\nclkb is 1 at 8e-06\r\nclkb is 0 at 8.5e-06\r\nclkb is 1 at 9e-06\r\nclkb is 0 at 9.5e-06\r\nclkb is 1 at 1e-05\r\nFinishing at time 1e-05 (TOP.top.bot)\r\n- top.sv:52: Verilog $finish\r\n\r\n```\r\n\r\nNow we will activate the problem:\r\n\r\n```\r\nverilator -exe -timing -cc -build top.sv -main --top-module top +define+DIFFERENT_TIMEUNIT\r\n./obj_dir/Vtop\r\n\r\n```\r\n\r\n```\r\nclkb is 1 at 0\r\nclkb is 0 at 1e-15\r\nInitial finishing at 2e-15, clkb = 0\r\nclkb is 1 at 2e-15\r\nclkb is 0 at 3e-15\r\nclkb is 1 at 4e-15\r\nclkb is 0 at 5e-15\r\nclkb is 1 at 6e-15\r\nclkb is 0 at 7e-15\r\nclkb is 1 at 8e-15\r\nclkb is 0 at 9e-15\r\nclkb is 1 at 1e-14\r\nclkb is 0 at 1.1e-14\r\nclkb is 1 at 1.2e-14\r\nclkb is 0 at 1.3e-14\r\nclkb is 1 at 1.4e-14\r\nclkb is 0 at 1.5e-14\r\nclkb is 1 at 1.6e-14\r\nclkb is 0 at 1.7e-14\r\nclkb is 1 at 1.8e-14\r\nclkb is 0 at 1.9e-14\r\nclkb is 1 at 2e-14\r\nFinishing at time 2e-14 (TOP.top.bot)\r\n- top.sv:52: Verilog $finish\r\n%Error: That was too quick! (2e-14)\r\n\r\n```\r\n\r\nThe timeunit in effect within bot should be influenced by the timeunits declared elsewhere.\r\n\r\nIt appears that only the # delays are affected?\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-05",
+  "closed_at": "2024-01-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

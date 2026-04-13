@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5725,
+  "issue_url": "https://github.com/verilator/verilator/issues/5725",
+  "title": "Allow using Verilated types in C++ `constexpr` contexts",
+  "body": "# Problem\r\n\r\nSystemVerilog `localparam` arrays marked `/* verilator public */` are currently exposed as a `static constexpr` variable of type `VlUnpacked`.\r\n\r\n```sv\r\nlocalparam int foo[420]  /* verilator public */ = {420{1}};\r\n```\r\n\r\n```cpp\r\nstatic constexpr VlUnpacked< /* something */ > foo = { /* a bunch of constants */ }; \r\n```\r\n\r\nIt is currently impossible to cleanly use `foo` in a `constexpr` context, such as:\r\n\r\n```cpp\r\nconstexpr int bar(std::size_t index)\r\n{\r\n    return Vsomething::foo[index];\r\n}\r\n\r\nconstexpr int baz = bar(1); // error\r\n```\r\n\r\nInstead, `bar` needs to be written as something like:\r\n\r\n```cpp\r\nconstexpr int bar(std::size_t index)\r\n{\r\n    return Vsomething::foo.m_storage[index]; // Uses the internal \"m_storage\" which should be considered private\r\n}\r\n```\r\n\r\n# Feature Request\r\n\r\nConditionally mark relevant functions in `verilated_types.h` as `constexpr` when C++14/C++17/C++20 is detected, allowing Verilated types to be used and accessed normally in a `constexpr` context.",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-10",
+  "closed_at": "2025-02-10",
+  "code_blocks": [
+    "localparam int foo[420]  /* verilator public */ = {420{1}};",
+    "static constexpr VlUnpacked< /* something */ > foo = { /* a bunch of constants */ };",
+    "constexpr int bar(std::size_t index)\r\n{\r\n    return Vsomething::foo[index];\r\n}\r\n\r\nconstexpr int baz = bar(1); // error",
+    "constexpr int bar(std::size_t index)\r\n{\r\n    return Vsomething::foo.m_storage[index]; // Uses the internal \"m_storage\" which should be considered private\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

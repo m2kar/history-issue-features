@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9563,
+  "issue_url": "https://github.com/llvm/circt/issues/9563",
+  "title": "[FIRRTL][circt-reduce] extmodule-instance-remover crash w/ properties",
+  "body": "Consider the following:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.extmodule @Bar(out a: !firrtl.string)\n  firrtl.module @Baz() {\n    %a = firrtl.instance Bar @Bar(out a: !firrtl.string)\n    %wire = firrtl.wire : !firrtl.string\n    firrtl.propassign %wire, %a : !firrtl.string\n  }\n  firrtl.extmodule @Foo()\n}\n```\n\nThis will crash with the following command:\n\n``` console\n# circt-reduce -skip-initial -test='exit 0' extmodule-instance-remover.mlir -include extmodule-instance-remover -o /dev/null\nReading input\nTesting input with `exit 0`\nInitial module has size 311\nTrying reduction `extmodule-instance-remover`\nAssertion failed: (isa<To>(Val) && \"cast<Ty>() argument of incompatible type!\"), function cast, file Casting.h, line 560.\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\nStack dump:\n0.\tProgram arguments: circt-reduce -skip-initial \"-test=exit 0\" extmodule-instance-remover.mlir -include extmodule-instance-remover -o /dev/null\nStack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):\n0  circt-reduce             0x0000000104563c34 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 56\n1  circt-reduce             0x0000000104561b1c llvm::sys::RunSignalHandlers() + 172\n2  circt-reduce             0x00000001045646dc SignalHandler(int, __siginfo*, void*) + 300\n3  libsystem_platform.dylib 0x000000018fd516a4 _sigtramp + 56\n4  libsystem_pthread.dylib  0x000000018fd17848 pthread_kill + 296\n5  libsystem_c.dylib        0x000000018fc209e4 abort + 124\n6  libsystem_c.dylib        0x000000018fc1fc18 err + 0\n7  circt-reduce             0x00000001056b7c2c llvm::StdThreadPool::wait() (.cold.1) + 0\n8  circt-reduce             0x000000010489a0d8 circt::firrtl::patterns::AddOfPad::~AddOfPad() + 0\n9  circt-reduce             0x00000001054a0f38 (anonymous namespace)::ExtmoduleInstanceRemover::rewrite(circt::firrtl::InstanceOp) + 680\n10 circt-reduce             0x00000001044ef0dc execute(mlir::MLIRContext&) + 3988\n11 circt-reduce             0x00000001044edebc main + 300\n12 dyld                     0x000000018f976b98 start + 6076\nzsh: abort      circt-reduce -skip-initial -test='exit 0' extmodule-instance-remover.mlir   -\n```",
+  "labels": [
+    "bug",
+    "FIRRTL",
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-31",
+  "closed_at": "2026-02-02",
+  "code_blocks": [
+    "\nThis will crash with the following command:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

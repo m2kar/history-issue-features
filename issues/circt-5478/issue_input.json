@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5478,
+  "issue_url": "https://github.com/llvm/circt/issues/5478",
+  "title": "[FIRRTL][SV] Module Hierarchy Files Not Using VerilogName",
+  "body": "The module hierarchy files that `HWExportModuleHierarchy` produce are incorrect if any instances are renamed. This is stemming from the pass directly emitting a file using the instance name instead of the VerilogName or, even better, a Verbatim.\r\n\r\nHere is a minimal example compiling with `firtool Foo.fir -export-module-hierarchy -split-verilog -o Foo`:\r\n\r\n```\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.ModuleHierarchyAnnotation\",\r\n    \"filename\": \"dut_hier.json\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.TestHarnessHierarchyAnnotation\",\r\n    \"filename\": \"tb_hier.json\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\": \"~Foo|Bar\"\r\n  },\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Foo|Baz>a\"\r\n  },\r\n  {\r\n    \"class\": \"chisel3.util.experimental.ForceNameAnnotation\",\r\n    \"target\": \"~Foo|Foo>bar\",\r\n    \"name\": \"HELLO_bar\"\r\n  },\r\n  {\r\n    \"class\": \"chisel3.util.experimental.ForceNameAnnotation\",\r\n    \"target\": \"~Foo|Bar>baz\",\r\n    \"name\": \"WORLD_baz\"\r\n  }\r\n]]\r\n  module Baz:\r\n    wire a: UInt<1>\r\n    a is invalid\r\n  module Bar:\r\n    inst baz of Baz\r\n  module Foo:\r\n    inst bar of Bar\r\n```\r\n\r\nThis produces:\r\n\r\n```json\r\n{\r\n  \"instance_name\": \"Bar\",\r\n  \"module_name\": \"Bar\",\r\n  \"instances\": [\r\n    {\r\n      \"instance_name\": \"baz\",\r\n      \"module_name\": \"Baz\",\r\n      \"instances\": []\r\n    }\r\n  ]\r\n}\r\n```\r\n\r\nAnd:\r\n\r\n```json\r\n{\r\n  \"instance_name\": \"Foo\",\r\n  \"module_name\": \"Foo\",\r\n  \"instances\": [\r\n    {\r\n      \"instance_name\": \"bar\",\r\n      \"module_name\": \"Bar\",\r\n      \"instances\": [\r\n        {\r\n          \"instance_name\": \"baz\",\r\n          \"module_name\": \"Baz\",\r\n          \"instances\": []\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}\r\n```\r\n\r\nThe instance names are incorrect and should be `HELLO_bar` and `WORLD_baz`.\r\n\r\nNote: there are two related issues:\r\n\r\n1. That pass does not use an `sv.verbatim` and instead directly writes files. This should be changed to use a verbatim.\r\n2. That pass interprets the default output directory (`-`) literally and will create this directory if you don't run with `-split-verilog -o=file`. This should also be changed to dump the files out in the current directory.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-26",
+  "closed_at": "2023-06-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

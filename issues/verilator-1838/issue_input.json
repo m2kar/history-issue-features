@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1838,
+  "issue_url": "https://github.com/verilator/verilator/issues/1838",
+  "title": "Question: inline all sub-functions within _eval greatly improve the performance with GCC 4.8.1",
+  "body": "---\n\n\nAuthor Name: **Jie Xu** (@jiexu)\nOriginal Redmine Message: 1525 from https://www.veripool.org\n\n\n\n---\n\nwhen trying to improve the performance of verilator model, I did some callgrind analysis on one test model.\n\n```\n--------------------------------------------------------------------------------\n            Ir\n--------------------------------------------------------------------------------\n1,083,335,590  PROGRAM TOTALS\n\n--------------------------------------------------------------------------------\n          Ir  file:function\n--------------------------------------------------------------------------------\n202,937,588  generated/debug/Vsim_top.cpp:Vsim_top::_eval(Vsim_top__Syms*)\n 76,848,704  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__330(Vsim_top__Syms*) \n 72,403,472  generated/debug/Vsim_top.cpp:Vsim_top::_change_request(Vsim_top__Syms*) \n 55,248,836  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__252(Vsim_top__Syms*) \n 50,653,271  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__361(Vsim_top__Syms*) \n 41,502,198  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__296(Vsim_top__Syms*) \n 36,028,065  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__363(Vsim_top__Syms*) \n 34,826,300  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__278(Vsim_top__Syms*) \n 24,283,790  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__332(Vsim_top__Syms*) \n 19,566,250  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__381(Vsim_top__Syms*) \n 19,304,864  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__352(Vsim_top__Syms*) \n\n```\nSurprisingly the @_eval@ function itself actually takes a lot of CPU cycles. Then I tried to make all the functions which are called by @_eval()@ as inline functions. The performance of the test model boosted about 17% while the executable sizes were almost the same.\n\nBased on this, I think we probably should have an option to make all the @_combo, _sequent, _multiclk@ function as inline as default. I think this is safe for all C++ compilers since those functions are called by only one place. Inlining those functions won't increase the executable size but will make functions like @_eval()@ much less costly.\n\n\n\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2014-11-12",
+  "closed_at": "2014-11-12",
+  "code_blocks": [
+    "--------------------------------------------------------------------------------\n            Ir\n--------------------------------------------------------------------------------\n1,083,335,590  PROGRAM TOTALS\n\n--------------------------------------------------------------------------------\n          Ir  file:function\n--------------------------------------------------------------------------------\n202,937,588  generated/debug/Vsim_top.cpp:Vsim_top::_eval(Vsim_top__Syms*)\n 76,848,704  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__330(Vsim_top__Syms*) \n 72,403,472  generated/debug/Vsim_top.cpp:Vsim_top::_change_request(Vsim_top__Syms*) \n 55,248,836  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__252(Vsim_top__Syms*) \n 50,653,271  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__361(Vsim_top__Syms*) \n 41,502,198  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__296(Vsim_top__Syms*) \n 36,028,065  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__363(Vsim_top__Syms*) \n 34,826,300  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__278(Vsim_top__Syms*) \n 24,283,790  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__332(Vsim_top__Syms*) \n 19,566,250  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__381(Vsim_top__Syms*) \n 19,304,864  generated/debug/Vsim_top.cpp:Vsim_top::_combo__TOP__352(Vsim_top__Syms*) \n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

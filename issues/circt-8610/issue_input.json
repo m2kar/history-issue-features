@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8610,
+  "issue_url": "https://github.com/llvm/circt/issues/8610",
+  "title": "[FIRRTL] [Bug Report] Comb Loop Detect not aware of bitcast + extract",
+  "body": "See this MLIR Module of FIRRTL, the output `output_0` should connected from `input_0` with `%3 = firrtl.bitcast %io` and `firrtl.bits %3 7 to 0`:\n```mlir\nmodule {\n  firrtl.circuit \"TEST\" {\n    firrtl.module @TEST(in %input_0: !firrtl.uint<8>, out %output_0: !firrtl.uint<8>) attributes {convention = #firrtl<convention scalarized>, layers = [@verification]} {\n      %io = firrtl.wire : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      %probe = firrtl.wire : !firrtl.bundle<>\n      %0 = firrtl.subfield %io[input_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      firrtl.connect %0, %input_0 : !firrtl.uint<8>\n      %1 = firrtl.subfield %io[output_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      firrtl.connect %output_0, %1 : !firrtl.uint<8>\n      %2 = firrtl.subfield %io[output_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      %3 = firrtl.bitcast %io : (!firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>) -> !firrtl.uint<16>\n      %4 = firrtl.bits %3 7 to 0 : (!firrtl.uint<16>) -> !firrtl.uint<8>\n      %_GEN_0 = firrtl.node interesting_name %4 : !firrtl.uint<8>\n      firrtl.connect %2, %_GEN_0 : !firrtl.uint<8>\n    }\n    firrtl.layer @verification bind {\n    }\n  }\n}\n```\nHowever, `combinational cycle in a FIRRTL module, sample path: TEST.{_GEN_0 <- ... <- io_output_0 <- _GEN_0}`\n\nThe `firrtl.bitcast` is only designed for lowering to `hw.bitcast`, see [here](https://github.com/llvm/circt/blob/6d08cb473337670277f12dd5857fa6e9a7e616f6/lib/Dialect/FIRRTL/Transforms/LowerTypes.cpp#L1350), so `CheckCombLoops` will detect this as a loop.\nThe simplest way of fixing this postpone the `CheckCombLoops` to HW, and don't execute it in FIRRTL Pass.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-27",
+  "closed_at": "2025-07-06",
+  "code_blocks": [
+    "module {\n  firrtl.circuit \"TEST\" {\n    firrtl.module @TEST(in %input_0: !firrtl.uint<8>, out %output_0: !firrtl.uint<8>) attributes {convention = #firrtl<convention scalarized>, layers = [@verification]} {\n      %io = firrtl.wire : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      %probe = firrtl.wire : !firrtl.bundle<>\n      %0 = firrtl.subfield %io[input_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      firrtl.connect %0, %input_0 : !firrtl.uint<8>\n      %1 = firrtl.subfield %io[output_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      firrtl.connect %output_0, %1 : !firrtl.uint<8>\n      %2 = firrtl.subfield %io[output_0] : !firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>\n      %3 = firrtl.bitcast %io : (!firrtl.bundle<input_0 flip: uint<8>, output_0: uint<8>>) -> !firrtl.uint<16>\n      %4 = firrtl.bits %3 7 to 0 : (!firrtl.uint<16>) -> !firrtl.uint<8>\n      %_GEN_0 = firrtl.node interesting_name %4 : !firrtl.uint<8>\n      firrtl.connect %2, %_GEN_0 : !firrtl.uint<8>\n    }\n    firrtl.layer @verification bind {\n    }\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

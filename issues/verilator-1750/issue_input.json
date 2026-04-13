@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1750,
+  "issue_url": "https://github.com/verilator/verilator/issues/1750",
+  "title": "Question: Command line specification of public access to variables",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Message: 752 from https://www.veripool.org\n\n\n\n---\n\nVerilator already provides rich mechanisms by which test benches can access registers and signals inside models: verilator public, DPI and VPI.\n\nHowever all of these require modifying the DUT, and this can be a problem when working with golden RTL from third parties. We (Jeremy Bennett and Jie Xu) have therefore come up with a proposal, to allow public access variables to be specified on the verilator command line, so allowing golden RTL to be used unchanged.\n\nIn practice, the programmer's view of registers is not exactly the same as the underlying Verilog registers. So more generally we should like to specify virtual registers, which are a combination of underlying Verilog registers, to be accessed as a single DPI call.\n\nWe would welcome comments on our suggestion.\n\n# Features required\n\nThe features required of such virtual registers are:\n* mapping an arbitrary catenation of slices of wires, registers and array elements to a single virtual register.\n* allowing any combination of read, write or no access to bits within the virtual registers\n* permitting different mappings of the virtual register for read and for write.\n* allowing the virtual register to be specified as an element of an array, thereby allowing virtual memory mapped registers to be created.\n\nThe specification must be capable of being represented clearly and unambiguously as command line arguments to Verilator. Potentially a simplified syntax could be provided for simple access to registers.\n\n# Candidate syntax\n\nSuggested syntax for a register with identical read and write mapping\n\n```\n --virtual-public <virtual_name>={<element>,<element>,<element>,...}\n\n```\n\nWhere _virtual_name_ is the name by which the virtual register will be referred to, and _element_ may be one of\n* a hierarchical reference to a scalar\n* a hierarchical reference to a vector or a slice of a vector\n* a hierarchical reference to a single element of an array, or a slice of such an element\n* a constant with explicit width\n\nVerilog notation is used for hierarchical names, to specify slices and array elements and to specify constants. The resulting Verilator model will export two DPI functions at the top level:\n\n```\n <virtual_name>_read\n <virtual_name>_write\n\n```\n\nto read and write the elements of the virtual register. Where a constant is specified as part of the register, read will always return those bits and write will have no effect. *Note.* _virtual_name_ must be a valid name in both Verilog and C.\n\nWhere separate mappings are required for reading and writing, two specifications must be provided for each register:\n\n```\n --virtual-public-read <virtual_name>={<element>,<element>,<element>,...}\n --virtual-public-write <virtual_name>={<element>,<element>,<element>,...}\n\n```\n\n*Note.* There may be parts of the virtual register that are read only and parts that are write only.\n\nIn the case of a virtual register that is only to be read, there is no need to provide a write specification. Similarly there is no need to provide a read specification for a register that is only to be written. In such cases the relevant DPI function will not be defined.\n\n# Verilator implementation\n\nWe are still investigating how best to implement us. We believe the implementation should work on the Abstract Syntax Tree (AST) at an early stage, modifying it to insert the DPI functions at the top level. It is important that target registers are not optimized away.\n\n# Errors and warnings\n\nVerilator should warn at compile time if any element is not valid.\n\nIf a write specification uses an element which cannot be written (for example a wire), Verilator should issue a warning at compile time. If the compilation is allowed to proceed, writes to such elements will be ignored.\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2012-03-07",
+  "closed_at": "2012-03-09",
+  "code_blocks": [
+    " --virtual-public <virtual_name>={<element>,<element>,<element>,...}\n\n",
+    " <virtual_name>_read\n <virtual_name>_write\n\n",
+    " --virtual-public-read <virtual_name>={<element>,<element>,<element>,...}\n --virtual-public-write <virtual_name>={<element>,<element>,<element>,...}\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

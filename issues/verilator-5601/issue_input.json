@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5601,
+  "issue_url": "https://github.com/verilator/verilator/issues/5601",
+  "title": "Support parameter pattern initialization of multidimensional arrays",
+  "body": "> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```verilog\r\nmodule array_2d ();\r\n\r\n  localparam bit MATRIX[2][2] = '{'{1'b1, 1'b0}, '{1'b1, 1'b1}};\r\n\r\n  genvar i, j;\r\n  generate\r\n    for (i = 0; i < 1; i++)\r\n      for (j = 0; j < 1; j++) begin\r\n        if (MATRIX[i][j]) begin : gen_matrix\r\n        end\r\n      end\r\n  endgenerate\r\n\r\nendmodule;\r\n```\r\n\r\n> What 'verilator' command line do we use to run your example?\r\n\r\n```\r\n$ verilator_bin --lint-only test_2d.sv\r\n%Error: test_2d.sv:9:13: Expecting expression to be constant, but variable isn't const: 'MATRIX'\r\n                       : ... note: In instance 'array_2d'\r\n    9 |         if (MATRIX[i][j]) begin : gen_matrix\r\n      |             ^~~~~~\r\n%Error: test_2d.sv:9:22: Generate If condition must evaluate to constant\r\n                       : ... note: In instance 'array_2d'\r\n    9 |         if (MATRIX[i][j]) begin : gen_matrix\r\n      |                      ^\r\n%Error: Exiting due to 2 error(s)\r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n```\r\n$ verilator --version\r\nVerilator 5.031 devel rev v5.030-23-g2e1128b41\r\n```\r\n\r\n> What OS and distribution are you using?\r\n\r\nUbuntu 24.04\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nYes, I've taken a look through the V3Const.cpp:2766 and noticed this, so it's maybe a known issue?\r\n```c\r\n                } else if (m_params && VN_IS(valuep, InitArray)) {\r\n                    // Allow parameters to pass arrays\r\n                    // Earlier recursion of InitArray made sure each array value is constant\r\n                    // This exception is fairly fragile, i.e. doesn't\r\n                    // support arrays of arrays or other stuff\r\n                    AstNode* const newp = valuep->cloneTree(false);\r\n```\r\n",
+  "labels": [
+    "area: elaboration",
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-09",
+  "closed_at": "2025-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

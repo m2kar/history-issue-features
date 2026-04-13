@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3088,
+  "issue_url": "https://github.com/llvm/circt/pull/3088",
+  "title": "[PrepareForEmission] Reuse wires for output ports",
+  "body": "This commit changes to reuse existing wires as placeholder of output ports \r\nwhen output ports are uniquely assigned to a wire.  \r\n\r\nExample\r\n```scala\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output sink: UInt<3>\r\n  module Foo:\r\n    output c: UInt<3>\r\n    wire foo: UInt<3>\r\n    inst bar of Bar\r\n    foo <= bar.sink\r\n    c <= foo\r\n```\r\nAfter:\r\n```verilog\r\n  wire [2:0] foo; \r\n\r\n  Bar bar ( \r\n    .sink (foo)\r\n  );\r\n  assign c = foo;  \r\n```\r\nBefore:\r\n```verilog\r\n  wire [2:0] _bar_sink; // foo.fir:7:5\r\n  wire [2:0] foo;       // foo.fir:6:5\r\n\r\n  assign foo = _bar_sink;   \r\n  Bar bar (     // foo.fir:7:5\r\n    .sink (_bar_sink)\r\n  );\r\n  assign c = foo;  \r\n``` ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-10",
+  "closed_at": "2022-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

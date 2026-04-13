@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7078,
+  "issue_url": "https://github.com/llvm/circt/issues/7078",
+  "title": "[OM] Rework Class and Object op to finish the move away from fields being symbols",
+  "body": "Since the OM dialect's inception, fields were symbols in the Class. This was problematic, because Classes themselves are symbols in the builtin Module symbol table, so they can be referenced by Object ops and Object field ops.\r\n\r\nAs we have found time and again, nested symbol tables don't work, so we made fields no longer a symbol. But this meant we had to scan the class body while verifying fields. That became a performance problem, so we moved this logic out of a verifier, and instead ran a global Class/Object verification pass at certain points in the pipeline: https://github.com/llvm/circt/pull/7026\r\n\r\nThis issue is to track the final resolution of this saga, which will probably encompass a few concrete steps.\r\n\r\nIn short, I think it makes sense for Class / Object to behave more like HWModule / Instance in the HW dialect. This will necessitate a few changes:\r\n\r\n* Rather than om.field ops in the class body, we can move to a terminator op like om.fields, analogous to the hw.output op\r\n* This will require an attribute somewhere, probably on the om.class, to hold the field names, and verify that the names array matches the number of operands to the om.fields op\r\n\r\nThis is sufficient to get away from the half-baked sort of symbolic representation of om.field. But we need to address the core issue, which was verifier performance.\r\n\r\nIt might be possible to keep the om.class type as just a symbol reference to the om.class op with the above changes. The om.object op can verify the class exists and takes the specified inputs. The om.object.field op may be able to efficiently verify that the requested field exists with the correct type. One thing we can change is the om.object.field doesn't need to support a path of fields--it turned out we never needed this ability--it is only ever one field at a time.\r\n\r\nIf it would be helpful for verification performance, we could also consider augmenting the om.class type to include the fields, more like the hw.module_type. This would still need to be verified against the om.class, probably in the om.object verifier, but then the om.object.field verifier could check against the type directly.",
+  "labels": [
+    "enhancement",
+    "OM"
+  ],
+  "state": "open",
+  "created_at": "2024-05-22",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

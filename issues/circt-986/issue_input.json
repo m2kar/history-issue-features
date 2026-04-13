@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 986,
+  "issue_url": "https://github.com/llvm/circt/issues/986",
+  "title": "[LLHD] Allow llhd.inst to instantiate rtl.module",
+  "body": "LLHD currently does not allow for RTL modules to be instantiated. Being able to so will be an important step towards co-simulating SystemVerilog/LLHD and RTL Dialect designs. This is likely just a modification in the verifier for the `llhd.inst` operation.\r\n\r\nEventually the following should work:\r\n```\r\nrtl.module @Foo(%a: i1) -> (%b: i1) {\r\n  rtl.output %a : i1\r\n }\r\n\r\nllhd.entity @Bar() -> () {\r\n  %c0_i1 = llhd.const 0 : i1\r\n  %a = llhd.sig \"a\" %c0_i1 : i1\r\n  %b = llhd.sig \"b\" %c0_i1 : i1\r\n  llhd.inst \"u0\" @Foo (%a) -> (%b) : (!llhd.sig<i1>) -> (!llhd.sig<i1>)\r\n}\r\n```\r\nCurrently this produces:\r\n```\r\nerror: 'llhd.inst' op 'Foo' does not reference a valid proc or entity\r\n```\r\nAn important aspect of this support is to bridge the type system gap where LLHD instances require signals to be connected to the ports, but the RTL dialect has no notion of a signal. Basically the signature of the `llhd.inst` should match that of the `rtl.module`, but with all types wrapped in `!llhd.sig<...>`.",
+  "labels": [
+    "good first issue",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-30",
+  "closed_at": "2022-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1275,
+  "issue_url": "https://github.com/llvm/circt/pull/1275",
+  "title": "[FIRRTL] Rewrite LowerTypes with simpler structure",
+  "body": "Still auditing some code and finishing out some operations.\r\n\r\nRewrite LowerTypes to simplify and improve performance.\r\n\r\nWalks the operations in reverse order.  This lets it visit users before defs.  Users can usually be expanded out to multiple operations (think mux of a bundle to muxes of each field) with a temporary subWhatever op inserted.  When processing an aggregate producer, we blow out the op as appropriate, then walk the users, often those are subWhatever ops which can be bypassed and deleted.  Function arguments are logically last on the operation visit order.\r\n\r\nEach processing of an op peels one layer of aggregate type off.  Because new ops are inserted immediately above the current up, the walk will visit them next, effectively recusing on the aggregate types, without recusing.  These potentially temporary ops (if the aggregate is complex) effectively serve as the worklist.  Often aggregates are shallow, so the new ops are the final ones.\r\n\r\nThere is no global map.  When you update an aggregate producer, you build a small vector of it's expansion, which you use to update it's users.  Once the users of an aggregate are updated, there is no reason to store mapping data on them any longer.\r\n\r\nThis structure makes it relatively easy to to do connect-expansion and partial-connect-legalization along the way.  connects get processed before their source and dest.\r\n\r\nThis gives a 40% improvement on a medium sifive core and hasn't been tuned yet.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-06-15",
+  "closed_at": "2021-07-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

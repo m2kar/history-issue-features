@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4356,
+  "issue_url": "https://github.com/verilator/verilator/pull/4356",
+  "title": "Move variables mutated under fork..join_none/join_any blocks into anonymous objects",
+  "body": "See #4253 for some context\r\n\r\n-------------\r\n\r\nThere's a particular detail in the spec that I misunderstood, namely:\r\n\r\n> The lifetime of a fork-join block (see 9.3.2) shall encompass the execution of all processes spawned by the\r\nblock. The lifetime of a scope enclosing any fork-join block includes the lifetime of the fork-join block.\r\n\r\nIt turns out that by \"fork-join block\" the spec really means any parallel block, not just those which end with `join`.\r\nSee this thread for the reference: https://verificationacademy.com/forums/systemverilog/formal-arguments-passed-reference-fork-joinnone\r\n\r\nUsages that make use of this property can be spotted in UVM for example.\r\n\r\nThis complicates things severely, because it means that it is actually legal to reference a variable defined outside of a timing-control fork block and **even modify it** as long as it was defined in a block encompassing the parallel block. This means that the solution introduced in #4253 is insufficient, because it does not give us the possibility to mutate the variable and carry out the changes to other processes that reference it.\r\n\r\n-------------\r\n\r\nThis is an addition to the original solution - it solves the problem with an extra pass. By creating \"anonymous\" objects (aka. \"DynScopes\") and moving variables that are mutated in parallel blocks into those objects, we can work around this limitation. That's because objects are reference-counted and will live as long as all spawned process and their parent exist. Of course that means that the original references to those moved variables need to be updated, or to be more precise - replaced with appropriate `AstMemberSelect`s. All of this is handled in a newly proposed `DynScopeVisitor`.\r\n\r\nOnce  `DynScopeVisitor` finishes its job, the newly created \"DynScope\" objects as well as variables which don't require that treatment are passed to the forked tasks via `ForkVisitor` - the original mechanism introduced in #4253.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-11",
+  "closed_at": "2023-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

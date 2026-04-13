@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9952,
+  "issue_url": "https://github.com/llvm/circt/pull/9952",
+  "title": "[CoreToFSM] Fix concat-in-mux losing possible state values",
+  "body": "\r\nThe `generateConcatenatedValues` helper in the CoreToFSM pass used `std::move` to assign its computed results into `finalPossibleValues`, which overwrote any values that had already been accumulated by earlier branches of a mux. This caused the BFS next-state analysis to silently drop reachable states when a `comb.mux` had one constant branch and one `comb.concat` branch. The fix replaces the move-assignment with an insert loop so that previously accumulated values are preserved.\r\n\r\nA regression test (`concat-mux.mlir`) is included. It exercises a module whose next-state logic is `mux(b, 3, concat(a, 0))`, which has three reachable state values (0, 3, 4). Without the fix the pass only discovers two of them (0 and 4) because the constant 3 from the mux's true branch is overwritten when processing the concat on the false branch.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-16",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

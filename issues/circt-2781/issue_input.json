@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2781,
+  "issue_url": "https://github.com/llvm/circt/issues/2781",
+  "title": "[FIRRTL] IMCP Issue with Register Reset",
+  "body": "```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock: Clock\r\n    input p: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar.clock <= clock\r\n    bar.a is invalid\r\n\r\n    b <= bar.b\r\n    when p:\r\n      b <= UInt<1>(1)\r\n\r\n  module Bar :\r\n    input clock : Clock\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    reg r : UInt<1>, clock with: (reset => (a, UInt<1>(1)))\r\n    r is invalid\r\n\r\n    b <= r\r\n```\r\nMFC:\r\n```verilog\r\nmodule Foo(\t// ./x.fir:2:10\r\n  input  clock, p,\r\n  output b);\r\n\r\n  Bar bar ();\t// ./x.fir:7:5\r\n  assign b = 1'h1;\t// ./x.fir:2:10, :12:7, :13:5, :14:9\r\nendmodule\r\n\r\nmodule Bar();\t// ./x.fir:17:10\r\nendmodule\r\n```\r\nSFC:\r\n```verilog\r\nmodule Foo(\r\n  input   clock,\r\n  input   p,\r\n  output  b\r\n);\r\n  assign b = p; // @[]\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-17",
+  "closed_at": "2022-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3583,
+  "issue_url": "https://github.com/verilator/verilator/issues/3583",
+  "title": "hier_block mode module has wrong port connection order",
+  "body": "When I compile the below case with `verilator -cc dut.v --hierarchical --debug` (verilator version: 4.225)\r\n### dut.v\r\n```\r\n`timescale 1ps/1ps\r\n\r\nmodule mod2 (\r\n    output reg q,\r\n    input wire d,\r\n    input wire iclk\r\n);\r\n    \r\n    /*verilator hier_block*/\r\n    \r\n    always@(posedge iclk)\r\n        q = d;\r\n    \r\nendmodule\r\n\r\nmodule dut (\r\n    output wire q, \r\n    input wire d,\r\n    input wire clk\r\n);\r\n\r\n    mod2 u_mod (q, d, clk);\r\n\r\nendmodule\r\n\r\n```\r\nWill get error message:\r\n```\r\n%Error-ASSIGNIN: dut.v:21:20: Assigning to input/const variable: 'd'\r\n-node: VARREF 0xf01420 <e519#> {e21au} @dt=0@  d [LV] => VAR 0xf17620 <e355> {e17aq} @dt=0@  d INPUT [VSTATIC]  WIRE\r\n   21 |     mod2 u_mod (q, d, clk);\r\n      |                    ^\r\n                 ... For error description see https://verilator.org/warn/ASSIGNIN?v=4.225\r\n```\r\nHere's what I found in a debug message file:\r\n### Vdut_007_linkjump.tree\r\n```\r\n(omit)\r\n1:2: CELL 0x2a4a620 <e376> {e21ak}  u_mod -> MODULE 0x2a3a540 <e400#> {d6ai}  mod2  L3 [1ps]\r\n1:2:1: PIN 0x2a49ff0 <e365> {e21ar}  __pinNumber1 -> VAR 0x2a273e0 <e13> {d7av} @dt=0@  iclk INPUT [VSTATIC]  PORT\r\n1:2:1:1: VARREF 0x2a33310 <e516#> {e21ar} @dt=0@  q [RV] <- VAR 0x2a49100 <e349> {e16ar} @dt=0@  q OUTPUT [VSTATIC]  WIRE\r\n1:2:1: PIN 0x2a4a290 <e370> {e21au}  __pinNumber2 -> VAR 0x2a27950 <e21> {d8ay} @dt=0@  q OUTPUT [VSTATIC]  PORT\r\n1:2:1:1: VARREF 0x2a33420 <e519#> {e21au} @dt=0@  d [LV] => VAR 0x2a49620 <e355> {e17aq} @dt=0@  d INPUT [VSTATIC]  WIRE\r\n1:2:1: PIN 0x2a4a530 <e374> {e21ax}  __pinNumber3 -> VAR 0x2a27e70 <e30> {d9ax} @dt=0@  d INPUT [VSTATIC]  PORT\r\n1:2:1:1: VARREF 0x2a33530 <e522#> {e21ax} @dt=0@  clk [RV] <- VAR 0x2a49b40 <e362> {e18aq} @dt=0@  clk INPUT [VSTATIC]  WIRE\r\n(omit)\r\n```\r\nYou can see that the pin order is different from the order in the **dut.v**. In the **Vdut_007_linkjump.tree**, the `mod2`'s pin order is `iclk -> q -> d`, but in the **dut.v**, the `mod2`'s pin order is `q -> d -> iclk`. I think it's the cause of the **ASSIGNIN** error.\r\n\r\nI also found that if I change to put the `d` in the always block like `always@(posedge d)` instead of `always@(posedge iclk)`, the `__pinNumber1`  will be `d` instead of `iclk`.\r\n\r\nIs this a bug or is that I have to add some options to prevent this error? Thanks",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-29",
+  "closed_at": "2022-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

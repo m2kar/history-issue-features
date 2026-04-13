@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7173,
+  "issue_url": "https://github.com/verilator/verilator/issues/7173",
+  "title": "Internal Error V3Scope.cpp:359 for recursive constant function in $unit scope",
+  "body": "### Reproducer\n\nRecursive constant functions work inside a module (since 5.038, commit b6ecffeb6),\nbut crash with Internal Error when defined at file scope ($unit):\n\n```verilog\nfunction automatic integer gate_depth;\n  input integer way;\n  integer d1, d2, sc, n1, n2;\n  begin\n    if (way <= 1) gate_depth = 0;\n    else if (way <= 4) gate_depth = 1;\n    else begin\n      sc = $clog2(way);\n      n1 = 1 << (sc - 1);\n      n2 = way - n1;\n      d1 = gate_depth(n1);\n      d2 = gate_depth(n2);\n      gate_depth = ((d1 > d2) ? d1 : d2) + 1;\n    end\n  end\nendfunction\n\nmodule t;\n  localparam D5 = gate_depth(5);\n  localparam D8 = gate_depth(8);\n  initial begin\n    $display(\"D5=%0d D8=%0d\", D5, D8);\n    $finish;\n  end\nendmodule\n```\n\n### Error\n\n```\n%Error: Internal Error: test.v:11:12: ../V3Scope.cpp:359: No clone for package function\n                                    : ... note: In instance '$unit'\n   11 |       d1 = gate_depth(n1);\n      |            ^~~~~~~~~~\n```\n\n### Analysis\n\nThe constant folder correctly evaluates the localparams (D5=2, D8=2), but the\nfunction definition remains in the $unit package AST with its recursive FUNCREFs.\n\nIn `ScopeVisitor::visit(AstNodeFTask*)`, `cloneTree(false)` updates internal\ncross-references via `@astgen ptr`: the FUNCREF inside the clone points to the\nclone itself (not the original). But only `nodep->user2p(clonep)` is set —\nthe clone's `user2p` stays null.\n\nWhen `ScopeCleanupVisitor` iterates the clone and encounters the recursive FUNCREF,\n`taskp()` returns the clone, and `clone->user2p()` is null → assertion failure.\n\n### Suggested fix\n\nOne line in `V3Scope.cpp`, `ScopeVisitor::visit(AstNodeFTask*)`:\n\n```diff\n         nodep->user2p(clonep);\n+        clonep->user2p(clonep);  // For recursive self-references after cloneTree\n         m_scopep->addBlocksp(clonep);\n```\n\nAll existing regression tests pass (`t_func_recurse*`).\n\n### Version\n\nVerilator 5.044 2026-01-01 rev v5.044-52-g7e7b6d7fb",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-02",
+  "closed_at": "2026-03-02",
+  "code_blocks": [
+    "function automatic integer gate_depth;\n  input integer way;\n  integer d1, d2, sc, n1, n2;\n  begin\n    if (way <= 1) gate_depth = 0;\n    else if (way <= 4) gate_depth = 1;\n    else begin\n      sc = $clog2(way);\n      n1 = 1 << (sc - 1);\n      n2 = way - n1;\n      d1 = gate_depth(n1);\n      d2 = gate_depth(n2);\n      gate_depth = ((d1 > d2) ? d1 : d2) + 1;\n    end\n  end\nendfunction\n\nmodule t;\n  localparam D5 = gate_depth(5);\n  localparam D8 = gate_depth(8);\n  initial begin\n    $display(\"D5=%0d D8=%0d\", D5, D8);\n    $finish;\n  end\nendmodule\n",
+    "%Error: Internal Error: test.v:11:12: ../V3Scope.cpp:359: No clone for package function\n                                    : ... note: In instance '$unit'\n   11 |       d1 = gate_depth(n1);\n      |            ^~~~~~~~~~\n",
+    "         nodep->user2p(clonep);\n+        clonep->user2p(clonep);  // For recursive self-references after cloneTree\n         m_scopep->addBlocksp(clonep);\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6480,
+  "issue_url": "https://github.com/verilator/verilator/issues/6480",
+  "title": "Internals: Simplify Ast modeling of loops",
+  "body": "I'm raising this for discussion at this point, but I would like to propose a\nsimplification to the Ast modeling of loops. We already don't have `AstFor`,\nand we very quickly get rid of `AstDoWhile`, so `AstWhile` is the only one in\nmost places. However `AstWhile` still has the issue of having an ambiguous\nplace to insert new statements created when lowering the loop condition (they\nneed to go both before loop entry and on the loop back edge).\n\nAs an alternative, one could model all source level loops without his having\nthis problem using the following 2 constructs:\n\n```\nAstLoop\n  astgen op1p := stmtsp : List[NodeStmt]\n  astgen op2p := contsp : List[NodeStmt]\n\nAstBreak:\n  astgen op1p := unlessp : AstNodeExpr\n```\n\nThat is, an infinite loop with 2 sections, which executes as:\n```\n  while (ture) {\n     stmtsp;\n     // <- 'continue' inside 'stmtsp' goes here\n     contsp;\n  }\n```\n\nPlus a conditional 'break' statement, which branches after the loop if the\ncondition is false. (Or if you prefer we can call it AstLoopTest.)\n\nThe nice thing about this is that there is no issue of where to insert new\nstatements created for the condition (they go before the AstBreak), and you\nstill know if a condition is a loop condition (as opposed to an 'if' condition)\nfor error messages and the like. (AstBreak can be lowered to an\nAstIf(AstJumpLabel) if you don't mind loosing the information that this was a\nloop test)\n\nModeling the source level loops is pretty straight forward:\n\n\n```\n  while (cond) { body; }\n  // Becomes\n  loop {\n    stmtps:\n      break cond;\n      body;\n    contsp:\n      <empty>\n  }\n\n  do { body; } while (cond);\n  // Becomes\n  loop {\n    stmtps:\n      body;\n      break cond;\n    contsp:\n      <empty>\n  }\n\n  for (init; cond; step) { body; }\n  // Becomes\n  init\n  loop {\n    stmtps:\n      break cond;\n      body;\n    contsp:\n      step;\n  }\n\n  forever { body; }\n  // Becomes\n  loop {\n    stmtps:\n      body;\n    contsp:\n      <empty>\n  }\n```\n\nAgain the point here is to simplify the representation so we can always just go\n\"insert before\" or \"insert after\" on a statement while lowering expressions.\n\nIt also has the nice side effect of not forcing the unrolling of the first\niteration of a 'do' loop, and because every loop is represented the same way,\nwe only need to have one algorithm for handling everything.\n\nWhen emitting to C++, we can special case some configurations if needed to emit\nmore \"readable\" code, but GCC/Clang should not care and should be happy with\ngotos and have no observable performance difference\n",
+  "labels": [
+    "type: maintenance"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-23",
+  "closed_at": "2025-09-29",
+  "code_blocks": [
+    "AstLoop\n  astgen op1p := stmtsp : List[NodeStmt]\n  astgen op2p := contsp : List[NodeStmt]\n\nAstBreak:\n  astgen op1p := unlessp : AstNodeExpr\n",
+    "  while (ture) {\n     stmtsp;\n     // <- 'continue' inside 'stmtsp' goes here\n     contsp;\n  }\n",
+    "  while (cond) { body; }\n  // Becomes\n  loop {\n    stmtps:\n      break cond;\n      body;\n    contsp:\n      <empty>\n  }\n\n  do { body; } while (cond);\n  // Becomes\n  loop {\n    stmtps:\n      body;\n      break cond;\n    contsp:\n      <empty>\n  }\n\n  for (init; cond; step) { body; }\n  // Becomes\n  init\n  loop {\n    stmtps:\n      break cond;\n      body;\n    contsp:\n      step;\n  }\n\n  forever { body; }\n  // Becomes\n  loop {\n    stmtps:\n      body;\n    contsp:\n      <empty>\n  }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

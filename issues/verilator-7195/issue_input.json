@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7195,
+  "issue_url": "https://github.com/verilator/verilator/issues/7195",
+  "title": "Fix class extend references between queues",
+  "body": "@gezalore might you help me with some template type conversion magic in include/verilated_types.h pretty-please?\n\nBelow code rewritten from UVM tests/70regs/80examples/05primer gives:\n\n```\nVt_1_t__03a__03areg_block_slave__Vclpkg__0.cpp:10:60: error: cannot convert \n      VlQueue<VlClassRef<Vt_1_t__03a__03areg_slave_TABLES>,[...]>\n to  VlQueue<VlClassRef<Vt_1_t__03a__03auvm_reg>,[...]>\n ```\n\nTABLES properly derives from uvm_reg, and VlClassRef has the appropriate magic, but something's needed in the VlQueue (and perhaps other) containers.  Gemini made some suggestions about templated constructors being needed, but their suggestions didn't do it.\n\n<details>\n<summary>Example</summary>\n\n```systemverilog\nmodule t;\n\n  class uvm_reg;\n  endclass\n\n  class reg_slave_DATA extends uvm_reg;\n  endclass\n\n  class reg_slave_TABLES extends uvm_reg;\n    function uvm_reg create(string name = \"\");\n      reg_slave_TABLES tmp;\n      tmp = new;\n      return tmp;\n    endfunction\n  endclass\n\n  class reg_block_slave;\n    reg_slave_DATA DATA;\n    rand reg_slave_TABLES TABLES[256];\n\n    virtual function void build();\n      this.configure(TABLES);  // Issue was here\n    endfunction\n\n    function void configure(uvm_reg reg_a[]);\n      foreach (reg_a[i])\n        $display(\"%p\", reg_a[i]);\n    endfunction\n  endclass\n\n  initial begin\n    reg_block_slave c;\n    c = new;\n    c.build;\n  end\n\nendmodule\n```\n</details>",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-04",
+  "closed_at": "2026-03-05",
+  "code_blocks": [
+    "Vt_1_t__03a__03areg_block_slave__Vclpkg__0.cpp:10:60: error: cannot convert \n      VlQueue<VlClassRef<Vt_1_t__03a__03areg_slave_TABLES>,[...]>\n to  VlQueue<VlClassRef<Vt_1_t__03a__03auvm_reg>,[...]>\n ",
+    "module t;\n\n  class uvm_reg;\n  endclass\n\n  class reg_slave_DATA extends uvm_reg;\n  endclass\n\n  class reg_slave_TABLES extends uvm_reg;\n    function uvm_reg create(string name = \"\");\n      reg_slave_TABLES tmp;\n      tmp = new;\n      return tmp;\n    endfunction\n  endclass\n\n  class reg_block_slave;\n    reg_slave_DATA DATA;\n    rand reg_slave_TABLES TABLES[256];\n\n    virtual function void build();\n      this.configure(TABLES);  // Issue was here\n    endfunction\n\n    function void configure(uvm_reg reg_a[]);\n      foreach (reg_a[i])\n        $display(\"%p\", reg_a[i]);\n    endfunction\n  endclass\n\n  initial begin\n    reg_block_slave c;\n    c = new;\n    c.build;\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

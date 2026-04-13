@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2475,
+  "issue_url": "https://github.com/verilator/verilator/issues/2475",
+  "title": "Interface arrays always connect to ports in high:low order",
+  "body": "When an interface array port on a module is declared with low:high ordering or declared by size (which is also low:high) and connected to an interface array that is high:low ordering in a parent module, the interface array within the child module is ordered with high:low ordering, rather than having the array elements reversed. I believe they should be reversed per my understanding of the language. Additionally, Vivado treats the connections as reversed in order, which is where I noticed the simulation-synthesis mismatch.\r\n\r\n```systemverilog\r\ninterface intf ();\r\n    integer index;\r\nendinterface\r\n\r\nmodule subm (\r\n    intf y[0:2] //low to high\r\n);\r\n\r\nendmodule\r\nmodule t()\r\n    intf test_intf[2:0](); //high downto low\r\n    subm subm_inst (\r\n    //here, a 2:0 signal (test_intf) is connected to a 0:2 port (y),\r\n    //so the connections should end up reversed in ordering,\r\n    //but I observed that within subm, they are connected 0->0, 1->1, 2->2\r\n        .y(test_intf)\r\n    );\r\nendmodule\r\n```\r\n\r\nUsing verilator git master as of today (edf6a40f1994d9a237b82e7aefeb9a83c85c2d5b).\r\n\r\nSee attached test in test_regress format. [t_interface_array_ordering.zip](https://github.com/verilator/verilator/files/4949218/t_interface_array_ordering.zip)",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-20",
+  "closed_at": "2021-02-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

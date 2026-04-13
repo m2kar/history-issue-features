@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9048,
+  "issue_url": "https://github.com/llvm/circt/pull/9048",
+  "title": "[CombToSynth] Use parallel-prefix tree for unsigned comparisons",
+  "body": "This commit extends the unsigned comparison lowering to support multiple parallel-prefix architectures (Sklanskey, Kogge-Stone, Brent-Kung) in addition to the existing ripple-carry implementation. No functional change in prefix-tree/adder lowering. \r\n\r\nPreviously, all comparisons used a ripple-carry style implementation that processed bits sequentially from LSB to MSB, resulting in O(n) depth for n-bit comparisons. This was a significant performance bottleneck for wide comparisons. The comparison lowering is now refactored to use the same parallel-prefix tree algorithms as the adder, reducing depth to O(log n).\r\n\r\nThe comparison logic is formulated as a prefix computation where equal bits are computed as ~(a_i ^ b_i) and greater bits as ~a_i & b_i, with propagate and generate signals based on equality and greater-than conditions.\r\n\r\nIntegration tests for all architectures verify logical equivalence via circt-lec. \r\n\r\nbefore/after for 64-bit unsigned comparision. \r\n```\r\nuenoku@pop-os ~/d/circt-synth (dev/hidetou/icmp-parallel) [1]> ../circt/build/bin/circt-synth bar.mlir -output-longest-path=- -o /dev/null\r\n# Longest Path Analysis result for \"icmp_unsigned\"\r\nFound 128 paths\r\nFound 1 unique fanout points\r\nMaximum path delay: 128\r\n## Showing Levels\r\nLevel = 128       . Count = 1         . 100.00    %\r\n## Top 0 (out of 1) fan-out points\r\n\r\nuenoku@pop-os ~/d/circt-synth (dev/hidetou/icmp-parallel)> ./build/bin/circt-synth bar.mlir -output-longest-path=- -o /dev/null \r\n# Longest Path Analysis result for \"icmp_unsigned\"\r\nFound 128 paths\r\nFound 1 unique end points \r\nMaximum path delay: 14\r\n## Showing Levels\r\nLevel = 14        . Count = 1         . 100.00    %\r\n## Top 0 (out of 1) end points\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-03",
+  "closed_at": "2025-10-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

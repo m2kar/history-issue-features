@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4388,
+  "issue_url": "https://github.com/verilator/verilator/issues/4388",
+  "title": "Timing Problem with make_tracing_sc example",
+  "body": "Overview: for make_tracing_sc verilator example: adding timing resolution of 1fs runs to completion\r\nHowever, changing timing resolution to 10fs gives error:\r\nError Case Changes:\r\nMakefile Added:\r\n```\r\n# Run Verilator in timing mode\r\nVERILATOR_FLAGS += --timing\r\n# Set default time resolution\r\nVERILATOR_FLAGS += --timescale-override /10fs\r\n```\r\nIn sc_main.cpp at beginning of sc_main() added:\r\n```\r\n    // define timing resolution as 1ps is way too large\r\n    sc_set_time_resolution(10, SC_FS);\r\n```\r\nAnd in top.v and sub.v, just before the \"module\" lines added:\r\n```\r\n`timescale 1ps/10fs\r\n```\r\nrunning make clean and then make gives:\r\n...\r\n```\r\n-- RUN ---------------------\r\nobj_dir/Vtop +trace\r\n\r\n        SystemC 2.3.4-Accellera --- Jul 24 2023 14:38:10\r\n        Copyright (c) 1996-2022 by all Contributors,\r\n        ALL RIGHTS RESERVED\r\n%Error: SystemC's sc_set_time_resolution is 10^-99, which does not match Verilog timeprecision 10^-14. Suggest use 'sc_set_time_resolution(1s)', or Verilator '--timescale-override 1s/1s'\r\nAborting...\r\nmake: *** [Makefile:85: run] Aborted (core dumped)\r\n> \r\n```\r\nCase that works (I went back and forth quite a few times to verify):\r\nChanges: exactly the same as the case that didn't work, but change all the \"10\"s to \"1\"s, that is use:\r\n```\r\nVERILATOR_FLAGS += --timescale-override /1fs\r\n    sc_set_time_resolution(1, SC_FS);\r\n`timescale 1ps/1fs\r\n```\r\nand example runs to completion:\r\n...\r\n```\r\n[0] Model running...\r\n\r\nEnabling waves into logs/vlt_dump.vcd...\r\n[43000000] fastclk is 5 times faster than clk\r\n\r\n*-* All Finished *-*\r\n- sub.v:47: Verilog $finish\r\n\r\n-- COVERAGE ----------------\r\n/home/Dropbox/programming/Verilog/verilator/bin/verilator_coverage --annotate logs/annotated logs/coverage.dat\r\nTotal coverage (5/34) 14.00%\r\nSee lines with '%00' in logs/annotated\r\n\r\n-- DONE --------------------\r\nTo see waveforms, open vlt_dump.vcd in a waveform viewer\r\n\r\n> \r\n```\r\nI can live with using a 1fs resolution (1ps is way too large), it just means I have redo my standard digital library; probably not a bit deal, but I still thought it might be of general interest to correct this.\r\np.s. I'm brand new to SystemC (and I don't really want to pay for the IEEE Reference Manual until I have to), but I don't think I made a mistake.\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-26",
+  "closed_at": "2023-07-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3999,
+  "issue_url": "https://github.com/verilator/verilator/issues/3999",
+  "title": "Parameter enum const functions fail",
+  "body": "I'm trying to write a const function to export the list of enum values as a string written to a parameter but I encountered a segmentaion fault when trying to compile. I think I've isolated that the issue has something to do with using the enum next function with data flow into parameter variables.\r\n```\r\nmodule t ();\r\n\r\n   typedef enum logic {E0, E1} enm_t;\r\n\r\n   function automatic enm_t get_2();\r\n      enm_t enm;\r\n      enm = E0;\r\n      return enm.next;\r\n   endfunction\r\n\r\n   function automatic enm_t get_second();\r\n      enm_t enm;\r\n      enm = E0;\r\n      return enm.next;\r\n   endfunction\r\n\r\n   localparam enm_t enum_second = get_2();\r\n   // localparam enm_t enum_second = E1;\r\n\r\n   $info(\"%d %d %d\", get_2(), get_second(), enum_second);\r\n\r\nendmodule\r\n```\r\n\r\nFrom gdb, I've found that the issue at this line `nodep->getChildDTypep()->numeric().isSigned()` at V3LinkDot.cpp:1256 `getChildDType()` is null and `nodep->m_name = \"__Venumtab_enum_next0\"`. I'm stuck understanding what the LinkDot visitor is trying to do and how it affects the enum next function.",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-02",
+  "closed_at": "2023-10-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

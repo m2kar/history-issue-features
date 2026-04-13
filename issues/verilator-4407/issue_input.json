@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4407,
+  "issue_url": "https://github.com/verilator/verilator/issues/4407",
+  "title": "Is it possible to access the member of a user-defined struct in SystemVerilog using VPI and verilator?",
+  "body": "In SystemVerilog, we can use our own user-defined data structure, as the example below:\r\n```\r\ntypedef struct packed {\r\n    logic [riscv::VLEN-1:0]   pc;            \r\n    logic [TRANS_ID_BITS-1:0] trans_id;         \r\n    logic [REG_ADDR_SIZE-1:0] rs1;           \r\n    logic [REG_ADDR_SIZE-1:0] rs2;           \r\n    logic [REG_ADDR_SIZE-1:0] rd;           \r\n    riscv::xlen_t             result;          \r\n} scoreboard_entry_t;\r\n```\r\n\r\nFor now, we don't need to know what exactly these members represent. What we can see is a user-defined data strucuture in SystemVerilog. And later we instantiate this struct as an input port in a module:\r\n\r\n`input  scoreboard_entry_t        issue_instr_i/*verilator public_flat_rd*/,`\r\n\r\n\r\nAs above, `issue_instr_i` is of this data struct and it is exposed to verilator. When I try to access it via VPI:\r\n\r\n```\r\nvpiHandle issue_instr =vpi_handle_by_name((PLI_BYTE8*)\"TOP.core.issue_instr_i\", NULL);\r\ns_vpi_value v1;\r\nv1.format = vpiHexStrVal;\r\nvpi_get_value(issue_instr, &v1);\r\nprintf(\"instruction: %s\\n\", v1.value.str);\r\n```\r\n\r\nApparently it only gives me a long string of hexadecimal values. And if I try to access one of the members with a new VPI handle:\r\n\r\n`vpiHandle issue_instr =vpi_handle_by_name((PLI_BYTE8*)\"TOP.core.issue_instr_i.rs1\", NULL);`\r\n\r\nI get the error message\r\n\r\n` /...verilator/include/verilated_vpi.cpp:1763: vpi_get_value: Unsupported vpiHandle ((nil))`\r\n\r\nCould anyone let me know how to access a specific member in this struct? Does Verilator support this?",
+  "labels": [
+    "resolution: answered",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-06",
+  "closed_at": "2023-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

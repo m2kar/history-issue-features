@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5646,
+  "issue_url": "https://github.com/verilator/verilator/issues/5646",
+  "title": "Fix mislinking two ports of the same interface connected to same module",
+  "body": "This is somewhat contrived, not a distillation of real code.\r\n\r\nInstances `b0`, and `b1` are distinct instances of module `B`. There should not be a circular loop between `b0.a.x` and `b1.a.x`. The following code\r\n\r\n```SystemVerilog\r\ninterface A;\r\n  logic x;\r\nendinterface\r\n\r\nmodule B;\r\n  A a();\r\nendmodule\r\n\r\nmodule C(A a0, A a1);\r\n  assign a1.x = a0.x;\r\nendmodule\r\n\r\nmodule test;\r\n  B b0();\r\n  B b1();\r\n  C c(b0.a, b1.a);\r\nendmodule\r\n```\r\n\r\nresults in the following error.\r\n\r\n```\r\n%Error: bug.sv:10:15: Wire inputs its own output, creating circular logic (wire x=x)\r\n   10 |   assign a1.x = a0.x;\r\n      |               ^\r\n%Warning-UNOPTFLAT: bug.sv:2:9: Signal unoptimizable: Circular combinational logic: 'test.b1.a.x'\r\n                              : ... note: In instance 'test.b1.a'\r\n    2 |   logic x;\r\n      |         ^\r\n                    ... For warning description see https://verilator.org/warn/UNOPTFLAT?v=5.030\r\n                    ... Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n                    bug.sv:2:9:      Example path: test.b1.a.x\r\n                    bug.sv:10:15:      Example path: ASSIGNW\r\n                    bug.sv:2:9:      Example path: test.b1.a.x\r\n%Error: Exiting due to 1 error(s), 1 warning(s)\r\n```\r\n\r\nNote that there is no error if `b0` and `b1` are instances of distinct but completely identical modules.\r\n\r\n```\r\ninterface A;\r\n  logic x;\r\nendinterface\r\n\r\nmodule B0;\r\n  A a();\r\nendmodule\r\n\r\nmodule B1;\r\n  A a();\r\nendmodule\r\n\r\nmodule C(A a0, A a1);\r\n  assign a1.x = a0.x;\r\nendmodule\r\n\r\nmodule test;\r\n  B0 b0();\r\n  B1 b1();\r\n  C c(b0.a, b1.a);\r\nendmodule\r\n```\r\n\r\n> What 'verilator' command line do we use to run your example?\r\n\r\n`verilator --timing --trace --top-module test--binary bug.sv`\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.030.\r\n\r\n> What OS and distribution are you using?\r\n\r\nUbuntu 22.04 under WSL.\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nIf this look like someone who is a Verilator beginner could reasonably handle.\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-28",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

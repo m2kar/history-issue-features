@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2888,
+  "issue_url": "https://github.com/llvm/circt/issues/2888",
+  "title": "[FIRRTL] Don't Dedup Modules with Different NestedPrefixModulesAnnotation",
+  "body": "`NestedPrefixModulesAnnotation` with different prefixes should not deduplicate. This can be interpreted one of two ways, either of which should have the same effect:\r\n\r\n1. `NestedPrefixModulesAnnotation` should block deduplication.\r\n2. The `PrefixModules` pass should duplicate modules which have different prefixes.\r\n\r\nSiFive's extensions to the SFC are implementing this using strategy (2).\r\n\r\nAn end-to-end test case that should work is the following:\r\n\r\n```scala\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.NestedPrefixModulesAnnotation\",\r\n    \"prefix\":\"prefix1_\",\r\n    \"inclusive\":true,\r\n    \"target\":\"~Foo|Bar\"\r\n  },\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.NestedPrefixModulesAnnotation\",\r\n    \"prefix\":\"prefix2_\",\r\n    \"inclusive\":true,\r\n    \"target\":\"~Foo|Baz\"\r\n  }\r\n]]\r\n  module Bar:\r\n  module Baz:\r\n  module Foo:\r\n    inst bar of Bar\r\n    inst baz of Baz\r\n```\r\n\r\nCurrently, this produces (`firtool -dedup -strip-debug-info`):\r\n\r\n```verilog\r\nmodule prefix2_Bar();\r\nendmodule\r\n\r\nmodule Foo();\r\n  prefix2_Bar bar ();\r\n  prefix2_Bar baz ();\r\nendmodule\r\n```\r\n\r\nThis should produce:\r\n```verilog\r\nmodule prefix1_Bar();\r\nendmodule\r\n\r\nmodule prefix2_Baz();\r\nendmodule\r\n\r\nmodule Foo();\r\n  prefix1_Bar bar ();\r\n  prefix2_Baz baz ();\r\nendmodule\r\n```\r\n\r\nThere may also be an interaction here with memories where memories should not deduplicate if they have different prefixes.  This may be a little funky because it has interactions with the memory generator schema which may not respect prefixing.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2022-04-13",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

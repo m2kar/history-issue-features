@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 541,
+  "issue_url": "https://github.com/verilator/verilator/issues/541",
+  "title": "Improper WIDTH warning on a parameterized module",
+  "body": "---\n\n\nAuthor Name: **Hiroki Honda**\nOriginal Redmine Issue: 541 from https://www.veripool.org\nOriginal Date: 2012-08-01\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI have five-year experience using Verilator --cc on CentOS x86_64.  Thank you for this great tool.\r\n\r\nThe issue I have noticed is that Verilator 3.833 produces a WIDTH warning for a valid design containing parameterized modules.\r\n\r\n```\r\n[linux]$ cat paramtest.v\r\nmodule paramtest(clk,rst,cke,idata,odata);\r\ninput clk,rst,cke;\r\ninput  [7:0] idata;\r\noutput [7:0] odata;\r\nparamtest_DFFRE#(1) dffre0(clk,rst,cke,idata[7],odata[7]);\r\nparamtest_DFFE#(7) dffe0(clk,cke,idata[6:0],odata[6:0]);\r\n//paramtest_DFFRE#(2) dffre0(clk,rst,cke,idata[7:6],odata[7:6]);\r\n//paramtest_DFFE#(6) dffe0(clk,cke,idata[5:0],odata[5:0]);\r\nendmodule\r\nmodule paramtest_DFFRE(clk,rst,cke,d,q);\r\nparameter W=1;\r\nparameter [W-1:0] INIT={W{1'b0}};\r\ninput clk,rst,cke;\r\ninput [W-1:0] d;\r\noutput [W-1:0] q;\r\nreg [W-1:0] q;\r\nalways @(posedge clk or posedge rst) begin\r\n  if (rst)  q <= INIT;\r\n  else      q <= cke ? d : q;\r\nend\r\nendmodule\r\nmodule paramtest_DFFE(clk,cke,d,q);\r\nparameter W=1;\r\ninput clk,cke;\r\ninput [W-1:0] d;\r\noutput [W-1:0] q;\r\nparamtest_DFFRE#(W) dffre0(clk,1'b0,cke,d,q);\r\nendmodule\r\n[linux]$ export VERILATOR_ROOT=/home/honda/oss/verilator-3.831\r\n[linux]$ $VERILATOR_ROOT/bin/verilator --lint-only paramtest.v\r\n[linux]$ export VERILATOR_ROOT=/home/honda/oss/verilator-3.832\r\n[linux]$ $VERILATOR_ROOT/bin/verilator --lint-only paramtest.v\r\n[linux]$ export VERILATOR_ROOT=/home/honda/oss/verilator-3.833\r\n[linux]$ $VERILATOR_ROOT/bin/verilator --lint-only paramtest.v\r\n%Warning-WIDTH: paramtest.v:18: Operator ASSIGNDLY expects 7 bits on the Assign RHS, but Assign RHS's VARREF 'INIT' generates 1 bits.\r\n%Warning-WIDTH: Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n%Error: Command Failed /home/honda/oss/verilator-3.833/verilator_bin --lint-only paramtest.v\r\n[linux]$ export VERILATOR_ROOT=/home/honda/oss/verilator-3.840\r\n[linux]$ $VERILATOR_ROOT/bin/verilator --lint-only paramtest.v\r\n%Warning-WIDTH: paramtest.v:18: Operator ASSIGNDLY expects 7 bits on the Assign RHS, but Assign RHS's VARREF 'INIT' generates 1 bits.\r\n%Warning-WIDTH: Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n%Error: Command Failed /home/honda/oss/verilator-3.840/verilator_bin --lint-only paramtest.v\r\n[linux]$\r\n\n```\r\n\r\nWhen I change the design from \"DFFRE#(1)+DFFE#(7)\" to \"DFFRE#(2)+DFFE#(6)\", the WIDTH warning disappears.\r\n\r\nFYI, my installation procedure was as follows (no SYSTEMC,SYSTEMPERL).\r\n```\r\n[linux]$ cd /home/honda/oss/verilator-3.8NN\r\n[linux]$ export VERILATOR_ROOT=`pwd`\r\n[linux]$ ./configure\r\n[linux]$ make\r\n[linux]$ make test_c\r\nAll Tests passed\r\n\n```\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-08-01",
+  "closed_at": "2012-09-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

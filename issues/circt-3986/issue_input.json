@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3986,
+  "issue_url": "https://github.com/llvm/circt/issues/3986",
+  "title": "[ESI] Better names for unwrapped channels",
+  "body": "Currently, unwrap operators will create default names for wrap/unwrap ops:\r\n\r\n```mlir\r\n  hw.module @handshake_store_in_ui64_ui32_out_ui32_ui64(%addrIn0: !esi.channel<i64>, %dataIn: !esi.channel<i32>, %ctrl: !esi.channel<none>) -> (dataToMem: !esi.channel<i32>, addrOut0: !esi.channel<i64>) {\r\n    %rawOutput, %valid = esi.unwrap.vr %addrIn0, %2 : i64\r\n    %rawOutput_0, %valid_1 = esi.unwrap.vr %dataIn, %2 : i32\r\n    %rawOutput_2, %valid_3 = esi.unwrap.vr %ctrl, %2 : none\r\n    %chanOutput, %ready = esi.wrap.vr %rawOutput_0, %1 : i32\r\n    %chanOutput_4, %ready_5 = esi.wrap.vr %rawOutput, %1 : i64\r\n    %0 = comb.and %ready, %ready_5 : i1\r\n    %1 = comb.and %valid_1, %valid, %valid_3 : i1\r\n    %2 = comb.and %0, %1 : i1\r\n    hw.output %chanOutput, %chanOutput_4 : !esi.channel<i32>, !esi.channel<i64>\r\n  }\r\n```\r\n\r\nHowever, referenced SSA values may already have a meaningful name or a `name` attribute or a name attribute. These names should be used in the generated asm names:\r\n\r\n```mlir\r\n  hw.module @handshake_store_in_ui64_ui32_out_ui32_ui64(%addrIn0: !esi.channel<i64>, %dataIn: !esi.channel<i32>, %ctrl: !esi.channel<none>) -> (dataToMem: !esi.channel<i32>, addrOut0: !esi.channel<i64>) {\r\n    %addrIn0_raw, %addrIn0_valid = esi.unwrap.vr %addrIn0, %2 : i64\r\n    %dataIn_raw, %dataIn_valid = esi.unwrap.vr %dataIn, %2 : i32\r\n    %ctrl_raw, %ctrl_valid = esi.unwrap.vr %ctrl, %2 : none\r\n    %chanOutput, %ready = esi.wrap.vr %dataIn_raw, %1 : i32\r\n    %chanOutput_4, %ready_5 = esi.wrap.vr %addrIn0_raw, %1 : i64\r\n    %0 = comb.and %ready, %ready_5 : i1\r\n    %1 = comb.and %dataIn_valid, %addrIn0_valid, %ctrl_valid : i1\r\n    %2 = comb.and %0, %1 : i1\r\n    hw.output %chanOutput, %chanOutput_4 : !esi.channel<i32>, !esi.channel<i64>\r\n  }\r\n```\r\n\r\nGoing even further, it should also be possible to derive names for wrap ops - these are often used to generate module outputs, which have names associated with them.",
+  "labels": [
+    "ESI"
+  ],
+  "state": "open",
+  "created_at": "2022-09-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

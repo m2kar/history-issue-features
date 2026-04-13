@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4822,
+  "issue_url": "https://github.com/llvm/circt/pull/4822",
+  "title": "[HW] Add hw.wire operation",
+  "body": "Add the `hw.wire` operation to the HW dialect. A wire offers the ability to assign a human-readable name or an inner symbol to an edge in the SSA graph, for human consumption or remote references through a symbol.\r\n\r\nThis fills a representational gap where language frontends like FIRRTL have to resort to `sv.wire` if they need any of the naming or symbol reference capabilities of a wire, but in doing so they also have to buy into the SV-specific quirks and connect semantics of `sv.wire`, which are annoying to analyze. Almost all uses in FIRRTL don't care about the connect semantics though. The new `hw.wire` op allows for expressing a wire without the connect semantics, leveraging the graph-ness of the HW dialect, which makes analysis a lot easier and will allow frontends to significantly reduce the number of SV-specific ops they emit. Decoupling frontends from the SV emission backend is very valuable in practice, as it allows for the intermediate HW representation to be consumed by other tools like simulators without them having to try and implement the SV semantics of a wire.\r\n\r\nIn a nutshell, this allows for the following replacement in almost all cases:\r\n\r\n```mlir\r\n// before\r\n%myWire = sv.wire sym @mySym : !hw.inout<i42>\r\n%0 = sv.read_inout %myWire : !hw.inout<i42>\r\nsv.assign %myWire, %1 : i42\r\nhw.output %0 : i42\r\n\r\n// after\r\n%myWire = hw.wire %1 sym @mySym : i42\r\nhw.output %myWire : i42\r\n```\r\n\r\nThis commit adds the `hw.wire` op, canonicalizations, and tests for it. It also adds `BuilderUtils` with a helper to accept `StringAttr`, `StringRef`, or `Twine` in a single builder argument, which is going to be useful for other operations as well. The changes to ExportVerilog are limited to qualifying `WireOp` as `sv::WireOp` to disambiguate from the new `hw::WireOp`.",
+  "labels": [
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-14",
+  "closed_at": "2023-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

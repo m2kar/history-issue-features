@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2080,
+  "issue_url": "https://github.com/llvm/circt/pull/2080",
+  "title": "[reduce] Add FIRRTL lowering passes, improve pattern application strategy",
+  "body": "This PR improves *circt-reduce* as follows:\r\n\r\n### Add a root port pruning reduction pattern\r\n\r\nAdd a pattern to circt-reduce which removes unused ports from the root module, which can significantly reduce the size of the test case.\r\n\r\n### Keep current pattern chunk size after successful reduction\r\n\r\nThe circt-reduce tool iteratively tries to apply a rewrite pattern on large subsets of the operations. If the pattern doesn't apply on the current subset, the number of operations is halved and application is retried, forming a sort of binary search for reductions.\r\n\r\nIn the current implementation, when circt-reduce applies a pattern that improves the output, it will immediately reset the subset to its maximum size and restart trying pattern application from the top. This can be very cumbersome in the case where the rewrite pattern applies only when a fine granularity of operations is chosen. However, it takes a while to arrive at that granularity, with circt-reduce having to try through all the larger operation subsets first. But having arrived at a small subset size suggests that subsequent successful rewrites will occur at the same subset size, or even smaller. So it makes much more sense to continue trying rewriting at the current level of granularity, even after a pattern has applied successfully.\r\n\r\nThis commit changes circt-reduce such that it does not restart pattern application at the top with largest granularity, but keeps going at the current setting. If that runs through, the reduction will rerun from the top anyway due to the pattern having successfully applied.\r\n\r\n### Add one-shot reductions, enable FIRRTL passes\r\n\r\nAdd the ability for reductions to declared themselves as \"one-shot\", which indicates to circt-reduce that it should not try to reapply the same reduction at the same location again. This is useful for reductions that always apply, like lowerings and optimization passes, as they are likely to be marked as accepting increases in module size for the sake of reduced complexity elsewhere. This can get them stuck in a loop where circt-reduce would accept their reduction, and then immediately try to reapply them at the exact same spot. Marking a reduction as \"one-shot\" will cause circt-reduce to skip this reapplication, and also to not restart pattern application at the top after a successful reduction.\r\n\r\nThis now allows this kind of lowering pass to be used as a reduction pattern in circt-reduce, and this commit enables a whole bunch of passes from the FIRRTL dialect as one-shot reduction patterns.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-04",
+  "closed_at": "2021-11-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

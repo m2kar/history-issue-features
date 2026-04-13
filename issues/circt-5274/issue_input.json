@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5274,
+  "issue_url": "https://github.com/llvm/circt/issues/5274",
+  "title": "[PrefixModules] Prefixing is incorrect",
+  "body": "              I understand this is less broken, but please see this through.\r\n\r\nHere's a simple tweak to your test that demonstrates one of the kinds of breakages I mentioned: https://github.com/llvm/circt/compare/main...dtzSiFive:circt:misc/prefix-module-breakage?expand=1 .\r\n\r\nRunning with this PR produces the following (should be caught by verifier (?!)):\r\n\r\n```\r\n  firrtl.circuit \"Prefix_RewriteInnerNameRefs\" {\r\n    firrtl.module @Prefix_RewriteInnerNameRefs() {\r\n      %wire = firrtl.wire sym @wire : !firrtl.uint<1>\r\n      firrtl.instance mid @Prefix_Prefix2_Mid()\r\n      sv.verbatim \"{{0}}\" {symbols = [#hw.innerNameRef<@Prefix_RewriteInnerNameRefs::@wire>]}\r\n      sv.verbatim \"{{0}} {{1}}\" {symbols = [#hw.innerNameRef<@Prefix_RewriteInnerNameRefs::@wire>, #hw.innerNameRef<@Prefix_Prefix3_Nested::@wire>]}\r\n    }\r\n    firrtl.module @Prefix_Prefix2_Mid() {\r\n      firrtl.instance nested @Prefix_Prefix2_Prefix3_Nested()\r\n    }\r\n    firrtl.module @Prefix_Prefix2_Prefix3_Nested() {\r\n      %wire = firrtl.wire sym @wire : !firrtl.uint<1>\r\n    }\r\n  }\r\n```\r\n\r\nNotice that in the presence of multiple prefixes being applied the inner ref is updated incorrectly (missing `Prefix2` on `Nested` reference).\r\n\r\n_Originally posted by @dtzSiFive in https://github.com/llvm/circt/issues/5259#issuecomment-1563188190_\r\n            ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-05-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

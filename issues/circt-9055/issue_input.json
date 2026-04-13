@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9055,
+  "issue_url": "https://github.com/llvm/circt/pull/9055",
+  "title": "[circt-verilog-lsp] Avoid recursing into other buffers when indexing",
+  "body": "Profiling showed `visitDefault` dominated indexing time (~99.99% of runtime in larger projects) due to deep traversal into non-relevant buffers. This patch keeps correctness while greatly reducing unnecessary recursion. In a SoC-scale System verilog project, this change reduces indexing time from 6.6 s to 4 ms.\r\n\r\n- Added `definitelyOutsideMainBuffer()` helper to detect whether an AST node’s source range, syntax range, or location belongs to the main buffer.\r\n- Integrated this check into the templated `visit<T>` function:\r\n  - Skips recursion (`visitDefault`) when a node is clearly outside the main file.\r\n  - Uses a new `ASTBase` alias for clarity and correctness when calling `visitDefault<T>()`.\r\n- Removed redundant `visitDefault()` calls from individual symbol visitors (`NetSymbol`, `VariableSymbol`, `ImportSymbol`, etc.) that no longer need to recurse manually.\r\n- Result: traversal remains correct but prunes large off-buffer branches early, improving indexing time for multi-file compilations.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-06",
+  "closed_at": "2025-10-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

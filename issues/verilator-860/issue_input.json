@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 860,
+  "issue_url": "https://github.com/verilator/verilator/issues/860",
+  "title": "Support for /*verilator public*/ on SV structs too?",
+  "body": "---\n\n\nAuthor Name: **Jonathon Donaldson**\nOriginal Redmine Issue: 860 from https://www.veripool.org\nOriginal Date: 2014-12-11\n\n\n---\n\nThe recently added feature of being able to use /*verilator public*/ on SV enums is priceless and works very very well. I no longer have to duplicate (i.e. recreate) any enums in my C++ code that already exist in my SV code. This saves loads of tedious copy & paste work when creating the testbench!\r\n\r\nI'm now wondering if the same capability can easily be added for SV structs? The reason I ask is because I also have a lot of SV structs in my designs that are made up of these enums and so I end up having to duplicate the SV structs in my C++ code.\r\n\r\nLet's assume I have the following SV package that I verilate:\r\n\r\n```\r\npackage our_types;\r\n\r\n// Flags\r\ntypedef enum logic {n,N} T_Flg_N /*verilator public*/;\r\ntypedef enum logic {r,R} T_Flg_R /*verilator public*/;\r\ntypedef enum logic {o,O} T_Flg_O /*verilator public*/;\r\n\r\n// Processor Status Register\r\ntypedef struct packed {\r\n  T_Flg_N N;\r\n  T_Flg_R R;\r\n  T_Flg_O O;\r\n} T_PS_Reg /*verilator public*/;\r\n\r\nendpackage : our_types\r\n\n```\r\n\r\nWith the current version of verilator the \"/*verilator public*/\" on the struct is ignored. So this results in having to do the following in the C++ testbench code:\r\n\r\n```\r\n#include \"Vour_our_types.h\" // for access to T_Flg_N/T_Flg_R/T_Flg_O\r\n\r\n// My manually duplicated T_PS_Reg\r\ntypedef struct {\r\n  Vour_our_types::T_Flg_N N;\r\n  Vour_our_types::T_Flg_R R;\r\n  Vour_our_types::T_Flg_O O;\r\n} T_PS_Reg;\r\n\r\nint main () {\r\n  Vour_our_types::T_PS_Reg PS_Reg;\r\n}\r\n\n```\r\n\r\nBut if /*verilator public*/ worked on SV structs then all I would have to do is this:\r\n\r\n```\r\n#include \"Vour_our_types.h\" // for access to T_PS_Reg\r\n\r\nint main () {\r\n  Vour_our_types::T_PS_Reg PS_Reg;\r\n}\r\n\n```\r\n\r\nWith the existing support for /*verilator public*/ on SV enums is support for SV structs something that can be easily added? Or are SV structs a whole different problem altogether that would require a significant amount of work?\r\n\r\nI attached an example in test_regress format.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: data-types",
+    "effort: days",
+    "type: feature-IEEE",
+    "type: feature-non-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2014-12-11",
+  "closed_at": "2024-03-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

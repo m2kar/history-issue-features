@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4586,
+  "issue_url": "https://github.com/llvm/circt/issues/4586",
+  "title": "[FIRRTL] PrefixModules Not Duplicating Modules When Necessary",
+  "body": "I hit a situation where `PrefixModules` should be duplicating modules, but it is not.\r\n\r\nConsider the following:\r\n\r\n```\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.NestedPrefixModulesAnnotation\",\r\n    \"target\":\"~Top|Foo\",\r\n    \"prefix\":\"A_\",\r\n    \"inclusive\":true\r\n  },\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.NestedPrefixModulesAnnotation\",\r\n    \"target\":\"~Top|Foo_1\",\r\n    \"prefix\":\"B_\",\r\n    \"inclusive\":true\r\n  },\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Top|Foo>in\"\r\n  },\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Top|Foo_1>in\"\r\n  }\r\n]]\r\n  module Foo :\r\n    input in : UInt<8>\r\n\r\n  module Foo_1 :\r\n    input in : UInt<8>\r\n\r\n  module Top :\r\n    input in : UInt<8>\r\n\r\n    inst f1 of Foo\r\n    inst f2 of Foo_1\r\n    f1.in <= in\r\n    f2.in <= in\r\n```\r\n\r\nIf I run this with `firtool -dedup`, I get the following Verilog:\r\n\r\n```verilog\r\nmodule A_Foo(\r\n  input [7:0] in);\r\n\r\nendmodule\r\n\r\nmodule Top(\r\n  input [7:0] in);\r\n\r\n  A_Foo f1 (\r\n    .in (in)\r\n  );\r\n  A_Foo f2 (\r\n    .in (in)\r\n  );\r\nendmodule\r\n```\r\n\r\nIf I run without dedup, I get two modules (expectedly):\r\n\r\n```verilog\r\nmodule A_Foo(\r\n  input [7:0] in);\r\n\r\nendmodule\r\n\r\nmodule B_Foo_1(\r\n  input [7:0] in);\r\n\r\nendmodule\r\n\r\nmodule Top(\r\n  input [7:0] in);\r\n\r\n  A_Foo f1 (\r\n    .in (in)\r\n  );\r\n  B_Foo_1 f2 (\r\n    .in (in)\r\n  );\r\nendmodule\r\n```\r\n\r\nBasically, I'm expecting to see both an `A_` and `B_` prefix in the output and I only get an `A_` prefix.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-01-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

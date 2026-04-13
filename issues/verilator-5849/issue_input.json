@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5849,
+  "issue_url": "https://github.com/verilator/verilator/issues/5849",
+  "title": "Coverage breaks expressions with `this`",
+  "body": "Some expressions that contain `this` are broken with `--coverage` enabled since 34ced254c0b1ebcf996dd922266faabd26da1869 (@toddstrader).\n\nFor example, this:\n\n```systemverilog\nclass Foo;\n    function logic test;\n        return !this;\n    endfunction\nendclass\n```\n\nResults in the following error:\n\n```\nError: test.sv:3:17: Internal: Unknown node type reached emitter: THISREF\n    3 |         return !this;\n      |                 ^~~~\n```\n\nAnd this:\n\n```systemverilog\nclass Foo;\n    function logic test;\n        return this && this;\n    endfunction\nendclass\n```\n\nResults in:\n\n```\n%Error: test.sv:3:16: Internal: Unknown node type reached emitter: THISREF\n    3 |         return this && this;\n      |                ^~~~\n%Error: test.sv:3:24: Internal: Unknown node type reached emitter: THISREF\n    3 |         return this && this;\n      |                        ^~~~\n```\n\nIt doesn't manifest for all expressions, e.g. a sole `this`, `this.x`, `f(this)` all work. Even `this + 1` is accepted (it breaks on C++ compilation :smile:). Seems like logic expressions are the problem.\n \nTest case for completeness:\n\n```systemverilog\nclass Foo;\n    function logic test;\n        return this && !this;\n    endfunction\nendclass\n\nmodule t;\n    initial begin\n        Foo f = new;\n        void'(f.test);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n```",
+  "labels": [
+    "area: coverage"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-11",
+  "closed_at": "2025-09-06",
+  "code_blocks": [
+    "class Foo;\n    function logic test;\n        return !this;\n    endfunction\nendclass\n",
+    "Error: test.sv:3:17: Internal: Unknown node type reached emitter: THISREF\n    3 |         return !this;\n      |                 ^~~~\n",
+    "class Foo;\n    function logic test;\n        return this && this;\n    endfunction\nendclass\n",
+    "%Error: test.sv:3:16: Internal: Unknown node type reached emitter: THISREF\n    3 |         return this && this;\n      |                ^~~~\n%Error: test.sv:3:24: Internal: Unknown node type reached emitter: THISREF\n    3 |         return this && this;\n      |                        ^~~~\n",
+    "class Foo;\n    function logic test;\n        return this && !this;\n    endfunction\nendclass\n\nmodule t;\n    initial begin\n        Foo f = new;\n        void'(f.test);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

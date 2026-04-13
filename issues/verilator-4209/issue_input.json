@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4209,
+  "issue_url": "https://github.com/verilator/verilator/issues/4209",
+  "title": "Different results when `-fno-split` is given due to blocking assignment",
+  "body": "### Example code\r\n\r\nVerilog file `top.v`:\r\n```verilog\r\nmodule top (O, clk, wire1, wire0);\r\n  output [5:0] O;\r\n  input clk;\r\n  input wire [2:0] wire0;\r\n  input wire [2:0] wire1;\r\n  wire [2:0] wire2;\r\n  wire [2:0] wire3;\r\n  reg [2:0] reg0 /*verilator public_flat*/ = (2'h0);\r\n  reg [2:0] reg1 /*verilator public_flat*/ = (2'h0);\r\n  reg [2:0] reg2 /*verilator public_flat*/ = (2'h0);\r\n  reg [2:0] reg3 /*verilator public_flat*/ = (2'h0);\r\n  reg [2:0] reg4 /*verilator public_flat*/ = (2'h0);\r\n\r\n  always @(posedge clk) begin\r\n    if ((-wire1))\r\n      reg0 <= wire1;\r\n    else\r\n      reg1 = wire0;\r\n  end\r\n  always @(posedge clk) begin\r\n    reg2 <= {reg0};\r\n  end\r\n  assign wire3 = (wire0 == reg0);\r\n  assign wire2 = {reg2, wire3, reg0, reg1};\r\n\r\n  always @(posedge clk) begin\r\n    if (wire0[1])\r\n      reg4 <= (~&wire2);\r\n    if ((wire2 * wire2))\r\n      reg3 <= $unsigned(wire2);\r\n    else\r\n      reg3 <= reg4;\r\n  end\r\n  assign O = {reg3, reg4, wire2};\r\nendmodule\r\n```\r\n\r\nC++ file `main.cpp`:\r\n```cpp\r\n#include \"verilated.h\"\r\n#include \"Vtop.h\"\r\n\r\n#include <bitset>\r\n#include <iostream>\r\n\r\n//======================\r\n\r\nint main(int argc, char** argv, char**) {\r\n    // Setup context, defaults, and parse command line\r\n    Verilated::debug(0);\r\n    const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};\r\n    contextp->commandArgs(argc, argv);\r\n\r\n    // Construct the Verilated model, from Vtop.h generated from Verilating\r\n    const std::unique_ptr<Vtop> topp{new Vtop{contextp.get()}};\r\n\r\n    // Simulate\r\n    topp->clk = 0;\r\n    topp->eval();\r\n    topp->wire0 = 7;\r\n    topp->wire1 = 0;\r\n    topp->clk = 1;\r\n    topp->eval();\r\n    std::cout << \"O = \" << std::bitset<8>(topp->O) << std::endl;\r\n\r\n    // Final model cleanup\r\n    topp->final();\r\n    return 0;\r\n}\r\n```\r\n\r\n### Actual Behavior\r\n\r\n**Without** the `-fno-split` option, `O = 00000111`.\r\n\r\n```sh\r\n$ verilator -cc -exe -Wno-fatal -Wno-lint -Mdir default -build top.v main.cpp && ./default/Vtop          \r\nmake: Entering directory '/home/zyk/C/verilator/default'\r\n... # Omitted\r\nmake: Leaving directory '/home/zyk/C/verilator/default'\r\nO = 00000111\r\n```\r\n\r\n**With** the `-fno-split` option, `O = 00001111`.\r\n\r\n```sh\r\n$ verilator -cc -exe -Wno-fatal -Wno-lint -fno-split -Mdir no_split -build top.v main.cpp && ./no_split/Vtop\r\nmake: Entering directory '/home/zyk/C/verilator/no_split'\r\n... # Omitted\r\nmake: Leaving directory '/home/zyk/C/verilator/no_split'\r\nO = 00001111\r\n```\r\n\r\n### Verilator version\r\n\r\nThe latest git master (`729f8b9334ce01d289e31e59a126f1611b20736b`).\r\n\r\n### OS version\r\n\r\nWSL2 on Windows (Debian 10)",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-18",
+  "closed_at": "2023-05-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

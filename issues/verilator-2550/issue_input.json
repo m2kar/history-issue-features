@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2550,
+  "issue_url": "https://github.com/verilator/verilator/issues/2550",
+  "title": "Optimizing parallel generates past elaboration",
+  "body": "Hey folks,\r\n\r\nAbout a year ago I noticed i-cache being a bottleneck for my simulator performance (https://github.com/verilator/verilator/issues/2042). \r\n\r\nNow that I have some time, one optimization that I think could help with icache perf is preserving parallel generates past elaboration. Right now I'm imagining something like \r\n\r\n``` systemverilog\r\ngenvar rr, cc;\r\ngenerate\r\n  for (rr=0; rr<16; rr=rr+1) begin : gen1\r\n    for (cc=0; cc<4; cc=cc+1) begin : gen2\r\n      example_module example(\r\n        .i_clk      (i_clk),\r\n        .i_reset_n  (i_reset_n),\r\n        .a          (row_val[rr]),\r\n        .b          (col_val[cc]),\r\n        .o_sum        (sum_out[rr * 16 + cc]));\r\n      end\r\n    end\r\nendgenerate\r\n```\r\nverilating into something like\r\n```cpp\r\n//Vtop__Syms.h\r\nVtop__example_module top__DOT__gen1__BRA__rr__KET__DOT__gen2__BRA__cc__KET__DOT__example[16][4];\r\n\r\n```\r\n\r\n\r\nDoes this seem remotely feasible?  FWIW, I'd be willing to spend a bit of time on this ",
+  "labels": [
+    "area: performance",
+    "effort: weeks"
+  ],
+  "state": "open",
+  "created_at": "2020-09-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

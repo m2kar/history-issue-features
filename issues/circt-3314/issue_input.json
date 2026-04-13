@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3314,
+  "issue_url": "https://github.com/llvm/circt/pull/3314",
+  "title": "[PrettifyVerilog] Stop duplicating unary op with namehint",
+  "body": "This commit changes PrettifyVerilog to stop duplicating unary ops with namehints so that we can use namehints. This might be a bit controversial because namehint semantics is \"best effort\" but I'd like to stop inlining expressions with namehints moderately if possible. For example,\r\n\r\n```mlir\r\nhw.module @namehint(%a: i1) -> (b: i1, c: i1) {\r\n  %true = hw.constant true\r\n  %0 = comb.xor %a, %true {sv.namehint = \"a_not\"} : i1\r\n  hw.output %0, %0 : i1, i1\r\n}\r\n```\r\nbefore:\r\n```verilog\r\n  assign b = ~a;        // bar.mlir:4:8, :5:3\r\n  assign c = ~a; \r\n```\r\nafter:\r\n```verilog\r\n  wire a_not = ~a;      // bar.mlir:4:8\r\n  assign b = a_not;     // bar.mlir:5:3\r\n  assign c = a_not;     // bar.mlir:5:3\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-09",
+  "closed_at": "2022-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

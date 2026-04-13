@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8260,
+  "issue_url": "https://github.com/llvm/circt/issues/8260",
+  "title": "[Comb] or(concat, concat) -> concat & or(and, concat) -> concat(extract) canonicalizer",
+  "body": "If I'm reading this right, there could be a set of comb canonicalizers doing the following simplification from\n\n```mlir\n  hw.module @alias(in %init : i4, in %in0 : i1, in %in1 : i1, out out : i4) {\n    %c0_i2 = hw.constant 0 : i2\n    %false = hw.constant false\n    %c-5_i4 = hw.constant -5 : i4\n    %c-3_i4 = hw.constant -3 : i4\n    %c0_i3 = hw.constant 0 : i3\n    %c-2_i4 = hw.constant -2 : i4\n    %0 = comb.and %init, %c-2_i4 : i4\n    %1 = comb.concat %c0_i3, %in1 : i3, i1\n    %2 = comb.or %1, %0 : i4\n    %3 = comb.and %2, %c-3_i4 : i4\n    %4 = comb.concat %c0_i2, %in0, %false : i2, i1, i1\n    %5 = comb.or %4, %3 : i4\n    %6 = comb.and %5, %c-5_i4 : i4\n    %7 = comb.concat %false, %in1, %c0_i2 : i1, i1, i2\n    %8 = comb.or %7, %6 : i4\n    hw.output %8 : i4\n  }\n```\n\nto\n\n```mlir\n  hw.module @alias(in %init : i4, in %in0 : i1, in %in1 : i1, out out : i4) {\n    %0 = comb.extract %init from 3 : (i4) -> i1\n    %1 = comb.concat %0, %in1, %in0, %in1 : i1, i1, i1, i1\n    hw.output %1 : i4\n  }\n```",
+  "labels": [
+    "enhancement",
+    "Comb"
+  ],
+  "state": "open",
+  "created_at": "2025-02-20",
+  "closed_at": null,
+  "code_blocks": [
+    "  hw.module @alias(in %init : i4, in %in0 : i1, in %in1 : i1, out out : i4) {\n    %c0_i2 = hw.constant 0 : i2\n    %false = hw.constant false\n    %c-5_i4 = hw.constant -5 : i4\n    %c-3_i4 = hw.constant -3 : i4\n    %c0_i3 = hw.constant 0 : i3\n    %c-2_i4 = hw.constant -2 : i4\n    %0 = comb.and %init, %c-2_i4 : i4\n    %1 = comb.concat %c0_i3, %in1 : i3, i1\n    %2 = comb.or %1, %0 : i4\n    %3 = comb.and %2, %c-3_i4 : i4\n    %4 = comb.concat %c0_i2, %in0, %false : i2, i1, i1\n    %5 = comb.or %4, %3 : i4\n    %6 = comb.and %5, %c-5_i4 : i4\n    %7 = comb.concat %false, %in1, %c0_i2 : i1, i1, i2\n    %8 = comb.or %7, %6 : i4\n    hw.output %8 : i4\n  }\n",
+    "  hw.module @alias(in %init : i4, in %in0 : i1, in %in1 : i1, out out : i4) {\n    %0 = comb.extract %init from 3 : (i4) -> i1\n    %1 = comb.concat %0, %in1, %in0, %in1 : i1, i1, i1, i1\n    hw.output %1 : i4\n  }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

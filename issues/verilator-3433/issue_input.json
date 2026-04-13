@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3433,
+  "issue_url": "https://github.com/verilator/verilator/issues/3433",
+  "title": "Support localparam integer array slicing",
+  "body": "Hi,\r\n\r\nwhen initializing a localparam integer array with a slice of a larger localparam integer array, then Verilator complains that the resulting localparam is not constant. These arrays are initialized as follows:\r\n```\r\nlocalparam int unsigned LARGE_ARRAY[5] = '{1, 2, 3, 4, 5};\r\nlocalparam int unsigned SMALL_ARRAY[2] = LARGE_ARRAY[1 +: 2];\r\n```\r\n\r\nAs far as I understand the standard, slices of unpacked arrays are permissible and by extension slices of constant integer arrays should equally be legal in SystemVerilog (and be constant as long as the source array and slice indices are all constant).\r\n\r\nCode example:\r\n```\r\nmodule mymod\r\n    #(\r\n        parameter int unsigned VAL[2] = '{1, 2}\r\n    )\r\n    ();\r\nendmodule\r\n\r\nmodule top\r\n    ();\r\n    localparam int unsigned LARGE_ARRAY[5] = '{1, 2, 3, 4, 5};\r\n    localparam int unsigned SMALL_ARRAY[2] = LARGE_ARRAY[1 +: 2];\r\n    mymod #(\r\n        .VAL ( SMALL_ARRAY )\r\n    ) myinst ();\r\nendmodule\r\n```\r\n\r\nVerilator version and error message:\r\n```\r\n$ verilator --version\r\nVerilator 4.222 2022-05-02 rev UNKNOWN.REV\r\n$ verilator -Wall --cc array_params.sv --top-module top --lint-only\r\n%Error: array_params.sv:13:16: Expecting expression to be constant, but variable isn't const: 'SMALL_ARRAY'\r\n                                       : ... In instance top\r\n   13 |         .VAL ( SMALL_ARRAY )\r\n      |                ^~~~~~~~~~~\r\n%Error: array_params.sv:13:10: Can't convert defparam value to constant: Param 'VAL' of 'myinst'\r\n                                       : ... In instance top\r\n   13 |         .VAL ( SMALL_ARRAY )\r\n      |          ^~~\r\n```\r\n\r\nNote that directly assigning the desired values to the second array as shown below works fine.\r\n```\r\nlocalparam int unsigned LARGE_ARRAY[5] = '{1, 2, 3, 4, 5};\r\nlocalparam int unsigned SMALL_ARRAY[2] = '{2, 3};\r\n```",
+  "labels": [
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-17",
+  "closed_at": "2026-01-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2152,
+  "issue_url": "https://github.com/llvm/circt/pull/2152",
+  "title": "[FIRRTL/LowerToHW] Reuse random bits in register initialization",
+  "body": "This PR changes the lowering to track used random bits length and reuse appropriately. \r\nWith this patch, \r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input a: UInt<1>\r\n    output o: UInt<138>\r\n\r\n\r\n    reg r1: UInt<2>, clock\r\n    reg r2: UInt<4>, clock\r\n    reg r3: UInt<32>, clock\r\n    reg r4: UInt<100>, clock\r\n\r\n    r1 <= a\r\n    r2 <= a\r\n    r3 <= a\r\n    r4 <= a\r\n    o <= cat(r1, cat(r2, cat(r3, r4)))\r\n```\r\nwill be initialized like this:\r\n```verilog\r\n`ifdef RANDOMIZE_REG_INIT // foo.fir:8:5\r\n        _T = `RANDOM;   // foo.fir:8:5\r\n        r1 = _T[1:0];   // foo.fir:8:5\r\n        r2 = _T[5:2];   // foo.fir:9:5\r\n        _T_0 = `RANDOM; // foo.fir:10:5\r\n        r3 = {_T[31:6], _T_0[5:0]};     // foo.fir:10:5\r\n        _T_1 = `RANDOM; // foo.fir:11:5\r\n        r4 = {_T_0[31:6], `RANDOM, `RANDOM, _T_1[9:0]}; // foo.fir:11:5\r\n`endif\r\n```\r\n\r\nWill close https://github.com/llvm/circt/issues/2094\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-11",
+  "closed_at": "2021-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

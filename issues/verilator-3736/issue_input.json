@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3736,
+  "issue_url": "https://github.com/verilator/verilator/issues/3736",
+  "title": "Warning-UNUSEDSIGNAL not being raised if verilator is invoqued with --coverage flag",
+  "body": "To replicate:\r\n\r\n> 1. Add an unused `reg` to `top.v` in `make_tracing_c`. i.e:\r\n> top.v:\r\n> ```\r\n>    // And an example sub module. The submodule will print stuff.\r\n>    sub sub (/*AUTOINST*/\r\n>             // Inputs\r\n>             .clk                        (clk),\r\n>             .reset_l                    (reset_l));\r\n> \r\n>    reg tes_arg;   // Unused register here!\r\n>    initial begin ....\r\n> ```\r\n> 2. Toggle the `--coverage` flag in the Makefile\r\n> Makefile:\r\n> ```\r\n> #VERILATOR_FLAGS += --coverage\r\n> VERILATOR_FLAGS += --coverage\r\n> ```\r\n\r\nResults:\r\n> 1. With the --coverage flag:\r\n> ```\r\n> -- Verilator tracing example\r\n> \r\n> -- VERILATE ----------------\r\n> verilator -cc --exe -x-assign fast -Wall --trace --assert --coverage   -f input.vc top.v sim_main.cpp\r\n> \r\n> -- BUILD -------------------\r\n> make -j -C obj_dir -f ../Makefile_obj\r\n> .....\r\n> ....\r\n> -- RUN ---------------------\r\n> obj_dir/Vtop +trace\r\n> \r\n> [1] Tracing to logs/vlt_dump.vcd...\r\n> \r\n> [1] Model running...\r\n> \r\n> [1] clk=1 rstl=1 iquad=1234 -> oquad=1235 owide=3_22222222_11111112\r\n> ...\r\n> ...\r\n> [16] clk=0 rstl=1 iquad=12c4 -> oquad=12c5 owide=3_22222222_11111112\r\n> *-* All Finished *-*\r\n> - sub.v:29: Verilog $finish\r\n> [17] clk=1 rstl=1 iquad=12c4 -> oquad=12c5 owide=3_22222222_11111112\r\n> \r\n> -- COVERAGE ----------------\r\n> verilator_coverage --annotate logs/annotated logs/coverage.dat\r\n> Total coverage (2/36) 5.00%\r\n> See lines with '%00' in logs/annotated\r\n> \r\n> -- DONE --------------------\r\n> To see waveforms, open vlt_dump.vcd in a waveform viewer\r\n> ```\r\n> 2. Without the --coverage flag:\r\n> ```\r\n> rm -rf obj_dir logs *.log *.dmp *.vpd coverage.dat core\r\n> \r\n> -- Verilator tracing example\r\n> \r\n> -- VERILATE ----------------\r\n> verilator -cc --exe -x-assign fast -Wall --trace --assert -f input.vc top.v sim_main.cpp\r\n> %Warning-UNUSEDSIGNAL: top.v:35:8: Signal is not driven, nor used: 'tes_arg'\r\n>                                  : ... In instance top\r\n>    35 |    reg tes_arg;\r\n>       |        ^~~~~~~\r\n>                        ... For warning description see https://verilator.org/warn/UNUSEDSIGNAL?v=5.002\r\n>                        ... Use \"/* verilator lint_off UNUSEDSIGNAL */\" and lint_on around source to disable this message.\r\n> %Error: Exiting due to 1 warning(s)\r\n> make: *** [Makefile:64: run] Error 1\r\n> ```\r\n\r\n\r\nWhat 'verilator --version' are you using? 5.002 2022-10-29 rev v5.002-29-gdb39d70c7\r\n\r\nWhat OS and distribution are you using? Ubuntu 20.04/Red Hat Enterprise 7.9\r\n\r\nMay we assist you in trying to fix this in Verilator yourself? Yes\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-09",
+  "closed_at": "2022-11-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2380,
+  "issue_url": "https://github.com/llvm/circt/pull/2380",
+  "title": "[LowerToHW] Fix reg init via verbatim ops",
+  "body": "Work around a bug in Verilog emission with the disallowLocalVariables\r\noption where temporaries are spilled to wires which violates the\r\nordering of the initial block used for register randomization.  This\r\nmanifests as X's showing up in registers after initialization.  This\r\navoids this entirely by using explicit registers and verbatim operations\r\nusing those registers.\r\n\r\nFixes #2310.\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>\r\n\r\nFor the example FIRRTL circuit shown in #2310:\r\n\r\n```verilog\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input d: UInt<1>\r\n    output q: UInt<1>\r\n\r\n    reg r: UInt<1>, clock\r\n\r\n    r <= d\r\n    q <= r\r\n```\r\n\r\nThis PR produces, with or without `-lowering-options=disallowLocalVariables`:\r\n\r\n```verilog\r\nmodule Foo(\t// Bar.fir:2:10\r\n  input  clock, d,\r\n  output q);\r\n\r\n  reg r;\t// Bar.fir:7:5\r\n\r\n  `ifndef SYNTHESIS\t// Bar.fir:7:5\r\n    `ifdef RANDOMIZE_REG_INIT\t// Bar.fir:7:5\r\n      reg [31:0] _RANDOM;\t// Bar.fir:7:5\r\n\r\n    `endif\r\n    initial begin\t// Bar.fir:7:5\r\n      `INIT_RANDOM_PROLOG_\t// Bar.fir:7:5\r\n      `ifdef RANDOMIZE_REG_INIT\t// Bar.fir:7:5\r\n        _RANDOM = `RANDOM;\t// Bar.fir:7:5\r\n        r = _RANDOM[0];\t// Bar.fir:7:5\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  always @(posedge clock)\t// Bar.fir:9:7\r\n    r <= d;\t// Bar.fir:9:7\r\n  assign q = r;\t// Bar.fir:2:10\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-22",
+  "closed_at": "2021-12-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

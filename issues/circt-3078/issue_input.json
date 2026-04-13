@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3078,
+  "issue_url": "https://github.com/llvm/circt/pull/3078",
+  "title": "[FIRRTL][FullAsyncResetTransform] Preseve synchronous reset value",
+  "body": "When the FullAsyncResetTransform replaces the reset of a register it\r\nreplaces all other connections to the register with a `mux(reset,\r\nresetValue, originalValue)`.  The transform did not properly take into\r\naccount the implicit self connection of every register, `r <= r`.  This\r\ncaused problems when the value was connected inside of a When block, and\r\nthe old reset value would become gated on the When op's condition.  The\r\noriginal reset value needed to have higher priority than the original\r\nconditions. This change adds an explicit self-connect to the register\r\nwhich is properly muxed with the reset.\r\n\r\nAn alternative way of handling this is to move the\r\n`FullAsyncResetTransform` after ExpandWhens, or to make the implicit\r\nself connect of registers explicit in the parser.\r\n\r\n\r\n\r\nInput:\r\n```firrtl\r\nreg r : UInt<8>, clock with :\r\n  (reset => (reset, UInt<8>(1)))\r\n\r\nwhen cond:\r\n  r <= x\r\n```\r\n\r\nOriginal output:\r\n```firrtl\r\nreg r : UInt<8>, clock with :\r\n  (reset => (async, UInt<8>(0)))\r\n\r\nwhen cond:\r\n  r = mux (reset, UInt<8>(1), x)\r\n```\r\n\r\nNew output:\r\n```firrtl\r\nreg r : UInt<8>, clock with :\r\n  (reset => (async, UInt<8>(0)))\r\n\r\nr <= mux(reset, UInt<8>(1), r)\r\n\r\nwhen cond:\r\n  r = mux (reset, UInt<8>(1), x)\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-09",
+  "closed_at": "2022-05-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

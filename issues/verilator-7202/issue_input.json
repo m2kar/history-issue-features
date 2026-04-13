@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7202,
+  "issue_url": "https://github.com/verilator/verilator/pull/7202",
+  "title": "Fix recursive default assignment for subarrays (#4589)",
+  "body": "## Summary\r\nVerilator was rejecting legal unpacked-array default assignment patterns like `int a[4][4] = '{default: 0};` because it tried to assign the scalar default directly to a subarray instead of applying `default` recursively. This patch is necessary to implement IEEE 1800 recursive default behavior for unpacked subarrays so standards-compliant source (including transpiled code) no longer fails elaboration/lint.\r\n\r\n## Issue\r\nFixes https://github.com/verilator/verilator/issues/4589\r\n\r\n## Root Cause\r\nIn `WidthVisitor::patternArray` (`src/V3Width.cpp`), when an element was filled from `default: ...`, Verilator cloned the default pattern member and immediately typed it as the subelement dtype. For unpacked subarray elements, scalar defaults (for example `0`) must first be interpreted as a recursive default pattern (`'{default: 0}` at the next level), but that recursion was not synthesized, leading to unpacked-array type errors.\r\n\r\n## Changes\r\n- `src/V3Width.cpp`\r\n  - Added `defaultPatp_patternArray(AstPatMember* defaultp, AstNodeDType* elemDTypep)`.\r\n  - For unpacked subarray elements:\r\n    - Keep existing behavior if value is already a pattern.\r\n    - Keep existing behavior if value is directly assignable to the subarray type.\r\n    - Otherwise rewrite the element default into a recursive pattern form equivalent to `'{default: value}`.\r\n  - `patternArray(...)` now uses `defaultPatp_patternArray(...)` instead of raw `defaultp->cloneTree(false)`.\r\n- Added regression test:\r\n  - `test_regress/t/t_array_pattern_default_recursive.v`\r\n  - `test_regress/t/t_array_pattern_default_recursive.py`\r\n\r\n## Verification Evidence (VE)\r\n### Environment\r\n- Command: `./bin/verilator --version`\r\n- Result: `Verilator 5.047 devel rev v5.046-53-g4f4d48e9d (mod)`\r\n\r\n### 1. Fixed behavior: recursive default on unpacked subarrays now accepted\r\n- Testcase:\r\n  ```systemverilog\r\n  module dut;\r\n     int a[4][4] = '{default: 0};\r\n  endmodule\r\n  ```\r\n- Command: `./bin/verilator --lint-only /tmp/repro_4589_default.sv`\r\n- Result: Pass (exit code 0)\r\n\r\n### 2. Non-regression: direct array-typed default value still accepted\r\n- Testcase:\r\n  ```systemverilog\r\n  module t;\r\n    int row[4] = '{1,2,3,4};\r\n    int c[2][4] = '{default: row};\r\n  endmodule\r\n  ```\r\n- Command: `./bin/verilator --lint-only /tmp/repro_default_row.sv`\r\n- Result: Pass (exit code 0)\r\n\r\n### 3. Regression test added for this fix\r\n- Command: `./bin/verilator --binary test_regress/t/t_array_pattern_default_recursive.v && ./obj_dir/Vt_array_pattern_default_recursive`\r\n- Result: Pass, runtime prints `*-* All Finished *-*`",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-05",
+  "closed_at": "2026-03-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

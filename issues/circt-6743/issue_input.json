@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6743,
+  "issue_url": "https://github.com/llvm/circt/pull/6743",
+  "title": "[ImportVerilog] Convert empty modules and instances",
+  "body": "Extend the `ImportVerilog` conversion to support empty SystemVerilog module definitions and instances of such modules.\r\n\r\nTo do this, add a `ImportVerilogInternals.h` header that defines a `Context` helper struct to aid in the conversion. Similar to other parsers and translations, the context has a builder, tracks operations, and offers entry points to convert different nodes of the Slang AST, and handles diagnostics and location conversion.\r\n\r\nAn annoying quirk of Slang is the fact that the top-level declarations in an SV file are reordered and rearranged. All instantiable nodes, such as modules, programs, or interfaces, are moved into a separate list of top-level instances which is unordered. To allow for better testing with FileCheck and to produce more predictable output, the helper `Context` tracks an ordered `std::map` of the created top-level MLIR ops, indexed by their Slang location in the input. This map is used to determine the insertion point for new modules as the AST is converted, such that the resulting MLIR ops are essentially in source file order.\r\n\r\nThis new conversion discards any module ports, and any module members except for instances and stray semicolons. This is already sufficient to create module hierarchies, and also to define modules nested in other modules, which Slang already helpfully resolves to an instance and outlined module definition.\r\n\r\nThis commit also adds corresponding `moore.module` and `moore.instance` operations to capture the empty modules and instances. These will be extended in the future to deal with all the quirks of Verilog ingestion.\r\n\r\nMost of the module hierarchy conversion is in a new `Structure.cpp` file in the `ImportVerilog` conversion, in preparation for future additions of statement, expression, and type conversion in separate files.",
+  "labels": [
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-25",
+  "closed_at": "2024-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

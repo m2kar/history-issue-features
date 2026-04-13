@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3438,
+  "issue_url": "https://github.com/verilator/verilator/issues/3438",
+  "title": "How to address - \"Unsupported: Timing control statement in this location\"",
+  "body": "Have the following code:\r\n```verilog\r\n\r\ninterface x_bus #(ADDR_WIDTH=32) (input wire clk);\r\n    `LOCAL_KEEP logic [ADDR_WIDTH-1:0] address;\r\n    `LOCAL_KEEP logic [31:0]           write_data;\r\n    `LOCAL_KEEP logic [31:0]           read_data;\r\n    `LOCAL_KEEP logic                     write;\r\n    `LOCAL_KEEP logic                     read;\r\n    `LOCAL_KEEP logic                     write_done;\r\n    `LOCAL_KEEP logic                     read_done;\r\n\r\n    modport slave (input address, write_data, write, read, output read_data, write_done, read_done);\r\n    modport master  (input read_data, write_done, read_done, output address, write_data, write, read );\r\n\r\n    task write_reg(input string name, input integer addr, input integer value);\r\n        integer timeout = 256;\r\n        begin\r\n            @(posedge clk);\r\n            timeout    = 256;\r\n            address    = ADDR_WIDTH'(addr);\r\n            write_data = value;\r\n            write      = 1;\r\n            read       = 0;\r\n            while( !write_done) begin\r\n                @(posedge clk);\r\n                write = 0;\r\n                if (timeout > 0) timeout = timeout-1;\r\n                else begin\r\n                    $error(\"%s: timeout in OB write\", name);\r\n                    break;\r\n                end\r\n            end\r\n            address    = 0;\r\n            write_data = 0;\r\n        end\r\n    endtask\r\nendinterface\r\n```\r\n\r\nThe `@(posedge clk)` seem to be causing these errors in verilator.\r\n\r\nThe error message:\r\n```text\r\n%Error-UNSUPPORTED: <filename>:60:13: Unsupported: timing control statement in this location\r\n                                        : ... In instance X\r\n                                        : ... Suggest have one timing control statement per procedure, at the top of the procedure\r\n```\r\n\r\nHow would one go about having `one timing control statement` per procedure at the top of the procedure/task? in this case?\r\n",
+  "labels": [
+    "area: scheduling",
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-18",
+  "closed_at": "2022-05-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2187,
+  "issue_url": "https://github.com/verilator/verilator/issues/2187",
+  "title": "Optimize replicate-and-or decoders",
+  "body": "Looking at a profile of Cores-SewRV, dec_tlu_ctl.sv line 2495 is the hotest block.\r\n\r\nThis implements a large decoder and REPLICATE-AND-OR mux like this:\r\n\r\n```\r\n   assign csr_misa = (!dec_csr_rdaddr_d[11]&!dec_csr_rdaddr_d[6]\r\n       &!dec_csr_rdaddr_d[5]&!dec_csr_rdaddr_d[2]&dec_csr_rdaddr_d[0]);\r\n   assign csr_mvendorid = (dec_csr_rdaddr_d[10]&!dec_csr_rdaddr_d[7]\r\n       &!dec_csr_rdaddr_d[1]&dec_csr_rdaddr_d[0]);\r\n   assign dec_csr_rddata_d[31:0] = ( ({32{csr_misa}}      & 32'h40001104) |\r\n                                     ({32{csr_mvendorid}} & 32'h00000045) |\r\n```\r\n\r\nOptimize REPLICATE-AND-OR muxes to be case statements or otherwise (that then later get optimized.)  As the decode provided is sparse this might be difficult, requires thought how to do this.  Perhaps all replicate-ands should be candidates.\r\n\r\nSee also #2186.\r\n\r\nCommitting t_gate_ormux.v to show example.\r\n",
+  "labels": [
+    "area: performance",
+    "effort: days",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2020-03-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

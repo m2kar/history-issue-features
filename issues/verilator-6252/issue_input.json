@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6252,
+  "issue_url": "https://github.com/verilator/verilator/issues/6252",
+  "title": "Verilator + Cocotb Integration Problem",
+  "body": "# Verilator + Cocotb Integration Problem\n\n## Environment Details\n\n| Component | Version | Details |\n|-----------|---------|---------|\n| **Verilator** | 5.020 | Debian 5.020-1 (2024-01-01 rev) |\n| **Python** | 3.12.3 | Python runtime |\n| **Cocotb** | 1.9.2 | Hardware verification framework |\n| **OS** | Ubuntu 24.04 LTS | x86_64 architecture |\n| **Kernel** | 6.8.0-71-generic | #71-Ubuntu SMP PREEMPT_DYNAMIC |\n\n## Problem Description\n\nI'm trying to integrate **cocotb** (Python-based hardware verification framework) with **Verilator** (C++-based SystemVerilog simulator), but the integration is failing at the executable creation step.\n\n## What I've Tried\n\n### 1. Standard Verilator Approach (`--cc` flag)\n- ✅ Verilator successfully generates C++ files and object files\n- ✅ Creates `Vfft_top.mk` Makefile\n- ❌ **Manual compilation fails** - missing `main()` function and undefined references\n\n### 2. SystemC Approach (`--sc` flag)\n- ✅ Generates SystemC wrapper files\n- ❌ **Linking fails** - missing SystemC libraries and undefined references\n\n### 3. Manual Linking Attempts\n- ❌ **Incomplete linking** - Verilator's generated Makefile only links `Vfft_top.o` without other object files\n- ❌ **Missing libraries** - Not linking with Verilator runtime libraries (`libverilated.a`, etc.)\n\n## Root Cause Analysis\n\nThe fundamental issue is that **cocotb expects a standalone executable** (`Vfft_top`) that it can run, but:\n\n1. **Verilator generates C++ code** that needs a `main()` function\n2. **Cocotb provides the `main()` function** and simulation driver\n3. **The integration between them** requires proper linking of:\n   - All Verilator-generated object files\n   - Verilator runtime libraries\n   - Cocotb's simulation wrapper\n\n## Current Status\n\n| Component | Status | Notes |\n|-----------|--------|-------|\n| **Icarus Verilog + Cocotb** | ✅ Working perfectly | No issues |\n| **Verilator + Cocotb** | ❌ Failing at executable creation | Main problem |\n| **Verilator compilation** | ✅ Working | Generates all files correctly |\n| **Final linking** | ❌ Failing | Missing proper integration |\n\n## Error Details\n\nWhen trying to manually build the executable, I get linker errors like:\n```\nundefined reference to main' undefined reference to Vfft_topSyms::~Vfft_top_Syms()'\nundefined reference to operator new(unsigned long)' undefined reference to VerilatedModel::VerilatedModel(VerilatedContext&)'\n```\n\n## Question\n\nIs there a recommended approach for integrating Verilator with cocotb? Should I:\n1. Use a different Verilator flag combination?\n2. Let cocotb handle the Verilator integration automatically?\n3. Use a specific cocotb configuration for Verilator?\n\nAny guidance on the proper way to integrate these tools would be greatly appreciated.",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-01",
+  "closed_at": "2025-08-01",
+  "code_blocks": [
+    "undefined reference to main' undefined reference to Vfft_topSyms::~Vfft_top_Syms()'\nundefined reference to operator new(unsigned long)' undefined reference to VerilatedModel::VerilatedModel(VerilatedContext&)'\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

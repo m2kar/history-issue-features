@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7046,
+  "issue_url": "https://github.com/verilator/verilator/issues/7046",
+  "title": "C++ compilation error for unpacked array ports with -fno-inline",
+  "body": "## Bug\n\nWith `-fno-inline`, Verilator generates mismatched C++ types for unpacked array ports. The root wrapper emits `VL_OUT8` macros producing raw C arrays (`CData[256]`), while the module class uses `vlArgType()` producing `VlUnpacked<CData, 256>`. This type mismatch causes C++ compilation failure when the root wrapper copies port values from the module class.\n\n```\nerror: incompatible types in assignment of 'VlUnpacked<CData, 256>' to 'CData [256]'\n```\n\n### Failing tests (1)\n\n- `t_opt_slice_element_limit`\n\n### Reproducer\n\n```bash\ncd test_regress\nverilator --cc -fno-inline t/t_opt_slice_element_limit.v\nmake -C obj_dir -f Vt_opt_slice_element_limit.mk\n# -> error: incompatible types in assignment\n# Without -fno-inline, compiles successfully\n```\n\n### Related\n\n- Found during the `-fno-inline` audit for #1539 (post-scope inliner)\n\n### Version\n\nTested on master at `bb0e1c8c6` (`Verilator 5.045 devel rev v5.044-152-gbb0e1c8c6`).",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-11",
+  "closed_at": null,
+  "code_blocks": [
+    "error: incompatible types in assignment of 'VlUnpacked<CData, 256>' to 'CData [256]'\n",
+    "cd test_regress\nverilator --cc -fno-inline t/t_opt_slice_element_limit.v\nmake -C obj_dir -f Vt_opt_slice_element_limit.mk\n# -> error: incompatible types in assignment\n# Without -fno-inline, compiles successfully\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1115,
+  "issue_url": "https://github.com/verilator/verilator/issues/1115",
+  "title": "Import statement not recognized",
+  "body": "---\n\n\nAuthor Name: **Robert Baruch** (@RobertBaruch)\nOriginal Redmine Issue: 1115 from https://www.veripool.org\n\n\n\n---\n\nI'm using Verilator built from head (11/26/2016), and 1800-2012 SystemVerilog.\r\n\r\n```\r\n=== file common.v ===\r\n\r\npackage common;\r\n\r\ntypedef enum { NONE, RST, INC, LOAD } microaddr_cmd;\r\n\r\nendpackage: common\r\n\n```\r\n\r\n```\r\n=== file microaddr_counter.v ===\r\n\r\nmodule microaddr_counter\r\n     import common::*;\r\n\r\n(input wire clk,\r\n     input common::microaddr_cmd cmd,\r\n     input wire [9:0] load_addr,\r\n     output reg [9:0] addr);\r\n\r\nalways_ff @(posedge clk) begin\r\n     unique case(cmd)\r\n         NONE: ;\r\n         RST: addr <= 0;\r\n         INC: addr <= addr + 1;\r\n         LOAD: addr <= load_addr;\r\n     endcase\r\nend\r\n\r\nendmodule\r\n\n```\r\n\r\nCommand: verilator -Wall -I. --debug -cc microaddr_counter.v\r\n\r\nOutput:\r\n\r\n```\r\n\t/usr/local/bin/verilator_bin_dbg -Wall -I. --debug -cc microaddr_counter.v\r\nStarting Verilator 3.890 2016-11-25 rev verilator_3_890\r\n- V3Os.cpp:54:        export SYSTEMC_ARCH=linux # From sysname 'linux'\r\n- V3File.cpp:190:        --check-times failed: no input obj_dir/Vmicroaddr_counter__verFiles.dat\r\n- V3GraphTest.cpp:356:test: \r\n- V3ParseImp.cpp:97:  parseFile: microaddr_counter\r\n  Preprocessing microaddr_counter.v\r\n- V3PreShell.cpp:133:     Reading microaddr_counter.v\r\n- V3ParseImp.cpp:162: Lexing microaddr_counter.v\r\n%Error: microaddr_counter.v:2: syntax error, unexpected IDENTIFIER, expecting PACKAGE-IDENTIFIER\r\n%Error: microaddr_counter.v:5: syntax error, unexpected input, expecting IDENTIFIER or do or final\r\n%Error: microaddr_counter.v:7: syntax error, unexpected output, expecting IDENTIFIER or do or final\r\n%Error: microaddr_counter.v:7: syntax error, unexpected ')', expecting ',' or ';'\r\n%Error: Exiting due to 4 error(s)\r\n- V3Ast.cpp:1035:     Dumping obj_dir/Vmicroaddr_counter_990_final.tree\r\n- V3StatsReport.cpp:207:statsReport: \r\n%Error: Aborting since under --debug\r\n%Error: export VERILATOR_ROOT=/usr/local\r\n%Error: /usr/local/bin/verilator_bin_dbg -Wall -I. --debug -cc microaddr_counter.v\r\n%Error: Command Failed /usr/local/bin/verilator_bin_dbg -Wall -I. --debug -cc microaddr_counter.v\r\n\n```\r\n\r\nIt seems to me that Verilator needs to know that \"common\" is a package identifier and not a plain old identifier, but I'm not sure how to tell it. I thought that it would be able to figure it out since \"common\" comes right after the import keyword.\n\n\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2016-11-26",
+  "closed_at": "2016-11-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

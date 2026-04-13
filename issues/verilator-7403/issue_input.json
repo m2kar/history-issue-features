@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7403,
+  "issue_url": "https://github.com/verilator/verilator/issues/7403",
+  "title": "Abstract virtual class must redeclare inherited pure virtual method",
+  "body": "Verilator requires an abstract derived virtual class to redeclare a pure virtual method inherited from its abstract base class.\n\n#### Code:\n```systemverilog\nvirtual class Base;\n  pure virtual function void f0();\nendclass\n\nvirtual class Child extends Base;\n  pure virtual function void f1();\nendclass\n```\n\n#### Actual behavior:\nVerilator reports that Child must implement `f0()`:\n```\n$ verilator --sv --lint-only repro.sv\n%Error: repro.sv:5:9: Class 'Child' extends 'Base' but is missing implementation for 'f0' (IEEE 1800-2023 8.26)\n    5 | virtual class Child extends Base;\n      |         ^~~~~\n        repro.sv:2:30: ... Location of interface class's function\n    2 |   pure virtual function void f0();\n      |                              ^~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.047 for more assistance.\n%Error: Exiting due to 1 error(s)\n```\n\n#### Expected:\nChild is abstract, so `f0()` should remain inherited as pure virtual.\n\n#### Posible fix:\n```diff\ndiff --git a/src/V3LinkDot.cpp b/src/V3LinkDot.cpp\nindex c9174bcc..5054de9d 100644\n--- a/src/V3LinkDot.cpp\n+++ b/src/V3LinkDot.cpp\n@@ -3406,7 +3406,7 @@ class LinkDotResolveVisitor final : public VNVisitor {\n                     if (!baseFuncp || !baseFuncp->pureVirtual()) continue;\n                     const bool existsInDerived = foundp && !foundp->imported();\n                     if (m_statep->forPrimary() && !existsInDerived\n-                        && !derivedClassp->isInterfaceClass()) {\n+                        && !derivedClassp->isInterfaceClass() && !derivedClassp->isVirtual()) {\n                         derivedClassp->v3error(\n                             \"Class \" << derivedClassp->prettyNameQ() << impOrExtends\n                                      << baseClassp->prettyNameQ()\n```\n\nI'll prepare a pull request, if you don't mind.\n\n#### Version\n```sh\n$ verilator --version\nVerilator 5.047 devel rev v5.046-200-gbe6780e44 (mod)\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-10",
+  "closed_at": "2026-04-10",
+  "code_blocks": [
+    "virtual class Base;\n  pure virtual function void f0();\nendclass\n\nvirtual class Child extends Base;\n  pure virtual function void f1();\nendclass\n",
+    "$ verilator --sv --lint-only repro.sv\n%Error: repro.sv:5:9: Class 'Child' extends 'Base' but is missing implementation for 'f0' (IEEE 1800-2023 8.26)\n    5 | virtual class Child extends Base;\n      |         ^~~~~\n        repro.sv:2:30: ... Location of interface class's function\n    2 |   pure virtual function void f0();\n      |                              ^~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.047 for more assistance.\n%Error: Exiting due to 1 error(s)\n",
+    "diff --git a/src/V3LinkDot.cpp b/src/V3LinkDot.cpp\nindex c9174bcc..5054de9d 100644\n--- a/src/V3LinkDot.cpp\n+++ b/src/V3LinkDot.cpp\n@@ -3406,7 +3406,7 @@ class LinkDotResolveVisitor final : public VNVisitor {\n                     if (!baseFuncp || !baseFuncp->pureVirtual()) continue;\n                     const bool existsInDerived = foundp && !foundp->imported();\n                     if (m_statep->forPrimary() && !existsInDerived\n-                        && !derivedClassp->isInterfaceClass()) {\n+                        && !derivedClassp->isInterfaceClass() && !derivedClassp->isVirtual()) {\n                         derivedClassp->v3error(\n                             \"Class \" << derivedClassp->prettyNameQ() << impOrExtends\n                                      << baseClassp->prettyNameQ()\n",
+    "$ verilator --version\nVerilator 5.047 devel rev v5.046-200-gbe6780e44 (mod)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

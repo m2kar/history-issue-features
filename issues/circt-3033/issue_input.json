@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3033,
+  "issue_url": "https://github.com/llvm/circt/issues/3033",
+  "title": "[FIRRTL] Dedup Should Work in Circuit Order",
+  "body": "CIRCT deviates from the SFC because it is doing deduplication based on the instantiation order).  Instead, deduplication should use circuit order (declaration order).\r\n\r\nConsider the following:\r\n\r\n```scala\r\ncircuit Bar:\r\n  module X:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    b <= not(a)\r\n  module Y:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    b <= not(a)\r\n  module Bar:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst y of Y\r\n    inst x of X\r\n\r\n    x.a <= a\r\n    y.a <= a\r\n    b <= xor(x.b, y.b)\r\n```\r\n\r\nThis circuit, `Bar`, instantiates two modules that will deduplicate, `X` and `Y`. Module `Y` is instantiated before module `X`. However, `Y` should deduplicate into `X` because `X` is declared first.\r\n\r\nCurrently CIRCT produces (`firtool Bar.fir -dedup -strip-debug-info`):\r\n\r\n```verilog\r\nmodule Y(\r\n  input  a,\r\n  output b);\r\n\r\n  assign b = ~a;\r\nendmodule\r\n\r\nmodule Bar(\r\n  input  a,\r\n  output b);\r\n\r\n  wire _x_b;\r\n  wire _y_b;\r\n\r\n  Y y (\r\n    .a (a),\r\n    .b (_y_b)\r\n  );\r\n  Y x (\r\n    .a (a),\r\n    .b (_x_b)\r\n  );\r\n  assign b = _x_b ^ _y_b;\r\nendmodule\r\n```\r\n\r\nSFC produces (`firrtl -i Bar.fir`):\r\n\r\n```verilog\r\nmodule X(\r\n  input   a,\r\n  output  b\r\n);\r\n  assign b = ~a;\r\nendmodule\r\nmodule Bar(\r\n  input   a,\r\n  output  b\r\n);\r\n  wire  y_a;\r\n  wire  y_b;\r\n  wire  x_a;\r\n  wire  x_b;\r\n  X y (\r\n    .a(y_a),\r\n    .b(y_b)\r\n  );\r\n  X x (\r\n    .a(x_a),\r\n    .b(x_b)\r\n  );\r\n  assign b = x_b ^ y_b;\r\n  assign y_a = a;\r\n  assign x_a = a;\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-03",
+  "closed_at": "2026-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

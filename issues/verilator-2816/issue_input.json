@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2816,
+  "issue_url": "https://github.com/verilator/verilator/issues/2816",
+  "title": "mixed blocking and non-blocking assignment on dfferent slices of vector",
+  "body": "The mixed blocking and non-blocking assignment is supported. Here is my example. It works.\r\n\r\n```verilog\r\nmodule test(input clk);\r\n\r\nreg [31:0] cnt=0;\r\n\r\nalways @(posedge clk) begin\r\n\tcnt <= cnt + 1;\r\nend\r\n\r\nreg [15:1] ex;\r\n\r\nalways @(*) begin\r\n\tex[1] = cnt[0];\r\nend\r\n\r\ngenvar i;\r\ngenerate\r\nfor (i=2;i<=15;i=i+1)  begin: T1T0_INFO_EN\r\n\talways @(posedge clk) begin\r\n\t\tex[i] <= ex[i-1];\r\n\tend\r\nend\r\nendgenerate\r\n\r\nendmodule\r\n\r\n```\r\n\r\nAbove code can pass the compilation. ex[1] is assigned in blocking mode, while ex[15:2] is assigned in nonblocking mode.\r\n\r\nbut in the real design, the situation is complex. Then the similar code will report the error.\r\nI simplify the code as below.\r\n\r\n```verilog\r\nmodule test (\r\n\tclk\r\n\t, rst_n\r\n\t, mul_num_ex4\r\n\t, t1_mul_num_ex4\r\n\t, mul_num_ex5\r\n\t, t0_stall_ex1\r\n\t, t1_stall_ex1\r\n);\r\n\r\ninput               clk;\r\ninput               rst_n;\r\n\r\ninput  [1 -1:0] t0_stall_ex1                  ;\r\ninput  [1 -1:0] t1_stall_ex1                  ;\r\ninput [7:0]                 mul_num_ex4;\r\ninput [7:0]                 t1_mul_num_ex4;\r\noutput [7:0]            mul_num_ex5;\r\nreg [5:0]               valu_csr_wsts_ex7;\r\nreg [7:0]               mul_num_ex5;\r\n\r\ngenvar i;\r\nwire pp_en_ex1;\r\nreg [15:1] valu_en_ex ;\r\nreg [1:0] t0_ex [15:1];\r\n\r\nwire first_go_stall_ex1 = t0_stall_ex1 | t1_stall_ex1;\r\n\r\nalways @ (*) begin\r\n\tvalu_en_ex[1] = pp_en_ex1 & !first_go_stall_ex1;\r\nend\r\n\r\ngenerate\r\n\r\nfor (i=2;i<=15;i=i+1)  begin: t0\r\n\talways @ (posedge clk or negedge rst_n) begin\r\n\t\tif (!rst_n) begin \r\n\t\t\tvalu_en_ex[i] <= 1'b0;\r\n\t\tend else begin\r\n\t\t\tvalu_en_ex[i] <= valu_en_ex[i-1] ;\r\n\t\tend\r\n\tend\r\n\talways @ (posedge clk or negedge rst_n) begin\r\n\t\tif (!rst_n) begin \r\n\t\t\tt0_ex[i] <= 2'b0;\r\n\t\tend\r\n\t\telse begin\r\n\t\t\tif (valu_en_ex[i-1]) begin \r\n\t\t\t\tt0_ex[i] <= t0_ex[i-1];\r\n\t\t\tend\r\n\t\tend\r\n\tend\r\nend\r\nendgenerate\r\nalways @ (posedge clk ) begin\r\n\tcase (t0_ex[4])\r\n\t\t2'd0   : mul_num_ex5            <= 8'b0 ;\r\n\t\t2'd1   : mul_num_ex5            <= mul_num_ex4 ;\r\n\t\t2'd2   : mul_num_ex5            <= t1_mul_num_ex4 ;\r\n\t\tdefault: mul_num_ex5            <= mul_num_ex4 + t1_mul_num_ex4 ;\r\n\tendcase\r\nend\r\nendmodule\r\n```\r\n\r\nthe error:\r\n```\r\n%Error-BLKANDNBLK: test.sv:26:12: Unsupported: Blocked and non-blocking assignments to same variable: 'test.valu_en_ex'\r\n   26 | reg [15:1] valu_en_ex ;\r\n      |            ^~~~~~~~~~\r\n                   test.sv:32:2: ... Location of blocking assignment\r\n   32 |  valu_en_ex[1] = pp_en_ex1 & !first_go_stall_ex1;\r\n      |  ^~~~~~~~~~\r\n                   test.sv:42:4: ... Location of nonblocking assignment\r\n   42 |    valu_en_ex[i] <= valu_en_ex[i-1] ;\r\n      |    ^~~~~~~~~~\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\nThe issue is not caused by the mix assignment. Actually, if I remove the t0_ex related code (keep the mixed assignment on valu_en_ex), the issue is gone. \r\n\r\nPlease help check what's the real issue. And there is any workaround for me to move on.",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-04",
+  "closed_at": "2021-03-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

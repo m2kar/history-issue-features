@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2049,
+  "issue_url": "https://github.com/llvm/circt/pull/2049",
+  "title": "[FIRRTL] Fix unpacked array ordering in GCT and ExportVerilog",
+  "body": "The FIRRTL Grand Central pass and ExportVerilog currently order unpacked arrays in reverse upon emission. A nested array like `uarray<2 x uarray<3 x i1>>` has the shape `[[a,b,c], [d,e,f]]` and should produce the following verilog:\r\n\r\n    logic foo [2][3]; // non-range indices used for clarity\r\n\r\nGenerally the following SV declaration:\r\n\r\n    logic [2:0][1:0] bar [4:0][3:0];\r\n\r\nReads its dimensions from outer- to innermost as:\r\n\r\n    [4:0], [3:0], [2:0], [1:0]\r\n\r\nCurrently, ExportVerilog will emit the above `foo` example as `foo[3][2]`, which is incorrect. Fixing ExportVerilog also provides a fix for an issue @seldridge tackled earlier in ca5bfac. This change reverts parts of that older fix since the updated declaration order now makes the original Grand Central index order correct.\r\n\r\nThe output now matches what the Scala FIRRTL compiler produces.",
+  "labels": [
+    "FIRRTL",
+    "HW",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-28",
+  "closed_at": "2021-10-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

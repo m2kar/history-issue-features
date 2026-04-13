@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3003,
+  "issue_url": "https://github.com/verilator/verilator/issues/3003",
+  "title": "lint-only: no warning when reg type is used in output port connection",
+  "body": "Verilator does not complain when a _reg_ type is connected to output port of module instance.\r\n\r\nSee the following example:\r\n```\r\nsubmod.v:\r\n\r\nmodule submod (\r\n    input wire CLK,\r\n    input wire RESET,\r\n    input wire in1,\r\n    input wire in2,\r\n    output reg out1\r\n);\r\n\r\nalways @(posedge CLK) begin\r\n    if (RESET) begin\r\n        out1 <= 0;\r\n    end else begin\r\n        out1 <= in1 | in2;\r\n    end\r\nend\r\n\r\nendmodule\r\n```\r\n```\r\ntopmod.v:\r\n\r\nmodule topmod(\r\n    input wire CLK,\r\n    input wire RESET,\r\n    input wire top_in1,\r\n    input wire top_in2,\r\n    output reg top_out\r\n);\r\n\r\nreg top_reg;\r\n\r\nsubmod submod_inst(\r\n    .CLK(CLK),\r\n    .RESET(RESET),\r\n    .in1(top_in1),\r\n    .in2(top_in2),\r\n    .out1(top_reg)\r\n);\r\n\r\nalways @(posedge CLK) begin\r\n    if (RESET) begin\r\n        top_out <= 0;\r\n    end else begin\r\n        top_out <= top_reg;\r\n    end\r\nend\r\n\r\nendmodule\r\n```\r\nVerilator was invoked with the following ways:\r\n```\r\n$ verilator --lint-only --default-language 1364-2001 -Wall  topmod.v\r\n$ verilator --lint-only --default-language 1364-2005 -Wall  topmod.v\r\n```\r\nIt reports nothing.\r\n\r\nverilator version (master was not checked):\r\n```\r\n$ verilator --version\r\nVerilator 4.202 2021-04-24 rev v4.202\r\n```\r\n\r\nXilinx tools (ISE 14.7 and Vivado 2019.1) that use IEEE 1364-2001 and IEEE 1364-2005 standards signal warning like this:\r\n```[Synth 8-685] variable 'top_reg' should not be used in output port connection```\r\n\r\nThe corresponding standards were also checked, they both disallow to connect _variable_ to output port of modules. (See section 12.3.9.2. in both)\r\n```\r\nThe following external items shall not be connected to the output or inout ports of modules:\r\n— Variables\r\n...\r\n```\r\nI also have a similar issue ([issue#1369](https://github.com/verilator/verilator/issues/1369)) that may have some common parts with this one.",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-03",
+  "closed_at": "2025-08-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

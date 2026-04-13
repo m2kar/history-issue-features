@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5376,
+  "issue_url": "https://github.com/verilator/verilator/issues/5376",
+  "title": "Performing writes to array via DPI-C function may end up with a wrong data in the array.",
+  "body": "# Environment\r\nCPU: AMD Ryzen 7 5700G / AMD EPYC 7773X / Intel Core i7 13700K \r\nOS: Ubuntu 22.04\r\nCC: clang 18.1.3\r\nverilator: 5.026 2024-06-15 rev v5.026\r\n[xmake](https://xmake.io): 2.9.4\r\n\r\n# Reproducing the bug\r\n```\r\ngit clone https://github.com/Siudya/qsim\r\ncd qsim\r\nxmake -y\r\nxmake run emu -d -c 10000\r\n```\r\nThe VCD waveform file can be founde in `build/linux/release/sim.vcd`\r\nActual cmds the scripts run can be shown with\r\n```\r\nxmake -rv\r\n```\r\nRunning logs will be similar as followings:\r\n```\r\nOptions: Status\r\nseed: 1043\r\nwave_file: sim.vcd\r\nmax_cycle: 10000\r\ndump_wave: 0\r\ninject data:\r\n 0x00ef36d95c09cca780f5e0caa3ea1c6b01244ccccc7c1cf5fbf8b928f7f7fff5fe8c30478c184ea138e9f820d5e722d0\r\ninject data:\r\n 0x0007367040afa67c97b2e51c5e0658319e59f182b94b22f62c81f73e47e4ae1cfa6c0b35bedc620e22f0fa0996f5cf8d\r\neject data:\r\n 0x0007367040afa67c97b2e51c5e0658319e59f182b94b22f62c81f73e47e4ae1cfa6c0b35bedc620e22f0fa0996f5cf8d\r\n[0] %Error: QueueSim.sv:38: Assertion failed in TOP.QueueSim: Assertion failed: rx data wrong!\r\n    at QueueSim.scala:72 assert(!rx.io.fault, \"rx data wrong!\")\r\n\r\n%Error: src/rtl/QueueSim.sv:38: Verilog $stop\r\nAborting...\r\n```\r\n# About the reproducing project\r\n`src/rtl` conatins all DUT files in SystemVerilog.\r\n`src/csrc` contains testbench files in C++.\r\nThe `qsim` project consists of a 2-entry FIFO. Each entry of the FIFO has 383 bits width.\r\n`Injector` contains a DPI-C function `queue_inject` to transmit data to the FIFO.\r\n`Ejector` contains a DPI-C function  `queue_eject`  to receive data from FIFO.\r\nAll DPI-C functions are implemnted in `src/csrc/myio.cpp`. A scoreboard is also included.\r\nOnce the reset is deasserted, `Injector` starts to inject **random** data continuously.\r\n\r\nThe bug can be obvious when checking write ports of `/TOP/QueueSim/queue/ram_2x383` (W0_*).\r\nA write to addr 0 stores wrong data in `\\Memory[0]`.",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-15",
+  "closed_at": "2024-08-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6650,
+  "issue_url": "https://github.com/verilator/verilator/issues/6650",
+  "title": "BLKLOOPINIT recently became stricter or just more verbose",
+  "body": "I'm seeing BLKLOOPINIT thrown for auto-generated CSR RTL from PeakRDL, with v5.042. On older versions of Verilator, even as recently as v5.038, I did not see this.\n\nExample PeakRDL generated code now throws %Error-BLKLOOPINIT\n\n```systemverilog\n    // AXI4-Lite Response Logic\n    struct {\n        logic is_wr;\n        logic err;\n        logic [31:0] rdata;\n    } axil_resp_buffer[4];\n\n    logic [2:0] axil_resp_wptr;\n    logic [2:0] axil_resp_rptr;\n\n    always_ff @(posedge clk) begin\n        if(rst) begin\n            for(int i=0; i<4; i++) begin\n                axil_resp_buffer[i].is_wr <= '0;\n                axil_resp_buffer[i].err <= '0;\n                axil_resp_buffer[i].rdata <= '0;\n            end\n            axil_resp_wptr <= '0;\n            axil_resp_rptr <= '0;\n        end else begin\n          ...\n```\n\nProduces:\n```\n%Error-BLKLOOPINIT: /some/path/some_file.sv:170:43: Unsupported: Non-blocking assignment to array with compound element type inside loop\n  170 |                 axil_resp_buffer[i].is_wr <= '0;\n      |                                           ^~\n```",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-06",
+  "closed_at": "2025-11-06",
+  "code_blocks": [
+    "    // AXI4-Lite Response Logic\n    struct {\n        logic is_wr;\n        logic err;\n        logic [31:0] rdata;\n    } axil_resp_buffer[4];\n\n    logic [2:0] axil_resp_wptr;\n    logic [2:0] axil_resp_rptr;\n\n    always_ff @(posedge clk) begin\n        if(rst) begin\n            for(int i=0; i<4; i++) begin\n                axil_resp_buffer[i].is_wr <= '0;\n                axil_resp_buffer[i].err <= '0;\n                axil_resp_buffer[i].rdata <= '0;\n            end\n            axil_resp_wptr <= '0;\n            axil_resp_rptr <= '0;\n        end else begin\n          ...\n",
+    "%Error-BLKLOOPINIT: /some/path/some_file.sv:170:43: Unsupported: Non-blocking assignment to array with compound element type inside loop\n  170 |                 axil_resp_buffer[i].is_wr <= '0;\n      |                                           ^~\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

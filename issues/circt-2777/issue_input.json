@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2777,
+  "issue_url": "https://github.com/llvm/circt/pull/2777",
+  "title": "[FIRRTL][Inliner] Fix NLA filtering on symbol collision",
+  "body": "When a module is inlined into a parent module, the inlined body may\r\ndefine symbols that have to be changed to not collide with existing\r\nsymbols in the parent module. When this happens, the code will find all\r\nNLAs referencing this symbol and update the symbol referenced.\r\n\r\nWhen a module is inlined into two locations, it is important that only the\r\nNLAs referring to each location are updated with the renamed symbol at\r\nthat location.  There was a bug where we would update the symbol of all\r\nNLAs to use the same symbol, one renaming overwriting the other.\r\nThis would cause a verifier error after the module InlinerPass:\r\n\r\n```\r\n'firrtl.nla' op  operation with symbol: #hw.innerNameRef<@ModuleName::@target> does not contain a reference to the NonLocalAnchor\r\n```\r\n\r\nThis fixes the change by only updating the symbol in an NLA when the\r\ncurrent path matches the NLA's path.\r\n\r\nOne confusing part of this change is that `InstanceOp` symbol updates\r\nstill need to unconditionally update the non-leaf portion of an NLA's\r\npath.  To implement this, if an annotation is a breadcrumb (has class\r\n`circt.nonlocal`) we unconditionally rename the symbol in the referenced\r\nNLA.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-16",
+  "closed_at": "2022-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

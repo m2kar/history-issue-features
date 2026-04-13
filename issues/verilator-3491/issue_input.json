@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3491,
+  "issue_url": "https://github.com/verilator/verilator/issues/3491",
+  "title": "missing ';' when convert single line systemverilog queue operation into c++",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```systemverilog\r\ntypedef struct packed {\r\n  logic [31:0]  araddr;\r\n  logic [7 : 0]  arid;\r\n  logic [7 : 0]  arlen;\r\n} ar_t;\r\n\r\nar_t  ar;\r\nar_t  ar_queue[$];\r\n\r\n// only one single line queue operation in if block\r\nalways @(negedge clk) begin\r\n  if (push_en) begin\r\n    ar_queue.push_back(ar);\r\n  end\r\n  if (pop_en) begin\r\n    void'(ar_queue.pop_fornt());\r\n  end\r\nend\r\n```\r\n\r\nin the previous example, the converted result is like,\r\n\r\n```c++\r\nif (balabala) {\r\n   vlSelf->tb_top__DOT__imem__DOT__ar_queue.pop_fornt()}\r\n```\r\n\r\nand g++ says, \r\n\r\n> Vtb_top__024root_DepSet_h9ad02603__44.cpp:2106:61: error: expecetd ';' before '}' token\r\n>        vlSelf->tb_top__DOT__imem__DOT__ar_queue.pop_fornt()}\r\n\r\nafter adding a redundant line(`tmp <= 0`), the compilation and simulation finish successfully.\r\n\r\n```systemverilog\r\n\r\n// add redundant code to ensure there are multiple lines in if block\r\nlogic tmp;\r\nalways @(negedge clk) begin\r\n  if (push_en) begin\r\n    ar_queue.push_back(ar);\r\n  end\r\n  if (pop_en) begin\r\n    tmp <= 0;\r\n    void'(ar_queue.pop_fornt());\r\n  end\r\nend\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n`Verilator 4.222 2022-05-02` compiled from source code on local machine.\r\n\r\nWhat OS and distribution are you using?\r\n\r\n```\r\nRed Hat Enterprise Linux Server\r\nRelease 6.5 (Santiago)\r\n```\r\n\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-12",
+  "closed_at": "2022-08-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6531,
+  "issue_url": "https://github.com/verilator/verilator/issues/6531",
+  "title": "Arithmetic right shift error in verilator 5.038 2025-07-08 rev v5.038",
+  "body": "I think the code bellow does not work as it should.\n```\n// \n// 1111_1110_1011_1110_1101_0001_0010_0011 >>> 20\n// 1111_1111_1111_1111_1111_1111_1111_1110_1011\n// \n\n`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       $write(\"%%Error: %s:%0d:  got=%32b exp=%32b\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top (out35);\n    output wire [32:0] out35;\n    wire   signed [32:0] wire_4;\n    assign wire_4 = 32'b11111110_10111110_11010001_00100011;\n    assign out35  = (wire_4 >>> 20);\n\n    initial begin\n        #10;\n        `checkd(out35, 32'b11111111_11111111_11111111_11101011);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n```\nIt can be reproduced with the following command:\n`verilator --binary -Wno-lint --timing test.v && ./obj_dir/Vtest`\n\nVerilator outputs:\n```\n- V e r i l a t i o n   R e p o r t: Verilator 5.038 2025-07-08 rev v5.038\n- Verilator: Built from 0.026 MB sources in 2 modules, into 0.020 MB in 7 C++ files needing 0.000 MB\n- Verilator: Walltime 0.215 s (elab=0.000, cvt=0.003, bld=0.204); cpu 0.010 s on 1 threads; alloced 21.023 MB\n%Error: test.v:23:  got=4075 exp=4294967275\n%Error: test.v:23:  got=00000000000000000000111111101011 exp=11111111111111111111111111101011\n%Error: test.v:23: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nThe arithmetic shift right of the number should of course fill it with the sign bit, i.e. `wire_4[31]` which is `1`. Instead Verilator performs a regular (logical) shift.\n\nA similar issue seems to have been addressed in   #5994 . However, it appears that the fix was not complete.\n\n\nSystem details:\n  - Verilator 5.038 2025-07-08 rev v5.038\n  - Also tried Verilator 5.041 devel rev v5.040-251-gb4d064d16\n  - OS: Ubuntu 24.04.2 LTS",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-06",
+  "closed_at": "2025-10-06",
+  "code_blocks": [
+    "// \n// 1111_1110_1011_1110_1101_0001_0010_0011 >>> 20\n// 1111_1111_1111_1111_1111_1111_1111_1110_1011\n// \n\n`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       $write(\"%%Error: %s:%0d:  got=%32b exp=%32b\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top (out35);\n    output wire [32:0] out35;\n    wire   signed [32:0] wire_4;\n    assign wire_4 = 32'b11111110_10111110_11010001_00100011;\n    assign out35  = (wire_4 >>> 20);\n\n    initial begin\n        #10;\n        `checkd(out35, 32'b11111111_11111111_11111111_11101011);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n",
+    "- V e r i l a t i o n   R e p o r t: Verilator 5.038 2025-07-08 rev v5.038\n- Verilator: Built from 0.026 MB sources in 2 modules, into 0.020 MB in 7 C++ files needing 0.000 MB\n- Verilator: Walltime 0.215 s (elab=0.000, cvt=0.003, bld=0.204); cpu 0.010 s on 1 threads; alloced 21.023 MB\n%Error: test.v:23:  got=4075 exp=4294967275\n%Error: test.v:23:  got=00000000000000000000111111101011 exp=11111111111111111111111111101011\n%Error: test.v:23: Verilog $stop\nAborting...\nAborted (core dumped)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

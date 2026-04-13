@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5434,
+  "issue_url": "https://github.com/verilator/verilator/issues/5434",
+  "title": "Ref Applied to Subsequent Arguments in Task",
+  "body": "```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.029 devel rev v5.028-49-g1c38744fd\r\n```\r\n\r\nHello. I'm getting a strange error when changing the order of ref arguments.\r\n\r\n```systemverilog\r\n// ref_order.sv\r\nmodule tb;\r\n\r\nlogic clk;\r\ninitial begin\r\n    clk = 1;\r\n    forever begin\r\n        clk = !clk;\r\n        if (clk) $display(\"posedge %0t\", $time);\r\n        #1ns;\r\n    end\r\nend\r\n\r\ntask automatic progress_clock_good(int num_cycles, ref logic clk_in);\r\n    while ((num_cycles--) > 0) @(posedge clk_in);\r\nendtask\r\ntask automatic progress_clock_bad(ref logic clk_in, int num_cycles);\r\n    while ((num_cycles--) > 0) @(posedge clk_in);\r\nendtask\r\n\r\ninitial begin\r\n    progress_clock_good(5, clk);\r\n    // progress_clock_bad(clk, 5); // causes error\r\n    $finish;\r\nend\r\n\r\nendmodule\r\n```\r\n```\r\n# without progress_clock_bad()\r\nverilator -f verilator.f\r\n...\r\n./obj_dir/Vref_order\r\nposedge 1000\r\nposedge 3000\r\nposedge 5000\r\nposedge 7000\r\nposedge 9000\r\n- ref_order.sv:24: Verilog $finish\r\n```\r\n```\r\n# with progress_clock_bad() uncommented\r\nverilator -f verilator.f\r\n%Error: ref_order.sv:23:29: Ref argument requires matching types; port 'num_cycles' requires 'int' but connection is 'logic[31:0]'.\r\n                          : ... note: In instance 'tb'\r\n   23 |     progress_clock_bad(clk, 5);  \r\n      |                             ^\r\n```\r\n\r\nI won't have time to look into this until October, but I am happy to receive points on where to get started!",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-05",
+  "closed_at": "2024-09-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

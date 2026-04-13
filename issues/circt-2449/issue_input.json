@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2449,
+  "issue_url": "https://github.com/llvm/circt/issues/2449",
+  "title": "[HWCleanup] Missed optimization because of not being CSEd",
+  "body": "```scala\r\ncircuit Bar :\r\n  module Bar :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    input valid : UInt<1>\r\n    input value : UInt<16>\r\n  \r\n    reg bar : UInt<16>, clock with :\r\n      reset => (UInt<1>(\"h0\"), bar) @[main.scala 32:24]\r\n    reg foo : UInt<16>, clock with :\r\n      reset => (UInt<1>(\"h0\"), foo) @[main.scala 33:24]\r\n    reg busy : UInt<1>, clock with :\r\n      reset => (reset, UInt<1>(\"h0\")) @[main.scala 36:28]\r\n    when not(busy) : @[main.scala 43:15]\r\n      when valid : @[main.scala 66:23]\r\n        bar <= value @[main.scala 70:16]\r\n        foo <= value @[main.scala 71:16]\r\n        busy <= UInt<1>(\"h1\") @[main.scala 72:12]\r\n```\r\nCurrently the output is like:\r\n```sv\r\nalways @(posedge clock) begin // main.scala:36:28\r\n    if (~(busy | ~valid))       // main.scala:43:15, :70:16\r\n      bar <= value;     // main.scala:70:16\r\n    if (~(busy | ~valid))       // main.scala:43:15, :71:16\r\n      foo <= value;  \r\n```\r\nIf statements should be merged into one. This is because two `~(busy|~valid)` are introduced in SV canonicalizer and they are not CSEd. Therefore, HWCleanup is not able to identify they are same. So it might be worth to run CSE again before HWCleanup, or to use structural equivalence in HWCleanup. ",
+  "labels": [
+    "Verilog Quality"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-12",
+  "closed_at": "2022-04-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

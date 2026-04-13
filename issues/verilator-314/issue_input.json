@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 314,
+  "issue_url": "https://github.com/verilator/verilator/issues/314",
+  "title": "always@(in1 or in2 or in3) has bugs",
+  "body": "---\n\n\nAuthor Name: **Michael Perrott**\nOriginal Redmine Issue: 314 from https://www.veripool.org\nOriginal Date: 2011-01-11\n\n\n---\n\nThe code within the first always loop below will be executed differently depending on the clk signal being observed in the second always loop.  For instance, when the clk is quiet, the first always loop will be executed a few times (it should really only happen once) with static in1, in2, in3 values, and many times when the clk signal starts toggling.\r\n\r\n```\r\nmodule transition_statement_bug(sig1, sig2, sig3, clk);\r\n\r\n\r\ninput sig1;\r\ninput sig2;\r\ninput sig3;\r\ninput clk;\r\nreg state_val;\r\nreg flag;\r\n\r\ninitial begin\r\n    state_val = 1'b0;\r\n    flag = 1'b0;\r\nend\r\n\r\nalways @(sig1 or sig2 or sig3) begin\r\n    case({sig1,sig2,sig3})\r\n       3'b111 : begin\r\n           flag = 1'b0;\r\n           $display(\"---- Flag is zero %d %d %d\",sig1,sig2,sig3);\r\n       end\r\n       default : begin\r\n           if(flag == 0) begin\r\n              flag = 1'b1;\r\n              $display(\"---- Flag is one %d %d %d\",sig1,sig2,sig3);\r\n           end\r\n       end\r\n    endcase\r\nend\r\n\r\nalways @(posedge clk) begin\r\n    state_val <= (state_val == 1'b0) ? 1'b1 : 1'b0;\r\nend\r\n\r\n\r\nendmodule\r\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: wontfix",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2011-01-11",
+  "closed_at": "2011-01-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

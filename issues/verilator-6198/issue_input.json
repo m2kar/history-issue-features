@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6198,
+  "issue_url": "https://github.com/verilator/verilator/issues/6198",
+  "title": "Optimizing 2 ** X into left-shift (missed optimization)",
+  "body": "**What would you like added/supported?**\n\nIt would be nice if Verilator could optimized `2 ** x` (where `x` is unsigned) into `1 << x`. This currently works if the base is constant and `unsigned` (e.g. `32'd2`), but the optimization is not applied if the base is declared as signed.\nThis construct is quite common (even though one could argue people should just use an unsigned base for correctness).\n\n```systemverilog\nint unsigned x;\n\n// optimized into 1 << X (left-shift)\nassign opt1 = 32'd2 ** X;\nassign opt2 = $unsigned(2) ** X;\n\n// optimization missed\nassign noopt1 = 2 ** X;\n```\n\n**Note about Signedness**\n\nI am not sure about the required output type. As far as I can see, Verilator produces a signed output, but I am unsure whether this is correct. There is this comment in the source code which I don't understand fully:\nhttps://github.com/verilator/verilator/blob/9b99d9697fd631d46b7bdaf0713a4b9d82348138/src/V3Width.cpp#L1499-L1501\n\nIn any case, this optimization can still work even if the output needs to be signed (I think), by converting the output back to a signed number after shifting.\n\nThere is also [this commit](https://github.com/verilator/verilator/commit/55ad95060996d3398ef8eee883f5ec71d935e731) which removed this optimization, and I assume there was some thought behind that. So we need to be careful to ensure a correct output type.\n\n**What 'verilator --version' are you using?  Did you try it with the git master version?**\n\n`Verilator 5.039 devel rev v5.038-1-g8ba7cec15` (very recent)\n\n**May we assist you in trying to fix this in Verilator yourself?**\n\nI am trying to prepare a patch for this.",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-18",
+  "closed_at": "2025-07-20",
+  "code_blocks": [
+    "int unsigned x;\n\n// optimized into 1 << X (left-shift)\nassign opt1 = 32'd2 ** X;\nassign opt2 = $unsigned(2) ** X;\n\n// optimization missed\nassign noopt1 = 2 ** X;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

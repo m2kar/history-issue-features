@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4095,
+  "issue_url": "https://github.com/llvm/circt/pull/4095",
+  "title": "[ExportVerilog] Prefix enum fields with typedef names",
+  "body": "Long-standing todo which now needs immediate fixing.\r\n\r\nCurrently, enums with identical fields will alias during emission:\r\n```mlir\r\nhw.type_scope @fsm_enum_typedecls {\r\n    hw.typedecl @M2_state_t : !hw.enum<A, B>\r\n    hw.typedecl @M1_state_t : !hw.enum<A, B>\r\n}\r\n```\r\nemits as\r\n```sv\r\ntypedef enum {A, B} M2_state_t;\r\ntypedef enum {A, B} M1_state_t;\r\n```\r\n\r\nThis commit introduces a change to ExportVerilog wherein enum prefixes are gathered before running module emission. These prefixes will be any `hw.typedecl` that declares an enum type within a `hw.type_scope` in the top-level `mlir::Module`.\r\n\r\nEnums now work as:\r\n```mlir\r\nhw.type_scope @fsm_enum_typedecls {\r\n    hw.typedecl @M2_state : !hw.enum<A, B>\r\n    hw.typedecl @M1_state : !hw.enum<A, B>\r\n}\r\n```\r\nemits as\r\n```sv\r\ntypedef enum {M2_state_A, M2_state_B} M2_state;\r\ntypedef enum {M1_state_A, M1_state_B} M1_state;\r\n```",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-13",
+  "closed_at": "2022-10-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3363,
+  "issue_url": "https://github.com/llvm/circt/issues/3363",
+  "title": "[FIRParser] Failure to parse instance named \"module\"",
+  "body": "Platform: macOS 12.4, x86_64\r\ncirct commit: be20cdeebf9fcc3c0ca249f89c8913778a3d94f6\r\n\r\nThe [Gemmini](https://github.com/ucb-bar/gemmini) design contains a module instance named \"module\": https://github.com/ucb-bar/gemmini/blob/87550581d98210540ac013f96fbcb9150be39df7/src/main/scala/gemmini/CounterFile.scala#L228\r\n\r\nThis results in the following parser failure:\r\n\r\n```\r\n$ ./build/bin/firtool --format=fir --warn-on-unprocessed-annotations --verify-each=false --dedup=1 --annotation-file=chipyard.TestHarness.GemminiRocketConfig.anno.json -o Gemmini.v chipyard.TestHarness.GemminiRocketConfig.fir --verbose-pass-executions\r\n[firtool] Running fir parser\r\nchipyard.TestHarness.GemminiRocketConfig.fir:285245:10: error: 'module' must be first token on its line\r\n    inst module of CounterFile @[CounterFile.scala 228:24]\r\n         ^\r\n```\r\n\r\nIt looks like while parsing the contents of a module, we immediately exit the module-statement-parser when we encounter `module`/`extmodule`: https://github.com/llvm/circt/blob/23ae1a7391c3d4d03eceade2189e224c4bb1ebaf/lib/Dialect/FIRRTL/Import/FIRParser.cpp#L3577-L3580\r\n\r\nWe then pop back out to the circuit parser, and try to interpret that `module` token as the start of a module definition, and then trigger this error: https://github.com/llvm/circt/blob/23ae1a7391c3d4d03eceade2189e224c4bb1ebaf/lib/Dialect/FIRRTL/Import/FIRParser.cpp#L3826-L3830\r\n\r\nIt appears this strategy is the problem: https://github.com/llvm/circt/blob/23ae1a7391c3d4d03eceade2189e224c4bb1ebaf/lib/Dialect/FIRRTL/Import/FIRParser.cpp#L3567-L3568\r\n\r\nSince we can't determine when we're in the middle of lexing a module statement, and therefore if this `module` token is in the middle of a statement, or at the start of a new one.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-15",
+  "closed_at": "2023-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

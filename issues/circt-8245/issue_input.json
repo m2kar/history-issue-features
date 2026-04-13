@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8245,
+  "issue_url": "https://github.com/llvm/circt/issues/8245",
+  "title": "[LLHD] Mem2Reg crash on reasonable input",
+  "body": "The following crashes `circt-opt --llhd-mem2reg`:\n\n```mlir\nmodule {\n  hw.module @Foo(in %a : i1, in %b : i32, out x : i32) {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    %c0_i32 = hw.constant 0 : i32\n    %c42_i32 = hw.constant 42 : i32\n    %false = hw.constant false\n    %a_0 = llhd.sig name \"a\" %false : i1\n    %b_1 = llhd.sig name \"b\" %c0_i32 : i32\n    %x = llhd.sig %c0_i32 : i32\n    %1 = llhd.prb %b_1 : !hw.inout<i32>\n    %2 = llhd.prb %x : !hw.inout<i32>\n    %3 = llhd.prb %a_0 : !hw.inout<i1>\n    llhd.process {\n      cf.br ^bb1\n    ^bb1:  // 2 preds: ^bb0, ^bb3\n      %5 = llhd.prb %b_1 : !hw.inout<i32>\n      llhd.drv %x, %5 after %0 : !hw.inout<i32>\n      %6 = llhd.prb %a_0 : !hw.inout<i1>\n      cf.cond_br %6, ^bb2, ^bb3\n    ^bb2:  // pred: ^bb1\n      %7 = llhd.prb %x : !hw.inout<i32>\n      %8 = comb.add %7, %c42_i32 : i32\n      llhd.drv %x, %8 after %0 : !hw.inout<i32>\n      cf.br ^bb3\n    ^bb3:  // 2 preds: ^bb1, ^bb2\n      %9 = llhd.prb %x : !hw.inout<i32>\n      func.call @printikus(%9) : (i32) -> ()\n      llhd.wait (%1, %2, %3 : i32, i32, i1), ^bb1\n    }\n    llhd.drv %a_0, %a after %0 : !hw.inout<i1>\n    llhd.drv %b_1, %b after %0 : !hw.inout<i32>\n    %4 = llhd.prb %x : !hw.inout<i32>\n    hw.output %4 : i32\n  }\n  func.func private @printikus(%arg0: i32) {\n    return\n  }\n}\n```",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-15",
+  "closed_at": "2025-02-24",
+  "code_blocks": [
+    "module {\n  hw.module @Foo(in %a : i1, in %b : i32, out x : i32) {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    %c0_i32 = hw.constant 0 : i32\n    %c42_i32 = hw.constant 42 : i32\n    %false = hw.constant false\n    %a_0 = llhd.sig name \"a\" %false : i1\n    %b_1 = llhd.sig name \"b\" %c0_i32 : i32\n    %x = llhd.sig %c0_i32 : i32\n    %1 = llhd.prb %b_1 : !hw.inout<i32>\n    %2 = llhd.prb %x : !hw.inout<i32>\n    %3 = llhd.prb %a_0 : !hw.inout<i1>\n    llhd.process {\n      cf.br ^bb1\n    ^bb1:  // 2 preds: ^bb0, ^bb3\n      %5 = llhd.prb %b_1 : !hw.inout<i32>\n      llhd.drv %x, %5 after %0 : !hw.inout<i32>\n      %6 = llhd.prb %a_0 : !hw.inout<i1>\n      cf.cond_br %6, ^bb2, ^bb3\n    ^bb2:  // pred: ^bb1\n      %7 = llhd.prb %x : !hw.inout<i32>\n      %8 = comb.add %7, %c42_i32 : i32\n      llhd.drv %x, %8 after %0 : !hw.inout<i32>\n      cf.br ^bb3\n    ^bb3:  // 2 preds: ^bb1, ^bb2\n      %9 = llhd.prb %x : !hw.inout<i32>\n      func.call @printikus(%9) : (i32) -> ()\n      llhd.wait (%1, %2, %3 : i32, i32, i1), ^bb1\n    }\n    llhd.drv %a_0, %a after %0 : !hw.inout<i1>\n    llhd.drv %b_1, %b after %0 : !hw.inout<i32>\n    %4 = llhd.prb %x : !hw.inout<i32>\n    hw.output %4 : i32\n  }\n  func.func private @printikus(%arg0: i32) {\n    return\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

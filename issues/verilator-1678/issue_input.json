@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1678,
+  "issue_url": "https://github.com/verilator/verilator/issues/1678",
+  "title": "Question: Installation of Verilator on MacOS 10.4",
+  "body": "---\n\n\nAuthor Name: **Robert Guenzel**\nOriginal Redmine Message: 152 from https://www.veripool.org\n\n\n\n---\n\nHi interested reader,\n\nI just recently installed verilator 3.712 on MacOS 10.4 (gcc 4.0).\nIt was kind of tricky, and there was hardly any information available on the web how to resolve the problems I stumbled upon.\n\nMaybe the problems I encountered are just due to my own stupidity, but still I decided to post my experience here to help other MacOS 10.4 users to install verilator.\n\nFirst you have to install a more recent bison version than what is part of MacOS.\nUsing the most recent bison release 2.4 failed, because there was a problem with an unexpected behavior of some \"m4 push\" or something like that.\nMaybe bison depends on other libs which I did not have the correct version of.\n(I apologize for being imprecise here, but I tried so many things, I cannot remember the correct error message...)\nUsing bison 1.875 (the minimum required version) failed, because of a bug in bison 1.875 (the one with the \"__attribute__((__unsused__))\" error).\nFinally, after trying some other versions, I found out that bison 2.0 works well.\n\nThen I tried to install Verilog-Perl 3.212.\nTo get this to work, you have to patch the Makefiles in the \"Parser\" and \"Preproc\" directories, after having called \"perl Makefile.PL\".\nThere you have to change the DLEXT variable from DLEXT = bundle to DLEXT = dylib\nand you have to change the LDDLFLAGS to\nLDDLFLAGS = -dynamiclib -lstdc++ -L/System/Library/Perl/5.8.6/darwin-thread-multi-2level/CORE -lperl -lgcc_eh -L/usr/local/lib\n\n(Note that your path to libperl.dylib might be different. Double check on that to be on the safe side)\n\nThen it was time to install SystemPerl 1.330.\nAfter calling \"perl Makefile.PL\" you need to patch Parser/scgrammer.c.\nYou gotta remove (comment out) line 1443.\nThis line is a duplicate of the line 160 of Parser/scgrammer.h (obfuscated by some Macros, but it is),\nbut without the required 'extern' keyword (line 160 has it). That leads to\nmultiple defined symbols when linking. When you comment line 1443 out, this problem is solved.\n\nThen you have to patch line 860 in Parser/sclex.c\nThere is the declaration of a function 'input' that is then defined at line 1951. However in line 1951 it is defined static while in line 860 it is not declared that way. Adding the 'static' keyword in front of line 860 fixes that compile problem.\n\nAfterwards you need to patch Parser/Makefile in the same way as described for Verilog-Perl above.\n\nThen installing verilator 3.712 worked without any problems.\n\nNote that I did \"make test\" for all the things mentioned above and they all went through without complaints.\n\nFinally, I verilated some of my verilog projects sucessfully, so I just claim my patches did not mess verilator up... ;-)\n\nI hope someone will find this post helpful.\n\nIf I find time (and the money for MacOS 10.5) I will try the same installation on MacOS 10.5.\n\nIf you have any problems with installing the stuff on MacOS, I can offer some help, if you send me the errors via mail.\n\nbest regards\n  Robert\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2009-07-22",
+  "closed_at": "2009-08-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3508,
+  "issue_url": "https://github.com/verilator/verilator/issues/3508",
+  "title": "Verilator 5 – DPI export trigger never triggered in `nba`",
+  "body": "This concerns the `develop-v5` branch.\r\n\r\nThe DPI export trigger is used as an external domain for both `act` and `nba` ordering. The sentree used for both is `[true] __VactTriggered.at(<DPI trigger>)`:\r\n\r\nhttps://github.com/verilator/verilator/blob/develop-v5/src/V3Sched.cpp#L1080-L1104\r\n\r\nBut I think it should be changed to `[true] __VnbaTriggered.at(<DPI trigger>)` for `nba` ordering.\r\n\r\nSee the `t_order_dpi_export_7.pl` test. We get this code:\r\n```cpp\r\nvoid Vt_order_dpi_export_7___024root___eval_nba(Vt_order_dpi_export_7___024root* vlSelf) {\r\n    if (false && vlSelf) {}  // Prevent unused\r\n    Vt_order_dpi_export_7__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt_order_dpi_export_7___024root___eval_nba\\n\"); );\r\n    // Body\r\n    if (vlSelf->__VnbaTriggered.at(1U)) {\r\n        Vt_order_dpi_export_7___024root___nba_sequent__TOP__0(vlSelf);\r\n    }\r\n    if (vlSelf->__VactTriggered.at(0U)) {\r\n        Vt_order_dpi_export_7___024root___ico_sequent__TOP__0(vlSelf);\r\n    }\r\n}\r\n```\r\nThe condition in the second `if` will never be true, as `__VactTriggered` should be all zeroes in `nba`.",
+  "labels": [
+    "status: assigned"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-21",
+  "closed_at": "2022-07-21",
+  "code_blocks": [
+    "void Vt_order_dpi_export_7___024root___eval_nba(Vt_order_dpi_export_7___024root* vlSelf) {\r\n    if (false && vlSelf) {}  // Prevent unused\r\n    Vt_order_dpi_export_7__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt_order_dpi_export_7___024root___eval_nba\\n\"); );\r\n    // Body\r\n    if (vlSelf->__VnbaTriggered.at(1U)) {\r\n        Vt_order_dpi_export_7___024root___nba_sequent__TOP__0(vlSelf);\r\n    }\r\n    if (vlSelf->__VactTriggered.at(0U)) {\r\n        Vt_order_dpi_export_7___024root___ico_sequent__TOP__0(vlSelf);\r\n    }\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

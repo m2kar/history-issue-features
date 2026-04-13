@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1943,
+  "issue_url": "https://github.com/verilator/verilator/issues/1943",
+  "title": "Question: Adding foreign module support to Verilator",
+  "body": "---\n\n\nAuthor Name: **Xavier Delacour**\nOriginal Redmine Message: 2348 from https://www.veripool.org\n\n\n\n---\n\n\nThe patch [1] is a first pass at implementing \"foreign modules\", based on the notes at [2]. E.g., run it like [3]-- module C2 [4] causes generation of obj_dir/foreign_C2.v [5], which is automatically included in C1, etc. --trace output works.\n\nWhat is there is mostly working, though some issues pop up around scheduling of clocked signals. In the current implementation, an AstForeignRead within a clocked block will behave like a delayed assign (generating ASSIGNPRE FOREIGNREAD ASSIGNPOST etc), but in some cases that leads to an extra clock inserted when traversing up the foreign module hierarchy and back down another branch. It feels as though knowledge of ASSIGNPRE/ASSIGNPOST wants to be exported more fully to the foreign interface.\n\nPlease take a look and try it out-- I can elaborate more on what isn't clear if anything. Any thoughts on how pre/post scheduling should work in particular would be appreciated. Thanks!\n\nXavier\n\n[1]\nhttps://github.com/xavier98/verilator-foreign/commit/9c509f6d381af7e0ded09a6890e733e8c66a8fc4\n\n[2]\nhttps://www.veripool.org/boards/2/topics/412-Verilator-verilating-compiling-modules-into-separate-object-files\n\n[3]\n```<code class=\"text\">\ncd test_v/foreign\n../../verilator_bin --cc C2.v\n../../verilator_bin --cc C1.v\n</code>\n```\n\n[4]\n```<code class=\"text\">\nmodule C2\n  (input clk,\n    input din,\n    output dout\n    );\n    // verilator foreign_module\n    reg   doutr;\n    assign dout = doutr;\n    always @(posedge clk)\n      doutr <= din;\nendmodule\n</code>\n```\n\n[5]\n```<code class=\"text\">\n// verilator tracing_off\n// verilator lint_off UNOPTFLAT\nmodule foreign_C2 (\n         input logic clk,\n         input logic din,\n         output logic dout);\n     // verilator inline_module\n     // verilator foreign_interface C2\n     // verilator foreign_write clk\n     always @(posedge clk) begin\n         // verilator foreign_eval _sequent__TOP__1\n         // verilator foreign_write din\n         // verilator foreign_read_post dout\n     end\n     always @(foreign_settle) begin\n         // verilator foreign_eval _settle__TOP__2\n         // verilator foreign_read_post dout\n     end\nendmodule\n\n</code>\n```\n\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2017-09-20",
+  "closed_at": "2017-09-20",
+  "code_blocks": [
+    "\n[4]\n",
+    "\n[5]\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3220,
+  "issue_url": "https://github.com/verilator/verilator/issues/3220",
+  "title": "Macros arguments wrongly substituted in strings",
+  "body": "Words in strings that have the same names as macro arguments seem to be substituted by the argument value, which I think is wrong.\r\n\r\nExample SV:\r\n```\r\nmodule test;\r\n\r\n`define print_something(data1) $display(\"data1 is: %d\", data1);\r\n\r\n   initial begin\r\n      `print_something(10)\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nC++:\r\n```\r\n#include <verilated.h>          // Defines common routines\r\n#include \"Vtest.h\"               // From Verilating \"top.v\"\r\n\r\nVtest *top;                      // Instantiation of model\r\n\r\nvluint64_t main_time = 0;       // Current simulation time\r\n// This is a 64-bit integer to reduce wrap over issues and\r\n// allow modulus.  This is in units of the timeprecision\r\n// used in Verilog (or from --timescale-override)\r\n\r\ndouble sc_time_stamp() {        // Called by $time in Verilog\r\n    return main_time;           // converts to double, to match\r\n                                // what SystemC does\r\n}\r\n\r\n\r\nint main(int argc, char** argv) {\r\n    Verilated::commandArgs(argc, argv);   // Remember args\r\n\r\n    top = new Vtest;             // Create model\r\n\r\n    while (!Verilated::gotFinish()) {\r\n        top->eval();            // Evaluate model\r\n        main_time++;            // Time passes...\r\n    }\r\n\r\n    top->final();               // Done simulating\r\n    delete top;\r\n}\r\n```\r\n\r\nBuild command:\r\n```\r\nverilator --cc --timescale-override 1ps/1ps test.sv --top-module test --exe --build main.cpp\r\n```\r\n\r\nExecution result:\r\n```\r\n10 is:          10\r\n- test.sv:7: Verilog $finish\r\n```\r\n\r\nExpected result:\r\n```\r\ndata1 is:          10\r\n- test.sv:7: Verilog $finish\r\n```\r\n\r\nThis is on latest master.",
+  "labels": [
+    "area: parser",
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-26",
+  "closed_at": "2021-11-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

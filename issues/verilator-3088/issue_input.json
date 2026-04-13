@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3088,
+  "issue_url": "https://github.com/verilator/verilator/issues/3088",
+  "title": "`unique` annotation on `if` generates WARNING-LATCH ",
+  "body": "**Version**: Verilator 4.200 2021-03-12 rev v4.110-43-g5022e81af (mod)\r\n\r\n**Test case**:\r\n```\r\nmodule main (\r\n    input logic go\r\n);\r\n    logic [1:0] cs_if_in;\r\n    logic [1:0] fsm_out;\r\n    always_comb begin\r\n        unique if(fsm_out == 2'd1) cs_if_in = 2'd1;\r\n        else if (fsm_out == 2'd2) cs_if_in = 2'd2;\r\n        else cs_if_in = 2'd0;\r\n    end\r\nendmodule\r\n\r\n```\r\n\r\n**To reproduce**: run `verilator --lint-only out.sv`.\r\n**Expected**: No warnings are reported\r\n**Output**: \r\n```\r\n%Warning-LATCH: out.sv:7:5: Latch inferred for signal 'main.cs_if_in' (not all control paths of combinational always assign a value)\r\n                          : ... Suggest use of always_latch for intentional latches\r\n    7 |     always_comb begin\r\n      |     ^~~~~~~~~~~\r\n                ... Use \"/* verilator lint_off LATCH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nRemoving the `unique` in front of `if` eliminates the error. I'm not sure if I'm misunderstanding how `unique if` works but I had expected that the final `else` branch in the `if` would mean that a latch would not have be inferred here.\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\nYes\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-31",
+  "closed_at": "2022-10-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

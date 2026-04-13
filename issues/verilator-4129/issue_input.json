@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4129,
+  "issue_url": "https://github.com/verilator/verilator/issues/4129",
+  "title": "XML output cell hier of generate block",
+  "body": "When having a module instantiation in generate block like below:\r\n```\r\nmodule submod();\r\n    wire some_sig;\r\nendmodule\r\n\r\nmodule test(\r\n);\r\n    if(1) begin : some_gen\r\n        submod submod_i();\r\n    end\r\nendmodule\r\n```\r\nI think that the generated XML file is incorrect, specifically <cells> section cells attribute hier.\r\nThis is the output I get:\r\n\r\n```diff\r\n<?xml version=\"1.0\" ?>\r\n<!-- DESCRIPTION: Verilator output: XML representation of netlist -->\r\n<verilator_xml>\r\n  <files>\r\n    <file id=\"a\" filename=\"&lt;built-in&gt;\" language=\"1800-2017\"/>\r\n    <file id=\"b\" filename=\"&lt;command-line&gt;\" language=\"1800-2017\"/>\r\n    <file id=\"c\" filename=\"test.v\" language=\"1800-2017\"/>\r\n  </files>\r\n  <module_files>\r\n    <file id=\"c\" filename=\"test.v\" language=\"1800-2017\"/>\r\n  </module_files>\r\n  <cells>\r\n    <cell loc=\"c,5,8,5,12\" name=\"test\" submodname=\"test\" hier=\"test\">\r\n-     <cell loc=\"c,9,12,9,20\" name=\"submod_i\" submodname=\"submod\" hier=\"test.submod_i\"/>\r\n+     <cell loc=\"c,9,12,9,20\" name=\"submod_i\" submodname=\"submod\" hier=\"test.some_gen.submod_i\"/>\r\n    </cell>\r\n  </cells>\r\n  <netlist>\r\n    <module loc=\"c,5,8,5,12\" name=\"test\" origName=\"test\" topModule=\"1\">\r\n      <begin loc=\"c,8,15,8,23\" name=\"some_gen\">\r\n        <instance loc=\"c,9,12,9,20\" name=\"submod_i\" defName=\"submod\" origName=\"submod_i\"/>\r\n      </begin>\r\n    </module>\r\n    <module loc=\"c,1,8,1,14\" name=\"submod\" origName=\"submod\">\r\n      <var loc=\"c,2,10,2,18\" name=\"some_sig\" dtype_id=\"1\" vartype=\"logic\" origName=\"some_sig\"/>\r\n    </module>\r\n    <typetable loc=\"a,0,0,0,0\">\r\n      <basicdtype loc=\"c,2,10,2,18\" id=\"1\" name=\"logic\"/>\r\n    </typetable>\r\n  </netlist>\r\n</verilator_xml>\r\n\r\n```\r\nI would expect that the path to the submodule would also include some_gen. Am I correct to assume that?\r\nThis way I cannot access VPI signal based on this path, as `some_sig` signal for VPI  is `test.some_gen.submod_i.some_sig`\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nYes, I could fix it if it is bug after all, and I can get some directions.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-17",
+  "closed_at": "2023-04-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

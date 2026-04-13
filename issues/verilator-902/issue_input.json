@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 902,
+  "issue_url": "https://github.com/verilator/verilator/issues/902",
+  "title": "Enhancement request for parameters",
+  "body": "---\n\n\nAuthor Name: **Kevin Thompson**\nOriginal Redmine Issue: 902 from https://www.veripool.org\nOriginal Date: 2015-03-25\n\n\n---\n\nHello,\r\n\r\nI believe that this is more of a request for an enhancement than a fix per-se.\r\n\r\nTo begin with, if I have a module with this signature:\r\n\r\nmodule v1 #(parameter WIDTH = 204)\r\n(\r\n     input                                 Clk,\r\n     input                                 nReset,\r\n     input [WIDTH-1:0]         wData, \r\n     output reg [WIDTH-1:0] rData \r\n);\r\n:\r\n:\r\n:\r\nendmodule\r\n\r\nWithin another Verilog module, it is possible to create two instances of “v1” with differing widths:\r\n\r\nmodule top_v();\r\n\r\n     parameter WIDTH=128;\r\n\r\n     reg [WIDTH-1:0] my_data_in;\r\n     wire [WIDTH-1:0] my_data_out;\r\n\r\n     v1 #(.WIDTH(WIDTH)) \r\n         my_v1(.Clk(Clk), .nReset(nReset), .wData(my_data_in), .rData(my_data_out) );\r\n\r\n     reg [32-1:0] more_data_in;\r\n     wire [32-1:0] more_data_out;\r\n\r\n     v1 #(.WIDTH(32)) \r\n         more_v1(.Clk(Clk),\r\n              .nReset(nReset),\r\n              .wData(more_data_in),\r\n              .rData(more_data_out) );\r\n:\r\n:\r\n:\r\nendmodule\r\n\r\nWithin the C++ code however, once the module v1 is translated, the data width is “locked in”. Would it be possible to add template functionality to the translated C++ module, e.g. for “module v1” above:\r\n\r\n\r\n\r\n\r\ntemplate <std::size_t width=204> // or whatever WIDTH is defined as.\r\nstruct v1 : public sc_module\r\n{\r\n\tsc_in<sc_bv<width> >    wData;\r\n\tsc_out< sc_bv<width> > rData;\r\n:\r\n:\r\n:\r\n}\r\n\r\nIn another top C++ module this would allow one to do:\r\n\r\nv1<214> first_inst;\r\nv1<32>   second_inst;\r\nv1<>       def_inst;\r\n\r\nI realize that this would be a design change but perhaps instead of the being the default behavior when parameters are present in Verilog, it could be a command line switch, e.g. --templated-parameters, and then let the user deal with the templated code. The –templated-parameters switch of course would only be used when –pins-bv is also included.\r\n\r\nThank you.\n\n\n",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2015-03-25",
+  "closed_at": "2015-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

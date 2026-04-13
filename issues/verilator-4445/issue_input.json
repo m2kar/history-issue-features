@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4445,
+  "issue_url": "https://github.com/verilator/verilator/issues/4445",
+  "title": "Fix x-assign unique when index out-of-range of an unpacked struct array",
+  "body": "verilator version: >= 5.012 （include the newest version Verilator 5.015 devel rev v5.014-31-g63db60f64） \r\n(I didn't test the lower version)\r\n\r\nbug code:\r\n```verilog\r\ntypedef struct {\r\n    logic a;\r\n} Data_t;\r\n\r\nmodule tb (\r\n    input wire clk,\r\n    input wire rst\r\n);\r\n    localparam int SIZE = 20;\r\n    reg[$clog2(SIZE)-1 : 0] ptr;\r\n    Data_t buffer[SIZE];\r\n    reg out;\r\n\r\n    always_ff @( posedge clk ) begin\r\n        int i;\r\n        if (rst) begin\r\n            for (i=0;i<SIZE;i=i+1) begin\r\n                buffer[i].a <= 0;\r\n            end\r\n        end\r\n        else begin\r\n            ptr <= (ptr == (SIZE - 1)) ? 0 : (ptr+1);\r\n            out <= buffer[ptr].a;\r\n        end\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\n\r\nwith verialtor arguments :\r\n```\r\n--x-assign unique --x-initial unique\r\n```\r\nif SIZE = 32, compile success\r\nbut if is 20 or others not a power of 2, compile error\r\nmessage:\r\n```\r\nVtb_tb__DepSet_h66f4ffa7__0.cpp:129:33: error: operands to ‘?:’ have different types ‘Vtb_Data_t__struct__0’ and ‘IData’ {aka ‘unsigned int’}\r\n  128 |         vlSelf->__Vdly__out = ((0x13U >= (IData)(vlSelf->__PVT__ptr))\r\n      |                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n  129 |                                 ? vlSelf->__PVT__buffer\r\n      |                                 ^~~~~~~~~~~~~~~~~~~~~~~\r\n  130 |                                [vlSelf->__PVT__ptr]\r\n      |                                ~~~~~~~~~~~~~~~~~~~~\r\n  131 |                                 : (IData)(vlSelf->__Vxrand_h9c26aeca__0))\r\n```\r\ngenerated c++ code is:\r\n```c++\r\n        vlSelf->__Vdly__out = ((0x13U >= (IData)(vlSelf->__PVT__ptr))\r\n                                ? vlSelf->__PVT__buffer\r\n                               [vlSelf->__PVT__ptr]\r\n                                : (IData)(vlSelf->__Vxrand_h9c26aeca__0))\r\n            .__PVT__a;\r\n```\r\n__Vxrand_h9c26aeca__0 is a unsiged instead of struct\r\n\r\nif without verilator arguments\r\nthen another error message\r\n```\r\nVtb___024root__DepSet_h00dcc3fb__0.cpp:188:39: error: no match for ‘operator&’ (operand types are ‘bool’ and ‘Vtb_Data_t__struct__0’)\r\n  188 |                                       & vlSelf->tb__DOT__buffer\r\n```\r\n\r\nwhen ptr may go out of the array range\r\nit will generated the\r\n\"out = (ptr <= (SZIE-1) ? buffer[ptr] : random_value).a\"\r\nc++ code (random_value is a unsigned type)\r\nor\r\n\"out = ((ptr <= (SZIE-1) & buffer[ptr]).a\" (without verilator arguments)\r\nI think it should be\r\n\"out = (ptr <= (SZIE-1) ? buffer[ptr].a : random_value)\"",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-28",
+  "closed_at": "2024-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

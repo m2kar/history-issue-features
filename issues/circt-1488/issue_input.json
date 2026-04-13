@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1488,
+  "issue_url": "https://github.com/llvm/circt/issues/1488",
+  "title": "[FIRRTL] imconstprop mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module Bar :\r\n    input a: UInt<1>\r\n    input b: UInt<1>\r\n    output c: UInt<1>\r\n    output d: UInt<1>\r\n    c <= b\r\n    wire _c: UInt<1>\r\n    _c <= xor(a, c)\r\n    d <= _c\r\n  module top_mod :\r\n    input a: UInt<1>\r\n    input b: UInt<1>\r\n    output c: UInt<1>\r\n    output d: UInt<1>\r\n    inst bar of Bar\r\n    bar.a <= a\r\n    bar.b <= b\r\n    c <= bar.c\r\n    d <= bar.d\r\n```\r\n\r\nCompiled with `firtool -imconstprop` produces this Verilog:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input  a, b,\r\n  output c, d);\r\n\r\n  assign c = b;\t// a_top_mod.fir:2:10\r\n  assign d = 1'h0;\t// a_top_mod.fir:2:10, :8:5\r\nendmodule\r\n\r\nmodule top_mod(\r\n  input  a, b,\r\n  output c, d);\r\n\r\n  wire bar_d;\t// a_top_mod.fir:16:5\r\n\r\n  Bar bar (\t// a_top_mod.fir:16:5\r\n    .a (a),\r\n    .b (b),\r\n    .c (c),\r\n    .d (bar_d)\r\n  );\r\n  assign d = 1'h0;\t// a_top_mod.fir:11:10, :16:5\r\nendmodule\r\n```\r\n\r\n![image](https://user-images.githubusercontent.com/511872/127385642-59d723fc-1f03-49a6-bfd7-09f6b403c1f1.png)\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input   a,\r\n  input   b,\r\n  output  c,\r\n  output  d\r\n);\r\n  assign c = b;\r\n  assign d = a ^ c;\r\nendmodule\r\nmodule top_mod(\r\n  input   a,\r\n  input   b,\r\n  output  c,\r\n  output  d\r\n);\r\n  wire  bar_a;\r\n  wire  bar_b;\r\n  wire  bar_c;\r\n  wire  bar_d;\r\n  Bar bar (\r\n    .a(bar_a),\r\n    .b(bar_b),\r\n    .c(bar_c),\r\n    .d(bar_d)\r\n  );\r\n  assign c = bar_c;\r\n  assign d = bar_d;\r\n  assign bar_a = a;\r\n  assign bar_b = b;\r\nendmodule\r\n\r\n```\r\n![image](https://user-images.githubusercontent.com/511872/127385700-ac28908c-3e7d-4d2b-952d-67b7dedec153.png)\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-28",
+  "closed_at": "2021-07-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

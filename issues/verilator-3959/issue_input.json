@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3959,
+  "issue_url": "https://github.com/verilator/verilator/issues/3959",
+  "title": "Fix WIDTH to point at proper subtract fileline",
+  "body": "**How to reproduce:**\r\n\r\nIf you lint the attached file, which I reproduce below, you will get the following error:\r\n\r\n```\r\n%Warning-WIDTH: bugreport.v:7:31: Operator SUB expects 32 bits on the LHS, but LHS's VARREF 'UROM_DEPTH' generates 11 bits.\r\n                                : ... In instance uRom\r\n    7 |     reg [UROM_WIDTH-1:0] uRam[UROM_DEPTH];      \r\n      |                               ^~~~~~~~~~\r\n                ... For warning description see https://verilator.org/warn/WIDTH?v=5.006\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\nBut this warning is about a non-existing SUB operation and a non-existing LHS. Making `UROM_DEPTH=1024;` fixes the warning, but I don't think the warning should have ever been there.\r\n\r\ninput file:\r\n```\r\nlocalparam UADDR_WIDTH = 4'd10;\r\nlocalparam UROM_WIDTH = 5'd17;\r\nlocalparam UROM_DEPTH = 11'd1024;\r\n\r\n\r\nmodule uRom( input clk, input [UADDR_WIDTH-1:0] microAddr, output logic [UROM_WIDTH-1:0] microOutput);\r\n    reg [UROM_WIDTH-1:0] uRam[UROM_DEPTH];      \r\n    initial begin\r\n        $readmemb(\"microrom.mem\", uRam);\r\n    end\r\n    \r\n    always @( posedge clk) \r\n        microOutput <= uRam[ microAddr];\r\nendmodule\r\n```\r\n[bugreport.v.zip](https://github.com/verilator/verilator/files/10748005/bugreport.v.zip)\r\n**What 'verilator --version' are you using?  Did you try it with the git master version?**\r\nTested with 5.06 and _git master_.\r\n\r\n**What OS and distribution are you using?**\r\nUbuntu mate 20.04 LTS\r\n\r\n**May we assist you in trying to fix this in Verilator yourself?**\r\n\r\nI cannot help with software development\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-15",
+  "closed_at": "2023-05-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

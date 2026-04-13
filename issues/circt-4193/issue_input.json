@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4193,
+  "issue_url": "https://github.com/llvm/circt/issues/4193",
+  "title": "[FIRRTL] Memory blocks DCE",
+  "body": "Currently we generally treat memories as black-box, hence we cannot optimize at all. For example, in the following example `cmem rf` is a memory whose fields are `a` and `b`. But there is no user of output `b`. \r\n```scala\r\ncircuit DUTModule:\r\n  module DUTModule :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output io : { flip addr : UInt<3>, flip dataIn : {a:UInt<2>, b:UInt<3>}, flip wen : UInt<1>, dataOut : {a:UInt<2>}}\r\n\r\n    cmem rf : {a:UInt<2>, b:UInt<3>} [8]\r\n    infer mport read = rf[io.addr], clock\r\n    io.dataOut.a <= read.a\r\n    when io.wen :\r\n      infer mport write = rf[io.addr], clock\r\n      write <= io.dataIn\r\n```\r\n\r\nSFC can optimize away field b because SFC lowers a memory into registers. \r\n```verilog\r\n  reg [1:0] rf_a [0:7];\r\n  wire  rf_a_read_en;\r\n  wire [2:0] rf_a_read_addr;\r\n  wire [1:0] rf_a_read_data;\r\n  wire [1:0] rf_a_write_data;\r\n  wire [2:0] rf_a_write_addr;\r\n  wire  rf_a_write_mask;\r\n  wire  rf_a_write_en;\r\n  assign rf_a_read_en = 1'h1;\r\n  assign rf_a_read_addr = io_addr;\r\n  assign rf_a_read_data = rf_a[rf_a_read_addr];\r\n  assign rf_a_write_data = io_dataIn_a;\r\n  assign rf_a_write_addr = io_addr;\r\n  assign rf_a_write_mask = 1'h1;\r\n  assign rf_a_write_en = io_wen;\r\n  assign io_dataOut_a = rf_a_read_data;\r\n  always @(posedge clock) begin\r\n    if (rf_a_write_en & rf_a_write_mask) begin\r\n      rf_a[rf_a_write_addr] <= rf_a_write_data;\r\n    end\r\n  end\r\n // .. there is no register regarding `b`.\r\n```\r\n\r\nOn the other hand, MFC:\r\n```verilog\r\n wire [2:0] _rf_b_ext_R0_data;\r\n  rf_a_combMem rf_a_ext (\r\n    .R0_addr (io_addr),\r\n    .R0_en   (1'h1),\r\n    .R0_clk  (clock),\r\n    .W0_addr (io_addr),\r\n    .W0_en   (io_wen),\r\n    .W0_clk  (clock),\r\n    .W0_data (io_dataIn_a),\r\n    .R0_data (io_dataOut_a)\r\n  );\r\n  rf_b_combMem rf_b_ext (\r\n    .R0_addr (io_addr),\r\n    .R0_en   (1'h1),\r\n    .R0_clk  (clock),\r\n    .W0_addr (io_addr),\r\n    .W0_en   (io_wen),\r\n    .W0_clk  (clock),\r\n    .W0_data (io_dataIn_b),\r\n    .R0_data (_rf_b_ext_R0_data)\r\n  );\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-10-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

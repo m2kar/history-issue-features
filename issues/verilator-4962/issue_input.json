@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4962,
+  "issue_url": "https://github.com/verilator/verilator/issues/4962",
+  "title": "Unclear error on call of non-static method using scope reference",
+  "body": "Hi! I'm not sure that this is a bug, but rather a lack of clear error message to facilitate debugging. It's quite non-obvious to resolve this first time, especially in large and complicated code.\r\n\r\nCode where non-static method is called using scope reference mistakenly (or expected `static` qualifier is missing):\r\n\r\n```verilog\r\nmodule test;\r\n  class foo;\r\n    function void print();\r\n      $display(\"I'm foo class\");\r\n    endfunction\r\n  endclass\r\n  \r\n  class bar;\r\n    function void hello();\r\n      $display(\"I'm bar class\");\r\n      foo::print(); // <--- error\r\n    endfunction\r\n  endclass\r\n\r\n  initial begin\r\n    bar obj = new();\r\n    obj.hello();\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nVerilator error:\r\n\r\n```\r\nIn file included from Vtest__ALL.cpp:10:\r\nVtest_test__03a__03abar__Vclpkg__DepSet_hca57f31b__0.cpp: In member function ‘void Vtest_test__03a__03abar::__VnoInFunc_hello(Vtest__Syms*)’:\r\nVtest_test__03a__03abar__Vclpkg__DepSet_hca57f31b__0.cpp:13:11: error: ‘class Vtest_test__03a__03abar’ has no member named ‘__VnoInFunc_print’; did you mean ‘__VnoInFunc_hello’?\r\n   13 |     this->__VnoInFunc_print(vlSymsp);\r\n      |           ^~~~~~~~~~~~~~~~~\r\n      |           __VnoInFunc_hello\r\n```\r\n\r\nAt the same, this code in other simulators:\r\n- \"Error-[ISRF] Illegal scoped reference found\"\r\n- \"A Non static class member cannot be accessed via the class scope resolution operator '::'.\"\r\n\r\nThis case can be quite frequent when non-stable code full of static/non-static methods is debugged.\r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-171-gba47da658\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-11",
+  "closed_at": "2024-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1731,
+  "issue_url": "https://github.com/verilator/verilator/issues/1731",
+  "title": "Question: Passing an sformat-formatted string to a DPI function",
+  "body": "---\n\n\nAuthor Name: **R. Diez**\nOriginal Redmine Message: 628 from https://www.veripool.org\n\n\n\n---\n\nHi all:\n\nVerilator does not seem to have a $system() task, and I wish to run a shell command at the beginning of the simulation,\nbut only after my DPI module has created a listening socket. This is what I've written so far:\n\n    import \"DPI-C\" function int uart_dpi_run_shell_command ( input string shell_cmd_to_run,\n                                                             output int command_exit_code );\n\nThat works fine, but now I wish to build the shell_cmd_to_run string with Verilog parameters. I've tried this:\n\n    $sformat( shell_cmd,\n              \"gnome-terminal --command \\\"sh -c 'socat -,raw TCP4:localhost:%d'\\\" &\",\n              `UART_DPI_TELNET_PORT );\n\nIf I define shell_cmd like this:\n\n  reg [127*8:0] shell_cmd;\n\nThen $sformat() fills the string with leading zeroes, and the DPI module things the string is empty.\n\nOn the other hand, if I define shell_cmd like this:\n\n  string shell_cmd;\n\nThen I get this compilation error:\n\n  error: cannot convert â€˜std::stringâ€™ to â€˜void*â€™ for argument â€˜2â€™ to â€˜void VL_SFORMAT_X(int, void*, const char*, ...)â€™\n\nI guess \"input string\" in the DPI function declaration translates to \"const char*\" in the generated .h file, but the \"string shell_cmd\" declaration creates an std::string. Somewhere is a call to std::string::c_str() probably missing.\n\nCan someone help me here?\n\nThanks in advance,\n  R. Diez\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2011-11-14",
+  "closed_at": "2011-12-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

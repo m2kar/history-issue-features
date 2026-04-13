@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 881,
+  "issue_url": "https://github.com/verilator/verilator/issues/881",
+  "title": "Incorrect inlining of continuous assignment",
+  "body": "---\n\n\nAuthor Name: **Mike Thyer**\nOriginal Redmine Issue: 881 from https://www.veripool.org\nOriginal Date: 2015-02-05\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI've distilled an issue with the inlining of continuous assignments into a tiny test case.\r\nI've attached a regression test demonstrating this, the important bits are here:\r\n\r\n    assign a_w = a_r;\r\n    always @(*) begin\r\n      a_r = 0;\r\n      b_r = a_w;\r\n      a_r = c_q_r;\r\n      c_d_r = c_q_r; // a counter\r\n    end\r\n\r\nIn some circumstances Verilator inlines the assign into the always block.  This results in b_r taking on the value 0 instead of being the same as a_r.\r\n\r\nIn the full code, this problem occurred using -O1 but went away using -O0.  It also occurred when using -O0 -OG, but not when using -O1 -Og.\r\nIn this reduced case, the problem only occurs when using -O0 -OG.  Curiously there are no UNOPTFLAT warnings, just incorrect simulation results.\r\n\r\nI realize the -O<letter> options are for developers rather than users.  I'm hoping that diagnosing this smaller problem will help get the full code compiling with the -O1 setting.\r\nI've started looking through the Verilator source code, but I'm not fully up to speed with it yet.  I can see where the inlining is done, I don't yet fully understand how Verilator decides if this is valid or not.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2015-02-06",
+  "closed_at": "2015-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

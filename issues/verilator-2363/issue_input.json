@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2363,
+  "issue_url": "https://github.com/verilator/verilator/pull/2363",
+  "title": "Introduce notion of VerilatedFdList.",
+  "body": "Initial attempt at #2333.\r\n\r\nLocks were previously used to guard updates to shared state (the table which maintains the file-descriptor to FILE* mapping, operations on FILE*, etc...). In the MCD case, this was not sufficient. For a MCD descriptor, the constituent descriptors could belong to distinct threads. In the small interval where a MCD descriptor set was computed (in verilated_imp.h:fdtofp), another thread could close one of the file descriptors contained within it, invalidating the set and causing undefined behavior when a subsequent attempt is made to access the now stale descriptor.\r\n\r\nIn general, I would expect a single distinct file-descriptor to be owned entirely by a single thread. This idiom breaks down in the MCD case, which (IMHO) is a bit dodgy when used in a multi-threaded environment. Nevertheless, the solution I came up with is to introduce the notion of a VerilatedFdList. This replaces the prior FILE* array which was previously populated by the fptofd call. The class encapsulates the notion of a file-descriptor set and, more importantly, it adopts the lock acquired by fdtofp. The lock is then subsequently released through RAII whenever the list is destructed. The only real significant change here (semantically) is that when acquiring a file-descriptor set, the global I/O mutex is not unlocked until the requested set has been destructed (and any I/O completed). The small-interval where the lock is released and then reacquired is now removed.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-25",
+  "closed_at": "2020-05-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

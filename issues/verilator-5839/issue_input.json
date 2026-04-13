@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5839,
+  "issue_url": "https://github.com/verilator/verilator/issues/5839",
+  "title": "Fix assignment pattern as function argument",
+  "body": "Future UVM on `uvm_field_queue_string(abstractions, UVM_DEFAULT) ` gives `%Error-UNSUPPORTED: t/t_0.v:29:19: Unsupported/Illegal: Assignment pattern member not underneath a supported construct: ARG`\n\nExample test\n\n```\n`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\ntypedef struct {\n   string name1;\n   string name2;\n} names_t;\n\nclass uvm_queue;\n   names_t m_queue[$];\n\n   virtual function void push_back(names_t item);\n      m_queue.push_back(item);\n   endfunction\nendclass\n\nmodule t(/*AUTOARG*/);\n\n   uvm_queue q;\n\n   initial begin\n      // From uvm_queue#(uvm_acs_name_struct) __local_field_names__;\n      q = new;\n      q.push_back('{\"n1\", \"n2\"});\n      q.push_back('{\"m1\", \"m2\"});\n      $display(\"%p\", q);\n      `checks(q.m_queue[0].name1, \"n1\");\n      `checks(q.m_queue[0].name2, \"n2\");\n      `checks(q.m_queue[1].name1, \"m1\");\n      `checks(q.m_queue[1].name2, \"m2\");\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\n\nendmodule\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-08",
+  "closed_at": "2025-03-08",
+  "code_blocks": [
+    "`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\ntypedef struct {\n   string name1;\n   string name2;\n} names_t;\n\nclass uvm_queue;\n   names_t m_queue[$];\n\n   virtual function void push_back(names_t item);\n      m_queue.push_back(item);\n   endfunction\nendclass\n\nmodule t(/*AUTOARG*/);\n\n   uvm_queue q;\n\n   initial begin\n      // From uvm_queue#(uvm_acs_name_struct) __local_field_names__;\n      q = new;\n      q.push_back('{\"n1\", \"n2\"});\n      q.push_back('{\"m1\", \"m2\"});\n      $display(\"%p\", q);\n      `checks(q.m_queue[0].name1, \"n1\");\n      `checks(q.m_queue[0].name2, \"n2\");\n      `checks(q.m_queue[1].name1, \"m1\");\n      `checks(q.m_queue[1].name2, \"m2\");\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

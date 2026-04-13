@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5170,
+  "issue_url": "https://github.com/verilator/verilator/pull/5170",
+  "title": "Use SystemC BITS_PER_DIGIT in VL_ASSIGN_SBW",
+  "body": "When using Verilator with SystemC 3.0.0, test [t_var_sc_bv.pl](https://github.com/verilator/verilator/blob/master/test_regress/t/t_var_sc_bv.pl) fails on https://github.com/verilator/verilator/blob/02dd33b60e938aa6d619207c1f8b01d2093ee50b/test_regress/t/t_var_sc_bv.cpp#L154\r\n\r\nwith error:\r\n```\r\nfree(): invalid pointer\r\n```\r\n\r\nAs an aftermath of https://github.com/verilator/verilator/pull/3513, assignment of [sc_biguint](https://github.com/accellera-official/systemc/blob/176a3b04e30607cded81cb60194719df506069e3/src/sysc/datatypes/int/sc_biguint.h#L86) is performed by accessing its internal representation. This representation was changed between versions 2.3.4 and 3.0.0. The change that led to test failure was https://github.com/accellera-official/systemc/commit/e9c401ebfcdfa67333fd64bbf60fd29697c51475 which changed `BITS_PER_DIGIT` value  from `30` to `32` which is used by our assignment macro for offset calculation.\r\n\r\nThe mismatched `VL_SC_BITS_PER_DIGIT` caused `m_free` variable to be overwritten with some non-zero value which caused \r\n`~sc_unsigned` to trigger [`free`](https://github.com/bminor/glibc/blob/eb370158794d7c64740a257ab2246ab46b90306a/stdlib/stdlib.h#L687) on non-heap allocated `sc_unsigned::digit` variable. This led to `free(): invalid pointer` runtime simulation error. Failure occurred when `obits` `VL_ASSIGN_SBW` parameter was set to 255 (which was greater than `lsb` in that case).\r\n\r\nThe fix consists of using `BITS_PER_DIGIT` directly in `VL_ASSIGN_SBW` instead of relying on hard-coded `VL_SC_BITS_PER_DIGIT` value.\r\n\r\nDirect call to `BITS_PER_DIGIT` macro was already done in similar `VL_ASSIGN_WSB`,  but not in `VL_ASSIGN_SBW`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-06-10",
+  "closed_at": "2024-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

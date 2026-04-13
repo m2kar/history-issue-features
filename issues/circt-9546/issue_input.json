@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9546,
+  "issue_url": "https://github.com/llvm/circt/pull/9546",
+  "title": "[Arc] Add Support for Dynamic Strings to the Arcilator Runtime",
+  "body": "Part 3 of the plan described in [PR #9438](https://github.com/llvm/circt/pull/9438).\r\n\r\n## Summary\r\n\r\nThis PR implements the LLVM lowering and runtime support for Sim dynamic strings in the Arcilator pipeline.\r\n\r\n## Implementation Details\r\n\r\n### 1. `DynamicString` Type\r\nAdded `DynamicString` struct to represent dynamic strings in the runtime. The actual string data is heap-allocated; this struct provides a convenient stack-based representation containing:\r\n- Pointer to the heap-allocated character data\r\n- Length of the string\r\n\r\n### 2. Lowering Strategy\r\n\r\n**Constant Assignment:**\r\n- Allocate a `DynamicString` on the stack\r\n- Make a runtime call that populates the struct with the string literal data\r\n\r\n**String Length:**\r\n- Locate the allocated `DynamicString` corresponding to the underlying string SSA value on the stack\r\n- Load the length field from the struct\r\n- *Assumes the underlying string has a corresponding `alloca` op (see Discussion Points)*\r\n\r\n**String Concatenation:**\r\n- Allocate a `DynamicString` on the stack for the result\r\n- Gather pointers to the `DynamicString` structs of the input strings\r\n- Pass these pointers as arguments to a runtime call that performs the concatenation\r\n\r\n### 3. Testing\r\n\r\n- **Arc-to-LLVM lowering tests**: Verify correct LLVM IR generation\r\n- **Arcilator integration tests**: End-to-end testing of dynamic string operations\r\n- **ArcRuntime unit tests**: Direct testing of runtime functions\r\n\r\n## Discussion Points\r\n\r\n### Question 1: Test Organization\r\nI've added unit tests for the runtime functions in the ArcRuntime test suite. Since `unittests/Dialect/Arc/Runtime/ArcRuntimeTest.cpp` appears to test public APIs, should the tests for private runtime calls be placed in a separate file (e.g., `ArcRuntimeInternalsTest.cpp` or `ArcStringRuntimeTest.cpp`)? Or is it acceptable to include them in the existing file?\r\n\r\nEDIT: The integration tests are failing because of this. Should I add it to a different file?\r\n\r\n### Question 2: `alloca` Assumption and Mapping Strategy\r\nThe current string length implementation assumes that every string SSA value has a corresponding `alloca` operation on the stack. Would this assumption be violated in any realistic use case? If so, should we implement the explicit mapping from SSA-values to addresses now, or start simple and refactor later if needed?",
+  "labels": [
+    "Arc"
+  ],
+  "state": "open",
+  "created_at": "2026-01-29",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

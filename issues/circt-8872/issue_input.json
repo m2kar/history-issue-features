@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8872,
+  "issue_url": "https://github.com/llvm/circt/pull/8872",
+  "title": "[Arc] Consider array/struct field alignment when computing state size",
+  "body": "The `StateType` in the Arc dialect currently just defers to `hw::getBitWidth` to compute the number of bits that need to be allocated in the simulator state. This is problematic, since types like structs and arrays have field and element alignment requirements, making LLVM require more bytes for these types than the summed-up bit width would suggest. As a result, the AllocateState pass would allocate 2 bytes for `struct<tag: i5, sign_ext: i1, offset: i3, size: i2>`, even though LLVM would consider the individual fields to be aligned to the nearest byte, making the struct cover 4 bytes in memory.\r\n\r\nTo fix this issue, make `StateType` more carefully compute the actual number of bits required in simulator storage by requiring all elements of a array or struct to be at least byte-aligned, and to more carefully track the alignmenmt of individual fields. This allows us to predict how many bytes more accurately.\r\n\r\nThis fixes a few nasty simulation mismatches between Arcilator and Verilator due to the memory corruption that would result from not allocating sufficient storage for arrays and structs.",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-19",
+  "closed_at": "2025-08-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

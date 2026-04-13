@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 631,
+  "issue_url": "https://github.com/verilator/verilator/issues/631",
+  "title": "Verilator mis-searches for modules with double underscores with __05F",
+  "body": "---\n\n\nAuthor Name: **Jason McMullan** (@ezrec)\nOriginal Redmine Issue: 631 from https://www.veripool.org\nOriginal Date: 2013-03-11\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI am working with a codebase with a number of models of the form of\r\nsection__module.v, and the default name mangling of Verilator would necessitate that I rename them all to section__05Fmodule.v\r\n\r\nWith the following change, verilator now only mangles a double underscore if it is at the start of a name:\r\n\r\nie:\r\n\r\n```\r\n__encode__me => __05Fencode__me\r\nencode__me   => encode__me\r\n\n```\r\n\r\n\r\n```\r\n--- a/src/V3Ast.cpp\r\n+++ b/src/V3Ast.cpp\r\n@@ -100,7 +100,7 @@ string AstNode::encodeName(const string& namein) {\r\n             : isalnum(pos[0])) {\r\n             out += pos[0];\r\n         } else if (pos[0]=='_') {\r\n-           if (pos[1]=='_') {\r\n+           if (start == pos && pos[1]=='_') {\r\n                 out += \"_\"; out += \"__05F\";  // hex(_) = 0x5F\r\n                 pos++;\r\n             } else {\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-03-11",
+  "closed_at": "2013-05-11",
+  "code_blocks": [
+    "--- a/src/V3Ast.cpp\r\n+++ b/src/V3Ast.cpp\r\n@@ -100,7 +100,7 @@ string AstNode::encodeName(const string& namein) {\r\n             : isalnum(pos[0])) {\r\n             out += pos[0];\r\n         } else if (pos[0]=='_') {\r\n-           if (pos[1]=='_') {\r\n+           if (start == pos && pos[1]=='_') {\r\n                 out += \"_\"; out += \"__05F\";  // hex(_) = 0x5F\r\n                 pos++;\r\n             } else {"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

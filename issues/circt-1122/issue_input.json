@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1122,
+  "issue_url": "https://github.com/llvm/circt/issues/1122",
+  "title": "[FIRRTL] (tail) false positive",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output tmp42: SInt<11>\r\n    tmp42 <= validif(tail(UInt(\"h11f\"), 13), SInt<11>(0))\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\n// Standard header to adapt well known macros to our needs.\r\n\r\nmodule top_mod(\r\n  output [10:0] tmp42);\r\n\r\n  assign tmp42 = 11'h0;\t// a_top_mod.fir:2:3, :4:46\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Error message:\r\n\r\n```\r\nException in thread \"main\" firrtl.passes.CheckWidths$TailWidthException: : [target ~top_mod|top_mod] Parameter 13 in tail operator is larger than input width 9.\r\n```\r\n",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-21",
+  "closed_at": "2021-05-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

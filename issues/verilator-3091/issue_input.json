@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3091,
+  "issue_url": "https://github.com/verilator/verilator/pull/3091",
+  "title": "Fix evaluation when variables are assigned in DPI exported functions",
+  "body": "This is the fix for the real issue that prompted the idea of #3047.\r\n\r\nThe use case arose trying to manage multiple clock signals with complex frequency ratios in C++ and then using the mechanism demonstrated in the added test to inject the clocks by calling the exported function prior to eval. It is arguable whether this is an IEEE compliant use case as I believe the standard does say exported functions can only be called from imported functions, but the use case seem reasonable to me, and I believe you could orchestrate something to the same effect that is compliant. Also I believe this resolves a more general issue of signals being set in exported functions being mishandled.\r\n\r\nNote, that the edge in the ordering graph from the input vertex to the variable set by a function might not be necessary to fix this (but assigning the variable to the combinational domain is necessary), but at the same time it does seem reasonably correct to treat those variables as top level inputs.\r\n\r\nDoes this change to V3Order seem reasonable to you? If so should probably make it work for public functions as well.\r\n\r\n---\r\n\r\nLogic downstream of variables assigned in a DPI exported function (that\r\nmay be called from outside eval) were not re-evaluated properly (see\r\ntest added in this patch) as we didn't realize the variables might be\r\nvolatile. This is fixed by the following changes in V3Order:\r\n\r\n1. Walk all DPI exported functions, and add an edge to the ordering\r\ngraph from the input vertex, to all variables written by the exported\r\nfunction (except for function locals).\r\n\r\n2. Assign all variable vertices that have an in-edge from the input\r\nvertex to the combinational domain.\r\n\r\nNote that point 2 above does not cause any change for variables that\r\nwere already descendants of the input node, as they would have already\r\nbeen assigned to the combinational domain due to being inputs (or\r\nnonOutputs) of the top level module.\r\n\r\nWe appreciate your contributing to Verilator.  If this is your first commit, please add your name to docs/CONTRIBUTORS, and read our contributing guidelines in docs/CONTRIBUTING.rst.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-05",
+  "closed_at": "2021-08-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

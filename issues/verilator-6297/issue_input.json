@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6297,
+  "issue_url": "https://github.com/verilator/verilator/issues/6297",
+  "title": "Module `ref` ports don't work without module inlining",
+  "body": "V3Inline just happens to do the right thing for `ref` ports, but they don't work if the module with the `ref` port is not inlined. I can't see documentation about support for `ref` ports being limited, and more importantly some times we can't inline modules at all, so this might be hit without warning.\n\nTest:\n\n```systemverilog\n`define stop $stop\n`define check(got ,exp) do if ((got) !== (exp)) begin $write(\"%%Error: %s:%0d: cyc=%0d got='%0d exp='%0d\\n\", `__FILE__,`__LINE__, cyc, (got), (exp)); `stop; end while(0)\n\nmodule top;\n\n  bit clk = 0;\n  always #5 clk = ~clk;\n\n  int cyc = 0;\n  int x;\n\n  sub s(clk, cyc, x);\n\n  always @(posedge clk) begin\n    cyc <= cyc + 1;\n    if (cyc == 0) begin\n      // Ignore\n    end else if (cyc == 1) begin\n      // 'x' updated by 'sub'\n    end else if (cyc == 2) begin\n      `check(x, 100);\n    end else if (cyc == 3) begin\n      x <= 200;\n    end else if (cyc == 4) begin\n      `check(x, 200);\n    end else begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n   end\n\nendmodule\n\nmodule sub(\n  input bit clk,\n  input int cyc,\n  ref int y\n);\n\n  always @(posedge clk) begin\n    if (cyc == 0) begin\n      // Ignore\n    end else if (cyc == 1) begin\n      y <= 100;\n    end else if (cyc == 2) begin\n      `check(y, 100);\n    end else if (cyc == 3) begin\n      // 'y' updated by 'top'\n    end else if (cyc == 4) begin\n      `check(y, 200); // <-------------- Fails this check \n    end\n   end\n\nendmodule\n```\n\nCommand line:\n```\nverilator --binary refport.sv -fno-inline -Wno-BLKANDNBLK\n```\n\nNote with `-fno-inline` we also get a seemingly stray `-Wno-BLKANDNBLK`. It's probably from the ~~AstAssignAlias created by V3Inline, which is treated as a combinational assignment~~ pin assignment created later.\n\nExecution fails:\n\n```\n%Error: refport.sv:56: cyc=4 got='100 exp='200\n%Error: refport.sv:56: Verilog $stop\nAborting...\n```\n\nThis is because without the inlining, the created ~~AstAssignAlias~~ pin assignment is executed as `x = y`, so the update from the submodule is visible to the top module, but not the other way around.\n\nTracked down while looking into #6280 \n\nAn alternative way to implement ref ports would be to treat them as a parameter, and specialize the module using the hierarchical reference it is bound to. Maybe?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-17",
+  "closed_at": "2025-08-22",
+  "code_blocks": [
+    "`define stop $stop\n`define check(got ,exp) do if ((got) !== (exp)) begin $write(\"%%Error: %s:%0d: cyc=%0d got='%0d exp='%0d\\n\", `__FILE__,`__LINE__, cyc, (got), (exp)); `stop; end while(0)\n\nmodule top;\n\n  bit clk = 0;\n  always #5 clk = ~clk;\n\n  int cyc = 0;\n  int x;\n\n  sub s(clk, cyc, x);\n\n  always @(posedge clk) begin\n    cyc <= cyc + 1;\n    if (cyc == 0) begin\n      // Ignore\n    end else if (cyc == 1) begin\n      // 'x' updated by 'sub'\n    end else if (cyc == 2) begin\n      `check(x, 100);\n    end else if (cyc == 3) begin\n      x <= 200;\n    end else if (cyc == 4) begin\n      `check(x, 200);\n    end else begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n   end\n\nendmodule\n\nmodule sub(\n  input bit clk,\n  input int cyc,\n  ref int y\n);\n\n  always @(posedge clk) begin\n    if (cyc == 0) begin\n      // Ignore\n    end else if (cyc == 1) begin\n      y <= 100;\n    end else if (cyc == 2) begin\n      `check(y, 100);\n    end else if (cyc == 3) begin\n      // 'y' updated by 'top'\n    end else if (cyc == 4) begin\n      `check(y, 200); // <-------------- Fails this check \n    end\n   end\n\nendmodule\n",
+    "verilator --binary refport.sv -fno-inline -Wno-BLKANDNBLK\n",
+    "%Error: refport.sv:56: cyc=4 got='100 exp='200\n%Error: refport.sv:56: Verilog $stop\nAborting...\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

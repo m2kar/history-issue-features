@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9516,
+  "issue_url": "https://github.com/llvm/circt/issues/9516",
+  "title": "[FIRRTL] Elide domains of zero-width ports in LowerDomains",
+  "body": "Consider the following example, directly adapted from an existing `lower-domains.mlir` test:\n\n``` mlir\n firrtl.circuit \"Foo\" {\n  firrtl.domain @ClockDomain\n  firrtl.module private @ZeroWidthPort(\n    in %A: !firrtl.domain of @ClockDomain,\n    in %a: !firrtl.uint<0> domains [%A]\n  ) {\n  }\n  firrtl.module @Foo() {}\n}\n```\n\nCurrently, this will lower the `ZeroWidthPort` module to the following. This keeps the domain information, but it is intentionally empty because `LowerToHW` will strip zero-width ports.\n\n``` mlir\nfirrtl.module private @ZeroWidthPort(\n  in %A: !firrtl.class<@ClockDomain()>, \n  out %A_out: !firrtl.class<@ClockDomain_out(\n    in domainInfo_in: !firrtl.class<@ClockDomain()>, \n    out domainInfo_out: !firrtl.class<@ClockDomain()>, \n    in associations_in: !firrtl.list<path>, \n    out associations_out: !firrtl.list<path>\n  )>, \n  in %a: !firrtl.uint<0>\n) {\n      %A_object = firrtl.object @ClockDomain_out(in domainInfo_in: !firrtl.class<@ClockDomain()>, out domainInfo_out: !firrtl.class<@ClockDomain()>, in associations_in: !firrtl.list<path>, out associations_out: !firrtl.list<path>)\n      %0 = firrtl.object.subfield %A_object[domainInfo_in] : !firrtl.class<@ClockDomain_out(in domainInfo_in: !firrtl.class<@ClockDomain()>, out domainInfo_out: !firrtl.class<@ClockDomain()>, in associations_in: !firrtl.list<path>, out associations_out: !firrtl.list<path>)>\n      firrtl.propassign %0, %A : !firrtl.class<@ClockDomain()>\n      %1 = firrtl.object.subfield %A_object[associations_in] : !firrtl.class<@ClockDomain_out(in domainInfo_in: !firrtl.class<@ClockDomain()>, out domainInfo_out: !firrtl.class<@ClockDomain()>, in associations_in: !firrtl.list<path>, out associations_out: !firrtl.list<path>)>\n      %2 = firrtl.list.create  : !firrtl.list<path>\n      firrtl.propassign %1, %2 : !firrtl.list<path>\n      firrtl.propassign %A_out, %A_object : !firrtl.class<@ClockDomain_out(in domainInfo_in: !firrtl.class<@ClockDomain()>, out domainInfo_out: !firrtl.class<@ClockDomain()>, in associations_in: !firrtl.list<path>, out associations_out: !firrtl.list<path>)>\n    }\n```\n\nI've observed a handful of situations where there are private modules with lots of this going on, e.g., O(10) unused, inferred domains show up because there are lots of zero-width ports.\n\nIt would be better if truly unused domains could be stripped when they have no association information. This may motivate breaking the zero-width removal part of `LowerToHW` out to a pass that runs earlier in the FIRRTL to HW conversion pipeline.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2026-01-26",
+  "closed_at": null,
+  "code_blocks": [
+    "\nCurrently, this will lower the `ZeroWidthPort` module to the following. This keeps the domain information, but it is intentionally empty because `LowerToHW` will strip zero-width ports.\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

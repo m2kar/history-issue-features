@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2392,
+  "issue_url": "https://github.com/llvm/circt/pull/2392",
+  "title": "[FIRRTL] Add multibit_mux op and lowerings",
+  "body": "This commit adds new operation `multibit_mux` to make subaccess lowering\r\nmore efficient. Subaccess ops are currently lowered into mux chains but in HW/Comb dialect\r\nthey are pulled back to array_create + array_get. `multibit_mux` will be directly lowered\r\ninto array_create + array_get at LowerToHW.\r\n\r\nThis commit containts parser/printer, folder,\r\nLowerTypes and LowerToHW change. multibit_mux operations are\r\ncreated only at subaccess lowering in LowerTypes. \r\n\r\nThis speeds up entire process after LowerTypes  5%~10% for large circuits.\r\nWill close https://github.com/llvm/circt/issues/1617.\r\n\r\nNote that this is not NFC because of mux canonicalizations. \r\nFor example, \r\n```scala\r\ncircuit B:\r\n  module B :\r\n    input sel : UInt<2>\r\n    output bar : UInt<1>\r\n    wire foo: UInt<1>[4]\r\n    foo[0] <= UInt<1>(1)\r\n    foo[1] <= UInt<1>(0)\r\n    foo[2] <= UInt<1>(1)\r\n    foo[3] <= UInt<1>(0)\r\n    bar <= foo[sel]\r\n```\r\nwas converted into:\r\n```sv\r\nassign bar = sel != 2'h3 & (sel == 2'h2 | sel != 2'h1);\r\n```\r\nbut with this patch, \r\n```sv\r\nwire [3:0] _T = {{1'h1}, {1'h0}, {1'h1}, {1'h0}}; \r\nassign bar = _T[sel];\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-26",
+  "closed_at": "2021-12-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9449,
+  "issue_url": "https://github.com/llvm/circt/issues/9449",
+  "title": "ImportVerilog basic test may have invalid SV",
+  "body": "Checking with latest version of slang @dinoruic found:\n\n```\n../circt/test/Conversion/ImportVerilog/basic.sv:1827:11: error: expression is not assignable\n  output .b0(42),\n          ^  ~~\n../circt/test/Conversion/ImportVerilog/basic.sv:1831:11: error: expression is not assignable\n  output .b2(y ^ z)\n          ^  ~~~~~\n```\n\nLiterals as port references  like .a(42) or binary operators like .a(x^y) are not valid by [SytemVerilog standard (IEEE 1800) 23.2.2.1 Non-ANSI style port declarations](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8299595#page=699.77):\n\n```\nThe port reference for each port in the list_of_ports in the module header can be one of the following:\n— A simple identifier or escaped identifier\n— A bit-select of a vector declared within the module\n— A part-select of a vector declared within the module\n— A concatenation of any of the above\n```\n\nThe release 9.1 of slang already does not allow input ports to do that. What's new in the master branch also raises an error if it happens to output ports.\n\n--\n\nWould there be any objection to just simplifying that test? (We would ideally like to bump to version closer to head too)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-14",
+  "closed_at": "2026-01-14",
+  "code_blocks": [
+    "../circt/test/Conversion/ImportVerilog/basic.sv:1827:11: error: expression is not assignable\n  output .b0(42),\n          ^  ~~\n../circt/test/Conversion/ImportVerilog/basic.sv:1831:11: error: expression is not assignable\n  output .b2(y ^ z)\n          ^  ~~~~~\n",
+    "The port reference for each port in the list_of_ports in the module header can be one of the following:\n— A simple identifier or escaped identifier\n— A bit-select of a vector declared within the module\n— A part-select of a vector declared within the module\n— A concatenation of any of the above\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

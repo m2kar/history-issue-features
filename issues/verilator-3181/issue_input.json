@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3181,
+  "issue_url": "https://github.com/verilator/verilator/issues/3181",
+  "title": "Array method name failed to parse if conflict with sv keywords",
+  "body": "verilator version: 4.214\r\nsteps of reproduction:\r\n```\r\n// file: x.sv\r\nmodule x();\r\n\tbyte b[$] = {1, 2, 3};\r\n\tbyte v;\r\n    initial begin\r\n    \tv = b.and();\r\n        $display(\"%d\", v);\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\nwhich gives following error:\r\n```\r\n%Error: x.sv:5:17: syntax error, unexpected ';', expecting with-then-(\r\n    5 |      v = b.and();\r\n      |                 ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\nI changed verilog.y:4120 from\r\n```\r\narray_methodWith<nodep>:\r\n\t\tarray_methodNoRoot\t\t\t{ $$ = $1; }\r\n```\r\nto\r\n```\r\narray_methodWith<nodep>:\r\n\t\tarray_methodNoRoot parenE\t\t{ $$ = $1; }\r\n```\r\nand the problem seems to be fixed, not sure if it is the right way though.",
+  "labels": [
+    "resolution: fixed",
+    "area: parser"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-22",
+  "closed_at": "2021-10-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

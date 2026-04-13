@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4643,
+  "issue_url": "https://github.com/verilator/verilator/pull/4643",
+  "title": "if-statement/ternary dataflow bug",
+  "body": "I've encountered this bug with if-statements/contitional-expressions that are moving data larger than 32 bits.\r\ne.g.:\r\n```\r\n        if (wordQ.size() > 0) begin\r\n            myint = 100'(wordQ.pop_front());\r\n        end else begin\r\n            myint = 100'(99);\r\n        end\r\n```\r\n\r\n The emitted C++ code can come out as this:\r\n```  \r\n    VL_EXTENDS_WI(100,32, __Vtemp_h8963a0fe__1, vlSelf->t__DOT__wordQ.pop_front());\r\n    t__DOT__myint[0U] = (VL_LTS_III(32, 0U, vlSelf->t__DOT__wordQ.size())\r\n                          ? __Vtemp_h8963a0fe__1[0U]\r\n                          : 0x63U);\r\n    t__DOT__myint[1U] = (VL_LTS_III(32, 0U, vlSelf->t__DOT__wordQ.size())\r\n                          ? __Vtemp_h8963a0fe__1[1U]\r\n                          : 0U);\r\n    t__DOT__myint[2U] = (VL_LTS_III(32, 0U, vlSelf->t__DOT__wordQ.size())\r\n                          ? __Vtemp_h8963a0fe__1[2U]\r\n                          : 0U);\r\n    t__DOT__myint[3U] = (VL_LTS_III(32, 0U, vlSelf->t__DOT__wordQ.size())\r\n                          ? (0xfU & __Vtemp_h8963a0fe__1[3U])\r\n                          : 0U);\r\n```\r\nOR\r\n```\r\nVL_COND_WIWW(100, __Vtemp_11, VL_LTS_III(32, 0U, vlSelf->wordQ.size()), vlSelf->wordQ.pop_front(), __Vtemp_9);\r\n```\r\n\r\nBoth of which use the value of `pop_front` without accounting for side effects.\r\n\r\nSource code/test is included in the pull request, but I'm not familiar with with the C++ emission part of verilator. Which files/modules should I look at to try and fix this?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-30",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

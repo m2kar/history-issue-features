@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3185,
+  "issue_url": "https://github.com/verilator/verilator/pull/3185",
+  "title": "Fix wrong bit op tree optimization",
+  "body": "Fixes #3182 \r\n\r\nHere is the input of the problematic bit op tree path. (Note that `bits_source` is originally `SimTop__DOT__l_soc__DOT__core_with_l2__DOT__core__DOT__memBlock__DOT__dcache__DOT__dcache__DOT__wb_io_mem_release_bits_source`, but I shortened in the following snippet).\r\n\r\n```\r\n    AND 0x556f7b9f39f0 <e171813016#> {c1049971bf} @dt=0x556fb8a4dfb0@(G/wu32/1)\r\n    1: NOT 0x556f7b9f3ab0 <e171813012#> {c1049969as} @dt=0x556fb8a4dfb0@(G/wu32/1)\r\n    1:1: SHIFTR 0x556f7b9f3c40 <e196387914#> {c1049969bu} @dt=0x556fb8a4dfb0@(G/wu32/1)\r\n    1:1:1: VARREF 0x556f79de76e0 <e196387904#> {c1032795bs} @dt=0x556fb8a4b210@(G/wu32/6)  bits_source [RV] <- VAR 0x556f5f5ee850 <e51888605#> {c453059ao} @dt=0x556c34314260@(G/w5)  bits_source [VSTATIC]  WIRE\r\n    1:1:2: CONST 0x556f79de77f0 <e196387905#> {c1049969bv} @dt=0x556bafb09cf0@(G/swu32/3)  3'h5\r\n    2: GTE 0x556f798209e0 <e171813015#> {c1049970bz} @dt=0x556f46c20010@(G/nwu32/1)\r\n    2:1: CONST 0x556f79820aa0 <e171813013#> {c1049970cc} @dt=0x556c21cbee00@(G/wu32/5)  5'h10\r\n    2:2: VARREF 0x556f79820bc0 <e171813014#> {c1032795bs} @dt=0x556c21cbee00@(G/wu32/5)  bits_source [RV] <- VAR 0x556f5f5ee850 <e51888605#> {c453059ao} @dt=0x556c34314260@(G/w5)  bits_source [VSTATIC]  WIRE\r\n```\r\nVariable `bits_source` has just 5 bit width as `(G/w5)` tells.\r\nThe result of SHIFTR (Logical shift right) of 5 is 0.\r\nNOT flips the result to 1, but the NOT is ignored in the master.\r\n\r\nI have been trying to make a small test case, but unfortunately not yet.\r\nI think It's better to merge this fix rather than taking time to adding a test as this bug causes wrong simulation result.\r\nWhen I can make a small test case, I will send another PR.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-29",
+  "closed_at": "2021-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

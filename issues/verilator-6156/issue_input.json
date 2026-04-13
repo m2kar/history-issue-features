@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6156,
+  "issue_url": "https://github.com/verilator/verilator/issues/6156",
+  "title": "ICO replication in hierarchical verilation",
+  "body": "Is it required for *all* logic driven by hierarchical block module inputs to be `V3SchedReplicate`d into an ICO region?\n\nOr more specifically, can we constrain the size of ICO region in hierarchical blocks when we know they are not top modules themselves?\n\n\nThe current replication algorithm assumes that all of hier_block inputs are `primaryIO` variables but it is not always the case.\n\nConsider the following example:\n```verilog\nmodule t (\n    clk\n);\n  input clk;\n  logic [7:0] non_top_input = $c1(2);\n\n  logic [7:0] top_out = 0;\n  logic [7:0] non_top_out = 0;\n\n  sub sub (\n      .clk(clk),\n      .sub_non_top(non_top_input),\n      .sub_top_out(top_out),\n      .sub_non_top_out(non_top_out)\n  );\n  always @(posedge clk) begin\n    $write(\"%d, %d, %d, %d\", clk, non_top_input, top_out, non_top_out);\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\nendmodule\n\nmodule sub (\n    input clk,\n    input [7:0] sub_non_top,\n    output [7:0] sub_top_out,\n    output [7:0] sub_non_top_out\n);  /*verilator hier_block*/\n  assign sub_top_out = 8'(clk) ^ $c1(2);\n  assign sub_non_top_out = sub_non_top ^ $c1(3);\nendmodule\n```\n\nHere, assignment to `sub_non_top_out` is not required to be inside ICO region as we can determine (during the last hierarchical stage) that input signals of assignment RHS are not top-module primaryIOs. Therefore when excluding this vertex from `INPUT` replication, this assignment is scheduled onto `stl` region only, without changing the output of simulation.\n\nI'm thinking on analyzing in `V3SchedReplicate` phase which signals are needed for ICO in hierarchical blocks and then using this to limit size of ICO logic in those blocks. What I'm concerned about is whether simulation correctness will hold for a general case with this optimization.\n\n@gezalore\n",
+  "labels": [
+    "area: scheduling",
+    "status: discussion",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-04",
+  "closed_at": "2025-07-24",
+  "code_blocks": [
+    "module t (\n    clk\n);\n  input clk;\n  logic [7:0] non_top_input = $c1(2);\n\n  logic [7:0] top_out = 0;\n  logic [7:0] non_top_out = 0;\n\n  sub sub (\n      .clk(clk),\n      .sub_non_top(non_top_input),\n      .sub_top_out(top_out),\n      .sub_non_top_out(non_top_out)\n  );\n  always @(posedge clk) begin\n    $write(\"%d, %d, %d, %d\", clk, non_top_input, top_out, non_top_out);\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\nendmodule\n\nmodule sub (\n    input clk,\n    input [7:0] sub_non_top,\n    output [7:0] sub_top_out,\n    output [7:0] sub_non_top_out\n);  /*verilator hier_block*/\n  assign sub_top_out = 8'(clk) ^ $c1(2);\n  assign sub_non_top_out = sub_non_top ^ $c1(3);\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

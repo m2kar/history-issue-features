@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4284,
+  "issue_url": "https://github.com/llvm/circt/issues/4284",
+  "title": "[ExportVerilog] Synchronous Negedge Reset?",
+  "body": "Example MLIR\r\n```\r\nmodule attributes {circt.loweringOptions = \"locationInfoStyle=none\"} {\r\n    hw.module @Foo(%I: i8, %CLK: i1, %RESETN: i1) -> (O: i8) {\r\n        %1 = sv.reg {name = \"Register_inst0\"} : !hw.inout<i8>\r\n        sv.alwaysff(posedge %CLK) {\r\n            sv.passign %1, %I : i8\r\n        } (syncreset : negedge %RESETN) {\r\n            sv.passign %1, %2 : i8\r\n        }\r\n        %2 = hw.constant 0 : i8\r\n        sv.initial {\r\n            sv.bpassign %1, %2 : i8\r\n        }\r\n        %0 = sv.read_inout %1 : !hw.inout<i8>\r\n        hw.output %0 : i8\r\n    }\r\n}\r\n```\r\n\r\nverilog out\r\n\r\n```\r\nmodule Foo(\r\n  input  [7:0] I,\r\n  input        CLK,\r\n               RESETN,\r\n  output [7:0] O);\r\n\r\n  reg [7:0] Register_inst0;\r\n  always_ff @(posedge CLK) begin\r\n    if (RESETN)\r\n      Register_inst0 <= 8'h0;\r\n    else\r\n      Register_inst0 <= I;\r\n  end // always_ff @(posedge)\r\n  initial\r\n    Register_inst0 = 8'h0;\r\n  assign O = Register_inst0;\r\nendmodule\r\n```\r\n\r\nInvestigating the docs and code it seems that negedge logic is only generated for async resets.  Is there any reason that synchronous negedge is not supported? If not, I'd be happy to update the code.\r\n\r\nRelevant issue: https://github.com/phanrahan/magma/issues/1178",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-11-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

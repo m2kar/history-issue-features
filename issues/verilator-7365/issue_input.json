@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7365,
+  "issue_url": "https://github.com/verilator/verilator/pull/7365",
+  "title": "Fix false ASSIGNIN on interface input port connections",
+  "body": "## Summary\r\n\r\nFollow-up to #7322. That PR suppressed false `ASSIGNIN` for continuous\r\nassignments to net-type interface input ports (`assign sif.port = val`),\r\nbut missed the port-connection path (`.output_port(sif.port)`). \r\nFound in CVV integration: https://github.com/openhwgroup/core-v-verif/pull/2724\r\n\r\nAt `V3Width` time, port connections are still `AstPin` nodes — `V3Inst`\r\nconverts them to `AssignW` later. The existing check only matched\r\n`AssignW` as parent, so port connections were not suppressed.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\ninterface ifc_status (input wire busy);\r\nendinterface\r\n\r\nmodule dut (output logic sleep_o);\r\n  initial sleep_o = 1'b1;\r\nendmodule\r\n\r\nmodule dut_wrap (ifc_status sif);\r\n  dut u_dut (\r\n    .sleep_o(sif.busy)  // Legal but triggers ASSIGNIN\r\n  );\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-ASSIGNIN: Assigning to input/const variable: 'busy'\r\n```\r\n\r\n## Changes\r\n\r\n- `V3Width.cpp`: Extend ASSIGNIN suppression to also accept `AstPin` as parent node, since a port connection to a net-type input is semantically equivalent to a continuous assignment (IEEE 1800-2023 §23.3.3.3)\r\n\r\n## Test\r\n\r\n- Updated `test_regress/t/t_interface_input_port_assign.v` -- added port-connection scenario (Scenario 4) alongside existing continuous-assignment scenarios\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-02",
+  "closed_at": "2026-04-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

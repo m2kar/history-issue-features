@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9164,
+  "issue_url": "https://github.com/llvm/circt/issues/9164",
+  "title": "[ImportVerilog] Implicit return variable assignment treated as captured value",
+  "body": "The following used to compile, with the assignment to the implicit variables `bar` and `foo` working properly:\n```systemverilog\nmodule FunctionReturnFailure(input bit u, output bit v);\n  assign v = bar(u);\n  function automatic bit bar(input bit b);\n    bar = foo(b);\n  endfunction\n  function automatic bit foo(input bit a);\n    foo = a;\n  endfunction\nendmodule\n```\nRunning this through `circt-verilog` now produces the following error which looks like it's coming from how captured variables are treated:\n```\nbroken.sv:3:26: error: expected captured value to be a ref-like type\n  function automatic bit bar(input bit b);\n                         ^\nbroken.sv:3:26: note: see current operation:\n\"func.func\"() <{function_type = (!moore.i1) -> !moore.i1, sym_name = \"bar\", sym_visibility = \"private\"}> ({\n^bb0(%arg0: !moore.i1):\n  %0 = \"moore.variable\"(%arg0) : (!moore.i1) -> !moore.ref<i1>\n  %1 = \"moore.variable\"() : () -> !moore.ref<i1>\n  %2 = \"moore.read\"(%0) : (!moore.ref<i1>) -> !moore.i1\n  %3 = \"func.call\"(%2) <{callee = @foo}> : (!moore.i1) -> !moore.i1\n  \"moore.blocking_assign\"(%1, %3) : (!moore.ref<i1>, !moore.i1) -> ()\n}) : () -> ()\n```\n@Scheremo Any idea what's going on here? Could this be the lvalue callback not realizing that there is an implicit `bar`/`foo` variable in scope?",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-30",
+  "closed_at": "2025-10-31",
+  "code_blocks": [
+    "module FunctionReturnFailure(input bit u, output bit v);\n  assign v = bar(u);\n  function automatic bit bar(input bit b);\n    bar = foo(b);\n  endfunction\n  function automatic bit foo(input bit a);\n    foo = a;\n  endfunction\nendmodule\n",
+    "broken.sv:3:26: error: expected captured value to be a ref-like type\n  function automatic bit bar(input bit b);\n                         ^\nbroken.sv:3:26: note: see current operation:\n\"func.func\"() <{function_type = (!moore.i1) -> !moore.i1, sym_name = \"bar\", sym_visibility = \"private\"}> ({\n^bb0(%arg0: !moore.i1):\n  %0 = \"moore.variable\"(%arg0) : (!moore.i1) -> !moore.ref<i1>\n  %1 = \"moore.variable\"() : () -> !moore.ref<i1>\n  %2 = \"moore.read\"(%0) : (!moore.ref<i1>) -> !moore.i1\n  %3 = \"func.call\"(%2) <{callee = @foo}> : (!moore.i1) -> !moore.i1\n  \"moore.blocking_assign\"(%1, %3) : (!moore.ref<i1>, !moore.i1) -> ()\n}) : () -> ()\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

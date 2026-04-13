@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4163,
+  "issue_url": "https://github.com/llvm/circt/issues/4163",
+  "title": "[FIRRTL, SV] Broken mux pragmas when hw.array_get is CSEd",
+  "body": "```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input d: UInt<1>[8]\r\n    input sel: UInt<3>\r\n    output q: UInt<1>\r\n\r\n    q <= mux(lt(sel,UInt<3>(4)), d[add(sel, UInt<3>(4))], d[sub(sel, UInt<3>(4))])\r\n```\r\n\r\nThe current output is:\r\n```\r\n  wire [7:0] _GEN = {{d_7}, {d_6}, {d_5}, {d_4}, {d_3}, {d_2}, {d_1}, {d_0}};\r\n  wire       _GEN_0;\r\n  wire       _GEN_1 = _GEN[sel - 3'h4] /* cadence map_to_mux */;\r\n  /* synopsys infer_mux_override */\r\n  assign _GEN_0 = _GEN_1;\r\n  wire       _GEN_2;\r\n  /* synopsys infer_mux_override */\r\n  assign _GEN_2 = _GEN_1;\r\n  assign q = sel[2] ? _GEN_2 : _GEN_0;\r\nendmodule\r\n```\r\n\r\n`/* synopsys infer_mux_override */` must be annotated to `_GEN[sel - 3'h4]` but it's spilled to a wire because of CSE. \r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-10-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

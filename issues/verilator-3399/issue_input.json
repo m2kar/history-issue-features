@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3399,
+  "issue_url": "https://github.com/verilator/verilator/issues/3399",
+  "title": "Incorrect tristate enable logic",
+  "body": "Version:  Verilator 4.214 2021-10-17 rev v4.214\r\nOS: RHEL\r\n\r\nHi,\r\n\r\nI've got a bug or user issue, still to be determined, but would like some help in debugging further.  I have a simple tristate model that I'm using for both FPGA and Verilator and I'm seeing some strange behaviour in Verilator where the output port of the tristate, the input to the core, isn't being driven when enabled.  I tried to construct a testcase using the tristate model on it's own but that works fine so it seems to be some interaction with the larger system.\r\n\r\nMy tristate model looks like:\r\n\r\n```systemverilog\r\nmodule pad_tri (\r\n  output logic pad_o,\r\n  input logic pad_i,\r\n  input logic oe,\r\n  input logic ie,\r\n  inout wire pad\r\n);\r\n\r\n  assign pad   = oe ? pad_i : 'z;\r\n  assign pad_o = ie ? pad   : 'z;\r\n\r\nendmodule\r\n```\r\n\r\nWhat I can see in the waves is that `pad` is busy toggling while `ie` is high but I get no output on `pad_o`.\r\n\r\nI modified my toplevel to just instantiate a single `pad_tri` rather than have them inside of generate statements to see if that helped but no change.  I've been looking through the generated CPP files and the following looks strange.  I've not looked at the naming conventions here before but the following looks dodgy to me:\r\n\r\n```cpp\r\n    vlSelf->chip_sim_tb__DOT__u_led_2_tristate__DOT__pad_o__out__en0 \r\n        = (1U & (((IData)(vlSelf->chip_sim_tb__DOT__led_input_en) \r\n                  & (IData)(vlSelf->chip_sim_tb__DOT__led_output_en)) \r\n                 >> 2U));\r\n```\r\nThe nets `led_input_en` and `led_output_en` are connected to `ie` and `oe` respectively.\r\n\r\nHaving seen that, I've just modified the `pad_o` assignment to be just `assign pad_o = pad` and the simulation works correctly.  So could this just be a broken optimisation?\r\n\r\nCan you also explain what the various signal suffixes mean. Is `__out__en0` meant to be the output enable?",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-27",
+  "closed_at": "2022-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

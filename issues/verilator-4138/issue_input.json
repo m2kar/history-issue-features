@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4138,
+  "issue_url": "https://github.com/verilator/verilator/issues/4138",
+  "title": "Support inside expressions with strings and doubles",
+  "body": "This issue can manifest in several ways. For example\r\n\r\n```systemverilog\r\ntask foo(string s);\r\n  if (s inside {\"RW\", \"WO\"})\r\n    $display(\"string: %s\", s);\r\nendtask\r\n\r\nmodule t();\r\n  foo(\"ABC\");\r\nendmodule\r\n```\r\n\r\nwill compile, but the simulation output will be incorrect:\r\n\r\n```\r\nstring: ABC\r\n```\r\n\r\nHowever, when the task is moved into a class, like so:\r\n\r\n```systemverilog\r\nclass Bar;\r\n  task foo(string s);\r\n    if (s inside {\"RW\", \"WO\"})\r\n      $display(\"string: %s\", s);\r\n  endtask\r\nendclass\r\n```\r\n\r\nthis will no longer compile, leaving a lengthy set of errors, starting with:\r\n\r\n```cc\r\nVt_inside_nonint___024unit__03a__03aBar__Vclpkg__DepSet_hdd08c3fc__0.cpp:13:33: error: no match for ‘operator==’ (operand types are ‘long long unsigned int’ and ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’})\r\n   13 |     if (VL_UNLIKELY(((0x5257ULL == s) | (0x574fULL\r\n      |                       ~~~~~~~~~ ^~ ~\r\n      |                       |            |\r\n      |                       |            std::string {aka std::__cxx11::basic_string<char>}\r\n      |                       long long unsigned int\r\n```\r\n\r\nIt's even more straightforward with `real`s:\r\n\r\n```\r\ntask foo(real d);\r\n  if (d inside {0.0, 1.0})\r\n    $display(\"string: %f\", d);\r\nendtask\r\n```\r\nresults in:\r\n```\r\n%Warning-REALCVT: test_regress/t/t_inside_nonint.v:2:7: Implicit conversion of real to integer\r\n-node: VARREF 0x55e39fb81f90 {d2ah} @dt=0x55e39fba2880@(d)  d pkg=0x55e39fba37c0 [RV] <- VAR 0x55e39fba2950 {d1ap} @dt=0x55e39fba2880@(d)  d INPUT [FUNC] PORT\r\n    2 |   if (d inside {0.0, 1.0})\r\n      |       ^\r\n                  ... For warning description see https://verilator.org/warn/REALCVT?v=5.009\r\n                  ... Use \"/* verilator lint_off REALCVT */\" and lint_on around source to disable this message.\r\n```\r\n\r\n\r\n----------------------------\r\n\r\nAfter looking into the code, I found out that the logic for `inside` statement assumes that it is dealing with logic values. Interestingly enough, this doesn't always result in any reported error. The reason seems to be that string literals are treated as logic vectors which eventually get casted if there's a need to do so. I guess that in the first example, the `s` string got constified before it gets compared with the literals which ended up removing the type mismatch. It is puzzling however, that the expression evaluated to `1'b1`, so I 'm not sure about this explanation.\r\n\r\n----------------------------\r\n\r\nVerilator version: 84a46939b348836ab8abbd79f61386e403997720\r\nOS: Gentoo Linux (x86_64)\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-20",
+  "closed_at": "2023-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

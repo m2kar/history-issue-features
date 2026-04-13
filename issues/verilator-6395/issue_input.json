@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6395,
+  "issue_url": "https://github.com/verilator/verilator/issues/6395",
+  "title": "Fix LLVM compiler limit on number of class constructor initializers",
+  "body": "We are trying to build large designs with Verilator. GCC appears to be fairly hopeless for this. LLVM initially builds the large designs for a moderate number of \"tiles\" but when the design is scaled up, LLVM output silently crashes. We tracked this down to a problem with the number of constructor initializers in the Vtb__Syms.cpp file. When this reaches 64K, the output is no good. \n\nAfter a shit-ton of debugging, we found the culprit is in LLVM's clang/include/clang/AST/DeclBase.h file. It defines a constant NumCtorInitializers, which is the log of the number of constructor initializers that it will handle before silently corrupting itself.  It is currently set to 16 (i.e. 2^16=64K). But what is especially surprising is that this value was 21 only a few years ago, then went to 19, 18, 17. Basically, the LLVM front end maintainers are stealing bits away from this field over time.  So we are seeing an exponential decrease in the number of modules that Verilator can simulate over time. \n\nWe went to the Clang Frontend forum on discourse.llvm.org, and asked about this (https://discourse.llvm.org/t/plans-for-cxxconstructordecl/88200) and discovered that their current roadmap is to decrease this down to 13. At that point Verilator will have gone from being able to support 2 million modules to only 8192.  Now I understand that this could also be fixed by hacking Verilator to pieces but it seems very strange for the world's leading edge compiler to be exponentially reducing the universe of programs it supports. \n\nIt turns out there is a very simple fix for this in LLVM (adding one 32-bit field per constructor), but at least one LLVM maintainer (who works at Nvidia) on the discussion argued against the idea because it would use more memory.\n\nI want to draw awareness of this to those who might find this concerning. For any that are more savvy about LLVM RFC etc process, here is the link to the discussion:\n\nhttps://discourse.llvm.org/t/plans-for-cxxconstructordecl/88200\n",
+  "labels": [
+    "area: portability"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-06",
+  "closed_at": "2025-11-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7820,
+  "issue_url": "https://github.com/llvm/circt/pull/7820",
+  "title": "[FIRRTL] Dedup: hash modules back->front",
+  "body": "Hashing modules back->front lets us be a bit leaner with the state we\r\nhave to track, and hopefully will give us a nice speed improvement.\r\n\r\nIn the old algorithm, as we hashed each operation or block in the\r\nmodule, we would store its position as an index into a side-table.  When\r\na value is used, we could record the use by hashing-in the result-no and\r\nthe defining operation's index (or argument-no and block index, resp).\r\n\r\nThis index table is a major performance bottleneck for dedup: in a large\r\nmodule, this table can be massive. The observation made is that values\r\ntend to only be used near their definition. After we hash the last use\r\nof an operation or block, we should be safe to remove its index from the\r\nindex table, and keep the index table as small as possible.\r\n\r\nThis PR modifies the hasher to walk the module backwards. When a value\r\nis first encountered (while hashing a use/operand), we assign an ID to\r\nthe defining operation. We use that ID to hash all uses.\r\n\r\nWhen the defining op is hashed, we hash its ID once more (recording the\r\nfact that the ID is defined by the op), and remove the ID from the\r\ntable--a value can only be used after it is defined. This ensures that\r\nwe only track the ID of an operation for its live range in the IR.\r\n\r\nThe IDs are assigned according to their \"first occurrence\" in the\r\nbackwards walk of the IR. Since the assignment of IDs is derived from\r\nthe structure of the IR, two equivalent modules should assign the same\r\nIDs to the same ops.\r\n\r\nThis PR also updates the hashing of inner-symbols to be handled in a\r\nsimilar way. When an inner symbol is referenced, we assign an ID and\r\nrecord the reference by hashing the ID. When an inner symbol is defined,\r\nwe record the definition by, again, hashing the ID. Unlike values, a\r\nsymbol can be referenced before it is defined, so we can never free\r\ninner symbol IDs. This corrects an old logical \"bug\" in dedup, which\r\nnever arises in practice because chisel cannot generate it.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-15",
+  "closed_at": "2024-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

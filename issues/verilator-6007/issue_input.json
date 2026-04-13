@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6007,
+  "issue_url": "https://github.com/verilator/verilator/issues/6007",
+  "title": "Incorrect Optimization Causes Mismatched Output in Verilator",
+  "body": "The following is the problematic code `test.v`. \n\n```verilog\n`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\nmodule top (out33);\n\noutput wire [6:0] out33;\n\n    assign out33 = (6'o66 <<< 32'hFFFF_FFFF);\n\n    initial begin\n      #10;\n      `checkd(out33, '0);\n      $write(\"*-* All Finished *-*\\n\");\n      $finish; \n    end\n\nendmodule\n\n```\n\nYou can reproduce the issue with the following commands:\n\n```\nverilator --binary -Wno-lint --timing  test.v\n./obj_dir/Vtest\n```\n\nVerilator output:\n\n```\n%Error: test.v:16:  got=27 exp=0\n%Error: test.v:16: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nHowever, Icarus Verilog completes successfully with `*-* All Finished *-*`.  Moreover, examining the expression shows that the result should also be 0.\n\n\n### System details:\n* Verilator version: Verilator 5.037 devel rev v5.036-64-g2f6ecd185\n* OS: Ubuntu 22.04.5 LTS (Jammy), Kernel/Release: 22.04\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-16",
+  "closed_at": "2025-05-17",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\nmodule top (out33);\n\noutput wire [6:0] out33;\n\n    assign out33 = (6'o66 <<< 32'hFFFF_FFFF);\n\n    initial begin\n      #10;\n      `checkd(out33, '0);\n      $write(\"*-* All Finished *-*\\n\");\n      $finish; \n    end\n\nendmodule\n\n",
+    "verilator --binary -Wno-lint --timing  test.v\n./obj_dir/Vtest\n",
+    "%Error: test.v:16:  got=27 exp=0\n%Error: test.v:16: Verilog $stop\nAborting...\nAborted (core dumped)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

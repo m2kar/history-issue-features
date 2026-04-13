@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7842,
+  "issue_url": "https://github.com/llvm/circt/pull/7842",
+  "title": "[HWToBTOR2] Fix slice lowering argument meanings",
+  "body": "Seems like HWToBTOR2 currently implements the wrong semantics for slice in BTOR2 - we assume that BTOR2's slice operation takes the same arguments as our extract (the lowbit and the width) but it actually requires the upper and lower bits of the slice.\r\n\r\nFor example:\r\n```\r\nhw.module @Top() {\r\n    %c0_i8 = hw.constant 0 : i8\r\n    %extract = comb.extract %c0_i8 from 4 : (i8) -> i4\r\n}\r\n```\r\ncurrently lowers to \r\n```\r\n1 sort bitvec 8\r\n2 constd 1 0\r\n3 sort bitvec 1\r\n4 slice 3 2 0 4\r\n```\r\nwhich when given to Btor-mc throws\r\n```\r\nbtormc: parse error in 'breaking.btor2' line 4: lower has to be less than or equal to upper\r\n```\r\nas it's expecting the 3rd argument of the slice to be the upper bit so it should be greater than the 4th.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-19",
+  "closed_at": "2024-11-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

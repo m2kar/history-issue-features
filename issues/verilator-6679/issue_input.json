@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6679,
+  "issue_url": "https://github.com/verilator/verilator/issues/6679",
+  "title": "Fix extending a class by a typedef",
+  "body": "Hello,\n\nif I try to inherit from a class that by itself is typedef of another class, verilator does not accept this.\nA minimal example for this is:\n\n```\npackage kbus_slave_agent_pkg;\n\n  class hsh_slave_transaction #(int P_REQ_DATA_WIDTH, int P_GNT_DATA_WIDTH);\n      rand int x;\n  endclass;\n\n  /////////////////////////////////////////////////////////////////////////////\n  // Parameters\n  /////////////////////////////////////////////////////////////////////////////\n  // Storage data width\n  parameter P_REQ_DATA_WIDTH = 32;\n\n  // Storage address widt\n  parameter P_GNT_DATA_WIDTH = 32;\n\n  typedef hsh_slave_transaction #(P_REQ_DATA_WIDTH, P_GNT_DATA_WIDTH) kbus_slave_transaction_base;\n\n  class kbus_slave_transaction extends kbus_slave_transaction_base;\n    rand int y;\n  endclass;;\n\nendpackage : kbus_slave_agent_pkg\n```\n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\n```\n%Error-UNSUPPORTED: t_class_extends_typedef/t_class_extends_typedef.sv:19:40: Unsupported: TYPEDEF 'kbus_slave_transaction_base' in AstClassExtends\n   19 |   class kbus_slave_transaction extends kbus_slave_transaction_base;\n      |                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.042\n%Error: Exiting due to 1 error(s)\n```\n\nI expect Verilator to correctly inherit from the type-defed class.\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --cc t_class_extends_typedef/t_class_extends_typedef.sv\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\nI am using 5.042. I did not try the latest master branch, but there seems to be no commits since that would\ndeal with similar issue.\n\nWhat OS and distribution are you using?\n\n```\nLinux runner4.tropic.dev.hq.sldev.cz 4.18.0-553.58.1.el8_10.x86_64 #1 SMP Thu Jun 12 14:27:07 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nYes, this would be appreciated, but there are no guarantees I will have time to deal with it.",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-11",
+  "closed_at": "2026-02-21",
+  "code_blocks": [
+    "package kbus_slave_agent_pkg;\n\n  class hsh_slave_transaction #(int P_REQ_DATA_WIDTH, int P_GNT_DATA_WIDTH);\n      rand int x;\n  endclass;\n\n  /////////////////////////////////////////////////////////////////////////////\n  // Parameters\n  /////////////////////////////////////////////////////////////////////////////\n  // Storage data width\n  parameter P_REQ_DATA_WIDTH = 32;\n\n  // Storage address widt\n  parameter P_GNT_DATA_WIDTH = 32;\n\n  typedef hsh_slave_transaction #(P_REQ_DATA_WIDTH, P_GNT_DATA_WIDTH) kbus_slave_transaction_base;\n\n  class kbus_slave_transaction extends kbus_slave_transaction_base;\n    rand int y;\n  endclass;;\n\nendpackage : kbus_slave_agent_pkg\n",
+    "%Error-UNSUPPORTED: t_class_extends_typedef/t_class_extends_typedef.sv:19:40: Unsupported: TYPEDEF 'kbus_slave_transaction_base' in AstClassExtends\n   19 |   class kbus_slave_transaction extends kbus_slave_transaction_base;\n      |                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.042\n%Error: Exiting due to 1 error(s)\n",
+    "verilator --cc t_class_extends_typedef/t_class_extends_typedef.sv\n",
+    "Linux runner4.tropic.dev.hq.sldev.cz 4.18.0-553.58.1.el8_10.x86_64 #1 SMP Thu Jun 12 14:27:07 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

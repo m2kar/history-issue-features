@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3173,
+  "issue_url": "https://github.com/verilator/verilator/issues/3173",
+  "title": "Giving the SystemC module the same name as the top level verilog module using --preifx results in not compilable code",
+  "body": "Verilator supports setting the name of the generated SystemC module using the --prefix option. This leads to compile errors when the prefix is the same as the verilog module, because a member pointer of the same name as the class is generated.\r\n\r\n```\r\nmodule myflop (input clk, r, d, output logic q);\r\n  // dummy member for access\r\n  logic [7:0] mem[7] /* verilator public */;\r\n  always_ff @(posedge clk or posedge r)\r\n    if (r)\r\n      q <= 0;\r\n    else\r\n      q <= d;\r\nendmodule\r\n```\r\n\r\nThe generated code looks something like this when verilating using `verilator --sc --prefix myflop --pins-sc-uint myflop.v` \r\n\r\n```\r\n...\r\nSC_MODULE(myflop) {\r\n  public:\r\n    // CELLS\r\n    // Public to allow access to /*verilator_public*/ items;\r\n    // otherwise the application code can consider these internals.\r\n    myflop_myflop* myflop;\r\n...\r\n```\r\nThis is illegal and will lead to C++ compile errors. Is there a way to rename the pointer `myflop_myflop* myflop`? Starting from Verilator 4.210 it seems that the pointer is always generated even when not using /*verilator_public*/.\r\n\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\nYes",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-14",
+  "closed_at": "2024-11-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1666,
+  "issue_url": "https://github.com/verilator/verilator/issues/1666",
+  "title": "Question: Asynchronous Reset",
+  "body": "---\n\n\nAuthor Name: **Aki Niimura**\nOriginal Redmine Message: 75 from https://www.veripool.org\n\n\n\n---\n\nHello Verilator experts,\n\nI have used Verilator (converted to C++) to simulate a design that uses two clocks (ACLK and HCLK).\nThe design contains a clock boundary crossing logic that requires flop with asynchronous reset.\n(See the code snippet below)\n\nWhen I run simulation using the generated C++ code, the logic was behaving incorrectly.\nTo overcome the problems, I did the following:\n1. tied two clocks together (ACLK = HCLK)\n1. skipped the clock boundary logic (using `ifdef verilator to switch)\n\nNow, the simulation is delivering the results I'm expecting.\n\nMy question to Verilator experts are:\n1. Is what I did appropriate?\n1. Is there any common rule to follow when it comes asynchronous logic?\n1. Is there any good coding style of async logic that can be tolerated by Verilator?\n\nAny suggestions will be appreciated.\n\nBest regards,\nAki Niimura\n\n*[Code excerpt]*\n```\n\nalways @(posedge ACLK)\n     aImstart_q <= aImstart_d;\n\nassign aImstart_d =\n     ~ARESETn ? {3{1'b0}} :\n         { aImstart_q[1:0], hImstart_q } ;\n\nalways @(posedge HCLK or posedge asynHrst_d)\n     if(asynHrst_d)\n         hImstart_q <= 1'b0;\n     else\n         hImstart_q <= hImstart_d;\n\nassign hImstart_d =\n     HIMSTARTP ? 1'b1 :\n         hImstart_q ;\n\nassign asynHrst_d = |{\n     ~HRESETn,\n     aImstart_q[1]\n     };\n\n\n```\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2009-02-25",
+  "closed_at": "2009-02-26",
+  "code_blocks": [
+    "\nalways @(posedge ACLK)\n     aImstart_q <= aImstart_d;\n\nassign aImstart_d =\n     ~ARESETn ? {3{1'b0}} :\n         { aImstart_q[1:0], hImstart_q } ;\n\nalways @(posedge HCLK or posedge asynHrst_d)\n     if(asynHrst_d)\n         hImstart_q <= 1'b0;\n     else\n         hImstart_q <= hImstart_d;\n\nassign hImstart_d =\n     HIMSTARTP ? 1'b1 :\n         hImstart_q ;\n\nassign asynHrst_d = |{\n     ~HRESETn,\n     aImstart_q[1]\n     };\n\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

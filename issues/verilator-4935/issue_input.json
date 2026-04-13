@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4935,
+  "issue_url": "https://github.com/verilator/verilator/issues/4935",
+  "title": "Fix hang when using --trace with -O0",
+  "body": "Thank you for making this great project\r\n\r\nI have packaged the problematic design into a [dedicated repo](https://github.com/FurryAcetylCoA/verilator-bug1).\r\nIn short, the minimized design looks like\r\n``` verilog\r\nmodule CPU(input wire clock, cpu_reset);\r\n  reg         reset_r;\t\r\n  always @(posedge clock) begin\t\r\n    reset_r <= cpu_reset;\t // The problematic one\r\n  end \r\nendmodule\r\n\r\nmodule TOP(input clock, reset);\r\n  reg sync_0, sync_1, sync_2;\t\r\n  wire _cpu_reset_chain_io_q = sync_0;\t\r\n  CPU cpu ( .clock(clock),\r\n            .cpu_reset(_cpu_reset_chain_io_q | reset) \r\n  );\r\n  always @(posedge clock) begin\r\n    sync_0 <= sync_1;\t\r\n    sync_1 <= sync_2;\r\n    sync_2 <= reset;\t\r\n  end\r\nendmodule\r\n```\r\nI tested in `Verilator 5.023 devel rev v5.020-121-ga69cb9b0` and `Verilator 5.022`\r\n\r\nThis same design also generate an Infinite recursion with flag `-O0`. As described in the repo mentioned.\r\n\r\n\r\nPlease let me know if you need any more info.\r\n\r\nThanks!\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-01",
+  "closed_at": "2024-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

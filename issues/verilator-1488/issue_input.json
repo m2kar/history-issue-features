@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1488,
+  "issue_url": "https://github.com/verilator/verilator/issues/1488",
+  "title": "A strange code generated from a parametric module.",
+  "body": "---\n\n\nAuthor Name: **Slava B**\nOriginal Redmine Issue: 1488 from https://www.veripool.org\n\n\n\n---\n\nI've seen a strange code generated from a parametric module. I minimized this scenario to a few lines:\r\n```<code class=\"text\">\r\nmodule arbiter #(\r\n     parameter VCD_PORT_NUMBER = 3\r\n)\r\n(\r\n     input clk,\r\n     output reg [VCD_PORT_NUMBER-1:0] in_ip2bus_ack,\r\n     output reg [(VCD_PORT_NUMBER*32)-1:0] in_ip2bus_data\r\n);\r\n     always @ (posedge clk)\r\n         begin\r\n             in_ip2bus_ack = 3'b0;\r\n             in_ip2bus_data = 96'b0;\r\n         end\r\nendmodule\r\n</code>\n```\r\nThe resulting translation is:\r\n```<code class=\"cpp\">\r\nSC_MODULE(Varbiter) {\r\n  public:\r\n\r\n     sc_in<bool> clk;\r\n     sc_out<uint32_t> in_ip2bus_ack;\r\n     sc_out<sc_bv<96> > in_ip2bus_data;\r\n...\r\n}   \r\n</code>\n```\r\nWhy Verilator converted Verilog's 3-bit port (in_ip2bus_ack) into 32-bit port in SystemC. The conversion of 96-bit port (in_ip2bus_data) was correct. This is very misleading. Did I miss something?\r\n\r\nThanks,\r\nSlava\n\n\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2019-08-06",
+  "closed_at": "2019-08-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

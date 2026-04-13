@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3580,
+  "issue_url": "https://github.com/verilator/verilator/pull/3580",
+  "title": "Add signal strengths handling to assignments to nets of size 1",
+  "body": "I add support for multiple continuous assignments (and logic gates parsed as assignments, for example `or`) with size of 1.\r\nSince signal strength is rarely used, I wanted to use approach that don't increase memory cost of simulation when they aren't used.\r\nThis PR needs (and contains) changes from https://github.com/verilator/verilator/pull/3545.\r\n\r\nDescription of my approach (it is also in V3SignalStrength.cpp):\r\nThe approach is to create var__s0 and var__s1 for each var that is on LHS of at least two\r\nassignments or its assignment has strength highz0 or highz1, which may change its value.\r\nvar__s0 is used for storing strength of the strongest assignment of value 0 to var,\r\nvar__s1 stores strength of the strongest assignment of value 1.\r\nWe want to replace the current assignments to the var with one assignment with the RHS depending on __s0 and __s1.\r\n\r\nFirst we iterate through the list of assignments that have the var on the LHS.\r\nWe want to do the following steps, but we may not know the value of the RHS at verilation time,\r\nso we need to do all of them and add a comparison of the RHS with the value corresponding to the\r\nstep.\r\n* If the RHS has value 0, we try to update __s0\r\n* If the RHS has value 1, we try to update __s1\r\n* If the RHS has value x, we try to update both __s vars (to handle the case when\r\nassignment of x is the strongest)\r\n\r\nIf the RHS has value z, no __s vars are touched (it is the weakest signal and any other value will\r\noverwrite it), so we can skip this case.\r\n\r\nAfter the iteration we create new assignment to var, according to values of __s0 and __s1:\r\ns0 > s1:\r\nvar = 0\r\ns0 < s1:\r\nvar = 1\r\ns0 == s1 and s0 != 0:\r\nvar = x\r\ns0 == s1 and s0 == 0:\r\nvar = z",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-08-25",
+  "closed_at": "2022-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

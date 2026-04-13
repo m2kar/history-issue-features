@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6862,
+  "issue_url": "https://github.com/verilator/verilator/issues/6862",
+  "title": "Fix typedef `::` class reference error",
+  "body": "The below test, rewritten from UVM tests/99compat/7520_compat_packer and about 6 similar tests, fails with:\n\n```\n%Error: t/t_0.v:22:42: Syntax error: Not expecting CLASSREFDTYPE under a DOT in dotted expression\n   22 |     typedef object_registry#(c_pkg::compat_packer,\"c_pkg::compat_packer\") type_id;\n      |                                     ^~~~~~~~~~~~~\n        t/t_0.v:22:42: ... Resolving this reference\n   22 |     typedef object_registry#(c_pkg::compat_packer,\"c_pkg::compat_packer\") type_id;\n      |                                     ^~~~~~~~~~~~~\n```\n\n```\npackage pkg;\n  class object_registry #(\n      type T = int\n  );\n  endclass\n\n  class packer;\n    typedef object_registry#(packer) type_id;\n  endclass\nendpackage\n\npackage c_pkg;\n  import pkg::*;\n  class compat_packer extends pkg::packer;\n    typedef object_registry#(c_pkg::compat_packer) type_id;\n  endclass\nendpackage\n\nimport pkg::*;\nimport c_pkg::*;\n\nmodule t;\n  initial begin\n    compat_packer c;\n    c = new();\n    $finish;\n  end\nendmodule\n```\n\n",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-23",
+  "closed_at": "2025-12-24",
+  "code_blocks": [
+    "%Error: t/t_0.v:22:42: Syntax error: Not expecting CLASSREFDTYPE under a DOT in dotted expression\n   22 |     typedef object_registry#(c_pkg::compat_packer,\"c_pkg::compat_packer\") type_id;\n      |                                     ^~~~~~~~~~~~~\n        t/t_0.v:22:42: ... Resolving this reference\n   22 |     typedef object_registry#(c_pkg::compat_packer,\"c_pkg::compat_packer\") type_id;\n      |                                     ^~~~~~~~~~~~~\n",
+    "package pkg;\n  class object_registry #(\n      type T = int\n  );\n  endclass\n\n  class packer;\n    typedef object_registry#(packer) type_id;\n  endclass\nendpackage\n\npackage c_pkg;\n  import pkg::*;\n  class compat_packer extends pkg::packer;\n    typedef object_registry#(c_pkg::compat_packer) type_id;\n  endclass\nendpackage\n\nimport pkg::*;\nimport c_pkg::*;\n\nmodule t;\n  initial begin\n    compat_packer c;\n    c = new();\n    $finish;\n  end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

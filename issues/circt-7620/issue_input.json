@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7620,
+  "issue_url": "https://github.com/llvm/circt/issues/7620",
+  "title": "[FIRRTL] AddSeqMemPorts of Memories Instantiated Under and Above DUT",
+  "body": "Current, `AddSeqMemPorts` will error if you have a situation where a memory is instantiated under the design-under-test (DUT) and above it. This is typically avoided by `LowerMemories` which is both responsible for creating `firrtl.memmodule` and only deduplicating memories that are under the DUT. However, if a memory like this leaks through, then it can cause an error.\r\n\r\nConsider the following circuit:\r\n\r\n``` mlir\r\nfirrtl.circuit \"Foo\" attributes {\r\n  annotations = [\r\n    {\r\n      class = \"sifive.enterprise.firrtl.AddSeqMemPortAnnotation\",\r\n      name = \"user_input\",\r\n      input = true,\r\n      width = 1\r\n    }\r\n  ]\r\n} {\r\n  firrtl.layer @A bind {}\r\n\r\n  firrtl.memmodule @mem(\r\n    in W0_addr: !firrtl.uint<1>,\r\n    in W0_en: !firrtl.uint<1>,\r\n    in W0_clk: !firrtl.clock,\r\n    in W0_data: !firrtl.uint<1>\r\n  ) attributes {\r\n    dataWidth = 1 : ui32,\r\n    depth = 2 : ui64,\r\n    extraPorts = [],\r\n    maskBits = 1 : ui32,\r\n    numReadPorts = 0 : ui32,\r\n    numReadWritePorts = 0 : ui32,\r\n    numWritePorts = 1 : ui32,\r\n    readLatency = 1 : ui32,\r\n    writeLatency = 1 : ui32\r\n  }\r\n\r\n  firrtl.module @Bar() attributes {\r\n    annotations = [\r\n      {class = \"sifive.enterprise.firrtl.MarkDUTAnnotation\"}\r\n    ]\r\n  } {\r\n    %0:4 = firrtl.instance mem @mem(\r\n      in W0_addr: !firrtl.uint<1>,\r\n      in W0_en: !firrtl.uint<1>,\r\n      in W0_clk: !firrtl.clock,\r\n      in W0_data: !firrtl.uint<1>\r\n    )\r\n  }\r\n\r\n  firrtl.module @Foo() {\r\n    firrtl.instance bar @Bar()\r\n    %0:4 = firrtl.instance mem @mem(\r\n      in W0_addr: !firrtl.uint<1>,\r\n      in W0_en: !firrtl.uint<1>,\r\n      in W0_clk: !firrtl.clock,\r\n      in W0_data: !firrtl.uint<1>\r\n    )\r\n  }\r\n\r\n}\r\n```\r\n\r\nWhen compiled with `circt-opt -firrtl-add-seqmem-ports Foo.mlir  | circt-opt` this will not update the instance that is outside the DUT. It is additionally unclear how it could update this memory.\r\n\r\n```\r\n<stdin>:13:5: error: 'firrtl.module' op block argument locations should match signature locations\r\n    \"firrtl.module\"() ({\r\n    ^\r\n<stdin>:13:5: note: see current operation: \r\n\"firrtl.module\"() ({\r\n^bb0(%arg0: !firrtl.uint<1>):\r\n  %0:5 = \"firrtl.instance\"() {annotations = [], layers = [], moduleName = @mem, name = \"mem\", nameKind = #firrtl<name_kind droppable_name>, portAnnotations = [[], [], [], [], []], portDirections = array<i1: false, false, false, false, false>, portNames = [\"W0_addr\", \"W0_en\", \"W0_clk\", \"W0_data\", \"user_input\"]} : () -> (!firrtl.uint<1>, !firrtl.uint<1>, !firrtl.clock, !firrtl.uint<1>, !firrtl.uint<1>)\r\n  \"firrtl.matchingconnect\"(%0#4, %arg0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n}) {annotations = [{class = \"sifive.enterprise.firrtl.MarkDUTAnnotation\"}], convention = #firrtl<convention internal>, layers = [], parameters = [], portAnnotations = [[{class = \"firrtl.transforms.DontTouchAnnotation\"}]], portDirections = array<i1: false>, portLocations = [loc(unknown)], portNames = [\"sram_0_user_input\"], portSyms = [], portTypes = [!firrtl.uint<1>], sym_name = \"Bar\"} : () -> ()\r\n```\r\n\r\nThis could be solved with memory duplication. I will plan to add a stopgap error that will prevent generating illegal MLIR. The best solution is to delete this pass entirely and move the functionality of this pass (MBIST insertion) into Chisel.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-24",
+  "closed_at": "2024-09-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

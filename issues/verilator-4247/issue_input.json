@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4247,
+  "issue_url": "https://github.com/verilator/verilator/pull/4247",
+  "title": "Fix operator == for unpacked struct, if elements are VlUnpacked arrays",
+  "body": "Unfortunately, the last pull request (#4234) didn't completely solve the issue of operator== and != for unpacked structures.\r\nI didn't account for a multidimensional VlUnpacked that might be a member of the unpacked structure.\r\n\r\nThe idea is to unroll the VlUnpacked and compare element by element.\r\nSo for arr[2][3]\r\n```\r\narr[0][0] == rhs.arr[0][0] &&\r\n...\r\narr[1][2] == rhs.arr[1][2];\r\n```\r\n\r\nI tried to find a piece of code that does that in the Verilator source code, but I couldn't find it.\r\nHow I understood it works for the unpacked arrays is that if there is an assignment or comparison, this will be unrolled by \r\nhttps://github.com/verilator/verilator/blob/4f1f487ae4ea0811883e78d287941a4d8abbad19/src/V3Slice.cpp#L179\r\n\r\nThis is done on the AstNodeBiop, and in my case I just have AstStructDtype.\r\nI created a new function unrollArrayDimensions.\r\nhttps://github.com/verilator/verilator/pull/4247/files#diff-de9699f6979ca0af5f793c81a755008b758ce728717f8bc223ebf0354976541fR220\r\n\r\nIt passes my test and my bigger design finally compiles, but maybe the implementation is not optimal.\r\nI am open to suggestions on how to improve it.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-05-30",
+  "closed_at": "2023-05-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

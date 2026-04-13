@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5811,
+  "issue_url": "https://github.com/verilator/verilator/issues/5811",
+  "title": "Fix fork failure due to `-fmerge-cond-motion`",
+  "body": "The following test fails, but passes with `-fno-merge-cond-motion`.  Note adding the commented-out display fixes it, as disables the bad motion from happening.\n\n@gezalore might you take a look?\n\n```\n// Based on ivtest's pr540.v by Steve Williams.\nmodule t;\n   bit simple_fail, loop_fail, fork_fail, tlp_fail, tfk_fail;\n   integer loop_cntr, tlp_cntr;\n   reg fred, abort;\n\n   initial begin\n      #1;\n      loop_fail = 0;\n      fork_fail = 0;\n      tlp_fail = 0;\n      tfk_fail = 0;\n      fred = 0;\n      abort = 1;\n      #4;\n      fred = 1;\n      #4;\n      if (loop_fail) $error(\"***** block with loop disable FAILED *****\");\n      if (fork_fail) $error(\"***** forked block disable FAILED *****\");\n      if (tlp_fail) $error(\"***** task with loop disable FAILED *****\");\n      if (tfk_fail) $error(\"***** task with forked block disable FAILED ****\\n\");\n      $write(\"*-* All Finished *-*\\n\");\n      $finish(0);\n   end\n\n   // more complex: block disable inside for-loop\n   initial begin\n      #2;\n      begin: configloop\n         for (loop_cntr = 0; loop_cntr < 3; loop_cntr=loop_cntr+1) begin\n            $display(\"time: %0t loop\", $time);\n            wait (fred);\n            $display(\"time: %0t gotfred\", $time);\n            if (abort) begin\n               disable configloop;\n            end\n            // Adding this makes MergeCond not merge, and it will pass\n            // $display(\"time: %0t lf\", $time);\n            loop_fail = 1;\n         end\n      end // configloop block\n      if (loop_fail) $display(\"\\n\\ttime: %0t, loop_cntr: %0d\",$time,loop_cntr);\n   end\n\nendmodule\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-28",
+  "closed_at": "2025-02-28",
+  "code_blocks": [
+    "// Based on ivtest's pr540.v by Steve Williams.\nmodule t;\n   bit simple_fail, loop_fail, fork_fail, tlp_fail, tfk_fail;\n   integer loop_cntr, tlp_cntr;\n   reg fred, abort;\n\n   initial begin\n      #1;\n      loop_fail = 0;\n      fork_fail = 0;\n      tlp_fail = 0;\n      tfk_fail = 0;\n      fred = 0;\n      abort = 1;\n      #4;\n      fred = 1;\n      #4;\n      if (loop_fail) $error(\"***** block with loop disable FAILED *****\");\n      if (fork_fail) $error(\"***** forked block disable FAILED *****\");\n      if (tlp_fail) $error(\"***** task with loop disable FAILED *****\");\n      if (tfk_fail) $error(\"***** task with forked block disable FAILED ****\\n\");\n      $write(\"*-* All Finished *-*\\n\");\n      $finish(0);\n   end\n\n   // more complex: block disable inside for-loop\n   initial begin\n      #2;\n      begin: configloop\n         for (loop_cntr = 0; loop_cntr < 3; loop_cntr=loop_cntr+1) begin\n            $display(\"time: %0t loop\", $time);\n            wait (fred);\n            $display(\"time: %0t gotfred\", $time);\n            if (abort) begin\n               disable configloop;\n            end\n            // Adding this makes MergeCond not merge, and it will pass\n            // $display(\"time: %0t lf\", $time);\n            loop_fail = 1;\n         end\n      end // configloop block\n      if (loop_fail) $display(\"\\n\\ttime: %0t, loop_cntr: %0d\",$time,loop_cntr);\n   end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

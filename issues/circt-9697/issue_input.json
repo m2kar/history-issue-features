@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9697,
+  "issue_url": "https://github.com/llvm/circt/issues/9697",
+  "title": "[FIRRTL] Dedup: missing symbol fixups",
+  "body": "```mlir\nfirrtl.circuit \"Baz\" {\n  firrtl.class private @Foo() {}\n  firrtl.class private @Bar() {}\n  firrtl.module @Baz() attributes {annotations = [{class = \"firrtl.transforms.NoDedupAnnotation\"}]} {\n    %wire1 = firrtl.wire : !firrtl.class<@Foo()>\n    %wire2 = firrtl.wire : !firrtl.class<@Bar()>\n  }\n}\n```\nrunning `./bin/circt-opt dedup.mlir --pass-pipeline='builtin.module(firrtl.circuit(firrtl-dedup))' --mlir-print-ir-after-all --debug-only=firrtl-dedup`\n\ngives\n\n```\n===- Dedup circuit \"Baz\" ----------------------------------------------------===\n\nFound 3 modules\nComputing module information\n- Hash 8cc8baf9fff66ade809f06bd206e72e4bcc90a72d187914f69343313e9762e35 for \"Foo\"\n- Hash 8cc8baf9fff66ade809f06bd206e72e4bcc90a72d187914f69343313e9762e35 for \"Bar\"\n- Hash ---------------------------------------------------------------- for \"Baz\"\nUpdate modules\n- Replace \"Bar\" with \"Foo\"\nUpdate annotations\n// -----// IR Dump After Dedup (firrtl-dedup) //----- //\nfirrtl.circuit \"Baz\" {\n  firrtl.class private @Foo() {\n  }\n  firrtl.module @Baz() attributes {annotations = [{class = \"firrtl.transforms.NoDedupAnnotation\"}]} {\n    %wire1 = firrtl.wire : !firrtl.class<@Foo()>\n    %wire2 = firrtl.wire : !firrtl.class<@Bar()>\n  }\n}\n```\nI expect that `wire2` should have had its type updated from `@Bar` to `@Foo`.  I believe this is happening due to the `NoDedup` annotation preventing the calculation of `ModuleInfo` for this module, which later prevents us from fixing up operations in the body of `Baz` during `fixupSymbolSensitiveOps`.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2026-02-19",
+  "closed_at": null,
+  "code_blocks": [
+    "firrtl.circuit \"Baz\" {\n  firrtl.class private @Foo() {}\n  firrtl.class private @Bar() {}\n  firrtl.module @Baz() attributes {annotations = [{class = \"firrtl.transforms.NoDedupAnnotation\"}]} {\n    %wire1 = firrtl.wire : !firrtl.class<@Foo()>\n    %wire2 = firrtl.wire : !firrtl.class<@Bar()>\n  }\n}\n",
+    "===- Dedup circuit \"Baz\" ----------------------------------------------------===\n\nFound 3 modules\nComputing module information\n- Hash 8cc8baf9fff66ade809f06bd206e72e4bcc90a72d187914f69343313e9762e35 for \"Foo\"\n- Hash 8cc8baf9fff66ade809f06bd206e72e4bcc90a72d187914f69343313e9762e35 for \"Bar\"\n- Hash ---------------------------------------------------------------- for \"Baz\"\nUpdate modules\n- Replace \"Bar\" with \"Foo\"\nUpdate annotations\n// -----// IR Dump After Dedup (firrtl-dedup) //----- //\nfirrtl.circuit \"Baz\" {\n  firrtl.class private @Foo() {\n  }\n  firrtl.module @Baz() attributes {annotations = [{class = \"firrtl.transforms.NoDedupAnnotation\"}]} {\n    %wire1 = firrtl.wire : !firrtl.class<@Foo()>\n    %wire2 = firrtl.wire : !firrtl.class<@Bar()>\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

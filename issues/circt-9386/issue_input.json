@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9386,
+  "issue_url": "https://github.com/llvm/circt/pull/9386",
+  "title": "[LLHD] Add support for IntegerType to SROA",
+  "body": "This is forked from maerhart's mix-and-match branch which is linked from https://github.com/llvm/circt/issues/8065.\n\nIt enables SROA to destructure IntegerTypes, which is required to support importing packed arrays in circt-verilog.\n\nAll credit to this goes to maerhart, whose commit linked above I've fixed:\n  - It was from Feb 2025, so forward port and cleanup.\n  - Fix implementation of SigExtractOp - it was checking the output type was IntegerType, but that was never\n    true (SigExtractOp always returns RefType) so actually the rest of the implementation of rewire() would\n    always assert-fail.\n  - Add support for multi-bit slices in SigExtractOp via bit-blasting. Only works for static indices.\n  - Add option to enable SROA in ImportVerilog; it was disabled due to https://github.com/llvm/circt/issues/8804.\n    - (Without the above there is no way to integration test this change).\n  - Registers the IntegerType external model during LLHD dialect registration so it's harder to accidentally\n    forget.\n  - Only destructure llhd::SignalOps if there exists some partial user.\n    - This is a potentially impactful change, but I think it's sound. We should only SROA SignalOps that have\n      some user of *part* of the op - if a SignalOp is used only by ProbeOps and DriveOps, why destructure in\n      the first place? we'd just need to reconstruct the op anyway. In fact, one of the existing testcases tests\n      just that, so it has been modified.\n    - This is more important now that we can destructure arbitrary ints - we don't want to bit-blast all ints\n      even those not used by SigExtractOps!\n",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-24",
+  "closed_at": "2026-01-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

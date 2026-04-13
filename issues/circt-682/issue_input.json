@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 682,
+  "issue_url": "https://github.com/llvm/circt/issues/682",
+  "title": "Handle Registers in LowerTypes",
+  "body": "Aggregate *registers* are currently not being lowering in FIRRTL Dialect's type lowering pass. I think this is a straightforward addition of a visitor for wire ops in the pass.\r\n\r\nConsider:\r\n```scala\r\ncircuit Bar :\r\n  module Bar:\r\n    input a: {a: UInt<1>}\r\n    input clk: Clock\r\n    output b: {a: UInt<1>}\r\n\r\n    reg x: {a: UInt<1>}, clk\r\n\r\n    x.a <= a.a\r\n    b.a <= x.a\r\n```\r\n\r\nThis is currently crashing when running:\r\n\r\n```bash\r\ncirct-translate -import-firrtl Bar.fir | circt-opt -pass-pipeline='firrtl.circuit(firrtl.module(firrtl-lower-types))'\r\n```\r\n\r\nWith:\r\n\r\n```\r\nAssertion failed: (entry && \"bundle lowering was not set\"), function getBundleLowering, file ../lib/Dialect/FIRRTL/Transforms/LowerTypes.cpp, line 524.\r\n```\r\n\r\nThis is basically the same thing as #680, just split out to potentially expose more parallel work.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-25",
+  "closed_at": "2021-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

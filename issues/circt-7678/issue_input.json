@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7678,
+  "issue_url": "https://github.com/llvm/circt/issues/7678",
+  "title": "[FIRRTL] FRT: treats different encodings of register resets differently",
+  "body": "Both registers have a reset, although the first uses the `regreset` representation, and the latter uses a regular `reg` driven by a mux.\r\n\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\r\n   \"class\": \"circt.FullResetAnnotation\",\r\n   \"target\": \"~Foo|Foo>r1\",\r\n   \"resetType\": \"sync\"\r\n  }\r\n]]\r\n  public module Foo:\r\n    input c : Clock\r\n    input i : UInt<8>\r\n    input r1 : UInt<1>\r\n    input r2 : UInt<1>\r\n    output o0 : UInt<8>\r\n    output o1 : UInt<8>\r\n\r\n    reg reg0 : UInt<8>, c with:\r\n      reset => (r2, UInt<8>(2))\r\n    connect reg0, i\r\n    connect o0, reg0\r\n\r\n    reg reg1 : UInt<8>, c\r\n    connect reg1, mux(r2, UInt<8>(3), i)\r\n    connect o1, reg1\r\n\r\n```\r\ngives:\r\n```verilog\r\nmodule Foo(\r\n  input        c,\r\n  input  [7:0] i,\r\n  input        r1,\r\n               r2,\r\n  output [7:0] o0,\r\n               o1\r\n);\r\n\r\n  reg [7:0] reg0;\r\n  reg [7:0] reg1;\r\n  always @(posedge c) begin\r\n    if (r2)\r\n      reg0 <= 8'h2;\r\n    else\r\n      reg0 <= i;\r\n    if (r1)\r\n      reg1 <= 8'h0;\r\n    else\r\n      reg1 <= r2 ? 8'h3 : i;\r\n  end // always @(posedge)\r\n  `ifdef ENABLE_INITIAL_REG_\r\n    `ifdef FIRRTL_BEFORE_INITIAL\r\n      `FIRRTL_BEFORE_INITIAL\r\n    `endif // FIRRTL_BEFORE_INITIAL\r\n    initial begin\r\n      automatic logic [31:0] _RANDOM[0:0];\r\n      `ifdef INIT_RANDOM_PROLOG_\r\n        `INIT_RANDOM_PROLOG_\r\n      `endif // INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM[/*Zero width*/ 1'b0] = `RANDOM;\r\n        reg0 = _RANDOM[/*Zero width*/ 1'b0][7:0];\r\n        reg1 = _RANDOM[/*Zero width*/ 1'b0][15:8];\r\n      `endif // RANDOMIZE_REG_INIT\r\n    end // initial\r\n    `ifdef FIRRTL_AFTER_INITIAL\r\n      `FIRRTL_AFTER_INITIAL\r\n    `endif // FIRRTL_AFTER_INITIAL\r\n  `endif // ENABLE_INITIAL_REG_\r\n  assign o0 = reg0;\r\n  assign o1 = reg1;\r\nendmodule\r\n```\r\nThe second register ends up with a needless double-reset added by FRT, when it already had a reset.\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-10-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

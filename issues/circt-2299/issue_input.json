@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2299,
+  "issue_url": "https://github.com/llvm/circt/issues/2299",
+  "title": "[FIRRTL] Parsing a `-1` Parameter Results in Too Few Bits",
+  "body": "When parsing external module parameters from FIRRTL text, negative numbers need to be expanded to a 32-bit value.  (Likely, all integer parameters should just be parsed as 32-bit values regardless of whether or not they can fit in a smaller-sized APSInt.)\r\n\r\nAs an example, the following input FIRRTL text:\r\n\r\n```scala\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output a: UInt<1>\r\n    parameter x = -1\r\n  module Foo:\r\n    output a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    a <= bar.a\r\n```\r\n\r\nIs parsed into:\r\n```mlir\r\nfirrtl.circuit \"Foo\"   {\r\n  firrtl.extmodule @Bar(out a: !firrtl.uint<1>) attributes {parameters = {x = -1 : i4}}\r\n  firrtl.module @Foo(out %a: !firrtl.uint<1>) {\r\n    %bar_a = firrtl.instance bar  @Bar(out a: !firrtl.uint<1>)\r\n    firrtl.connect %a, %bar_a : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThis results in the following Verilog:\r\n```verilog\r\n// external module Bar\r\n\r\nmodule Foo(     // Foo.fir:5:10\r\n  output a);\r\n\r\n  Bar #(\r\n    .x(15)\r\n  ) bar (       // Foo.fir:8:5\r\n    .a (a)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe SFC produces:\r\n```verilog\r\nmodule Foo(\r\n  output  a\r\n);\r\n  wire  bar_a;\r\n  Bar #(.x(-1)) bar (\r\n    .a(bar_a)\r\n  );\r\n  assign a = bar_a;\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-06",
+  "closed_at": "2021-12-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

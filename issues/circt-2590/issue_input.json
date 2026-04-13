@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2590,
+  "issue_url": "https://github.com/llvm/circt/issues/2590",
+  "title": "[ExportVerilog] Unnecessary temporary wire for bitcast between array and integer",
+  "body": "input: \r\n```mlir\r\nhw.module @Foo(%a: i2) -> (r:i1) {\r\n  %0 = hw.bitcast %a : (i2) -> !hw.array<2xi1>\r\n  %false = hw.constant false\r\n  %1 = hw.array_get %0[%false] : !hw.array<2xi1>\r\n  hw.output %1 : i1\r\n}\r\n```\r\ncurrent output :\r\n```sv\r\nmodule Foo(\t// foo.mlir:1:1\r\n  input  [1:0] a,\r\n  output       r);\r\n\r\n  wire [1:0] _T = a;\t// foo.mlir:2:8\r\n  assign r = _T[1'h0];\t// foo.mlir:3:11, :4:7, :5:2\r\nendmodule\r\n```\r\n\r\nThis pattern would not be so frequent but we can eliminate `_T`.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-02-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

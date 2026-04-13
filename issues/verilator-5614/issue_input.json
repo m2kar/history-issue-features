@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5614,
+  "issue_url": "https://github.com/verilator/verilator/issues/5614",
+  "title": "Variable index into queue array",
+  "body": "(Verified on v5.028, both on MacOS and RHEL)\r\n\r\nI'm having some issues when attempting to use a variable index (ex. in a for-loop) to push into a specific queue in an array. It appears as though pushing into a specific queue additionally pushes all previous elements from other queues in the array\r\n\r\nMinimal Reproducible Example:\r\n```verilog\r\nmodule top;\r\n  int queues [3][$];\r\n\r\n  initial begin\r\n    for( int i = 0; i < 3; i = i + 1) begin\r\n      queues[i].push_back(i);\r\n    end\r\n    $display(\"%p\", queues);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\nI'm compiling/running the above (saved as `tmp.v`) with the commands\r\n```bash\r\nverilator --binary tmp.v\r\n./obj_dir/tmp\r\n```\r\nMy expected output is 1 element per queue in the array:\r\n```plain\r\n'{'{'h0} , '{'h1} , '{'h2} } \r\n```\r\nHowever, the actual output I'm getting is\r\n```plain\r\n'{'{'h0} , '{'h0, 'h1} , '{'h0, 'h1, 'h2} } \r\n```\r\n\r\nThe reason for \"variable index\" is because doing the following achieves the expected output:\r\n```verilog\r\nmodule top;\r\n  int queues [3][$];\r\n\r\n  initial begin\r\n    queues[0].push_back(0);\r\n    queues[1].push_back(1);\r\n    queues[2].push_back(2);\r\n    $display(\"%p\", queues);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nIs there something I'm doing wrong, or could contribute to a fix? Thanks in advance!\r\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-15",
+  "closed_at": "2025-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

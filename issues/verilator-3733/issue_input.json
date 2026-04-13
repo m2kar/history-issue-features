@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3733,
+  "issue_url": "https://github.com/verilator/verilator/issues/3733",
+  "title": "Internal error with timing control in while-break loop",
+  "body": "Hi! I encountered a internal error while playing around with the new timing feature.\r\n\r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nhere is a minimal example `t_timing_break.sv` (it works fine with vivado's xsim):\r\n``` systemverilog\r\nmodule t();\r\n  logic clk = 0;\r\n  logic out = 1;\r\n\r\n  always #5 clk = ~clk;\r\n\r\n  initial begin\r\n    while(1) begin\r\n      if(out) begin\r\n        break;\r\n      end\r\n      @(negedge clk);\r\n    end\r\n\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nresult of command `verilator --debug --timing --binary t_timing_break.sv`:\r\n\r\n``` log\r\nStarting Verilator 5.003 devel rev v5.002-13-ga29d9469d\r\n- Verilator.cpp:586:  Option --verilate: Start Verilation\r\n\r\n.......\r\n\r\n- V3Ast.cpp:1121:     Dumping obj_dir/Vt_timming_break_030_const.tree\r\n%Error: Internal Error: t_timming_break.sv:10:9: ../V3Broken.cpp:172: Broken link in node (or something without maybePointedTo): '!labelp()->brokeExistsBelow()' @ ../V3AstNodes.cpp:1604\r\n-node: JUMPGO 0x555556116980 <e204> {c10aj} -> JUMPLABEL 0x5555561168c0 <e247> {c8af} -> JUMPBLOCK 0x5555561167f0 <e249#> {c8af}\r\n   10 |         break;\r\n      |         ^~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n- V3Ast.cpp:1121:     Dumping obj_dir/Vt_timming_break_990_final.tree\r\n- V3Broken.cpp:326:   Broken called under broken, skipping recursion.\r\n- V3StatsReport.cpp:223:statsReport: \r\n%Error: Internal Error: Aborting since under --debug\r\n%Error: export VERILATOR_ROOT=/home/jomit/usr\r\n%Error: setarch --addr-no-randomize /home/jomit/usr/bin/verilator_bin_dbg --debug --timing --binary t_timming_break.sv\r\n%Error: Command Failed setarch --addr-no-randomize /home/jomit/usr/bin/verilator_bin_dbg --debug --timing --binary t_timming_break.sv\r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nusing latest git master version `Verilator 5.003 devel rev v5.002-13-ga29d9469d`\r\n\r\n> What OS and distribution are you using?\r\n\r\nManjaro 22.0.0\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nno, I'm not familiar with verilator source code.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-09",
+  "closed_at": "2022-11-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

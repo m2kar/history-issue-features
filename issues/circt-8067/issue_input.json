@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8067,
+  "issue_url": "https://github.com/llvm/circt/pull/8067",
+  "title": "[CombToAIG] Add shl/shru/shrs lowering",
+  "body": "This commit implements lowering for shift operations. They are currently lowered into mux-trees with a gate condition for out-of-bounds, e.g.:\r\n\r\n```mlir\r\nhw.module @shift3(in %lhs: i3, in %rhs: i3, out out_shl: i3, out out_shr: i3, out out_shrs: i3) {\r\n  %0 = comb.shl %lhs, %rhs : i3\r\n  %1 = comb.shru %lhs, %rhs : i3\r\n  %2 = comb.shrs %lhs, %rhs : i3\r\n  hw.output %0, %1, %2 : i3, i3, i3\r\n}\r\n```\r\n\r\n```verilog\r\n$ circt-opt --pass-pipeline=\"builtin.module(hw.module(convert-comb-to-aig{additional-legal-ops=comb.xor,comb.or,comb.and,comb.mux,comb.add,comb.icmp},convert-aig-to-comb),export-verilog)\" bar.mlir\r\n\r\nmodule shift3(  // bar.mlir:2:1\r\n  input  [2:0] lhs,     // bar.mlir:2:22\r\n               rhs,     // bar.mlir:2:35\r\n  output [2:0] out_shl, // bar.mlir:2:49\r\n               out_shr, // bar.mlir:2:66\r\n               out_shrs // bar.mlir:2:83\r\n);\r\n\r\n  wire [2:0] _GEN = {3{lhs[2]}};        // bar.mlir:5:8\r\n  assign out_shl =\r\n    rhs < 3'h3\r\n      ? (rhs[1] ? (rhs[0] ? 3'h0 : {lhs[0], 2'h0}) : rhs[0] ? {lhs[1:0], 1'h0} : lhs)\r\n      : 3'h0;   // bar.mlir:2:35, :3:8, :6:3\r\n  assign out_shr =\r\n    rhs < 3'h3\r\n      ? (rhs[1] ? (rhs[0] ? 3'h0 : {2'h0, lhs[2]}) : rhs[0] ? {1'h0, lhs[2:1]} : lhs)\r\n      : 3'h0;   // bar.mlir:2:35, :4:8, :6:3\r\n  assign out_shrs =\r\n    rhs < 3'h3\r\n      ? (rhs[1]\r\n           ? (rhs[0] ? _GEN : {3{lhs[2]}})\r\n           : rhs[0] ? {{2{lhs[2]}}, lhs[1]} : {lhs[2], lhs[1:0]})\r\n      : _GEN;   // bar.mlir:2:35, :5:8, :6:3\r\nendmodule\r\n\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-01-11",
+  "closed_at": "2025-01-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

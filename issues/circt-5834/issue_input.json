@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5834,
+  "issue_url": "https://github.com/llvm/circt/issues/5834",
+  "title": "[OM] [Evaluator] Cache is not working as intended",
+  "body": "```mlir\r\nimport circt\r\nfrom circt.dialects import om\r\nfrom circt.ir import Context, InsertionPoint, Location, Module\r\n\r\nwith Context() as ctx, Location.unknown():\r\n  circt.register_dialects(ctx)\r\n\r\n  module = Module.parse(\"\"\"\r\n  module {\r\n    om.class @Test(%param: i64) {\r\n      %0 = om.object @Child(%param) : (i64) -> !om.class.type<@Child>\r\n      om.class.field @child, %0 : !om.class.type<@Child>\r\n    }\r\n\r\n    om.class @Child(%0: i64) {\r\n      om.class.field @foo, %0 : i64\r\n    }\r\n\r\n  }\r\n  \"\"\")\r\n\r\n  evaluator = om.Evaluator(module)\r\n\r\nobj = evaluator.instantiate(\"Test\", 41)\r\nprint(obj.child.foo)\r\nobj = evaluator.instantiate(\"Test\", 42)\r\nprint(obj.child.foo)\r\n```\r\n\r\nCurrent output is:\r\n```\r\n41\r\n41\r\n```\r\nThe second line must be `42`. The bug is currently we use `Value` as key of cache but it is not correct when actual parameters are different.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-14",
+  "closed_at": "2023-10-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

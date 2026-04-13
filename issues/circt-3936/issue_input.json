@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3936,
+  "issue_url": "https://github.com/llvm/circt/issues/3936",
+  "title": "[Handshake] Using `LazyFork` can produce combinatorial cycles.",
+  "body": "It seems that handshake's `LazyFork` violates a required property for composable dataflow circuits:\r\n\r\nConsider the following example:\r\n\r\n```mlir\r\nhandshake.func @test(%arg0: none) -> (none) {\r\n  %0:2 = lazy_fork [2] %arg0 : none\r\n  %outCtrl = join %0#0, %0#1 : none, none\r\n  return %outCtrl: none\r\n}\r\n```\r\n\r\nwhen lowering this to FIRRTL and feeding it into `firtool` it will complain that there is a cycle involving the valid and ready signals of `%0`. `LazyFork` will only set the output's valid signal once all of them are ready to receive something. `Join` on the other hand, waits until all inputs are valid, before it sets their ready signals.\r\n\r\nThe [paper](https://dl.acm.org/doi/abs/10.1145/3274280?casa_token=OVUNBCSHtmIAAAAA:PebHfy40cC4s__zctnuPHHWxePK0Y8_OHMEPnCibWzm53npdIOgOi30RNUOt80w4LeLAfZ0c9IxpfvQ) which introduces compositional dataflow circuits states the following:\r\n\r\n> We avoid combinational cycles by insisting each cycle in the dataflow network have at least one\r\ndata and one control buffer (see Section 4) and by insisting no block has a combinational path from\r\na ready to a valid signal.\r\n\r\nWhile we ensure the first property with buffer insertions, the latter is violated by `LazyFork`. \r\n\r\nIt seems that a correct `LazyFork` implementation requires changes to ensure it can be used correctly. Not sure if it will then still be \"cheaper\" than a normal/eager fork, though. ",
+  "labels": [
+    "Handshake"
+  ],
+  "state": "open",
+  "created_at": "2022-09-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

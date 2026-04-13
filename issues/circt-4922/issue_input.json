@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4922,
+  "issue_url": "https://github.com/llvm/circt/issues/4922",
+  "title": "[reduce] Improve handling of NLA's, especially \"new\" format + sharing.",
+  "body": "HierPathOp's (previously `firrtl.nla`) no longer are referenced via `circt.nonlocal` breadcrumbs along the instance path, so identifying which hierpath's an instance participates in cannot be determined by checking for that.  For example, this causes ModuleExternalizer to no longer be able to externalize instances if an NLA targets the ports/ops of the module (or its children, but not sure that would work previously (?)).  Similarly InstanceStubber, so on.\r\n\r\nIn addition to dropping the breadcrumbs, to reduce the quantity of HierPathOp's and cost of their maintenance, they now end in the module now (instead of InnerRef / (Symbol::InnerSymbol pair)), identifying the path only not the targets specifically, so they're often shared across operations/ports using them.   If this can be handled reasonably would help avoid invalid IR but may require more expensive walks to be done reliably.\r\n\r\nFIRRTL's `NLATable` may be useful for querying the HierPath's an instance participates in, but finding other users may require walking the final module and/or looking through cached SymbolUsers (or so).   Or extending NLATable.\r\n\r\nThis may not be worth addressing if we change how these work, but recording this issue since ran into it trying to use circt-reduce on NLA-heavy designs.",
+  "labels": [
+    "enhancement",
+    "Reducer"
+  ],
+  "state": "open",
+  "created_at": "2023-04-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

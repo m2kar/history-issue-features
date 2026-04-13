@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1326,
+  "issue_url": "https://github.com/verilator/verilator/issues/1326",
+  "title": "Comb Logic order problem",
+  "body": "---\n\n\nAuthor Name: **Kyunghwan Cho**\nOriginal Redmine Issue: 1326 from https://www.veripool.org\n\n\n\n---\n\n\r\nWhen trying to compile systemverilog source, I found the following issues.\r\n\r\nalu0_opd_update reflects the previous value of alu0_c, not the current value of alu0_c.\r\nAt verilated cpp file, I checked that the line of alu0_opd_update is before that of alu0_c.\r\n\r\n```\r\nlogic alu0_c;\r\nlogic alu0_opd_update;\r\n\r\nassign   alu0_c = (i_exe_alu0_c == 2'b00) |\r\n               (i_exe_alu0_c == 2'b01 && status_true) | (i_exe_alu0_c == 2'b10 && ~status_true);\r\nassign   alu0_opd_update = i_exe_alu0_update_enable & alu0_c & update_alu;\r\n\n```\r\n\r\n\r\nUsing always_comb to enforce order of assignments, it works fine.\r\n\r\n\n```\r\nalways_comb  begin\r\n    alu0_c = (i_exe_alu0_c == 2'b00) |\r\n               (i_exe_alu0_c == 2'b01 && status_true) | (i_exe_alu0_c == 2'b10 && ~status_true);\r\n\r\n    alu0_opd_update = i_exe_alu0_update_enable & alu0_c & update_alu;\r\n\n```\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2018-08-06",
+  "closed_at": "2019-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

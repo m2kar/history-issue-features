@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 770,
+  "issue_url": "https://github.com/llvm/circt/pull/770",
+  "title": "[SV] Add RTL name legalization pass",
+  "body": "Implement name legalization and uniquification as a separate pass on the RTL/SV dialect.\r\n\r\nAt the moment things like `rtl.module @inout () {}` are renamed and emitted as `module inout_0 [...]` directly in the `ExportVerilog` translation. This is problematic since (a) we cannot reason about the exact name a module will have in the final Verilog just by looking at the IR, and (b) the module names in the output change depending on which subset of the IR is emitted (e.g. when doing split Verilog output).\r\n\r\nThis PR introduces a `RTLLegalizeNamesPass` that essentially goes throug RTL/SV IR and applies name uniquification and collision avoidance with reserved keywords. It also picks up a few things the `ExportVerilog` translation and split Verilog output could have missed:\r\n- An earlier `inout` module colliding with a later `inout_0` module\r\n- Collisions in interface and modport names\r\n- Extern modules being renamed upon collisions\r\n- File names for split Verilog output not matching module names\r\n\r\nSince this pass is now a prerequisit for emitting proper Verilog, simply calling `circt-translate -export-verilog` will produce potentially broken output since that tool currently does not run any passes on the IR. For `firtool` I have added an appropriate invocation to the legalization pass upon Verilog output. Should the `exportVerilog()` function create a pass manager internally to run the `RTLLegalizeNames` pass in any case before emission? Or should we just say `circt-translate` Verilog output is intentionally broken if unsavoury names are in the input?",
+  "labels": [
+    "HW",
+    "ExportVerilog",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-16",
+  "closed_at": "2021-03-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

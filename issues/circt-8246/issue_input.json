@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8246,
+  "issue_url": "https://github.com/llvm/circt/issues/8246",
+  "title": "[LLHD] Mem2Reg creates drives to read-only signals",
+  "body": "The following only reads signal `%a_0`, but LLHD's mem2reg pass still inserts a corresponding drive. Reproduce with `circt-opt --llhd-mem2reg` on the following:\n\n```mlir\nmodule {\n  hw.module @Foo(in %a : i32) {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    %c0_i32 = hw.constant 0 : i32\n    %a_0 = llhd.sig name \"a\" %c0_i32 : i32\n    %1 = llhd.prb %a_0 : !hw.inout<i32>\n    llhd.process {\n      cf.br ^bb1\n    ^bb1:  // 2 preds: ^bb0, ^bb1\n      %2 = llhd.prb %a_0 : !hw.inout<i32>\n      func.call @dummy(%2) : (i32) -> ()\n      llhd.wait (%1 : i32), ^bb1\n    }\n    llhd.drv %a_0, %a after %0 : !hw.inout<i32>\n    hw.output\n  }\n  func.func private @dummy(%arg0: i32) {\n    return\n  }\n}\n```\n\nThe pass should probably track if a definition comes from a probe inserted by the pass, or an actual drive to the signal.",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-15",
+  "closed_at": "2025-02-24",
+  "code_blocks": [
+    "module {\n  hw.module @Foo(in %a : i32) {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    %c0_i32 = hw.constant 0 : i32\n    %a_0 = llhd.sig name \"a\" %c0_i32 : i32\n    %1 = llhd.prb %a_0 : !hw.inout<i32>\n    llhd.process {\n      cf.br ^bb1\n    ^bb1:  // 2 preds: ^bb0, ^bb1\n      %2 = llhd.prb %a_0 : !hw.inout<i32>\n      func.call @dummy(%2) : (i32) -> ()\n      llhd.wait (%1 : i32), ^bb1\n    }\n    llhd.drv %a_0, %a after %0 : !hw.inout<i32>\n    hw.output\n  }\n  func.func private @dummy(%arg0: i32) {\n    return\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

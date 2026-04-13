@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6967,
+  "issue_url": "https://github.com/llvm/circt/issues/6967",
+  "title": "[HW] Inner symbols dropped by InlineModules ",
+  "body": "InlineModules pass currently strips inner symbols so it could break design.\r\n```mlir\r\n$ cat test.mlir\r\n  hw.hierpath @hier [@Foo::@bar, @Bar::@a]\r\n  hw.module private @Bar(in %a : i1 {hw.exportPort = #hw<innerSym@a>}, out b : i1) {\r\n    hw.output %a : i1\r\n  }\r\n  hw.module @Foo(in %a : i1, out b : i1) {\r\n    %bar.b = hw.instance \"bar\" sym @bar @Bar(a: %a: i1) -> (b: i1)\r\n    hw.output %bar.b : i1\r\n  }\r\n\r\n$ circt-opt test.mlir -hw-flatten-modules -hw-verify-irn\r\ntest.mlir:1:3: error: 'hw.hierpath' op  module: \"Foo\" does not contain any instance with symbol: \"bar\"\r\n  hw.hierpath @hier [@Foo::@bar, @Bar::@a]  \r\n  ^\r\ntest.mlir:1:3: note: see current operation: \"hw.hierpath\"() {namepath = [#hw.innerNameRef<@Foo::@bar>, #hw.innerN\r\n```",
+  "labels": [
+    "bug",
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2024-04-30",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

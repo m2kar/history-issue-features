@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4179,
+  "issue_url": "https://github.com/verilator/verilator/pull/4179",
+  "title": "Use unchanged copy of parameterized class for instantation",
+  "body": "Currently a node of a parameterized class represents also the default instance of that class. Sometimes such a node is edited during elaboration in V3Param and if another instance of that class is created, the copied body may be already changed.\r\nHere are the ASTs of instances of the `Bar` class defined in the test I added. They were dumped using the current master.\r\n```\r\n    1:2: CLASS 0x5555570d4480 <e706> {d5ab}  Bar  L4 [1ps] [EXT]\r\n    1:2:2: PARAMTYPEDTYPE 0x555557087180 <e1220#> {d5as} @dt=0x5555570c9e10@(sw32)  S -> BASICDTYPE 0x5555570c9e10 <e1219#> {d5au} @dt=this@\r\n(sw32)  int kwd=int range=[31:0]\r\n    1:2:2: FUNC 0x5555570cda00 <e1116> {d5ab} @dt=0@  new [METHOD]\r\n    1:2:4: CLASSEXTENDS 0x5555570cac60 <e704> {d5bh} @dt=0@\r\n    1:2:4:1: CLASSREFDTYPE 0x5555570d8dd0 <e1125> {d5ab} @dt=this@(w0)class:Foo__Tz1  Foo__Tz1 cpkg=0x5555570d4f00 -> CLASS 0x5555570d4f00 <e1222#> {d1ab}  Foo__Tz1  L5 [1ps] [EXT]\r\n\r\n\r\n    1:2: CLASS 0x5555570d5200 <e1236#> {d5ab}  Bar__Tz2  L5 [1ps] [EXT]\r\n    1:2:2: PARAMTYPEDTYPE 0x5555570877a0 <e1220#> {d5as} @dt=0x5555570c9e10@(sw32)  S -> BASICDTYPE 0x5555570c9e10 <e1219#> {d5au} @dt=this@(sw32)  int kwd=int range=[31:0]\r\n    1:2:2:1: BASICDTYPE 0x5555570d9380 <e1237#> {d11aj} @dt=this@(w8)  logic kwd=logic range=[7:0]\r\n    1:2:2: FUNC 0x5555570cdc00 <e1116> {d5ab} @dt=0@  new [METHOD]\r\n    1:2:4: CLASSEXTENDS 0x5555570cbc30 <e704> {d5bh} @dt=0@\r\n    1:2:4:1: CLASSREFDTYPE 0x5555570d92b0 <e1125> {d5ab} @dt=this@(w0)class:Foo__Tz1  Foo__Tz1 \r\n```\r\nThere are 2 problems with them:\r\n* parameter S of Bar__Tz2 has the same dtypep as the parameter in the instance Bar, so it's wrong. The parameter in Bar__Tz2 has also a child dtypep, which throws error in V3Broken.\r\n* Both instances extend the same class, but Bar__Tz2 should extend a different one.\r\n\r\nThis PR fixes it. When the default instance of a class is used, a copy is stored and it is used as the original class if another instance is created.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-05-08",
+  "closed_at": "2023-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

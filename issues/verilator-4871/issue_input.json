@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4871,
+  "issue_url": "https://github.com/verilator/verilator/issues/4871",
+  "title": "Fatal error on split variable when tracing is enabled",
+  "body": "Hi there.\r\n\r\nThe following example code:\r\n```\r\nmodule test\r\n  (\r\n   input      [10:0] [31:0]     register_in,\r\n    output     [10:0] [31:0]     register\r\n   );\r\n   assign register = register_in;\r\n\r\nendmodule\r\n\r\nmodule verilator_split;\r\n\r\n   logic [10:0] [31:0] register_in /*verilator split_var*/;\r\n\r\n   test test\r\n     (.register_in(register_in),\r\n      .register());\r\nendmodule\r\n```\r\n\r\nLeads to the following compilation error when tracing is enabled:\r\n```\r\nverilator --cc -O3 --trace-fst verilator_split.sv --top-module verilator_split --exe verilator_split.cpp\r\n%Error: Internal Error: verilator_split.sv:15:20: ../V3SplitVar.cpp:1124: not enough split variables\r\n                                                : ... note: In instance 'verilator_split'\r\n   15 |      (.register_in(register_in),\r\n      |                    ^~~~~~~~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nWithout the `--trace-fst` flag it works properly.\r\n\r\nQuickly going through the code it seems to be related to the fact that some undriven signals  don't get optimised out when tracing is enabled and I'm therefore wondering if this assert in V3SplitVar.cpp:1124 is correct in this case?\r\n\r\nThanks\r\n\r\nAdrien\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-02",
+  "closed_at": "2025-08-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

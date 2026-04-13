@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3597,
+  "issue_url": "https://github.com/llvm/circt/pull/3597",
+  "title": "[ExportVerilog] Directly emit declarations when spillWiresAtPrepare",
+  "body": "This PR implements new emission mechanism when `spillWiresAtPrepare` option is being enabled. \r\nThis PR should not change the current results except for small improvements around `isExpressionEmittedInline`.\r\nNew emission mechanism doesn't do forward declarations of registers and wires, instead they are\r\nemitted within their visitor methods in a similar way to normal statements. Since cyclic dependencies are\r\nresolved by PrepareForEmission, it is allowed to inline assignments into wire declarations \r\nintroduced by syntax constraint.  \r\n\r\nThis PR contains several minor improvements to fill the gap between old and new emission mechanism.\r\n* `isExpressionEmittedInline` is changed to handle bpassign and passign as well. \r\n* When an expressions requires a temporary wire, we first try `reuseExistingInOut` function and if it succeeds, we don't have to create a new wire. \r\n*  Logic op legalization. \"automatic logic\" is allowed to be used only at begging of statements. PrepareForEmission moves logic op to the nearest valid program point with `findLogicOpInsertionPoint`.    \r\n \r\n`sv-dialect.mlir` and `hw-dialect.mlir` is changed to test an new emission method. `OLD` and `NEW` are used when there are differences. The primary difference is that old emission inlines assignments to automatic logic variables with `isExpressionEmittedInlineIntoProceduralDeclaration`. I'm planning to apply this heuristic to the new method but I found `isExpressionEmittedInlineIntoProceduralDeclaration` has a bug (https://github.com/llvm/circt/issues/3603), which occurs when side effecting ops are used in the same block. Therefore I'm not sure we can emit exactly the same results as old one while correcting the unsoundness.  \r\n\r\nThis depends on https://github.com/llvm/circt/pull/3572",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-25",
+  "closed_at": "2022-08-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

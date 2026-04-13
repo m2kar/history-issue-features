@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6766,
+  "issue_url": "https://github.com/verilator/verilator/issues/6766",
+  "title": "Fix recursion on pre/post_randomize",
+  "body": "The following, reduced from UVM tests/10resources/99compat/7453_print_config_matches, results in a compile-time error:\n\n```\nVt_0_t__03a__03aconfig_obj__Vclpkg__0.cpp:7:6: error: infinite recursion detected [-Werror=infinite-recursion]\n    7 | void Vt_0_t__03a__03aconfig_obj::__VnoInFunc_post_randomize(Vt_0__Syms* __restrict vlSymsp) {\n```\n\n```\nmodule t;\n\n  virtual class uvm_object;\n  endclass\n\n  class config_obj extends uvm_object;\n    function void post_randomize();\n      super.post_randomize();\n    endfunction\n  endclass\n\n  initial $finish;\n\nendmodule\n```\n\nCurrently the pre/post_randomize functions are inserted on-demand, but the super. one isn't so it calls itself due to a bug.\n\nI'll probably get to fixing this shortly if no one else does.\n\n",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-06",
+  "closed_at": "2025-12-06",
+  "code_blocks": [
+    "Vt_0_t__03a__03aconfig_obj__Vclpkg__0.cpp:7:6: error: infinite recursion detected [-Werror=infinite-recursion]\n    7 | void Vt_0_t__03a__03aconfig_obj::__VnoInFunc_post_randomize(Vt_0__Syms* __restrict vlSymsp) {\n",
+    "module t;\n\n  virtual class uvm_object;\n  endclass\n\n  class config_obj extends uvm_object;\n    function void post_randomize();\n      super.post_randomize();\n    endfunction\n  endclass\n\n  initial $finish;\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

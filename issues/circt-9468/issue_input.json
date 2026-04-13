@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9468,
+  "issue_url": "https://github.com/llvm/circt/issues/9468",
+  "title": "[FIRRTL] LowerClasses creates duplicate symbols for external modules with the same defname",
+  "body": "`LowerClasses` fails to lower external modules which have properties when the external modules have the same defname. Consider the following:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.extmodule @Bar_1<WIDTH: ui32 = 1>(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<1>\n  ) attributes {defname = \"Bar\"}\n  firrtl.extmodule @Bar_2<WIDTH: ui32 = 2>(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<2>\n  ) attributes {defname = \"Bar\"}\n  firrtl.module @Foo() {\n    %bar_1_a, %bar_1_b = firrtl.instance bar_1 @Bar_1(\n      in a: !firrtl.integer,\n      in b: !firrtl.uint<1>\n    )\n    %bar_2_a, %bar_2_b = firrtl.instance bar_2 @Bar_2(\n      in a: !firrtl.integer,\n      in b: !firrtl.uint<2>\n    )\n    %0 = firrtl.integer 0\n    firrtl.propassign %bar_1_a, %0 : !firrtl.integer\n    firrtl.propassign %bar_2_a, %0 : !firrtl.integer\n  }\n}\n```\n\nThis can be compiled with:\n\n``` console\n# circt-opt -pass-pipeline='builtin.module(firrtl.circuit(firrtl-lower-classes))' Foo.mlir\nFoo.mlir:6:3: error: redefinition of symbol named 'Bar_Class'\n  firrtl.extmodule @Bar_2<WIDTH: ui32 = 2>(\n  ^\nFoo.mlir:6:3: note: see current operation: \n\"om.class.extern\"() <{fieldNames = [], fieldTypes = {}, formalParamNames = [\"basepath\", \"a\"], sym_name = \"Bar_Class\"}> ({\n^bb0(%arg0: !om.basepath, %arg1: !om.integer):\n}) : () -> ()\nFoo.mlir:2:3: note: see existing symbol definition here\n  firrtl.extmodule @Bar_1<WIDTH: ui32 = 1>(\n  ^\n```\n\nI think the right thing to do here is to only create one class for each external module with that defname.\n\nNote: the root issue here is a representational one where external modules with parameters are not actually modules, but instantiations of specific parametric modules. A much larger refactor to change this representation so that there was exactly one module for `Bar` that had parameters bound at the instantiation site and a way to represent the fact that the parameters affect the widths of ports would fix this. E.g.:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.extmodule @Bar<WIDTH: ui32>(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<WIDTH>\n  )\n  firrtl.module @Foo() {\n    %bar_1_a, %bar_1_b = firrtl.instance bar_1 @Bar<1>(\n      in a: !firrtl.integer,\n      in b: !firrtl.uint<1>\n    )\n    %bar_2_a, %bar_2_b = firrtl.instance bar_2 @Bar<2>(\n      in a: !firrtl.integer,\n      in b: !firrtl.uint<2>\n    )\n    %0 = firrtl.integer 0\n    firrtl.propassign %bar_1_a, %0 : !firrtl.integer\n    firrtl.propassign %bar_2_a, %0 : !firrtl.integer\n  }\n}\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-17",
+  "closed_at": "2026-01-20",
+  "code_blocks": [
+    "\nThis can be compiled with:\n\n",
+    "\nI think the right thing to do here is to only create one class for each external module with that defname.\n\nNote: the root issue here is a representational one where external modules with parameters are not actually modules, but instantiations of specific parametric modules. A much larger refactor to change this representation so that there was exactly one module for `Bar` that had parameters bound at the instantiation site and a way to represent the fact that the parameters affect the widths of ports would fix this. E.g.:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

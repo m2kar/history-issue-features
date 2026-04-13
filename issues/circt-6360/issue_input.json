@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6360,
+  "issue_url": "https://github.com/llvm/circt/issues/6360",
+  "title": "[FIRRTL] Bitcasts reverse bundle field order in LowerTypes ",
+  "body": "Since PR #6339, the `LowerTypes` pass in the FIRRTL dialect reverses the field order for bundles when bitcasting in one direction, but not the other. @SpriteOvO do you have any idea what might be going on here? Could it be that the bundle field order is only honored in one direction of bitcast, but not the other?\r\n\r\n### Example 1\r\n```\r\nfirrtl.circuit \"Queue_4\" {\r\n  firrtl.module @Queue_4(\r\n    in %a: !firrtl.bundle<data: uint<512>, strb: uint<64>, last: uint<1>>,\r\n    out %b: !firrtl.bundle<data: uint<512>, strb: uint<64>, last: uint<1>>\r\n  ) {\r\n    %0 = firrtl.bitcast %a : (!firrtl.bundle<data: uint<512>, strb: uint<64>, last: uint<1>>) -> !firrtl.uint<577>\r\n    %1 = firrtl.bitcast %0 : (!firrtl.uint<577>) -> !firrtl.bundle<data: uint<512>, strb: uint<64>, last: uint<1>>\r\n    firrtl.strictconnect %b, %1 : !firrtl.bundle<data: uint<512>, strb: uint<64>, last: uint<1>>\r\n  }\r\n}\r\n```\r\nRunning this through `firtool` produces before PR #6339 produces the following assignments:\r\n```\r\n  assign b_data = a_data;\r\n  assign b_strb = a_strb;\r\n  assign b_last = a_last;\r\n```\r\nAfter the PR the assignments look as follows:\r\n```\r\n  assign b_data = {a_data[446:0], a_strb, a_last};\r\n  assign b_strb = a_data[510:447];\r\n  assign b_last = a_data[511];\r\n```\r\n\r\n### Example 2\r\n```\r\nfirrtl.circuit \"Queue_9\" {\r\n  firrtl.module @Queue_9(\r\n    in %a: !firrtl.bundle<addr: uint<25>, len: uint<8>, size: uint<3>, burst: uint<2>, lock: uint<1>, cache: uint<4>, prot: uint<3>, qos: uint<4>, region: uint<4>, id: uint<12>, user: uint<1>>,\r\n    out %b: !firrtl.bundle<addr: uint<25>, len: uint<8>, size: uint<3>, burst: uint<2>, lock: uint<1>, cache: uint<4>, prot: uint<3>, qos: uint<4>, region: uint<4>, id: uint<12>, user: uint<1>>\r\n  ) {\r\n    %0 = firrtl.bitcast %a : (!firrtl.bundle<addr: uint<25>, len: uint<8>, size: uint<3>, burst: uint<2>, lock: uint<1>, cache: uint<4>, prot: uint<3>, qos: uint<4>, region: uint<4>, id: uint<12>, user: uint<1>>) -> !firrtl.uint<67>\r\n    %1 = firrtl.bitcast %0 : (!firrtl.uint<67>) -> !firrtl.bundle<addr: uint<25>, len: uint<8>, size: uint<3>, burst: uint<2>, lock: uint<1>, cache: uint<4>, prot: uint<3>, qos: uint<4>, region: uint<4>, id: uint<12>, user: uint<1>>\r\n    firrtl.strictconnect %b, %1 : !firrtl.bundle<addr: uint<25>, len: uint<8>, size: uint<3>, burst: uint<2>, lock: uint<1>, cache: uint<4>, prot: uint<3>, qos: uint<4>, region: uint<4>, id: uint<12>, user: uint<1>>\r\n  }\r\n}\r\n```\r\nAssignments before PR #6339:\r\n```\r\n  assign b_addr = a_addr;\r\n  assign b_len = a_len;\r\n  assign b_size = a_size;\r\n  assign b_burst = a_burst;\r\n  assign b_lock = a_lock;\r\n  assign b_cache = a_cache;\r\n  assign b_prot = a_prot;\r\n  assign b_qos = a_qos;\r\n  assign b_region = a_region;\r\n  assign b_id = a_id;\r\n  assign b_user = a_user;\r\n```\r\nAfter the PR the assignments look as follows:\r\n```\r\n  assign b_addr = {a_cache[0], a_prot, a_qos, a_region, a_id, a_user};\r\n  assign b_len = {a_size[1:0], a_burst, a_lock, a_cache[3:1]};\r\n  assign b_size = {a_len[1:0], a_size[2]};\r\n  assign b_burst = a_len[3:2];\r\n  assign b_lock = a_len[4];\r\n  assign b_cache = {a_addr[0], a_len[7:5]};\r\n  assign b_prot = a_addr[3:1];\r\n  assign b_qos = a_addr[7:4];\r\n  assign b_region = a_addr[11:8];\r\n  assign b_id = a_addr[23:12];\r\n  assign b_user = a_addr[24];\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-31",
+  "closed_at": "2024-10-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

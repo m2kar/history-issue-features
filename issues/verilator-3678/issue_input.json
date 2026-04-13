@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3678,
+  "issue_url": "https://github.com/verilator/verilator/issues/3678",
+  "title": "VCD dump contents incorrect with --timing coroutines",
+  "body": "Hi!\r\n\r\nI came across a strange behaviour in verilator with the VCD dump file. The code below:\r\n```\r\nmodule bug_tb;\r\n\r\n\tlocalparam CLOCK_HALF_PERIOD = 5;\r\n\tlocalparam CLOCK_CYCLE = 10;\r\n\r\n\tlogic \t\t\trst;\r\n\tlogic \t\t\tclk;\r\n\tlogic \t\t\tvarA;\r\n\tlogic \t\t\tvarB;\r\n\tlogic \t\t\tvarC;\r\n\tlogic\t\t\tvarD;\r\n\r\n\tinitial begin\r\n\t\t$dumpfile (\"SimLog.vcd\");\r\n\t\t$dumpvars;\r\n\tend\r\n\r\n\talways #CLOCK_HALF_PERIOD clk = ~clk;\r\n\r\n\talways begin\r\n\r\n\t\trst = 1;\r\n\t\tclk = 0;\r\n\t\tvarA = 0;\r\n\t\tvarC = 0;\r\n\t\tvarB = 0;\r\n\t\tvarD = 0;\r\n\r\n\t\t#CLOCK_CYCLE;\r\n\t\trst = 0;\r\n\t\tvarB = 1;\r\n\r\n\t\t$display(\"rst: %d, varB: %d\", rst, varB);\r\n\r\n\t\t#CLOCK_CYCLE;\r\n\r\n\t\t$finish;\r\n\tend\r\n\r\nendmodule\r\n```\r\nCompiles and runs correctly, giveing the output:\r\n```\r\n%Warning: previous dump at t=0, requesting t=0, dump call ignored\r\nrst: 0, varB: 1\r\n- bug_tb.sv:37: Verilog $finish\r\n\r\n```\r\n\r\nBut when reading the VCD dump file in GTKWave the values for `rst` and `varB` remain unchanged during the entire simulation, as can be seen in the attached PDF: \r\n[gtkwave_out.pdf](https://github.com/verilator/verilator/files/9792410/gtkwave_out.pdf)\r\n\r\n\r\nIf I comment any on the assignments, for example:\r\n```\r\nvarA = 0;\r\n// varC = 0;\r\nvarB = 0;\r\nvarD = 0;\r\n```\r\n\r\nThe dump files is correct:\r\n[gtkwave_out.pdf](https://github.com/verilator/verilator/files/9792416/gtkwave_out.pdf)\r\n\r\nA complete example of the bug, along with build script and generated files is here:\r\nhttps://github.com/Hiperino/Verilator_bug\r\n\r\nI have tested this on Icarus Verilog and it gives correct results in the dump file each time.\r\n\r\nAm I doing something wrong or is it a bug?\r\n\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.001 devel rev v4.228-153-g038d57070 \r\nMost recent git master as of 15.10.2022\r\n\r\nWhat OS and distribution are you using?\r\nArch Linux, gcc version 12.2.0, no SystemC\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nYes",
+  "labels": [
+    "resolution: duplicate",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-15",
+  "closed_at": "2022-10-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

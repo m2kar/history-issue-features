@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6945,
+  "issue_url": "https://github.com/verilator/verilator/issues/6945",
+  "title": "`VL_SCOPED_RAND_RESET_I` is not very random for different `+verilator+seed+<seed>`",
+  "body": "I was testing running a test from #6927/#6929 with `+verilator+rand+reset+2` for multiple values of `+verilator+seed+<seed>`, and noticed that, for the same translation, bits from two signals were always initialized to 0 and 1, or 1 and 0, for every seed I tested, never 0 and 0, or 1 and 1.\n\nThe code that initializes the signals is the call `VL_SCOPED_RAND_RESET_I(1, __VscopeHash, 13598237235615402128ull)`. That function definition is:\n\n```c++\nIData VL_SCOPED_RAND_RESET_I(int obits, uint64_t scopeHash, uint64_t salt) VL_MT_UNSAFE {\n    if (Verilated::threadContextp()->randReset() == 0) return 0;\n    IData data = ~0;\n    if (Verilated::threadContextp()->randReset() != 1) {  // if 2, randomize\n        VlRNG rng{Verilated::threadContextp()->randSeed() ^ scopeHash ^ salt};\n        data = rng.rand64();\n    }\n    data &= VL_MASK_I(obits);\n    return data;\n}\n```\n\nThe constructor of `VlRNG` is:\n\n```c++\nexplicit VlRNG(uint64_t seed0) VL_MT_SAFE : m_state{0x12341234UL, seed0} {}\n```\n\nAnd the implementation of `rand64` is:\n\n```c++\nuint64_t VlRNG::rand64() VL_MT_UNSAFE {\n    // Xoroshiro128+ algorithm\n    const uint64_t result = m_state[0] + m_state[1];\n    m_state[1] ^= m_state[0];\n    m_state[0] = (((m_state[0] << 55) | (m_state[0] >> 9)) ^ m_state[1] ^ (m_state[1] << 14));\n    m_state[1] = (m_state[1] << 36) | (m_state[1] >> 28);\n    return result;\n}\n```\n\nThat means that `VL_SCOPED_RAND_RESET_I` is effectively:\n\n```c++\nIData VL_SCOPED_RAND_RESET_I(int obits, uint64_t scopeHash, uint64_t salt) VL_MT_UNSAFE {\n    if (Verilated::threadContextp()->randReset() == 0) return 0;\n    IData data = ~0;\n    if (Verilated::threadContextp()->randReset() != 1) {  // if 2, randomize\n        data = 0x12341234UL + (Verilated::threadContextp()->randSeed() ^ scopeHash ^ salt);\n    }\n    data &= VL_MASK_I(obits);\n    return data;\n}\n```\n\nFor 1-bit signals, the expression reduces to `randSeed() ^ (scopeHash ^ salt)`, where `scopeHash ^ salt` is a constant value for each signal. This means that the seed passed as an argument is only able to flip the bit when it is odd, and not when it is even. This significantly compromises the use case of testing a simulation across multiple seeds, where two signals being equal or different is what may trigger a bug (as in #6929, cc @toddstrader).\n\nAn easy enhancement here would be to compute `result` after performing one iteration of the Xoroshiro128+ algorithm, but I am not sure how good a single iteration of Xoroshiro128+ is. A more robust solution would be to use a good hash function to hash `randSeed()`, `scopeHash`, and `salt` into something more random, or possibly to keep the PRNG internal state between `VL_SCOPED_RAND_RESET_I` calls (though that may be undesirable).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-21",
+  "closed_at": "2026-02-01",
+  "code_blocks": [
+    "\nThe constructor of `VlRNG` is:\n\n",
+    "\nAnd the implementation of `rand64` is:\n\n",
+    "\nThat means that `VL_SCOPED_RAND_RESET_I` is effectively:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

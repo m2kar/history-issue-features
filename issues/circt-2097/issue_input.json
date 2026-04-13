@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2097,
+  "issue_url": "https://github.com/llvm/circt/issues/2097",
+  "title": "[PrettifyVerilog?] MulAddRecFN_postMul in FPU.fir has weird redundant statements",
+  "body": "I'm not sure what is going wrong here, probably something in PrettifyVerilog?  This is on FPU.fir from firrtl testsuite:\r\n\r\n```\r\n$ firtool -verilog FPU.fir \r\n...\r\nmodule MulAddRecFN_postMul(     // FPU.fir:4855:10\r\n...\r\n  wire [74:0] _T_16 = {_T_14, _T_15, io_fromPreMul_bit0AlignedNegSigC}; // Cat.scala:30:58\r\n...\r\n  wire [74:0] _T_42 = ~_T_16;   // MulAddRecFN.scala:257:23\r\n  wire [74:0] _T_43 = ~_T_16;   // MulAddRecFN.scala:257:23\r\n  wire [74:0] _T_44 = ~_T_16;   // MulAddRecFN.scala:257:23\r\n  wire [74:0] _T_45 = ~_T_16;   // MulAddRecFN.scala:257:23\r\n\r\n  wire [42:0] _T_48 = _T_46 ? (io_fromPreMul_isCDominant ? {1'h0, _T_39} : _T_40 ? (_T_41 ? {_T_44[27:1], 16'h0}\r\n                : {1'h0, _T_43[42:1]}) : _T_41 ? {10'h0, _T_42[49:18], |_T_34} : {_T_45[11:1], 32'h0}) :\r\n                {1'h0, io_fromPreMul_isCDominant ? _T_39 : _T_40 ? (_T_41 ? {io_mulAddResult[25:0], _T_13 ?\r\n                16'hFFFF : 16'h0} : io_mulAddResult[41:0]) : _T_41 ? {8'h0, _T_14[1:0],\r\n                io_mulAddResult[47:17], _T_13 ? ~(|_T_34) : |_T_31} : {io_mulAddResult[9:0], _T_13 ?\r\n                32'hFFFFFFFF : 32'h0}}; // Bitwise.scala:71:12, Cat.scala:30:58, CircuitMath.scala:37:22, MulAddRecFN.scala:207:46, :255:57, :262:62, :308:23, \r\n```\r\n\r\nPrettifyVerilog generally duplicates `~` unary operators to make avoid spilled temps in the generated code, but some expressions must be spilled - specifically those subject to extracts.  We shouldn't duplicate in this case, because it ends up with silly stuff like the above _T_42/_T_43/_T_44/_T_45 lines.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-07",
+  "closed_at": "2021-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

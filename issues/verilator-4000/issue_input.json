@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4000,
+  "issue_url": "https://github.com/verilator/verilator/issues/4000",
+  "title": "Incorrect results for reverse for loop",
+  "body": "The logic after transforming with verilator is not the same as original RTL code;\r\n\r\nExample:\r\nexample is edited based on verilator/examples/make_tracing_sc/top.v; just replace top.v with the code below and then input command \"make\" (add verilator_flags  --Wno-fatal).\r\n\r\n=============================================================\r\n// top.v\r\nmodule top\r\n  (\r\n   // Declare some signals so we can see how I/O works\r\n   input              clk,\r\n   input              fastclk,\r\n   input              reset_l,\r\n\r\n   output wire [1:0]  out_small,\r\n   output wire [39:0] out_quad,\r\n   output wire [69:0] out_wide,\r\n   input [1:0]        in_small,\r\n   input [39:0]       in_quad,\r\n   input [69:0]       in_wide\r\n   );\r\n\r\n   // Connect up the outputs, using some trivial logic\r\n   assign out_small = ~reset_l ? '0 : (in_small + 2'b1);\r\n   assign out_quad  = ~reset_l ? '0 : (in_quad + 40'b1);\r\n   assign out_wide  = ~reset_l ? '0 : (in_wide + 70'b1);\r\n\r\n   // And an example sub module. The submodule will print stuff.\r\n   sub sub (/*AUTOINST*/\r\n            // Inputs\r\n            .clk                        (clk),\r\n            .fastclk                    (fastclk),\r\n            .reset_l                    (reset_l));\r\n\r\n   // Print some stuff as an example\r\n   initial begin\r\n      $display(\"[%0t] Model running...\\n\", $time);\r\n   end\r\n\r\n// ============add code start=====================\r\nparameter row=15;\r\nparameter col=9;\r\n\r\nreg [row:0][col:0]  seg_chunk_num_pre;\r\nreg [row:0][col:0]  seg_chunk_num;\r\nreg [row:0][col:0]  seg_chunk_num_flip;\r\n\r\ninteger k;\r\nalways @(posedge fastclk) begin\r\n    if (reset_l)\r\n\t\tfor (k=0; k<row+1; k=k+1) begin\r\n\t\t\tseg_chunk_num_pre[k] <= 10'b0;\r\n\t\tend\r\n\telse\r\n\t\tfor (k=0; k<row+1; k=k+1) begin\r\n\t\t\tseg_chunk_num_pre[k] <= 10'b1 + k;\r\n\t\tend\r\nend\t\r\n\r\ninteger i;\r\nalways @(*) begin\r\n\tfor (i=0; i<row+1; i=i+1) begin\r\n\t\tseg_chunk_num[i] = seg_chunk_num_pre[i];\r\n\t\tseg_chunk_num_flip[i] = seg_chunk_num[row-1-i];\r\n\tend\r\nend\t\r\n// ============add code end=====================\r\n\r\nendmodule\r\n\r\n=============================================================\r\n\r\n\r\nWaveform:\r\nIdeally seg_chunk_num_flip should be changed simultaneouslly after seg_chunk_num being changed;\r\nbut the waveform shows that parts of bits of seg_chunk_num_flip is changed at next clk posedge, which is not the original logic of RTL code!\r\n![image](https://user-images.githubusercontent.com/120101215/222698467-263759f5-a621-416d-adc9-a7624ead9282.png)\r\n\r\nBesides, if the order of code is reversed. such as code below: The waveform will be fine. \r\n\t\t//seg_chunk_num[i] = seg_chunk_num_pre[i];\r\n\t\tseg_chunk_num_flip[i] = seg_chunk_num[row-1-i];\r\n                seg_chunk_num[i] = seg_chunk_num_pre[i];\r\n\r\nverilator version:  verilator-master;  downloaded 2023/03/03\r\nOS: CentOS 6.10",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-03",
+  "closed_at": "2023-03-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2686,
+  "issue_url": "https://github.com/verilator/verilator/issues/2686",
+  "title": "Fix numbering of unnamed generate blocks (genblk<n>) to match IEEE",
+  "body": "Tested on: 4.107 devel rev v4.106-54-gb15dd3f8 (master branch: commit b15dd3f)\r\n\r\nAs per the LRM each generate-construct (both named and unnamed) in a given scope is assigned a number. The generated names are assigned to the unnamed blocks _as per this assigned number_.\r\n\r\nIn Verilator, we see that the number for these unnamed generate blocks don't match the assigned number when there are some named blocks in between.\r\n\r\nRelevant part of LRM below. Emphasis mine.\r\n\r\nLRM 1800-2012\r\n\r\n> 27.6 External names for unnamed generate blocks\r\n>  \r\n> Each generate construct in a given scope is assigned a number. The number will be 1 for the construct that appears textually first in that scope and will increase by 1 for **each subsequent generate construct** in that scope. All unnamed generate blocks will be given the name “genblk<n>” where **<n> is the number assigned to its enclosing generate construct**.\r\n\r\n\r\nCode sample to demonstrate this issue:\r\n```\r\n// Example to show the genblk naming for signals\r\nmodule top;\r\nlogic [3:0] dataIn = 4'b1010;\r\n// 1\r\nfor (genvar i = 0; (i < 8); i++) begin // should be genblk1\r\n    logic [3:0] sig1;\r\n    assign sig1 = dataIn;\r\nend\r\n// 2\r\nfor (genvar i = 0; (i < 8); i++) begin // should be genblk2\r\n    logic [3:0] sig2;\r\n    assign sig2 = dataIn;\r\nend\r\n// 3\r\nfor (genvar i = 0; (i < 8); i++) begin : Custom3 // should be Custom3\r\n    logic [3:0] sig3;\r\n    assign sig3 = dataIn;\r\nend\r\n// 4\r\nfor (genvar i = 0; (i < 8); i++) begin // should be genblk4 and NOT genblk3\r\n    logic [3:0] sig4;\r\n    assign sig4 = dataIn;\r\nend\r\nendmodule // End Top Module\r\n```\r\nIn the above example, the generated name for the last block should be genblk4. In Verilator we see it as genblk3. \r\n\r\n",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-10",
+  "closed_at": "2020-12-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5994,
+  "issue_url": "https://github.com/verilator/verilator/issues/5994",
+  "title": "Arithmetic right-shift by constant > 32 bits gives wrong result",
+  "body": "The code below triggers the problem:\n\n```verilog\n`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top (out35);\n    output wire [2:0] out35;\n    wire   signed [2:0] wire_4;\n    assign wire_4 = 3'b011;\n    assign out35  = (wire_4 >>> 36'hffff_ffff_f);\n\n    initial begin\n        #10;\n        `checkd(out35, '0);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n```\n\nReproduce it with the command below (`-fno-const-bit-op-tree` is optional; removing it makes no difference):\n\n```bash\nverilator --binary -Wno-lint --timing -fno-const-bit-op-tree test.v\n```\n\nVerilator outputs:\n\n```\n%Error: test.v:15:  got=7 exp=0\n%Error: test.v:15: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nBecause the sign-bit of `wire_4` is `0`, the final result should be `0`. Icarus Verilog (iverilog) confirms this:\n\n```\n*-* All Finished *-*\n```\n\nNote: the error only occurs when the arithmetic right-shift amount for `wire_4` is greater than 32 bits (`32'hffff_ffff`). The issue is likely related to that.\n\nSystem details:\n\n* Verilator version: Verilator 5.037 devel rev v5.036-44-ga80aa07de\n* OS: Ubuntu 22.04.5 LTS (Jammy) Kernel/Release: 22.04",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-09",
+  "closed_at": "2025-05-10",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top (out35);\n    output wire [2:0] out35;\n    wire   signed [2:0] wire_4;\n    assign wire_4 = 3'b011;\n    assign out35  = (wire_4 >>> 36'hffff_ffff_f);\n\n    initial begin\n        #10;\n        `checkd(out35, '0);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n",
+    "verilator --binary -Wno-lint --timing -fno-const-bit-op-tree test.v\n",
+    "%Error: test.v:15:  got=7 exp=0\n%Error: test.v:15: Verilog $stop\nAborting...\nAborted (core dumped)\n",
+    "*-* All Finished *-*\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

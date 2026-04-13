@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8393,
+  "issue_url": "https://github.com/llvm/circt/pull/8393",
+  "title": "[HWMemSimImpl] Avoid generation of 0 bit Value",
+  "body": "`HWMemSimImpl` generates a zero bit result from `comb.extract` when the memory data is 1 bit width.\r\nFor example,\r\n```\r\nhw.module.generated @ram_2x1, @FIRRTLMem(in %R0_addr : i1, in %R0_en : i1, in %R0_clk : i1, out R0_data : i1, in %W0_addr : i1, in %W0_en : i1, in %W0_clk : i1, in %W0_data : i1) attributes {depth = 2 : i64, emit.fragments = [@RANDOM_INIT_REG_FRAGMENT, @RANDOM_INIT_MEM_FRAGMENT, @RANDOM_INIT_FRAGMENT], initFilename = \"\", initIsBinary = false, initIsInline = false, maskGran = 1 : ui32, numReadPorts = 1 : ui32, numReadWritePorts = 0 : ui32, numWritePorts = 1 : ui32, readLatency = 0 : ui32, readUnderWrite = 0 : i32, width = 1 : ui32, writeClockIDs = [0 : i32], writeLatency = 1 : ui32, writeUnderWrite = 1 : i32}\r\n```\r\ngenerates the following extract  of i0\r\n```\r\n           sv.for %j = %c0_i6 to %c-32_i6 step %c-32_i6_0 : i6 {\r\n              %RANDOM = sv.macro.ref.expr.se @RANDOM() : () -> i32\r\n              %7 = comb.extract %j from 0 : (i6) -> i0\r\n              %8 = sv.indexed_part_select_inout %_RANDOM_MEM[%7 : 32] : !hw.inout<i32>, i0\r\n              sv.bpassign %8, %RANDOM : i32\r\n            }\r\n```\r\n\r\nThis is a simple fix that creates a `c0_ui1` instead of the `comb.extract`: \r\n```\r\n    sv.for %j = %c0_i6 to %c-32_i6 step %c-32_i6_0 : i6 {\r\n              %RANDOM = sv.macro.ref.expr.se @RANDOM() : () -> i32\r\n              %false = hw.constant false\r\n              %7 = sv.indexed_part_select_inout %_RANDOM_MEM[%false : 32] : !hw.inout<i32>, i1\r\n              sv.bpassign %7, %RANDOM : i32\r\n            }\r\n```\r\nRelated to: https://github.com/llvm/circt/pull/8351\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-04",
+  "closed_at": "2025-04-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5461,
+  "issue_url": "https://github.com/verilator/verilator/issues/5461",
+  "title": "Error accessing `typedef` declared inside parameterized class",
+  "body": "Hello!\r\n\r\nIf you access a type declaration (`typedef`) in one parameterized class and use it to specify the type of a parameter of another parameterized class, an error occurs.\r\n\r\nThe expected behavior is no errors.\r\n\r\nRelated (maybe) issue: https://github.com/verilator/verilator/issues/4924 (see `Test 2` output)\r\n\r\n**Example:**\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class cls1#(bit param);\r\n    typedef bit bool_t;\r\n  endclass\r\n\r\n  class cls2#(cls1#()::bool_t param); // note that for some reason the parameter for `cls1` may be omitted here\r\n  endclass\r\n\r\n  cls2#(1) mycls; // here the parameter for `cls2` cannot be omitted - there will be an error\r\n\r\nendmodule\r\n```\r\n\r\nIf `cls1` is made a simple (non-parameterized) class, then everything works:\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class cls1;\r\n    typedef bit bool_t;\r\n  endclass\r\n\r\n  class cls2#(cls1::bool_t param);\r\n  endclass\r\n\r\n  cls2#(1) mycls;\r\n\r\nendmodule\r\n\r\n```\r\n\r\n**Output:**\r\n\r\n```text\r\n%Error: Internal Error: top.sv:7:24: ../V3AstNodeDType.h:1191: Typedef not linked\r\n                                   : ... note: In instance 'top'\r\n    7 |   class cls2#(cls1#()::bool_t param);  \r\n      |                        ^~~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\n**Command:**\r\n\r\n```bash\r\nverilator --binary top.sv\r\n```\r\n\r\n---\r\n\r\nVerilator version (git master): `Verilator 5.029 devel rev v5.028-88-g195a66529`\r\n\r\nOS (verilator devcontainer): Ubuntu 22.04.4 LTS",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-09-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

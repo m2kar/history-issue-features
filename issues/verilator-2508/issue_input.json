@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2508,
+  "issue_url": "https://github.com/verilator/verilator/issues/2508",
+  "title": "Support (non-open) unpacked array for DPI-C",
+  "body": "The latest master (dbb69412e56ebd66e3a88a0589c5f061db496269) Verilates the following code without an error.\r\n```systemverilog\r\nmodule t();\r\n   import \"DPI-C\" function void f(int i[3]);\r\n   int i[3];\r\n   initial f(i);\r\nendmodule\r\n```\r\n\r\nBut C++ compiler complains as below.\r\n```\r\nIn file included from Vt__ALL.cpp:3:\r\n./Vt.cpp:73:15: error: assigning to 'int' from incompatible type 'IData *' (aka 'unsigned int *')\r\n    i__Vcvt = i;\r\n              ^\r\n1 error generated.\r\n```\r\n\r\n\r\n\r\nLooking at the Verilated code, I suspect non-open unpacked array is not supported yet. \r\n```c++\r\nVL_INLINE_OPT void Vt::__Vdpiimwrap_t__DOT__f_TOP(IData/*31:0*/ i[3]) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt::__Vdpiimwrap_t__DOT__f_TOP\\n\"); );\r\n    // Body\r\n    int i__Vcvt;  // <= Temporary variable is scalar, not an array\r\n    i__Vcvt = i;\r\n    f(i__Vcvt);\r\n}\r\n```\r\n\r\nI am going to implement this feature.\r\nPlease let me know if I misunderstand the standard or overlook the ongoing work.",
+  "labels": [
+    "area: data-types",
+    "effort: days",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2020-08-22",
+  "closed_at": "2020-11-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

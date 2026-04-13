@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4363,
+  "issue_url": "https://github.com/verilator/verilator/issues/4363",
+  "title": "Fix handling of clocks embedded in SV structs",
+  "body": "How may we help - what is your question?\r\n\r\nPlease see the code example below.  This is a trivial example to illustrate.  Some IPs have clocks and resets (functional pervasive) embedded in structs and some IPs have explicit clocks and resets for ports.  When a leaf node that has explicit clocks and reset ports (module_B) is instantiated inside a module that has a pervasive struct (module_A) the clock appears to not propagate.   Is this expected Verilator behaviour?\r\n\r\n```\r\nXXX@MacBook-Pro-6 tb % verilator --version\r\nVerilator 5.013 devel rev v5.012-54-gced1dfeff\r\n```\r\n\r\nI have also tried various combinations of --clk and /\\*verilator clocker\\*/, etc.\r\n\r\n```\r\n--clk tb.module_A.module_B.clk1x\r\n\r\nmodule module_B(\r\n   input logic  clk1x /*verilator clocker*/\r\n   ,input logic reset\r\n```\r\n\r\n<img width=\"816\" alt=\"image\" src=\"https://github.com/verilator/verilator/assets/92717390/8bbee523-263c-4875-bb0c-1a09288799cf\">\r\n\r\n```\r\n\r\ntypedef struct packed {\r\n   logic clk1x;\r\n   logic reset;\r\n} cnr_t;\r\n\r\nmodule module_B(\r\n   input logic clk1x\r\n   ,input logic reset\r\n   ,input logic A\r\n   ,output logic B\r\n);\r\n\r\n   always_ff @(posedge clk1x) begin\r\n      if(reset) begin\r\n         B <= 'b0;\r\n      end else begin\r\n         B <= A;\r\n      end\r\n   end\r\n\r\nendmodule\r\n\r\nmodule module_A(\r\n   input cnr_t cnr\r\n   ,input logic A\r\n   ,output logic B\r\n);\r\n\r\n   module_B module_B(\r\n      .clk1x(cnr.clk1x)\r\n      ,.reset(cnr.reset)\r\n      ,.A(A)\r\n      ,.B(B)\r\n   );\r\n\r\nendmodule\r\n\r\nmodule tb();\r\n\r\n   cnr_t cnr;\r\n   logic A, B;\r\n\r\n   module_A module_A(\r\n      .cnr(cnr)\r\n      ,.A(A)\r\n      ,.B(B)\r\n   );\r\n\r\n   always #10 cnr.clk1x = ~cnr.clk1x;\r\n\r\n   initial begin\r\n      $dumpfile(\"tb.vcd\");\r\n      $dumpvars(0, tb);\r\n\r\n      cnr.reset = 'b1;\r\n      A = 'b0;\r\n\r\n      #20;\r\n      cnr.reset = 'b0;\r\n\r\n      #20;\r\n      A = 'b1;\r\n\r\n      #20;\r\n      A = 'b0;\r\n\r\n      #100;\r\n      $finish;\r\n   end\r\n\r\nendmodule\r\n```\r\n\r\n\r\n\r\n\r\n",
+  "labels": [
+    "area: scheduling",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-13",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

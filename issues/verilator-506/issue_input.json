@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 506,
+  "issue_url": "https://github.com/verilator/verilator/issues/506",
+  "title": "Support SystemVerilog string initializations ",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 506 from https://www.veripool.org\nOriginal Date: 2012-05-05\n\n\n---\n\nI tried to compile Altera's DDR3 controller and testbench with Micron's DDR3 DRAM model (Altera's DRAM model does not compile because of structs). \r\n\r\nVerilator completes without errors, however, generated code does not compile with gcc:\r\n\r\n```\r\ng++44  -I. -MMD -I.../verilator/include -I.../verilator/include/vltstd -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0 -c -o Vddr3_ctlr_m0_q11_1sp2_example_sim__ALLcls.o Vddr3_ctlr_m0_q11_1sp2_example_sim__ALLcls.cpp\r\nIn file included from Vddr3_ctlr_m0_q11_1sp2_example_sim__ALLcls.cpp:2:\r\nVddr3_ctlr_m0_q11_1sp2_example_sim.cpp: In static member function â€˜static void Vddr3_ctlr_m0_q11_1sp2_example_sim::_initial__TOP(Vddr3_ctlr_m0_q11_1sp2_example_sim__Syms*)â€™:\r\nVddr3_ctlr_m0_q11_1sp2_example_sim.cpp:25917: error: â€˜struct Vddr3_ctlr_m0_q11_1sp2_example_simâ€™ has no member named â€˜messageâ€™\r\nVddr3_ctlr_m0_q11_1sp2_example_sim.cpp:25920: error: â€˜struct Vddr3_ctlr_m0_q11_1sp2_example_simâ€™ has no member named â€˜messageâ€™\r\nVddr3_ctlr_m0_q11_1sp2_example_sim.cpp:25922: warning: cannot pass objects of non-POD type â€˜struct std::stringâ€™ through â€˜...â€™; call will abort at runtime\r\n...\r\n\n```\r\n\r\ngenerate code:\r\n\r\n```\r\n     // INITIAL at ..//submodules//./..//submodules/altera_avalon_clock_source.sv:76 \r\n     // Function: ___05Fhello at ..//submodules//./..//submodules/altera_avalon_clock_source.sv:77 \r\n     VL_SFORMAT_X(64,vlTOPp->message,\"%Nv.pll_ref_clk: - Hello from altera_clock_source.\", \r\n                  vlSymsp->name()); \r\n     // Function: print at ..//submodules//./..//submodules/altera_avalon_clock_source.sv:40 \r\n     __Vtask_print__1__message = vlTOPp->message; \r\n     VL_WRITEF(\"%20t:    INFO: %s\\n\",64,VL_TIME_Q(), \r\n               64,__Vtask_print__1__message); \r\n\n```\r\n\r\nThe first error is on line with VL_SFORMAT_X().\r\n\r\nSource code:\r\n\r\n```\r\n    import verbosity_pkg::*; \r\n \r\n    localparam HALF_CLOCK_PERIOD   = 1000.000000/CLOCK_RATE/2; // half clock period in ns \r\n     \r\n    logic clk = 1'b0; \r\n \r\n//   string message   = \"*uninitialized*\"; \r\n    bit    run_state = 1'b1; \r\n \r\n    function automatic void __hello(); \r\n       $sformat(message, \"%m: - Hello from altera_clock_source.\"); \r\n       print(VERBOSITY_INFO, message);             \r\n       $sformat(message, \"%m: -   $Revision: #1 $\"); \r\n       print(VERBOSITY_INFO, message);             \r\n       $sformat(message, \"%m: -   $Date: 2011/11/10 $\"); \r\n       print(VERBOSITY_INFO, message); \r\n       $sformat(message, \"%m: -   CLOCK_RATE = %0d\", CLOCK_RATE);       \r\n       print(VERBOSITY_INFO, message); \r\n       print_divider(VERBOSITY_INFO);       \r\n    endfunction \r\n...\r\n    initial begin \r\n       __hello(); \r\n    end \r\n\n```\r\n\r\nIt seems related to #^A - I commented out string message declaration to get around #^A, which I guess makes the code incorrect, although verilator and VCS do not complain.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2012-05-05",
+  "closed_at": "2014-12-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

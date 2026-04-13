@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7559,
+  "issue_url": "https://github.com/llvm/circt/pull/7559",
+  "title": "[Arc] Implement memory initializers",
+  "body": "Following #7480, This PR adds support for initialization of arcilator memories.  The code still needs tidying and testing. But, as always, I appreciate early feedback on the overall approach.\r\n\r\nSpecifically, it adds the `arc.initmem.filled` and `arc.initmem.randomized` operations, enabling initialization with a constant value and runtime generated random values respectively. Both ops produce a SSA value of the newly added `!arc.memory_initializer<* x *>` type, indicating that they can be used to initialize memories irrespective of size and word type. Sadly, there is currently no front or middle end equivalent of these operations, so for the moment they mostly serve as a template showing how initialization can be handled with and without help from the runtime environment.\r\n\r\nThe `memory_initializer` value is passed as an optional argument to the `arc.memory` op. During `LowerState` it gets moved to the 'initital' pseudo clock-tree and a `arc.initialize_memory` op is inserted to associate the initializer with the memory's state. Finally, the newly added `LowerMemoryInitializers` pass converts the initializers to the low level state writes, which, depending on the initializer, may involve invoking the runtime environment with a reference to the storage. This utilizes the also newly added `arc.call_environment` caller and `arc.environment_call` callee op pair. Right now they don't do anything special, but I think it makes sense to separate calls to the runtime environment from generic function calls.\r\n\r\nSpeaking of the runtime environment: As discussed in #7445, the increasing complexity makes implementing it as effectively a header library impractical. I'm still working on restructuring it and it probably doesn't make much sense to land this PR here before that has been done (the new call ops also don't really belong in this PR). In the end, this should allow us to add an initializer op for `.mem` files, with the static reading and parsing logic stashed away in the runtime library. ",
+  "labels": [
+    "Arc"
+  ],
+  "state": "open",
+  "created_at": "2024-08-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

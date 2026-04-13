@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6258,
+  "issue_url": "https://github.com/verilator/verilator/issues/6258",
+  "title": "Incorrect Non-ANSI I/O declaration conflict error",
+  "body": "Seems to be caused by bd1ac03828c09e30bb1ee68ddcd2115b81f20c27.\n\n```systemverilog\nmodule t(i);\n input [3:0] i;\n wire  [4-1:0] i;\nendmodule\n```\n\nRunning `verilator --lint-only` produces:\n\n```\n%Error: nonansi.sv:5:16: Non-ANSI I/O declaration of signal conflicts with type declaration: 'i'\n    5 |  wire  [4-1:0] i;\n      |                ^\n        nonansi.sv:4:14: ... Location of other declaration\n    4 |  input [3:0] i;\n      |              ^\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.039 for more assistance.\n```\n\n\nThis `sameTree` fails because the range LHS is an Const in one and a Sub in the other:\nhttps://github.com/verilator/verilator/blob/7d2b6bd9218110621e67fa26c7cf54885f3b695e/src/V3LinkDot.cpp#L1534\n\nNote example is simplified from a case where `4-1` is actually parametrized `N-1`, while the `3` is hard-coded.\n\nThis is what's causing XuanTie-E902 and XuanTie-E906 to fail in RTLMeter.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-05",
+  "closed_at": "2025-08-05",
+  "code_blocks": [
+    "module t(i);\n input [3:0] i;\n wire  [4-1:0] i;\nendmodule\n",
+    "%Error: nonansi.sv:5:16: Non-ANSI I/O declaration of signal conflicts with type declaration: 'i'\n    5 |  wire  [4-1:0] i;\n      |                ^\n        nonansi.sv:4:14: ... Location of other declaration\n    4 |  input [3:0] i;\n      |              ^\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.039 for more assistance.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

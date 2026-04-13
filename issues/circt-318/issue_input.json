@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 318,
+  "issue_url": "https://github.com/llvm/circt/issues/318",
+  "title": "[FIRRTL] (rem) slicing scalar",
+  "body": "Similar to #313 \r\n\r\nThe following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input tmp85: UInt<1>\r\n    input tmp79: UInt<1>\r\n    output tmp106: UInt<1>\r\n    tmp106 <= rem(tmp79, tmp85)\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl` produces this verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  tmp85, tmp79,\r\n  output tmp106);\r\n\r\n  wire _T = tmp79 % tmp85;\t// top_mod.fir:7:15\r\n  assign tmp106 = _T[0];\t// top_mod.fir:3:3, :7:15\r\nendmodule\r\n```\r\n\r\nThat has the following error:\r\n\r\n```bash\r\n%Error: top_mod.v:6:21: Illegal bit or array select; type does not have a bit range, or bad dimension: data type is 'logic'\r\n                      : ... In instance top_mod\r\n    6 |   assign tmp106 = _T[0];  \r\n      |                     ^\r\n```\r\n",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-11",
+  "closed_at": "2020-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

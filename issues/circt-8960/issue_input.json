@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8960,
+  "issue_url": "https://github.com/llvm/circt/pull/8960",
+  "title": "[ImportVerilog] Add support for materializing `FixedSizeUnpackedArrayType` as `UnpackedArrayType`.",
+  "body": "This PR adds support for materializing `slang::ast::FixedSizeUnpackedArrayType` as `moore::UnpackedArrayType`. \r\nPreviously, only constant immediate`SVInt`s could be materialized, and working with RTL that used constant-valued, fixed-size unpacked arrays led to errors if they were used after declaration.\r\n\r\nThis conversion is necessary for supporting unpacked system verilog parameter arrays, e.g.:\r\n`parameter int unsigned SomeParam [8] = {default: 0}`\r\nThis pattern is valid system verilog and widely used in the [snitch cluster](https://github.com/pulp-platform/snitch_cluster) repository, for example in the `snitch_cluster` and `snitch_cluster_wrapper` modules.\r\n\r\nThis implementation adds the function `Context::materializeFixedSizeUnpackedArrayType` as a target for `Context::materializeConstant` if the provided type can be safely cast to `slang::ast::FixedSizeUnpackedArrayType` (at runtime); otherwise the old logic is applied.\r\nThis PR also adds a test where the materialization conversion is applied on a module parameter and used in a function declared within the module body; it checks that the array is properly set up from constants and array access use a `moore::dyn_extract`.\r\n\r\n~I'm not fully sure the logic to extract the maximum bitwidth of all elements or inference of four-value logic is needed. Please let me know if you see a better way!~\r\nEDIT: Removed what appears to me to be superfluous checking for the bitwidth of the underlying type and the presence of X/Z values. \r\n",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-13",
+  "closed_at": "2025-09-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

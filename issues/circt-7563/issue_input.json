@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7563,
+  "issue_url": "https://github.com/llvm/circt/issues/7563",
+  "title": "[SV] Canonicalizer ASAN failure",
+  "body": "Input I had locally presently causes ASAN failure w/canonicalizer.\r\n\r\nInput:\r\n\r\n```mlir\r\nhw.module @Test(in %x : i8, in %clock: i1) {\r\n  // All of these are equivalent to `var logic x` .\r\n\r\n  // logic-type variable, assign to x.\r\n  %logicvar = sv.logic : !hw.inout<i8>\r\n  sv.assign %logicvar, %x : i8\r\n\r\n  // Same but use keyword \"reg\" (reg x; = var logic x;)\r\n  %regvar = sv.reg : !hw.inout<i8>\r\n  sv.assign %regvar, %x : i8\r\n\r\n  // sv.reg supports initialization operand, demonstrate.\r\n  %regwithinit = sv.reg init %x : !hw.inout<i8>\r\n}\r\n```\r\n\r\nASAN report snippet:\r\n\r\n```\r\n=================================================================\r\n==4169766==ERROR: AddressSanitizer: heap-use-after-free on address 0x50d000000640 at pc 0x564cb22e62ba bp 0x7ffd4dcf1670 sp 0x7ffd4dcf1668\r\nREAD of size 8 at 0x50d000000640 thread T0\r\n    #0 0x564cb22e62b9 in mlir::detail::IROperandBase::getNextOperandUsingThisValue() /home/will/src/sifive/circt/llvm/llvm/../mlir/include/mlir/IR/UseDefLists.h:43:58\r\n    #1 0x564cb22e62b9 in mlir::ValueUseIterator<mlir::OpOperand>::operator++() /home/will/src/sifive/circt/llvm/llvm/../mlir/include/mlir/IR/UseDefLists.h:322:39\r\n    #2 0x564cb22e62b9 in circt::sv::RegOp::canonicalize(circt::sv::RegOp, mlir::PatternRewriter&) /home/will/src/sifive/circt/lib/Dialect/SV/SVOps.cpp:311:18\r\n```\r\n\r\nAt a glance, we're deleting users while iterating over them (and may delete operations using this more than once twice / invalidate the list).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-31",
+  "closed_at": "2024-09-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6881,
+  "issue_url": "https://github.com/verilator/verilator/pull/6881",
+  "title": "Internals: Add AST nodes for tagged union parsing (#6867 partial)",
+  "body": "## Tagged Union Parsing (Step 2 of #6867)\n\nThis PR adds AST infrastructure and parser grammar for tagged unions per IEEE 1800-2023. All features are parsed into proper AST nodes and flagged as unsupported in V3LinkParse, enabling future implementation.\n\n### IEEE 1800-2023 References\n\n**Section 11.9 - Tagged union expressions** (Syntax 11-6):\n```\ntagged_union_expression ::= tagged member_identifier [ primary ]\n```\n\n**Section 12.6 - Pattern matching** (Syntax 12-4):\n```\npattern ::=\n    ( pattern )\n  | . variable_identifier\n  | .*\n  | constant_expression\n  | tagged member_identifier [ pattern ]\n  | ' { pattern { , pattern } }\n  | ' { member_identifier : pattern { , member_identifier : pattern } }\n```\n\n### New AST Nodes\n\n| Node | Purpose |\n|------|---------|\n| `AstTaggedExpr` | Tagged union expression: `tagged MemberName [expr]` |\n| `AstTaggedPattern` | Tagged pattern: `tagged MemberName [pattern]` |\n| `AstPatternVar` | Pattern variable binding: `.variable` |\n| `AstPatternStar` | Pattern wildcard: `.*` |\n| `AstMatches` | Matches operator: `expr matches pattern` |\n\n### Type System Changes\n\n- `VBasicDTypeKwd::CVOID` - Void type for tagged union members (named CVOID to avoid Windows VOID macro conflict)\n- `AstUnionDType::isTagged()` - Tracks whether union is `union tagged`\n- `VCaseType::CT_CASEMATCHES` - Case statement variant for `case matches`\n\n### Parser Grammar\n\n**Tagged union declarations:**\n- `union tagged { ... }` now sets `isTagged()` flag instead of emitting BBUNSUP\n- `void` member type creates `CVOID` dtype\n\n**Tagged union expressions:**\n- Token pipeline disambiguates `yTAGGED__LEX` → `yTAGGED` (primary follows) or `yTAGGED__NONPRIMARY` (no primary follows)\n- Handles: parenthesized expressions, assignment patterns, literals, identifiers, concatenations\n\n**Pattern matching:**\n- `patternNoExpr` rules for `.variable`, `.*`, `tagged id pattern`\n- `case_matches_itemList` for `case (expr) matches` statements\n- `expr matches pattern` operator\n\n### Unsupported Flagging\n\nFeatures are flagged in V3LinkParse with specific error messages:\n- `Unsupported: tagged union`\n- `Unsupported: tagged pattern`\n- `Unsupported: pattern variable`\n- `Unsupported: pattern wildcard`\n- `Unsupported: matches operator`\n- `Unsupported: case matches (for tagged union)`\n- `Unsupported: void (for tagged unions)`\n\n### Token Pipeline Disambiguation\n\nThe `.variable_identifier` construct is valid only in pattern context, not as a primary. This creates ambiguity:\n- Expression: `tagged JmpU .a` → `(tagged JmpU) . a` (void member + member access)\n- Pattern: `tagged Valid .n` → `tagged Valid (.n)` (tagged pattern with variable)\n\nThe token pipeline looks ahead after `tagged id` to determine if a primary follows, emitting the appropriate token variant.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-04",
+  "closed_at": "2026-01-17",
+  "code_blocks": [
+    "tagged_union_expression ::= tagged member_identifier [ primary ]\n",
+    "pattern ::=\n    ( pattern )\n  | . variable_identifier\n  | .*\n  | constant_expression\n  | tagged member_identifier [ pattern ]\n  | ' { pattern { , pattern } }\n  | ' { member_identifier : pattern { , member_identifier : pattern } }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

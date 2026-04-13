@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 678,
+  "issue_url": "https://github.com/llvm/circt/issues/678",
+  "title": "[FIRRTL] (div / reg / add) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 3727\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    output tmp22: SInt<8>\r\n    output _tmp30: UInt<1>\r\n    input tmp6: SInt<1>\r\n    wire tmp7: UInt<1>\r\n    reg _tmp17: UInt<7>, clock\r\n    reg tmp21: UInt<1>, clock with: (reset => (reset, UInt<1>(0)))\r\n    tmp7 <= UInt<1>(0)\r\n    _tmp17 <= div(UInt<7>(\"b1101111\"), tmp7)\r\n    tmp21 <= orr(_tmp17)\r\n    tmp22 <= add(tmp6, asSInt(_tmp17))\r\n    _tmp30 <= tmp21\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl --enable-lower-types` produces this Verilog:\r\n\r\n```verilog\r\n// skipped defines\r\nmodule top_mod(\r\n  input        clock, reset, tmp6,\r\n  output [7:0] tmp22,\r\n  output       _tmp30);\r\n\r\n  wire       tmp7;\t// a_top_mod.fir:9:5\r\n  reg  [6:0] _tmp17;\t// a_top_mod.fir:10:5\r\n  reg        tmp21;\t// a_top_mod.fir:11:5\r\n\r\n// skipped ifdefs\r\n  assign tmp7 = 1'h0;\t// a_top_mod.fir:11:55, :12:10\r\n  always_ff @(posedge clock)\t// a_top_mod.fir:13:12\r\n    _tmp17 <= 7'h6F / {6'h0, tmp7};\t// a_top_mod.fir:13:{12,15,19}\r\n  wire [6:0] _T = _tmp17;\t// a_top_mod.fir:14:14\r\n  always_ff @(posedge clock) begin\t// a_top_mod.fir:14:11\r\n    if (reset)\t// a_top_mod.fir:14:11\r\n      tmp21 <= 1'h0;\t// a_top_mod.fir:11:{5,55}\r\n    else\t// a_top_mod.fir:14:11\r\n      tmp21 <= |_T;\t// a_top_mod.fir:14:{11,14}\r\n  end // always_ff @(posedge)\r\n  assign tmp22 = {8{tmp6}} + {{1{_T[6]}}, _T};\t// a_top_mod.fir:3:3, :15:14\r\n  assign _tmp30 = tmp21;\t// a_top_mod.fir:3:3\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT --dont-fold div` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        clock,\r\n  input        reset,\r\n  output [7:0] tmp22,\r\n  output       _tmp30,\r\n  input        tmp6\r\n);\r\n// skipped ifdefs\r\n  reg [6:0] _tmp17;\r\n  reg  tmp21;\r\n  wire [6:0] _GEN_0 = {7{tmp6}};\r\n  assign tmp22 = $signed(_GEN_0) + $signed(_tmp17);\r\n  assign _tmp30 = tmp21;\r\n  always @(posedge clock) begin\r\n    _tmp17 <= 7'h6f / 1'h0;\r\n    if (reset) begin\r\n      tmp21 <= 1'h0;\r\n    end else begin\r\n      tmp21 <= |_tmp17;\r\n    end\r\n  end\r\n// skipped ifdefs\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nyosys 0\r\nERROR: Found 9 unproven $equiv cells in 'equiv_status -assert'.\r\nyosys 1\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-25",
+  "closed_at": "2021-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

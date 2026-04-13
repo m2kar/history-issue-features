@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2631,
+  "issue_url": "https://github.com/verilator/verilator/issues/2631",
+  "title": "Optimize Reloop for better array detection",
+  "body": "In SweRV C++ output the branch predictor results in code which basically makes a pattern, that if we **hand** expand to macros is this:\r\n\r\n```\r\n#define F(ai, bm, co, e, f, g) \\\r\n    vlTOPp->bht_bank_wr_data[ai] \\\r\n        = ((bm & vlTOPp->bht_bank_wr_data[ai]) \\\r\n           | (co & (((we2 & (e == bh0)) ? br0sh : ((we1 & (f == bh1)) ? br1sh : (exh4))) << g)))\r\n\r\n    for (int ii=0; ii<8; ++ii) {   // In reality, is unrolled\r\n        for (int bit=0; bit<16; ++bit) {   // In reality is unrolled\r\n            F(ii, ~(3U<<(bit*2)), 3U<<(bit*2), bit, bit, bit*2);\r\n```\r\n\r\n* If common expressions are pulled out of the loop, the code is 47% faster and similar sized.\r\n* If the already-unrolled loop for the ii index is converted to a for loop the code after above is 9% faster and 80% smaller.\r\n* If the bits are looped the code is 40% slower and 80% smaller again - classic space/time tradeoff. Note the bit part of this loop is described in bug #2630, if that is fixed this loop optimization would not apply.\r\n\r\nV3Reloop could be improved to look at all the I/O and constants in each statement and look for better looping opportunities.\r\n\r\nThis is likely 5% or more overall gain.\r\n",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "open",
+  "created_at": "2020-11-08",
+  "closed_at": null,
+  "code_blocks": [
+    "#define F(ai, bm, co, e, f, g) \\\r\n    vlTOPp->bht_bank_wr_data[ai] \\\r\n        = ((bm & vlTOPp->bht_bank_wr_data[ai]) \\\r\n           | (co & (((we2 & (e == bh0)) ? br0sh : ((we1 & (f == bh1)) ? br1sh : (exh4))) << g)))\r\n\r\n    for (int ii=0; ii<8; ++ii) {   // In reality, is unrolled\r\n        for (int bit=0; bit<16; ++bit) {   // In reality is unrolled\r\n            F(ii, ~(3U<<(bit*2)), 3U<<(bit*2), bit, bit, bit*2);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

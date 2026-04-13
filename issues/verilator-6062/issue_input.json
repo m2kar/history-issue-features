@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6062,
+  "issue_url": "https://github.com/verilator/verilator/issues/6062",
+  "title": "Erratic behaviour of muxed signed ports",
+  "body": "[test_mux.cpp.txt](https://github.com/user-attachments/files/20609126/test_mux.cpp.txt)\n[test_mux.sv.txt](https://github.com/user-attachments/files/20609127/test_mux.sv.txt)\n\nHi,\n\nI've created a mux module as follow:\n```\nmodule test_mux (\n  input clock,\n  input reset,\n  input signed [23:0] in0,\n  input signed [23:0] in1,\n  input signed [23:0] in2,\n  input signed [23:0] in3,\n  input signed [23:0] in4,\n  input signed [23:0] in5,\n  input signed [23:0] in6,\n  input signed [23:0] in7,\n  input signed [3:0] sel,\n  output signed [23:0] out\n);\n```\n\nNothing fancy, just routing `inX` to `out` depending of the value of `sel`.\n\nI'm filling the inputs as follow:\n\n```\n    top->in0 = -1;\n    top->in1 = 2;\n    top->in2 = 3;\n    top->in3 = 4;\n    top->in4 = 5;\n    top->in5 = 6;\n    top->in6 = 7;\n    top->in7 = 8;\n```\nI made a simple program to scan the inputs by increasing the `sel` port. Here is the output:\n\n```\n-1\n255\n3\n4\n5\n6\n7\n8\n```\n\nI was expecting:\n```\n-1\n2\n3\n4\n5\n6\n7\n8\n```\n\nIt looks like the data following a negative input has his last byte turned all to 1.\n\nI've attached the files to reproduce the bug (please remove .txt). You can run it with the following command:\n`verilator --cc --exe --build -Wall test_mux.cpp test_mux.sv`\n\nI'm using the following version:\n`Verilator 5.036 2025-04-27 rev v5.036-48-g0dc93c1d5`\n\nBut this bug is also in 5.006 (Debian packages)\n\nUsing Debian 12 (bookworm)\n\nBest regards,\nKevin",
+  "labels": [
+    "resolution: invalid"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-05",
+  "closed_at": "2025-06-05",
+  "code_blocks": [
+    "module test_mux (\n  input clock,\n  input reset,\n  input signed [23:0] in0,\n  input signed [23:0] in1,\n  input signed [23:0] in2,\n  input signed [23:0] in3,\n  input signed [23:0] in4,\n  input signed [23:0] in5,\n  input signed [23:0] in6,\n  input signed [23:0] in7,\n  input signed [3:0] sel,\n  output signed [23:0] out\n);\n",
+    "    top->in0 = -1;\n    top->in1 = 2;\n    top->in2 = 3;\n    top->in3 = 4;\n    top->in4 = 5;\n    top->in5 = 6;\n    top->in6 = 7;\n    top->in7 = 8;\n",
+    "-1\n255\n3\n4\n5\n6\n7\n8\n",
+    "-1\n2\n3\n4\n5\n6\n7\n8\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

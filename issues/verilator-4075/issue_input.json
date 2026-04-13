@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4075,
+  "issue_url": "https://github.com/verilator/verilator/issues/4075",
+  "title": "Incorrect values in trace from variable written with blocking assignment in process with various timing controls",
+  "body": "Summarising this is a little tricky, but I have produced a cut-down code example that replicates the behaviour I'm seeing which is from a build of latest master (`verilator --version` reports `Verilator 5.009 devel rev v5.008-91-g0b96789e6`) running under Ubuntu 20 LTS (GCC version `gcc (Ubuntu 11.3.0-1ubuntu1~22.04) 11.3.0`).\r\n\r\nThe RTL below has a variable `ready`. In the trace from the simulation `ready` goes high and stays high which is not the expected behaviour. The values from the trace are not consistent with the values reported by the `always@(posedge clk)` block that has a display statement giving the value of `ready`.\r\n\r\n```systemverilog\r\ntypedef struct packed {\r\n  logic [31:0] addr;\r\n  logic [31:0] wdata;\r\n  logic        write;\r\n} mem_req_t;\r\n\r\nmodule verilator_bug ();\r\n  logic clk;\r\n\r\n  initial begin\r\n    $dumpfile(\"trace.fst\");\r\n    $dumpvars;\r\n\r\n    clk = 0;\r\n\r\n    forever begin\r\n      #5 clk = ~clk;\r\n    end\r\n  end\r\n\r\n  initial begin\r\n    #1000;\r\n    $finish();\r\n  end\r\n\r\n  logic        ready;\r\n  logic [31:0] addr;\r\n  logic        write;\r\n  logic [31:0] wdata;\r\n\r\n  always @(posedge clk) begin\r\n    $display(\"Ready is %d at time %t\", ready, $time());\r\n  end\r\n\r\n  assign addr  = '0;\r\n  assign write = 1'b0;\r\n  assign wdata = '0;\r\n\r\n  initial begin\r\n    int ready_delay;\r\n    mem_req_t new_req;\r\n\r\n    forever begin\r\n      ready = 1'b0;\r\n\r\n      ready_delay = 10;\r\n      for (int i = 0;i < ready_delay; ++i) begin\r\n        @(posedge clk);\r\n      end\r\n\r\n      ready = 1'b1;\r\n\r\n      new_req = '{\r\n        addr:  addr,\r\n        wdata: wdata,\r\n        write: write\r\n      };\r\n\r\n      @(posedge clk);\r\n      #1;\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\nWith the above code in a file `verilog_bug.sv` the following reproduces the issue:\r\n\r\n```\r\nverilator --binary --trace-fst verilator_bug.sv\r\n./obj_dir/Vverilator_bug\r\n```\r\n\r\nThe stdout shows `ready` (as observed by the display statement) toggling between 0 and 1 at various points as expected. The trace in `trace.fst` shows `ready` go high once and it stays high.\r\n\r\nI have tried to cut this down further but any more reduction in the RTL seems to restore correct behaviour.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-31",
+  "closed_at": "2023-03-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

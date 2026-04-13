@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 408,
+  "issue_url": "https://github.com/verilator/verilator/issues/408",
+  "title": "verilator generates incorrect C++ code when genvar is used incorrectly",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 408 from https://www.veripool.org\nOriginal Date: 2011-10-28\n\n\n---\n\nVerilog test case:\r\n\r\n```\r\n`define SIZE  512\r\n`define WIDTH (`SIZE/2)\r\n\r\nmodule e_flop #(parameter WIDTH=1)\r\n    (\r\n     output reg  [WIDTH-1:0] o,\r\n     input  wire [WIDTH-1:0] i,\r\n     input  wire clk,\r\n     input  wire en\r\n     );\r\n\r\n    always_ff @(posedge clk)\r\n      if (en)\r\n        o <= i;\r\n\r\nendmodule // e_flop\r\n\r\n\r\nmodule top\r\n  (\r\n    output logic [`SIZE-1:0] dram_rdata_flopped,\r\n    input logic [`WIDTH-1:0] dram_rdata,\r\n    input logic              dram_rdata_v,\r\n    input logic              clk,\r\n    input logic              rst\r\n    );\r\n\r\n    genvar                    i;\r\n\r\n    e_flop #(`WIDTH) u_dram_rdata_ff0( .o (dram_rdata_flopped[i*`WIDTH +: `WIDTH]),\r\n                                       .en(dram_rdata_v),\r\n                                       .i (dram_rdata),\r\n                                       .* );\r\n    generate\r\n       for( i=1; i<2; i++ ) begin: STAGING_FF\r\n          e_flop #(`WIDTH) u_dram_rdata_ff( .o (dram_rdata_flopped[i*`WIDTH +: `WIDTH]),\r\n                                            .en(dram_rdata_v),\r\n                                            .i (dram_rdata),\r\n                                            .* );\r\n       end\r\n    endgenerate\r\n\r\nendmodule // top\r\n\n```\r\n\r\nVerilator runs without errors:\r\n\r\n```\r\nverilator -sv -cc --top-module top test.v\r\n\n```\r\n\r\nGenerated code does not compile:\r\n\r\n```\r\nmake -f Vtop.mk\r\n/usr/bin/perl /tools/verilator/verilator-3.821/share/verilator/bin/verilator_includer Vtop.cpp > Vtop__ALLcls.cpp\r\ng++44  -I. -MMD -I/tools/verilator/verilator-3.821/share/verilator/include -I/tools/verilator/verilator-3.821/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_TRACE=0 -DVM_COVERAGE=0        -c -o Vtop__ALLcls.o Vtop__ALLcls.cpp\r\nIn file included from Vtop__ALLcls.cpp:2:\r\nVtop.cpp: In constructor â€˜Vtop::Vtop(const char*)â€™:\r\nVtop.cpp:25: error: â€˜v__DOT__iâ€™ was not declared in this scope\r\nVtop.cpp: In static member function â€˜static void Vtop::_sequent__TOP__1(Vtop__Syms*)â€™:\r\nVtop.cpp:138: error: â€˜struct Vtopâ€™ has no member named â€˜v__DOT__iâ€™\r\nVtop.cpp:140: error: â€˜struct Vtopâ€™ has no member named â€˜v__DOT__iâ€™\r\nIn file included from Vtop__ALLcls.cpp:2:\r\nVtop.cpp: In static member function â€˜static void Vtop::_settle__TOP__2(Vtop__Syms*)â€™:\r\nVtop.cpp:165: error: â€˜struct Vtopâ€™ has no member named â€˜v__DOT__iâ€™\r\nVtop.cpp:167: error: â€˜struct Vtopâ€™ has no member named â€˜v__DOT__iâ€™\r\nmake: *** [Vtop__ALLcls.o] Error 1\r\n\n```\r\n\r\nVCS prints error message.\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed",
+    "area: data-types"
+  ],
+  "state": "closed",
+  "created_at": "2011-10-28",
+  "closed_at": "2024-10-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3005,
+  "issue_url": "https://github.com/verilator/verilator/issues/3005",
+  "title": "Add limit to V3Expand to prevent large replication operation runaway",
+  "body": "Something similar to the following code caused an out-of-memory error when evaluated as part of a larger design. In this example allocation peaked at a little over 12GB on my CentOS7 system:\r\n\r\n```\r\nmodule t #( parameter NV = 2500) (\r\n    input          a,\r\n    input          w1,\r\n    input  [127:0] w2,\r\n    output [ 31:0] o\r\n);\r\n\r\nwire [NV-1:0] d = a ? NV'(0) : {NV{w2}};\r\nassign        o = d[31:0];\r\n\r\nendmodule\r\n```\r\nVersion 4.102 was used with the following command line:\r\n```\r\nverilator --cc t.v\r\n```\r\n\r\nThe issue was due to a coding error where w1 should have been used instead of w2, and the WIDTH warning emitted makes this clear, but I was wondering if there was an underlying issue under the hood causing the allocation explosion?\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-03",
+  "closed_at": "2021-06-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

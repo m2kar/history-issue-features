@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2248,
+  "issue_url": "https://github.com/llvm/circt/issues/2248",
+  "title": "[Comb] Remove `SExtOp`, introduce a new `ReplicateOp`",
+  "body": "A sign extend is logically free according to our documented cost models since it is \"just wires\", but it is nonetheless really important to improve verilog quality and reduce the size of the IR.\r\n\r\nUnfortunately, our SExtOp makes certain transformations awkward and requires duplication because it is both a replicate and a concat bundled together into one operation.  Because of this, everything that works on concats should think about `SExtOp`, but doesn't in practice.\r\n\r\nWe solved this for `ZExtOp` by eliminating it, replacing it with a zero value + concat.  I think we should do something similar for `SExtOp`: introduce a new (more primitive) \"replicate\" operation that takes an integer operation and replicates it a constant number of times - this directly corresponds to what Verilog has.  We'd then implement `sext` like operations as a combination of replicate and concat.  Such a lowering will make verilog emission simpler, and will make combine peepholes much easier to implement.\r\n\r\nOne in particular that I'd like to add support for is this for this:\r\n\r\n```\r\n  wire [31:0] _T_4 = {_T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_2, _T_3, 1'h0}; \r\n   thing = {{17{_T_4[31]}}, _T_4};\r\n```\r\n\r\nwhich is currently:\r\n\r\n```\r\n  %x = comb.concat lots of stuff\r\n  %thing = comb.sext %x to i59\r\n```\r\n\r\ninto:\r\n\r\n```\r\n  %x = comb.concat %T2, .... lots of stuff\r\n  %tmp = comb.extract %x at 31 : i1\r\n  %tmp2 = comb.replicate %tmp to i17\r\n   %thing = comb.concat %tmp2, %x\r\n```\r\n\r\nwhich would naturally then fold to:\r\n\r\n```\r\n %x = comb.concat %T2, .... lots of stuff\r\n  %tmp2 = comb.replicate %T2 to i17\r\n   %thing = comb.concat %tmp2, %x\r\n```\r\n\r\nand then the elements of the concat can get merged into the replicate.  We'd end up with:\r\n\r\n```\r\n   thing = {{18{_T_2[31]}}, _T_3, 1'h0}; \r\n```\r\n\r\nwhich seems nicer.\r\n",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-29",
+  "closed_at": "2021-12-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

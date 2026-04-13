@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2768,
+  "issue_url": "https://github.com/llvm/circt/issues/2768",
+  "title": "[FIRRTL][Inliner] Trouble with non-local annotations",
+  "body": "```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.nla @nla_5560 [#hw.innerNameRef<@Bar0::@leaf>, #hw.innerNameRef<@Leaf::@w>]\r\n  firrtl.nla @nla_5561 [#hw.innerNameRef<@Bar1::@leaf>, #hw.innerNameRef<@Leaf::@w>]\r\n  firrtl.module @Foo() {\r\n    firrtl.instance bar0  @Bar0()\r\n    firrtl.instance bar1  @Bar1()\r\n  }\r\n  firrtl.module @Bar0() {\r\n    firrtl.instance leaf sym @leaf  {annotations = [{circt.nonlocal = @nla_5560, class = \"circt.nonlocal\"}]} @Leaf()\r\n  }\r\n  firrtl.module @Bar1() {\r\n    firrtl.instance leaf sym @leaf  {annotations = [{circt.nonlocal = @nla_5561, class = \"circt.nonlocal\"}]} @Leaf()\r\n  }\r\n  firrtl.module @Leaf() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n    %w = firrtl.wire sym @w  {annotations = [{circt.nonlocal = @nla_5560, class = \"test0\"}, {circt.nonlocal = @nla_5561, class = \"test1\"}]} : !firrtl.uint<8>\r\n  }\r\n}\r\n```\r\n\r\n`./bin/circt-opt --pass-pipeline='firrtl.circuit(firrtl-inliner)'  ./inline.mlir`\r\n- Annotations with class `test0` and `test1` should not be in both locations\r\n- There should not be a reference to `@nla_5560` anymore as it has been deleted.\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\"  {\r\n    firrtl.module @Foo() {\r\n      firrtl.instance bar0  @Bar0()\r\n      firrtl.instance bar1  @Bar1()\r\n    }\r\n    firrtl.module @Bar0() {\r\n      %leaf_w = firrtl.wire sym @w  {annotations = [{class = \"test0\"}, {class = \"test1\"}]} : !firrtl.uint<8>\r\n    }\r\n    firrtl.module @Bar1() {\r\n      %leaf_w = firrtl.wire sym @w  {annotations = [{circt.nonlocal = @nla_5560, class = \"test0\"}, {class = \"test1\"}]} : !firrtl.uint<8>\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-15",
+  "closed_at": "2022-03-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

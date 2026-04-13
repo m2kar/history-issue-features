@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7535,
+  "issue_url": "https://github.com/llvm/circt/issues/7535",
+  "title": "[MooreToCore] VariableOp lowered failed",
+  "body": "Dear @maerhart @fabianschuiki ,\r\n When lowering `SV` to `Hw` Dialect, there is a stack dump. \r\nDriver: circt-verilog %s\r\n```\r\nmodule top();\r\n  typedef struct {\r\n    int a;\r\n    int b;\r\n  } ms_t;\r\n\r\n  ms_t ms;\r\n\r\n  initial begin\r\n    ms = '{ 0, 1};\r\n\r\n    ms = '{ default:1, int:1};\r\n\r\n    ms = '{ int:0, int:1};\r\n  end\r\n\r\nendmodule\r\n```\r\nIt can be converted to `moore` Dialect like this\r\nDriver:  circt-verilog --ir-moore %s\r\n```\r\nmodule {\r\n  moore.module @top() {\r\n    %0 = moore.constant 1 : i32\r\n    %1 = moore.constant 0 : i32\r\n    %ms = moore.variable : <ustruct<{a: i32, b: i32}>>\r\n    moore.procedure initial {\r\n      %2 = moore.struct_create %1, %0 : !moore.i32, !moore.i32 -> ustruct<{a: i32, b: i32}>\r\n      moore.blocking_assign %ms, %2 : ustruct<{a: i32, b: i32}>\r\n      %3 = moore.struct_create %0, %0 : !moore.i32, !moore.i32 -> ustruct<{a: i32, b: i32}>\r\n      moore.blocking_assign %ms, %3 : ustruct<{a: i32, b: i32}>\r\n      moore.blocking_assign %ms, %3 : ustruct<{a: i32, b: i32}>\r\n      moore.return\r\n    }\r\n    moore.output\r\n  }\r\n}\r\n```\r\nBut it got stack dump when casting `hw::InOutType`. Maybe `structType` should be converted somehow.\r\nThis is part of error codes.\r\n```\r\n#19 0x00005f9660f42af4 (anonymous namespace)::OperationLegalizer::legalizeWithPattern(mlir::Operation*, mlir::ConversionPatternRewriter&) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:1958:21\r\n#20 0x00005f9660f3b100 (anonymous namespace)::OperationLegalizer::legalize(mlir::Operation*, mlir::ConversionPatternRewriter&) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:1850:17\r\n#21 0x00005f9660f3aa73 mlir::OperationConverter::convert(mlir::ConversionPatternRewriter&, mlir::Operation*) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:2384:26\r\n#22 0x00005f9660f3b41f mlir::OperationConverter::convertOperations(llvm::ArrayRef<mlir::Operation*>) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:2436:16\r\n#23 0x00005f9660f3fdfc mlir::applyFullConversion(llvm::ArrayRef<mlir::Operation*>, mlir::ConversionTarget const&, mlir::FrozenRewritePatternSet const&, mlir::ConversionConfig) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:3447:22\r\n#24 0x00005f9660f3fe9d mlir::applyFullConversion(mlir::Operation*, mlir::ConversionTarget const&, mlir::FrozenRewritePatternSet const&, mlir::ConversionConfig) /home/pluto/Documents/circt/circt/llvm/mlir/lib/Transforms/Utils/DialectConversion.cpp:3453:10\r\n#25 0x00005f965faed60d (anonymous namespace)::MooreToCorePass::runOnOperation() /home/pluto/Documents/circt/circt/lib/Conversion/MooreToCore/MooreToCore.cpp:1398:14\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-08-20",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

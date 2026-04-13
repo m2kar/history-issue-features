@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4448,
+  "issue_url": "https://github.com/verilator/verilator/issues/4448",
+  "title": "Enumerated type variable .name() method causes lifetime unknown Internal Error",
+  "body": "In the example below, an \"Interval Error V3Fork.cpp:194: Variable's lifetime is unknown\" is triggered when using the .name() method of an enum to render it as a string. Printing the enum as an integer is OK (see commented line in example).\r\n\r\nI tried a bunch of things as mentioned in the manual like making a local copy, but it seems that the call to .name() is the issue.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```\r\nmodule enum_lifetime_bug;\r\n\r\ntypedef enum {PWR_DC, PWR_SQUARE_WAVE} e_pwr_profile;\r\n\r\ne_pwr_profile     pwr_profile = PWR_DC;\r\nreal cap_voltage = 0.0;\r\nreal pwr_dut     = 0.0;\r\n\r\ninitial begin: POWER_PROFILE\r\n\r\n  while(1) begin\r\n    pwr_dut = 0.0;\r\n    wait(cap_voltage >= 3.3);\r\n    fork\r\n      begin\r\n        wait(cap_voltage <= 2.0);\r\n        $display(\"Warning undervoltage (%0t)\", $time);\r\n      end\r\n      begin\r\n        case (pwr_profile)\r\n          PWR_DC: begin\r\n            forever begin\r\n              pwr_dut = 0.1;\r\n              #1ms;\r\n            end\r\n          end\r\n\r\n          PWR_SQUARE_WAVE: begin\r\n            forever begin\r\n              #5ms;\r\n              pwr_dut  = 0.01;\r\n              #5ms;\r\n              pwr_dut  = 0.05;\r\n            end\r\n          end\r\n\r\n          default: begin\r\n            //$error(\"pwr_profile %0d not supported\", pwr_profile);\r\n            $error(\"pwr_profile %s not supported\", pwr_profile.name()); // <-- .name() causes lifetime error\r\n          end\r\n        endcase\r\n      end\r\n    join_any\r\n    pwr_dut    = 0.0;\r\n  end\r\nend\r\n\r\n\r\ninitial begin\r\n  repeat(100) begin\r\n    #1us;\r\n    cap_voltage += 0.1;\r\n  end\r\n  $finish;\r\nend\r\n\r\nendmodule\r\n\r\n```\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.014 2023-08-06\r\n\r\nWhat OS and distribution are you using?\r\n\r\nUbuntu under windows WSL2\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-30",
+  "closed_at": "2023-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

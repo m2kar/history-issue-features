@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 803,
+  "issue_url": "https://github.com/verilator/verilator/issues/803",
+  "title": "Writing to one structure element clobbers another",
+  "body": "---\n\n\nAuthor Name: **Jeff Bush** (@jbush001)\nOriginal Redmine Issue: 803 from https://www.veripool.org\nOriginal Date: 2014-07-13\nOriginal Assignee: Jeff Bush (@jbush001)\n\n---\n\nI found an issue where I do a nonblocking assignment to one structure member, followed by another (the former is multiple bits and the latter is only one bit), and the first member I assigned is clobbered.  This seems to be due to a value larger than 32 being passed into the left shift operator (The _Vdlyvllsb variable is larger than 32 and is not masked). If I manually edit the generated code to mask this value (bitwise and with 31), the code works correctly.\r\n\r\nThe issue appears to occur where the nonblocking store is applied.  Here is the generated code:\r\n\r\n```\r\n     if (__Vdlyvset__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69) {\r\n\tvlTOPp->v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores[0U][(__Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69 \r\n\t\t\t\t\t\t\t\t\t\t>> 5U)] \r\n\t    = (vlTOPp->v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores\r\n\t       [0U][(__Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69 \r\n\t\t     >> 5U)] | ((IData)(1U) << __Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69));\r\n\n```\r\n\r\nNote that __Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69 in this case is 611. At the very end of the last expression, it is the shift amount to create the one bit value.  Technically, I think the C spec says the result is undefined, but I'd expect it to mask off the value.  I printed the value of that array element before and after this assignment and multiple bits have been set.\r\n\r\nJust for yucks, I added a printf at the top of this clause:\r\n\r\n```\r\n     if (__Vdlyvset__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69) {\r\nprintf(\"shifted value is %x shift amount %d\", \r\n\t((IData)(1U) << __Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69),\r\n\t__Vdlyvlsb__v__DOT__core0__DOT__l2_cache_interface__DOT__store_buffer__DOT__pending_stores__v69);\r\n\n```\r\n\r\n\r\nIt prints this out:\r\n\r\n```\r\nshifted value is 389c00 shift amount 611\r\n\n```\r\n\r\nWhich seems totally bizarre to me. So, it appears the processor or compiler is doing something very odd with this.  I'm using MacOS 10.9.3 with Apple LLVM version 5.1 (clang-503.0.40) (based on LLVM 3.4svn).\r\n\r\n\r\nAt any rate, it would probably be more proper to mask the shift value when generating structure assignments.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-07-13",
+  "closed_at": "2014-09-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

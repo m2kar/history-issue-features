@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2741,
+  "issue_url": "https://github.com/verilator/verilator/issues/2741",
+  "title": "Modules with reals cannot have coverage collection enabled?",
+  "body": "Take the following module as an example:\r\n\r\n`/* verilator coverage_off */\r\nmodule\r\n   cov_check\r\n     (\r\n      input logic clk1,\r\n      input real delay,\r\n      output logic test1,\r\n      output real test2\r\n      );\r\n\r\n   timeunit 1s;\r\n   timeprecision 1ns;\r\n\r\n   parameter init_delay = 1e-6;\r\n\r\n   always @(posedge clk1)\r\n     begin\r\n\tif ($realtime() > init_delay/10)\r\n\t  begin\r\n\t     test1 <= 'b1;\r\n\t     test2 <= init_delay;\r\n\t  end\r\n\telse\r\n\t  begin\r\n\t     test1 <= 'b0;\r\n\t     test2 <= init_delay + delay;\r\n\t  end\r\n     end // always @ (posedge clk1)\r\n   \r\nendmodule // cov_check\r\n/* verilator coverage_on */\r\n`\r\n\r\nIt compiles cleanly with:\r\n\r\n`verilator -Wall -cc cov_check.sv -build --coverage`\r\n\r\nHowever, if the coverage on/off comments are removed:\r\n\r\n`In file included from Vcov_check__ALL.cpp:3:0:\r\nVcov_check.cpp: In static member function ‘static void Vcov_check::_combo__TOP__1(Vcov_check__Syms*)’:\r\nVcov_check.cpp:75:24: error: invalid operands of types ‘double’ and ‘double’ to binary ‘operator^’\r\n     if ((vlTOPp->delay ^ vlTOPp->top__DOT____Vtogcov__delay)) {\r\n          ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nVcov_check.cpp: In static member function ‘static void Vcov_check::_sequent__TOP__3(Vcov_check__Syms*)’:\r\nVcov_check.cpp:93:24: error: invalid operands of types ‘double’ and ‘double’ to binary ‘operator^’\r\n     if ((vlTOPp->test2 ^ vlTOPp->top__DOT____Vtogcov__test2)) {\r\n          ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nIn file included from Vcov_check__ALL.cpp:4:0:\r\nVcov_check__Slow.cpp: In static member function ‘static void Vcov_check::_settle__TOP__2(Vcov_check__Syms*)’:\r\nVcov_check__Slow.cpp:51:24: error: invalid operands of types ‘double’ and ‘double’ to binary ‘operator^’\r\n     if ((vlTOPp->delay ^ vlTOPp->top__DOT____Vtogcov__delay)) {\r\n          ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nVcov_check__Slow.cpp:59:24: error: invalid operands of types ‘double’ and ‘double’ to binary ‘operator^’\r\n     if ((vlTOPp->test2 ^ vlTOPp->top__DOT____Vtogcov__test2)) {\r\n          ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nmake: *** [Vcov_check__ALL.o] Error 1\r\n`\r\nI am using Verilator 4.104\r\n\r\nShouldn't the reals be simply ignored from a coverage point of view?\r\n\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-06",
+  "closed_at": "2021-01-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

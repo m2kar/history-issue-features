@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8405,
+  "issue_url": "https://github.com/llvm/circt/pull/8405",
+  "title": "[firrtl] Move LowerLayers after LowerXMR",
+  "body": "Move the `LowerLayers` pass after the `LowerXMR` pass.  To do this, all\r\npasses at the end of the CHIRRTL to Low FIRRTL pipeline are moved after\r\n`LowerXMR`.  This is necessary because the `LowerLayers` pass cannot, at\r\npresent, be moved after the passes at the end of the pipeline.\r\n\r\nThis is done to enable forcing out of layers.  By lowering probes to XMRs,\r\nthe layers can be lowered trivially to modules/instances and their XMRs\r\nwill now (seemingly) magically just work.  By doing the loweirng in this\r\nway, it avoids ever having to represent an input probe in the FIRRTL\r\ndialect.\r\n\r\nA consequence of this is that there are now simplifying\r\nassumptions (preconditions) that can be made about the `LowerLayers` pass:\r\n\r\n1. It will never see a number of probe ops because the `LowerXMR` pass has\r\na postcondition that all of these are removed.\r\n\r\n2. Input and output ports can never be created on modules created from\r\nlayer blocks.\r\n\r\nWhile I am generally always in favor of passes being relocatable anywhere\r\nin the pipeline, this is one pass that really does _not_ make sense to be\r\nrelocatable.  In effect, this pass is part of the lowering from FIRRTL to\r\nHW.  There is no point in being able to use it earlier in the pipeline.\r\nThat said, it still is tested to work with things which we may one-day\r\npreserve, like `WhenOp`s.\r\n\r\n#### Todo\r\n\r\n- [x] Handle zero width\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-09",
+  "closed_at": "2025-04-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

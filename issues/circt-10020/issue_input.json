@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10020,
+  "issue_url": "https://github.com/llvm/circt/issues/10020",
+  "title": "[FIRRTL] Replace redundant RewritePattern with OpRewritePattern",
+  "body": "https://github.com/llvm/circt/blob/9fec564559f59755740cc5391bf3f88ce70dc6ee/lib/Dialect/FIRRTL/FIRRTLFolds.cpp#L1403-L1411\nFIRRTLFolds.cpp has several unnecessary uses of RewritePattern, e.g:\n```cpp\nclass FlattenCat : public mlir::RewritePattern {\npublic:\n  FlattenCat(MLIRContext *context)\n      : RewritePattern(CatPrimOp::getOperationName(), 0, context) {}\n\n  LogicalResult\n  matchAndRewrite(Operation *op,\n                  mlir::PatternRewriter &rewriter) const override {\n    auto cat = cast<CatPrimOp>(op);\n    ...\n}\n```\nWe can simplify this to:\n```cpp\nclass FlattenCat\n    : public mlir::OpRewritePattern<CatPrimOp> {\npublic:\n  using OpRewritePattern::OpRewritePattern;\n\n  LogicalResult\n  matchAndRewrite(CatPrimOp op,\n                  mlir::PatternRewriter &rewriter) const override {\n}\n```",
+  "labels": [
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-23",
+  "closed_at": "2026-03-24",
+  "code_blocks": [
+    "class FlattenCat : public mlir::RewritePattern {\npublic:\n  FlattenCat(MLIRContext *context)\n      : RewritePattern(CatPrimOp::getOperationName(), 0, context) {}\n\n  LogicalResult\n  matchAndRewrite(Operation *op,\n                  mlir::PatternRewriter &rewriter) const override {\n    auto cat = cast<CatPrimOp>(op);\n    ...\n}\n",
+    "class FlattenCat\n    : public mlir::OpRewritePattern<CatPrimOp> {\npublic:\n  using OpRewritePattern::OpRewritePattern;\n\n  LogicalResult\n  matchAndRewrite(CatPrimOp op,\n                  mlir::PatternRewriter &rewriter) const override {\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

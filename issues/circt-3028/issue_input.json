@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3028,
+  "issue_url": "https://github.com/llvm/circt/issues/3028",
+  "title": "[SV] Miss-complication by reordering side-effect ops",
+  "body": "```mlir\r\nhw.module @Foo(%clock:i1, %a:i8, %b:i8) {\r\n  %reg = sv.reg : !hw.inout<i8> \r\n  %fd = hw.constant 0x80000002 : i32\r\n  sv.always posedge %clock {\r\n    sv.bpassign %reg, %a : i8\r\n    %x = sv.read_inout %reg : !hw.inout<i8>\r\n    sv.bpassign %reg, %b : i8\r\n    sv.fwrite %fd, \"%d\"(%x) : i8\r\n  }\r\n}\r\n```\r\n\r\nCurrent output:\r\n```verilog\r\nmodule Foo(\r\n  input       clock,\r\n  input [7:0] a,\r\n              b);\r\n\r\n  reg [7:0] reg_0;\r\n\r\n  always @(posedge clock) begin\r\n    reg_0 = a;\r\n    reg_0 = b;\r\n    $fwrite(32'h80000002, \"%d\", reg_0);\r\n  end // always @(posedge)\r\nendmodule\r\n```\r\n\r\nThis is incorrect because the value of `a` should be printed. I guess we have to create a temporary register if we can't use `automatic`. ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-05-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

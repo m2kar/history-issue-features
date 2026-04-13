@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4642,
+  "issue_url": "https://github.com/verilator/verilator/pull/4642",
+  "title": "Parallel simulation builds with concatenated .cpp files (#4601)",
+  "body": "Introduces an option to create and compile specified number of aggregate compilation units (i.e. cpp files that `#include` other .cpp files) in simulation compilation process. Useful when the number of simulation .cpp files is very large (i.e. thousands) - in such cases cumulative overhead from spawning and initializing each compiler process is quite significant.\r\n\r\n#### Test Case\r\n\r\nTested in https://github.com/antmicro/verilator-verification-features-tests with UVM, where Verilator produces more than 4000 .cpp files. I was able to lower simulation build time from about 1:40 to 0:20 on a CPU with 20 vcores.\r\n\r\n#### How it Works\r\n\r\n`VM_PARALLEL_JOBS` make variable specifies how many aggregate compilation units to use. Fast and Slow lists are handled separately and each list gets `$VM_PARALLEL_JOBS` aggretates, so in total 2 * `VM_PARALLEL_JOBS` compiler processes are spawned (excluding those for PCH, final binary, etc). The files to be included in a given aggregate are picked in order from a list. Decision on how many files to include in each aggregate is based on a total size (in bytes of code) of included cpp files - each aggregate for a given list is intended to have approximately the same size.\r\n\r\n#### How to Use\r\n\r\n`make -f Vtop.mk VM_PARALLEL_JOBS=$N -j$M`\r\n\r\nIn a basic use case `$N == $M == $(nproc)`. This creates `$N` processes for \"Fast\" sources, and `$N` processes for \"Slow\" sources. This is intended, as \"Slow\" sources are usually compiled without optimizations and their compilation is short, so they fill remaining time on CPU cores that ended compilation of \"Fast\" aggregate faster than other cores.\r\n\r\nI had a bit better results with `2 * $N == $M == 4 * $(nproc)` (`M=32` and `N=16` in my case). Make just spawns all compiler processes at once and lets OS handle switching between them as they go.\r\n\r\n#### Todo\r\n\r\n- Merge `verilator_includer2` into `verilator_includer` and clean it up\r\n- Add a test\r\n- Rename `VM_PARALLEL_JOBS` to something better",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-30",
+  "closed_at": "2024-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

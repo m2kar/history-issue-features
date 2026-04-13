@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5166,
+  "issue_url": "https://github.com/llvm/circt/pull/5166",
+  "title": "[Arc] Change MemoryWritePortOp to also take an arc",
+  "body": "The `arc.state` operation computes the fan-in of the register(s) it represents inside an arc which allows a simpler IR structure because only one operation is required to represent this instead calls + state operations making it easier to iterate the predecessor registers, etc. There are the exceptions of the enable and reset operands though. While the reset is mostly the reset signal provided by the root module input (like for the clock operand) and thus not really an issue to represent as an operand, the enable operand typically requires a call operation as predecessor to compute the fan-in. As discussed last week, it might be nice to also compute this fan-in inside the arc that already computes the data inputs plus adding a unit attribute on the state operation to indicate that that is the case and to verify that the last arc output has `i1` type.\r\n\r\nThis PR attempts to implement a similar structure for the `arc.memory_write_port` operation to see how this concept would generalize over memory operations, potentially providing a more uniform IR structure overall.\r\n\r\nThe canonicalizations had to be removed because they require a symbol lookup now, which is impossible to do efficiently inside the regular canonicalizer. The plan here is to introduce an ArcCanonicalizer that has access to a SymbolCache which has to be kept up-to-date by the patterns inside that canoicalizer. This new pass then allows us to collect patterns like the ones removed in this PR, removing calls to passthrough arcs, but also patterns on operations not from the arc dialect (e.g., the mux sequence to zero_count pattern).",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-10",
+  "closed_at": "2023-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2726,
+  "issue_url": "https://github.com/verilator/verilator/issues/2726",
+  "title": "Optimize duplicated ifs",
+  "body": "Verilator for some designs creates output code with many replicated if conditions:\r\n\r\n```\r\nif (cond) {\r\n   ...\r\n}\r\nif (cond) {\r\n  ...\r\n}\r\n```\r\n\r\nI thought this was causing a slowdown but the C compiler seems to properly remove them.  Regardless we should probably simplify to enable future optimizations.  A hack at this which needs more work is here:\r\n\r\n```\r\ndiff --git a/src/V3Reloop.cpp b/src/V3Reloop.cpp\r\n--- a/src/V3Reloop.cpp\r\n+++ b/src/V3Reloop.cpp\r\n@@ -148,6 +148,31 @@ private:\r\n             iterateChildren(nodep);\r\n         }\r\n     }\r\n+    bool mergeIf(AstNodeIf* ap) {\r\n+        AstNode* nextp = ap->nextp();\r\n+        if (!nextp) return false;\r\n+        AstNodeIf* bp = VN_CAST(nextp, NodeIf);\r\n+        if (!bp) return false;\r\n+        AstNodeVarRef* arefp = VN_CAST(ap->condp(), NodeVarRef);\r\n+        AstNodeVarRef* brefp = VN_CAST(bp->condp(), NodeVarRef);\r\n+        if (!arefp || !brefp || !arefp->sameGateTree(brefp)) return false;\r\n+        UINFO(9, \"IF IF -> IF \" << brefp << endl);\r\n+        // FIXME doesn't check if inner code sets arefp->varp, need a good algorithm for this\r\n+        // 64-bit mask indicating which signals (hashed) are lvalues?\r\n+        // What if we attach something to each var:\r\n+        //    Each statement (including statemtn->nextp) that has a set of that var?\r\n+        if (ap->branchPred().unknown()) ap->branchPred(bp->branchPred());\r\n+        if (bp->ifsp()) ap->addIfsp(bp->ifsp()->unlinkFrBackWithNext());\r\n+        if (bp->elsesp()) ap->addElsesp(bp->elsesp()->unlinkFrBackWithNext());\r\n+        VL_DO_DANGLING(pushDeletep(bp->unlinkFrBack()), bp);\r\n+        return true;\r\n+    }\r\n+    virtual void visit(AstNodeIf* nodep) override {\r\n+        if (!m_cfuncp) return;\r\n+        mergeEnd();\r\n+        while (mergeIf(nodep)) {}\r\n+        iterateChildren(nodep);\r\n+    }\r\n     virtual void visit(AstNodeAssign* nodep) override {\r\n         if (!m_cfuncp) return;\r\n```\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-23",
+  "closed_at": "2023-10-21",
+  "code_blocks": [
+    "diff --git a/src/V3Reloop.cpp b/src/V3Reloop.cpp\r\n--- a/src/V3Reloop.cpp\r\n+++ b/src/V3Reloop.cpp\r\n@@ -148,6 +148,31 @@ private:\r\n             iterateChildren(nodep);\r\n         }\r\n     }\r\n+    bool mergeIf(AstNodeIf* ap) {\r\n+        AstNode* nextp = ap->nextp();\r\n+        if (!nextp) return false;\r\n+        AstNodeIf* bp = VN_CAST(nextp, NodeIf);\r\n+        if (!bp) return false;\r\n+        AstNodeVarRef* arefp = VN_CAST(ap->condp(), NodeVarRef);\r\n+        AstNodeVarRef* brefp = VN_CAST(bp->condp(), NodeVarRef);\r\n+        if (!arefp || !brefp || !arefp->sameGateTree(brefp)) return false;\r\n+        UINFO(9, \"IF IF -> IF \" << brefp << endl);\r\n+        // FIXME doesn't check if inner code sets arefp->varp, need a good algorithm for this\r\n+        // 64-bit mask indicating which signals (hashed) are lvalues?\r\n+        // What if we attach something to each var:\r\n+        //    Each statement (including statemtn->nextp) that has a set of that var?\r\n+        if (ap->branchPred().unknown()) ap->branchPred(bp->branchPred());\r\n+        if (bp->ifsp()) ap->addIfsp(bp->ifsp()->unlinkFrBackWithNext());\r\n+        if (bp->elsesp()) ap->addElsesp(bp->elsesp()->unlinkFrBackWithNext());\r\n+        VL_DO_DANGLING(pushDeletep(bp->unlinkFrBack()), bp);\r\n+        return true;\r\n+    }\r\n+    virtual void visit(AstNodeIf* nodep) override {\r\n+        if (!m_cfuncp) return;\r\n+        mergeEnd();\r\n+        while (mergeIf(nodep)) {}\r\n+        iterateChildren(nodep);\r\n+    }\r\n     virtual void visit(AstNodeAssign* nodep) override {\r\n         if (!m_cfuncp) return;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

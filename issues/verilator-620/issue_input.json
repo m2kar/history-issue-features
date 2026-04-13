@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 620,
+  "issue_url": "https://github.com/verilator/verilator/issues/620",
+  "title": "Comparison against x and z leads to verilator crash",
+  "body": "---\n\n\nAuthor Name: **Jason McMullan** (@ezrec)\nOriginal Redmine Issue: 620 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator: Feb 19, 2013 (f2fb77c15a31a6155763ef77b51739e66d9a25a5)\r\n\r\nThe following test causes Verilator to crash in V3Tristate.cpp:\r\n\r\n```\r\n             AstPin* outpinp;\r\n             {\r\n                 AstVar* outModVarp = (AstVar*) nodep->modVarp()->user4p();\r\n// BUG - outModVarp is NULL here\r\n                 AstNode* outexprp = nodep->exprp()->cloneTree(false);  // Note has lvalue() set\r\n                 outpinp = new AstPin(nodep->fileline(),\r\n                                      nodep->pinNum(),\r\n// CRASH - Null pointer dereference\r\n                                      outModVarp->name(),  // should be {var}\"__out\"\r\n                                      outexprp);\r\n\n```\r\n\r\n\r\nTest case code 'textcase_xz.v':\r\n\r\n```\r\nmodule testcase_xz (\r\n     input clk,\r\n     output out\r\n);\r\n\r\nreg out;\r\n\r\nalways @(posedge clk)\r\nbegin\r\n     if ( clk !== 1'bx && clk !== 1'bz )\r\n     begin\r\n         out <= ~out;\r\n     end\r\nend\r\n\r\nendmodule\r\n\n```\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-20",
+  "closed_at": "2017-04-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

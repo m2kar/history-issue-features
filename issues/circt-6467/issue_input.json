@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6467,
+  "issue_url": "https://github.com/llvm/circt/pull/6467",
+  "title": "[circt-mc] Introduce `circt-mc` (supersedes #4647)",
+  "body": "Introduces the `circt-mc` tool that was previously drafted in #4647 - since there's a lot of bloat on that thread from development I figured a new PR for actual review made sense (apologies for how long it ended up taking for me to come back to this tool and get it into better shape!). The tool now has a front-end thanks to the `verif` dialect (assert and assume ops are supported, would be great to add support for `LTL` dialect ops especially and I have some ideas for how to do this, but seems a lot for the initial PR!). Needs a few more tests and I'll flag some review points that I'm aware of and would appreciate feedback on below, but I figured getting this available ahead of the model checking ODM made sense.\r\n\r\nOne big change from the draft PR is that for simplicity's sake that PR was horrible for memory efficiency, as the update function for every single instance of an op was stored separately. That's now fixed, but because I need to encompass every possible signature of update function (and would rather avoid a lot of unnecessary lookups with a big all-purpose function signature) there's some pretty ugly type variant games being played. I'll flag this in a review comment below, but thoughts would be very appreciated. This also means there's a lot of `circt-lec` refactoring also happening, but I would say net-positive refactoring (e.g. a clear map of ops to semantic representations is available now).\r\n\r\nThere's also some bloat here from having to work around  the fact that the `circt-lec` infrastructure this all builds upon has a separation between the IR itself and the circuit representation - in theory this is very nice, so I've been careful not to violate it, but in practice it's a little bit impractical as the tool grows (and leads to some weird situations e.g. operation names still being used in the part of the code that shouldn't _really_ know about ops). Walking the IR with a case statement that updates the state for each op would be a much simpler way of model checking, instead of storing a vector of things to update - discussing with @fabianschuiki we wondered if maybe the extra layer of separation here might be a problem in the long term, as we continue to need more than the LEC model of just building a standalone Z3 representation of the circuit and moving on. Probably something to sort and simplify separately from this PR though IMO, once there's something upstream that actually has to deal with the added complexity.\r\n\r\nThere might also be a little bit of massaging necessary to handle some graph region edge cases here, but as I add tests to cover edge cases that should become clearer.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-29",
+  "closed_at": "2024-03-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

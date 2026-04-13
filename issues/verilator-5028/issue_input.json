@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5028,
+  "issue_url": "https://github.com/verilator/verilator/issues/5028",
+  "title": "Being able to specify a zero width in an indexed part-select operation violates LRM",
+  "body": "Hello!\r\n\r\nIEEE 1800-2017 (11.5.1 Vector bit-select and part-select addressing) requires that the width expression for an indexed part-select operation be a positive integer constant, but Verilator allows the use of 0.\r\n\r\n**Example:**\r\n\r\n```systemverilog\r\nmodule tb;\r\n  initial begin\r\n    int val = '1;\r\n    int left;\r\n\r\n    $display(val[left+:0]);\r\n\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nFirst problem: if the `left` variable is not explicitly initialized, an internal error will occur:\r\n\r\n```text\r\n%Error: Internal Error: tb/tb.sv:6:17: ../V3Expand.cpp:398: Width mismatch\r\n    6 |     $display(val[left-:0]);\r\n      |                 ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nSecond problem: if `left` is initialized, then `$display` will display `x`, although this does not comply with LRM.\r\n\r\n**Command:**\r\n\r\n```bash\r\nverilator --binary tb/tb.sv\r\n```\r\n\r\n---\r\n\r\nVerilator version (git master): `Verilator 5.023 devel rev v5.020-223-g39ee522f9`\r\n\r\nOS (verilator devcontainer): Ubuntu 22.04.3 LTS",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-30",
+  "closed_at": "2024-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

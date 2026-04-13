@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1084,
+  "issue_url": "https://github.com/llvm/circt/pull/1084",
+  "title": "[FIRRTL] Move result type computation to InferTypeOpInterface",
+  "body": "* Many FIRRTL operations have their result type fully determined by their arguments (operands and attributes). The `InferTypeOpInterface` formalizes this behaviour and provides a unified verification hook as well as a builder which automatically infers the result type of the built operation. The interface also allows passes to treat all ops that can determine their return type uniformly (e.g., the width inference pass).\r\n* Adjust the definition of most FIRRTL expression ops to implement this interface. Some operations which have a well-known return type that is independent of their arguments, such as comparisons or reductions, automatically generate the necessary `inferReturnTypes` function impl.\r\n* The semantics and function signature of `inferReturnTypes` is different from the `getResultType` we have at the moment. This requires a somewhat widespread mechanical change in FIRRTLOps.cpp to update to this new function.\r\n* The FIR parser used a specific flavor of `getResultType` to both check that the parsed operation arguments and constants are of the correct form, and to determine the result type. This is now split into a dedicated `verifyParsedArguments` functions that only performs validation, and the parser is updated to use the `inferReturnTypes` function for the other step. We can't use the builder function with inferred type in the parser, as that aborts/asserts rather than exiting gracefully.\r\n* The `getResultType` implementations performed a certain amount of operation verification alongside type computation. Mainly to check that IntType operands are of the same kind. This is now explicitly formalized in a `SameOperandsIntKind` op trait, which performs the check. Without this change, all the operations with well-known result types (comparisons, reductions) would lose this validation, since the `inferReturnTypes` is auto-generated in their case.\r\n* As a result of this change, a few calls in `HandshakeToFIRRTL` become more streamlined as the result type no longer needs to be explicitly calculated.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-19",
+  "closed_at": "2021-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

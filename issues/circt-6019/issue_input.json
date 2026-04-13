@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6019,
+  "issue_url": "https://github.com/llvm/circt/issues/6019",
+  "title": "[OM] Need IntegerType? (or IR/LowerClasses bug)",
+  "body": "Input:\r\n```\r\nFIRRTL version 3.2.0\r\ncircuit ListCreate:\r\n  module ListCreate:\r\n    input propIn : Integer\r\n    output propOut : List<Integer>\r\n\r\n    propassign propOut, List<Integer>(propIn, Integer(123))\r\n```\r\n\r\nError, with `firtool --mlir-print-ir-after-failure`:\r\n```\r\nlist-create.fir:7:25: error: 'om.list_create' op requires all operands to have the same type\r\n    propassign propOut, List<Integer>(propIn, Integer(123))\r\n                        ^\r\nlist-create.fir:7:25: note: see current operation: %1 = \"om.list_create\"(%arg0, %0) : (i64, si12) -> !om.list<i64>\r\n// -----// IR Dump After LowerClasses Failed (firrtl-lower-classes) //----- //\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.module\"() ({\r\n  ^bb0:\r\n  }) {annotations = [], convention = #firrtl<convention scalarized>, portAnnotations = [], portDirections = 0 : i0, portLocations = [], portNames = [], portSyms = [], portTypes = [], sym_name = \"ListCreate\"} : () -> ()\r\n  \"om.class\"() ({\r\n  ^bb0(%arg0: i64):\r\n    %0 = \"om.constant\"() {value = 123 : si12} : () -> si12\r\n    %1 = \"om.list_create\"(%arg0, %0) : (i64, si12) -> !om.list<i64>\r\n    \"om.class.field\"(%1) {sym_name = \"propOut\"} : (!om.list<i64>) -> ()\r\n  }) {formalParamNames = [\"propIn\"], sym_name = \"ListCreate_Class\"} : () -> ()\r\n}) {annotations = [], name = \"ListCreate\"} : () -> ()\r\n```\r\n\r\nSince these are APInt's/BigInt's, probably need a type to capture any width integer so, e.g., `List<Integer>` works at the OM level.",
+  "labels": [
+    "OM"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-01",
+  "closed_at": "2023-09-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

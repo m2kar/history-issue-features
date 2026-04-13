@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4015,
+  "issue_url": "https://github.com/verilator/verilator/issues/4015",
+  "title": "push_back() to dynamic queue define in a struct",
+  "body": "I have dynamic queue defined in a struct as\r\n\r\n    package mytest01;\r\n        typedef struct {\r\n            int b[$];\r\n        } foo_t;\r\n    \r\n        function automatic foo_t bar();\r\n            foo_t _foo;\r\n    \r\n            for(int i = 0; i < 5; i++) begin\r\n                int tmp = $urandom();\r\n                _foo.b.push_back(tmp);\r\n            end\r\n        endfunction // bar\r\n    \r\n    endpackage\r\n\r\nI got error while run `verilator --cc mytest01.sv`\r\n\r\n    %Error-UNSUPPORTED: mytest01.sv:11:20: Unsupported: Non-variable on LHS of built-in method 'push_back'\r\n       11 |             _foo.b.push_back(tmp);\r\n      |                    ^~~~~~~~~\r\n                        ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.006\r\n    %Error: Exiting due to 1 error(s)\r\n            ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n\r\nIf use temporary queue, there's no errors\r\n\r\n    package mytest02;\r\n        typedef struct {\r\n            int b[$];\r\n        } foo_t;\r\n\r\n        function automatic foo_t bar();\r\n            foo_t _foo;\r\n            int _b[$];\r\n\r\n            for(int i = 0; i < 5; i++) begin\r\n                int tmp = $urandom();\r\n                _b.push_back(tmp);\r\n            end\r\n            _foo.b = _b;\r\n        endfunction // bar\r\n\r\n    endpackage\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-11",
+  "closed_at": "2023-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 571,
+  "issue_url": "https://github.com/verilator/verilator/issues/571",
+  "title": "Compilation issues with PLI and DPI on MSVC",
+  "body": "---\n\n\nAuthor Name: **Amir Gonnen**\nOriginal Redmine Issue: 571 from https://www.veripool.org\nOriginal Date: 2012-10-22\n\n\n---\n\nI'm compiling a verilated module on MSVC 10 (Windows 7, Verilator-3.820)\r\n\r\nSince I'm compiling it as a lib, I don't need it to export any symbol (I call the PLI/DPI from my C++ wrapper which is compiled in the same application)\r\n\r\nI've encountered the following issues:\r\n\r\n1. DPI functions (on svdpi.h) are always exported through XXTERN which is eventually defined as __declspec(dllimport). When not compiling to DLL, this results in linking errors. To work around this I had to comment the definition of DPI_DLLISPEC on svdpi.h and define it as nothing.\r\n1. Same problem with XXTERN on vpi_user.h and PLI_DLLISPEC/PLI_DLLESPEC. In that case since the definition of PLI_DLLISPEC/PLI_DLLESPEC is guarded by ifndef, it's possible to define it externally and avoid changing vpi_user.h file itself.\r\n1. On verilated_vpi.h, the vpi_register_cb uses the VL_TIME_Q macro. This macro is defined as a call to sc_time_stamp (on verilated.h) and declares an extern if needed. When not compiling with systemc I get an \"unresolved symbol sc_time_stamp\" error on linking. To work around this I had to declare the sc_time_stamp function myself, but I'm not sure yet how to calculate the time returned there... meanwhile I call vl_fatal.\r\n\r\nThanks,\r\n\r\nAmir\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2012-10-22",
+  "closed_at": "2012-12-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

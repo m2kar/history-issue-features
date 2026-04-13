@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8864,
+  "issue_url": "https://github.com/llvm/circt/pull/8864",
+  "title": "[Comb] Generalize AndOp narrowing if mask has leading/trailing zeros",
+  "body": "Instead of only narrowing `comb.and` operations that have a `comb.extract` operand, do so on any and that has a constant operand with leading or trailing zeros. Since we consider `comb.concat` to be free, this canonicalization essentially turns a wide `comb.and` into a cheaper narrow `comb.and` plus an additional, free `comb.concat`.\r\n\r\nThis helps canonicalize Comb ops that implement an integer equivalent of `hw.array_inject` into corresponding extracts and concats.\r\n\r\nIn particular, this helps canonicalize\r\n```mlir\r\nhw.module @Foo(in %a : i1, out z : i2) {\r\n  %c1_i2 = hw.constant 1 : i2\r\n  %c-2_i2 = hw.constant -2 : i2\r\n  %false = hw.constant false\r\n  %0 = comb.and %5, %c-2_i2 : i2\r\n  %1 = comb.concat %false, %a : i1, i1\r\n  %2 = comb.or %0, %1 : i2\r\n  %3 = comb.and %2, %c1_i2 : i2\r\n  %4 = comb.concat %a, %false : i1, i1\r\n  %5 = comb.or %3, %4 : i2\r\n  hw.output %5 : i2\r\n}\r\n```\r\ninto the more compact\r\n```mlir\r\nhw.module @Foo(in %a : i1, out z : i2) {\r\n  %false = hw.constant false\r\n  %0 = comb.concat %false, %a : i1, i1\r\n  %1 = comb.concat %a, %false : i1, i1\r\n  %2 = comb.or %0, %1 : i2\r\n  hw.output %2 : i2\r\n}\r\n```",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-16",
+  "closed_at": "2025-08-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

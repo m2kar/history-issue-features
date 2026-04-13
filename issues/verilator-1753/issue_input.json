@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1753,
+  "issue_url": "https://github.com/verilator/verilator/issues/1753",
+  "title": "Question: Behaviour when ignoring COMBDLY",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Message: 852 from https://www.veripool.org\n\n\n\n---\n\nI have the following module in my code:\n\n```\nmodule sim_top (clk , ctrl);\n\n    input wire clk;\n    output wire ctrl;\n\n    reg \t       y1;\n    reg \t       y2;\n\n    assign ctrl = y2;\n\n    always @(clk) begin\n       if (clk) begin\n          y1 <= 1'b0;\n       end\n       else begin\n          y1 <= 1'b1;\n       end\n    end\n\n    always @(posedge clk) begin\n       y2 <= y1;\n    end\n\nendmodule\n\n```\n\nVerilator warns (COMBDLY) that using non-blocking assignment inside a combinatorial always block is bad practice, referring to the Clifford Cummings paper at SNUG 2000 on the subject (http://www.sunburst-design.com/papers/CummingsSNUG2000SJ_NBA_rev1_2.pdf). If COMBDLY is overridden, Verilator treats the non-blocking assignments as though they were blocking, i.e. as though the code were:\n\n```\nmodule sim_top (clk , ctrl);\n\n    input wire clk;\n    output wire ctrl;\n\n    reg \t       y1;\n    reg \t       y2;\n\n    assign ctrl = y2;\n\n    always @(clk) begin\n       if (clk) begin\n          y1 = 1'b0;\n       end\n       else begin\n          y1 = 1'b1;\n       end\n    end\n\n    always @(posedge clk) begin\n       y2 <= y1;\n    end\n\nendmodule\n\n```\n\nOn the posedge of clk, this code contains a race between the assignment of y1 as the inverse of the clock (the first, combinatorial, always block) and the evaluation of y1 as the RHS of a non-blocking assignment (the second, sequential, always block). The Verilog 2001 standard is explicit (section 5.4.2) that the active events of different always blocks may be evaluated in any order. If the combinatorial always is evaluated first, then y2 will be latched high. If the sequential always is evaluated first, then y2 will be latched low.\n\nTesting shows that event driven simulators, other cycle-accurate modeling tools and gates synthesized by Design Compiler all choose to evaluate the combinatorial block first and y2 is latched high. Verilator evaluates the sequential block first, and y2 is latched low.\n\nAt one level this doesn't matter. This is clearly bad code, and the fact that Verilator behaves differently from other tools is a consequence. If this were new code, then clearly it would have to be fixed. However in this case, it is long-standing \"golden\" production code. It has this bug in it (and probably more like it), but it causes no problems because all other tools work in one particular way. Now we are building models of this legacy code, it would be helpful if Verilator resolved races in the same way as other tools, particularly synthesis tools. This would allow us to avoid modifying the golden reference RTL.\n\nIt seems that all other tools have rules used when modeling races, beyond what is specified in the Verilog standard. Does anyone have an understanding of what those rules are. Should there be an option to Verilator to allow those rules to be used, so Verilator models more closely match other simulation tools? Should the COMBDLY warning give more information to help in identifying these races, and if so what should that warning be?\n\nI would welcome community suggestions on this.\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2012-06-13",
+  "closed_at": "2012-07-17",
+  "code_blocks": [
+    "module sim_top (clk , ctrl);\n\n    input wire clk;\n    output wire ctrl;\n\n    reg \t       y1;\n    reg \t       y2;\n\n    assign ctrl = y2;\n\n    always @(clk) begin\n       if (clk) begin\n          y1 <= 1'b0;\n       end\n       else begin\n          y1 <= 1'b1;\n       end\n    end\n\n    always @(posedge clk) begin\n       y2 <= y1;\n    end\n\nendmodule\n\n",
+    "module sim_top (clk , ctrl);\n\n    input wire clk;\n    output wire ctrl;\n\n    reg \t       y1;\n    reg \t       y2;\n\n    assign ctrl = y2;\n\n    always @(clk) begin\n       if (clk) begin\n          y1 = 1'b0;\n       end\n       else begin\n          y1 = 1'b1;\n       end\n    end\n\n    always @(posedge clk) begin\n       y2 <= y1;\n    end\n\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

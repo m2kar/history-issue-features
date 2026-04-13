@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8626,
+  "issue_url": "https://github.com/llvm/circt/issues/8626",
+  "title": "[ImportVerilog] Fixup case statements that look exhaustive but are not",
+  "body": "I've seen quite a bit of code like the following out in the wild:\n\n```systemverilog\nmodule Foo (\n  input  logic [1:0] a,\n  output logic [3:0] z\n);\n  always_comb begin\n    case (a)\n      2'd0: z = 4'b0001;\n      2'd1: z = 4'b0010;\n      2'd2: z = 4'b0100;\n      2'd3: z = 4'b1000;\n    endcase\n  end\nendmodule\n```\n\nThe intention clearly is to list all distinct values the input `a` can assume, and provide a unique output assignment for each. This case statement _looks_ exhaustive, and it also _is_ exhaustive in 2-state logic. But in SystemVerilog's 4-state `logic` type, this case-statement is non-exhaustive. If the input `a` contains an X or Z bit, none of the case items match and `z` remains unassigned, essentially modelling a latch.\n\nSynthesis tools will often work around this by mapping the 4-state logic to 2-state logic, which makes case statements like this exhaustive. We need a similar workaround in CIRCT. For now, since the core dialects don't support 4-state logic, we can just assume that case statements that are exhaustive in 2-state logic need no else/default branch when we lower to IR.\n\nThe above produces the following IR:\n```mlir\nhw.module @Foo(in %a : i2, out z : i4) {\n  %c0_i3 = hw.constant 0 : i3\n  %true = hw.constant true\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i4 = hw.constant 0 : i4\n  %c-1_i2 = hw.constant -1 : i2\n  %c4_i4 = hw.constant 4 : i4\n  %c-2_i2 = hw.constant -2 : i2\n  %c2_i4 = hw.constant 2 : i4\n  %c1_i2 = hw.constant 1 : i2\n  %c1_i4 = hw.constant 1 : i4\n  %c0_i2 = hw.constant 0 : i2\n  %z = llhd.sig %c0_i4 : i4\n  %1 = llhd.prb %z : !hw.inout<i4>\n  %2 = comb.icmp ceq %a, %c0_i2 : i2\n  %3 = comb.icmp ceq %a, %c1_i2 : i2\n  %4 = comb.icmp ceq %a, %c-2_i2 : i2\n  %5 = comb.icmp ceq %a, %c-1_i2 : i2\n  %6 = comb.concat %5, %c0_i3 : i1, i3\n  %7 = comb.xor %2, %true : i1\n  %8 = comb.xor %3, %true : i1\n  %9 = comb.and %8, %7, %4 : i1\n  %10 = comb.mux %9, %c4_i4, %6 : i4\n  %11 = comb.and %7, %3 : i1\n  %12 = comb.mux %11, %c2_i4, %10 : i4\n  %13 = comb.mux %2, %c1_i4, %12 : i4\n  %14 = comb.or %2, %11, %9, %5 : i1\n  llhd.drv %z, %13 after %0 if %14 : !hw.inout<i4>\n  hw.output %1 : i4\n}\n```\nThe problematic part is the `if %14` on the `llhd.drv`: if none of the four case items match, the drive does not take effect. This needs to be fixed.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-30",
+  "closed_at": "2025-07-01",
+  "code_blocks": [
+    "module Foo (\n  input  logic [1:0] a,\n  output logic [3:0] z\n);\n  always_comb begin\n    case (a)\n      2'd0: z = 4'b0001;\n      2'd1: z = 4'b0010;\n      2'd2: z = 4'b0100;\n      2'd3: z = 4'b1000;\n    endcase\n  end\nendmodule\n",
+    "hw.module @Foo(in %a : i2, out z : i4) {\n  %c0_i3 = hw.constant 0 : i3\n  %true = hw.constant true\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i4 = hw.constant 0 : i4\n  %c-1_i2 = hw.constant -1 : i2\n  %c4_i4 = hw.constant 4 : i4\n  %c-2_i2 = hw.constant -2 : i2\n  %c2_i4 = hw.constant 2 : i4\n  %c1_i2 = hw.constant 1 : i2\n  %c1_i4 = hw.constant 1 : i4\n  %c0_i2 = hw.constant 0 : i2\n  %z = llhd.sig %c0_i4 : i4\n  %1 = llhd.prb %z : !hw.inout<i4>\n  %2 = comb.icmp ceq %a, %c0_i2 : i2\n  %3 = comb.icmp ceq %a, %c1_i2 : i2\n  %4 = comb.icmp ceq %a, %c-2_i2 : i2\n  %5 = comb.icmp ceq %a, %c-1_i2 : i2\n  %6 = comb.concat %5, %c0_i3 : i1, i3\n  %7 = comb.xor %2, %true : i1\n  %8 = comb.xor %3, %true : i1\n  %9 = comb.and %8, %7, %4 : i1\n  %10 = comb.mux %9, %c4_i4, %6 : i4\n  %11 = comb.and %7, %3 : i1\n  %12 = comb.mux %11, %c2_i4, %10 : i4\n  %13 = comb.mux %2, %c1_i4, %12 : i4\n  %14 = comb.or %2, %11, %9, %5 : i1\n  llhd.drv %z, %13 after %0 if %14 : !hw.inout<i4>\n  hw.output %1 : i4\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

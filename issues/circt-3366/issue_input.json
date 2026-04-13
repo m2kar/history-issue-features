@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3366,
+  "issue_url": "https://github.com/llvm/circt/pull/3366",
+  "title": "[FIRRTL] rework innerref verification, starting with HierPathOp.",
+  "body": "## Introduction\r\n\r\nInnerRef's are expensive to verify presently, as the InnerSymbol\r\nportion requires walking the target operation (FModuleLike).\r\n\r\nHierPathOps are chains of these, and so were especially\r\nproblematic in this regard.\r\n\r\nThis is a similar problem to verifying Symbol (SymbolTable) users,\r\nand is solved in a similar way.\r\n\r\n## Overview\r\n\r\nThe primary components of the new approach:\r\n\r\n**1. Drive verification from the top of InnerRef resolution scope**\r\n\r\nOnly walk the relevant IR once, parallelizing where makes sense.\r\n\r\n**2. Introduce an interface for verifying InnerRef's**\r\n\r\nOperations using InnerRef's can implement the interface\r\nto opt-in to this new verification.\r\n\r\n## Details\r\n\r\nFor (1), a new trait \"InnerRefNamespace\" is added to mark Operations\r\nin which InnerRef's are resolved.  For now this is only added to CircuitOp.\r\n\r\nFor (2), introduce \"InnerRefUserOpInterface\" with a \"verifyInnerRefs\"\r\nmethod, similar to SymbolOpUserInterface and verifySymbolUses.\r\nOperations using InnerRef's should prefer this interface, at least for\r\npurposes of verification: since `verifyInnerRefs` also provides the operation\r\nwith a SymbolTable, all the same verification done in `verifySymbolUses` can be\r\ndone together with verification involving resolving the InnerSymbol's.\r\n(There's no need for a SymbolTableCollection within an InnerRefNamespace,\r\nas there's only one SymbolTable, at the top level.)\r\n\r\nIn addition, InnerSymbolTable is fleshed out a bit so that it can be\r\nused for basic lookups of InnerSymbols, and \"InnerSymbolTableCollection\"\r\nis added that serves a similar purpose as SymbolTableCollection.\r\nInnerRefNamespace is also a class (as well as the trait) that combines a\r\nSymbolTable and the InnerSymbolTableCollection, for convenient access to both\r\nin \"verifyInnerRefs\".\r\n\r\nSome structural requirements are now explicitly checked.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-16",
+  "closed_at": "2022-06-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

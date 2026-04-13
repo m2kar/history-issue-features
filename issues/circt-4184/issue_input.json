@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4184,
+  "issue_url": "https://github.com/llvm/circt/issues/4184",
+  "title": "[FIRRTL] Not great error message for not fully initialized wires and submodules",
+  "body": "Consider:\r\n```\r\ncircuit Top :\r\n  module Foo :\r\n    input foo : UInt<8>\r\n    input in : UInt<8>\r\n    output out : UInt<8>\r\n\r\n    out <= and(in foo)\r\n\r\n  module Top:\r\n    input en : UInt<1>\r\n    input in : UInt<8>\r\n    output out : UInt<8>\r\n\r\n    inst foo of Foo @[Top.scala 1:1]\r\n    wire w : UInt<8> @[Top.scala 2:2]\r\n    foo.in <= in\r\n    out <= foo.out\r\n    when en : @[Top.scala 10:10]\r\n      foo.foo <= UInt(0) @[Top.scala 20:20]\r\n      w <= UInt(0) @[Top.scala 30:30]\r\n```\r\nThis gives the error message:\r\n```\r\nTop.scala:1:1: error: sink \"foo.foo\" not fully initialized\r\nTop.scala:1:1: note: see current operation: %0:3 = \"firrtl.instance\"() {annotations = [], moduleName = @Foo, name = \"foo\", nameKind = #firrtl<name_kind droppable_name>, portAnnotations = [[], [], []], portDirections = -4 : i3, portNames = [\"foo\", \"in\", \"out\"]} : () -> (!firrtl.uint<8>, !firrtl.uint<8>, !firrtl.uint<8>)\r\nTop.scala:2:2: error: sink \"w\" not fully initialized\r\nTop.scala:2:2: note: see current operation: %1 = \"firrtl.wire\"() {annotations = [], name = \"w\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<8>\r\n```\r\n\r\nIt's nice that it gives the source locator and precise port, but it would be helpful to know what module I'm in (`Top`) and more context about the lack of initialization, eg. SFC gives:\r\n```\r\nException in thread \"main\" firrtl.passes.PassExceptions:\r\nfirrtl.passes.CheckInitialization$RefNotInitializedException:  @[Top.scala 1:1] : [module Top]  Reference foo is not fully initialized.            \r\n   : foo.foo <= mux(en, UInt<1>(\"h0\"), VOID)\r\nfirrtl.passes.CheckInitialization$RefNotInitializedException:  @[Top.scala 2:2] : [module Top]  Reference w is not fully initialized.              \r\n   : w <= mux(en, UInt<1>(\"h0\"), VOID)\r\nfirrtl.passes.PassException: 2 errors detected!\r\n```\r\nSFC isn't great either but it does let me know that I did at least connect to it (and it tells me that I'm in `module Top`).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-25",
+  "closed_at": "2022-10-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

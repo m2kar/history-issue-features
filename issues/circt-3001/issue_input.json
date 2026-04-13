@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3001,
+  "issue_url": "https://github.com/llvm/circt/issues/3001",
+  "title": "[ExportVerilog] Reduction Operators Tripping Lint Warnings",
+  "body": "Consider the following:\r\n\r\n```mlir\r\nmodule {\r\n  hw.module @Foo(%a: i1, %b: i2) -> (c: i1) {\r\n    %c0_i2 = hw.constant 0 : i2\r\n    %0 = comb.icmp ne %b, %c0_i2 : i2\r\n    %1 = comb.or %a, %0 : i1\r\n    hw.output %1 : i1\r\n  }\r\n}\r\n```\r\n\r\nThis produces the following Verilog:\r\n\r\n```\r\nmodule Foo(\r\n  input        a,\r\n  input  [1:0] b,\r\n  output       c);\r\n\r\n  assign c = a | |b;\r\nendmodule\r\n```\r\n\r\nTools will complain about `a | |b` thinking that the user screwed up.  We should instead emit this as `a | (|b)` both because it works around a common lint warning and also because it's easier to read. 😅 ",
+  "labels": [
+    "enhancement",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-29",
+  "closed_at": "2022-09-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8562,
+  "issue_url": "https://github.com/llvm/circt/pull/8562",
+  "title": "[Seq] Add canonicalization for FirReg with mux-based constant drivers",
+  "body": "Implement a canonicalization pattern for seq.firreg operations that optimizes registers with mux-based self-loops to constant values [exactly same way](https://github.com/llvm/circt/blob/5dc12802ef2b8264a00b70f236beae886db2c0da/lib/Dialect/FIRRTL/FIRRTLFolds.cpp#L3095) in FIRRTL dialect. \r\n\r\nThe pattern matches registers where the next value is a mux with one branch being the register itself (creating a self-loop) and the other branch being a constant:\r\n```mlir\r\n  %mux = comb.mux %cond, %reg, %constant  // or (%constant, %reg)\r\n  %reg = seq.firreg %mux clock %clk\r\n```\r\nIn such cases, the register effectively holds a constant value and can be replaced with that constant, eliminating the register entirely.\r\n\r\nThe optimization is only applied when:\r\n- One mux branch is the register output (self-loop)\r\n- The other mux branch is a constant\r\n- If the register has a reset value, it must be a constant matching the mux constant",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-13",
+  "closed_at": "2025-06-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

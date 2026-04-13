@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2705,
+  "issue_url": "https://github.com/llvm/circt/issues/2705",
+  "title": "[HW] Add support for generator expressions",
+  "body": "#2701, #2703 introduces support for using HW module parameters in `seq, comb` operations as well as support for parametric arrays.\r\n\r\nTo be able to do something meaningful with this, a next step could be to add a `generate` operation to the HW dialect, wherein we can use control flow operations to describe our parametric hardware.\r\nThis would then be accompanied by an elaboration step that is invoked upon module instantiation. By doing this in CIRCT (as opposed to emitting SystemVerilog `generate` structures), we'll be able to leverage existing RTL dialect optimizations and transformations/inlining/....\r\n\r\nTo kick off a discussion, one possible implementation is to implement a `hw.generate` operation that defines a region. Internally, `SCF` \r\nor `affine` dialect operations could be used as the elaboration language. The main challenge with this is to be able to use our `#hw.param.decl.ref<\"...\">` attributes as values accepted by the verifiers of these operations, such as the following:\r\n\r\n```mlir\r\nhw.module @accumulate<N: i32>(%vec : !hw.array<#hw.param.decl.ref<\"N\"> x i32>) -> (out: i32) {\r\n  %tmp = sv.wire : i32\r\n  hw.generate {\r\n    %first = hw.array_get %vec[0] : i32\r\n    %ub = hw.param.value i32 = #hw.param.decl.ref<\"N\">\r\n    %sum = scf.for %iv = 1 to %ub step 1 iter_args(%sum_iter = %first) -> (i32) {\r\n        %v = hw.array_get %vec[%iv] : i32\r\n        %partial_sum = comb.add %sum_iter, %v\r\n        scf.yield %partial_sum : i32\r\n    }\r\n    sv.assign %tmp, %sum : i32\r\n  }\r\n  hw.output %tmp : i32\r\n}\r\n```",
+  "labels": [
+    "enhancement",
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2022-03-01",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

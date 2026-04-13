@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9335,
+  "issue_url": "https://github.com/llvm/circt/issues/9335",
+  "title": "[FIRRTL] Dedup of modules with incompatible ports",
+  "body": "I just ran into this weird failure in FIRRTL's Dedup pass:\n\n```mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.module private @Bar(in %clock: !firrtl.clock) {}\n  firrtl.module private @Baz() {\n    %Bar_clock = firrtl.instance Bar @Bar(in clock: !firrtl.clock)\n  }\n  firrtl.module private @Qux() {}\n  firrtl.module @Foo() {}\n}\n```\n\nRunning this through `circt-opt --firrtl-dedup` produces the following error:\n```\nerror: 'firrtl.instance' op has a wrong number of results; expected 0 but got 1\n    %Bar_clock = firrtl.instance Bar @Bar(in clock: !firrtl.clock)\n                 ^\nnote: see current operation: %0 = \"firrtl.instance\"() <{\n    annotations = [],\n    domainInfo = [[]],\n    layers = [],\n    moduleName = @Foo,\n    name = \"Bar\",\n    nameKind = #firrtl<name_kind droppable_name>,\n    portAnnotations = [[]],\n    portDirections = array<i1: false>,\n    portNames = [\"clock\"]\n  }> : () -> !firrtl.clock\nnote: original module declared here\n  firrtl.module @Foo() {}\n  ^\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-11",
+  "closed_at": "2025-12-11",
+  "code_blocks": [
+    "firrtl.circuit \"Foo\" {\n  firrtl.module private @Bar(in %clock: !firrtl.clock) {}\n  firrtl.module private @Baz() {\n    %Bar_clock = firrtl.instance Bar @Bar(in clock: !firrtl.clock)\n  }\n  firrtl.module private @Qux() {}\n  firrtl.module @Foo() {}\n}\n",
+    "error: 'firrtl.instance' op has a wrong number of results; expected 0 but got 1\n    %Bar_clock = firrtl.instance Bar @Bar(in clock: !firrtl.clock)\n                 ^\nnote: see current operation: %0 = \"firrtl.instance\"() <{\n    annotations = [],\n    domainInfo = [[]],\n    layers = [],\n    moduleName = @Foo,\n    name = \"Bar\",\n    nameKind = #firrtl<name_kind droppable_name>,\n    portAnnotations = [[]],\n    portDirections = array<i1: false>,\n    portNames = [\"clock\"]\n  }> : () -> !firrtl.clock\nnote: original module declared here\n  firrtl.module @Foo() {}\n  ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5194,
+  "issue_url": "https://github.com/llvm/circt/pull/5194",
+  "title": "[Arc] MemoryReadPortOp: remove enable and clock operand, make it pure",
+  "body": "* Remove the optional enable and clock operands from `arc.memory_read_port` making it a combinatorial read port. Latencies can be added using the `arc.state` operation.\r\n* Adjust InferMemories accordingly\r\n* Make `arc.memory_read_port` pure to allow it to be moved into `arc.define` ops. This means the memory value has to be passed via argument. This will be considered to pass the whole memory as a value (like `hw.array`) at this stage of the lowering. The LegalizeStateUpdates pass should make it easy to switch to pointer semantics for memories.\r\n* Remove top-level `sv.macro.decl` ops in StripSV (sorry for this unrelated change, but it's just 4 lines :) )\r\n* Remove the optional stride parameter from the `!arc.memory` type and add a member function to conveniently compute the stride on-demand. Not removing it led to some issues in the lowering to LLVM which would have required bigger changes to AllocateState otherwise.\r\n* Fix a bug in the ClockDomainOp canonicalizer revealed by the change to the regression test required by the removal of the `memory_read_port` operands\r\n* Change the memory read port lowering in LowerState such that it does not reorder read ops anymore, but just converts them and also lowers Arcs that contain reads to functions early on because arcs don't allow ops with memory side effects. Alternatively we could split the arcs and pull the read ops out again.\r\n* Add the memory read/write reordering to LegalizeStateUpdates instead. This is just a temporary implementation and fails on more complex cases, but we need to re-implement this pass anyways as it is very slow (~4 sec on rocket, 100s of sec on largeBoom)\r\n* Add support for `func.call` op lowering in LowerArcToLLVM and lower arcs with LLVM internal linkage such that LLVM can remove those functions when getting inlined to reduce the objfile size to almost a third for rocket.\r\n\r\nSorry for touching a lot of things in this PR. Let me know if I should try to split it up a bit more.",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-13",
+  "closed_at": "2023-05-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

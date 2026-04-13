@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7649,
+  "issue_url": "https://github.com/llvm/circt/issues/7649",
+  "title": "[FIRRTL] Layers and Analog",
+  "body": "Consider:\r\n```firrtl\r\nFIRRTL version 4.0.0\r\n\r\ncircuit Foo :\r\n  layer L, bind :\r\n\r\n  extmodule Bar :\r\n    input a : Analog<1>\r\n  public module Foo :\r\n    input a : Analog<1>\r\n\r\n    layerblock L:\r\n      inst b of Bar\r\n      attach(b.a, a)\r\n```\r\n\r\nPresently this fails in the verifier after LowerLayers:\r\n\r\n```\r\n// -----// IR Dump Before LowerLayers (firrtl-lower-layers) //----- //\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.layer @L bind {\r\n  }\r\n  firrtl.extmodule private @Bar(in a: !firrtl.analog<1>) attributes {convention = #firrtl<convention scalarized>}\r\n  firrtl.module @Foo(in %a: !firrtl.analog<1>) attributes {convention = #firrtl<convention scalarized>} {\r\n    firrtl.layerblock @L {\r\n      %b_a = firrtl.instance b @Bar(in a: !firrtl.analog<1>)\r\n      firrtl.attach %b_a, %a : !firrtl.analog<1>, !firrtl.analog<1>\r\n    }\r\n  }\r\n}\r\n\r\nanalog-layer.fir:13:7: error: analog types may not be connected\r\n      attach(b.a, a)\r\n      ^\r\nanalog-layer.fir:13:7: note: see current operation: \"firrtl.matchingconnect\"(%0, %arg0) : (!firrtl.analog<1>, !firrtl.analog<1>) -> ()\r\n```\r\n\r\nLowerLayers should diagnose this if unsupported, or learn to emit an appropriate connect operation (attach).\r\n\r\nSince `attach` is bidirectional, it seems like it should not be allowed across layer boundaries for consistency with `connect` in that direction.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-09-30",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

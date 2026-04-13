@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5767,
+  "issue_url": "https://github.com/verilator/verilator/issues/5767",
+  "title": "Support `specparam`",
+  "body": "```\nmodule s25fl128s ();\n    reg PoweredUp;\nspecify\n    specparam tdevice_PU = 3e8;\nendspecify\n    initial\n    begin\n        PoweredUp = 1'b0;\n        #tdevice_PU PoweredUp = 1'b1;\n    end\nendmodule\n```\n\nminimised from https://github.com/Barabas5532/crush/blob/0c41c31b812d7b477e4c75ffc21b9b8b7fb91afb/crush_example_freertos/sim/s25fl128s.v.\n\n`verilator --lint-only s25fl128s.v` causes the following output:\n\n```\n%Error: s25fl128s.v:9:10: Can't find definition of variable: 'tdevice_PU'\n   14 |         #tdevice_PU PoweredUp = 1'b1;\n      |          ^~~~~~~~~~\n%Error: Exiting due to 1 error(s)\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\nVerilator 5.030 2024-10-27\n\nWhat OS and distribution are you using?\nArch Linux\n\nMay we assist you in trying to fix this in Verilator yourself?\nSure\n\nI found a test with a specparam, but it is not used anywhere in the test https://github.com/verilator/verilator/blob/5b65c15ecaa0073f3185c7dcf08a16e216bfd44f/test_regress/t/t_gate_basic.v#L43. Also I guess this is a test for the simulator and not the linter.\n\nI also see in https://github.com/verilator/verilator/blob/5b65c15ecaa0073f3185c7dcf08a16e216bfd44f/docs/guide/languages.rst?plain=1#L479 that specparam is ignored. I guess this is for simulation again. For linting, verilator should make a note of the defined specparams to avoid the error when a time delay uses the param like in my example.",
+  "labels": [
+    "type: feature-IEEE",
+    "resolution: unplanned"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-06",
+  "closed_at": "2025-02-25",
+  "code_blocks": [
+    "module s25fl128s ();\n    reg PoweredUp;\nspecify\n    specparam tdevice_PU = 3e8;\nendspecify\n    initial\n    begin\n        PoweredUp = 1'b0;\n        #tdevice_PU PoweredUp = 1'b1;\n    end\nendmodule\n",
+    "%Error: s25fl128s.v:9:10: Can't find definition of variable: 'tdevice_PU'\n   14 |         #tdevice_PU PoweredUp = 1'b1;\n      |          ^~~~~~~~~~\n%Error: Exiting due to 1 error(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

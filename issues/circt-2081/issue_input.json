@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2081,
+  "issue_url": "https://github.com/llvm/circt/pull/2081",
+  "title": "[FIRRTL] Add inner names to declarations",
+  "body": "Add a `inner_sym` attribute to the following FIRRTL dialect operations:\r\n\r\n- `InstanceOp`\r\n- `NodeOp`\r\n- `WireOp`\r\n- `RegOp`\r\n- `RegResetOp`\r\n- `MemOp`\r\n\r\nThe `inner_sym` attribute allows these operations to be named in a `hw.innerNameRef`, and gives us the ability to attach a name to these operations that will be carried over through lowering into the HW dialect.\r\n\r\nAn interesting case arises if one of these operations has an inner name and type lowering would have to duplicate the operation. This can occur for example for a wire with aggregate type:\r\n\r\n    %x = firrtl.wire sym @foo : !firrtl.bundle<a: uint<1>, b: uint<2>>\r\n\r\nType lowering would convert this into two wires, one for field `a` and one for field `b`. However, since the wire itself defines the symbol `@foo`, it is unclear what should happen with the symbol. At the moment, type lowering will just emit an error in this case. Other valid options would be to drop the symbol (which is kind of brittle), or introduce a breadcrumb operation that keeps track of the change, like:\r\n\r\n    %x_a = firrtl.wire sym @foo_a\r\n    %x_b = firrtl.wire sym @foo_b\r\n    firrtl.aggregate_symbol @foo, [@foo_a, @foo_b]\r\n\r\nSince we have no such use cases at the moment, just emitting an error seems fine.\r\n\r\nThis change does not yet include module port symbols, which require significant additional changes that will follow as a separate PR.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-04",
+  "closed_at": "2021-11-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

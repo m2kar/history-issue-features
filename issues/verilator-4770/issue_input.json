@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4770,
+  "issue_url": "https://github.com/verilator/verilator/issues/4770",
+  "title": "Trivial register file implementation using a task fails \"verilator --cc\"",
+  "body": "The following minimized test case passes in most tools, but fails in Verilator built from head, master branch:\r\n\r\n```verilog\r\nmodule regfile (\r\n  input  logic       clock,\r\n  output logic[31:0] out,\r\n  input  logic[7:0]  addr\r\n);\r\n\r\n  logic[31:0] data_[256];\r\n  logic[31:0] out_;\r\n\r\n  always_ff @(posedge clock) begin\r\n    tick(addr);\r\n  end\r\n\r\n  task automatic tick(logic[7:0] addr);\r\n    data_[addr] <= 1;\r\n    out_ <= data_[addr];\r\n  endtask\r\n\r\n  always_comb out = out_;\r\n\r\nendmodule\r\n```\r\n\r\nTest run in Ubuntu 22.04.3 on x86_64:\r\n\r\n```console\r\naappleby@jankytron:~$ verilator --version\r\nVerilator 5.019 devel rev v5.018-85-gc5ba6e22f\r\naappleby@jankytron:~$ verilator --cc verilator_bad_regfile.sv\r\n%Error: Internal Error: verilator_bad_regfile.sv:15:17: ../V3EmitCFunc.h:1408: Unknown node type reached emitter: BEGIN\r\n   15 |     data_[addr] <= 1;\r\n      |                 ^~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nI'll attempt to fix it myself.\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-12-18",
+  "closed_at": "2023-12-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

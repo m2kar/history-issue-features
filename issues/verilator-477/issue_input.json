@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 477,
+  "issue_url": "https://github.com/verilator/verilator/issues/477",
+  "title": "incorrect %Error: Selection index out of range",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 477 from https://www.veripool.org\nOriginal Date: 2012-04-04\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nTest case:\r\n\r\n```\r\nmodule submod(\r\n         rst_n,\r\n         clk,\r\n         rst_n_ext\r\n);\r\n\r\nparameter STAGES = 4;\r\nparameter NUM_OUT = 1;\r\n\r\ninput   rst_n;\r\ninput   clk;\r\noutput  [NUM_OUT-1:0] rst_n_ext;\r\n\r\nreg[STAGES+NUM_OUT-2:0] rst_reg;\r\n\r\ngenerate\r\ngenvar i;\r\n         for (i=0; i<STAGES+NUM_OUT-1; i=i+1)\r\n         begin\r\n                 always @(posedge clk or negedge rst_n)\r\n                 begin\r\n                         if (~rst_n)\r\n                                 rst_reg[i] <= 1'b0;\r\n                         else\r\n                         begin\r\n                                 if (i==0)\r\n                                         rst_reg[i] <= 1'b1;\r\n                                 else if (i < STAGES)\r\n                                         rst_reg[i] <= rst_reg[i-1];\r\n                                 else\r\n                                         rst_reg[i] <= rst_reg[STAGES-2];\r\n                                 \r\n                         end\r\n                 end\r\n         end\r\nendgenerate\r\n\r\n         assign rst_n_ext = rst_reg[STAGES+NUM_OUT-2:STAGES-1];\r\n\r\nendmodule\r\n\r\n\r\nmodule test(\r\n             input  rst_n,\r\n             input  clk,\r\n             output out\r\n             );\r\n\r\n    reg [4-1:0] rst1;\r\n\r\n    submod  u1(\r\n                 .rst_n        (rst_n),\r\n                 .clk          (clk),\r\n                 .rst_n_ext    (rst1)\r\n         );\r\n         defparam u1.STAGES  = 5; \r\n         defparam u1.NUM_OUT = 4;\r\n\r\n    reg [1-1:0] rst2;\r\n\r\n    submod  u2(\r\n                 .rst_n        (rst_n),\r\n                 .clk          (clk),\r\n                 .rst_n_ext    (rst2)\r\n         );\r\n         defparam u2.STAGES = 5; \r\n\r\nendmodule\r\n\n```\r\n\r\nError:\r\n\r\n```\r\nverilator -sp -Wno-fatal --top-module test test.v\r\n%Error: test.v:29: Selection index out of range: 7:7 outside 4:0\r\n%Error: test.v:29: Selection index out of range: 7:7 outside 4:0\r\n%Error: Exiting due to 2 error(s)\r\n\n```\r\n\r\nNote that if any of two instantiations is commented out, there is no error.\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-04-04",
+  "closed_at": "2012-04-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

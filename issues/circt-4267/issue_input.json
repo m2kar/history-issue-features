@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4267,
+  "issue_url": "https://github.com/llvm/circt/issues/4267",
+  "title": "HW: Check inner symbols aren't defined multiple times (at least at some point)",
+  "body": "We don't do this in HW, and unsurprisingly this can cause strange problems if occurs and not detected.\r\n\r\nAn explicit pass, verifier, or if nothing else detecting this when building an HWSymbolCache (like we do in ExportVerilog) would be good.\r\n\r\nPresently, point `firtool` at our `verilog-basic.mlir` test to see a crash, extracted/simplified test case:\r\n\r\n```mlir\r\nhw.module @bind_rename_port(%.io_req_ready.output: i1, %reset: i1, %clock: i1) {\r\n  hw.output\r\n}\r\n\r\nhw.module @SiFive_MulDiv(%clock: i1, %reset: i1) -> (io_req_ready: i1) {\r\n  %false = hw.constant false\r\n  hw.instance \"InvisibleBind_assert\" sym @__ETC_SiFive_MulDiv_assert @bind_rename_port(\".io_req_ready.output\": %false: i1, reset: %reset: i1, clock: %clock: i1) -> () {doNotPrint = true}\r\n  hw.probe @__ETC_SiFive_MulDiv_assert, %false, %reset, %clock: i1,i1,i1\r\n  hw.output %false : i1\r\n}\r\n\r\nsv.bind #hw.innerNameRef<@SiFive_MulDiv::@__ETC_SiFive_MulDiv_assert>\r\n```\r\n\r\nI'll be fixing the testcase to not do this shortly.\r\n\r\nInnerSymbolTable / InnerSymbolOpInterface and all that related goodness in FIRRTL that handle this and more would be convenient to have in HW, but are not compatible.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-08",
+  "closed_at": "2022-11-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

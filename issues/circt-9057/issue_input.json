@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9057,
+  "issue_url": "https://github.com/llvm/circt/issues/9057",
+  "title": "[MooreToCore] Unexpected topological cycle after importing generated verilog",
+  "body": "Hello, I'm having an issue when trying to import Verilog generated with Yosys. It leads into a combinatorial cycle that isn't present in the Verilog program.\nHere is a simple example of problematic Verilog:\n```sv\nmodule outline_control_3(output [1:0] result, input arg0);\n  assign result[1] = arg0;\n  assign result[0] = result[1];\nendmodule\n```\nWhen I import the Verilog into Moore with `./circt-translate --import-verilog test.sv` it generates the following program:\n```mlir\nmodule {\n  moore.module @outline_control_3(out result : !moore.l2, in %arg0 : !moore.l1) {\n    %result = moore.net wire : <l2>\n    %arg0_0 = moore.net name \"arg0\" wire : <l1>\n    %0 = moore.extract_ref %result from 1 : <l2> -> <l1>\n    %1 = moore.read %arg0_0 : <l1>\n    moore.assign %0, %1 : l1\n    %2 = moore.extract_ref %result from 0 : <l2> -> <l1>\n    %3 = moore.read %result : <l2>\n    %4 = moore.extract %3 from 1 : l2 -> l1\n    moore.assign %2, %4 : l1\n    %5 = moore.read %result : <l2>\n    moore.assign %arg0_0, %arg0 : l1\n    moore.output %5 : !moore.l2\n  }\n}\n```\nBut then, when I lower it into the comb/HW dialects with `./circt-translate --import-verilog test.sv | ./circt-opt --moore-lower-concatref --canonicalize --cse --convert-moore-to-core --llhd-sig2reg --canonicalize --cse`. It generates the following program:\n```mlir\nmodule {\n  hw.module @outline_control_3(out result : i2, in %arg0 : i1) {\n    %false = hw.constant false\n    %0 = comb.concat %false, %3 : i1, i1\n    %1 = comb.concat %arg0, %false : i1, i1\n    %2 = comb.or %1, %0 : i2\n    %3 = comb.extract %2 from 1 : (i2) -> i1\n    hw.output %2 : i2\n  }\n}\n```\nMy problem here is that `%3` depends on `%2`, which in turn depends on `%0`, which also depends on `%3`. As the hw.module contains a `graph` region, it doesn't seem to be an invalid MLIR program. But is it the expected behavior? There is a combinatorial cycle that wasn't present in the imported Verilog.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-06",
+  "closed_at": "2026-01-15",
+  "code_blocks": [
+    "module outline_control_3(output [1:0] result, input arg0);\n  assign result[1] = arg0;\n  assign result[0] = result[1];\nendmodule\n",
+    "module {\n  moore.module @outline_control_3(out result : !moore.l2, in %arg0 : !moore.l1) {\n    %result = moore.net wire : <l2>\n    %arg0_0 = moore.net name \"arg0\" wire : <l1>\n    %0 = moore.extract_ref %result from 1 : <l2> -> <l1>\n    %1 = moore.read %arg0_0 : <l1>\n    moore.assign %0, %1 : l1\n    %2 = moore.extract_ref %result from 0 : <l2> -> <l1>\n    %3 = moore.read %result : <l2>\n    %4 = moore.extract %3 from 1 : l2 -> l1\n    moore.assign %2, %4 : l1\n    %5 = moore.read %result : <l2>\n    moore.assign %arg0_0, %arg0 : l1\n    moore.output %5 : !moore.l2\n  }\n}\n",
+    "module {\n  hw.module @outline_control_3(out result : i2, in %arg0 : i1) {\n    %false = hw.constant false\n    %0 = comb.concat %false, %3 : i1, i1\n    %1 = comb.concat %arg0, %false : i1, i1\n    %2 = comb.or %1, %0 : i2\n    %3 = comb.extract %2 from 1 : (i2) -> i1\n    hw.output %2 : i2\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

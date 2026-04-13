@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2363,
+  "issue_url": "https://github.com/llvm/circt/issues/2363",
+  "title": "[ExportVerilog] Weird wire indent level",
+  "body": "For the following IR, \r\n```mlir\r\n// ./bin/circt-opt foo.mlir -export-verilog\r\nhw.module @Foo(%a: i1, %b: i1) -> (r1: i1, r2: i1) {\r\n  %0 = comb.icmp eq %a, %b : i1\r\n  hw.output %0, %0 : i1, i1\r\n}\r\n```\r\nExportVerilog will generate\r\n```sv \r\nmodule Foo(     // foo.mlir:2:3\r\n  input  a, b,\r\n  output r1, r2);\r\n\r\nwire _T = a == b;       // foo.mlir:3:10\r\n  assign r1 = _T;       // foo.mlir:4:5\r\n  assign r2 = _T;       // foo.mlir:4:5\r\nendmodule\r\n```\r\nThe indent level of `_T` should be the same as assignments. Interestingly, the following works correctly. \r\n```mlir\r\nhw.module @Foo(%a: i1, %b: i1) -> (r1: i1, r2: i1) {\r\n    %0 = comb.icmp eq %a, %b : i1\r\n    %reg = sv.reg  : !hw.inout<i1>\r\n    sv.initial  {\r\n      sv.if %a  {\r\n        sv.passign %reg, %0 : i1\r\n      }\r\n    }\r\n    hw.output %0, %0 : i1, i1\r\n }\r\n```\r\n```sv\r\nmodule Foo(     // foo.mlir:2:3\r\n  input  a, b,\r\n  output r1, r2);\r\n\r\n  reg reg_0;    // foo.mlir:4:12\r\n\r\n  wire _T = a == b;     // foo.mlir:3:10\r\n  initial begin // foo.mlir:5:5\r\n    if (a)      // foo.mlir:6:6\r\n      reg_0 <= a == b;  // foo.mlir:7:13, :8:8\r\n  end // initial\r\n  assign r1 = _T;       // foo.mlir:11:5\r\n  assign r2 = _T;       // foo.mlir:11:5\r\nendmodule\r\n```\r\n\r\nI guess this comes from https://github.com/llvm/circt/commit/d45862380c6789f72e8fa92a6c33a188bcd1cf9d. I think `blockDeclarationIndentLevel` is not correctly initialized somehow. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-17",
+  "closed_at": "2021-12-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

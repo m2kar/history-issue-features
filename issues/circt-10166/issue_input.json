@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 10166,
+  "issue_url": "https://github.com/llvm/circt/pull/10166",
+  "title": "DRAFT: [3/2] [Moore] Lower class object access and virtual dispatch through LLVM memory",
+  "body": "Introduce an explicit LLVM-backed object-memory path for Moore classes and\r\ncarry virtual dispatch cleanly through `convert-moore-to-core` and\r\n`convert-to-llvm`.\r\n\r\nThis change keeps class handles as `!moore.class<...>` values and class\r\nvariables as `!moore.ref<class<...>>`, while using `!moore.ptr<T>` for\r\naddresses into object storage. `moore.class.property_ref` now models field\r\naddress computation explicitly, and Moore-to-core lowers class field reads\r\nand writes through LLVM pointer semantics instead of LLHD probing.\r\n\r\nOn the lowering side, class objects use the stabilized header ABI with\r\nRTTI and vtable metadata, symbolic vtables are materialized as LLVM\r\nglobals, and virtual calls lower to an explicit vtable slot lookup plus\r\nindirect `llvm.call`. Class-handle variables no longer introduce extra\r\nheap allocation in `VariableOpConversion`; uninitialized handles become\r\nnull LLVM pointers and reads of handle values are treated as identity on\r\nthe LLVM path.\r\n\r\nThe importer and verifier logic are updated to understand the split\r\nbetween variable refs and object pointers, and the test suite is refreshed\r\nto use the current explicit assembly syntax for `moore.read` and the\r\nassignment ops.\r\n\r\nAdd and expand coverage for:\r\n- import of class field accesses using `moore.ptr`\r\n- nontrivial virtual method bodies with real arithmetic/control-flow\r\n- end-to-end virtual dispatch through `circt-verilog --ir-moore`,\r\n  `--moore-create-vtables`, `--convert-moore-to-core`, and `--convert-to-llvm`\r\n- parser/roundtrip tests for the updated Moore assignment assembly forms",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-04-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

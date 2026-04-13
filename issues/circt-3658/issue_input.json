@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3658,
+  "issue_url": "https://github.com/llvm/circt/pull/3658",
+  "title": "[FIRRTL] Subword assignment support via rewriting to read-modify-write",
+  "body": "This implements subword assignment by allowing the `BitsPrimOp` as a sink and then rewriting connections to it during the expand-whens pass.\r\n\r\nWhen a value is subword-assigned without having a previous connection, an \"uninitialized\" wire is created to represent the previous value. During initialization checking, the checker makes sure that no uninitialized wires are reachable from any connection in the module. Some additional canonicalizations of the bits primop are needed to make sure that uses of uninitialized wires are eliminated if all bits are assigned. The canonicalizations are implemented in `ExpandWhens` because they are necessary for the pass. I also added them to `FIRRTLFolds.cpp` because they might be generally useful, but I'm not sure how to use the ones from `FIRRTLFolds` during expand-whens because I couldn't figure out how to run canonicalizations during a pass rather than as a separate pass. There's probably a better solution here, so let me know if there's something I should change.\r\n\r\nThe parser has also been modified to support new syntax for `BitsPrimOp`: `x[hi:lo]` is equivalent to `bits(x, hi, lo)`, and `x[i]` is equivalent to `bits(x, i, i)`. I'm not sure if I made this modification in the best way, or if we should use this new syntax at all, rather than just supporting `bits(x, hi, lo) <=` (currently this syntax is also supported). It uses the subaccess cache for the single bit index, but not for the range index.\r\n\r\nThis implementation does not accept any combinational loops.\r\n\r\nLet me know what you think, thanks!",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-08-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

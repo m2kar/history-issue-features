@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1187,
+  "issue_url": "https://github.com/llvm/circt/issues/1187",
+  "title": "FIRRTL Error involving Division Fold",
+  "body": "The following circuit crashes `firtool`. \r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input divisor: UInt<1>\r\n    output result: UInt<0>\r\n\r\n    wire dividend: UInt<0>\r\n    dividend is invalid\r\n\r\n    result <= div(dividend, divisor)\r\n```\r\n\r\nThe issue is that `div(x, invalid)` or `div(invalid, x)` is trying to fold to `UInt<$width>(0)` where `$width` is the result type. This is the usual problem where `APInt` can't have a zero width.\r\n\r\nThis started to show up on `circt/perf`'s test1 because inter-module constant propagation got turned on in e73115d5969905b2def85af062d3feb15c204003 which tickles this for test1. The minimal circuit above hits the same code path but goes through the `SimpleCanonicalizer` which means that this will fail even without/before e73115d5969905b2def85af062d3feb15c204003.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-02",
+  "closed_at": "2021-06-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

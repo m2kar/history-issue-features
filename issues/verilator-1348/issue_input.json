@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1348,
+  "issue_url": "https://github.com/verilator/verilator/issues/1348",
+  "title": "C++ unordered_set hash/comparator requirements",
+  "body": "---\n\n\nAuthor Name: **Kevin Kiningham** (@kkiningh)\nOriginal Redmine Issue: 1348 from https://www.veripool.org\n\n\n\n---\n\nBoth the hash and comparator functors provided to std::unordered_set must be copy constructible per the C++ standard. Otherwise, compiling verilator with libc++ fails with the following errors\r\n\r\n\"error: static_assert failed \"the specified hash does not meet the Hash requirements\"\"\r\n\"error: static_assert failed \"the specified comparator is required to be copy constructible\"\"\r\n\r\nThe error goes away if both EqSenTree and HashSenTree are made copyable.\r\n\r\nAlso, for some reason std::less<ScoreboardTestElem> and std::less<MergeCandidate> are considered non-invokable in SortByValueMap::removeKeyFromOldVal, which causes a warning. I'm not totally sure why this is since it looks like both have a const operator< member function defined.\r\n\r\nYou can check for this by adding the following static assert to the first line of removeKeyFromOldVal.\r\n\r\nstatic_assert(std::__invokable<const T_KeyCompare &, const T_Key &, const T_Key &>::value, \"Not invokable\");\r\n\r\n(In c++17 you can use std::is_invocable instead of std::__invokable)\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2018-09-16",
+  "closed_at": "2018-10-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

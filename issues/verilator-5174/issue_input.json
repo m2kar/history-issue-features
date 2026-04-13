@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5174,
+  "issue_url": "https://github.com/verilator/verilator/issues/5174",
+  "title": "Poor performance in large concat tree",
+  "body": "I encountered poor performance when using Verilator to convert assignments between large bit width signals. This is the example below. In the generated code, a large number of temporary variables, \"__Vtemp_+<number>\", will be used (the number will increase from 249 to 1913, and the bit width will increase from 2048 to 15360), and the VL_CONCAT_WIW function will be used extensively (approximately 1665 times) to continuously perform memcpy and concatenation from __ Vtemp_249, all the way to __Vtemp_1913, and finally to the final __Vcellout_ shift_exceed_ch_sig_merge. The intermediate memcpys are too time-consuming, resulting in poor execution performance of the entire program.\r\n\r\n# example\r\n```verilog\r\n// shift_exceed.v\r\nmodule shift_exceed\r\n#(\r\n    parameter CH_NUM = 640,\r\n    parameter CN_W = 22\r\n)(\r\n    input [CH_NUM-1:0] pd_fp_ind,\r\n    input [CH_NUM-1:0] ch_en,\r\n    input [CH_NUM * CN_W-1:0] ch_in,\r\n    output reg [CH_NUM * (CN_W+2) - 1:0] ch_sig_merge\r\n);\r\n\r\ngenvar i1;\r\ngenerate\r\nfor (i1 = 0; i1 < CH_NUM; i1=i1+1) begin: GEN_SIG_MERGE\r\n    assign ch_sig_merge[i1 * (CN_W+2) +: (CN_W+2) ] = {\r\n            pd_fp_ind[i1],\r\n            ch_en[i1],\r\n            ch_in[i1 * CN_W +: CN_W]\r\n        };\r\nend \r\nendgenerate\r\n\r\nendmodule\r\n```\r\n# command line\r\n`verilator --sc --debug --gdbbt --Wno-fatal ../shift_exceed.v`\r\n\r\n# verilator --version\r\nVerilator 5.024 2024-04-05 rev UNKNOWN.REV\r\nI have already tried it with the git master version. The problem still exists.\r\n\r\n#  OS distribution \r\nCentOS Linux release 7.9.2009 (Core)\r\n\r\n# May we assist you in trying to fix this in Verilator yourself?\r\nYes, please. I haven't found the root cause yet, I don't know how to fix it.",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-12",
+  "closed_at": "2024-11-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

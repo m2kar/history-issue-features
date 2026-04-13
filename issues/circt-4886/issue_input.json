@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4886,
+  "issue_url": "https://github.com/llvm/circt/issues/4886",
+  "title": "[FIRRTL] InferResets Not Duplicating Modules When Necessary",
+  "body": "In the following FIRRTL, we have a module instantiated twice, once in a FullAsyncReset domain, and once not in any domain.\r\n\r\n``` firrtl\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.FullAsyncResetAnnotation\",\r\n    \"target\":\"~Top|FullAsyncWrapper>rf_reset\"\r\n  }\r\n]]\r\n  module Child :\r\n    input clock : Clock\r\n    input foo : UInt<8>\r\n    output bar : UInt<8>\r\n\r\n    reg r : UInt<8>, clock\r\n    r <= foo\r\n    bar <= r\r\n\r\n  module FullAsyncWrapper :\r\n    input clock : Clock\r\n    input rf_reset : AsyncReset\r\n    input foo : UInt<8>\r\n    output bar : UInt<8>\r\n\r\n    inst c of Child\r\n    c.clock <= clock\r\n    c.foo <= foo\r\n    bar <= c.bar\r\n\r\n  module Top :\r\n    input clock : Clock\r\n    input rf_reset : AsyncReset\r\n    input foo : UInt<8>\r\n    output bar : UInt<8>\r\n\r\n    inst wrap of FullAsyncWrapper\r\n    wrap.clock <= clock\r\n    wrap.rf_reset <= rf_reset\r\n    wrap.foo <= foo\r\n\r\n    inst child of Child\r\n    child.clock <= clock\r\n    child.foo <= foo\r\n\r\n    bar <= and(wrap.bar, child.bar)\r\n```\r\n\r\nRun this with firtool 1.36.0 and you will get\r\n```\r\ntest.fir:7:10: error: module 'Child' instantiated in different reset domains\r\n  module Child :\r\n         ^\r\ntest.fir:7:10: note: see current operation: \r\n\"firrtl.module\"() ({\r\n^bb0(%arg0: !firrtl.clock, %arg1: !firrtl.uint<8>, %arg2: !firrtl.uint<8>):\r\n  %0 = \"firrtl.reg\"(%arg0) {annotations = [], name = \"r\", nameKind = #firrtl<name_kind droppable_name>} : (!firrtl.clock) -> !firrtl.uint<8>\r\n  \"firrtl.strictconnect\"(%0, %arg1) : (!firrtl.uint<8>, !firrtl.uint<8>) -> ()\r\n  \"firrtl.strictconnect\"(%arg2, %0) : (!firrtl.uint<8>, !firrtl.uint<8>) -> ()\r\n}) {annotations = [], portAnnotations = [], portDirections = -4 : i3, portLocations = [loc(\"test.fir\":8:11), loc(\"test.fir\":9:11), loc(\"test.fir\":10:12)], portNames = [\"clock\", \"foo\", \"bar\"], portSyms = [], portTypes = [!firrtl.clock, !firrtl.uint<8>, !firrtl.uint<8>], sym_name = \"Child\", sym_visibility = \"private\"} : () -> ()\r\ntest.fir:22:5: note: instance 'wrap/c' is in reset domain rooted at 'rf_reset' of module 'FullAsyncWrapper'\r\n    inst c of Child\r\n    ^\r\ntest.fir:18:11: note: reset domain 'rf_reset' of module 'FullAsyncWrapper' declared here:\r\n    input rf_reset : AsyncReset\r\n          ^\r\ntest.fir:38:5: note: instance 'child' is in no reset domain\r\n    inst child of Child\r\n    ^\r\n```\r\n\r\nThis is a very similar issue to https://github.com/llvm/circt/issues/4586",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-24",
+  "closed_at": "2026-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

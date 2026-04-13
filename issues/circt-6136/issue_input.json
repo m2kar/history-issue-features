@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6136,
+  "issue_url": "https://github.com/llvm/circt/issues/6136",
+  "title": "[LowerSeqToSV] struct_create with clock field produces invalid IR",
+  "body": "Input:\r\n```mlir\r\nmodule {\r\n  hw.module @ClockAgg(%c: !hw.struct<clock: !seq.clock>) -> (oc: !hw.struct<clock: !seq.clock>) {\r\n    %clock = hw.struct_extract %c[\"clock\"] : !hw.struct<clock: !seq.clock>\r\n    %0 = hw.struct_create (%clock) : !hw.struct<clock: !seq.clock>\r\n    hw.output %0 : !hw.struct<clock: !seq.clock>\r\n  }\r\n}\r\n```\r\n\r\n`circt-opt --lower-seq-to-sv clock-agg.mlir`\r\n\r\n```\r\nclock-agg.mlir:4:10: error: 'hw.struct_create' op structure field `\"clock\"` type does not match\r\n    %0 = hw.struct_create (%clock) : !hw.struct<clock: !seq.clock>\r\n         ^\r\nclock-agg.mlir:4:10: note: see current operation: %1 = \"hw.struct_create\"(%0) : (i1) -> !hw.struct<clock: !seq.clock>\r\n```\r\n\r\nCrafted example after encountering error \"in the wild\" with `-preserve-aggregate=all`.  Here's a FIRRTL snippet this is reachable from, FWIW, using `-preserve-aggregate=all -scalarize-top-module=false`:\r\n\r\n```firrtl\r\ncircuit ClockAgg:\r\n  module ClockAgg:\r\n    input c: {clock: Clock}\r\n    output oc: {clock: Clock}\r\n    oc.clock <= asClock(asUInt(c.clock))\r\n```\r\n\r\nThe above FIRRTL works in 1.53.0 but produces the above in 1.54.0 and on main.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-15",
+  "closed_at": "2023-09-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

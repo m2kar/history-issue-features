@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5109,
+  "issue_url": "https://github.com/verilator/verilator/issues/5109",
+  "title": "Compilation error on classes with names differing in case",
+  "body": "On current master, as well as older versions, Verilator runs into a compilation error when compiling any code like the following:\r\n```sv\r\nclass Cls;endclass\r\nclass CLS;endclass\r\n```\r\n\r\nThe primary reason for that is that the class names are reflected in the file names of the headers that need to be both included from `V*__Syms.h`:\r\n```c\r\n#include \"Vt___024unit__03a__03aCls__Vclpkg.h\"\r\n#include \"Vt___024unit__03a__03aCLS__Vclpkg.h\"\r\n```\r\nThe above would be a problem in itself already on case-insensitive filesystems (including NTFS), but on binary-safe filesystems like ext4 it also manifests itself, because the 'include guard' defines in the headers are normalized to upper-case, and therefore become exactly the same:\r\n```c\r\n#ifndef VERILATED_VT___024UNIT__03A__03ACLS__VCLPKG_H_\r\n#define VERILATED_VT___024UNIT__03A__03ACLS__VCLPKG_H_  // guard\r\n```\r\n\r\nIdeally, Verilator should detect the situation and change parts of the file name(s), or just the guard variables, but other options include modifying all the file names proactively (adding a hash or escaping uppercase letters like underscores etc.), or an early warning.\r\n\r\n(loosely related: #2062)",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-09",
+  "closed_at": "2024-07-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

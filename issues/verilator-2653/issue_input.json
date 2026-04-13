@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2653,
+  "issue_url": "https://github.com/verilator/verilator/issues/2653",
+  "title": "Race in similar codes gives different results",
+  "body": "Version: verilator-4.104\r\n\r\nI have 2 tests, the only difference is the assertion of the signal `out`, but the results are different.\r\n\r\n> test1, code:\r\n``` verilog\r\nmodule t (input   clk);\r\n\r\nreg     in;\r\nwire    out;\r\ninteger cyc = 0;\r\n\r\nalways @ (posedge clk) begin\r\n    cyc <= cyc + 1;\r\n    $write(\"cyc = %d  in = %x  out = %x\\n\", cyc, in, out);\r\nend\r\n\r\nalways @ (posedge clk) begin\r\n    if (cyc == 0)\r\n        in <= 1'b1;\r\n    else if (cyc == 1)\r\n        in <= 1'b0;\r\n//    else if (cyc == 2)\r\n//        if (out != 1'b1) $stop;\r\n//    else if (cyc == 3)\r\n//        if (out != 1'b0) $stop;\r\n    else if (cyc == 9)\r\n        $finish;\r\nend\r\n\r\nreg internal;\r\nassign out = internal ^ clk;\r\nalways @ (posedge clk) begin\r\n    internal <= in;\r\nend\r\n\r\nendmodule\r\n```\r\n\r\n> test1, running result:\r\n``` txt\r\ncyc =           0  in = 0  out = 1\r\ncyc =           1  in = 1  out = 1\r\ncyc =           2  in = 0  out = 0\r\ncyc =           3  in = 0  out = 1\r\ncyc =           4  in = 0  out = 1\r\ncyc =           5  in = 0  out = 1\r\ncyc =           6  in = 0  out = 1\r\ncyc =           7  in = 0  out = 1\r\ncyc =           8  in = 0  out = 1\r\ncyc =           9  in = 0  out = 1\r\n``` \r\n--- \r\n> test2, code:\r\n``` verilog\r\nmodule t (input   clk);\r\n\r\nreg     in;\r\nwire    out;\r\ninteger cyc = 0;\r\n\r\nalways @ (posedge clk) begin\r\n    cyc <= cyc + 1;\r\n    $write(\"cyc = %d  in = %x  out = %x\\n\", cyc, in, out);\r\nend\r\n\r\nalways @ (posedge clk) begin\r\n    if (cyc == 0)\r\n        in <= 1'b1;\r\n    else if (cyc == 1)\r\n        in <= 1'b0;\r\n    else if (cyc == 2)\r\n        if (out != 1'b1) $stop;\r\n    else if (cyc == 3)\r\n        if (out != 1'b0) $stop;\r\n    else if (cyc == 9)\r\n        $finish;\r\nend\r\n\r\nreg internal;\r\nassign out = internal ^ clk;\r\nalways @ (posedge clk) begin\r\n    internal <= in;\r\nend\r\n\r\nendmodule\r\n```\r\n\r\n> test2, running result:\r\n```txt\r\ncyc =           0  in = 0  out = 0\r\ncyc =           1  in = 1  out = 0\r\ncyc =           2  in = 0  out = 1\r\ncyc =           3  in = 0  out = 0\r\ncyc =           4  in = 0  out = 0\r\ncyc =           5  in = 0  out = 0\r\ncyc =           6  in = 0  out = 0\r\ncyc =           7  in = 0  out = 0\r\ncyc =           8  in = 0  out = 0\r\ncyc =           9  in = 0  out = 0\r\n```\r\n\r\nI extracted this test from your test `t_gen_intdot`.\r\nAs you can see, test2 just uncomment the assertion code, and the output of the signal `out` are opposite.\r\n\r\nWhat do you think of this results of tests?\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-23",
+  "closed_at": "2020-11-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

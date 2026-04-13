@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2153,
+  "issue_url": "https://github.com/verilator/verilator/issues/2153",
+  "title": "Docker container not returning actual exit code",
+  "body": "When running verilator in docker (from hub.docker.com/r/verilator/verilator) the exit code is always set to 1 regardless success or not. It seems like the wrapper script is the culprit. (I know I can override the entrypoint and run the executable directly without the wrapper, but it'd be nice to always have the proper exit code by default)\r\n\r\nWith these two test files\r\n```\r\nMatsMBP:status mats$ cat ok.v\r\nmodule top(input a, output y);\r\nassign y=~a;\r\nendmodule\r\n\r\nMatsMBP:status mats$ cat err.v\r\nmodule top(input a, output y);\r\nassign y=~b;\r\nendmodule\r\n```\r\n\r\nI get the correct exit codes when I run a local installation at my laptop.\r\n\r\n```\r\nMatsMBP:status mats$ /usr/local/Cellar/verilator/4.020/bin/verilator_bin --lint-only ok.v ; echo $?\r\n0\r\n\r\nMatsMBP:status mats$ /usr/local/Cellar/verilator/4.020/bin/verilator_bin --lint-only err.v ; echo $?\r\n%Error: err.v:2: Can't find definition of variable: 'b'\r\nassign y=~b;\r\n          ^\r\n%Error: Exiting due to 1 error(s)\r\n10\r\n```\r\n\r\nBut when running in the container I always get 1 as the exit code\r\n\r\n```\r\nMatsMBP:status mats$ docker run --rm -w/work -v${PWD}/:/work verilator/verilator --lint-only ok.v ; echo $?\r\n1\r\n\r\nMatsMBP:status mats$ docker run --rm -w/work -v${PWD}/:/work verilator/verilator --lint-only err.v ; echo $?\r\n%Error: err.v:2: Can't find definition of variable: 'b'\r\nassign y=~b;\r\n          ^\r\n%Error: Exiting due to 1 error(s)\r\n1\r\n```\r\n\r\n\r\n\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: invoking/options"
+  ],
+  "state": "closed",
+  "created_at": "2020-02-06",
+  "closed_at": "2020-03-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

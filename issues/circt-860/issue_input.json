@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 860,
+  "issue_url": "https://github.com/llvm/circt/issues/860",
+  "title": "[FIRRTL] crash in ExportVerilog: use-before-def creating a wire with incorrect type",
+  "body": "```mlir\r\n// ./bin/firtool ./crash-inout.mlir --verilog\r\nrtl.module @ArrayLHS(%clock: i1) -> () {\r\n  %false = rtl.constant false\r\n  sv.alwaysff(posedge %clock)  {\r\n    sv.passign %reg, %false : i1\r\n  }\r\n  %reg = sv.reg  : !rtl.inout<i1>\r\n}\r\n```\r\nSince `%reg` is used before its defined, the code is attempting to create a wire for it.  This is resulting in a wire of type `rtl.inout<inout<i1>>`:\r\n```\r\n<unknown>:0: error: invalid element for rtl.inout type\r\n\r\n    frame #3: 0x00007fff203f29d6 libsystem_c.dylib`__assert_rtn + 314\r\n  * frame #4: 0x00000001036a2904 libCIRCTRTL.dylib`circt::rtl::InOutType mlir::detail::StorageUserBase<circt::rtl::InOutType, mlir::Type, circt::rtl::detail::InOutTypeStorage, mlir::detail::TypeUniquer>::get<mlir::Type>(ctx=0x00007ffeefbff470, args=Type @ 0x00007ffeefbfdce0) at StorageUniquerSupport.h:96:5\r\n    frame #5: 0x00000001036a2865 libCIRCTRTL.dylib`circt::rtl::InOutType::get(context=0x00007ffeefbff470, elementType=Type @ 0x00007ffeefbfdd10) at RTLTypes.cpp.inc:146:10\r\n    frame #6: 0x00000001032695f9 libCIRCTSV.dylib`circt::rtl::InOutType::get(elementType=Type @ 0x00007ffeefbfdd40) at RTLTypes.h.inc:65:14\r\n    frame #7: 0x000000010326d525 libCIRCTSV.dylib`circt::sv::WireOp::build(odsBuilder=0x00007ffeefbfe108, odsState=0x00007ffeefbfded0, elementType=Type @ 0x00007ffeefbfddc8, name=StringAttr @ 0x00007ffeefbfddc0) at SVOps.cpp:833:21\r\n    frame #8: 0x0000000100228e5c libCIRCTExportVerilog.dylib`circt::sv::WireOp mlir::OpBuilder::create<circt::sv::WireOp, mlir::Type>(this=0x00007ffeefbfe108, location=Location @ 0x00007ffeefbfdec0, args=0x00007ffeefbfe0b0) at Builders.h:398:5\r\n    frame #9: 0x0000000100228aec libCIRCTExportVerilog.dylib`circt::sv::WireOp mlir::ImplicitLocOpBuilder::create<circt::sv::WireOp, mlir::Type>(this=0x00007ffeefbfe108, args=0x00007ffeefbfe0b0) at ImplicitLocOpBuilder.h:67:23\r\n    frame #10: 0x000000010021f34a libCIRCTExportVerilog.dylib`lowerUsersToTemporaryWire(op=0x000000010fc36300) at ExportVerilog.cpp:2505:28\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-31",
+  "closed_at": "2021-03-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

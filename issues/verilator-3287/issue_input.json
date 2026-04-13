@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3287,
+  "issue_url": "https://github.com/verilator/verilator/issues/3287",
+  "title": "Optimize AstAssignPre into initialization",
+  "body": "Currently, Verilator translates non blocking assignments into the folowing general sequence:\r\n\r\n```\r\nvoid _eval() {\r\n   vlSyms->__Vdly__x = vlSyms->x;\r\n    <possible, but not necesasry assignments to vlSyms->__Vdly__x>;\r\n   vlSyms->x = vlSyms->__Vdly_x;\r\n}\r\n````\r\n\r\nThere are no assignments to the `__Vdly__*` signals anywhere outside of `_eval`, so the initial `__Vdly__x = x;` (the `AstAssignPre` created in V3Delayed) is redundant except on the very first invocation. We can instead execute the `__Vdly__x = x;` at the end of the initial settle phase, and subsequently remove it from `_eval`, saving one variable copy.\r\n\r\nNote: Currently `__Vdly__x` might have been converted into a function local, which is no longer possible with this optimization as we would then rely on the `__Vdly__*` variables being persistent across invocations of `_eval`.\r\n\r\nNote: Right now, non blocking assignments to arrays are implemented differently (as if they were memories) and this does not apply.\r\n\r\nNote: If the variable `x` is also assigned via blocking assignments, then we need to keep the current behaviour.\r\n",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "open",
+  "created_at": "2022-01-21",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

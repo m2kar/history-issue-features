@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4446,
+  "issue_url": "https://github.com/verilator/verilator/pull/4446",
+  "title": "Optimize program size by refactoring error reporting routines",
+  "body": "If you remove all the code about error reporting/assertions (like `v3error`/`UASSERT_OBJ`/...), you may find that the size of the verilator_bin drops from ~18MB to ~12.3MB, which is ~30% of the original size! Disassembler shows that a single `v3fatalSrc` produces about 264 bytes of the code. For example, a single `nodep->v3fatalSrc(\"...\");` in [V3LinkInc.cpp](https://github.com/verilator/verilator/blob/e24197fd16e63b4dede06d46adc33129d38db67c/src/V3LinkInc.cpp#L171) is compiled into the assembly shows in the following image. It contains code that acquires the V3Error::s().m_mutex, formats the output text with streaming operators and so on...\r\n\r\n![before](https://github.com/verilator/verilator/assets/4056887/77384466-ac1f-43da-8aa1-bca929db0c7e)\r\n\r\nA [lambda](https://github.com/verilator/verilator/blob/e24197fd16e63b4dede06d46adc33129d38db67c/src/V3Error.h#L554) passed to `m_mutex.lockCheckStopRequest` is also generated for each call. These greatly increase the program size. It's very inefficient.\r\n\r\nAfter this patch the acquiring and releasing of the lock take place in `V3Error::v3errorAcquireLock()` (called by `V3Error::v3errorPrep`) and `V3Error::v3errorEnd` respectively, so it won't be inlined into every function call. It also guarantees that `V3ErrorGuarded::v3errorStr()` and `V3ErrorGuarded::v3errorEnd()` are called with the lock acquired. The streaming operation to format the output text is also optimized carefully. Now the generated code looks much better.\r\n\r\n![after](https://github.com/verilator/verilator/assets/4056887/5437e27a-5417-4f99-a52f-be1c5dcaf066)\r\n\r\nThe binary size is quite smaller than before.\r\n\r\nBefore\r\n\r\n```\r\n 18342000 verilator_bin\r\n100197376 verilator_bin_dbg\r\n```\r\n\r\nNow\r\n\r\n```\r\n 13619032 verilator_bin\r\n 82263520 verilator_bin_dbg\r\n```\r\n\r\nBesides, it almost doubles the speed of the building process.\r\n\r\nBefore\r\n```\r\n$ time make -j20\r\nmake -j20  1799.37s user 57.01s system 1607% cpu 1:55.49 total\r\n```\r\n\r\nNow\r\n```\r\n$ time make -j20\r\nmake -j20  1067.50s user 40.01s system 1508% cpu 1:13.40 total\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-28",
+  "closed_at": "2023-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

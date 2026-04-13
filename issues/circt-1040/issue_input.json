@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1040,
+  "issue_url": "https://github.com/llvm/circt/pull/1040",
+  "title": "Infrastructure for static operation schedulers",
+  "body": "This is a rough draft of an infrastructure for static schedulers; see also the discussion in the [forum](https://llvm.discourse.group/t/generic-interface-for-operation-schedulers/3410).\r\n\r\nScheduling happens as part of the conversion from an untimed, graph-like IR to a timed representation. In this scenario, the operation with the graph to be scheduled \"knows\" the semantics of the graph, i.e. the dependences between the nested operations. In contrast, the conversion pass \"knows\" the operators available in the target IR, and can choose a scheduling algorithm with the desired properties (resource-constrained, pipelined, etc.) and objectives.\r\n\r\nCurrently, the following pieces exist in this PR:\r\n- A dialect `sched` to tie everything together.\r\n- A dialect attribute `OperatorInfo`, which represents the (abstract) properties of an operator, e.g. from your HLS library. \r\n- An operation interface `SchedulableOpInterface`, which declares a method `constructSchedulingProblem`.\r\n- A class `SchedulerBase` which acts as the common interface for all concrete scheduler implementations, and a very basic `ASAPScheduler` to illustrate the concept.\r\n\r\nIn the proposed infrastructure, the graph op implements the `SchedulableOpInterface`. The conversion pass instantiates a concrete scheduler implementation, and passes it to the schedulable op's `constructSchedulingProblem` method, which registers all operations and dependences necessary for scheduling. Suitable `OperatorInfo`s can be attached to graph operations by a separate preparation pass, or registered in the scheduling problem on the fly.\r\n\r\nTo demonstrate all this, I implemented a pass `-schedule-pipeline`, which schedules the operation inside of a `static logic.pipeline` operation with dummy latencies of 1. The computed start time is attached as an integer attribute (see `test/Dialect/Scheduling/asap-schedule.mlir`.\r\n\r\n**TODO:**\r\n- I'd expect a common use case for the `SchedulableOpInterface` to be operations with graph regions in which the operations shall be scheduled according to the SSA graph. The construction of the scheduling problem thus could be reused in form of a trait.\r\n- The `affine.for` is a prime suspect for scheduling; I'll check how well it fits in the proposed infrastructure.\r\n- A hierarchy of utilities for different categories of schedulers, e.g. a `ModuloSchedulerBase` which provides a helper to compute the minimum II.\r\n- More properties in the `OperatorInfo` (blocking time, delays, resource demands), creation methods for common categories (e.g. `createFullyPipelinedOperator(...)`), and a compact textural representation for the attribute.\r\n- More schedulers :wink:",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-11",
+  "closed_at": "2021-05-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

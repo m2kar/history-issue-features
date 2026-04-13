@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1117,
+  "issue_url": "https://github.com/llvm/circt/issues/1117",
+  "title": "[FIRRTL] width infer (dshl) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output _tmp55: SInt<518>\r\n    wire tmp30: SInt\r\n    tmp30 <= asSInt(SInt(-130))\r\n    _tmp55 <= dshl(SInt(\"h-20\"), asUInt(tmp30))\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\n// Standard header to adapt well known macros to our needs.\r\n\r\nmodule top_mod(\r\n  output [517:0] _tmp55);\r\n\r\n  assign _tmp55 = 518'h0;\t// a_top_mod.fir:2:3, :6:12\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output [517:0] _tmp55\r\n);\r\n  assign _tmp55 = -518'sh8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\r\n    ;\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 131 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-21",
+  "closed_at": "2021-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

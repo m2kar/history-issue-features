@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2218,
+  "issue_url": "https://github.com/llvm/circt/issues/2218",
+  "title": "[firtool] Usage of \"-\" for default output directory and passes that write files",
+  "body": "Going back to at least https://github.com/llvm/circt/commit/0f98ce99d, the default output directory for `firtool` is set to `\"-\"`.  This can cause weird interactions with passes that are trying to write output files, like export module hierarchy.\r\n\r\nE.g., if if you run the following export module hierarchy test through firtool:\r\n\r\n```mlir\r\nhw.module @InnerModule(%in: i1) -> (out: i1) {\r\n  hw.output %in : i1\r\n}\r\n\r\nhw.module @MainDesign(%in: i1) -> (out: i1) {\r\n  %0 = hw.instance \"inner\" @InnerModule(in: %in: i1) -> (out: i1)\r\n  hw.output %0 : i1\r\n}\r\n\r\nhw.module @TestHarness() attributes {firrtl.moduleHierarchyFile = #hw.output_file<\"testharness_hier.json\", excludeFromFileList>} {\r\n  %0 = hw.constant 1 : i1\r\n  hw.instance \"main_design\" @MainDesign(in: %0: i1) -> (out: i1)\r\n}\r\n```\r\n\r\nUsing `firtool Foo.mlir -verilog -export-module-hierarchy` you wind up with an output in the directory `-`:\r\n\r\n```\r\n# tree -- -\r\n-\r\n└── testharness_hier.json\r\n\r\n0 directories, 1 file\r\n```\r\n\r\nWe should do something different here, e.g., the default output directory should be \".\" or we should interpret \"-\" to do something different, like emit to stdout and show `// ---- FILE: foobar.json` visual delimiters.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-11-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

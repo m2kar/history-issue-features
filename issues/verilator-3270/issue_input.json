@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3270,
+  "issue_url": "https://github.com/verilator/verilator/issues/3270",
+  "title": "Verilator forces all members of an interface to have either blocked or non-blocking assignments",
+  "body": "Verilator linter marks it as an error when a register is used in both blocked and non-blocking assignments. That is fine. But, when a System Verilog interface is comprised of many logic elements, I think it is legit to have some of them use blocked assignments while others use non-blocking.\r\n\r\nFor instance, when parsing the files in the [fx68k project](https://github.com/ijor/fx68k), there is an interface called *s_nanod*:\r\n```\r\ntypedef struct {\r\n\t// ... other definitions\r\n\tlogic updSsw;\r\n\tlogic ryl2ab;\r\n} s_nanod;\r\n```\r\nAnd Verilator complaints because of this:\r\n```\r\n%Error-BLKANDNBLK: ../../../../modules/fx68k/fx68k.sv:293:10: Unsupported: Blocked and non-blocking assignments to same variable: 'jtcop_game.u_main.u_cpu.u_cpu.Nanod'\r\n  293 |  s_nanod Nanod;\r\n      |          ^~~~~\r\n                   ../../../../modules/fx68k/fx68k.sv:790:9: ... Location of blocking assignment\r\n  790 |  assign Nanod.updSsw = Nanod.aob2Ab;\r\n      |         ^~~~~\r\n                   ../../../../modules/fx68k/fx68k.sv:917:4: ... Location of nonblocking assignment\r\n  917 |    Nanod.ryl2ab <= Nanod.reg2abl & !ablSpecial & nanoLatch[ NANO_RXL_DBL];\r\n      |    ^~~~~\r\n```\r\nThe error applies to the interface variable _Nanod_, but it arises from individual elements using different assignments. Each one of them only uses one type of assignment.\r\n\r\nI believe this use is correct even though Verilator marks this as an error.",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-05",
+  "closed_at": "2022-01-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

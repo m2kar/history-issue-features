@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7312,
+  "issue_url": "https://github.com/llvm/circt/pull/7312",
+  "title": "[OM] Introduce API to interact with class fields",
+  "body": "The goal is to introduce an abstraction that allows us to change how fields are represented under the hood.  This is a step towards addressing https://github.com/llvm/circt/issues/7078 which aims to use a terminator op to declare and store the field name/type mapping.  With this API in place, we can change how the underlying fields are accessed without having to update the producers/consumers of this information.\r\n\r\nIssues:\r\n* We introduce a `Field` struct to provide the information required by the evaluator.  We could return the FieldOp instead since this just passes through the relevant data, but if we change to fetching this information from the terminator op instead, we'd need to update the consumer code, so introducing a new intermediate type abstracts how the information is stored/fetched (at the cost of introducing a layer of indirection).  If we think this will be a performance issue, we may want to passthrough the underlying representation (currently FieldOp) and update the references when the internal implementation is changed.\r\n* The `addField` API will provide a hook to record field names and types for emitting the final terminator op, however is there a way for the `ClassOp` to run internal code at completion of the `lowerClass` logic? Otherwise, we will need to update the user code to run some kind of terminator function to tell the class to construct the final terminator op. E.g. some call here to \"emit fields\" https://github.com/llvm/circt/blob/e616cf1d327bd6748304f78755b034ba037224f0/lib/Dialect/FIRRTL/Transforms/LowerClasses.cpp#L972\r\n* Is there a way for `getFields` to have a type specified as an \"iterator emitting type Field\"? That is, the interface should be any range iterator over a collection of `Field` members (not necessarily the mapped iterator implementation used here).  Hiding it behind a name helps enforce the interface, but if someone were to expect that mapped iterator type, it would fail if we changed the underlying implementation to emit the fields differently.  I think the appropriate type would be some `Iterator<Field>` type where any iterator producing a Field could be used.  Exploring various ways to approach this using strategies such as iterator_traits etc... did not reveal anything useful yet.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-12",
+  "closed_at": "2024-07-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

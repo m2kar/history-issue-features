@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 755,
+  "issue_url": "https://github.com/llvm/circt/issues/755",
+  "title": "Verilog Or Reduction Improperly Inlines Nots",
+  "body": "Verilog emission is generating things like \"or reduction\" \"not\", e.g., `|~foo` which is invalid Verilog.\r\n\r\nConsider:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(%a: !firrtl.uint<8>, %b: !firrtl.flip<uint<1>>) {\r\n      %0 = firrtl.not %a : (!firrtl.uint<8>) -> !firrtl.uint<8>\r\n      %1 = firrtl.orr %0 : (!firrtl.uint<8>) -> !firrtl.uint<1>\r\n      firrtl.connect %b, %1 : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis produces:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [7:0] a,\r\n  output       b);\r\n\r\n  assign b = |~a;\t// sunder/Foo.fir:2:3, :6:{10,14}\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-11",
+  "closed_at": "2021-03-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

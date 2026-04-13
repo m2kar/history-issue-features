@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2576,
+  "issue_url": "https://github.com/llvm/circt/issues/2576",
+  "title": "[ExportVerilog] Inline duplicable unary op more aggressively",
+  "body": "For the following ir, \r\n```mlir\r\nhw.module @Foo(%a: i2) -> (h:i1, j:i1) {\r\n  %a0 = comb.extract %a from 0 : (i2) -> i1\r\n  hw.output %a0, %a0 : i1, i1\r\n}\r\n\r\n```\r\nThe result is:\r\n```sv\r\nmodule Foo(\t// bar.mlir:1:1\r\n  input  [1:0] a,\r\n  output       h, j);\r\n\r\n  wire _a_0 = a[0];\t// bar.mlir:2:9\r\n  assign h = _a_0;\t// bar.mlir:3:3\r\n  assign j = _a_0;\t// bar.mlir:3:3\r\nendmodule\r\n```\r\nWe can reduce number of temporary wires by inlining a[0].\r\n```sv\r\nassign h = a[0];\r\nassign j = a[0];\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-03",
+  "closed_at": "2022-02-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

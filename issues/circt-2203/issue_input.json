@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2203,
+  "issue_url": "https://github.com/llvm/circt/issues/2203",
+  "title": "[FIRRTL] Cast Folders for Invalid",
+  "body": "Similar to #2197, there are other folds/canonicalizations that are missing that may result in registers hanging around.\r\n\r\nConsider the following.  This is the same as #2197, but just with `asUInt` as opposed to `pad`:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    output a: UInt<1>\r\n\r\n    wire x: SInt<1>\r\n    x is invalid\r\n\r\n    reg b: UInt<1>, clock\r\n    b <= asUInt(x)\r\n    a <= b\r\n```\r\n\r\nMFC produces a register:\r\n\r\n```verilog\r\n  always @(posedge clock)\t// Foo.fir:10:7\r\n    b <= 1'h0;\t// Foo.fir:7:7, :10:7\r\n  assign a = b;\t// Foo.fir:2:10\r\n```\r\n\r\nSFC produces a constant output:\r\n\r\n```verilog\r\n  assign a = 1'h0;\r\n```\r\n\r\nHowever, this is just the tip of the iceberg.  I generated lots of tests of this same form and committed passing and failing test cases in https://github.com/llvm/circt/commit/4e21aebe0b26a4182ad95ef453ea4753618cf605.  When people look at fixing this, they should be able to move tests from the failing file to the passing file.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-18",
+  "closed_at": "2022-07-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

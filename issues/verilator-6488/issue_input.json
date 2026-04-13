@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6488,
+  "issue_url": "https://github.com/verilator/verilator/issues/6488",
+  "title": "Configure script incorrectly detects no C++14 support",
+  "body": "# System Information\nOS: Ubuntu 24.04\nVerilator: v5.040\ngcc/g++: 12\n\n# Bug\nI am attempting to follow the [Git Quick Install](https://verilator.org/guide/latest/install.html#git-quick-install) guide. On my system, the `ld` linker emits a warning about having a different version of libjansson than it expects (this is normal and does not cause issues). However, due to the way that the configure script checks for C++14 support, if any line at all is present in the `conftest.err` file (such as a linker warning), autoconf will interpret this as a failure even though the return code is 0.\n\nI have traced the issue to this autoconf macro: https://github.com/verilator/verilator/blob/v5.040/configure.ac#L289\n\nThe instantiation of this macro eventually leads to the following lines being present in the configure script:\n```\nif ac_fn_cxx_try_link \"$LINENO\"\nthen :\n  _my_result=yes\n      if test -s conftest.err; then\n        if grep -e \"\" conftest.err >/dev/null; then\n          _my_result=no\n        fi\n      fi\nelse $as_nop\n  _my_result=no\nfi\n```\n\nNote the empty string in the grep invocation. I got past this and was able to build verilator by just editing the script manually to not perform this check because I know that my version of g++ is compatible.\n\nI am not sure what the proper way to fix this is because I am not well versed in autoconf.",
+  "labels": [
+    "area: portability"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-25",
+  "closed_at": "2025-09-26",
+  "code_blocks": [
+    "if ac_fn_cxx_try_link \"$LINENO\"\nthen :\n  _my_result=yes\n      if test -s conftest.err; then\n        if grep -e \"\" conftest.err >/dev/null; then\n          _my_result=no\n        fi\n      fi\nelse $as_nop\n  _my_result=no\nfi\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

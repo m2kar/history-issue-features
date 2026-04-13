@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5229,
+  "issue_url": "https://github.com/verilator/verilator/issues/5229",
+  "title": "Internal fault/error if an enum object is referenced in a top module and a module is instantiated using using a parameter",
+  "body": "`m.sv`:\r\n```sv\r\nmodule m #(\r\n    int unsigned N = 8\r\n);\r\n  enum {\r\n    A,\r\n    B\r\n  } st;\r\nendmodule\r\n```\r\n\r\n`tb.sv`:\r\n```sv\r\nmodule tb;\r\n  localparam int unsigned N = 8;\r\n  m #(N) dut();\r\n\r\n  initial wait (dut.st == \r\n  `ifndef SECOND_CASE\r\n      dut.A\r\n  `else\r\n      dut.B\r\n  `endif\r\n      );\r\nendmodule\r\n```\r\n\r\n### First case:\r\n```sh\r\nverilator --binary -MAKEFLAGS '--silent' --quiet -j 0 m.sv tb.sv\r\n```\r\nOutput:\r\n```\r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt                             ^\r\n```\r\n\r\n### Second case:\r\n```sh\r\nverilator --binary -MAKEFLAGS '--silent' --quiet -j 0 +define+SECOND_CASE  m.sv tb.sv\r\n```\r\nOutput:\r\n```\r\n%Error: Internal Error: tb.sv:9:11: ../V3Width.cpp:2425: EnumItemRef can't deref back to an Enum\r\n                                  : ... note: In instance 'tb'\r\n    9 |       dut.B\r\n      |           ^\r\n```\r\n\r\nVersion 5.026 on ArchLinux\r\n\r\nThe following cases do not emit an error:\r\n1. Instantiating `m` without using the parameter port (`m dut;`)\r\n2. removing the  hierarchical name `dut.*` by using `dut.st == 0` instead in the `initial.\r\n3. using `int` instead of `int unsigned` for `N` in both modules\r\n\r\nDoes someone have an idea about where this error comes from?",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-05",
+  "closed_at": "2026-01-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8159,
+  "issue_url": "https://github.com/llvm/circt/pull/8159",
+  "title": "[FIRRTL][LowerToHW] Lower contract ops",
+  "body": "Lower `firrtl.contract` to `verif.contract` ops. The lowering itself is pretty straightforward, since the ops are basically equivalent. The only exception are block arguments in FIRRTL that get replaced with op results in Verif due to the switch from an SSACFG region with dominance to a graph region.\r\n\r\nThe block arguments require a slight change to how nested operations are handled by the pass. Currently, a post-order walk over the operations is used. This is problematic since the parent operation does not get an opportunity to lower its block arguments before its child operations are lowered, which may need access to those block arguments. Switching to a pre-order walk does not work, since that wouldn't allow us to modify the operations during the walk, which we obviously do during the lowering. This commit therefore adds a worklist that tracks operation ranges that are yet to be lowered. The worklist allows parent operations to lower themselves and any of their block arguments, and then add the nested regions, blocks, or operations onto the worklist for lowering. It's basically a pre-walk with the ability to mutate the parent operation before children are lowered.\r\n\r\nBlock arguments are also no longer automatically assumed to be already lowered. This was only valid for modules, since we lower the module ports before we lower the module body. In case of ops like contracts, the block arguments still need to be lowered. To fix this, modules push a 1-1 mapping of their block arguments into the map of lowered values, which allows other ops to provide some other lowering for their block arguments.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-31",
+  "closed_at": "2025-02-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

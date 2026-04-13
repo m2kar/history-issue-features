@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5401,
+  "issue_url": "https://github.com/verilator/verilator/issues/5401",
+  "title": "virtual parameterizable interface reported as never assigned any actual interface",
+  "body": "> Thanks for taking the time to report this.\r\n> \r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n> \r\n\r\n```\r\ninterface bad_if #(A=0, N=0);\r\n  bit [A-1:0] addr;\r\n  bit [(N*8)-1:0] data;\r\nendinterface\r\n\r\nclass bad_class #(A=0, N=0);  \r\n   virtual bad_if #(A, N) vif;\r\n   \r\n   function new(virtual bad_if #(A, N) _vif);\r\n      vif = _vif;\r\n   endfunction  \r\nendclass\r\n\r\nmodule top;\r\n  localparam A = 8;\r\n  localparam N = 2;\r\n\r\n   bad_if #(A, N) the_if();\r\n   bad_class bc_h;\r\n\r\n   initial begin\r\n      bc_h = new(the_if);\r\n      #100;\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\n> What 'verilator' command line do we use to run your example?\r\n\r\nverilator --binary --exe --timing ./bad_if.sv\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.028 2024-08-21 rev v5.028\r\n\r\n> What OS and distribution are you using?\r\n\r\nwindows 11 on WSL Ubuntu-24.04\r\n\r\n`May we assist you in trying to fix this in Verilator yourself?`\r\n\r\nI wouldn't have a clue where to start. \r\n\r\n> (Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\r\n\r\n\r\nHere's the error message.\r\n\r\n%Error-UNSUPPORTED: bad_if.sv:8:12: Unsupported: virtual interface never assigned any actual interface\r\n                                  : ... note: In instance 'top'\r\n    8 |    virtual bad_if #(A, N) vif;\r\n      |            ^~~~~~\r\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.028\r\n%Error-UNSUPPORTED: bad_if.sv:10:25: Unsupported: virtual interface never assigned any actual interface\r\n                                   : ... note: In instance 'top'\r\n   10 |    function new(virtual bad_if #(A, N) _vif);\r\n      |                         ^~~~~~\r\n%Error: Exiting due to 2 error(s)\r\n        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n\r\nIt works just fine if the port parameters are removed, like below.\r\n\r\n```\r\ninterface bad_if ;\r\n  localparam A = 8;\r\n  localparam N = 2;\r\n  bit [A-1:0] addr;\r\n  bit [(N*8)-1:0] data;\r\nendinterface\r\n\r\nclass bad_class ;  \r\n   virtual bad_if vif;\r\n   \r\n   function new(virtual bad_if _vif);\r\n      vif = _vif;\r\n   endfunction  \r\nendclass\r\n\r\nmodule top;\r\n  localparam A = 8;\r\n  localparam N = 2;\r\n\r\n   bad_if the_if();\r\n   bad_class bc_h;\r\n\r\n   initial begin\r\n      bc_h = new(the_if);\r\n      #100;\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "resolution: invalid"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-24",
+  "closed_at": "2024-08-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

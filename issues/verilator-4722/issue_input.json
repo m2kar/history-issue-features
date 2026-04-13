@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4722,
+  "issue_url": "https://github.com/verilator/verilator/issues/4722",
+  "title": "More functionality in `-f` argument files",
+  "body": "Hello!\r\n\r\nVerilator has `-f` and `-F` to read in an arguments file. however, it does not support ``` `` ```. I ran into this limitation while trying to do\r\n\r\n```plain\r\n`yosys-config --datdir`/simcells.v\r\n`yosys-config --datdir`/simlib.v\r\n```\r\n\r\nVCS's `-file filename` option works with the above example, and can handle all \"escape characters and metacharacters\". (I'm not sure if I am allowed to include longer snippets from `vcs --help`. I can if it would be helpful). I assume VCS offloads this functionality to a shell to parse the file.\r\n\r\nI wonder if instead of using a custom parser (as what is being done in [`V3Os::filenameSubstitute()`](https://github.com/verilator/verilator/blob/7167d4bdc0054943e140cc427cb2f54434cd9bd7/src/V3Os.cpp#L205-L247) to elaborate `$`), Verilator should read from `popen((\"sh -c 'echo \\\"\" + file_contents + \"\\\"'\").c_str(), \"r\")`.\r\n\r\nIf you feel this would be a valuable addition to Verilator, I am happy to work on this! Though I may want some more help brainstorming solutions to make this as cross-platform as possible.\r\n\r\n<details open>\r\n<summary>Proof of concept:</summary>\r\n<br>\r\n\r\n```c++\r\n#include <string>\r\n#include <fstream>\r\n#include <iostream>\r\n\r\nstd::string parse(std::string filename) {\r\n    // read in file\r\n    std::ifstream ifs{filename};\r\n    if (!ifs)\r\n        std::runtime_error(\"Could not file.\");\r\n    std::string file_contents((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());\r\n    ifs.close();\r\n\r\n    // sanitize input by prefacing all quotes with backslashes\r\n    std::string sanitized_contents = file_contents;\r\n    for (int i = sanitized_contents.length()-1; i >= 0; i--) {\r\n        if (sanitized_contents[i] != '\"') continue;\r\n        if (i != 0 && sanitized_contents[i-1] == '\\\\') continue;\r\n        sanitized_contents.insert(i, \"\\\\\");\r\n    }\r\n\r\n    // open pipe\r\n    std::string parsed_contents;\r\n    // Use sh to parse environment variables, escape characters, and metacharacters\r\n    FILE* pipe = popen((\"sh -c 'echo \\\"\" + sanitized_contents + \"\\\"'\").c_str(), \"r\");\r\n    if (!pipe)\r\n        std::runtime_error(\"Could not open pipe.\");\r\n\r\n    // read from pipe\r\n    char buffer[128];\r\n    while (fgets(buffer, sizeof(buffer), pipe) != nullptr)\r\n        parsed_contents += buffer;\r\n    if(!feof(pipe))\r\n        std::runtime_error(\"Error reading from pipe.\");\r\n    pclose(pipe);\r\n\r\n    // return\r\n    return parsed_contents;\r\n}\r\n\r\nint main() {\r\n\tstd::cout << parse(\"test.txt\") << std::endl;\r\n}\r\n```\r\n\r\n</details>",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-28",
+  "closed_at": "2023-11-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

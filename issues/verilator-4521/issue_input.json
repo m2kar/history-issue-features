@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4521,
+  "issue_url": "https://github.com/verilator/verilator/issues/4521",
+  "title": "Support $bits on typedef of a union",
+  "body": "I see $bits is supported in certain contexts per https://verilator.org/guide/latest/languages.html#systemverilog-2005-ieee-1800-2005-support\r\n\r\nI assume $bits isn't supported in the context below?\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nSeems like there is an issue in interpreting a struct that is part of a union. \r\nI took the example_c and inserted a packed union, which contains a single packed struct. \r\n\r\n```\r\nmodule top\r\n  ( input logic clk\r\n  , input logic rst\r\n  , output logic out1\r\n  );\r\n\r\n  localparam WORD_WIDTH = 16;\r\n\r\n   initial begin\r\n      $display(\"Hello World!\");\r\n      $finish;\r\n   end\r\n\r\n   typedef union packed {\r\n     struct packed {\r\n     logic [15:0]  temp_1 ;\r\n     logic [15:0]  temp_2 ;\r\n     logic [15:0]  temp_3 ;\r\n   } regs ;\r\n   logic [($bits(regs)/WORD_WIDTH)-1:0] [WORD_WIDTH-1:0] words ;\r\n   } my_union_t ;\r\n\r\n   my_union_t my_union;\r\nendmodule\r\n```\r\n\r\nThis is the error. I'm only verilating as you can see.\r\n```\r\n-- Verilator hello-world simple example\r\n-- VERILATE --------\r\nverilator -cc -j top.sv sim_main.cpp\r\n%Error: top.sv:28:18: Can't find definition of variable: 'regs'\r\n   28 |    logic [($bits(regs)/WORD_WIDTH)-1:0] [WORD_WIDTH-1:0] words ;\r\n      |                  ^~~~\r\n%Error: Exiting due to 1 error(s)\r\nMakefile:36: recipe for target 'default' failed\r\nmake: *** [default] Error 1\r\n```\r\n\r\n\r\nThis is a snippet from a known working version of a design that's synthesized with Vivado 2022, and simulated with VCS 2021.\r\nIf I exclude $bits and hard-code the number of bits contained in the struct, 48, it compiles.\r\ni.e. logic [2:0] [15:0] words ;\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version? I checkout out stable branch\r\nVerilator 5.016 2023-09-16 rev v5.014-149-g57c816f90\r\n\r\n\r\nWhat OS and distribution are you using?\r\nUbuntu 18.04 Kernel 4.15\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nSure.\r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2023-09-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

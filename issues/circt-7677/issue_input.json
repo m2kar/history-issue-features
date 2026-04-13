@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7677,
+  "issue_url": "https://github.com/llvm/circt/issues/7677",
+  "title": "[FIRRTL] SFCCompat: can select different values for a single invalid value",
+  "body": "```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n]]\r\n  public module Foo:\r\n    input c : Clock\r\n    input i0 : UInt<8>\r\n    input i1 : UInt<8>\r\n    input r : UInt<1>\r\n    output o0 : UInt<8>\r\n    output o1 : UInt<8>\r\n\r\n    wire w : UInt<8>\r\n    w is invalid\r\n\r\n    reg reg0 : UInt<8>, c with:\r\n      reset => (r, w)\r\n    connect reg0, i0\r\n    connect o0, reg0\r\n\r\n    reg reg1 : UInt<8>, c with:\r\n      reset => (r, w)\r\n    connect reg1, i1\r\n    connect o1, reg1\r\n\r\n```\r\ngives:\r\n```verilog\r\nmodule Foo(\r\n  input        c,\r\n  input  [7:0] i0,\r\n               i1,\r\n  input        r,\r\n  output [7:0] o0,\r\n               o1\r\n);\r\n\r\n  reg [7:0] reg0;\r\n  reg [7:0] reg1;\r\n  always @(posedge c) begin\r\n    reg0 <= i0;\r\n    reg1 <= i1;\r\n  end // always @(posedge)\r\n  `ifdef ENABLE_INITIAL_REG_\r\n    `ifdef FIRRTL_BEFORE_INITIAL\r\n      `FIRRTL_BEFORE_INITIAL\r\n    `endif // FIRRTL_BEFORE_INITIAL\r\n    initial begin\r\n      automatic logic [31:0] _RANDOM[0:0];\r\n      `ifdef INIT_RANDOM_PROLOG_\r\n        `INIT_RANDOM_PROLOG_\r\n      `endif // INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM[/*Zero width*/ 1'b0] = `RANDOM;\r\n        reg0 = _RANDOM[/*Zero width*/ 1'b0][7:0];\r\n        reg1 = _RANDOM[/*Zero width*/ 1'b0][15:8];\r\n      `endif // RANDOMIZE_REG_INIT\r\n    end // initial\r\n    `ifdef FIRRTL_AFTER_INITIAL\r\n      `FIRRTL_AFTER_INITIAL\r\n    `endif // FIRRTL_AFTER_INITIAL\r\n  `endif // ENABLE_INITIAL_REG_\r\n  assign o0 = reg0;\r\n  assign o1 = reg1;\r\nendmodule\r\n```\r\nThe resets for both registers are optimized away by SFCCompat, which implies that it selected `w = reg0` when lowering `reg0` and `w = reg1` when lowering `reg1`.  It should select a single value for the invalid value.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-10-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

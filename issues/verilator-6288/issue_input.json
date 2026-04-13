@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6288,
+  "issue_url": "https://github.com/verilator/verilator/issues/6288",
+  "title": "Warn on unexpected static variable declarations",
+  "body": "**Description**\nVerilator fails to correctly handle variable declarations that are initialized with queue.size() when the declaration occurs inside a for loop within a task. The variable gets assigned incorrect values (0?) instead of the actual queue size.\n\nVerilator Version: latest main\nOS: Linux\n\ncmd line for the snippted below: `verilator --binary --timing test_q.sv `\n\n**Code to Reproduce**\n```\nmodule test_queue_size_bug;\n    \n    parameter DATA_WIDTH = 8;\n    logic [DATA_WIDTH-1:0] expected_data_queue[$];\n    \n    task some_work();\n        // Add 3 items to queue\n        expected_data_queue.push_back(8'h01);\n        expected_data_queue.push_back(8'h02);\n        expected_data_queue.push_back(8'h03);\n        \n        // For loop with problematic queue size assignment\n        for (int i = 0; i < 3; i++) begin\n            //int queue_size_before = expected_data_queue.size();  // This line causes issues in Verilator\n            int queue_size_before = 0; // This works\n            queue_size_before = expected_data_queue.size();  // This works\n            $display(\"i=%0d, queue_size_before=%0d, actual_size=%0d\", \n                     i, queue_size_before, expected_data_queue.size());\n        end\n    endtask\n\n    initial begin\n        some_work();\n        $finish;\n    end\n    \nendmodule\n```\n\n**Test Case Output**\n\n```\n./obj_dir/Vtest_q \ni=0, queue_size_before=0, actual_size=3\ni=1, queue_size_before=0, actual_size=3\ni=2, queue_size_before=0, actual_size=3\n```",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-13",
+  "closed_at": "2025-12-06",
+  "code_blocks": [
+    "module test_queue_size_bug;\n    \n    parameter DATA_WIDTH = 8;\n    logic [DATA_WIDTH-1:0] expected_data_queue[$];\n    \n    task some_work();\n        // Add 3 items to queue\n        expected_data_queue.push_back(8'h01);\n        expected_data_queue.push_back(8'h02);\n        expected_data_queue.push_back(8'h03);\n        \n        // For loop with problematic queue size assignment\n        for (int i = 0; i < 3; i++) begin\n            //int queue_size_before = expected_data_queue.size();  // This line causes issues in Verilator\n            int queue_size_before = 0; // This works\n            queue_size_before = expected_data_queue.size();  // This works\n            $display(\"i=%0d, queue_size_before=%0d, actual_size=%0d\", \n                     i, queue_size_before, expected_data_queue.size());\n        end\n    endtask\n\n    initial begin\n        some_work();\n        $finish;\n    end\n    \nendmodule\n",
+    "./obj_dir/Vtest_q \ni=0, queue_size_before=0, actual_size=3\ni=1, queue_size_before=0, actual_size=3\ni=2, queue_size_before=0, actual_size=3\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

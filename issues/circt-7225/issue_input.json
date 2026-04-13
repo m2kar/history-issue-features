@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7225,
+  "issue_url": "https://github.com/llvm/circt/issues/7225",
+  "title": "[FIRRTL] InferResets: deleting op used to drive reset network results in use-after-free",
+  "body": "```mlir\r\nfirrtl.circuit \"MovableNodeShouldDominate\" {\r\n  firrtl.module @MovableNodeShouldDominate(in %clock: !firrtl.clock) {\r\n    %child_clock = firrtl.instance child @Child(in clock: !firrtl.clock)\r\n    firrtl.connect %child_clock, %clock : !firrtl.clock\r\n    %ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    %0 = firrtl.asAsyncReset %ui1 : (!firrtl.uint<1>) -> !firrtl.asyncreset\r\n    %localReset = firrtl.node %0 {annotations = [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}]} : !firrtl.asyncreset\r\n  }\r\n  firrtl.module @Child(in %clock: !firrtl.clock) {\r\n    %reg = firrtl.reg %clock : !firrtl.clock, !firrtl.uint<8>\r\n  }\r\n}\r\n```\r\n```\r\n./bin/circt-opt --pass-pipeline='builtin.module(firrtl.circuit(firrtl-infer-resets))' reset.mlir\r\n```\r\n\r\nInferResets needs to wire the result of the NodeOp to the instance of Child, and to do so [replaces it with a wire](https://github.com/llvm/circt/blob/main/lib/Dialect/FIRRTL/Transforms/InferResets.cpp#L1724).  This results in a dangling reference to the deleted node stored in the ResetDomain.\r\n\r\nRunning it under valgrind yields many errors, such as the one below, but my line numbers won't line up with `main` due to a lot of printf debugging:\r\n```\r\n==176563== Invalid read of size 8\r\n==176563==    at 0x1C35A53: mlir::Value::getLoc() const (llvm/mlir/lib/IR/Value.cpp:0)\r\n==176563==    by 0x12A6F98: implementAsyncReset (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:1688)\r\n==176563==    by 0x12A6F98: implementAsyncReset (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:1647)\r\n==176563==    by 0x12A6F98: (anonymous namespace)::InferResetsPass::runOnOperationInner() (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:545)\r\n==176563==    by 0x12A4465: (anonymous namespace)::InferResetsPass::runOnOperation() (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:513)\r\n\r\n==176563==  Address 0x613f688 is 40 bytes inside a block of size 128 free'd\r\n==176563==    at 0x4C39A93: free (vg_replace_malloc.c:872)\r\n==176563==    by 0x18E466D: llvm::iplist_impl<llvm::simple_ilist<mlir::Operation>, llvm::ilist_traits<mlir::Operation> >::erase(llvm::ilist_iterator<llvm::ilist_detail::node_options<mlir::Operation, true, false, void, false>, false, false>) (ilist.h:205)\r\n==176563==    by 0x12A7755: erase (OpDefinition.h:131)\r\n==176563==    by 0x12A7755: implementAsyncReset (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:1742)\r\n==176563==    by 0x12A7755: implementAsyncReset (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:1647)\r\n==176563==    by 0x12A7755: (anonymous namespace)::InferResetsPass::runOnOperationInner() (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:545)\r\n==176563==    by 0x12A4465: (anonymous namespace)::InferResetsPass::runOnOperation() (lib/Dialect/FIRRTL/Transforms/InferResets.cpp:513)\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-21",
+  "closed_at": "2024-07-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

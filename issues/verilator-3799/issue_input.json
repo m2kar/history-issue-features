@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3799,
+  "issue_url": "https://github.com/verilator/verilator/issues/3799",
+  "title": "Wrong output to text file",
+  "body": "The following code:\r\n\r\n```\r\ninteger fdebug=0, line_cnt=0;\r\n\r\ninitial begin\r\n    if( fdebug==0 )\r\n        fdebug=$fopen(\"main_io.log\",\"w\");\r\nend\r\n\r\nalways @(posedge clk) begin\r\n    if( rst ) begin\r\n        line_cnt <= 0;\r\n    end else if(cen6) begin\r\n        if( ram_cs ) line_cnt <= line_cnt+1;\r\n        if( ram_cs &&  cpu_rnw ) $fdisplay(fdebug,\"%04X -> %02X - %d\", A, ram_dout, line_cnt );\r\n        if( ram_cs && !cpu_rnw ) $fdisplay(fdebug,\"%04X <- %02X - %d\", A, dout, line_cnt );\r\n    end\r\nend\r\n```\r\nShould produce a distinct line_cnt output for each line in the _main_io.log_ text file. In Modelsim, that's the case. But somehow in Verilator you get the first four lines printed three times:\r\n\r\n```\r\neffe <- 01 -           0\r\neffd <- ac -           1\r\neffd -> ac -           2\r\neffe -> 01 -           3\r\neffe <- 01 -           0\r\neffd <- ac -           1\r\neffd -> ac -           2\r\neffe -> 01 -           3\r\neffe <- 01 -           0\r\neffd <- ac -           1\r\neffd -> ac -           2\r\neffe -> 01 -           3\r\ne000 -> 00 -           4\r\ne000 <- 55 -           5\r\ne000 -> 55 -           6\r\ne000 <- 00 -           7\r\ne001 -> 00 -           8\r\n```\r\nNote that the number in the last column should always increase. Note that **the waveforms are correct** when checked in gtkwave. The waveforms do follow the expected behaviour. The problem seems to be related to the file output. The correct behavior is:\r\n\r\n```\r\neffe <- 01 -           0\r\neffd <- ac -           1\r\neffd -> ac -           2\r\neffe -> 01 -           3\r\ne000 -> 00 -           4\r\ne000 <- 55 -           5\r\ne000 -> 55 -           6\r\ne000 <- 00 -           7\r\ne001 -> 00 -           8\r\ne001 <- 55 -           9\r\n```\r\n\r\n**_Can you attach an example that shows the issue?_**  \r\nIt's a convoluted setup. Let me just explain the issue in case something similar shows up.\r\n\r\n**_What 'verilator --version' are you using?  Did you try it with the git master version?_**\r\nVerilator 5.002 2022-10-29 rev v5.002\r\n\r\n**_What OS and distribution are you using?_**\r\nLinux once 5.4.0-132-generic #148-Ubuntu SMP Mon Oct 17 16:02:06 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux\r\n\r\n**_May we assist you in trying to fix this in Verilator yourself?_**\r\nLet me assist only in providing bug information rather than software development\r\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-04",
+  "closed_at": "2023-07-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

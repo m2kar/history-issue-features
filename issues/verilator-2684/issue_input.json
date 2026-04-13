@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2684,
+  "issue_url": "https://github.com/verilator/verilator/issues/2684",
+  "title": "Casts from packed structs to enums are now unsupported",
+  "body": "This came up in the OpenTitan repository, and I can try to make a minimal test-case if it's not just a case of \"rewrite your SV code; you're doing it wrong\"!\r\n\r\nIn that repository, we instantiate a module with a cast on one of the ports:\r\n```systemverilog\r\n  keymgr_sideload_key_ctrl u_sideload_ctrl (\r\n    .clk_i,\r\n    .rst_ni,\r\n\r\n    // more ports here ...\r\n\r\n    .dest_sel_i(keymgr_key_dest_e'(reg2hw.control.dest_sel)),\r\n\r\n    // more ports here ...\r\n\r\n  );\r\n```\r\nHere, `reg2hw.control.dest_sel` is a packed structure, defined like this:\r\n```systemverilog\r\n  typedef struct packed {\r\n\r\n    // ... more members here...\r\n\r\n    struct packed {\r\n      logic [1:0]  q;\r\n    } dest_sel;\r\n  } keymgr_reg2hw_control_reg_t;\r\n```\r\nand `kymgr_key_dest_e` is an enum type:\r\n```systemverilog\r\n  typedef enum logic [1:0] {\r\n    None   = 0,\r\n    Aes    = 1,\r\n    Hmac   = 2,\r\n    Kmac   = 3\r\n  } keymgr_key_dest_e;\r\n```\r\n\r\nWith Verilator 4.105, this compiles happily, but with the current head of master it spits out the following error:\r\n```\r\n%Error-UNSUPPORTED: ../src/lowrisc_ip_keymgr_0.1/rtl/keymgr.sv:333:17: Unsupported: static cast to 'ENUMDTYPE 'keymgr_pkg::keymgr_key_dest_e'' from 'STRUCTDT$\r\nPE'\r\n                                                                     : ... In instance top_earlgrey_verilator.top_earlgrey.u_keymgr\r\n  333 |     .dest_sel_i(keymgr_key_dest_e'(reg2hw.control.dest_sel)),\r\n      |                 ^~~~~~~~~~~~~~~~~      \r\n```\r\n\r\nLooking at the code in `V3Width.cpp`, I think this was probably from the changes in 74ef35d3b, which added support for dynamic casts.\r\n\r\nI *think* this cast should be allowed, in which case this is a regression. If I've misunderstood something, please let me know.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-10",
+  "closed_at": "2020-12-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

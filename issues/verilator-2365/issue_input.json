@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2365,
+  "issue_url": "https://github.com/verilator/verilator/pull/2365",
+  "title": "Rework parallel build and split",
+  "body": "Still WIP due to the issues below, but this is the baseline for #2360 and also implements some of #2247. It works fine for the test suite  but a couple of issues remain for EH1/EH2:\r\n\r\n- My recent changes to how trace routines are built means that without  `--output-split-ctrace` there is one huge trace function which remains the long pole in the build time. A similar issue remains for EH2, where there is a single sequent block that is 77k lines long and remains the long pole (and it is a very long pole). \r\n\r\nQuestion: How would you feel about defaulting `--output-split-cfuncs` and `--output-split-ctrace` to the value of `--output-split`, or some multiple thereof? Without something like that,  this PR has less then hoped for benefit for big builds.\r\n\r\n- I think default 10000 is probably too small. It yields about 3000-4000 line files. I will investigate a bit later, but SweRV EH2 will have 40+ files (assuming we do the split-cfuncs above) which I feel might be too much, though on a modern servwer you can easily get 40+ cores to compiles it alli one go. Let me know if you have an oppinion on this.\r\n\r\n- EH1 baseline speed is 9% slower with this patch (clang 10). This is completely unexpected, but I have seen similar amount of slowdown from trivial code changes I made perviously, so I think this is hitting some behaviour threshold possibly around inlining in clang. I know for a fact tha `_eval` in EH1 has a lot more branches with smaller sub-functions than EH2, and EH2 speed is the same.\r\n\r\nQuestion: Would you be happy to commit this with the performance regression, while raising a new issue to investigate why output split slows down EH1? Otherwise will have to dig into that right now which might take a while to resolve.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-25",
+  "closed_at": "2020-05-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

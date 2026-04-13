@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10125,
+  "issue_url": "https://github.com/llvm/circt/issues/10125",
+  "title": "[Synth] FunctionalReduction could introduce SSA-cycle",
+  "body": "```mlir\n  hw.module @ssa_cycle(in %a: i1, in %b: i1, out out0: i1) {\n    %0 = comb.and %a, %b : i1\n    %1 = comb.and %0, %a : i1\n    hw.output %1 : i1\n  }\n```\n\n```mlir\n$circt-opt -synth-functional-reduction bar.mlir\nmodule {\n  hw.module @ssa_cycle(in %a : i1, in %b : i1, out out0 : i1) {\n    %0 = comb.and %a, %b : i1\n    %1 = comb.and %2, %a : i1\n    %2 = synth.choice %0, %1 : i1\n    hw.output %2 : i1\n  }\n```\nThis is because %0, %1 are semantically equivalent but %0 is used by %1. \nIt's necessary remove cycles via perform post-processing in FunctionalReduction something like this:\n```\nif (noCycle(block)) return;\n\nfor (auto scc: findSCC(block)) {\n   // By construction SCC should contain a choice node (because choice created a cycle)\n   for (ChoiceOp choice: choices) {\n        // There should be at least one operand that came from outside of SCC \n        // (Otherwise it implies there was a SSA cycle before FunctionalReduction and it should have been rejected in pre-pass). \n        // So drop values defined within SCC.\n        dropChoiceOperandsInSCC(choice);\n   } \n}\n```\n",
+  "labels": [
+    "bug",
+    "Synth"
+  ],
+  "state": "open",
+  "created_at": "2026-04-05",
+  "closed_at": null,
+  "code_blocks": [
+    "  hw.module @ssa_cycle(in %a: i1, in %b: i1, out out0: i1) {\n    %0 = comb.and %a, %b : i1\n    %1 = comb.and %0, %a : i1\n    hw.output %1 : i1\n  }\n",
+    "$circt-opt -synth-functional-reduction bar.mlir\nmodule {\n  hw.module @ssa_cycle(in %a : i1, in %b : i1, out out0 : i1) {\n    %0 = comb.and %a, %b : i1\n    %1 = comb.and %2, %a : i1\n    %2 = synth.choice %0, %1 : i1\n    hw.output %2 : i1\n  }\n",
+    "if (noCycle(block)) return;\n\nfor (auto scc: findSCC(block)) {\n   // By construction SCC should contain a choice node (because choice created a cycle)\n   for (ChoiceOp choice: choices) {\n        // There should be at least one operand that came from outside of SCC \n        // (Otherwise it implies there was a SSA cycle before FunctionalReduction and it should have been rejected in pre-pass). \n        // So drop values defined within SCC.\n        dropChoiceOperandsInSCC(choice);\n   } \n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9602,
+  "issue_url": "https://github.com/llvm/circt/issues/9602",
+  "title": "[OM] Shift left folder doesnt sign extend",
+  "body": "The shift-left folder will do modular shift left, respecting the size of the underlying ap-int, but since we're working with big integers, I'd expect it to grow instead.\n\nDemo of the issue, 4 << 4 ==> 0\n\n```mlir\nfirrtl.circuit \"Casts\" {\n  firrtl.module @Casts() {}\n  firrtl.class @PropertyArithmetic(out %o1: !firrtl.integer) {\n    %0 = firrtl.integer 4\n    %1 = firrtl.integer.shl %0, %0 : (!firrtl.integer, !firrtl.integer) -> !firrtl.integer\n    firrtl.propassign %o1, %1 : !firrtl.integer\n  }\n}\n\n// ./bin/circt-opt -canonicalize='top-down=true region-simplify=aggressive' ../scratch/scratch.mlir  --mlir-print-ir-before-all\nmodule {\n  firrtl.circuit \"Casts\" {\n    firrtl.module @Casts() {\n    }\n    firrtl.class @PropertyArithmetic(out %o1: !firrtl.integer) {\n      %0 = firrtl.integer 0\n      firrtl.propassign %o1, %0 : !firrtl.integer\n    }\n  }\n}\n```\n",
+  "labels": [
+    "FIRRTL",
+    "OM"
+  ],
+  "state": "open",
+  "created_at": "2026-02-04",
+  "closed_at": null,
+  "code_blocks": [
+    "firrtl.circuit \"Casts\" {\n  firrtl.module @Casts() {}\n  firrtl.class @PropertyArithmetic(out %o1: !firrtl.integer) {\n    %0 = firrtl.integer 4\n    %1 = firrtl.integer.shl %0, %0 : (!firrtl.integer, !firrtl.integer) -> !firrtl.integer\n    firrtl.propassign %o1, %1 : !firrtl.integer\n  }\n}\n\n// ./bin/circt-opt -canonicalize='top-down=true region-simplify=aggressive' ../scratch/scratch.mlir  --mlir-print-ir-before-all\nmodule {\n  firrtl.circuit \"Casts\" {\n    firrtl.module @Casts() {\n    }\n    firrtl.class @PropertyArithmetic(out %o1: !firrtl.integer) {\n      %0 = firrtl.integer 0\n      firrtl.propassign %o1, %0 : !firrtl.integer\n    }\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

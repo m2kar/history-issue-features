@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4939,
+  "issue_url": "https://github.com/verilator/verilator/issues/4939",
+  "title": "verilator-config.cmake errors out when CMAKE_CXX_COMPILER_ID not defined before finding the verilator package.",
+  "body": "\r\nOS Distribution: alma8\r\nVerilator Version: 5.022\r\n\r\nWhen using cmake find package:\r\n\r\n```\r\n    find_package(verilator 5.022 REQUIRED\r\n        HINTS\r\n        /usr/local\r\n        $ENV{VERILATOR_ROOT}\r\n        ${VERILATOR_ROOT}\r\n    )\r\n```\r\nGet the following error in the verilator-config.cmake file:\r\n\r\n```\r\n[cmake] CMake Error at <VERILATOR_ROOT>/share/verilator/verilator-config.cmake:80 (if):\r\n[cmake]   if given arguments:\r\n[cmake] \r\n[cmake]     \"STREQUAL\" \"AppleClang\"\r\n[cmake] \r\n[cmake]   Unknown arguments specified\r\n```\r\n\r\nIt looks as though you are assuming the CMAKE_CXX_COMPILER_ID is defined before verilator is found.\r\n```\r\nif (${CMAKE_CXX_COMPILER_ID} STREQUAL \"AppleClang\")\r\n  add_link_options(-Wl,-U,__Z15vl_time_stamp64v,-U,__Z13sc_time_stampv)\r\nendif()\r\n```\r\n\r\nCMake supports `genex`  generator execution statements such as:\r\n\r\nadd_link_options(\r\n    $<$<COMPILE_LANG_AND_ID:CXX,AppleClang>:-Wl,-U,__Z15vl_time_stamp64v,-U,__Z13sc_time_stampv>\r\n)\r\n\r\nThat remove the need to check the if'statements and then get executed when they are used rather than when they are defined.\r\n\r\nI'm not sure if the minimally required 3.13 supports these though but it would be appreciated if you fixed this.\r\n\r\n",
+  "labels": [
+    "area: configure/compiling",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-01",
+  "closed_at": "2026-01-24",
+  "code_blocks": [
+    "find_package(verilator 5.022 REQUIRED\r\n        HINTS\r\n        /usr/local\r\n        $ENV{VERILATOR_ROOT}\r\n        ${VERILATOR_ROOT}\r\n    )",
+    "if (${CMAKE_CXX_COMPILER_ID} STREQUAL \"AppleClang\")\r\n  add_link_options(-Wl,-U,__Z15vl_time_stamp64v,-U,__Z13sc_time_stampv)\r\nendif()"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2564,
+  "issue_url": "https://github.com/llvm/circt/pull/2564",
+  "title": "Bump LLVM to 84fe34a0b7fd",
+  "body": "Quite some changes are made... Several things I'm not sure about:\r\n1. FunctionLike is updated from a trait to FunctionOpInterface, please take a look at the .td files whether the updates are reasonable :)\r\n2. We need to explicitly specify the `Location`s when adding arguments to a block. For those obvious cases (such as one-to-one conversion), I use the location of the original argument; For the other cases, I'm using UnknownLocation for now. Please feel free to commit on this branch or open other PRs to improve them.\r\n\r\nThe only test case that cannot pass is Dialect/FIRRTL/canonicalization.mlir, because we no longer have `getAsmResultNames` for `OpAsmDialectInterface`, see https://reviews.llvm.org/D117750. This means the current FIRRTL dialect's `getAsmResultNames` cannot work now. I replaced that method with multiple `getAsmResultNames`s owned by concrete ops (including Instance/MemOp, Node/Reg/RegReset/WireOp, Constant/InvalidValueOp, and several CIRRTL ops). However, I haven't find a way to handle the `name` attribute, which causes the failed test case:\r\n```cpp\r\n    // Many firrtl dialect operations have an optional 'name' attribute.  If\r\n    // present, use it.\r\n    if (op->getNumResults() == 1)\r\n      if (auto nameAttr = op->getAttrOfType<StringAttr>(\"name\"))\r\n        setNameFn(op->getResult(0), nameAttr.getValue());\r\n```\r\nFileCheck result:\r\n```shell\r\n/circt/test/Dialect/FIRRTL/canonicalization.mlir:1814:17: error: CHECK-NEXT: expected string not found in input\r\n // CHECK-NEXT: %bar0 = firrtl.bits %0 4 to 0 {name = \"bar0\"} : (!firrtl.uint<6>) -> !firrtl.uint<5>\r\n                ^\r\n<stdin>:566:82: note: scanning from here\r\n %0 = firrtl.add %d1, %d1 : (!firrtl.uint<5>, !firrtl.uint<5>) -> !firrtl.uint<6>\r\n                                                                                 ^\r\n<stdin>:567:2: note: possible intended match here\r\n %1 = firrtl.bits %0 4 to 0 {name = \"bar0\"} : (!firrtl.uint<6>) -> !firrtl.uint<5>\r\n ^\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-02",
+  "closed_at": "2022-02-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

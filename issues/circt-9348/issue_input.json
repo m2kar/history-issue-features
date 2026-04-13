@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9348,
+  "issue_url": "https://github.com/llvm/circt/issues/9348",
+  "title": "[LLHD] HoistSignals crash on multiple drives with different delays",
+  "body": "The following snippet crashes `circt-opt --llhd-hoist-signals`:\n```mlir\nhw.module private @foo(in %b : i42) {\n  %0 = llhd.constant_time <1ns, 0d, 0e>\n  %1 = llhd.constant_time <2ns, 0d, 0e>\n  %a = llhd.sig %b : i42\n  llhd.process {\n    llhd.drv %a, %b after %0 : i42\n    llhd.wait delay %0, ^bb1\n  ^bb1:\n    llhd.drv %a, %b after %1 : i42\n    llhd.wait delay %0, ^bb2\n  ^bb2:\n    llhd.halt\n  }\n  hw.output\n}\n```\nThis causes a call to `hw::getBitWidth` to return a value below 0:\n```\ncirct-opt: lib/Dialect/LLHD/Transforms/HoistSignals.cpp:504: \n  auto (anonymous namespace)::DriveHoister::hoistDrives()\n    ::(anonymous class)::operator()(DriveValue)\n    ::(anonymous class)::operator()(auto) const [type:auto = mlir::Type]:\n  Assertion `numBits >= 0' failed.\n```\nRelevant lines: https://github.com/llvm/circt/blob/main/lib/Dialect/LLHD/Transforms/HoistSignals.cpp#L502-L504. The problem goes away if the `llhd.drv` ops all have the same delay.\n\nSome of the [segfaults in sv-tests](https://github.com/circt/circt-tests/blob/results/2025/2025-12-15-131140-main-82227de/sv-tests/segfaults.txt) are related to this.",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-16",
+  "closed_at": "2025-12-16",
+  "code_blocks": [
+    "hw.module private @foo(in %b : i42) {\n  %0 = llhd.constant_time <1ns, 0d, 0e>\n  %1 = llhd.constant_time <2ns, 0d, 0e>\n  %a = llhd.sig %b : i42\n  llhd.process {\n    llhd.drv %a, %b after %0 : i42\n    llhd.wait delay %0, ^bb1\n  ^bb1:\n    llhd.drv %a, %b after %1 : i42\n    llhd.wait delay %0, ^bb2\n  ^bb2:\n    llhd.halt\n  }\n  hw.output\n}\n",
+    "circt-opt: lib/Dialect/LLHD/Transforms/HoistSignals.cpp:504: \n  auto (anonymous namespace)::DriveHoister::hoistDrives()\n    ::(anonymous class)::operator()(DriveValue)\n    ::(anonymous class)::operator()(auto) const [type:auto = mlir::Type]:\n  Assertion `numBits >= 0' failed.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

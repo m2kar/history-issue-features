@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1880,
+  "issue_url": "https://github.com/verilator/verilator/issues/1880",
+  "title": "Question: commandArgs(), commandArgsPlusMatch() and $value$plusargs()",
+  "body": "---\n\n\nAuthor Name: **Frederic Requin**\nOriginal Redmine Message: 1889 from https://www.veripool.org\n\n\n\n---\n\nHello,\n\nin my testbench, I am passing command line parameters using the standard verilog way with \"+params=...\".\n\nFirst problem (that I have solved) :\n\nIf a parameter is not present, it should take a default value.\n\nTo inject a default value in the parameter list, I have modified the method commandArgs() in verilated_imp.h :\n\ns_s.m_argVec.clear(); is replaced by : if (VL_UNLIKELY(!s_s.m_argVecLoaded)) s_s.m_argVec.clear();\n\nThis way, the method can be called more than once to append missing parameters :\n```\nconst char def_log_path[] = \"+log_path=/cygdrive/f/my_logs\";\nconst char *args_path[1] =\n{\n     def_log_path\n};\n\n...\n\narg = Verilated::commandArgsPlusMatch(\"log_path=\");\nif ((arg) && (arg[0]))\n{\n     int len;\n         \n     arg += 10;\n     // Allocate memory\n     len = strlen(arg);\n     cfg.log_path = (char *)malloc(len + 1);\n     // Copy the file path\n     strcpy(cfg.log_path, arg);\n     // Remove trailing slash\n     if ((cfg.log_path[len-1] == '\\\\') ||\n         (cfg.log_path[len-1] == '/'))\n     {\n         cfg.log_path[len-1] = 0;\n     }\n}\nelse\n{\n     // Allocate memory\n     cfg.log_path = (char *)malloc(sizeof(def_log_path) - 9);\n     // Copy the file name\n     strcpy(cfg.log_path, &args_path[0][10]);\n     // Add default argument\n     Verilated::commandArgs(1, &args_path[0]);\n}\n\n```\nThis is a little bit hacky but it does add the arguments, I have verified it with Verilated::internalsDump();\n\nThis leads to the second problem in the verilog code :\n\n```\n     integer     _ret;\n     integer     _fh;\n     string      _file_name;\n     string      _file_path;\n     \n     initial\n     begin\n         _ret = $value$plusargs(\"log_path=%s\", _file_path);\n         $sformat(_file_name, \"%s/my_log.txt\", _file_path);\n         $display(\"Openning %s...\\n\", _file_name);\n         _fh = $fopen(_file_name, \"r\");\n     end\n\n```\n_file_path string is always empty.\n\nIs there anything special to do for string passing ?\n\nFrederic\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2016-05-16",
+  "closed_at": "2016-05-16",
+  "code_blocks": [
+    "const char def_log_path[] = \"+log_path=/cygdrive/f/my_logs\";\nconst char *args_path[1] =\n{\n     def_log_path\n};\n\n...\n\narg = Verilated::commandArgsPlusMatch(\"log_path=\");\nif ((arg) && (arg[0]))\n{\n     int len;\n         \n     arg += 10;\n     // Allocate memory\n     len = strlen(arg);\n     cfg.log_path = (char *)malloc(len + 1);\n     // Copy the file path\n     strcpy(cfg.log_path, arg);\n     // Remove trailing slash\n     if ((cfg.log_path[len-1] == '\\\\') ||\n         (cfg.log_path[len-1] == '/'))\n     {\n         cfg.log_path[len-1] = 0;\n     }\n}\nelse\n{\n     // Allocate memory\n     cfg.log_path = (char *)malloc(sizeof(def_log_path) - 9);\n     // Copy the file name\n     strcpy(cfg.log_path, &args_path[0][10]);\n     // Add default argument\n     Verilated::commandArgs(1, &args_path[0]);\n}\n\n",
+    "     integer     _ret;\n     integer     _fh;\n     string      _file_name;\n     string      _file_path;\n     \n     initial\n     begin\n         _ret = $value$plusargs(\"log_path=%s\", _file_path);\n         $sformat(_file_name, \"%s/my_log.txt\", _file_path);\n         $display(\"Openning %s...\\n\", _file_name);\n         _fh = $fopen(_file_name, \"r\");\n     end\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

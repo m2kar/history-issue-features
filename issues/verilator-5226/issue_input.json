@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5226,
+  "issue_url": "https://github.com/verilator/verilator/issues/5226",
+  "title": "`--Mdir` does not play well with user c/cpp files",
+  "body": "* Issue explained\r\n\r\nIt's best explained by running the following example. The command and error message is given below. The key point is that user c file `test.c` and a \"complicated\" Mdir option co-exists. `--Mdir obj_dir` or `--Mdir obj_dir_other` is OK, but `--Mdir build/obj_dir` is not OK.\r\n\r\n```\r\n$ verilator --cc --build test.sv dpi.c -Mdir build/obj_dir\r\nmake: Entering directory '/home/fsp/my/test/build/obj_dir'\r\n/usr/sbin/python3 /usr/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include Vtest.cpp Vtest___024root__DepSet_h9b2d61ff__0.cpp Vtest___024root__DepSet_hc07518e4__0.cpp Vtest___024root__Slow.cpp Vtest___024root__DepSet_hc07518e4__0__Slow.cpp Vtest__Syms.cpp > Vtest__ALL.cpp\r\ng++ -Os  -I.  -MMD -I/usr/share/verilator/include -I/usr/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-overloaded-virtual -Wno-shadow -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable      -c -o Vtest__ALL.o Vtest__ALL.cpp\r\nmake: *** No rule to make target 'dpi.c', needed by 'dpi.o'.  Stop.\r\nmake: Leaving directory '/home/fsp/my/test/build/obj_dir'\r\n%Error: make -C build/obj_dir -f Vtest.mk -j 1 exited with 2\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /usr/bin/verilator_bin --cc --build test.sv dpi.c -Mdir build/obj_dir\r\n```\r\n\r\nThis is a Makefile issue, the contents of the two files are irrelevant. A minimal `test.sv` like below and an empty `dpi.c` is sufficient\r\n\r\n```sv\r\nmodule top;\r\n    initial $display(\"hello\");\r\nendmodule\r\n```\r\n\r\n* Investigation\r\n\r\nIt seems Verilator assumes `--Mdir` must specify a direct child of current directory. `VPATH=..` is hardcoded in `verilated.mk`. When it is not the case, e.g. given \"--Mdir build/obj_dir\", Makefile does not know where to find user c/cpp files.\r\n\r\nhttps://github.com/verilator/verilator/blob/dace2c0a9a8f9d0559c4e4cbdb56ebdcae93b097/include/verilated.mk.in#L94\r\n\r\n* Verilator version\r\n\r\n`Verilator 5.026 2024-06-15 rev UNKNOWN.REV` on ArchLinux, reproduced on master branch.\r\n\r\n* Proposed fix\r\n\r\nWe may remove the line `VPATH=..` in `verilated.mk`. Instead, we can record the absolute path of working directory of verilator in `Vprefix.mk`. As an example,\r\n\r\n```Makefile\r\n# contents of Vtest.mk\r\n...\r\n# Include list of all generated classes\r\ninclude Vtest_classes.mk\r\n# Include global rules\r\ninclude $(VERILATOR_ROOT)/include/verilated.mk\r\nVPATH += /home/fsp/my/test # absolute path of where verilator runs\r\n...\r\n```\r\n\r\n\r\nAny comments on this strategy?\r\n\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-04",
+  "closed_at": "2024-09-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

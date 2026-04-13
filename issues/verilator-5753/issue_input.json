@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5753,
+  "issue_url": "https://github.com/verilator/verilator/issues/5753",
+  "title": "Optimize clearFired",
+  "body": "@kbieganski, t_timing_fork_join.py makes this code:\n\n```\nvoid Vt_timing_fork_join___024root___eval_triggers__act(Vt_timing_fork_join___024root* vlSelf) {\n    ...\n    if (vlSelfRef.t__DOT__event1.isFired()) {\n        vlSelfRef.t__DOT__event1.clearFired();\n    }\n    if (vlSelfRef.t__DOT__event2.isFired()) {\n        vlSelfRef.t__DOT__event2.clearFired();\n    }\n    if (vlSelfRef.t__DOT__event3.isFired()) {\n        vlSelfRef.t__DOT__event3.clearFired();\n    }\n```\n\nIt looks like isFired is testing m_fired, then cleared fired just clears m_Fired. I'd think it would be more efficient to just always clear m_Fired, avoiding the branches; the only downside will be write cache pressure when the variable is already clear.  (Unless it's somehow a hot variable between threads... which seems unlikely)\n\nThis appears due to this: https://github.com/verilator/verilator/blob/05c7a3b90b7607ef4ae522b5ccec23d6ad308966/src/V3SenExprBuilder.h#L185\n\nRemoving the if, tests still pass.\n\n@kbieganski (I think your code) can this be optimized to just skip the if() or am I missing something?  Thanks",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-25",
+  "closed_at": "2025-01-30",
+  "code_blocks": [
+    "void Vt_timing_fork_join___024root___eval_triggers__act(Vt_timing_fork_join___024root* vlSelf) {\n    ...\n    if (vlSelfRef.t__DOT__event1.isFired()) {\n        vlSelfRef.t__DOT__event1.clearFired();\n    }\n    if (vlSelfRef.t__DOT__event2.isFired()) {\n        vlSelfRef.t__DOT__event2.clearFired();\n    }\n    if (vlSelfRef.t__DOT__event3.isFired()) {\n        vlSelfRef.t__DOT__event3.clearFired();\n    }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

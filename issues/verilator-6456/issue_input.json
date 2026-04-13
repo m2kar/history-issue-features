@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6456,
+  "issue_url": "https://github.com/verilator/verilator/issues/6456",
+  "title": "Add error on `localparam` value from hierarchical path",
+  "body": "When a `localparam` value of a module is _read_ from outside the module using a hierarchical path, the value of the `localparam` is computed based on the default parameters of the module, even if they are overwritten. For example, running the following code snippet:\n\n```\nmodule foo #(\n  parameter int X = 1\n) ();\n\n  localparam int Y = X;\n  localparam int Z = X;\n\n  initial $display(\"X=%0d, Y=%0d, Z=%0d.\", X, Y, Z);\n\nendmodule\n\nmodule tb;\n  localparam int MY_X = 2;\n\n  foo #(.X(MY_X)) inst ();\n\n  localparam int MY_Y = inst.Y;\n\n  initial $display(\"MY_Y=%0d.\", MY_Y);\n\nendmodule\n```\n\nprints the following lines:\n\n```\nMY_Y=1.\nX=2, Y=1, Z=2.\n```\n\nEven tough all values are supposed to be `2`. Reading the value of `inst.Y` in the line `localparam int MY_Y = inst.Y;` causes the value to be wrong both inside and outside the module. The value of `inst.Z` is not affected and shows the correct value derived from the overwritten value of parameter `X`. The problem seems to originate in the constant propagation, where the value of `MY_Y` is evaluated before the module `inst` is evaluated.\n\nThe example snippet above was run with `Verilator 5.036 2025-04-27 rev v5.036`, running the command `verilator --debug --timing --cc --exe --main --build --top-module tb test.sv -o test.vlt` on `AlmaLinux 9.6`.\n\nThe example snippet was also tested with VCS, which produces the correct output:\n```\nMY_Y=2.\nX=2, Y=2, Z=2.\n```\n\nThe following snippet could be used in regession tests:\n```\nmodule foo #(\n  parameter int X = 1\n) ();\n  localparam int Y = X;\nendmodule\n\nmodule tb;\n  localparam int MY_X = 2;\n\n  foo #(.X(MY_X)) inst ();\n\n  localparam int MY_Y = inst.Y;\n\n  initial begin\n    if (MY_X == MY_Y) $finish; else $error;\n  end\nendmodule\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-19",
+  "closed_at": "2025-09-20",
+  "code_blocks": [
+    "module foo #(\n  parameter int X = 1\n) ();\n\n  localparam int Y = X;\n  localparam int Z = X;\n\n  initial $display(\"X=%0d, Y=%0d, Z=%0d.\", X, Y, Z);\n\nendmodule\n\nmodule tb;\n  localparam int MY_X = 2;\n\n  foo #(.X(MY_X)) inst ();\n\n  localparam int MY_Y = inst.Y;\n\n  initial $display(\"MY_Y=%0d.\", MY_Y);\n\nendmodule\n",
+    "MY_Y=1.\nX=2, Y=1, Z=2.\n",
+    "MY_Y=2.\nX=2, Y=2, Z=2.\n",
+    "module foo #(\n  parameter int X = 1\n) ();\n  localparam int Y = X;\nendmodule\n\nmodule tb;\n  localparam int MY_X = 2;\n\n  foo #(.X(MY_X)) inst ();\n\n  localparam int MY_Y = inst.Y;\n\n  initial begin\n    if (MY_X == MY_Y) $finish; else $error;\n  end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

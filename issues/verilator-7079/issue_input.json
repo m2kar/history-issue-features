@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7079,
+  "issue_url": "https://github.com/verilator/verilator/pull/7079",
+  "title": "Support #0 delays with IEEE-1800 compliant semantics",
+  "body": "Need to still do docs and fix up a few tests/coverage as needed, but please provide feedback @wsnyder 🎄 🎁 \r\n\r\n---\r\n\r\nThis patch adds IEEE-1800 compliant scheduling support for the Inactive scheduling region used for #0 delays.\r\n\r\nImplementing this requires that **all** IEEE-1800 active region events are placed in the internal 'act' section. This has simulation performance implications. It prevents some optimizations (e.g. V3LifePost), which reduces single threaded performance. It also reduces the available work and parallelism in the internal 'nba' section, which reduced the effectiveness of multi-threading severely.\r\n\r\nPerformance impact on RTLMeter when using scheduling adjusted to support proper #0 delays is ~10-20% slowdown in single-threaded mode, and ~100% (2x slower) with --threads 4.\r\n\r\nTo avoid paying this performance penalty unconditionally, the scheduling is only adjusted if either:\r\n1. The input contains a statically known #0 delay\r\n2. The input contains a variable #x delay unknown at compile time\r\n\r\nIf no #0 is present, but #x variable delays are, a ZERODLY warning is issued advising the use of '--no-runtime-zero-delay' which is a promise by the user that none of the variable delays will evaluate to a zero delay at run-time. This warning is turned off if '--runtime-zero-delay' is explicitly given. This is similar to the '--timing' option.\r\n\r\nIf '--no-runtime-zero-delay' was used at compile time, then executing a zero delay will fail at runtime.\r\n\r\nA ZERODLY warning is also issued if a static #0 if found, but the user specified '--no-runtime-zero-delay'. In this case the scheduling is not adjusted to support #0, so executing it will fail at runtime. Presumably the user knows it won't be executed.\r\n\r\nThe intended behaviour with all this is the following:\r\n\r\nNo #0, no #var in the design (#constant is OK)\r\n-> Same as current behaviour, scheduling not adjusted,\r\n   same code generated as before\r\n\r\nHas static #0 and '--no-runtime-zero-delay' is NOT given: -> No warnings, scheduling adjusted so it just works, runs slow\r\n\r\nHas static #0 and '--no-runtime-zero-delay' is given: -> ZERODLY on the #0, scheduling not adjusted, fails at runtime if hit\r\n\r\nNo static #0, but has #var and no option is given: -> ZERODLY on the #var advising use of '--no-runtime-zero-delay' or\r\n   '--runtime-zero-delay' (similar to '--timing'), scheduling adjusted\r\n   assuming it can be a zero delay and it just works\r\n\r\nNo static #0, but has #var and '--no-runtime-zero-delay' is given: -> No warning, scheduling not adjusted, fails at runtime if zero delay\r\n\r\nNo static #0, but has #var and '--runtime-zero-delay' is given: -> No warning, scheduling adjusted so it just works\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-14",
+  "closed_at": "2026-02-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

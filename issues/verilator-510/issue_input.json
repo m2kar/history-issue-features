@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 510,
+  "issue_url": "https://github.com/verilator/verilator/issues/510",
+  "title": "Error with unsized elements in tristate select",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 510 from https://www.veripool.org\nOriginal Date: 2012-05-08\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe following code fails:\r\n\r\n```\r\nmodule t (clk);\r\n    input clk;\r\n\r\n    wire [1:0]  b;\r\n    wire [1:0]  c;\r\n    wire [0:0]  d;\t\t// Explicit width due to issue 508\r\n    wire [0:0]  e;\r\n\r\n    assign b[1:0] = clk ? 2'bx : 'bz;\r\n    assign c[1:0] = clk ? 2'bz : 'bx;\r\n    assign d      = clk ? 1'bx : 'bz;\r\n    assign e      = clk ? 1'bz : 'bx;\r\n    \r\nendmodule // t\r\n\n```\r\n\r\nThe errors given are:\r\n\r\n```\r\n%Error: t/t_tri_select_unsized.v:22: Unsupported RHS tristate construct: SEL\r\n%Error: t/t_tri_select_unsized.v:23: Unsupported RHS tristate construct: SEL\r\n%Error: t/t_tri_select_unsized.v:24: Unsupported RHS tristate construct: SEL\r\n%Error: t/t_tri_select_unsized.v:25: Unsupported RHS tristate construct: SEL\r\n\n```\r\n\r\n(where lines 22-25 iare the lines with the select). The error does not occur if we give an explicit length, even if it requires extending. For example the following is OK.\r\n\r\n```\r\nassign b[1:0] = clk ? 2'bx : 1'bz;\r\n\n```\r\n\r\nSince we get the same error even if we declare @wire [0:0] d;@, this may be connected to Issue 508.\r\n\r\nPlease pull a testcase from https://github.com/jeremybennett/verilator/tree/z-select-unsized\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2012-05-08",
+  "closed_at": "2012-07-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7725,
+  "issue_url": "https://github.com/llvm/circt/issues/7725",
+  "title": "[HWToSMT] Assertion failure on i0 constant",
+  "body": "It emits an error but seems like the error is not properly propagated. Also it would be nice if we can avoid unknown loc for error reporting (`<unknown>:0: error: bit-width must be at least 1, but got 0`)\r\n```mlir\r\n$ zero.mlir \r\n  hw.module @concat(in %lhs : i5, in %rhs : i5, out out : i5) {\r\n    %c0_i0 = hw.constant 0 : i0\r\n    %c = comb.concat %lhs, %c0_i0 : i5, i0\r\n    hw.output %c : i5\r\n  }\r\n  hw.module @concat2(in %lhs: i5, in %rhs: i5, out out: i5) {\r\n    hw.output %lhs : i5\r\n  }\r\n\r\n$ circt-lec zero.mlir --c1 concat --c2 concat2 -mlir-print-ir-after-all -verbose-pass-executions^C\r\n\r\n[circt-lec] Running \"convert-hw-to-smt\"\r\n<unknown>:0: error: bit-width must be at least 1, but got 0\r\ncirct-lec: /home/uenoku/dev/circt-dev/llvm/mlir/include/mlir/IR/StorageUniquerSupport.h:179: static ConcreteT mlir::detail::StorageUserBase<ConcreteT, BaseT, StorageT, UniquerT, Traits>::get(mlir::MLIRContext*, Args&& ...) [with Args = {llvm::APInt}; ConcreteT = circt::smt::BitVectorAttr; BaseT = mlir::Attribute; StorageT = circt::smt::detail::BitVectorAttrStorage; UniquerT = mlir::detail::AttributeUniquer; Traits = {mlir::TypedAttr::Trait}]: Assertion `succeeded( ConcreteT::verifyInvariants(getDefaultDiagnosticEmitFn(ctx), args...))' failed.\r\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\r\nStack dump:\r\n0.      Program arguments: ./build/bin/circt-lec zero.mlir --c1 concat --c2 concat2 -mlir-print-ir-after-all -verbose-pass-executions\r\n #0 0x00005e7f8081f32f llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) /home/uenoku/dev/circt-dev/llvm/llvm/lib/Support/Unix/Signals.inc:727:3\r\n #1 0x00005e7f8081cc1f llvm::sys::RunSignalHandlers() /home/uenoku/dev/circt-dev/llvm/llvm/lib/Support/Signals.cpp:105:20\r\n #2 0x00005e7f8081cf76 SignalHandler(int) /home/uenoku/dev/circt-dev/llvm/llvm/lib/Support/Unix/Signals.inc:413:1\r\n #3 0x00007ddb87842520 (/lib/x86_64-linux-gnu/libc.so.6+0x42520)\r\n #4 0x00007ddb878969fc __pthread_kill_implementation ./nptl/pthread_kill.c:44:76\r\n```",
+  "labels": [
+    "SMT"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-23",
+  "closed_at": "2024-10-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

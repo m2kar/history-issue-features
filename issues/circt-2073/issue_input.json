@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2073,
+  "issue_url": "https://github.com/llvm/circt/issues/2073",
+  "title": "Tabs in Verilog emission",
+  "body": "Verilog emitter uses tabs in some places to align comments. Example\r\n\r\nIn port list:\r\n\r\n![image](https://user-images.githubusercontent.com/511872/140163999-2a3d2088-ff55-4b16-b3fa-9a75ae48bc8c.png)\r\n\r\nIn assign statements:\r\n\r\n![image](https://user-images.githubusercontent.com/511872/140163452-6d436413-1f26-4c61-a906-f56f629d1f6a.png)\r\n\r\nTab size/behavior heavily depend on the editor / viewer and in general don't guaranty alignment.\r\nWe use spaces for indentation and alignment in most of the cases.\r\nUsing tabs in just one particular case and in the in the middle of the line complicates handling of the code.\r\n\r\n## How to reproduce\r\n\r\nThe following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod:\r\n  module top_mod:\r\n    input a: UInt<42>\r\n    output b: UInt\r\n    output bb: UInt\r\n    output bbb: UInt\r\n    output bbbb: UInt\r\n    b <= tail(a, 40)\r\n    bb <= tail(a, 3)\r\n    bbb <= tail(a, 2)\r\n    bbbb <= tail(a, 1)\r\n```\r\n\r\nCompiled with `firtool   --lower-to-hw --infer-widths --imconstprop --lowering-options=disallowPackedArrays,emittedLineLength=8192 --mlir-timing --verilog -o=$VFILE2` produces this code:\r\n\r\n```verilog\r\nmodule top_mod(\t// a_top_mod.fir:2:10\r\n  input  [41:0] a,\r\n  output [1:0]  b,\r\n  output [38:0] bb,\r\n  output [39:0] bbb,\r\n  output [40:0] bbbb);\r\n\r\n  assign b = a[1:0];\t// a_top_mod.fir:2:10, :8:10\r\n  assign bb = a[38:0];\t// a_top_mod.fir:2:10, :9:11\r\n  assign bbb = a[39:0];\t// a_top_mod.fir:2:10, :10:12\r\n  assign bbbb = a[40:0];\t// a_top_mod.fir:2:10, :11:13\r\nendmodule\r\n```\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-11-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

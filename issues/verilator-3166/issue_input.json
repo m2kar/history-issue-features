@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3166,
+  "issue_url": "https://github.com/verilator/verilator/issues/3166",
+  "title": "'No dtype on node with hasDType()' internal error",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\nWhen running without --debug, this results in a crash. When running in the regression suite, I receive the error above.\r\nThis appears to result from at least two scenarios:\r\n- Passing a scoped enumerator to a class constructor\r\n- Calling the constructor for the current class and passing local fields to the constructor (pattern: clone method)\r\n\r\nI've updated two current regression-suite tests to show the error.\r\n\r\n## t_class_enum.v\r\n\r\n```\r\nmodule t (/*AUTOARG*/);\r\n\r\nclass Cls;\r\n   typedef enum {A = 10, B = 20, C = 30} en_t;\r\n   en_t m_en;\r\n\r\n   function new(en_t v);\r\n       m_en = v;\r\n   endfunction\r\nendclass\r\n\r\n   initial begin\r\n      Cls c;\r\n      if (c.A != 10) $stop;\r\n      c = new(Cls::B);\r\n      if (c.m_en != 20) $stop;\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nAddition of the `new' method and call to constructor triggers the error.\r\n\r\n## t_class_new.v\r\nModifying Cls2Arg by adding the `clone` method triggers the error.\r\n```\r\nclass Cls2Arg;\r\n   int imembera;\r\n   int imemberb;\r\n   function new(int i, int j);\r\n      imembera = i + 1;\r\n      imemberb = j + 2;\r\n   endfunction\r\n\r\n   function Cls2Arg clone();\r\n      Cls2Arg ret;\r\n      ret = new(imembera, imemberb);\r\n      return ret;\r\n   endfunction\r\nendclass\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\nI'm using 'master' as of 20211010 updated 20:05 PDT.\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\nAbsolutely. I think it would be helpful to understand where a node's DType is expected to be set, and possible reasons for it not being set.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-11",
+  "closed_at": "2021-10-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

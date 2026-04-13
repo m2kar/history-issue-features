@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1472,
+  "issue_url": "https://github.com/verilator/verilator/issues/1472",
+  "title": "Memory not updating in for loop",
+  "body": "---\n\n\nAuthor Name: **Somya Dashora**\nOriginal Redmine Issue: 1472 from https://www.veripool.org\n\n\n\n---\n\nWe are facing an issue with following verilog code\r\n\r\nSnippets of the relevant portion of code is shown below :\r\n\r\n----------------------------------------------------------------------------------------------------\r\n\r\n```\r\nmodule DUT (\r\n         \r\n             //signal declaration\r\n        \r\n             ) ;\r\n\r\ninput Clear_Signal;\r\ninput rst ;\r\nreg [3:0] Dist_Ram [ 0 : RAM_DEPTH ] ;\r\n\r\ninteger i;\r\n\r\n\r\n     always @ ( posedge clk )\r\n        begin\r\n            if ( !rst )\r\n           begin\r\n              for( i=0 ; i < RAM_DEPTH ; i=i+1 ) // reset RAM with zeros\r\n                 Dist_Ram [ i ] <= {  4{ 1'b0 } };\r\n              end\r\n        \r\n             else\r\n               begin\r\n                  if ( Clear_Signal )                                       \r\n                    begin\r\n                       for ( i=0 ; i < RAM_DEPTH ; i = i+1 )\r\n                                 Dist_Ram [ i ] <= 4'd0 ;\r\n                    end\r\n                \r\n                // ---- Some Code Followed . . .\r\n                .\r\n                .\r\n                .\r\n                .\r\n                .\r\n\r\n\r\nendmodule\r\n\n```\r\n\r\n------------------------------------------------------------------------------------------------------------------------\r\n\r\nThe problem i am facing is that when signal Clear_Signal is asserted the Dist_Ram should have all zero as it content.\r\n\r\nBut on displaying the content we get\r\n\r\n     Dist_Ram[0] = 1001  // Some data written \r\n     Dist_Ram[1] = 1011  // by some code\r\n     Dist_Ram[2] = 1010  // \r\n     .\r\n     .\r\n     .\r\n     .\r\n     .\r\n     Dist_Ram[9] = 1001\r\n\r\nThis in not as expected.\r\n\r\nHowever the same code on Questa Sim-64 Version 10.6a results in\r\n     \r\n     Dist_Ram[0] = 0000\r\n     Dist_Ram[1] = 0000\r\n     Dist_Ram[2] = 0000\r\n     .\r\n     .\r\n     .\r\n     .\r\n     .\r\n     Dist_Ram[9] = 0000\r\n\r\nWhich is desired and expected.\r\n\r\nWe think this might be due the common loop variable 'i' which we are using to unroll the for loop - in both cases of rst and Clear_Signal.\r\n\r\nThe verilator version on which the code was run is :\r\n\r\nVerilator 4.016 2019-06-16 rev UNKNOWN_REV\r\n\r\n\r\nThe command that was run is\r\n\r\nverilator --x-assign fast --x-initial fast -O3                    \\\r\n-CFLAGS \"\"                                                        \\\r\n-Wno-style -Wno-lint -Wno-BLKLOOPINIT -Wno-STMTDLY -Wno-UNOPTFLAT \\\r\n-Mdir ./Verilator_obj                                             \\\r\n--cc -y src -y tb_v Top.v --exe ./tb_c/main.cpp &&                \\\r\nmake -j -C ./Verilator_obj -f VmkTop.mk &&                        \\\r\n./Verilator_obj/VmkTop  \r\n\r\n\r\nPlease could you let us know a way to resolve this.\n\n\n",
+  "labels": [
+    "resolution: abandoned",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-26",
+  "closed_at": "2019-10-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

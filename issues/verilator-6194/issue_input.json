@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6194,
+  "issue_url": "https://github.com/verilator/verilator/issues/6194",
+  "title": "task automatic called within fork within for loop: invalid argument",
+  "body": "```systemverilog\n`timescale 1ns / 1ps\n\nmodule dut_tb;\n\n    logic clk;\n\n    initial begin\n        clk = 0;\n        forever #(1) clk = ~clk;\n    end\n\n    task automatic send_req_packets(int module_id, int channel);\n        $display(\"send_req_packets start:  module %0d, channel %0d\", module_id, channel);\n        @(posedge clk);\n        $display(\"send_req_packets end:  module %0d, channel %0d\", module_id, channel);\n    endtask\n\n    initial begin\n        for (int m = 0; m < 2; m++) begin\n            for (int i = 0; i < 2; i++) begin\n                automatic int mod = m;\n                automatic int ch = i;\n                fork\n                    send_req_packets(mod, ch);\n                join_none\n            end\n        end\n\n        repeat (10) @(posedge clk);\n\n        $finish;\n    end\n\nendmodule\n\n```\nVerilator test Output\n```\nsend_req_packets start:  module 0, channel 0\nsend_req_packets start:  module 0, channel 1\nsend_req_packets start:  module 1, channel 0\nsend_req_packets start:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\n\n```\n\nWhat 'verilator' command line do we use to run your example?\n```\nverilator -cc --binary --build -j 0 -sv --timescale 1ns/10ps --Mdir tb_verilator -o tb_verilator tb.sv  -timing\n```\nThen execute the binary\n\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n`Verilator 5.039 devel rev v5.038-36-g87050670b`\n\nWhat OS and distribution are you using?\n```\nNAME=\"Red Hat Enterprise Linux\"\nVERSION=\"9.3 (Plow)\"\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\nI can try\n\nIf I run with xcelium I get\n```\nsend_req_packets start:  module 1, channel 1\nsend_req_packets start:  module 1, channel 0\nsend_req_packets start:  module 0, channel 1\nsend_req_packets start:  module 0, channel 0\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 0\nsend_req_packets end:  module 0, channel 1\nsend_req_packets end:  module 0, channel 0\n```\n\n",
+  "labels": [
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-18",
+  "closed_at": "2025-07-21",
+  "code_blocks": [
+    "`timescale 1ns / 1ps\n\nmodule dut_tb;\n\n    logic clk;\n\n    initial begin\n        clk = 0;\n        forever #(1) clk = ~clk;\n    end\n\n    task automatic send_req_packets(int module_id, int channel);\n        $display(\"send_req_packets start:  module %0d, channel %0d\", module_id, channel);\n        @(posedge clk);\n        $display(\"send_req_packets end:  module %0d, channel %0d\", module_id, channel);\n    endtask\n\n    initial begin\n        for (int m = 0; m < 2; m++) begin\n            for (int i = 0; i < 2; i++) begin\n                automatic int mod = m;\n                automatic int ch = i;\n                fork\n                    send_req_packets(mod, ch);\n                join_none\n            end\n        end\n\n        repeat (10) @(posedge clk);\n\n        $finish;\n    end\n\nendmodule\n\n",
+    "send_req_packets start:  module 0, channel 0\nsend_req_packets start:  module 0, channel 1\nsend_req_packets start:  module 1, channel 0\nsend_req_packets start:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 1\n\n",
+    "verilator -cc --binary --build -j 0 -sv --timescale 1ns/10ps --Mdir tb_verilator -o tb_verilator tb.sv  -timing\n",
+    "NAME=\"Red Hat Enterprise Linux\"\nVERSION=\"9.3 (Plow)\"\n",
+    "send_req_packets start:  module 1, channel 1\nsend_req_packets start:  module 1, channel 0\nsend_req_packets start:  module 0, channel 1\nsend_req_packets start:  module 0, channel 0\nsend_req_packets end:  module 1, channel 1\nsend_req_packets end:  module 1, channel 0\nsend_req_packets end:  module 0, channel 1\nsend_req_packets end:  module 0, channel 0\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

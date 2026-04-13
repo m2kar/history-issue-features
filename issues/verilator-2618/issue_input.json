@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2618,
+  "issue_url": "https://github.com/verilator/verilator/issues/2618",
+  "title": "Queue constructor/default doesn't properly initialize",
+  "body": "When a queue resizes:\r\n\r\n```\r\n         a = new [0];\r\n         `checkh(a.size, 0);\r\n         b = new [4](a);\r\n         `checkh(b.size, 4);\r\n         `checkh(b[0], 0);\r\n         `checkh(b[1], 0);\r\n```\r\n\r\nThe resize calls C++'s renew, which calls the queue element constructor.  This uses atDefault (default in SystemVerilog pattern). Currently atDefault is only set in the module constructor, so making the new object loses the default setting, even if zeroing.  The result is random default values rather than zero or the appropriate default.\r\n\r\nIdeal is probably to create a new class for each appropriate data type overloading the constructor appropriately.\r\n\r\nMight also be possible for verilated_heavy.cpp's cons() to take an example static variable with the default in it. This would break if the default does object construction, but since Verilog class objects always start with null initialization, constructing objects as a default might not be needed.\r\n\r\n",
+  "labels": [
+    "area: data-types",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-01",
+  "closed_at": "2025-09-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

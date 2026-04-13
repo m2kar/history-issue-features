@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5999,
+  "issue_url": "https://github.com/verilator/verilator/issues/5999",
+  "title": "Declaring a randc non-`packed` struct produces internal error: Unexpected randc variable dtype",
+  "body": "Given `ex.v`:\n\n```verilog\nclass ex;\n    randc struct {\n        logic x;\n    } s;\nendclass: ex\n\nmodule foo;\n  initial begin\n    ex e;\n    e.randomize(); // this call must be present to trigger the bug\n  end\nendmodule\n```\n\nrunning `verilator --lint-only ex.v ` produces:\n\n```\n%Error: Internal Error: ex.v:4:7: ../V3Randomize.cpp:1463: Unexpected randc variable dtype\n                                : ... note: In instance 'foo'\n    4 |     } s;\n      |       ^\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\n```\n\nThe following change resolves the error:\n\n```diff\n@@ -1,5 +1,5 @@\n class ex;\n-    randc struct {\n+    randc struct packed {\n         logic x;\n     } s;\n endclass: ex\n```\n\nI don't know enough about the details of the IEEE spec to confidently say that \"all structs declared randc must be packed,\" but if that's true perhaps it would make a more actionable error message than \"Internal error\"? \n\n> What 'verilator --version' are you using?  Did you try it with the git master version?\n\n```\n$ verilator --version\nVerilator 5.034 2025-02-24 rev v5.034\n```\n\n> What OS and distribution are you using?\n\n```\n$ head -n 5 /etc/os-release\nNAME=\"Manjaro Linux\"\nPRETTY_NAME=\"Manjaro Linux\"\nID=manjaro\nID_LIKE=arch\nBUILD_ID=rolling\n```\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nIf the fix ought to just be a more-specific error in this case, then yes. I'm not sure when I'll be able to get to it though, so someone else is also certainly welcome to take over if they feel more urgency. ",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-10",
+  "closed_at": "2025-09-06",
+  "code_blocks": [
+    "class ex;\n    randc struct {\n        logic x;\n    } s;\nendclass: ex\n\nmodule foo;\n  initial begin\n    ex e;\n    e.randomize(); // this call must be present to trigger the bug\n  end\nendmodule\n",
+    "%Error: Internal Error: ex.v:4:7: ../V3Randomize.cpp:1463: Unexpected randc variable dtype\n                                : ... note: In instance 'foo'\n    4 |     } s;\n      |       ^\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\n",
+    "@@ -1,5 +1,5 @@\n class ex;\n-    randc struct {\n+    randc struct packed {\n         logic x;\n     } s;\n endclass: ex\n",
+    "$ verilator --version\nVerilator 5.034 2025-02-24 rev v5.034\n",
+    "$ head -n 5 /etc/os-release\nNAME=\"Manjaro Linux\"\nPRETTY_NAME=\"Manjaro Linux\"\nID=manjaro\nID_LIKE=arch\nBUILD_ID=rolling\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

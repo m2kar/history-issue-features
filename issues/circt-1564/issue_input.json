@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1564,
+  "issue_url": "https://github.com/llvm/circt/issues/1564",
+  "title": "[ExportVerilog] multi-used readinout ops cause extraneous temporaries",
+  "body": "This:\r\n\r\n```\r\n hw.module @Thing(%auto_in_ar_bits_id : i2) -> (%aa: i3, %bb: i3){\r\n    %119 = sv.reg  : !hw.inout<i3>\r\n    %120 = sv.reg  : !hw.inout<i3>\r\n    %121 = sv.reg  : !hw.inout<i3>\r\n    %122 = sv.reg  : !hw.inout<i3>\r\n    %123 = sv.read_inout %120 : !hw.inout<i3>\r\n    %124 = sv.read_inout %119 : !hw.inout<i3>\r\n    %125 = sv.read_inout %121 : !hw.inout<i3>\r\n    %126 = sv.read_inout %122 : !hw.inout<i3>\r\n    %127 = hw.array_create %124, %123, %125, %126 : i3\r\n    %128 = hw.array_get %127[%auto_in_ar_bits_id] : !hw.array<4xi3>\r\n\r\n    %xx = comb.add %123, %124 : i3\r\n   hw.output %128, %xx : i3, i3\r\n}\r\n```\r\n\r\nCodegens into this verilog:\r\n\r\n```\r\nmodule Thing(\r\n  input  [1:0] auto_in_ar_bits_id,\r\n  output [2:0] aa, bb);\r\n\r\n  reg [2:0] _T;\t// y.mlir:2:12\r\n  reg [2:0] _T_0;\t// y.mlir:3:12\r\n  reg [2:0] _T_1;\t// y.mlir:4:12\r\n  reg [2:0] _T_2;\t// y.mlir:5:12\r\n\r\n  wire [2:0] _T_3 = _T_0;\t// y.mlir:6:12\r\n  wire [2:0] _T_4 = _T;\t// y.mlir:7:12\r\n  assign aa = ({{_T_4}, {_T_3}, {_T_1}, {_T_2}})[auto_in_ar_bits_id];\t// y.mlir:8:12, :9:12, :10:12, :11:12, :14:4\r\n  assign bb = _T_3 + _T_4;\t// y.mlir:13:11, :14:4\r\nendmodule\r\n```\r\n\r\nWe don't need the extra _T_4/_T_3 wires.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-13",
+  "closed_at": "2021-08-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4439,
+  "issue_url": "https://github.com/verilator/verilator/issues/4439",
+  "title": "verilator_coverage does not sum line hit count over coverage reports",
+  "body": "First of all, thank you for your work on Verilator!\r\n\r\nStarting with commit https://github.com/verilator/verilator/commit/b778784333ba0dda0f13141c5b68db9a11e98509 (related to #3876), `VlcSourceCount::incCount` no longer increments the line hit count, but computes the minimum over all hit counts instead:\r\n```\r\nm_count = std::min(m_count, count);\r\nif (!ok) m_ok = false;\r\n```\r\n(See https://github.com/verilator/verilator/commit/b778784333ba0dda0f13141c5b68db9a11e98509#diff-fd6a0121ce287e5d29c7c66320119c31074285af2b21861f18f185274a291661R56-R64)\r\n\r\nI'm sure there was a good reason why this was changed, but in my usage scenario where I'd like to compute the summed coverage over multiple tests, I'm now getting incorrect results. Specifically, in my use-case individual tests test different parts of the design, so the minimum hit count for many lines ends up incorrectly being set to zero.\r\n\r\nI'm using the following patch to fix this behaviour in our internal Verilator build:\r\n```diff\r\ndiff --git a/src/VlcSource.h b/src/VlcSource.h\r\nindex 788945787..6b87dd811 100644\r\n--- a/src/VlcSource.h\r\n+++ b/src/VlcSource.h\r\n@@ -58,7 +58,7 @@ public:\r\n             m_count = count;\r\n             m_ok = ok;\r\n         } else {\r\n-            m_count = std::min(m_count, count);\r\n+            m_count += count;\r\n             if (!ok) m_ok = false;\r\n         }\r\n     }\r\n-- \r\n```\r\n\r\nIf this is intended behavior, then feel free to ignore this issue; though, in that case the naming of the `incCount` function may be a little misleading.",
+  "labels": [
+    "area: coverage",
+    "type: feature-non-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-25",
+  "closed_at": "2023-08-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

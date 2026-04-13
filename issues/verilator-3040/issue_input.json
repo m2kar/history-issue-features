@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3040,
+  "issue_url": "https://github.com/verilator/verilator/issues/3040",
+  "title": "'--x-assign unique' in combination with a parameter containing X",
+  "body": "Using Git master.\r\n\r\nI use X valued bits in address decoders to combine the address and the mask into a single parameter.\r\nI had to fix some unrelated issue where I used X as a don't care and Verilator missed the bug due to optimizing X into '0.\r\nI was able to catch some of this bugs by using '--x-assign 1'.\r\nSo I tried to use '--x-assign unique' to see if my code had more X related bugs.\r\n\r\nI got the next error:\r\n```\r\n%Error: Internal Error: ../tbn/r5p_tb.sv:136:9: ../V3Localize.cpp:162: AstVarRef not under function\r\n                                              : ... In instance r5p_tb.ls_dec.__Vxrand1\r\n  136 |   .AS  ({ {1'b1, {DAW{1'bx}}} ,    \r\n      |         ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\nX assignment should not be used on *right operands* of *Wildcard equality operators*, since X and Z are treated as wildcards.\r\n\r\nI tried to find other cases where X/Z are used as wildcards:\r\n11.4.6 Wildcard equality operators\r\n11.4.13 Set membership operator (it uses the `==?` operator)\r\n12.5.4 Set membership case statement\r\n\r\nThis is a placeholder for now, I will try to prepare a proper regression test, checking both if the code compiles, and if it works as expected under various X assignment settings.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-23",
+  "closed_at": "2021-11-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

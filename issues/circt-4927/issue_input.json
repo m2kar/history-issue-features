@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4927,
+  "issue_url": "https://github.com/llvm/circt/issues/4927",
+  "title": "[Handshake] Inconsistent type for \"indexing\" values",
+  "body": "Currently, `ControlMergeOp`'s second result (which contains the index of the selected input) is required to be an `Index` type (see [here](https://github.com/llvm/circt/blob/main/include/circt/Dialect/Handshake/HandshakeOps.td#L413)). This seems slightly inconsistent with the `selectOperand` of `MuxOp` which can either be an `Index` type or an `IntegerType` (as specified by its [verification function](https://github.com/llvm/circt/blob/main/lib/Dialect/Handshake/HandshakeOps.cpp#L415)) and carries the same semantic meaning (i.e., indexing into a list of operands).\r\n\r\nAdditionally, once we have a bitwidth optimization pass, the required `Index` type will prevent us from optimizing the second result of `ControlMergeOp`'s, since we won't be able to change it to e.g., an `i1` if the control merge only has two inputs.\r\n\r\nIt seems to me that we should implement the same sort of logic for this result as for the `selectOperand` of `MuxOp`, for the reasons outlined above. This means having the second result of `ControlMergeOp` be an `AnyType` and checking that the value is either an `Index` or `IntegerType` with a large enough width in the operation's `verify` method. \r\n\r\nThis is something I can address quickly if people think this is a good idea.",
+  "labels": [
+    "Handshake"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-04",
+  "closed_at": "2023-04-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

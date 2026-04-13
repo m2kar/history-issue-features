@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6283,
+  "issue_url": "https://github.com/verilator/verilator/issues/6283",
+  "title": "Support parameters of unpacked structs",
+  "body": "**Bug Description**\nVerilator does not support default values for struct-type parameters in interface/module declarations, even when using aggregate assignment patterns or references to other struct parameters. \n\nVerilator Version: latest main\nPlatform: Linux\nSystemVerilog Standard: IEEE 1800-2023\n\n**Error Message**\n``\n%Error: ../tb/axis_if.sv:8:20: Expecting expression to be constant, but can't convert a CONSPACKUORSTRUCT to constant.\n``\n\nAccording to Section 6.20.2 Value Parameters:\n\n> A parameter can also be declared as an aggregate type, such as an unpacked array or an unpacked structure. An aggregate parameter shall be assigned to or overridden as a whole; individual members of an aggregate parameter may not be assigned or overridden separately.\n\n\n> A value parameter (parameter, localparam, or specparam) can only be set to an expression of literals, value parameters or local parameters, genvars, enumerated names, or a constant function of these. Package references are allowed.\n\n\n**Testcases**\nSetting the struct via an aggregate assignment pattern directly:\n```\ntypedef struct {\n    int test;\n} axis_cfg_t;\n\ninterface axi_stream_if #(\n    axis_cfg_t x = '{test: 1}  // Should be legal per IEEE 1800-2023 6.20.3\n) (\n    input logic clk,\n    input logic arstn\n);\nendinterface\n\nmodule tb_top;\n    logic clk, arstn;\n    axi_stream_if axis_if(clk, arstn);  // Should use default value\nendmodule\n```\n\nOr setting the parameter indirectly via another parameter\n```\ntypedef struct {\n    int test;\n} axis_cfg_t;\n\nparameter axis_cfg_t default_cfg = '{test: 1};\n\ninterface axi_stream_if #(\n    axis_cfg_t x = default_cfg  // Should be legal per IEEE 1800-2023 6.20.1\n) (\n    input logic clk,\n    input logic arstn\n);\nendinterface\n\nmodule tb_top;\n    logic clk, arstn;\n    axi_stream_if axis_if(clk, arstn);  // Should use default_cfg value\nendmodule\n```\n",
+  "labels": [
+    "area: data-types",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-11",
+  "closed_at": "2025-08-21",
+  "code_blocks": [
+    "typedef struct {\n    int test;\n} axis_cfg_t;\n\ninterface axi_stream_if #(\n    axis_cfg_t x = '{test: 1}  // Should be legal per IEEE 1800-2023 6.20.3\n) (\n    input logic clk,\n    input logic arstn\n);\nendinterface\n\nmodule tb_top;\n    logic clk, arstn;\n    axi_stream_if axis_if(clk, arstn);  // Should use default value\nendmodule\n",
+    "typedef struct {\n    int test;\n} axis_cfg_t;\n\nparameter axis_cfg_t default_cfg = '{test: 1};\n\ninterface axi_stream_if #(\n    axis_cfg_t x = default_cfg  // Should be legal per IEEE 1800-2023 6.20.1\n) (\n    input logic clk,\n    input logic arstn\n);\nendinterface\n\nmodule tb_top;\n    logic clk, arstn;\n    axi_stream_if axis_if(clk, arstn);  // Should use default_cfg value\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

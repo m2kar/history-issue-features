@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7284,
+  "issue_url": "https://github.com/verilator/verilator/pull/7284",
+  "title": "Support ## delay on implication RHS in SVA properties",
+  "body": "## Summary\r\nThis patch adds support for sequence expressions (cycle delays via `##`) on the RHS of SVA implication operators (`|->` and `|=>`), per IEEE 1800-2023 Section 16.12.7. Previously, Verilator rejected all implications involving sequence expressions with a blanket `UNSUPPORTED` error in `V3Width`, regardless of whether the sequence appeared on the LHS or RHS.\r\n\r\n## Reproducer\r\n```systemverilog\r\nmodule t (input clk);\r\n  logic a, b;\r\n  assert property (@(posedge clk) a |-> ##1 b);\r\n  assert property (@(posedge clk) a |=> ##2 b);\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: t.v:3:37: Unsupported: Implication with sequence expression\r\n                                           : ... note: In instance 't'\r\n   3 |   assert property (@(posedge clk) a |-> ##1 b);\r\n     |                                     ^~~\r\n%Error-UNSUPPORTED: t.v:4:37: Unsupported: Implication with sequence expression\r\n                                           : ... note: In instance 't'\r\n   4 |   assert property (@(posedge clk) a |=> ##2 b);\r\n     |                                     ^~~\r\n%Error: Exiting due to 2 error(s)\r\n```\r\n\r\n## Changes\r\n- Remove blanket `m_hasSExpr` implication check from `V3Width.cpp` that rejected all implication+sequence combinations\r\n- Add LHS/RHS distinction in `V3AssertPre::visit(AstImplication*)`: LHS sequence expressions (`AstPExpr` as antecedent) remain unsupported with a more specific error message (\"as antecedent\")\r\n- For RHS sequence expressions, wrap the `AstPExpr` body with an antecedent guard (`AstSampled` for overlapped `|->`, `AstPast` for non-overlapped `|=>`), so the sequence only starts when the antecedent holds\r\n- Update `t_property_sexpr_unsup.out` golden file: error count drops from 8 to 6 (two RHS-only cases now pass), remaining errors show refined message\r\n\r\n## Test\r\n- Added `test_regress/t/t_property_imply_delay.v` and `.py` — tests overlapped (`|-> ##1`, `|-> ##2`) and non-overlapped (`|=> ##2`) implication with cycle delays on RHS\r\n- Updated `test_regress/t/t_property_sexpr_unsup.out` — reflects refined error messages and removal of two now-supported cases\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-19",
+  "closed_at": "2026-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2692,
+  "issue_url": "https://github.com/llvm/circt/pull/2692",
+  "title": "[FIRRTL] Honor NLAs in GCT data tap paths",
+  "body": "The Grand Central data/mem taps pass used guess which concrete instance of a wire or port a data/mem tap referred to, because the taps were local annotations (i.e., they did not mention a concrete instance that they applied to). Since we now *do* have support for non-local annotations, and passes like deduplication make ample use of them, the GCT pass should consider the additional path information provided by NLAs when generating the data tap wiring. This commit makes GCT leverage the path information in NLAs.\r\n\r\nA concrete example would be a design with two instances:\r\n```\r\nmodule Top:\r\n  inst foo of Foo\r\n  inst bar of Foo\r\n```\r\nIf the instance port `foo.a` is targeted as a reference data tap, the GCT pass would up until now consider `Top.foo.a` and `Top.bar.a` as possible paths to that port, essentially ignoring the concrete instance path provided by the NLA `foo.a` and instead finding all possible prefixes for `Foo.a` (note the reference to Foo the module, not foo the instance.) The pass would then pick among all possible prefixes the shortest one (or in case of a tie, the last shortest one), which in this case could lead to the data tap targeting `Top.bar.a`, instead of the specified `Top.foo.a`.\r\n\r\nThe solution is to actually consider the concrete NLA instance path if one is given, and use that to perform the tapping. Arguably, *all* GCT data taps should be local annotations, which would also allow us to get rid of a lot of hacky logic in the GCT pass. That requires upstream changes in Chisel first, though.\r\n\r\nFixes #2691.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-25",
+  "closed_at": "2022-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5120,
+  "issue_url": "https://github.com/verilator/verilator/issues/5120",
+  "title": "SV interface name collision in different parts of design hierarchy -- Verilator muddles names between levels of hierarchy",
+  "body": "When I have an array of SV interfaces like this, Verilator works as expected for N=4.\r\n\r\n```\r\nAXIS_IF.master m_axis_if[N-1:0]\r\n```\r\n\r\nHowever, when I change to N=1, I get errors where Verilator has apparently mixed up master/slave modports and thinks I am assigning to an sv signal with the wrong direction. Basically Verilator seems to have confused master/slave modport determination, which usually automatic based on what the modport is connected to (ex: an AXIS_IF.master or AXIS_IF.slave modport of some module should and does cause it to pick the correct modport of the interface when N > 1).\r\n\r\n```\r\n  AXIS_IF #(\r\n      .DATA_W(AXIS_DATA_WIDTH),\r\n  ) axis_if (\r\n      .aclk   (clk),\r\n      .aresetn(~reset)\r\n  );\r\n  assign axis_if.tdata = tdata;\r\n```\r\n\r\nThis produces errors like:\r\n```\r\nAttempt to drive input-only modport: 'tdata'\r\n  144 |   assign axis_if.tdata = tdata;\r\n```\r\n\r\nIn this example, `tdata` is an input and `axis_if` is not even exposed as a port of the module.",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-05-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

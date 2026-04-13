@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7606,
+  "issue_url": "https://github.com/llvm/circt/pull/7606",
+  "title": "[Seq] Add a pass to implement firreg randomization",
+  "body": "This pass performs firreg random initialization for seq.compreg. With this pass we can represent \r\nfirreg initialization with compreg so we can eventually deprecate existing FirregLowering. There are still\r\nseveral differences:\r\n* Initialization for async reset registers is currently not fully implemented. This requires a change for seq.initial to capture port values to the body\r\n*  Several macros are deprecated: `FIRRTL_BEFORE_INITIAL`, `FIRRTL_AFTER_INITIAL` \r\n\r\nThis pass has an option to generate the randomization as MLIR core dialects which\r\nmake it possible to simulate with arcilator.   When `emitSV` is true, the pass generates\r\na random function call as a macro in the SV dialect. It supports configurable initialization of\r\n registers through macros like `RANDOM` and `INIT_RANDOM_PROLOG`. If the option is false,\r\nit produces simulatable IR using MLIR core dialects.\r\n\r\neg:\r\n```mlir\r\nhw.module @top(in %clk: !seq.clock, in %rst: i1, in %i: i18, out o: i18, out j: i18) {\r\n  %c0_i18 = hw.constant 0 : i18\r\n  %r0 = seq.compreg %i, %clk reset %rst, %c0_i18 : i18\r\n  %r1 = seq.compreg %i, %clk : i18\r\n\r\n  hw.output %r0, %r1: i18, i18\r\n}\r\n```\r\n```\r\ncirct-opt --pass-pipeline='builtin.module(seq-firreg-randomization{emit-sv=true},lower-seq-to-sv,canonicalize,export-verilog)'\r\n```\r\n```sv\r\nmodule top(\t// bar.mlir:4:1\r\n  input         clk,\t// bar.mlir:4:19\r\n                rst,\t// bar.mlir:4:40\r\n  input  [17:0] i,\t// bar.mlir:4:53\r\n  output [17:0] o,\t// bar.mlir:4:66\r\n                j\t// bar.mlir:4:78\r\n);\r\n\r\n  reg [17:0] r1;\t// bar.mlir:7:9\r\n  reg [17:0] r0;\t// bar.mlir:6:9\r\n  initial begin\t// bar.mlir:4:1\r\n    automatic logic [31:0] _GEN = `RANDOM;\t// bar.mlir:4:1\r\n    automatic logic [31:0] _GEN_0 = `RANDOM;\t// bar.mlir:4:1\r\n    `INIT_RANDOM_PROLOG_\t// bar.mlir:4:1\r\n    r0 = _GEN[17:0];\t// bar.mlir:4:1, :6:9\r\n    r1 = {_GEN[31:18], _GEN_0[3:0]};\t// bar.mlir:4:1, :7:9\r\n  end // initial\r\n  always_ff @(posedge clk) begin\t// bar.mlir:6:9\r\n    if (rst)\t// bar.mlir:6:9\r\n      r0 <= 18'h0;\t// bar.mlir:6:9\r\n    else\t// bar.mlir:6:9\r\n      r0 <= i;\t// bar.mlir:6:9\r\n  end // always_ff @(posedge)\r\n  always_ff @(posedge clk)\t// bar.mlir:7:9\r\n    r1 <= i;\t// bar.mlir:7:9\r\n  assign o = r0;\t// bar.mlir:6:9, :30:3\r\n  assign j = r1;\t// bar.mlir:7:9, :30:3\r\nendmodule\r\n```\r\n(`RANDOM` must not be placed before `INIT_RANDOM_PROLOG_` so this is a bug of ExportVerilog)\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-09-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

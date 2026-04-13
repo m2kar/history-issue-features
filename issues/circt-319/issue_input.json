@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 319,
+  "issue_url": "https://github.com/llvm/circt/issues/319",
+  "title": "[FIRRTL] (cat) 0-bit width",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_0: UInt<0>\r\n    input inp_1: UInt<5>\r\n    output out_0: UInt<5>\r\n    out_0 <= cat(inp_1, inp_0)\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl` produces this verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        inp_0,\r\n  input  [4:0] inp_1,\r\n  output [4:0] out_0);\r\n\r\n  assign out_0 = {inp_1, inp_0};\t// top_mod.fir:2:3, :6:14\r\nendmodule\r\n```\r\n\r\nThat has the following error:\r\n\r\n```bash\r\n%Warning-WIDTH: top_mod.v:6:16: Operator ASSIGNW expects 5 bits on the Assign RHS, but Assign RHS's REPLICATE generates 6 bits.\r\n                              : ... In instance top_mod\r\n    6 |   assign out_0 = {inp_1, inp_0};  \r\n      |                ^\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n```\r\n\r\nExpected Verilog output is:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [4:0] inp_1,\r\n  output [4:0] out_0);\r\n\r\n  assign out_0 = inp_1;\t// top_mod.fir:2:3, :6:14\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-11",
+  "closed_at": "2021-01-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

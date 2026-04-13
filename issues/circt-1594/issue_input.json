@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1594,
+  "issue_url": "https://github.com/llvm/circt/issues/1594",
+  "title": "[HW] Register w/ Wire Reset Produces Two Always Blocks, not CSE'd",
+  "body": "As identified https://llvm.discourse.group/t/firtool-register-verilog-emitter/4097, formulations of registers that are reset by wires may cause multiple always blocks to be generated. \r\n\r\nConsider:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"MyTop\"   {\r\n    firrtl.module @MyTop(in %clk: !firrtl.clock, in %reset: !firrtl.uint<1>, in %a: !firrtl.uint<1>, out %b: !firrtl.uint<2>) {\r\n      %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n      %reset_n = firrtl.wire  : !firrtl.uint<1>\r\n      %0 = firrtl.not %reset : (!firrtl.uint<1>) -> !firrtl.uint<1>\r\n      firrtl.connect %reset_n, %0 : !firrtl.uint<1>, !firrtl.uint<1>\r\n      %r = firrtl.regreset %clk, %reset_n, %c0_ui1  : !firrtl.uint<1>, !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %r, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %b, %r : !firrtl.uint<2>, !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis is getting lowered to two always blocks:\r\n\r\n```mlir\r\n  hw.module @MyTop(%clk: i1, %reset: i1, %a: i1) -> (%b: i2) {\r\n    %true = hw.constant true\r\n    %false = hw.constant false\r\n    %reset_n = sv.wire  : !hw.inout<i1>\r\n    %0 = comb.xor %reset, %true : i1\r\n    sv.assign %reset_n, %0 : i1\r\n    %1 = sv.read_inout %reset_n : !hw.inout<i1>\r\n    %r = sv.reg  : !hw.inout<i1>\r\n    sv.alwaysff(posedge %clk)  {\r\n    }(syncreset : posedge %1)  {\r\n      sv.passign %r, %false : i1\r\n    }\r\n    %2 = sv.read_inout %reset_n : !hw.inout<i1>\r\n    sv.alwaysff(posedge %clk)  {\r\n      sv.passign %r, %a : i1\r\n    }(syncreset : posedge %2)  {\r\n    }\r\n    %3 = sv.read_inout %r : !hw.inout<i1>\r\n    %4 = comb.concat %false, %3 : (i1, i1) -> i2\r\n    hw.output %4 : i2\r\n  }\r\n```\r\n\r\nThese two always blocks aren't cleaned up by HWCleanup because it runs before CSE can unify `%1` and `%2`.",
+  "labels": [
+    "bug",
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-17",
+  "closed_at": "2021-08-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

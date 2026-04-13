@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9388,
+  "issue_url": "https://github.com/llvm/circt/issues/9388",
+  "title": "[firtool] Can firtool replace special strings in format of assert op?",
+  "body": "Copy these contents to `MyModule.fir`\n\n``` firrtl\nFIRRTL version 6.0.0\ncircuit MyModule :%[[\n  {\n    \"class\":\"firrtl.transforms.DedupGroupAnnotation\",\n    \"target\":\"~|MyModule\",\n    \"group\":\"MyModule\"\n  }\n]]\n\n  public module MyModule :\n    input clock : Clock\n    input reset : UInt<1>\n    output io : { flip a : UInt<1>, b : UInt<1>}\n\n    connect io.b, io.a\n    when io.a : \n      node _T = eq(reset, UInt<1>(0h0)) \n      skip\n      intrinsic(circt_chisel_ifelsefatal<format = \"Assertion failed: {{SimulationTime}}, {{HierarchicalModuleName}}\\n\", label = \"chisel3_builtin\">, clock, io.b, _T) \n      when _T :\n        skip\n        printf(clock, UInt<1>(0h1), \"{{SimulationTime}}, {{HierarchicalModuleName}}\")\n```\nAnd then run `firtool --split-verilog --format fir MyModule.fir -o .` with firtool 1.138.0\nThe assertion and print statement print different strings.\n\n``` verilog\nmodule MyModule(\n  input  clock,\n         reset,\n         io_a,\n  output io_b\n);\n\n  `ifndef SYNTHESIS\n    always @(posedge clock) begin\n      automatic logic _GEN = io_a & ~reset;\n      if (_GEN & ~io_a) begin\n        if (`ASSERT_VERBOSE_COND_)\n          $error(\"Assertion failed: {{SimulationTime}}, {{HierarchicalModuleName}}\\n\");\n        if (`STOP_COND_)\n          $fatal;\n      end\n      if ((`PRINTF_COND_) & _GEN)\n        $fwrite(32'h80000002, \"%0t, %m\", $time);\n    end // always @(posedge)\n  `endif // not def SYNTHESIS\n  assign io_b = io_a;\nendmodule\n```\nIs it reasonable for firtool to replace the `{{SimulationTime}}` and `{{HierarchicalModuleName}}` in the assertion statement?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-26",
+  "closed_at": "2026-01-16",
+  "code_blocks": [
+    "And then run `firtool --split-verilog --format fir MyModule.fir -o .` with firtool 1.138.0\nThe assertion and print statement print different strings.\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6814,
+  "issue_url": "https://github.com/verilator/verilator/issues/6814",
+  "title": "Inherited type parameters not recognized when used to parameterize another class in derived class",
+  "body": "## Description\n\nWhen a derived class extends a parameterized base class and tries to use the inherited type parameters (like `REQ` and `RSP`) to parameterize another class, Verilator reports an error:\n\n```\n%Error: Parameter type pin value isn't a type: Param '__paramNumber1' of 'uvm_seq_item_pull_port'\n```\n\nThis is a critical pattern in UVM where drivers extend `uvm_driver#(my_tx)` and use `REQ`/`RSP` to instantiate ports.\n\n## Test Case\n\n```systemverilog\nclass uvm_sequence_item;\n   int id;\nendclass\n\nclass uvm_seq_item_pull_port #(type T1=uvm_sequence_item, type T2=T1);\n   T1 item1;\n   T2 item2;\nendclass\n\nclass uvm_driver #(type REQ=uvm_sequence_item, type RSP=REQ);\n   REQ req;\n   RSP rsp;\n   // This works inside the same class:\n   uvm_seq_item_pull_port #(REQ, RSP) seq_item_port;\nendclass\n\nclass my_tx extends uvm_sequence_item;\n   int data;\nendclass\n\nclass my_driver extends uvm_driver#(my_tx);\n   // This fails - using inherited REQ, RSP from base class\n   uvm_seq_item_pull_port #(REQ, RSP) axi_write_seq_item_port;  // ERROR HERE\nendclass\n\nmodule t;\n   initial begin\n      my_driver drv;\n      drv = new;\n      $finish;\n   end\nendmodule\n```\n\n## Expected Behavior\n\nThe code should compile successfully, as `REQ` and `RSP` should be inherited and available in the derived class.\n\n## Actual Behavior\n\n```\n%Error: t/t_class_param_uvm_driver.v:52:29: Parameter type pin value isn't a type: Param '__paramNumber1' of 'uvm_seq_item_pull_port'\n%Error: Internal Error: t/t_class_param_uvm_driver.v:52:29: AstNode is not of expected type, but instead has type 'PARSEREF'\n```\n\n## Impact on UVM\n\nThis pattern is essential for UVM testbenches where:\n1. `uvm_driver` defines type parameters `REQ` and `RSP`\n2. User drivers extend `uvm_driver#(my_transaction)`\n3. User drivers need to instantiate ports like `uvm_seq_item_pull_port#(REQ, RSP)`\n\nThis is blocking more complex UVM testbench support in Verilator.\n\n## Environment\n\n- Verilator version: 5.043 devel\n- Platform: macOS Darwin 25.1.0\n",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "open",
+  "created_at": "2025-12-14",
+  "closed_at": null,
+  "code_blocks": [
+    "%Error: Parameter type pin value isn't a type: Param '__paramNumber1' of 'uvm_seq_item_pull_port'\n",
+    "class uvm_sequence_item;\n   int id;\nendclass\n\nclass uvm_seq_item_pull_port #(type T1=uvm_sequence_item, type T2=T1);\n   T1 item1;\n   T2 item2;\nendclass\n\nclass uvm_driver #(type REQ=uvm_sequence_item, type RSP=REQ);\n   REQ req;\n   RSP rsp;\n   // This works inside the same class:\n   uvm_seq_item_pull_port #(REQ, RSP) seq_item_port;\nendclass\n\nclass my_tx extends uvm_sequence_item;\n   int data;\nendclass\n\nclass my_driver extends uvm_driver#(my_tx);\n   // This fails - using inherited REQ, RSP from base class\n   uvm_seq_item_pull_port #(REQ, RSP) axi_write_seq_item_port;  // ERROR HERE\nendclass\n\nmodule t;\n   initial begin\n      my_driver drv;\n      drv = new;\n      $finish;\n   end\nendmodule\n",
+    "%Error: t/t_class_param_uvm_driver.v:52:29: Parameter type pin value isn't a type: Param '__paramNumber1' of 'uvm_seq_item_pull_port'\n%Error: Internal Error: t/t_class_param_uvm_driver.v:52:29: AstNode is not of expected type, but instead has type 'PARSEREF'\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3515,
+  "issue_url": "https://github.com/verilator/verilator/issues/3515",
+  "title": "$sformat when the destination string is used as a format argument results in empty string.",
+  "body": "`Verilator 4.225 devel rev v4.224-49-ge0b61cea`\r\n\r\n  ```verilog\r\nmodule tjo();                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \r\ninitial begin                                                                                                                                                                                                                           \r\n    string fail_str = \"foo\";                                                                                                                                                                                                              \r\n    $sformat(fail_str, \"%s\", fail_str);                                                                                                                                                                                                   \r\n    $sformat(fail_str, \"%s\", fail_str);                                                                                                                                                                                                        \r\n    $display(fail_str);                                                                                                                                                                                                                   \r\nend                                                                                                                                                                                                                                                                                                                                                                                                                                                                                \r\nendmodule\r\n```\r\n\r\nI expect the the string \"foo\" to be printed out, but instead the empty string is printed.\r\n\r\nI found that the overwriting of the string is done here, the `output` string is cleared before it is read by `vl_vsformat`:\r\n\r\nhttps://github.com/verilator/verilator/blob/e0b61ceabd76d2fd3aae0a1ff1bd522e307de409/include/verilated.cpp#L1460-L1467\r\n\r\nA possible solution would be to not clear the output string, and instead use a new string that is then copied to the output string:\r\n\r\n```cpp\r\nvoid VL_SFORMAT_X(int obits_ignored, std::string& output, const char* formatp, ...) VL_MT_SAFE {\r\n    if (obits_ignored) {}\r\n    static VL_THREAD_LOCAL std::string t_output;  // static only for speed\r\n    t_output = \"\";\r\n    va_list ap;\r\n    va_start(ap, formatp);\r\n    _vl_vsformat(t_output, formatp, ap);\r\n    va_end(ap);\r\n\r\n    output = t_output;\r\n}\r\n```\r\nI tried this and it seems to work for this simple case.\r\n\r\nDo you want me to create a merge request with this change?\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-23",
+  "closed_at": "2022-07-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

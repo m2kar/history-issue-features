@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8931,
+  "issue_url": "https://github.com/llvm/circt/issues/8931",
+  "title": "[firtool] Error while preserving struct aggregates containing a clock",
+  "body": "Follow on to #8450.\n\nChisel version: 7.0.0-RC4\nfirtool version: 1.130.0\n\nI noticed an error cropping up when using `--preserve-aggregate=all` on a Rocket Chip design, specifically at [this line](https://github.com/chipsalliance/rocket-chip/blob/c357a0f32ecec9ee046ca1d6378c21ec7fec179b/src/main/scala/rocket/RocketCore.scala#L1218). I've brought it down to this reproduction:\n\n```firrtl\nFIRRTL version 6.0.0\ncircuit Foo :\n  layer Verification, bind, \"verification\" :\n    layer Assert, bind, \"verification/assert\" :\n    layer Assume, bind, \"verification/assume\" :\n    layer Cover, bind, \"verification/cover\" :\n\n  public module Foo :\n    input clock : Clock\n    input reset : UInt<1>\n    input a : UInt<1>\n    output b : UInt<1>\n\n    wire bundle : { clock : Clock, x : UInt<1>}\n    connect b, a\n    connect bundle.clock, clock\n    connect bundle.x, a\n    node _T = eq(reset, UInt<1>(0h0))\n    when _T :\n      skip\n      layerblock Verification :\n        printf(clock, UInt<1>(0h1), \"Bundle: %d\\n\", bundle.x) : printf\n```\n\nThe error shows up during `lower-firrtl-to-hw`:\n\n```\n$ firtool --version\nLLVM (http://llvm.org/):\n  LLVM version 22.0.0git\n  Optimized build.\nCIRCT firtool-1.130.0\n$ firtool --verbose-pass-executions --preserve-aggregate=all test.fir\n...\n[firtool] Running \"lower-firrtl-to-hw{verification-flavor=none warn-on-unprocessed-annotations=false}\"\ntest.fir:16:5: error: 'sv.read_inout' op result #0 must be a known primitive element, but got '!hw.struct<clock: !seq.clock, x: i1>'\n    connect bundle.clock, clock\n    ^\ntest.fir:16:5: note: see current operation: %8 = \"sv.read_inout\"(%7) : (!hw.inout<struct<clock: !seq.clock, x: i1>>) -> !hw.struct<clock: !seq.clock, x: i1>\ntest.fir:17:5: note: additional location here\n    connect bundle.x, a\n```\n\nSeems like having a `Clock` field in the bundle causes this error. It works fine if you remove the `Clock` field from the bundle.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-06",
+  "closed_at": null,
+  "code_blocks": [
+    "FIRRTL version 6.0.0\ncircuit Foo :\n  layer Verification, bind, \"verification\" :\n    layer Assert, bind, \"verification/assert\" :\n    layer Assume, bind, \"verification/assume\" :\n    layer Cover, bind, \"verification/cover\" :\n\n  public module Foo :\n    input clock : Clock\n    input reset : UInt<1>\n    input a : UInt<1>\n    output b : UInt<1>\n\n    wire bundle : { clock : Clock, x : UInt<1>}\n    connect b, a\n    connect bundle.clock, clock\n    connect bundle.x, a\n    node _T = eq(reset, UInt<1>(0h0))\n    when _T :\n      skip\n      layerblock Verification :\n        printf(clock, UInt<1>(0h1), \"Bundle: %d\\n\", bundle.x) : printf\n",
+    "$ firtool --version\nLLVM (http://llvm.org/):\n  LLVM version 22.0.0git\n  Optimized build.\nCIRCT firtool-1.130.0\n$ firtool --verbose-pass-executions --preserve-aggregate=all test.fir\n...\n[firtool] Running \"lower-firrtl-to-hw{verification-flavor=none warn-on-unprocessed-annotations=false}\"\ntest.fir:16:5: error: 'sv.read_inout' op result #0 must be a known primitive element, but got '!hw.struct<clock: !seq.clock, x: i1>'\n    connect bundle.clock, clock\n    ^\ntest.fir:16:5: note: see current operation: %8 = \"sv.read_inout\"(%7) : (!hw.inout<struct<clock: !seq.clock, x: i1>>) -> !hw.struct<clock: !seq.clock, x: i1>\ntest.fir:17:5: note: additional location here\n    connect bundle.x, a\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

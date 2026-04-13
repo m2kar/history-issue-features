@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3342,
+  "issue_url": "https://github.com/llvm/circt/pull/3342",
+  "title": "[ExportVerilog] Collect names from declarations before expressions.",
+  "body": "A situation can occur where a named declaration has its name re-named,\r\nin which case the hw.verilogName is used to indicate the new\r\nname. However, it is possible for collectNames to see a certain\r\nexpression that it wants to emit into a temporary, and decides to give\r\nit a generated name that collides with another declaration's generated\r\nhw.verilogName. This can happen if the expression is visited before\r\nthe declaration, and results in the declaration receiving a different\r\nunique name, which doesn't match the assigned hw.verilogName.\r\n\r\nThis isn't a huge problem for local emission, but non-local things\r\nlike binds have to be able to trust the hw.verilogName attribute\r\nholds the final name.\r\n\r\nThe change in this patch splits collectNames to loop over the IR\r\ntwice. First collecting names from declarations that may have a\r\nhw.verilogName, and then collecting the rest of the names, and\r\ndoing the rest of the work like measuring widths, marking values\r\nto emit, etc.\r\n\r\nSome implementation alternatives considered:\r\n  * Compute some sort of data structure containing the names. We're\r\n  moving away from global name data structures in favor of using the\r\n  IR. Computing something locally would need a pass over the IR\r\n  anyway, so there isn't much advantage over the current approach.\r\n  * Modify the hw.verilogName attr to match what ExportVerilog\r\n  selects. We are actively trying to make ExportVerilog mutate the IR\r\n  less, and make hw.verlogName more stable, and this would be the\r\n  opposite.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-14",
+  "closed_at": "2022-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6521,
+  "issue_url": "https://github.com/verilator/verilator/issues/6521",
+  "title": "interface port member select incorrectly flagged as hierarchical path",
+  "body": "\nThis little code example triggers a \"Parameter values cannot be hierarchical\" error with verilator version `Verilator 5.041 devel rev v5.040-182-g40ca0527d`:\n\n```verilog\ninterface Foo #(parameter WIDTH_BITS = 128);\nendinterface\n\nmodule Bar (Foo foo_in);\n    localparam WIDTH_BITS = foo_in.WIDTH_BITS;\nendmodule\n\nmodule top;\n    Foo #(.WIDTH_BITS(12)) foo ();\n    Bar bar(.foo_in(foo));\n    initial begin\n        $display(\"bar.WIDTH_BITS: %0d\", bar.WIDTH_BITS);\n    end\nendmodule\n```\n\nThis is incorrect because interface ports do not define a scope and therefore `foo_in.WIDTH_BITS` is not a hierarchical name, but a member select.  For reference please see section 23.7 \"Member selects and hierarchical names\" of the SV spec. See also commentary from the legendary dave_59[1] [here](https://verificationacademy.com/forums/t/access-parameterized-interface-ports-size-from-within-module/30796) and [here](https://stackoverflow.com/questions/29979408/in-systemverilog-is-it-allowed-to-read-a-parameter-from-an-interface#comment48108146_29989539).\n\nInterestingly, an older version of verilator, `Verilator 5.036 2025-04-27 rev v5.036` does not flag the above code as an error. I did a little digging and this is the commit that introduced this error: 7f85d7f45386993e942dd201bb8ec4cf382ffa29\n\n1.  Dave Rich, who worked for Gateway that invented verilog, and then Co-Design Automation which invented SystemVerilog and has been on the standards committee all along\n",
+  "labels": [
+    "area: elaboration",
+    "status: discussion",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-02",
+  "closed_at": "2025-10-02",
+  "code_blocks": [
+    "interface Foo #(parameter WIDTH_BITS = 128);\nendinterface\n\nmodule Bar (Foo foo_in);\n    localparam WIDTH_BITS = foo_in.WIDTH_BITS;\nendmodule\n\nmodule top;\n    Foo #(.WIDTH_BITS(12)) foo ();\n    Bar bar(.foo_in(foo));\n    initial begin\n        $display(\"bar.WIDTH_BITS: %0d\", bar.WIDTH_BITS);\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

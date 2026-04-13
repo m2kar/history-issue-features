@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4982,
+  "issue_url": "https://github.com/verilator/verilator/issues/4982",
+  "title": "Short-circuit evaluation ignored for impure functions",
+  "body": "Hello,\r\nI've noticed that functions within conditions are always evaluated and short-circuit evaluation does not happen. It is noticeable  by side-effects these functions may introduce.\r\n\r\nIn the code below `bar` shall not be called:\r\n\r\n```verilog\r\nmodule test;\r\n  function automatic bit foo(bit v);\r\n    $display(\"foo is called\");\r\n    return v;\r\n  endfunction\r\n\r\n  function automatic bit bar(bit v);\r\n    $display(\"bar is called\");\r\n    return v;\r\n  endfunction\r\n\r\n  initial begin\r\n    if (foo(0) && bar(1)) begin\r\n    end\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nThe output:\r\n\r\n```bash\r\n$ verilator --binary test.sv && ./obj_dir/Vtest\r\n...\r\nfoo is called\r\nbar is called\r\n- test.sv:15: Verilog $finish\r\n```\r\n\r\nExcerpt from 2017 standard:\r\n\r\n>11.3.5 Operator expression short circuiting \r\nThe operators shall follow the associativity rules while evaluating an expression as described in 11.3.2.\r\nSome operators (&&, ||, ->, and ?:) shall use short-circuit evaluation; in other words, some of their\r\noperand expressions shall not be evaluated if their value is not required to determine the final value of the\r\noperation. \r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-171-gba47da658\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-15",
+  "closed_at": "2024-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

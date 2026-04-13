@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8346,
+  "issue_url": "https://github.com/llvm/circt/pull/8346",
+  "title": "[FIRRTL] Add fprintf operation",
+  "body": "Add support for fprintf operation to FIRRTL dialect. This operation is similar\r\nto printf but writes to a file instead of stdout.\r\n\r\nThe operation has the following syntax:\r\nfprintf(clock, cond, \"output_file\", \"format_string\", substitutions...)\r\nExample:\r\n```scala\r\nFIRRTL version 4.0.0\r\ncircuit PrintTest:\r\n  ; CHECK-LABEL: @PrintTest\r\n  public module PrintTest :\r\n    input clock : Clock\r\n    input cond : UInt<1>\r\n    input var : UInt<32>\r\n    fprintf(clock, cond, \"test.txt\", \"test %d\\n\", var)\r\n    fprintf(clock, cond, \"test.txt\", \"[{{SimulationTime}}]: {{HierarchicalModuleName}}\\n\")\r\n```\r\n\r\n```verilog\r\n`ifndef __CIRCT_LIB_LOGGING\r\n  // CIRCT Logging Library\r\n  package __circt_lib_logging;\r\n    class FileDescriptor;\r\n      static int global_id [string];\r\n      static function int get(string name);\r\n        if (global_id.exists(name) == 32'h0)\r\n          global_id[name] = $fopen(name);\r\n        return global_id[name];\r\n      endfunction\r\n    endclass\r\n  endpackage\r\n  `define __CIRCT_LIB_LOGGING\r\n`endif // not def __CIRCT_LIB_LOGGING\r\nmodule PrintTest(\r\n  input       clock,\r\n              cond,\r\n  input [7:0] a\r\n);\r\n\r\n  `ifndef SYNTHESIS\r\n    reg [31:0] fd_test_txt;\r\n    initial begin\r\n      fd_test_txt = __circt_lib_logging::FileDescriptor::get(\"test.txt\");\r\n    end // initial\r\n    always @(posedge clock) begin\r\n      if ((`PRINTF_COND_) & cond) begin\r\n        $fwrite(fd_test_txt, \"hello\");\r\n        $fwrite(fd_test_txt, \"[%0t]: %m\\n\", $time);\r\n      end\r\n    end // always @(posedge)\r\n  `endif // not def SYNTHESIS\r\nendmodule\r\n```\r\n\r\nCurrently file name is not interpreted as format string. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-03-24",
+  "closed_at": "2025-04-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

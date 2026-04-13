@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9417,
+  "issue_url": "https://github.com/llvm/circt/issues/9417",
+  "title": "[Arc][arcilator] `hw.bitcast` Data Corruption for Aggregate Types with Non-Power-of-2 Element Widths in Arc",
+  "body": "\n**Description:**\nThere is a data corruption issue in the `arc` backend when using `hw.bitcast` to convert between aggregate types (structs or arrays) and flattened integers. The issue manifests specifically when the aggregate contains elements with non-power-of-2 bit widths (e.g., `i17`, `i33`).\n\nWhen casting such an aggregate to its corresponding flattened integer type and casting it back, the resulting data does not match the input. This suggests that the lowering or handling of `hw.bitcast` for these specific type combinations is preserving incorrect data during simulation.\n\n**Reproduction:**\nThe following MLIR modules demonstrate the failure. In both cases, the output `out` is expected to match the input `data`, but the values are corrupted after the round-trip cast.\n\n**Example 1: Struct with odd-width integers (`i17`)**\n```mlir\nhw.module @Test_Point_17(in %clk : !seq.clock, in %data : !hw.struct<x: i17, y: i17>, out out : !hw.struct<x: i17, y: i17>) {\n  // Cast struct to flat integer\n  %0 = hw.bitcast %data : (!hw.struct<x: i17, y: i17>) -> i34\n  // Store in register\n  %1 = seq.compreg %0, %clk {sv.namehint = \"reg\"} : i34  \n  // Cast back to struct\n  %2 = hw.bitcast %1 : (i34) -> !hw.struct<x: i17, y: i17>\n  hw.output %2 : !hw.struct<x: i17, y: i17>\n}\n```\n\n**Example 2: Array of odd-width integers (`[4 x i17]`)**\n```mlir\nhw.module @Test_Array_4xLogic_17(in %clk : !seq.clock, in %data : !hw.array<4xi17>, out out : !hw.array<4xi17>) {\n  // Cast array to flat integer\n  %0 = hw.bitcast %data : (!hw.array<4xi17>) -> i68\n  // Store in register\n  %1 = seq.compreg %0, %clk {sv.namehint = \"reg\"} : i68  \n  // Cast back to array\n  %2 = hw.bitcast %1 : (i68) -> !hw.array<4xi17>\n  hw.output %2 : !hw.array<4xi17>\n}\n```\n\n**Observed Behavior:**\nThe `out` signal contains corrupted values that do not match the `data` input signal. This indicates that the state is not being preserved correctly across the `hw.bitcast` operations.\n",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-06",
+  "closed_at": "2026-01-07",
+  "code_blocks": [
+    "hw.module @Test_Point_17(in %clk : !seq.clock, in %data : !hw.struct<x: i17, y: i17>, out out : !hw.struct<x: i17, y: i17>) {\n  // Cast struct to flat integer\n  %0 = hw.bitcast %data : (!hw.struct<x: i17, y: i17>) -> i34\n  // Store in register\n  %1 = seq.compreg %0, %clk {sv.namehint = \"reg\"} : i34  \n  // Cast back to struct\n  %2 = hw.bitcast %1 : (i34) -> !hw.struct<x: i17, y: i17>\n  hw.output %2 : !hw.struct<x: i17, y: i17>\n}\n",
+    "hw.module @Test_Array_4xLogic_17(in %clk : !seq.clock, in %data : !hw.array<4xi17>, out out : !hw.array<4xi17>) {\n  // Cast array to flat integer\n  %0 = hw.bitcast %data : (!hw.array<4xi17>) -> i68\n  // Store in register\n  %1 = seq.compreg %0, %clk {sv.namehint = \"reg\"} : i68  \n  // Cast back to array\n  %2 = hw.bitcast %1 : (i68) -> !hw.array<4xi17>\n  hw.output %2 : !hw.array<4xi17>\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

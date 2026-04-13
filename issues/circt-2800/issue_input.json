@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2800,
+  "issue_url": "https://github.com/llvm/circt/issues/2800",
+  "title": "Assertion Canonicalization/Removal",
+  "body": "There are situations where CIRCT can produce assertions which will either no longer do anything or assertions which are actually dead. Consider the following:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\"  {\r\n    firrtl.module @Foo() {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %0 = firrtl.asClock %c1_ui1 : (!firrtl.uint<1>) -> !firrtl.clock\r\n      %_clock = firrtl.node %0  : !firrtl.clock\r\n      %clock = firrtl.node sym @clock %_clock  : !firrtl.clock\r\n      %_en = firrtl.node %c1_ui1  : !firrtl.uint<1>\r\n      firrtl.assert %_clock, %c1_ui1, %c1_ui1, \"hello\"  {eventControl = 0 : i32, isConcurrent = true}\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis produces (`firtool Foo.mlir --strip-debug-info`):\r\n```verilog\r\nmodule Foo();\r\n  wire clock;\r\n\r\n  assign clock = 1'h1;\r\n  assert property (@(posedge 1'h1) 1'h1) else $error(\"hello\");\r\n  `ifdef USE_PROPERTY_AS_CONSTRAINT\r\n    assume property (@(posedge 1'h1) 1'h1);\r\n  `endif\r\nendmodule\r\n```\r\n\r\nThe final `assert` is wrong in two ways.  First the condition is always true meaning that the assertion will never fire. Additionally, the assertion may never actually be evaluated due to `@(posedge 1'h1)`. (I'm not sure about this... is this ever evaluated?) Certain tools, e.g., Yosys, are known to have problems with this (see: https://discourse.llvm.org/t/one-more-error-from-yosys/61181). These types of formulations should be canonicalized / DCE'd.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-24",
+  "closed_at": "2022-04-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

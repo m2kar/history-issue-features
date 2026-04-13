@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1153,
+  "issue_url": "https://github.com/verilator/verilator/issues/1153",
+  "title": "../V3Inst.cpp:360: Module dearray failed -- unpacked array of interfaces badness",
+  "body": "---\n\n\nAuthor Name: **John (Pete) Stevenson**\nOriginal Redmine Issue: 1153 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nWith two instances, each with a different implementation, Verilator emits a strange error message:\r\n```\r\n../V3Inst.cpp:360: Module dearray failed\r\n\n```\r\n\r\nUsing the attached 4 files, command line and stdout:\r\n```\r\n> verilator --lint-only Testbench.sv \r\n%Error: Internal Error: Contemplator.sv:13: ../V3Inst.cpp:360: Module dearray failed\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed /usr/local/bin/verilator_bin --lint-only Testbench.sv\r\n>verilator --version\r\nVerilator 3.902 2017-04-02 rev verilator_3_900-25-gf4a5aa2\r\n\n```\r\n\r\nPerhaps this is related to a previous issue because when using Verilator version 3.89, this code will trigger issue 1135.\r\n\r\nTestbench.sv\r\n```\r\ntypedef logic [63:0] uid_t;\r\ntypedef logic [31:0] value_t;\r\n\r\nmodule Testbench( input logic clk );\r\n     localparam  M = 5;\r\n     localparam  N = 1;\r\n\r\n     the_intf #(.M(M)) out0 [N-1:0] ();\r\n     the_intf #(.M(M)) out1 [N-1:0] ();\r\n\r\n     Contemplator #(\r\n         .IMPL ( 0    ),\r\n         .M    ( M    ),\r\n         .N    ( N    )) contemplatorOfTheZerothKind(\r\n         .clk  ( clk  ),\r\n         .out  ( out0 ));\r\n\r\n     Contemplator #(\r\n         .IMPL ( 1    ),\r\n         .M    ( M    ),\r\n         .N    ( N    )) contemplatorOfTheFirstKind(\r\n         .clk  ( clk  ),\r\n         .out  ( out1 ));\r\nendmodule\r\n\n```\r\n\r\nContemplator.sv\r\n```\r\nmodule Contemplator #(\r\n     parameter IMPL = 0,\r\n     parameter M    = 5,\r\n     parameter N    = 1 )(\r\n     input logic clk,\r\n     the_intf.i out [N-1:0]\r\n     );\r\n\r\n     the_intf #(.M(M)) inp[N-1:0] ();\r\n\r\n     DeepThought #(\r\n         .N    ( N   )) ultimateAnswerer(\r\n         .src  ( inp ),\r\n         .dst  ( out ));\r\nendmodule\r\n\n```\r\n\r\nDeepThought.sv\r\n```\r\nmodule DeepThought #(\r\n     parameter N = 1 )(\r\n     the_intf.t src[N-1:0],\r\n     the_intf.i dst[N-1:0]\r\n     );\r\nendmodule\r\n\n```\r\n\r\nthe_intf.sv\r\n```\r\ninterface the_intf #(parameter M = 5);\r\n     logic           valid;\r\n     uid_t           uid;\r\n     value_t [M-1:0] values;\r\n\r\n     modport i(\r\n         output valid,\r\n         output uid,\r\n         output values\r\n         );\r\n     modport t(\r\n         input valid,\r\n         input uid,\r\n         input values\r\n         );\r\nendinterface\r\n\n```\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2017-04-09",
+  "closed_at": "2017-05-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

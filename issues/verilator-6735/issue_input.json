@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6735,
+  "issue_url": "https://github.com/verilator/verilator/issues/6735",
+  "title": "Internal fault when cross-class calling with DPI",
+  "body": "Thanks for taking the time to report this.\n\nCan you please attach an example that shows the issue or missing feature?\n\n```verilog\npackage pyhdl_if;\n\n    typedef chandle PyObject;\n    import \"DPI-C\" context function PyObject _pyhdl_if_PyTuple_GetItem(input PyObject p0, input longint unsigned p1);\n\n    function PyObject PyTuple_GetItem(input PyObject p0, input longint unsigned p1);\n        return _pyhdl_if_PyTuple_GetItem(p0, p1);\n    endfunction\n\nclass py_object;\n    function new(PyObject obj);\n    endfunction\nendclass\n\nclass py_tuple;\n\n    function py_object get_item(int idx);\n        py_object ret = new(PyTuple_GetItem(null, longint'(idx)));\n        return ret;\n    endfunction\n\nendclass\n\nendpackage\n```\n\nThe testcase above shows the internal fault top-of-trunk. This code works on 5.040.\n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\n```\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /tools/verilator/5.043-20251125/bin/verilator_bin --binary pyhdl_pp_8.sv\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\n% verilator --binary pyhdl_pp_8.sv\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\nI can reproduce this with a build from 'main'. This code (and the rest) works on 5.040, as well as other simulators\n```\nVerilator 5.043 devel rev v5.042-106-g9155e2529\n```\n\n\nWhat OS and distribution are you using? Ubuntu 24.04\n\nMay we assist you in trying to fix this in Verilator yourself? Yes\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-26",
+  "closed_at": "2025-11-29",
+  "code_blocks": [
+    "package pyhdl_if;\n\n    typedef chandle PyObject;\n    import \"DPI-C\" context function PyObject _pyhdl_if_PyTuple_GetItem(input PyObject p0, input longint unsigned p1);\n\n    function PyObject PyTuple_GetItem(input PyObject p0, input longint unsigned p1);\n        return _pyhdl_if_PyTuple_GetItem(p0, p1);\n    endfunction\n\nclass py_object;\n    function new(PyObject obj);\n    endfunction\nendclass\n\nclass py_tuple;\n\n    function py_object get_item(int idx);\n        py_object ret = new(PyTuple_GetItem(null, longint'(idx)));\n        return ret;\n    endfunction\n\nendclass\n\nendpackage\n",
+    "%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /tools/verilator/5.043-20251125/bin/verilator_bin --binary pyhdl_pp_8.sv\n",
+    "% verilator --binary pyhdl_pp_8.sv\n",
+    "Verilator 5.043 devel rev v5.042-106-g9155e2529\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

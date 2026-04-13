@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3864,
+  "issue_url": "https://github.com/verilator/verilator/issues/3864",
+  "title": "Namespaces under `std` are not linked correctly",
+  "body": "When a class inside std is used as a namespace, the following error occurs:\r\n```\r\n%Error: Internal Error: t/t_process_rand.v:18:11: ../V3LinkDot.cpp:2796: Bad package link\r\n-node: CLASSORPACKAGEREF 0xd627d0 <e62> {d18al} @dt=0@  process -> UNLINKED\r\n   18 |       p = process::self();\r\n      |    \r\n```\r\n\r\nThis is because names in `std` are a special case for the lexer:\r\nhttps://github.com/verilator/verilator/blob/5fce23e90d2a721bb712dc9aacde594558489dda/src/V3ParseImp.cpp#L527-L534\r\nTheir `yylval.scp` is always set to null. For tokens being namespace refs, the value is used as a scope pointer, so refs to namespaces inside `std` are always linked to null, which results in the error.\r\n\r\nI think there's no right pointer to assign there instead, because `std` is parsed as the last file.\r\n\r\nIt probably can be solved by a different mechanic:\r\n1. For every design parse `std` first.\r\n2. For every undefined symbol, check if it exists in `std`.\r\n3. If so, add `import std::*` to the netlist and mark std as used.\r\n4. If `std` is not used, remove it right after the end of parsing.\r\n\r\nIt'd make Verilator parse `std` even if it's not needed, but `std` is rather small and otherwise the change shouldn't considerably affect the performance, I think it will also scale better.\r\n\r\nRunning my case requires modifying Verilator, but you can get the same behavior by declaring `static int bar` inside `std::mailbox` and using it in `t_mailbox.v`. [Here](https://github.com/verilator/verilator/files/10402544/t_mailbox_bar.txt) is a diff.\r\n\r\nTested with the latest commit (5fce23e90d2a721bb712dc9aacde594558489dda) on Fedora, Linux 6.0.14.\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: parser"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-12",
+  "closed_at": "2023-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

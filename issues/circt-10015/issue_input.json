@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 10015,
+  "issue_url": "https://github.com/llvm/circt/pull/10015",
+  "title": "[Synth] Canonicalize transitive choice operands",
+  "body": "## Summary\r\n\r\n  Fixes `synth.choice` canonicalization for transitive operand merging.\r\n\r\n  This addresses the issue described in #9932: nested `synth.choice` operands were not being flattened/merged transitively, and constant operands were not short-circuiting the choice during canonicalization.\r\n\r\n  ## Problem\r\n\r\n  Before this change, `ChoiceOp` only had:\r\n  - verification that at least one operand exists\r\n  - a fold for the trivial single-operand case\r\n\r\n  It did **not** canonicalize nested choices like:\r\n\r\n  ```mlir\r\n  %0 = synth.choice %x, %y, %z : i4\r\n  %1 = synth.choice %0, %u : i4\r\n  %2 = synth.choice %z, %v : i4\r\n  %3 = synth.choice %1, %2 : i4\r\n```\r\n  into:\r\n```mlir\r\n  %0 = synth.choice %x, %y, %z, %u, %v : i4\r\n```\r\n  It also did not canonicalize cases like:\r\n```mlir\r\n  %0 = synth.choice %x, %y, %constant : i4\r\n```\r\n  to:\r\n```mlir\r\n  %constant\r\n```\r\n  ## What this PR changes\r\n\r\n  This PR adds ChoiceOp canonicalization that:\r\n\r\n  - flattens nested synth.choice operands transitively\r\n  - deduplicates merged operands while preserving first-seen order\r\n  - replaces the choice with a constant if any reachable operand is an hw.constant\r\n  - replaces the choice with the single remaining operand if canonicalization collapses it to one input\r\n\r\n  ## Scope\r\n  It only adds local canonicalization for synth.choice and does not:\r\n\r\n  - introduce broader structural equivalence reasoning\r\n  - change the semantics of synth.choice\r\n  - add new synthesis transformations beyond the issue described in #9932\r\n\r\n  ## Tests\r\n\r\n  Added focused canonicalizer coverage for:\r\n\r\n  - single-operand choice folding\r\n  - constant short-circuiting\r\n  - transitive flattening of nested choices\r\n  - deduplication across nested choices",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-23",
+  "closed_at": "2026-03-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

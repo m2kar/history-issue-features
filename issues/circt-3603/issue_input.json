@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3603,
+  "issue_url": "https://github.com/llvm/circt/issues/3603",
+  "title": "[ExportVerilog] `isExpressionEmittedInlineIntoProceduralDeclaration`  incorrectly inlines assignments",
+  "body": "```mlir\r\nhw.module @isEmittedBroken(%a:i4, %b:i1, %c:i1) {\r\n  %0 = sv.reg : !hw.inout<i4>\r\n  %1 = sv.reg : !hw.inout<i4>\r\n  %2 = sv.reg : !hw.inout<i2>\r\n  sv.always posedge %b {\r\n   sv.bpassign %0, %a: i4\r\n   sv.bpassign %1, %a: i4\r\n   %3 = sv.read_inout %0: !hw.inout<i4>\r\n   %4 = sv.read_inout %1: !hw.inout<i4>\r\n   %add =comb.add %3, %4:i4\r\n   %extract = comb.extract %add from 1 : (i4) -> i2\r\n   sv.bpassign %2, %extract: i2\r\n  }\r\n}\r\n```\r\nCurrent output:\r\n```verilog\r\nmodule isEmittedBroken( // bar.mlir:1:1\r\n  input [3:0] a,\r\n  input       b,\r\n              c);\r\n\r\n  reg [3:0] _GEN;       // bar.mlir:2:8\r\n  reg [3:0] _GEN_0;     // bar.mlir:3:8\r\n  reg [1:0] _GEN_1;     // bar.mlir:4:8\r\n\r\n  always @(posedge b) begin     // bar.mlir:5:3\r\n    automatic logic [3:0] _GEN_2 = _GEN + _GEN_0;       // bar.mlir:8:9, :9:9, :10:10\r\n\r\n    _GEN = a;   // bar.mlir:6:4\r\n    _GEN_0 = a; // bar.mlir:7:4\r\n    _GEN_1 = _GEN_2[2:1];       // bar.mlir:11:15, :12:4\r\n  end // always @(posedge)\r\nendmodule\r\n```\r\n\r\n`_GEN_2` is declared as \"automatic logic\" variable and initialized at the same time. This is because `isExpressionEmittedInlineIntoProceduralDeclaration` identifies inlining `_GEN + _GEN_0` to be safe but it is actually incorrect. ",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-26",
+  "closed_at": "2022-08-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

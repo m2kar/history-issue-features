@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8544,
+  "issue_url": "https://github.com/llvm/circt/issues/8544",
+  "title": "[FIRRTL] Failed to optimize `bits(cat(cat(..))`.",
+  "body": "```mlir\n  firrtl.circuit \"A\" {\n    firrtl.module @A(in %clock: !firrtl.clock, in %u: !firrtl.uint<1>, in %cond: !firrtl.uint<1>, out %a: !firrtl.uint<2>) attributes {convention = #firrtl<convention scalarized>} {\n      %c0_ui2 = firrtl.constant 0 : !firrtl.uint<2>\n      %cat_1 = firrtl.cat %u, %c0_ui2 {name = \"cat_1\"} : (!firrtl.uint<1>, !firrtl.uint<2>) -> !firrtl.uint<3>\n      %cat_2 = firrtl.cat %cat_1, %u {name = \"cat_2\"} : (!firrtl.uint<3>, !firrtl.uint<1>) -> !firrtl.uint<4>\n      %0 = firrtl.bits %cat_2 2 to 1 : (!firrtl.uint<4>) -> !firrtl.uint<2>\n      firrtl.matchingconnect %a, %0 : !firrtl.uint<2>\n    }\n  }\n```\n\nEven though %0 is constant 0 it's not optimized at FIRRTL. At core dialect operands are flattened to comb.concat, and it's obviously canonicalized. \n\nThis issue causes this kind of unstable behavior for register optimizations:\n\n```scala\nFIRRTL version 5.0.0\n\ncircuit A:\n  public module A :\n    input clock : Clock\n    input u: UInt<1>\n    input cond : UInt<1>\n    output a : UInt<2>\n    output b: UInt<2>\n    reg r_a : UInt<2>, clock\n    reg r_b : UInt<2>, clock\n    connect a, r_a\n    connect b, r_b\n    node cat_1 = cat(u, UInt<2>(0))\n    node cat_2 = cat(cat_1, u)\n    node next_a = bits(cat_2, 3, 1)\n    when cond :\n      connect r_a, next_a\n      connect r_b, UInt<1>(0)\n```\nOutput:\n```verilog\n reg [1:0] r_a;\n  always @(posedge clock) begin\n    if (cond)\n      r_a <= 2'h0;\n  end // always @(posedge)\n  assign a = r_a;\n  assign b = 2'h0;\n```\n\nCurrently only `r_b` is optimized because the driver of `r_b` is `mux(cond, 0, r_b)` whereas `r_a` cannot be optimized since the driver of `r_a` is `mux(cond, cat, r_a)` (specifically this condition https://github.com/llvm/circt/blob/b33791db110010ca2f7de63cdbeedea0654165b7/lib/Dialect/FIRRTL/FIRRTLFolds.cpp#L3125)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-07",
+  "closed_at": "2025-06-27",
+  "code_blocks": [
+    "  firrtl.circuit \"A\" {\n    firrtl.module @A(in %clock: !firrtl.clock, in %u: !firrtl.uint<1>, in %cond: !firrtl.uint<1>, out %a: !firrtl.uint<2>) attributes {convention = #firrtl<convention scalarized>} {\n      %c0_ui2 = firrtl.constant 0 : !firrtl.uint<2>\n      %cat_1 = firrtl.cat %u, %c0_ui2 {name = \"cat_1\"} : (!firrtl.uint<1>, !firrtl.uint<2>) -> !firrtl.uint<3>\n      %cat_2 = firrtl.cat %cat_1, %u {name = \"cat_2\"} : (!firrtl.uint<3>, !firrtl.uint<1>) -> !firrtl.uint<4>\n      %0 = firrtl.bits %cat_2 2 to 1 : (!firrtl.uint<4>) -> !firrtl.uint<2>\n      firrtl.matchingconnect %a, %0 : !firrtl.uint<2>\n    }\n  }\n",
+    "FIRRTL version 5.0.0\n\ncircuit A:\n  public module A :\n    input clock : Clock\n    input u: UInt<1>\n    input cond : UInt<1>\n    output a : UInt<2>\n    output b: UInt<2>\n    reg r_a : UInt<2>, clock\n    reg r_b : UInt<2>, clock\n    connect a, r_a\n    connect b, r_b\n    node cat_1 = cat(u, UInt<2>(0))\n    node cat_2 = cat(cat_1, u)\n    node next_a = bits(cat_2, 3, 1)\n    when cond :\n      connect r_a, next_a\n      connect r_b, UInt<1>(0)\n",
+    " reg [1:0] r_a;\n  always @(posedge clock) begin\n    if (cond)\n      r_a <= 2'h0;\n  end // always @(posedge)\n  assign a = r_a;\n  assign b = 2'h0;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

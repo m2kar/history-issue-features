@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 591,
+  "issue_url": "https://github.com/llvm/circt/issues/591",
+  "title": "[FIRRTL] optimize away resetless registers [ConstantProp] [DCE]",
+  "body": "The registers in the following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    output out_b: UInt<8>\r\n    reg tmp_a: UInt<8>, clock\r\n    reg tmp_b: UInt<8>, clock\r\n    tmp_a <= UInt<8>(5)\r\n    tmp_b <= tmp_a\r\n    out_b <= tmp_b\r\n```\r\n\r\n`firrtl-1.5.0` compiler eliminates registers, propagates constant through, produces the following Verilog.\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        clock,\r\n  input        reset,\r\n  output [7:0] out_b\r\n);\r\n  assign out_b = 8'h5;\r\nendmodule\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl` produces suboptimal Verilog:\r\n\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        clock, reset,\r\n  output [7:0] out_b);\r\n\r\n  reg [7:0] tmp_a;\t// a_top_mod.fir:6:5\r\n  reg [7:0] tmp_b;\t// a_top_mod.fir:7:5\r\n\r\n  ....\r\n\r\n  always_ff @(posedge clock) begin\t// a_top_mod.fir:8:11\r\n    tmp_a <= 8'h5;\t// a_top_mod.fir:8:{11,14}\r\n    tmp_b <= tmp_a;\t// a_top_mod.fir:9:11\r\n  end // always_ff @(posedge)\r\n  assign out_b = tmp_b;\t// a_top_mod.fir:2:3\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-13",
+  "closed_at": "2021-03-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

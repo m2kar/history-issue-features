@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2999,
+  "issue_url": "https://github.com/llvm/circt/issues/2999",
+  "title": "[FIRRTL] Initialization of Async RegReset is different from SFC",
+  "body": "We are currently missing post-randomization for async registers done by SFC. This is causing weird divergence in simulations between SFC and MFC. \r\nhttps://github.com/chipsalliance/firrtl/blob/2eddce1a40709381b4ae9cc952708e7d6aa7b969/src/main/scala/firrtl/backends/verilog/VerilogEmitter.scala#L633-L644\r\n\r\nFor example, we have to insert extra initialization for `sync_0` and `sync_1` registers in the following program.\r\n```scala\r\ncircuit AsyncShift:  \r\n  module AsyncShift:\r\n    input clock : Clock\r\n    input reset : AsyncReset\r\n    output io : { flip d : UInt<1>, q : UInt<1>}\r\n\r\n    reg sync_0 : UInt<1>, clock with :\r\n      reset => (reset, UInt<1>(\"h0\")) \r\n    reg sync_1 : UInt<1>, clock with :\r\n      reset => (reset, UInt<1>(\"h0\")) \r\n    node _sync_2_T = bits(io.d, 0, 0) \r\n    sync_1 <= _sync_2_T \r\n    sync_0 <= sync_1 \r\n    io.q <= sync_0\r\n```\r\n\r\nMFC:\r\n```\r\n`INIT_RANDOM_PROLOG_      // foo.fir:7:5\r\n      `ifdef RANDOMIZE_REG_INIT // foo.fir:7:5\r\n        _RANDOM = {`RANDOM};    // foo.fir:7:5\r\n        sync_0 = _RANDOM[0];    // foo.fir:7:5\r\n        sync_1 = _RANDOM[1];    // foo.fir:9:5\r\n`endif\r\n```\r\n\r\nSFC:\r\n```\r\n`ifdef RANDOMIZE_REG_INIT\r\n  _RAND_0 = {1{`RANDOM}};\r\n  sync_0 = _RAND_0[0:0];\r\n  _RAND_1 = {1{`RANDOM}};\r\n  sync_1 = _RAND_1[0:0];\r\n`endif // RANDOMIZE_REG_INIT\r\n  if (reset) begin\r\n    sync_0 = 1'h0;\r\n  end\r\n  if (reset) begin\r\n    sync_1 = 1'h0;\r\n  end\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-29",
+  "closed_at": "2022-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

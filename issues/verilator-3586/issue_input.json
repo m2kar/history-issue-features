@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3586,
+  "issue_url": "https://github.com/verilator/verilator/issues/3586",
+  "title": "Randomized scheduling for better performance",
+  "body": "I have observed that the order in which we process otherwise independent graph vertices in `V3Partition::go()` and it's sub-routines can have a significant effect on the performance of the final model (measured up to 25% run-time difference).\r\n\r\nIdeally this should not happen, but we know the MTask coarsening problem is computaionally hard and the current algorithm is \"just an intelligent heuristic\" (with all the credit that that deserves).\r\n\r\nIf this variance is a fundamental property of the MTask coarsening algorithm (and not a bug somewhere), then we could take advantage of it relatively simply by running the algorithm multiple times on the randomly (but deterministically) shuffled input, and output the best schedule. Given that we would often have a wide build server to build large models (compiling the C++), we could just run the algorithm once on all available physical threads in parallel, which would likely not take a lot longer than running it once single threaded (bar cache effects, etc). The tricky part is picking the \"best\" schedule as the reported critical path length is not a very good predictor of actual performance (I have observed models with 10% longer reported critical paths to be faster at run-time), this probably is due to both cost inaccuracies and later optimizations (e.g.: V3MergeCond) influencing run-time.",
+  "labels": [
+    "area: performance",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-31",
+  "closed_at": "2022-12-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

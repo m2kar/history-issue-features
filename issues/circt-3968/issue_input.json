@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3968,
+  "issue_url": "https://github.com/llvm/circt/issues/3968",
+  "title": "[FIRRTL] LowerTypes can Violate New Port Uniqueness Checks",
+  "body": "Consider the following circuit:\r\n\r\n```scala\r\ncircuit Bar:\r\n  module Bar:\r\n    input a: UInt<1>[1]\r\n    output a_0: UInt<1>\r\n\r\n    a_0 <= a[0]\r\n```\r\n\r\nWhen compile with `firtool`, this will currently crash due to changes added in https://github.com/llvm/circt/pull/3891:\r\n```\r\n# firtool Bar.fir\r\nBar.fir:2:10: error: 'firrtl.module' op port names should be unique\r\n  module Bar:\r\n         ^\r\nBar.fir:2:10: note: see current operation: \r\n\"firrtl.module\"() ({\r\n^bb0(%arg0: !firrtl.uint<1>, %arg1: !firrtl.uint<1>):\r\n  \"firrtl.strictconnect\"(%arg1, %arg0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n}) {annotations = [], portAnnotations = [[], []], portDirections = -2 : i2, portNames = [\"a_0\", \"a_0\"], portSyms = [], portTypes = [!firrtl.uint<1>, !firrtl.uint<1>], sym_name = \"Bar\"} : () -> ()\r\n```\r\n\r\nPreviously, `firtool` would produce some not-so-great names:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input  a_0,\r\n  output a_0_0);\r\n\r\n  assign a_0_0 = a_0;\r\nendmodule\r\n```\r\n\r\nThe SFC produces subjectively better names:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input   a__0,\r\n  output  a_0\r\n);\r\n  assign a_0 = a__0;\r\nendmodule\r\n```\r\n\r\nThe SFC is approximating (though not exactly in my understanding) the definition of _prefix uniqueness_ in the FIRRTL spec. It is not necessary that we implement this, just: (1) that this doesn't crash and (2) that we produce some decent names here.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-22",
+  "closed_at": "2023-07-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

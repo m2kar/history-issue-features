@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2664,
+  "issue_url": "https://github.com/llvm/circt/pull/2664",
+  "title": "[FIRRTL] Handle NonLocalAnnotations on Bundle fields during LowerTypes",
+  "body": "This commit handles the NonLocalAnnotations on Bundle fields during LowerTypes.\r\n1. Update the NLA instance path to the new leaf symbol generated after Lowering\r\n2. If multiple Bundle fields share the same NLA, then create new NLAs for each of the fields, and fixup the annotations.\r\n3. Drop the Nonlocal DontTouch annotations, and delete the corresponding NLAs. \r\n\r\nWhen a Non-local annotation is attached to a bundle subfield, the NLA instance path contains a reference to the bundle symbol, for example, \r\n```mlir\r\nfirrtl.nla @nla [#hw.innerNameRef<@A::@test>, #hw.innerNameRef<@B::@test>, #hw.innerNameRef<@Z::@b>]\r\n...\r\nfirrtl.module @Z() {\r\n%bundle = firrtl.wire sym @b {\r\n  annotations = [#firrtl<\"subAnno<fieldID = 2, {circt.nonlocal = @nla, class =\\\"test\\\" }>\">]\r\n}: !firrtl.bundle<valid: uint<1>, ready: uint<1>, data: uint<64>>\r\n```\r\n\r\n`LowerTypes` will create a new symbol for each lowered field of the bundle, and the NLA must be fixed to refer to the appropriate symbol. For example,\r\n```mlir\r\nfirrtl.nla @nla [#hw.innerNameRef<@A::@test>, #hw.innerNameRef<@B:@test>, #hw.innerNameRef<@Z::@b_ready>]\r\n...\r\nfirrtl.module @Z() {\r\n%bundle_valid = firrtl.wire sym @b_valid :  uint<1>\r\n%bundle_ready = firrtl.wire sym @b_ready {annotations = [{circt.nonlocal = @nla, class =\\\"test\\\" }]}:  uint<1>\r\n%bundle_data = firrtl.wire sym @b_data :  uint<64>\r\n```\r\n\r\nThe following cases are handled in this commit\r\n1. If there is a nonlocal `DontTouch` `subAnno`, then drop the NLA, and make it a local `DontTouch`, by adding a symbol.\r\n2. For any other nonlocal annotation, update the NLA with the lowered symbol.\r\n3. If multiple fields share the same NLA, on different annotations, then ensure a new NLA is created for each unique symbol that requires the nonlocal annotation. \r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-21",
+  "closed_at": "2022-02-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

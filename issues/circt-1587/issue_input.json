@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1587,
+  "issue_url": "https://github.com/llvm/circt/issues/1587",
+  "title": "[ExportVerilog] Mux Tree Lowering Producing Busted Verilog",
+  "body": "The mux tree lowering that was added in ee457605169c16b1ce1400201e66d06d723f282b is producing some invalid Verilog in certain situations.\r\n\r\nConsider the following FIRRTL IR:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input idx: UInt<2>\r\n    input a: UInt<4>[4]\r\n    output b: UInt<4>\r\n\r\n    b <= a[idx]\r\n```\r\n\r\nThis is lowered to the following HW dialect mix:\r\n\r\n```mlir\r\nmodule attributes {firrtl.mainModule = \"Foo\"}  {\r\n  hw.module @Foo(%idx: i2, %a_0: i4, %a_1: i4, %a_2: i4, %a_3: i4) -> (%b: i4) {\r\n    %0 = hw.array_create %a_0, %a_1, %a_2, %a_3 : i4\r\n    %1 = hw.array_get %0[%idx] : !hw.array<4xi4>\r\n    hw.output %1 : i4\r\n  }\r\n}\r\n```\r\n\r\nAnd this produces the following Verilog:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [1:0] idx,\r\n  input  [3:0] a_0, a_1, a_2, a_3,\r\n  output [3:0] b);\r\n\r\n  assign b = ({{a_0}, {a_1}, {a_2}, {a_3}})[idx];\t// Tmp.fir:2:10, :7:12\r\nendmodule\r\n```\r\n\r\nThe problem is that the wire associated with `{{a_0}, {a_1}, ...}` cannot be inlined as this becomes illegal Verilog.  This can be hit for situations where the mux-encoded wire is small enough to be inlined.  The problem doesn't show up for situations where the mux-encoded wire is getting spilled.\r\n\r\nConcretely, the above has to emit as:\r\n\r\n```verilog\r\nwire bar [3:0][3:0] = {{a_0}, {a_1}, ...};\r\nassign b = bar[idx];\r\n```\r\n\r\nThe other two inlined approaches both are wrong. \r\n\r\nThe following is trying to bit extract out of a concatenation:\r\n\r\n```verilog\r\nassign b = {{a_0}, {a_1}, ...}[idx];\r\n```\r\n\r\nThe following is just illegal:\r\n\r\n```verilog\r\nassign b = ({{a_0}, {a_1}, ...})[idx];\r\n```",
+  "labels": [
+    "bug",
+    "ExportVerilog",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-16",
+  "closed_at": "2021-08-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

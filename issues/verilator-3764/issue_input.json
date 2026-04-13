@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3764,
+  "issue_url": "https://github.com/verilator/verilator/issues/3764",
+  "title": "`VERILATOR_ROOT` was not properly escaped",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n1. I use the following command to generate the `VMyTopLevel.mk` and other files\r\n\r\n```bash\r\n set -e ; verilator_bin.exe -CFLAGS -fPIC -CFLAGS -m64 -CFLAGS -shared -CFLAGS -Wno-attributes -LDFLAGS -fPIC -LDFLAGS -m64 -LDFLAGS -shared -LDFLAGS -Wno-attributes -CFLAGS -I\"jniIncludes\" -CFLAGS -I\"jniIncludes/win32\" -CFLAGS -fvisibility=hidden -LDFLAGS -fvisibility=hidden -CFLAGS -std=c++11 -LDFLAGS -std=c++11 --autoflush   --output-split 5000 --output-split-cfuncs 500 --output-split-ctrace 500 -Wno-WIDTH -Wno-UNOPTFLAT -Wno-CMPCONST -Wno-UNSIGNED --x-assign unique --x-initial-edge --trace-depth 0 -O3 -CFLAGS -O0 -CFLAGS -DTRACE --trace  --Mdir verilator --top-module MyTopLevel  -cc \"C:/Users/Administrator/IdeaProjects/SpinalHDL/tmp/job_1/MyTopLevel.v\" --exe verilator/VMyTopLevel__spinalWrapper.cpp \r\n```\r\n\r\n2. Then I try to make it with `make -f VMyTopLevel.mk`, it throws an error\r\n\r\n```\r\nCan't open perl script \"C:msys64clang64shareverilator/bin/verilator_includer\": No such file or directory\r\n```\r\n\r\n3. I found that the path was not properly escaped in file `VMyTopLevel.mk`\r\n\r\n```Makefile\r\nVERILATOR_ROOT = C:\\msys64\\clang64\\share\\verilator\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nWhat OS and distribution are you using?\r\n\r\nWindows 11 with SpinalHDL 1.7.3\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nI found that the path was correctly deslashed in file `V3EmitCMake.cpp`.\r\n\r\nhttps://github.com/verilator/verilator/blob/0322e9da7ed52bca9b8fa5d8d7170f3fea7f8c56/src/V3EmitCMake.cpp#L75-L81\r\n\r\nhttps://github.com/verilator/verilator/blob/0322e9da7ed52bca9b8fa5d8d7170f3fea7f8c56/src/V3EmitCMake.cpp#L100-L101\r\n\r\nBut it was not deslashed in file `V3EmitMk.cpp`.\r\n\r\nhttps://github.com/verilator/verilator/blob/0322e9da7ed52bca9b8fa5d8d7170f3fea7f8c56/src/V3EmitMk.cpp#L158-L159\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: portability"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-19",
+  "closed_at": "2022-11-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2499,
+  "issue_url": "https://github.com/verilator/verilator/issues/2499",
+  "title": "Unsupported: little endian ordering for arrays",
+  "body": "> Verilator version\r\n```\r\nVerilator 4.038 2020-07-11 rev v4.036-114-g0cd4a57ad\r\n```\r\n>Testcase\r\n```systemverilog\r\ntypedef struct packed {\r\n  logic [9:0] a;\r\n} t1;\r\n\r\ntypedef struct packed {\r\n  logic [6:0] b;\r\n  /* verilator lint_off LITENDIAN */\r\n  t1 [0:4] c;\r\n  /* verilator lint_on LITENDIAN */\r\n  logic d;\r\n} t2;\r\n\r\n/* verilator lint_off DECLFILENAME */\r\nmodule our;\r\n/* verilator lint_on DECLFILENAME */\r\n  t2 t;\r\n  initial begin\r\n    //1111111 1000010000 1000011000 1000011100 1000011110 1000011111 0\r\n    assign t = 58'b1111111100001000010000110001000011100100001111010000111110; \r\n    $displayb(t.b);\r\n    $displayb(t.c[0].a);\r\n    $displayb(t.d);\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n> Simulation Result\r\n```\r\n1111111\r\n1000011111\r\n0\r\n- t/t_little_endian_err.v:25: Verilog $finish\r\n```\r\n> I think the value of _**\"t.c[0].a\"**_ is _**1000010000**_, not _**1000011111**_, Because c (_**\"t1 [0:4] c;\"**_) is little endian. I think it's a bug, What do you all think? ",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2020-08-05",
+  "closed_at": "2020-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

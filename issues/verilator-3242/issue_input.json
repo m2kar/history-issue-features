@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3242,
+  "issue_url": "https://github.com/verilator/verilator/issues/3242",
+  "title": "UNUSED is mistakenly reported on signal connected to inout port of two submodules",
+  "body": "The attached example ([inout_connect_inlined.tar.gz](https://github.com/verilator/verilator/files/7695335/inout_connect_inlined.tar.gz)) has a Sender and Receiver submodule each with an `inout` port, through which the sender writes a value and the receiver reads it.  These are instantiated in a parent module that wires them together:\r\n```\r\nwire [31 : 0] recv$IN;\r\nReceiver recv(.CLK(CLK), .IN(recv$IN));\r\nSender #(.outvalue(32'd3737)) send(.OUT(recv$IN));\r\n```\r\nWithout `-Wall`, Verilator compiles and runs the example (transmitting the value 3737 from sender to receiver):\r\n```\r\n      3737\r\n      3737\r\n```\r\nWith warnings turned on, Verilator reports that the connecting wire is unused:\r\n```\r\n%Warning-UNUSED: mod.v:11:17: Signal is not used: 'recv$IN'\r\n                            : ... In instance mod\r\n   11 |   wire [31 : 0] recv$IN;\r\n      |                 ^~~~~~~\r\n                 ... For warning description see https://verilator.org/warn/UNUSED?v=4.215\r\n                 ... Use \"/* verilator lint_off UNUSED */\" and lint_on around source to disable this message.\r\n```\r\nThis happens with a recent HEAD and an earlier release:\r\n```\r\nVerilator 4.215 devel rev v4.214-50-ga14394db\r\nVerilator 4.200 2021-03-12 rev v4.110-43-g5022e81af (mod)\r\n```\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-10",
+  "closed_at": "2022-01-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

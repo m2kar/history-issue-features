@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4769,
+  "issue_url": "https://github.com/verilator/verilator/issues/4769",
+  "title": "Fix generate ifs to allow sharing same dotted name",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```\r\nmodule m1;\r\n   wire val1 = '0;\r\nendmodule\r\n\r\nmodule m2;\r\n   wire val2 = '1;\r\nendmodule\r\n\r\nmodule s;\r\n   parameter A = 0;\r\n//   generate\r\n      if (A == 1) begin : gen_scope\r\n        m1 m1;\r\n      end\r\n      else if (A == 2) begin : gen_scope\r\n        m2 m2;\r\n      end\r\n//   endgenerate\r\nendmodule\r\n\r\nmodule t;\r\n   s #(0) s0();\r\n   s #(1) s1();\r\n   s #(2) s2();\r\n   initial begin\r\n      if (s1.gen_scope.m1.val1 != '0) $stop;\r\n      if (s2.gen_scope.m2.val2 != '1) $stop;\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\n```\r\n%Error: t/t_gen_ifelse.v:32:24: Can't find definition of 'm1' in dotted scope/variable: 's1.gen_scope.m1'\r\n   32 |       if (s1.gen_scope.m1.val1 != '0) $stop;\r\n      |                        ^~\r\n        ... Known scopes under 's1.gen_scope': m2\r\n```\r\n\r\nThis seems to work with Questa: https://github.com/openhwgroup/cvw/blob/0eed57a0b797273ea38c2f5014e99b60244db775/src/ifu/ifu.sv#L321\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n```\r\n\r\nbin/verilator --version\r\nVerilator 5.019 devel rev v5.018-85-gc5ba6e22f\r\n```\r\n\r\nWhat OS and distribution are you using?\r\n\r\n```\r\nuname -a\r\nLinux loran 4.18.0-526.el8.x86_64 #1 SMP Sat Nov 18 00:54:11 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux\r\n```\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n**Maybe**",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2023-12-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

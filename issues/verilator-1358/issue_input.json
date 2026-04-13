@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1358,
+  "issue_url": "https://github.com/verilator/verilator/issues/1358",
+  "title": "Improve FST support to show enums",
+  "body": "---\n\n\nAuthor Name: **Sergi Granell** (@xerpi)\nOriginal Redmine Issue: 1358 from https://www.veripool.org\n\n\n\n---\n\nCurrently, the FST we generate is very limited (basically wires and one kind of scope). As FST actually supports SystermVerilog and VCD types and all kinds of scopes (such as module, package, struct, interface, etc), it would be nice to improve the FST support to make it generate these types.\r\nIt looks like this would requiere a major refactoring of the \"declFoo\" call dumping routines since fstapi needs more info than the currently passed on the current dumping functions parameters.\r\n\r\nSome generic pseudo C++ code that would visit all the hierarchy and emit FST would look like:\r\n```<code class=\"cpp\">\r\nvoid node_visit(const node_variable_t *node)\r\n{\r\n\tenum fstVarType var_type;\r\n\tenum fstVarDir var_dir;\r\n\r\n\tswitch (node->getType()) {\r\n\tcase VAR_TYPE_WIRE:\r\n\t\tvar_type = FST_VT_VCD_WIRE;\r\n\t\tbreak;\r\n\tcase VAR_TYPE_SV_LOGIC:\r\n\t\tvar_type = FST_VT_SV_LOGIC;\r\n\t\tbreak;\r\n\t...\r\n\t}\r\n\r\n\tif (node->getDir() == VAR_DIR_INPUT)\r\n\t\tvar_dir = FST_VD_INPUT;\r\n\telse if (node->getDir() == VAR_DIR_INPUT)\r\n\t\tvar_dir = FST_VD_OUTPUT;\r\n\telse\r\n\t\tvar_dir = FST_VD_IMPLICIT;\r\n\r\n\tfstWriterCreateVar(m_fst, var_type, var_dir, node->getLength(), node->getName(), ...)\r\n}\r\n\r\nvoid node_visit(const node_struct_t *node)\r\n{\r\n\tfstWriterSetScope(FST_ST_VCD_STRUCT, node->getName());\r\n\r\n\tfor (auto &child: node->children()\r\n\t\tnode_visit(child);\r\n\r\n\tfstWriterSetUpscope();\r\n}\r\n\r\nvoid node_visit(const node_module_t *node)\r\n{\r\n\tfstWriterSetScope(FST_ST_VCD_MODULE, node->getName());\r\n\r\n\tfor (auto &child: node->children()\r\n\t\tnode_visit(child);\r\n\r\n\tfstWriterSetUpscope();\r\n}\r\n\r\nvoid emit_vars()\r\n{\r\n\tnode_visit(getRoot());\r\n}\r\n</code>\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2018-10-03",
+  "closed_at": "2018-10-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

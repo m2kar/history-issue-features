@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 739,
+  "issue_url": "https://github.com/verilator/verilator/issues/739",
+  "title": "Multidimensional arrays and UNOPTFLAT warning",
+  "body": "---\n\n\nAuthor Name: **Glen Gibb**\nOriginal Redmine Issue: 739 from https://www.veripool.org\nOriginal Date: 2014-04-10\n\n\n---\n\nI'd like to use a multidimensional array to connect a number of combinational blocks where the output of one block is used as the input to the next block.\r\n\r\nTo explain what I mean, I've put together a simple test case that sums the number of ones in a signal. I'm using the technique that one would use in a software implementation where it iteratively masks, shifts, and adds blocks of increasing width. (Ignore the fact that there may be better ways to do this in hardware.) A parameterized module performs a single mask-shift-add step. A number of these modules are instantiated and connected in sequence. The first module instance takes row 0 as input and generates row 1 as output; the second module instance takes row 1 as input and generates row 2 as output etc.\r\n\r\nIf I create distinct signals for each row (e.g., @reg [31:0] row_0, row_1, row_2, ...@) then everything works fine. If I try using a multi-dimensional array (e.g., @reg [31:0] row[6]@) then I receive an UNOPTFLAT warning because of a circular loop:\r\n```\r\n%Warning-UNOPTFLAT: t/t_multi_dim_array.v:16: Signal unoptimizable: Feedback to clock or circular logic: v.row\r\n%Warning-UNOPTFLAT: Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n\n```\r\n\r\nThe code _does_ execute correctly with the appropriate lint_off directive. Two questions:\r\n1. What is the performance impact of disabling the UNOPTFLAT warning and having this signal unoptimized?\r\n1. I think that this coding style (i.e., using a multidimensional array to propagate a signal through a number of combination processing stages) is a reasonable coding choice. If so, should Verilator be modified to better optimize code using multidimensional arrays in this manner?\n\n\n",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2014-04-10",
+  "closed_at": "2014-04-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

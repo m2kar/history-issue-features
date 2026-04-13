@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5423,
+  "issue_url": "https://github.com/llvm/circt/pull/5423",
+  "title": "[HWModuleLike] Add by-name port lookup",
+  "body": "Adds capabilities to the `HWModuleLike` interface to lookup in/output port indices by name. This is done by maintaining a mapping (`DictionaryAttr`) between port names and their indices.\r\n\r\nThe `arg/resIdxMap` attributes are not inherent attributes of module-like ops (not part of parsing). this makes sense to me to avoid duplicating information. Instead, the mappings are updated whenever:\r\n1. a module-like op is parsed\r\n2. a module-like op is built\r\n3. a module-like op has its ports modified through `hw::modifyModulePorts` or any of the other functions which i managed to determine modifies ports.\r\n\r\nIf a user modifies the ports of a module outside the above locations, it is the responsability of the user to ensure that `updateModuleIndexMappings` is called.\r\n\r\nThe performance of this comes down to the performance of looking up a key in a `DictionaryAttr`.\r\n\r\nA final detail is that these mappings will only be available if a module has unique in/output port names, given that it is currently legal to have duplicate names in the `argNames`/`resNames` attributes, as well as this being supported by exportVerilog.\r\n\r\nLastly, `FIRRTL` module-like ops do not implement this interface (for now) given the unified in/out port list.\r\n\r\nAs a first user, updates `PipelineToHW` to lookup clk/rst ports by name. I'm sure there's tons of other uses throughout the codebase.\r\n\r\n**Note**: This is probably a fairly contentious way of implementing this, mainly regarding space overhead, issues as to how to ensure that the map is always up to date, computational overhead even if users don't want/need the capability.\r\n \r\nAlternative implementations:\r\n* MLIR properties: Helps with some of the computational complexity, wherein we'd store a `DenseMap` instead of a (uniqued) `DictionaryAttribute`\r\n* Helper class: Make this fully optional with a helper class/function that wraps a `HWModuleLike` to provide a by-name lookup API.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-19",
+  "closed_at": "2023-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

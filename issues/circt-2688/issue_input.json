@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2688,
+  "issue_url": "https://github.com/llvm/circt/issues/2688",
+  "title": "[FIRRTL] HW Attributes not Loaded?",
+  "body": "When running `circt-opt` with a lone pass that creates a `hw::InnerRefAttr` I can get MLIR to crash because the HW attributes aren't loaded.  (This is the same circuit as #2687, but with the bug in #2687 worked around by renaming `%0` to `%a`)\r\n\r\n```mlir\r\nfirrtl.circuit \"Top\"  {\r\n  firrtl.module @Top() {\r\n    %a1_x = firrtl.instance a1  @A(out x: !firrtl.uint<1>)\r\n    %a2_x = firrtl.instance a2  @A_(out x: !firrtl.uint<1>)\r\n  }\r\n  firrtl.module @A(out %x: !firrtl.uint<1>) {\r\n    %a = firrtl.wire  {annotations = [{class = \"hello\"}]} : !firrtl.uint<1>\r\n    %b = firrtl.node sym @b %a  : !firrtl.uint<1>\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %a, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %x, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n  firrtl.module @A_(out %x: !firrtl.uint<1>) {\r\n    %a = firrtl.wire  : !firrtl.uint<1>\r\n    %b = firrtl.node sym @b %a  : !firrtl.uint<1>\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %a, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %x, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThis then crashes when running `circt-opt --pass-pipeline='firrtl.circuit(firrtl-dedup)' dedup.mlir` with:\r\n\r\n```\r\nLLVM ERROR: can't create Attribute 'circt::hw::InnerRefAttr' because storage uniquer isn't initialized: the dialect was likely not loaded, or the attribute wasn't added with addAttributes<...>() in the Dialect::initialize() method.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-25",
+  "closed_at": "2022-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

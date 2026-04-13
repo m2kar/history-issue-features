@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 872,
+  "issue_url": "https://github.com/llvm/circt/issues/872",
+  "title": "[RTL/FIRRTL] Store port names more efficiently",
+  "body": "We currently store port name attributes in an extremely inefficient format, as generalized argument attributes.  Consider a module with three input ports like this:\r\n\r\n`module @foo(%a: i1, %b: i1, %c: i1) {`\r\n\r\nStoring these as argument attributes causes a ton of extra dictionaries to be created, and causes them to be indexed by strings, see the logic that builds this up in `buildModule` in RTLOps.cpp.  The argument attributes are stored something like this:\r\n\r\n```\r\n\"rtl.module\" () { name = @foo,  // name attribute\r\n                            arg0 = { rtl.name = \"a\"}, \r\n                            arg1 = { rtl.name = \"b\"},\r\n                            arg2 = { rtl.name = \"c\" }} \r\n```\r\n\r\nThis is four dictionaryattrs (one for each argument and one overall, and means the op level dictionary attr has #ports entries in it, which slows down everything that is looking up the name for a module - a fairly common operation.  This also means that we can't efficiently look up names by index, because we have to create the \"arg1\" strings and unique them to do a lookup.\r\n\r\nInstead, we should store the names as a separate attribute with a single array attribute, something like:\r\n\r\n```\r\n\"rtl.module\" () { name = @foo,  // name attribute\r\n                            portnames = [ \"a\", \"b\", \"c\"] }\r\n```\r\n\r\nThis would allow directly indexing port names, make the # entries in the module dictionary constant time.  This would dramatically reduce memory usage and make the compiler significantly faster.\r\n\r\nThis affects both the RTL and the FIRRTL dialect modules.\r\n",
+  "labels": [
+    "enhancement",
+    "FIRRTL",
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-02",
+  "closed_at": "2021-04-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

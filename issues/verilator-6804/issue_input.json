@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6804,
+  "issue_url": "https://github.com/verilator/verilator/issues/6804",
+  "title": "Interface with multiple initial blocks causes 'Duplicate declaration of member name' error",
+  "body": "## Summary\n\nWhen an interface contains multiple `initial` blocks and a method is called on that interface, Verilator may produce an internal error: \"Duplicate declaration of member name: ''\" due to the VMemberMap attempting to insert multiple anonymous nodes (which have empty names) into its internal map.\n\n## Minimal Reproduction\n\n```systemverilog\ninterface my_iface;\n   int value;\n\n   // Multiple initial blocks (anonymous - have empty names)\n   initial value = 0;\n   initial $display(\"Init 1\");\n   initial $display(\"Init 2\");\n\n   // A method that triggers member map lookup\n   function int get_value();\n      return value;\n   endfunction\nendinterface\n\nmodule t;\n   my_iface iface();\n   initial begin\n      if (iface.get_value() !== 0) $stop;\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\nendmodule\n```\n\n## Root Cause\n\nIn `V3MemberMap.h`, the `memberInsert()` function inserts child nodes into a map keyed by name. When multiple anonymous nodes (like `initial` blocks) are processed, they all have empty names `\"\"`, causing the second insertion to fail with a \"Duplicate declaration\" error.\n\n## Proposed Fix\n\nAdd a check to skip nodes with empty names in `memberInsert()`, since these cannot be looked up by name anyway:\n\n```cpp\nvoid memberInsert(MemberMap& mmapr, AstNode* childp, bool warn = true) {\n    // Skip nodes without names (e.g., initial blocks, anonymous statements)\n    // These can't be looked up by name anyway\n    if (childp->name().empty()) return;\n    const auto mitPair = mmapr.emplace(childp->name(), childp);\n    // ...\n}\n```\n\n## IEEE Reference\n\nIEEE 1800-2017 Section 25.3 allows multiple initial blocks in interfaces.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-12",
+  "closed_at": "2025-12-17",
+  "code_blocks": [
+    "interface my_iface;\n   int value;\n\n   // Multiple initial blocks (anonymous - have empty names)\n   initial value = 0;\n   initial $display(\"Init 1\");\n   initial $display(\"Init 2\");\n\n   // A method that triggers member map lookup\n   function int get_value();\n      return value;\n   endfunction\nendinterface\n\nmodule t;\n   my_iface iface();\n   initial begin\n      if (iface.get_value() !== 0) $stop;\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\nendmodule\n",
+    "void memberInsert(MemberMap& mmapr, AstNode* childp, bool warn = true) {\n    // Skip nodes without names (e.g., initial blocks, anonymous statements)\n    // These can't be looked up by name anyway\n    if (childp->name().empty()) return;\n    const auto mitPair = mmapr.emplace(childp->name(), childp);\n    // ...\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7208,
+  "issue_url": "https://github.com/llvm/circt/pull/7208",
+  "title": "[RFC][Sim] Add format string type and format specifier ops",
+  "body": "The motivation of this PR is to get a frontend/backend agnostic representation of \"printf-like\" format strings into the core dialects. These should allow us to specify the emission of messages during simulation, which include formatted representations of runtime values.\r\n\r\nIt adds the `!sim.fstring` type to the IR, which represents a sequence of format tokens. These tokens can either be string literals or the combination of a (SSA) value and a format specifier. It also adds the usual suspects of format specifiers as individual operations: Binary, signed/unsigned decimal and hexadecimal. To make the transition of the current direct FIRRTL-to-SV lowering as simple (and compatible) as possible, the specifics of those heavily lean on the way formatting works in SystemVerilog. Currently formatting is limited to integer values. For the details I'd ask you to refer to the documentation in the TableGen source.\r\n\r\nI deliberately decided against a representation where substitutions are embedded within a string, e.g., `\"Foo = %x\"`. While this imposes some efforts on the frontend lowerings to tokenize their format strings into separate operations , I think this will help us to avoid confusion between different fronend and backend formats. And more importantly, it makes processing substitutions in an \"MLIRish way\" easier. \r\n\r\nThese additions are intended as a first step towards a FIRRTL->Sim->Arc/LLVM-IR lowering pipeline for`printf` statements.  \r\nI've got a functional prototype of this integration [over in my repository](https://github.com/llvm/circt/compare/main...fzi-hielscher:circt:printf-github), which can hopefully give you an impression on how this could look like in the end.\r\n\r\nI have to point out that this is effectively a competing implementation to the existing print operation in the Verif dialect, added in #5616. I hope this does not disqualify me from the title of [friendly neighbourhood compiler engineer](https://github.com/llvm/circt/blob/main/include/circt/Dialect/Verif/VerifOps.td#L113C21-L113C61). I'm currently not aware of any (publicly available) lowering to `FormatVerilogStringOp`, so I cannot judge how hard it would be to transition this to my implementation. But I am somewhat confident that we'll find a way to unify these.\r\n\r\nI'd be happy to hear your opinions and suggestions on this approach.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-06-19",
+  "closed_at": "2024-07-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10109,
+  "issue_url": "https://github.com/llvm/circt/issues/10109",
+  "title": "[FIRRTL] InferDomains: Partially annotated wires not updated",
+  "body": "```firrtl\nFIRRTL version 6.0.0\ncircuit Foo :\n  domain ClockDomain :\n\n  domain PowerDomain :\n\n  public module Foo :\n    input A : Domain of ClockDomain\n    input p : UInt<1>\n    wire w : UInt<1> domains [A]\n    connect w, p\n```\n\ngives:\n```\n===- Running InferDomains ---------------------------------------------------===\ninfer: Foo\n  processing:\n    process port A : ClockDomain\n      set A : ClockDomain := A : ClockDomain\n    process port p\n      set domains(p) := [?1, ?2]\n    process %w = firrtl.wire domains[%A] : !firrtl.uint<1> domains[!firrtl.domain<@ClockDomain()>]\n      set domains(w) := [A : ClockDomain, ?3]\n    process firrtl.matchingconnect %w, %p : !firrtl.uint<1>\n      unify domains(w) = domains(p)\n      unify [A : ClockDomain, ?3] = [?1, ?2]\n      unify A : ClockDomain = ?1\n      unify ?3 = ?2\n  domain exports:\n    A : ClockDomain exported as A : ClockDomain\n  applying updates:\n    new-input PowerDomain : PowerDomain\n      unify ?2 = PowerDomain : PowerDomain\n  port summary:\n    A : ClockDomain\n    PowerDomain : PowerDomain\n    p domains [A : ClockDomain, PowerDomain : PowerDomain]\n===--------------------------------------------------------------------------===\n// -----// IR Dump After InferDomains (firrtl-infer-domains) //----- //\nfirrtl.circuit \"Foo\" {\n  firrtl.domain @ClockDomain\n  firrtl.domain @PowerDomain\n  firrtl.module @Foo(in %A: !firrtl.domain<@ClockDomain()>, in %PowerDomain: !firrtl.domain<@PowerDomain()>, in %p: !firrtl.uint<1> domains [%A, %PowerDomain]) attributes {convention = #firrtl<convention scalarized>} {\n    %w = firrtl.wire domains[%A] : !firrtl.uint<1> domains[!firrtl.domain<@ClockDomain()>]\n    firrtl.matchingconnect %w, %p : !firrtl.uint<1>\n  }\n}\n```\n\nThe wire was not updated, it should be associated with both %A and %PowerDomain.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-03",
+  "closed_at": "2026-04-06",
+  "code_blocks": [
+    "FIRRTL version 6.0.0\ncircuit Foo :\n  domain ClockDomain :\n\n  domain PowerDomain :\n\n  public module Foo :\n    input A : Domain of ClockDomain\n    input p : UInt<1>\n    wire w : UInt<1> domains [A]\n    connect w, p\n",
+    "===- Running InferDomains ---------------------------------------------------===\ninfer: Foo\n  processing:\n    process port A : ClockDomain\n      set A : ClockDomain := A : ClockDomain\n    process port p\n      set domains(p) := [?1, ?2]\n    process %w = firrtl.wire domains[%A] : !firrtl.uint<1> domains[!firrtl.domain<@ClockDomain()>]\n      set domains(w) := [A : ClockDomain, ?3]\n    process firrtl.matchingconnect %w, %p : !firrtl.uint<1>\n      unify domains(w) = domains(p)\n      unify [A : ClockDomain, ?3] = [?1, ?2]\n      unify A : ClockDomain = ?1\n      unify ?3 = ?2\n  domain exports:\n    A : ClockDomain exported as A : ClockDomain\n  applying updates:\n    new-input PowerDomain : PowerDomain\n      unify ?2 = PowerDomain : PowerDomain\n  port summary:\n    A : ClockDomain\n    PowerDomain : PowerDomain\n    p domains [A : ClockDomain, PowerDomain : PowerDomain]\n===--------------------------------------------------------------------------===\n// -----// IR Dump After InferDomains (firrtl-infer-domains) //----- //\nfirrtl.circuit \"Foo\" {\n  firrtl.domain @ClockDomain\n  firrtl.domain @PowerDomain\n  firrtl.module @Foo(in %A: !firrtl.domain<@ClockDomain()>, in %PowerDomain: !firrtl.domain<@PowerDomain()>, in %p: !firrtl.uint<1> domains [%A, %PowerDomain]) attributes {convention = #firrtl<convention scalarized>} {\n    %w = firrtl.wire domains[%A] : !firrtl.uint<1> domains[!firrtl.domain<@ClockDomain()>]\n    firrtl.matchingconnect %w, %p : !firrtl.uint<1>\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

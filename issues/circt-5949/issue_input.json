@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5949,
+  "issue_url": "https://github.com/llvm/circt/issues/5949",
+  "title": "[Handshake] Allow handshake ops to be used outside of a `handshake.func` (?)",
+  "body": "I've been thinking about whether it's reasonable to restrict `handshake` operations to having `handshake.func`s as their parent op. I think the main argument for doing so currently is avoiding confusion between e.g. `func.func` and `handshake.func`, with regards to the whole _\"every SSA value is a handshake channel\"_ (i.e. fine-grained dataflow).\r\n\r\nHowever, it's exactly that latter part which I'm questioning. We may want to use handshake within _any_ region which has fine-grained dataflow semantics. In other words, would it make more sense to say that Handshake ops should have something like `ParentOf<\"FineGrainedDataflowRegionOpInterface\">` (note: this isn't currently feasible, since interfaces can't be used in `ParentOf`, but a capability that many dialects need about... so probably will be possible soon).  \r\n\r\nThis would mean that I could bring my own op, which implements this interface, and use handshake (and handshake lowerings) to transform my custom fine-grained dataflow operation into the more explicit, low-level format that DC represents:\r\n\r\n```mlir\r\n// myDialect.fgdf implements FineGrainedDataflowRegionOpInterface for its inner region\r\n%out = myDialect.fgdf(%a : !myDialect.MyType<i32>, %b : !myDialect.MyType<i32>) -> (out : !nyDialect.MyType<i32>) {\r\n  ^bb0(%a_ : i32, %b_ : i32)\r\n  // this is a fine-grained dataflow region wherein we can reason about using\r\n  // handshake operations and semantics.\r\n  %res = arith.addi %a_, %b_ : i32\r\n  return %res : i32\r\n}\r\n\r\n// -------------------------------------------------------------------------- //\r\n\r\n// This means that we can use handshake-style lowering to lower the above to:\r\n%in0 = myDialect.to_dc %a : !myDialect.MyType<i32> -> !dc.value<i32>\r\n%in1 = myDialect.to_dc %b : !myDialect.MyType<i32> -> !dc.value<i32>\r\n\r\n%token, %output = dc.unpack %in0 : !dc.value<i32>\r\n%token_0, %output_1 = dc.unpack %in1 : !dc.value<i32>\r\n%0 = dc.join %token, %token_0\r\n%1 = arith.addi %output, %output_1 : i32\r\n%2 = dc.pack %0, %1 : i32\r\n\r\n%out = myDialect.from_dc %2 : !dc.value<i32> -> !myDialect.MyType<i32>\r\nhw.output %out : !myDialect.MyType<i32>\r\n```\r\n\r\ntl;dr: i want to use handshake ops outside of `handshake.func`.\r\n\r\n\r\nCC @Dinistro @mikeurbach @RamirezLucas @teqdruid ",
+  "labels": [
+    "Handshake"
+  ],
+  "state": "open",
+  "created_at": "2023-08-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

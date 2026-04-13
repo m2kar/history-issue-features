@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4071,
+  "issue_url": "https://github.com/verilator/verilator/pull/4071",
+  "title": "Improve xor tree optimization",
+  "body": "While debugging #4059, I found xor tree is not fully optimized.\r\n1 bit width of AstNot is safe on xor tree.\r\nWhen the input of an AstNot cannot be optimized, then the input node should be frozen, not the AstNot node itself.\r\n\r\n\r\n```c++\r\n(1U \r\n & ((~ \r\n     ((~ \r\n       (1U \r\n        & (VL_REDXOR_32( (0x2020000U & vlSelf->words_i[2U])) \r\n           ^ VL_REDXOR_16( (0x202U & vlSelf->words_i[3U]))))) \r\n      ^ \r\n      (~ \r\n       (1U \r\n        & (VL_REDXOR_16( (0x202U & vlSelf->words_i[2U])) \r\n           ^ VL_REDXOR_32( (0x2020000U & vlSelf->words_i[3U]))))))) \r\n    ^ \r\n    (~ \r\n     ((~ \r\n       (1U \r\n        & (~ \r\n           (VL_REDXOR_32( (0x2020000U & vlSelf->words_i[0U])) \r\n            ^ VL_REDXOR_16( (0x202U & vlSelf->words_i[1U])))))) \r\n      ^ \r\n      (~ \r\n       (1U \r\n        & (VL_REDXOR_16( (0x202U & vlSelf->words_i[0U])) \r\n           ^ VL_REDXOR_32( (0x2020000U & vlSelf->words_i[1U])))))))))\r\n```\r\nbecomes as the following. ( Input design is https://github.com/verilator/verilator/issues/4059#issue-1635623058)\r\n```c++\r\n(1U \r\n & (~ \r\n    (((VL_REDXOR_32( (0x2020202U & vlSelf->words_i[0U])) \r\n       ^ VL_REDXOR_32( (0x2020202U & vlSelf->words_i[1U]))) \r\n      ^ VL_REDXOR_32( (0x2020202U & vlSelf->words_i[2U]))) \r\n     ^ VL_REDXOR_32( (0x2020202U & vlSelf->words_i[3U])))))\r\n```\r\n\r\nChecked verilator_ext_tests.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-26",
+  "closed_at": "2023-03-26",
+  "code_blocks": [
+    "becomes as the following. ( Input design is https://github.com/verilator/verilator/issues/4059#issue-1635623058)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

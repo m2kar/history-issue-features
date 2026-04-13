@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3044,
+  "issue_url": "https://github.com/verilator/verilator/issues/3044",
+  "title": "Incorrect $write printout",
+  "body": "Following is the test verilog\r\n\r\n```\r\nmodule test(\r\n    input clk\r\n);\r\n\r\nreg [31: 0] cnt;\r\n\r\ninitial\r\nbegin\r\n    cnt = 'd0;\r\nend\r\n\r\nalways @(posedge clk)\r\nbegin\r\n    cnt <= cnt + 1;\r\nend\r\n\r\nalways @*\r\nbegin\r\n    if (cnt > 1)\r\n\t$finish;\r\n\r\n    $write(\"%08x\\n\", {16'h0, cnt[15:0]});\r\n    $write(\"%08x\\n\", {16'h0, cnt[31:16]}); // incorrect printout here\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nExpected output is\r\n\r\n```\r\n00000000\r\n00000000\r\n00000001\r\n00000000\r\n- test.v:20: Verilog $finish\r\n00000002\r\n00000000\r\n```\r\n\r\nBut the actual output is\r\n```\r\n00000000\r\n0000\r\n00000001\r\n0000\r\n- test.v:20: Verilog $finish\r\n00000002\r\n0000\r\n```\r\n\r\nI beleive that this commit cause this issue.\r\n\r\nhttps://github.com/verilator/verilator/commit/6c9c16c31df4cd3ffa034dec2906a71358fe4074\r\n\r\nIf I comment out \"TREEOP (\"AstAnd {$lhsp.castConst, matchMaskedShift(nodep)}\", \"DONE\");\" at src/V3Const.cpp line 3048, the issue is gone.\r\n\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-25",
+  "closed_at": "2021-06-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

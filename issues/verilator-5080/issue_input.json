@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5080,
+  "issue_url": "https://github.com/verilator/verilator/issues/5080",
+  "title": "A specific pattern is verilated into an infinite loop when optimizations are enabled",
+  "body": "I found a specific pattern that triggers a verilation bug.\r\n\r\nFrom my initial testing, having:\r\n- optimizations enabled\r\n- an always block triggered by an inout signal\r\n- with 2 nested conditionals \r\n- that lead to a task call\r\n- in which a delay is present\r\n\r\nmakes Verilator not put the `co_await` operator on the `VTrigSched` corresponding to this `always` block, leading to an infinite loop at the first eval.\r\n\r\n(I am not too familiar with Verilog or Verilator, so I may do some terminology errors)\r\n\r\nAn example of this pattern is given below.\r\n\r\n```Verilog\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2024.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\nmodule test;\r\n\r\n  wire inoutSignal;\r\n\r\n  submod foo(inoutSignal);\r\n\r\n  initial begin\r\n`ifdef TEST_VERBOSE\r\n    $display(\"The top module is starting\");\r\n`endif\r\n    #2 $display(\"*-* All Finished *-*\");\r\n    $finish();\r\n  end\r\n\r\nendmodule\r\n\r\nmodule submod (\r\n    inoutSignal\r\n);\r\n\r\n  inout inoutSignal;\r\n\r\n  reg cond1;\r\n  reg cond2;\r\n\r\n  initial begin\r\n`ifdef TEST_VERBOSE\r\n    $display(\"The module's initial is called before the infinite loop\");\r\n`endif\r\n    // These conditions could have any value\r\n    cond1 = 1;\r\n    cond2 = 0;\r\n  end\r\n\r\n  task testTask;\r\n    begin\r\n      #1;\r\n`ifdef TEST_VERBOSE\r\n        $display(\"This task block is never actually called\");\r\n`endif\r\n    end\r\n  endtask  // pumpErr\r\n\r\n  always @(inoutSignal) begin\r\n    // The infinte loop is in the generated timing block for this block\r\n    if (cond1) begin\r\n      if (cond2) begin\r\n        testTask;\r\n      end\r\n    end\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\nThe following command will trigger the bug :\r\n\r\n```verilator --binary --timing -DTEST_VERBOSE test.v```\r\n\r\nSimply adding the `-O0` Verilator flag will avoid it.\r\n\r\n\r\nThe bug was discovered on Verilator v5.020, and is still present in the git master version.\r\n\r\n\r\nI am using Pop!_OS 22.04 LTS (based on Ubuntu 22.04 LTS).\r\n\r\n\r\nI am used to working with C++, but not very familiar with the Verilator code base, so I would need some help to fix this.",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-29",
+  "closed_at": "2024-08-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

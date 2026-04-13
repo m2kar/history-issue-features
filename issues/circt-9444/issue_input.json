@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9444,
+  "issue_url": "https://github.com/llvm/circt/issues/9444",
+  "title": "[firtool] Error on SInt Memory with `-repl-seq-mem`",
+  "body": "We are running into ~~crashes~~ an error when trying to compile a circuit containing SInt-typed memories with firtool using the `-repl-seq-mem` option:\n```\n../../ir/sint_mem.fir:12:5: error: memories should be flattened before running LowerMemory\n    smem smem : SInt<8>[256]\n```\n(Reproducer below)\n\n`firrtl-lower-memory` expects all memories to have UInt type. However, `firrtl-flatten-memory` will only convert aggregate types to UInt.\nI can see two ways of fixing this, not sure which one is preferred:\n- Change FlattenMemory to also convert base types\n- Adapt LowerMemories (and potentially other downstream passes) to handle all base types\n\nRepro:\n```\nFIRRTL version 6.0.0\ncircuit Top :\n  public module Top :\n    input clock : Clock\n    input reset : UInt<1>\n    output io_dout : SInt<8>\n    input io_din : SInt<8>\n    input io_addr : UInt<8>\n    input io_en : UInt<1>\n    input io_wr : UInt<1>\n\n    smem smem : SInt<8>[256]\n    wire _io_dout_WIRE : UInt<8>\n    invalidate _io_dout_WIRE\n    when io_en :\n      connect _io_dout_WIRE, io_addr\n      read mport io_dout_MPORT = smem[_io_dout_WIRE], clock\n    connect io_dout, io_dout_MPORT\n    node _T = and(io_en, io_wr)\n    when _T :\n      write mport MPORT = smem[io_addr], clock\n      connect MPORT, io_din\n```\n```\n./bin/firtool -repl-seq-mem -repl-seq-mem-file=seqmem.conf  ../../ir/sint_mem.fir\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-13",
+  "closed_at": "2026-01-14",
+  "code_blocks": [
+    "../../ir/sint_mem.fir:12:5: error: memories should be flattened before running LowerMemory\n    smem smem : SInt<8>[256]\n",
+    "FIRRTL version 6.0.0\ncircuit Top :\n  public module Top :\n    input clock : Clock\n    input reset : UInt<1>\n    output io_dout : SInt<8>\n    input io_din : SInt<8>\n    input io_addr : UInt<8>\n    input io_en : UInt<1>\n    input io_wr : UInt<1>\n\n    smem smem : SInt<8>[256]\n    wire _io_dout_WIRE : UInt<8>\n    invalidate _io_dout_WIRE\n    when io_en :\n      connect _io_dout_WIRE, io_addr\n      read mport io_dout_MPORT = smem[_io_dout_WIRE], clock\n    connect io_dout, io_dout_MPORT\n    node _T = and(io_en, io_wr)\n    when _T :\n      write mport MPORT = smem[io_addr], clock\n      connect MPORT, io_din\n",
+    "./bin/firtool -repl-seq-mem -repl-seq-mem-file=seqmem.conf  ../../ir/sint_mem.fir\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

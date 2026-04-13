@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 630,
+  "issue_url": "https://github.com/verilator/verilator/issues/630",
+  "title": "Generated C++ array index out of bound",
+  "body": "---\n\n\nAuthor Name: **Jie Xu** (@jiexu)\nOriginal Redmine Issue: 630 from https://www.veripool.org\nOriginal Date: 2013-03-08\nOriginal Assignee: Jie Xu (@jiexu)\n\n---\n\nFor the following code, Verilator generates incorrect code where array index is out of bound. \r\n```\r\n`begin_keywords \"1800-2005\"\r\nmodule sim_top( clk, out );\r\n\r\ninput wire clk;\r\noutput wire out;\r\n\r\nreg a;\r\nreg b;\r\n\r\ntypedef struct packed {\r\n     logic config_a;\r\n     logic config_b;\r\n} param_t;\r\n\r\nparam_t conf [1:2] ;\r\n\r\nalways @ (posedge clk)\r\nbegin\r\n     conf[2].config_b <= a;\r\nend\r\n\r\nalways @ (posedge conf[2].config_b)\r\n     a = conf[2].config_a;\r\n\r\nendmodule\r\n\r\n\n```\r\n\r\nSpecifically, the signal involved is @conf@ which is an array and it triggers a \"UNOPTFLAT\" warning by Verilator. However, if we disable the \"UNOPTFLAT\" warning, Verilator will generate C++ code. But the index of the array is not correct. \r\nIn Vsim_top.h, the signal is defined as:\r\n```\r\nVL_SIG8(v__DOT__conf[2],1,0);\r\nVL_SIG8(__Vchglast__TOP__v__DOT__conf[2],1,0);\r\n\n```\r\n\r\nBut in Vsim_top.cpp::_change_request, these are used as:\r\n```\r\n |((IData)(vlTOPp->v__DOT__conf)[2] ^ (IData)(vlTOPp->__Vchglast__TOP__v__DOT__conf)[2])   //?? [2] is out of bound\r\n\n```\r\n\r\nThe verilog was compiled with \r\n```\r\nverilator -cc -trace --language 1364-2005 --top-module sim_top sim_top.sv -Wno-UNOPTFLAT\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-03-08",
+  "closed_at": "2013-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

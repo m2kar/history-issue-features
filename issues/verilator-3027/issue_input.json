@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3027,
+  "issue_url": "https://github.com/verilator/verilator/pull/3027",
+  "title": "Improve V3Localize",
+  "body": "Got a bit side tracked form the ccache efficiency work when I found this optimization opportunity. It makes the OpenTitan model 8.5% faster when compiled without --trace (measured on a single threaded model), as V3Localize now finds an additional ~21000 variables that it can convert into locals which no longer need to live in (and be stored to) the model state. ~~(Sadly when compiled with tracing these opportunities go away as variables are read in the tracing routines.)~~ \r\n\r\nThere are 3 patches and they should be kept separate as they are largely orthogonal. The first moves V3Descpoe after V3Localize, and teaches V3Localize how to localize variables of another module. Patch 2 is just infrastructure to be used in patch 3 initially but is generic. Patch 3 teaches V3Localize how to localize any variable that is always assigned before it's read within a function (previously it only did this if the variable was used only in a single function, but a lot of stuff was duplicaed into the settle loop, so there was a lot of lost opportuity).\r\n\r\nSome numbers for OpenTitan (single threaded, without --trace):\r\n```\r\nOld Localize: (0a28fc8c)\r\n\r\n      68,728.68 msec task-clock                #    1.000 CPUs utilized            ( +-  0.05% )\r\n             75      context-switches          #    0.001 K/sec                    ( +- 31.50% )\r\n              0      cpu-migrations            #    0.000 K/sec\r\n          1,549      page-faults               #    0.023 K/sec                    ( +-  0.02% )\r\n240,412,856,507      cycles                    #    3.498 GHz                      ( +-  0.05% )\r\n232,031,502,038      instructions              #    0.97  insn per cycle           ( +-  0.00% )\r\n 11,966,905,530      branches                  #  174.118 M/sec                    ( +-  0.00% )\r\n    261,356,240      branch-misses             #    2.18% of all branches          ( +-  0.47% )\r\n\r\n        68.7321 +- 0.0323 seconds time elapsed  ( +-  0.05% )\r\n\r\n\r\nNew Localize: (21917abf)\r\n\r\n      63,407.49 msec task-clock                #    1.000 CPUs utilized            ( +-  0.04% )\r\n             39      context-switches          #    0.001 K/sec                    ( +- 56.85% )\r\n              0      cpu-migrations            #    0.000 K/sec\r\n          1,434      page-faults               #    0.023 K/sec                    ( +-  0.01% )\r\n221,799,502,259      cycles                    #    3.498 GHz                      ( +-  0.04% )\r\n211,109,106,971      instructions              #    0.95  insn per cycle           ( +-  0.00% )\r\n 11,898,040,540      branches                  #  187.644 M/sec                    ( +-  0.00% )\r\n    264,866,360      branch-misses             #    2.23% of all branches          ( +-  0.78% )\r\n\r\n        63.4091 +- 0.0265 seconds time elapsed  ( +-  0.04% )\r\n\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-06-17",
+  "closed_at": "2021-06-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

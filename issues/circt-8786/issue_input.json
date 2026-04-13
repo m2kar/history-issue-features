@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8786,
+  "issue_url": "https://github.com/llvm/circt/issues/8786",
+  "title": "[Synthesis][AIG] Add Synthesis dialect and change AIG dialect to a sub-dialect of synthesis",
+  "body": "Currently AIG dialect is used as core representation for circt-synth flow but for synthesis there are few other operations I'd like to introduce but not limited to AIG. From that perspective I'm thinking it's better to introduce a dialect for synthesis and move AIG to sub-dialect of Synthesis. This is my current sketch for what looks like. \n\n### Meta operations for synthesis \n* `synth.choice` operation -- defer lowering decisions to the late stage/actual tech mapping\n```mlir\n%0 = synth.choice %slow_but_small, %balance, %fast_but_large : i42\n```\n inspired by https://people.eecs.berkeley.edu/~alanmi/publications/2005/tech05_map.pdf but not limited to AIG node\n\n* `synth.bundle` operation -- This is basically a compiler hint to map multiple output cells. Without this kind of operations it's necessary to recognize pairs of root operations in memory and DAG rewriting becomes much annoying to manage. \n```mlir\n%carry = comb.and %a, %b: i1\n%sum = comb.xor %a, %b: i1\n%carry', %sum' = synth.bundle %carry, %sum : i1, i1\n```\n* `synth.store` operation -- rollback to original operation\n```mlir\n%original = synth.store (%a, %b) {\n    %0 = comb.mul %a, %b : i32\n   synth.store.return %0: i32\n}\n%tech_mapped = hw.instance @some_gate (..) {arrivatl_time=1500}\n%0 = synth.choice %tech_mapped, %original : i32\n\n==> Restore pass\n\n%original = comb.mul %a, %b : i32\n%tech_mapped = hw.instance @some_gate (...) {arrival_time=1500}\n%0 = synth.choice %tech_mapped, %original : i32\n\n==> Rerun synthesis pipeline with post mapped timing analysis\n%tech_mapped = hw.instance @some_gate (...) {arrival_time=1500}\n%tech_mapped_2 = hw.instance @some_gate (...) {arrival_time=1400}\n%0 = synth.choice %tech_mapped, %tech_mapped_2 : i32\n```\n\n\n### Logic Representation \nCurrently both AIG and MIG are widely used in academia and it would be beneficial to being able to experiment both representations \n\n* `synth.aig.and_inv` operation (renamed from `aig.and_inv`)\n* `synth.mig.majority_inv` operation.  MIG has emerged as a new efficient representation for logic synthesis https://si2.epfl.ch/demichel/publications/archive/2016/07293649.pdf. \n\nMost of the existing passes/analysis for AIG can be easily extensible to MIG so should be ok. \nEither keeping AIG and MIG different dialects or defining it as sub-dialect of synthesis is an open question. \n\n### Migration\nMigration is mostly mechanical:\n* Synthesis dialect set up. Merge with existing lib/Synthesis directory\n* Move AIG/Transforms to Synthesis/Transforms (or Synthesis/AIG/Transforms if the pass is specific to AIG)\n* AIG CAPI/Python binding needs to be moved to synth",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-26",
+  "closed_at": "2026-03-21",
+  "code_blocks": [
+    "%0 = synth.choice %slow_but_small, %balance, %fast_but_large : i42\n",
+    "%carry = comb.and %a, %b: i1\n%sum = comb.xor %a, %b: i1\n%carry', %sum' = synth.bundle %carry, %sum : i1, i1\n",
+    "%original = synth.store (%a, %b) {\n    %0 = comb.mul %a, %b : i32\n   synth.store.return %0: i32\n}\n%tech_mapped = hw.instance @some_gate (..) {arrivatl_time=1500}\n%0 = synth.choice %tech_mapped, %original : i32\n\n==> Restore pass\n\n%original = comb.mul %a, %b : i32\n%tech_mapped = hw.instance @some_gate (...) {arrival_time=1500}\n%0 = synth.choice %tech_mapped, %original : i32\n\n==> Rerun synthesis pipeline with post mapped timing analysis\n%tech_mapped = hw.instance @some_gate (...) {arrival_time=1500}\n%tech_mapped_2 = hw.instance @some_gate (...) {arrival_time=1400}\n%0 = synth.choice %tech_mapped, %tech_mapped_2 : i32\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

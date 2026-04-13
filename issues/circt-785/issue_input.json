@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 785,
+  "issue_url": "https://github.com/llvm/circt/issues/785",
+  "title": "[FIRRTL] LowerTypes for Aggregate Register Inits",
+  "body": "Vector register lowering appears to not work.\r\n\r\nConsider the following circuit:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input a_d: UInt<1>[2]\r\n    output a_q: UInt<1>[2]\r\n\r\n    wire init: UInt<1>[2]\r\n    init[0] <= UInt<1>(0)\r\n    init[1] <= UInt<1>(0)\r\n\r\n    reg r: UInt<1>[2], clock with:\r\n      reset => (reset, init)\r\n\r\n    r <= a_d\r\n    a_q <= r\r\n```\r\n\r\nThis is crashing out in lower types:\r\n\r\n```bash\r\nfirtool -lower-to-rtl -enable-lower-types Foo.fir\r\n# Assertion failed: (entry && \"bundle lowering was not set\"), function getBundleLowering, file ../lib/Dialect/FIRRTL/Transforms/LowerTypes.cpp, line 794.\r\n```\r\n\r\nI would expect this to generate something like what the Scala FIRRTL Compiler does here:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input   clock,\r\n  input   reset,\r\n  input   a_d_0,\r\n  input   a_d_1,\r\n  output  a_q_0,\r\n  output  a_q_1\r\n);\r\n  reg  r_0;\r\n  reg  r_1;\r\n  assign a_q_0 = r_0;\r\n  assign a_q_1 = r_1;\r\n  always @(posedge clock) begin\r\n    if (reset) begin\r\n      r_0 <= 1'h0;\r\n    end else begin\r\n      r_0 <= a_d_0;\r\n    end\r\n    if (reset) begin\r\n      r_1 <= 1'h0;\r\n    end else begin\r\n      r_1 <= a_d_1;\r\n    end\r\n  end\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-18",
+  "closed_at": "2021-03-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

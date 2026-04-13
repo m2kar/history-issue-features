@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3198,
+  "issue_url": "https://github.com/verilator/verilator/issues/3198",
+  "title": "import-DPI with an open array for the packed dimension",
+  "body": "The SV DPI spec mentions \"open arrays\" and give `bit[]` as a legal example.  I tried writing this declaration (where the function can work for multiple sizes, with `arg1` telling it what size it was called with):\r\n```\r\nimport \"DPI-C\" function void poly_action(output bit[] res, bit[] arg0, int arg1);\r\n```\r\nand I see that Verilator 4.200 (2021-03-12 rev v4.110-43-g5022e81af) rejects the syntax:\r\n```\r\n%Error: dpi_declarations.v:1:53: syntax error, unexpected ']', expecting TYPE-IDENTIFIER\r\n```\r\nI tried looking in `verilog.y` to see why it didn't parse, and I can't see why it's not -- maybe that's a bug?  I do see this, which suggests that it should give a nicer message about not being supported:\r\n```\r\npacked_dimension<nodeRangep>:   // ==IEEE: packed_dimension                                                                                  \r\n                anyrange                                { $$ = $1; }\r\n        |       '[' ']'\r\n                        { $$ = nullptr; BBUNSUP($<fl>1, \"Unsupported: [] dimensions\"); }\r\n        ;\r\n```\r\nFYI, here's the path that I followed: the first option for `dpi_import_export` expects `function_prototype`; the first arm of that expects `tf_port_listE` between the parentheses; and that's `tf_port_listList`, which is a comma separated list of `tf_port_item`; the second arm of that is `tf_port_itemFront` followed by the name; and one of the arms of that is `tf_port_itemDir data_type` (a port direction like `output` followed by a data type); and that supports a type followed by `packed_dimensionListE`; which includes `packed_dimensionList`; which includes `packed_dimension`.\r\n\r\nSeparate from whether the error is being reported properly, would it be possible to support `bit[]` in DPI-C?",
+  "labels": [
+    "type: feature-IEEE",
+    "area: vpi/dpi/api"
+  ],
+  "state": "open",
+  "created_at": "2021-11-12",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 457,
+  "issue_url": "https://github.com/verilator/verilator/issues/457",
+  "title": "Problem with simple clock gating",
+  "body": "---\n\n\nAuthor Name: **Mike Denio**\nOriginal Redmine Issue: 457 from https://www.veripool.org\nOriginal Date: 2012-03-15\n\n\n---\n\nI'm creating a derrived clock through a very simple clock gate, but the derrived clock is being treated like a delayed signal such that any changes are not acted upon until a subsequent call to _eval(). The following test code will drive the test pin \"results\" to 0, while on other simulators, it will be driven to 1.\r\n\r\nI don't think it's anything I'm doing wrong. Please let me know otherwise, but it seems that the resulting model code generated in the function Vtb::_eval() would preclude this from ever working properly.\r\n\r\nHere is the Verlog. If it's poorly coded, please keep in mind I'm a software guy :) .\r\n\r\n-----------\r\n```\r\n`timescale 1 ps / 1 ps\r\n\r\nmodule tb ( gclk, rst_n );\r\ninput   gclk;\r\ninput   rst_n;\r\n\r\nwire    gclk;\r\nwire    rst_n;\r\nwire    clk_gated;\r\nwire    test_sig;\r\nwire    results;\r\n\r\nclockgate       clockgate( .in_clk(gclk), .en(1'b1), .out_clk(clk_gated) );\r\ntest_master     test_master( .gclk(gclk), .test_sig(test_sig) );\r\ntest_slave      test_slave_fail( .dclk(clk_gated), .test_sig(test_sig), .results(results) );\r\nendmodule\r\n\r\n//\r\n// failing clockgate module\r\n//\r\nmodule clockgate (in_clk, en, out_clk);\r\ninput   in_clk;            \r\ninput   en;            \r\noutput  out_clk;        \r\n\r\nwire    in_clk;\r\nwire    en;\r\nwire    out_clk;\r\nreg     en_reg;\r\n\r\nassign  out_clk  = (in_clk & en_reg);\r\n\r\nalways @ (posedge in_clk)\r\nbegin\r\n     if( en_reg != en )\r\n         en_reg <= #1 en;\r\nend \r\nendmodule\r\n\r\n\r\n//\r\n// test_master\r\n//\r\nmodule test_master (gclk, test_sig);\r\ninput   gclk;            \r\noutput  test_sig;       \r\n\r\nwire    gclk;\r\nreg     test_sig;\r\n\r\ninitial \r\nbegin\r\n  test_sig = 1'd0;\r\nend\r\n\r\nalways @ (gclk)\r\nbegin\r\n     if( gclk )\r\n         test_sig <= #1 1'b0;\r\n     else        \r\n         test_sig <= #1 1'b1;\r\nend\r\nendmodule\r\n\r\n\r\n//\r\n// test_slave\r\n//\r\nmodule test_slave (dclk, test_sig, results);\r\ninput   dclk;            \r\ninput   test_sig;       \r\noutput  results;       \r\n\r\nwire    dclk;\r\nwire    test_sig;\r\nreg     results;\r\n\r\ninitial \r\nbegin\r\n  results  = 1'd0;\r\nend\r\n\r\nalways @ (posedge dclk)\r\nbegin\r\n     if( test_sig )\r\n         results <= #1 1'b1;\r\n     else\r\n         results <= #1 1'b0;\r\nend\r\nendmodule\r\n\r\n\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: no fix needed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2012-03-15",
+  "closed_at": "2012-03-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

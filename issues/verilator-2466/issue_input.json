@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2466,
+  "issue_url": "https://github.com/verilator/verilator/issues/2466",
+  "title": "_eval() seems evaluate the combo logic firstly?",
+  "body": "From internals.adox (and one presentation years ago):\r\n\r\nOn other evaluations, the Verilated code detects what input signals have changes. If any are clocks, it calls the appropriate sequential functions (from always @ posedge statements). Interspersed with sequential functions it calls combo functions (from always @*). After this is complete, it detects any changes due to combo loops or internally generated clocks, and if one is found must reevaluate the model again.\r\n\r\nThis seems like the evaluate flow I agree, but from the generated _eval(), I can see combo logic are evaluated firstly, which is not aligned with the wording above.\r\n\r\nReason asking is we have two evaluate wtice in one click tick. \r\n\r\nGive Verilog exmaple:\r\n```\r\nmodule TB;\r\n..\r\nalways @(posedge clk)\r\n    sig_dut = ...;\r\n\r\ndut dut (.in(sig_dut), ...)\r\n\r\nmodule dut(in, ...);\r\nwire d;\r\nd=func( in, ...);\r\nalways @(posedge clk) \r\n   q<= d;\r\nendmodule\r\n```\r\n\r\nTo write C++ TB, within the while loop we have to do:\r\n```\r\nwhile(){\r\n   Vdut->in = sig_dut;\r\n   eva();\r\n   ftp->dump(mainTime);  // current simulation time\r\n   mainTime++;\r\n   eval();\r\n   ftp->dum(mainTime); // advanced to the next time\r\n}\r\n```\r\n\r\nIf we donot eval() twice, the \"d\" signal change at the same time as q. I think the function of \"q\" is still correct, just the \"d\" and \"q\" flip at the same clock edge hints race-condition like situation. Any suggest here ?",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-14",
+  "closed_at": "2020-07-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6463,
+  "issue_url": "https://github.com/verilator/verilator/pull/6463",
+  "title": "Deprecate clocker attribute and --clk option",
+  "body": "The only use for the clocker attribute and the AstVar::isUsedClock that is actually necessary today for correctness is to mark top level inputs of --lib-create blocks as being (or driving) a clock signal. Correctness of --lib-create (and hence hierarchical blocks) actually used to depend on having the right optimizations eliminate intermediate clocks (e.g.: V3Gate), when the top level port was not used directly in a sensitivity list, or marking top level signals manually via --clk or the clocker attribute. However V3Sched::partition already needs to trace through the logic to figure out what signals might drive a sensitivity list, so it can very easily mark all top level inputs as such.\r\n\r\nIn this patch we remove the AstVar::attrClocker and AstVar::isUsedClock attributes, and replace them with AstVar::isPrimaryClock, automatically set by V3Sched::partition. This eliminates all need for manual annotation so we are deprecating the --clk/--no-clk options and the clocker/no_clocker attributes.\r\n\r\nThis also eliminates the opportunity for any further mis-optimization similar to #6453.\r\n\r\nRegarding the other uses of the removed AstVar attributes:\r\n- As of 5.000, initial edges are triggered via a separate mechanism applied in V3Sched, so the use in V3EmitCFunc.cpp is redundant\r\n- Also as of 5.000, we can handle arbitrary sensitivity expressions, so the restriction on eliminating clock signals in V3Gate is unnecessary\r\n- Since the recent change when Dfg is applied after V3Scope, it does perform the equivalent of GateClkDecomp, so we can delete that pass.\r\n",
+  "labels": [
+    "pr: rtlmeter"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-20",
+  "closed_at": "2025-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

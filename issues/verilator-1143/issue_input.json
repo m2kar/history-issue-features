@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1143,
+  "issue_url": "https://github.com/verilator/verilator/issues/1143",
+  "title": "Interface array mismatch in length results in internal error",
+  "body": "---\n\n\nAuthor Name: **Johan Bjork**\nOriginal Redmine Issue: 1143 from https://www.veripool.org\n\n\n\n---\n\nIf you pass in an array of interfaces to a module that is expecting a differently sized array, you either get a silent success or a segfault, depending on whether the module expects a smaller or larger array.\r\n\r\n```\r\nmodule t (/*AUTOARG*/);\r\n    localparam N = 4;\r\n    foo_intf foos [N-1:0] ();\r\n\r\n    baz baz_inst (.foo(foos));\r\n\r\n    initial begin\r\n       $write(\"*-* All Finished *-*\\n\");\r\n       $finish;\r\n    end\r\n\r\nendmodule\r\n\r\nmodule baz(foo_intf foo[4:0] );\r\nendmodule\r\n\r\n%Error: t/t_interface_array_bad.v:14: Can't find definition of 'foos__Viftop__BRA__4__KET__' in dotted signal: .foos__Viftop[4]\r\n%Error:      Known scopes under 'foos__Viftop[4]': baz_inst, foos[0], foos[1], foos[2], foos[3]\r\n%Error: Verilator internal fault, sorry.  Consider trying --debug --gdbbt\r\n\r\n\n```\r\n\r\nIt seems AstUnpackArrayDType sets width \"for backward compatibility\" to the width of the subDType, so that makes the check in V3Width.cpp:2171 pass which otherwise seems to be the correct check to detect this.\r\n\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2017-03-20",
+  "closed_at": "2017-04-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

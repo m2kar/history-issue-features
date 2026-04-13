@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7972,
+  "issue_url": "https://github.com/llvm/circt/pull/7972",
+  "title": "Re-land: [FIRRTL][CAPI] Add more functions for discriminating and querying type",
+  "body": "Re-push #7960, closes #7970.\r\n\r\nIn #7960, I used `memcmp` for comparing 2 `struct FIRRTLBundleField`, this is problematic and may return unexpected results since 2 `MlirXXX` different opaque pointer structs may be the same content.\r\n\r\n```c\r\nbool bundleFieldEqual(const FIRRTLBundleField *lhs,\r\n                      const FIRRTLBundleField *rhs) {\r\n  return mlirIdentifierEqual(lhs->name, rhs->name) &&\r\n         lhs->isFlip == rhs->isFlip && mlirTypeEqual(lhs->type, rhs->type);\r\n}\r\n```\r\n\r\nAfter replacing it with function `bundleFieldEqual` above, it should be correct and the crash no longer occurs on Windows, and Valgrind no longer reports `Conditional jump or move depends on uninitialised value(s)`. The uninitialized memory error from Valgrind could be because `memcmp` accessed struct padding, but I'm confused as to why Windows reports it as 0xc0000409 (`STATUS_STACK_BUFFER_OVERRUN`). 😶‍🌫️",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-12-12",
+  "closed_at": "2024-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

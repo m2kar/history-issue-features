@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1276,
+  "issue_url": "https://github.com/llvm/circt/issues/1276",
+  "title": "[FIRRTL] Lower Types Regression",
+  "body": "The following circuit is throwing a verification error after lower types:\r\n\r\n```scala\r\ncircuit Foo :\r\n  extmodule Bar :\r\n    input a: UInt<2>\r\n\r\n  module Foo :\r\n    wire a : { flip b : UInt<1>}\r\n    inst bar of Bar\r\n    bar.a is invalid\r\n    a.b <= bar.a\r\n```\r\n\r\nThis is resulting in a `tail` of a flip type. 😬 The error is:\r\n```\r\nFoo.fir:9:9: error: input must be integer and amount must be >= 0\r\n    a.b <= bar.a\r\n```\r\n\r\nThe problematic line that is causing this is:\r\n```mlir\r\n %0 = \"firrtl.tail\"(%bar_a) {amount = 1 : i32} : (!firrtl.flip<uint<2>>) -> !firrtl.uint<1>\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-06-15",
+  "closed_at": "2021-06-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

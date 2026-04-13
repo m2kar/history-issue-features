@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2931,
+  "issue_url": "https://github.com/verilator/verilator/issues/2931",
+  "title": "Multi-channel file descriptors - cause core dump (4.200)",
+  "body": "I was trying to write simultaneously to a file and sim log, but seems this does not work on 4.102 and causes core dump on 4.200.\r\n\r\n```\r\n% obj_dir/Vour\r\nHello World\r\nSegmentation fault (core dumped)\r\n\r\n```\r\n\r\nthe code is modified example from manual:\r\n\r\n```\r\n  module our;\r\n  integer fd;\r\n\r\n     initial begin \r\n        $display(\"Hello World\"); \r\n        fd = $fopen(\"kuku.txt\");\r\n        fd = fd | 1;\r\n        $fwrite(fd, \"writing to kuku.txt\\n\");\r\n        $fclose(fd);\r\n        $finish; \r\n     end\r\n  endmodule\r\n\r\n```\r\n\r\nwith following CPP wrapper:\r\n \r\n ```\r\n#include \"Vour.h\"\r\n  #include \"verilated.h\"\r\n  int main(int argc, char** argv, char** env) {\r\n      VerilatedContext* contextp = new VerilatedContext;\r\n      contextp->commandArgs(argc, argv);\r\n      Vour* top = new Vour{contextp};\r\n      while (!contextp->gotFinish()) { top->eval(); }\r\n      delete top;\r\n      delete contextp;\r\n      return 0;\r\n  }\r\n\r\n```\r\nIt does write file if I comment out the line:\r\n\r\n`fd = fd  | 1;`\r\n\r\n\r\nChange log shows that multichannel file descriptors were implemented back in 4.038 (?)\r\nOn 4.102 the \"|1\" seems just ignored - the $fwrite writes only to file, not to screen/log\r\n\r\nwhat's wrong?\r\n \r\n\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-07",
+  "closed_at": "2021-06-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

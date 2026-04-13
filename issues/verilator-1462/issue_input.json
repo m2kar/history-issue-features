@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1462,
+  "issue_url": "https://github.com/verilator/verilator/issues/1462",
+  "title": "signal redeclaration is not reported",
+  "body": "---\n\n\nAuthor Name: **Peter Gerst**\nOriginal Redmine Issue: 1462 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI am using verilator to lint verilog modules which will be then synthesized by Xilinx tools. Prior to synthesis verilator is called with --lint-only mode to find errors and potential failures.\r\n\r\nThe following code makes Xinlinx syntheser to complain about signal re-declaration:\r\n\r\n```\r\nmodule output_wire (\r\n     input wire CLK,\r\n     input wire RESET,\r\n     input wire in0,\r\n\r\n     output wire out0,\r\n     output reg  out1\r\n);\r\n\r\nwire out0;\r\nreg  out1;\r\n\r\n\r\nassign out0 = (RESET) ? 1'b0 : in0;\r\n\r\nalways @(posedge CLK) begin\r\n     if (RESET) begin\r\n         out1 <= 1'b0;\r\n     end else begin\r\n         out1 <= in0;\r\n     end\r\nend\r\n\r\nendmodule\r\n\r\n\n```\r\n\r\nIn contrast verilator does not warn about anything:\r\n\r\n```\r\nverilator --lint-only --default-language 1364-2001 -Wall -Wno-PINCONNECTEMPTY output_wire.v\r\n\n```\r\n\r\n\r\n\r\nI also noticed that wire and reg signals are handled differently by verilator. See the following example:\r\n```\r\nmodule output_wire (\r\n     input wire CLK,\r\n     input wire RESET,\r\n     input wire in0,\r\n     /* output wire [1:0] out0, */\r\n     /* output reg  [1:0] out1 */\r\n     output wire out0,\r\n     output reg  out1\r\n);\r\n\r\n/* wire out0; */\r\n/* reg  out1; */\r\n/* wire [1:0] out0; */\r\nreg  [1:0] out1;\r\n\r\nassign out0 = (RESET) ? 1'b0 : in0;\r\n\r\nalways @(posedge CLK) begin\r\n     if (RESET) begin\r\n         out1 <= 1'b0;\r\n     end else begin\r\n         out1 <= in0;\r\n     end\r\nend\r\n\r\nendmodule\r\n\r\n\n```\r\n\r\nThis module is found to be okay by verilator although the differently declared out1 but if I uncommented line \"/* wire [1:0] out0; */\" and commented line \"reg  [1:0] out1;\" I got:\r\n```\r\n$ verilator --lint-only --default-language 1364-2001 -Wall -Wno-PINCONNECTEMPTY output_wire.v\r\n%Warning-WIDTH: output_wire.v:16: Operator COND expects 2 bits on the Conditional True, but Conditional True's CONST '1'h0' generates 1 bits.\r\n%Warning-WIDTH: Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: output_wire.v:16: Operator COND expects 2 bits on the Conditional False, but Conditional False's VARREF 'in0' generates 1 bits.\r\n%Error: Exiting due to 2 warning(s)\r\n%Error: Command Failed /usr/local/bin/verilator_bin --lint-only --default-language 1364-2001 -Wall -Wno-PINCONNECTEMPTY output_wire.v\r\n\n```\r\n\r\nverilator version:\r\n```\r\n$ verilator --version\r\nVerilator 4.014 2019-05-08 rev UNKNOWN_REV\r\n\n```\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-12",
+  "closed_at": "2019-06-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

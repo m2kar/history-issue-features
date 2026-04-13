@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6352,
+  "issue_url": "https://github.com/llvm/circt/pull/6352",
+  "title": "[CombToArith] Explicitly handle wide shifts to avoid UB",
+  "body": "As discussed during the last ODM, we expect shift operations in comb to produce defined values (matching the SV and VHDL behavior) even if the shift amount matches or exceeds the width of the LHS operand. In contrast, the shift operations in LLVM IR produce undefined values (poison) in this case. When converting from CIRCT MLIR to LLVM IR we lower to the MLIR arith dialect as an intermediate step. Currently, the semantics of the arith shift operations are not fully specified (see [[1]](https://discourse.llvm.org/t/rfc-define-precise-arith-semantics/65507),[[2]](https://discourse.llvm.org/t/rfc-arithmetic-vs-llvm-dialect/72477/7)). As a result we cannot safely convert comb shifts to arith shifts directly. This PR changes the conversion patterns for shift operations, which should result in defined behavior for all possible inputs. \r\n\r\nI have attached an end to end test for the arcilator pipeline, that produces a mismatch with the current implementation running on a x86_64 machine. I guess it would be useful to have this as a regression test, but I do not see an obvious way of integrating it in the testing infrastructure.\r\n\r\n```\r\n> ../circt/build/bin/arcilator --state-file=shifty.json shifty.mlir > shifty.ll\r\n> ../circt/build/bin/arcilator-header-cpp.py shifty.json > shifty.h\r\n> ../circt/llvm/build/bin/llc shifty.ll -O3 --filetype=obj -o shifty.o\r\n> clang++ -I../circt/build/bin shifty.cpp shifty.o -O3 -o shifty.elf\r\n> ./shifty.elf\r\nFAIL b11111111111111111111111111111111 SHL 32 = b11111111111111111111111111111111 \r\nFAIL b11111111111111111111111111111111 SHRU 32 = b11111111111111111111111111111111\r\nFAIL b11111111111111111111111111111111 SHL 33 = b11111111111111111111111111111110 \r\nFAIL b11111111111111111111111111111111 SHRU 33 = b01111111111111111111111111111111\r\nFAIL b11111111111111111111111111111111 SHL 34 = b11111111111111111111111111111100\r\n...\r\n```\r\n\r\n[shifty.cpp.txt](https://github.com/llvm/circt/files/13190704/shifty.cpp.txt)\r\n[shifty.mlir.txt](https://github.com/llvm/circt/files/13190715/shifty.mlir.txt)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-27",
+  "closed_at": "2023-11-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

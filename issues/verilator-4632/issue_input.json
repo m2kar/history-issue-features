@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4632,
+  "issue_url": "https://github.com/verilator/verilator/issues/4632",
+  "title": "Linting WIDTHEXPAND, WIDTHTRUNC for if branches inside always on parameter as condition",
+  "body": "Run into a bit of a weird code, but I still think its valid.\r\nHowever verilator is throwing linting warning, so I just want to leave it here.\r\n\r\n```\r\nmodule test #(\r\n    parameter SECDED = 2\r\n)(\r\n    output logic [11+SECDED:0] code_o\r\n);\r\n\r\n    always_comb begin\r\n        if (SECDED == 0) begin\r\n            code_o = 12'h1;\r\n        end else\r\n            code_o = {SECDED+12{1'b0}};\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\nThe first branch if(SECDED==0) is excluded with a constant parameter SECDED, so the code inside the block should be irrelevant.\r\nIt still reports a WIDTHEXPAND lint warning.\r\nThis code can be fixed with if outside always and assign statements, however, I think they are equivalent and both should not be linting warnings?\r\nProbably the problem is with verilator not checking if branch condition is a parameter or a constant if its inside a always block.\r\n\r\nError:\r\n```\r\n%Warning-WIDTHEXPAND: test.v:9:20: Operator ASSIGN expects 14 bits on the Assign RHS, but Assign RHS's CONST '12'h1' generates 12 bits.\r\n                                 : ... In instance test\r\n    9 |             code_o = 12'h1;\r\n      |                    ^\r\n                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.012\r\n                      ... Use \"/* verilator lint_off WIDTHEXPAND */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s\r\n```\r\n\r\nverilator --version\r\n\r\n```\r\nVerilator 5.012 2023-06-13 rev v5.012 (mod)\r\n```\r\n\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nSure, not sure when I will have time though. Just reporting it for later.\r\n",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-27",
+  "closed_at": "2023-10-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

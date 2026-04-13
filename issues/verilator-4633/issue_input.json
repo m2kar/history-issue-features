@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4633,
+  "issue_url": "https://github.com/verilator/verilator/pull/4633",
+  "title": "Allow constant %m formatting",
+  "body": "Constant elaboration of `%m` via `$sformatf()` results in:\r\n```\r\n%Error: t/t_initial_sformatf_m.v:19:29: Expecting expression to be constant, but can't convert a SCOPENAME to constant.\r\n                                      : ... note: In instance 't.some_sub_module'\r\n-node: SCOPENAME 0x555556daa000 <e919> {e19bd} @dt=0x555556debba0@(G/w64) [FMT]\r\n   19 |    localparam string NAME = $sformatf(\"%m\");\r\n      |                             ^~~~~~~~~\r\n```\r\nI believe `SCOPENAME` is an un-scoped placeholder since `%m` can't know what it is until this module has been concretely instantiated.  I tried to skip this check like so:\r\n```\r\n        if (m_required) {\r\n            if (VN_IS(nodep, NodeDType) || VN_IS(nodep, Range) || VN_IS(nodep, SliceSel) || VN_IS(nodep, ScopeName)) {\r\n                // Ignore dtypes for parameter type pins\r\n```\r\nand that allowed verilation to complete, but then I got:\r\n```\r\nVt_initial_sformatf_m___024root__Slow.cpp:11:81: error: invalid use of non-static data member ‘Vt_initial_sformatf_m___024root::vlSymsp’                                                                                                                                                                                                                                                                                                 \r\n   11 |                                                                                 vlSymsp->name()) ; \r\n      |                                                                                 ^~~~~~~                                                                                                                                                                                                                                                                                                                                          \r\n```\r\nbecause this was produced:\r\n```\r\n// Parameter definitions for Vt_initial_sformatf_m___024root\r\nconst std::string Vt_initial_sformatf_m___024root::t__DOT__some_sub_module__DOT__NAME = VL_SFORMATF_NX(\"%S\",\r\n                                                                                vlSymsp->name()) ;\r\n```\r\nI'm wondering if it would be better to try to make the C++ work and not worry about constifying `%m` in the AST.  Or if I need to squash the `VARSCOPE` later on:\r\n```\r\n    1:2:2:1: VARSCOPE 0x555556e788f0 <e1136> {e19aw} @dt=0x555556dea410@(G/str)  TOP->t__DOT__some_sub_module__DOT__NAME [T] [scopep=0x555556d87590] -> VAR 0x555556db6180 <e982> {e19aw} @dt=0x555556dea410@(G/str)  t__DOT__some_sub_module__DOT__NAME [VSTATIC]  LPARAM\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-27",
+  "closed_at": "2023-11-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

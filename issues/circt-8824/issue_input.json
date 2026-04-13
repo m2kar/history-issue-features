@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8824,
+  "issue_url": "https://github.com/llvm/circt/pull/8824",
+  "title": "[ImportVerilog] Add time literals",
+  "body": "Add support for time literal expressions such as `42us` or `1.234ns` to the ImportVerilog conversion.\r\n\r\nTime values in SystemVerilog are pretty messy and easy to misuse because they are essentially just unit-less integers or doubles. To make the CIRCT's Verilog frontend a bit more robust, introduce a new `!moore.time` type that represents a time value. The `time` and `realtime` types in SV both map to this IR type.\r\n\r\nAll time values are converted and rounded to femtoseconds and then stored as an `i64`. A new `moore.constant_time` can be used to materialize a constant time value. This means that time values in the IR are represented with an unambiguous unit.\r\n\r\nIn contrast, SystemVerilog eagerly converts time values to the underlying integer or double by scaling the value by the `timeunit` specified by the user. This is problematic when time values are passed between modules that have different `timeunit` specifications. Since time values are packed and thus equivalent to an integer, a time value will flow across this module boundary _without_ having its units rescaled. This can lead to a value like `10ns` read as a `100ps` in another module due to a time unit mismatch.\r\n\r\nSince the IR does not apply the time unit immediately when a time value is created, future cast operations from and to integers and doubles will have to apply this time unit scaling factor instead. As a result, time values become harder to abuse, and if the user never casts a time to an integer or double, all arithmetic on time values can be done directly on the `time` type without ever interacting with the local `timeunit` specification. We can later add a faithful-but-unsafe mode where we eagerly map time values to integers and doubles.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-06",
+  "closed_at": "2025-08-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

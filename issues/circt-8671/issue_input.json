@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8671,
+  "issue_url": "https://github.com/llvm/circt/issues/8671",
+  "title": "[ImportVerilog] Indexed ranges don't generate correct code",
+  "body": "Consider the following SV input:\n```systemverilog\nmodule Foo (input [7:0] a, output [7:0] u, output [7:0] v, output [7:0] w);\n  assign {u[7:4], u[3:0]} = a;\n  assign {v[4+:4], v[0+:4]} = a;\n  assign {w[7-:4], w[3-:4]} = a;\nendmodule\n```\nRound-tripping this produces the following:\n```systemverilog\n// circt-verilog input.sv | circt-opt --export-verilog -o /dev/null\nmodule Foo(input  [7:0] a, output [7:0] u, v, w);\n  wire [3:0] _a_7to4;\n  assign _a_7to4 = a[7:4];\n  assign u = a;\n  assign v = a;\n  assign w = {a[1:0], 6'h0} | {2'h0, _a_7to4, 2'h0};\nendmodule\n```\nThe last line, `assign w = ...` should also read `assign w = a;`.\n\nThe problematic lines in ImportVerilog are at https://github.com/llvm/circt/blob/main/lib/Conversion/ImportVerilog/Expressions.cpp#L1065-L1087. There is quite a bit of duplication between the Rvalue and Lvalue paths, except for the final MLIR op being created. The `IndexedDown` case seems to compute wrong indices here. Worth looking into, and potentially simplifying and joining the Rvalue and Lvalue paths.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-08",
+  "closed_at": "2025-07-09",
+  "code_blocks": [
+    "module Foo (input [7:0] a, output [7:0] u, output [7:0] v, output [7:0] w);\n  assign {u[7:4], u[3:0]} = a;\n  assign {v[4+:4], v[0+:4]} = a;\n  assign {w[7-:4], w[3-:4]} = a;\nendmodule\n",
+    "// circt-verilog input.sv | circt-opt --export-verilog -o /dev/null\nmodule Foo(input  [7:0] a, output [7:0] u, v, w);\n  wire [3:0] _a_7to4;\n  assign _a_7to4 = a[7:4];\n  assign u = a;\n  assign v = a;\n  assign w = {a[1:0], 6'h0} | {2'h0, _a_7to4, 2'h0};\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

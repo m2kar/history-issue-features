@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6259,
+  "issue_url": "https://github.com/llvm/circt/issues/6259",
+  "title": "[FIRRTL] MergeConnections Invalid IR for RWProbes",
+  "body": "I hit the following issue involving a RWProbe for the following FIRRTL:\r\n\r\n```\r\nFIRRTL version 3.1.0\r\ncircuit Foo : %[[\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"~Foo|Foo>w\"\r\n  }\r\n]]\r\n  module Foo :\r\n    output a : RWProbe<UInt<1>>\r\n\r\n    wire w : { a : UInt<1>, flip b : UInt<2> }\r\n    invalidate w.a\r\n    invalidate w.b\r\n    define a = rwprobe(w.a)\r\n```\r\n\r\nThis errors out with invalid IR after `MergeConnections`:\r\n\r\n```\r\n6259.fir:12:5: error: 'firrtl.aggregateconstant' op Cannot have constant bundle type with flip\r\n    invalidate w.a\r\n    ^\r\n6259.fir:12:5: note: see current operation: %1 = \"firrtl.aggregateconstant\"() {fields = [0 : ui1, 0 : ui2]} : () -> !firrtl.bundle<a: uint<1>, b flip: uint<2>>\r\n6259.fir:13:5: note: additional location here\r\n    invalidate w.b\r\n    ^\r\n```\r\n\r\n```mlir\r\n\"firrtl.module\"() ({\r\n^bb0(%arg0: !firrtl.rwprobe<uint<1>>):\r\n  %0:2 = \"firrtl.wire\"() {annotations = [{class = \"firrtl.transforms.DontTouchAnnotation\"}], forceable, name = \"w\", nameKind = #firrtl<name_kind droppable_name>} : () -> (!firrtl.bundle<a: uint<1>, b flip: uint<2>>, !firrtl.rwprobe<bundle<a: uint<1>, b: uint<2>>>)\r\n  %1 = \"firrtl.aggregateconstant\"() {fields = [0 : ui1, 0 : ui2]} : () -> !firrtl.bundle<a: uint<1>, b flip: uint<2>>\r\n  \"firrtl.connect\"(%0#0, %1) : (!firrtl.bundle<a: uint<1>, b flip: uint<2>>, !firrtl.bundle<a: uint<1>, b flip: uint<2>>) -> ()\r\n  %2 = \"firrtl.ref.sub\"(%0#1) {index = 0 : i32} : (!firrtl.rwprobe<bundle<a: uint<1>, b: uint<2>>>) -> !firrtl.rwprobe<uint<1>>\r\n  \"firrtl.ref.define\"(%arg0, %2) : (!firrtl.rwprobe<uint<1>>, !firrtl.rwprobe<uint<1>>) -> ()\r\n}) {annotations = [], convention = #firrtl<convention scalarized>, portAnnotations = [[]], portDirections = true, portLocations = [loc(\"6259.fir\":9:12)], portNames = [\"a\"], portSyms = [], portTypes = [!firrtl.rwprobe<uint<1>>], sym_name = \"Foo\"} : () -> ()\r\n```\r\n\r\nThis is trying to build an aggregate constant with flips. 😕 ",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-05",
+  "closed_at": "2023-10-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

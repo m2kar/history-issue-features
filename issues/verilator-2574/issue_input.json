@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2574,
+  "issue_url": "https://github.com/verilator/verilator/issues/2574",
+  "title": "BLKANDNBLK not reported on arrays so assignment statement does not take effect.",
+  "body": "Hi, Show you my testcase directly.\r\n\r\n```verilog\r\n// demo.v\r\nmodule t (\r\n    input   logic   clk,\r\n    output  logic   en_pp\r\n);\r\n    sub U_SUB (\r\n        .clk        (clk),\r\n        .en         (1'b1),\r\n        .en_pp      (en_pp)\r\n    );\r\nendmodule\r\n\r\nmodule sub (\r\n    input   logic   clk,\r\n    input   logic   en,\r\n    output  logic   en_pp\r\n);\r\nlogic pp[1:0];\r\nalways @ (*) begin\r\n    pp[0] = en;\r\n    en_pp = pp[1]; // This assignment statement does not take effect.\r\nend\r\nalways @ (posedge clk) begin\r\n    pp[1] <= pp[0];\r\n    $display(\"en_pp: %d\", en_pp);\r\nend\r\nendmodule\r\n```\r\n```cpp\r\n// sim_main.cpp\r\n#include \"Vdemo.h\"\r\n#include \"verilated.h\"\r\n\r\nvluint64_t main_time = 0;\r\ndouble sc_time_stamp() { return main_time; }\r\n\r\nint main(int argc, char** argv, char** env) {\r\n    Verilated::commandArgs(argc, argv);\r\n    Vdemo* top = new Vdemo;\r\n    while (!Verilated::gotFinish() && main_time < 40) {\r\n        top->eval();\r\n        main_time++;\r\n        top->clk = !top->clk;\r\n   }\r\n    delete top;\r\n    exit(0);\r\n}\r\n```\r\n0 error or warning when translating and running the case.\r\n```txt\r\n// Run the testcase and output as bellow.\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\nen_pp: 0\r\n```\r\n\r\nAs you can see, en_pp were all 0, which was absolutely incorrect. It should be 1 after cycle 1.\r\nAnd I looked into the cpp code, I could find the code related to the assignment `en_pp = pp[1]` in Vdemo__Slow.cpp\r\n```cpp\r\nvoid Vdemo::_settle__TOP__2(Vdemo__Syms* __restrict vlSymsp) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vdemo::_settle__TOP__2\\n\"); );\r\n    Vdemo* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n    // Body\r\n    vlTOPp->t__DOT__U_SUB__DOT__pp[0U] = 1U;\r\n    vlTOPp->en_pp = vlTOPp->t__DOT__U_SUB__DOT__pp[1U]; // code related to assignment.\r\n}\r\n```\r\nBut I failed to find any code related to the assignment `en_pp = pp[1]` in _combo_ function or _sequent_ function.\r\nWhat's more, I studied some source code, maybe the assignment had been deleted in V3Order by marking it as delete domain?\r\n\r\nWhat's your opinion?\r\n\r\n\r\nThanks.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2020-09-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

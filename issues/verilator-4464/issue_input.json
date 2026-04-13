@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4464,
+  "issue_url": "https://github.com/verilator/verilator/issues/4464",
+  "title": "Fix `case inside` internal error `V3Number toUInt with 4-state`",
+  "body": "\r\nHello,\r\n\r\nI see following internal error\r\n```\r\n%Error: Internal Error: top.sv:10:14: ../V3Number.cpp:905: toUInt with 4-state 3'bz\r\n   10 |     MISC0x = 3'b00?,\r\n      |              ^~~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n\r\n```\r\nTest case:\r\n```\r\npackage OpPkg;\r\n  typedef enum logic [2:0] {\r\n    MISC0 = 3'b000,\r\n    MISC1 = 3'b001,\r\n    MISC2 = 3'b010,\r\n    MISC3 = 3'b011,\r\n    MISC4 = 3'b100,\r\n    MISC5 = 3'b101,\r\n    MISC6 = 3'b110,\r\n    MISC0x = 3'b00?,\r\n    MISC1x = 3'b10?\r\n  } MiscOpcode_e;\r\n\r\n  typedef enum logic [6:0] {\r\n  OP08   = 7'h08,\r\n  OP09   = 7'h09,\r\n  OP60   = 7'h60,\r\n  OP61   = 7'h61,\r\n  OP62   = 7'h62,\r\n  OP66   = 7'h66,\r\n  OP67   = 7'h67\r\n} Opcode_e;\r\nendpackage\r\n\r\nmodule top();\r\n  begin\r\n    OpPkg::MiscOpcode_e stash;\r\n    OpPkg::Opcode_e Opcode;\r\n\r\n    always_comb\r\n    unique case(stash) inside\r\n      OpPkg::MISC0: Opcode = OpPkg::OP61;\r\n      OpPkg::MISC1: Opcode = OpPkg::OP60;\r\n      OpPkg::MISC2: Opcode = OpPkg::OP09;\r\n      OpPkg::MISC3: Opcode = OpPkg::OP08;\r\n      OpPkg::MISC4: Opcode = OpPkg::OP66;\r\n      OpPkg::MISC5: Opcode = OpPkg::OP67;\r\n      OpPkg::MISC6: Opcode = OpPkg::OP62;\r\n      default:      Opcode = OpPkg::Opcode_e'('x);\r\n    endcase\r\n  end\r\nendmodule\r\n```\r\n\r\n```\r\nverilator -cc top.sv\r\n```\r\nVersion: 5.0.14",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-08",
+  "closed_at": "2023-09-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

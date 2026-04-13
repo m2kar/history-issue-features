@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8548,
+  "issue_url": "https://github.com/llvm/circt/issues/8548",
+  "title": "[circt-bmc] Functionality to turn off assertion failure for specific clock period",
+  "body": "When verifying following IR with circt-bmc (`circt-bmc  -b 10 --module Compare`) it fails because in the first clock register values are not stabilized. After the first clock, it must be same (actually if I set appropriate initial values to these registers it was successfully verified). It would be fairly useful for me if bmc has an option to turn off assertions for specific period of clock. Alternative solution would be an option to turn off assertion until first reset. \n\n```mlir\nhw.module @before(in %clock: !seq.clock, in %reset: i1, in %a: i1, in %b: i1, in %c: i1, out out: i1) {\n  %0 = comb.and %a, %b : i1\n  %1 = comb.and %0, %c : i1\n  %false = hw.constant false\n  %pipe1 = seq.compreg %1, %clock : i1\n  hw.output %pipe1 : i1\n}\n\nhw.module @after(in %clock : !seq.clock, in %reset : i1, in %a : i1, in %b : i1, in %c : i1, out out : i1) {\n  %false = hw.constant false\n  %0 = comb.and %a, %b : i1\n  %retimed = seq.compreg %0, %clock : i1\n  %retimed_c = seq.compreg %c, %clock : i1\n\n  %1 = comb.and %retimed, %retimed_c : i1\n  hw.output %1 : i1\n}\n\nhw.module @Compare(in %clk: !seq.clock, in %reset: i1, in %a: i1, in %b: i1, in %c: i1) {\n  %before_out = hw.instance \"before\" @before(clock: %clk: !seq.clock, reset: %reset: i1, a: %a: i1, b: %b: i1, c: %c: i1) -> (out: i1) \n  %after_out = hw.instance \"after\" @after(clock: %clk: !seq.clock, reset: %reset: i1, a: %a: i1, b: %b: i1, c: %c: i1) -> (out: i1)\n  %2 = comb.icmp eq %before_out, %after_out : i1\n  verif.assert %2 : i1\n}\n```\n\n\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-09",
+  "closed_at": "2025-06-18",
+  "code_blocks": [
+    "hw.module @before(in %clock: !seq.clock, in %reset: i1, in %a: i1, in %b: i1, in %c: i1, out out: i1) {\n  %0 = comb.and %a, %b : i1\n  %1 = comb.and %0, %c : i1\n  %false = hw.constant false\n  %pipe1 = seq.compreg %1, %clock : i1\n  hw.output %pipe1 : i1\n}\n\nhw.module @after(in %clock : !seq.clock, in %reset : i1, in %a : i1, in %b : i1, in %c : i1, out out : i1) {\n  %false = hw.constant false\n  %0 = comb.and %a, %b : i1\n  %retimed = seq.compreg %0, %clock : i1\n  %retimed_c = seq.compreg %c, %clock : i1\n\n  %1 = comb.and %retimed, %retimed_c : i1\n  hw.output %1 : i1\n}\n\nhw.module @Compare(in %clk: !seq.clock, in %reset: i1, in %a: i1, in %b: i1, in %c: i1) {\n  %before_out = hw.instance \"before\" @before(clock: %clk: !seq.clock, reset: %reset: i1, a: %a: i1, b: %b: i1, c: %c: i1) -> (out: i1) \n  %after_out = hw.instance \"after\" @after(clock: %clk: !seq.clock, reset: %reset: i1, a: %a: i1, b: %b: i1, c: %c: i1) -> (out: i1)\n  %2 = comb.icmp eq %before_out, %after_out : i1\n  verif.assert %2 : i1\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

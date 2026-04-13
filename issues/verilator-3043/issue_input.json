@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3043,
+  "issue_url": "https://github.com/verilator/verilator/issues/3043",
+  "title": "\"Internal Error\" when set some signals public_flat_rw",
+  "body": "Hi:\r\n    I'm using verilator-4.204, and here is my testcase:\r\n```verilog\r\nmodule pipe_signal #(\r\n    parameter   BUS_WIDTH   = 4\r\n)\r\n(\r\n    input   wire                    i_clk,\r\n\r\n    input   wire    [BUS_WIDTH-1:0] i_signal,\r\n    output  wire    [BUS_WIDTH-1:0] o_signal\r\n);\r\n\r\nreg [BUS_WIDTH-1:0] signal_ff[2];\r\n\r\nalways @ (*) begin\r\n    signal_ff[0] = i_signal;\r\nend\r\n\r\nalways @ (posedge i_clk) begin\r\n    signal_ff[1] <= signal_ff[0];\r\nend\r\n\r\nassign o_signal = signal_ff[1];\r\n\r\nendmodule\r\n\r\nmodule sub (\r\n    input   wire    [1:0]   i_status /*verilator public_flat_rw*/,\r\n    input   wire    [488:0] i_data  ,\r\n\r\n    output  wire    [1:0]   o_status,\r\n    output  wire    [488:0] o_data\r\n);\r\n\r\nassign o_status = i_status;\r\nassign o_data   = i_data;\r\n\r\nendmodule\r\n\r\nmodule top\r\n(\r\n    input   wire            i_clk   ,\r\n\r\n    input   wire    [1:0]   i_status,\r\n    input   wire    [488:0] i_data  ,\r\n\r\n    output  wire    [1:0]   o_status,\r\n    output  wire    [488:0] o_data\r\n);\r\nwire    [1:0]   status ;\r\nwire    [488:0] data   ;\r\n\r\npipe_signal #(\r\n    .BUS_WIDTH  (491)\r\n) U_PIPE (\r\n    .i_clk      (i_clk             ),\r\n    .i_signal   ({i_status, i_data}),\r\n    .o_signal   ({status, data}    )\r\n);\r\n\r\nsub U_SUB (\r\n    .i_status   (status  ),\r\n    .i_data     (data    ),\r\n\r\n    .o_status   (o_status),\r\n    .o_data     (o_data  )\r\n);\r\n\r\nendmodule\r\n```\r\nAnd verilator gives the Error:\r\n```txt\r\n%Error: Internal Error: t.v:22:28: ../V3Subst.cpp:141: Reading a word that was never assigned, or bad word #\r\n   22 | assign o_signal = signal_ff[1];\r\n      |                            ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\nBut it runs smoothly if I remove the metacomment **public_flat_rw** to signal `i_status` of module `sub`\r\n\r\n",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-24",
+  "closed_at": "2021-09-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

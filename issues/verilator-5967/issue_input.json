@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5967,
+  "issue_url": "https://github.com/verilator/verilator/issues/5967",
+  "title": "Case statement incorrectly matches branch when using signed 1-bit input",
+  "body": "Below is the code that triggers the problem (`test.v`):\n\n```verilog\nmodule test;\n\nreg signed in4;\ninitial begin\n  in4 = 1;\n\n  #1;\n\n  $display(\"in4: %0d\", in4);\n\n  case (0 ? 1'h0 : in4)\n    5'b0101: begin\n        $display(\"1\");\n    end\n\n    8'b000001: begin\n      $display(\"2\");\n    end\n\n    default: begin\n      $display(\"3\");\n    end\n  endcase\nend\n\nendmodule\n```\n\nRun the commands below to reproduce:\n\n```bash\nverilator --binary -Wno-lint --timing -fno-expand test.v\n./obj_dir/Vtest\n```\n\nThe program prints\n\n```\nin4: -1\n2\n```\n\nAccording to my understanding, the ternary operator should choose `in4`, because `0` is `false`.  \n`in4` is an **signed** value and its binary representation is `1'b1`.  \nWhen it is compared with `8'b000001` in the `case`, it will be sign-extended to `8'b11111111`, so it should not match that branch (nor the other branch). Therefore the default branch ought to execute, printing `3` instead of `2` (This behavior  (**printing 3**) is also observed when using Icarus Verilog.).\n\nI also tried disabling optimizations with `-fno-expand`, but the output is still `2`.  \nBecause the result does not depend on the use of `$display`, this seems unrelated to <https://github.com/verilator/verilator/issues/5963>, so I’m opening a new issue here.",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-28",
+  "closed_at": "2025-04-28",
+  "code_blocks": [
+    "module test;\n\nreg signed in4;\ninitial begin\n  in4 = 1;\n\n  #1;\n\n  $display(\"in4: %0d\", in4);\n\n  case (0 ? 1'h0 : in4)\n    5'b0101: begin\n        $display(\"1\");\n    end\n\n    8'b000001: begin\n      $display(\"2\");\n    end\n\n    default: begin\n      $display(\"3\");\n    end\n  endcase\nend\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing -fno-expand test.v\n./obj_dir/Vtest\n",
+    "in4: -1\n2\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

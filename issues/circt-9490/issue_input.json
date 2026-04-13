@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9490,
+  "issue_url": "https://github.com/llvm/circt/issues/9490",
+  "title": "[OM][Evaluator][FIRRTL] Should we be able to evaluate ext classes if we don't use the outputs?",
+  "body": "I've run into the following when starting to turn on domains for an internal design. The issue is I have _a lot_ of external modules, which map to external classes, but I don't have any internal domain information for them. However, I don't exactly _need_ any internal information for them.\n\nE.g.:\n\n``` firrtl\nFIRRTL version 6.0.0\ncircuit Foo:\n  domain ClockDomain:\n    name: String\n    period: Integer\n\n  extmodule Bar:\n    input A: Domain of ClockDomain\n    input a: UInt<1> domains [A]\n\n  public module Foo:\n    input A: Domain of ClockDomain\n    input a: UInt<1> domains [A]\n\n    inst bar of Bar\n    domain_define bar.A = A\n    connect bar.a, a\n```\n\nUsing `main` patched with https://github.com/llvm/circt/pull/9474, I run into the following:\n\n``` console\n# firtool Foo.fir -output-final-mlir - -o /dev/null | domaintool - --module Foo --domain ClockDomain,A,10 --assign 0\n<stdin>:1:1: error: unknown class name @Bar_Class\nmodule {\n^\n```\n\nThe final MLIR is:\n\n``` mlir\nmodule {\n  hw.hierpath private @nla [@Foo::@sym]\n  hw.hierpath private @nla_0 [@Foo::@sym_0]\n  hw.module.extern private @Bar(in %a : i1 {hw.exportPort = #hw<innerSym@sym>})\n  hw.module @Foo(in %a : i1 {hw.exportPort = #hw<innerSym@sym>}) {\n    hw.instance \"bar\" sym @sym_0 @Bar(a: %a: i1) -> () {hw.verilogName = \"bar\"}\n    hw.output\n  }\n  om.class.extern @Bar_Class(%basepath: !om.frozenbasepath, %A: !om.class.type<@ClockDomain>)  -> (A_out: !om.class.type<@ClockDomain_out>) {\n  }\n  om.class @Foo_Class(%basepath: !om.frozenbasepath, %A: !om.class.type<@ClockDomain>)  -> (A_out: !om.class.type<@ClockDomain_out>) {\n    %0 = om.object @ClockDomain_out(%basepath, %A, %2) : (!om.frozenbasepath, !om.class.type<@ClockDomain>, !om.list<!om.frozenpath>) -> !om.class.type<@ClockDomain_out>\n    %1 = om.frozenpath_create reference %basepath \"Foo>a\"\n    %2 = om.list_create %1 : !om.frozenpath\n    %3 = om.frozenbasepath_create %basepath \"Foo/bar\"\n    %4 = om.object @Bar_Class(%3, %A) : (!om.frozenbasepath, !om.class.type<@ClockDomain>) -> !om.class.type<@Bar_Class>\n    %5 = om.object.field %4, [@A_out] : (!om.class.type<@Bar_Class>) -> !om.class.type<@ClockDomain_out>\n    om.class.fields %0 : !om.class.type<@ClockDomain_out> \n  }\n  om.class @ClockDomain(%basepath: !om.frozenbasepath, %name_in: !om.string, %period_in: !om.integer)  -> (name_out: !om.string, period_out: !om.integer) {\n    om.class.fields %name_in, %period_in : !om.string, !om.integer \n  }\n  om.class @ClockDomain_out(%basepath: !om.frozenbasepath, %domainInfo_in: !om.class.type<@ClockDomain>, %associations_in: !om.list<!om.frozenpath>)  -> (domainInfo_out: !om.class.type<@ClockDomain>, associations_out: !om.list<!om.frozenpath>) {\n    om.class.fields %domainInfo_in, %associations_in : !om.class.type<@ClockDomain>, !om.list<!om.frozenpath> \n  }\n}\n```\n\ntl;dr: the evaluator tries to evaluate the class `Bar_Class`, but it can't because it's external.\n\nThere's two rough shapes of solutions here:\n\n1. The evaluator needs to be lazier. There's no actual _need_ to evaluate `Bar_Class` here as it can't affect the outputs of `Foo_Class`.\n2. `Bar_Class` needs to not be external and the domain information needs to be available for it. Or: this is illegal and the circuit needs to be linked before it can be evaluated.\n\nThis is a simpler example than what I was discussing with @dtzSiFive earlier today where `Bar` provided all domain information and `Foo` only had output domains. In that situation, there's nothing that you can do other than (2). Hence, this may be what is necessary here.",
+  "labels": [
+    "FIRRTL",
+    "OM"
+  ],
+  "state": "open",
+  "created_at": "2026-01-22",
+  "closed_at": null,
+  "code_blocks": [
+    "\nUsing `main` patched with https://github.com/llvm/circt/pull/9474, I run into the following:\n\n",
+    "\nThe final MLIR is:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

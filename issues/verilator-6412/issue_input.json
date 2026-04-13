@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6412,
+  "issue_url": "https://github.com/verilator/verilator/issues/6412",
+  "title": "Internal Error: ../V3Width.cpp:7688: Node has no type",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\n```\npackage uvm_pkg;\nclass uvm_driver #(type REQ= int);\n  REQ req;\nendclass\nendpackage\npackage s_t_pkg;\n    import uvm_pkg::*;\nclass s_txn_base;\n  extern function bit is_posted();\nendclass: s_txn_base\nfunction bit s_txn_base::is_posted();\nendfunction : is_posted;\nclass s_t_txn extends s_txn_base;\nendclass: s_t_txn\nclass s_t_driver extends uvm_driver#(s_t_txn);  \n    bit     s_t_p_np_cpl=1;\n    extern task run_phase( int phase);\nendclass: s_t_driver\ntask s_t_driver::run_phase( int phase);\n  if (s_t_p_np_cpl==0) begin  \n    forever begin\n      if (req == null) begin\n      end else begin\n         if (req.is_posted) begin\n         end\n      end  \n    end  \n  end  \nendtask: run_phase\nendpackage\nmodule tb_top;\nendmodule : tb_top\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --sv --timing --cc --top-module tb_top test.sv\n%Error: Internal Error: test.sv:24:10: ../V3Width.cpp:7688: Node has no type\n                                     : ... note: In instance 'tb_top'\n   24 |          if (req.is_posted) begin\n      |          ^~\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n```\nVerilator 5.041 devel rev v5.040-73-g83ff8e13b\n```\n\nWhat OS and distribution are you using?\n\n```\nLinux 4.18.0-553.22.1.el8_10.x86_64\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-09",
+  "closed_at": "2025-09-19",
+  "code_blocks": [
+    "package uvm_pkg;\nclass uvm_driver #(type REQ= int);\n  REQ req;\nendclass\nendpackage\npackage s_t_pkg;\n    import uvm_pkg::*;\nclass s_txn_base;\n  extern function bit is_posted();\nendclass: s_txn_base\nfunction bit s_txn_base::is_posted();\nendfunction : is_posted;\nclass s_t_txn extends s_txn_base;\nendclass: s_t_txn\nclass s_t_driver extends uvm_driver#(s_t_txn);  \n    bit     s_t_p_np_cpl=1;\n    extern task run_phase( int phase);\nendclass: s_t_driver\ntask s_t_driver::run_phase( int phase);\n  if (s_t_p_np_cpl==0) begin  \n    forever begin\n      if (req == null) begin\n      end else begin\n         if (req.is_posted) begin\n         end\n      end  \n    end  \n  end  \nendtask: run_phase\nendpackage\nmodule tb_top;\nendmodule : tb_top\n",
+    "verilator --sv --timing --cc --top-module tb_top test.sv\n%Error: Internal Error: test.sv:24:10: ../V3Width.cpp:7688: Node has no type\n                                     : ... note: In instance 'tb_top'\n   24 |          if (req.is_posted) begin\n      |          ^~\n",
+    "Verilator 5.041 devel rev v5.040-73-g83ff8e13b\n",
+    "Linux 4.18.0-553.22.1.el8_10.x86_64\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

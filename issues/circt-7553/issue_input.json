@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7553,
+  "issue_url": "https://github.com/llvm/circt/pull/7553",
+  "title": "[Seq] Introduce seq.initial, !seq.immutable and replace powerOn value with initial value in compreg",
+  "body": "This PR extends compreg's powerOnValue operand to be able to capture more complicated initialization such as firreg's randomized initialization or DPI calls. This change should make register initialization more modular and a step forward towards https://github.com/llvm/circt/issues/7213. \r\n\r\nWhile ASICs might not have explicit initial values, they are crucial for simulation\r\nand FPGA implementation. FPGA designs often require constant initial values, while\r\nsimulation allows for more complex initialization using expressions like function calls\r\n`$random`, `$readmem`, and `$fopen`.\r\n\r\nseq.compreg has a (optional) powerOn operand that is lowered into inlined assignment in SV which allows users to initialize registers with user-specified values. However this representation is not sufficient for initialization with function calls. \r\n\r\nIn order to represent various kinds of initialization, `seq.initial` op and `!seq.immutable` type\r\nare introduced. The `seq.initial` operation produces values with types wrapped in `!seq.immutable`.\r\nThe `!seq.immutable` type wrapper prevents initial values from depending on time-variant values.\r\nStateful operations typically require corresponding initial values with the `!seq.immutable` type.\r\nThis ensures that the initial state of the operation is well-defined and independent of time-variant factors.\r\n\r\nExample Input:\r\n```mlir\r\n%r_init, %u_init = seq.initial {\r\n  %rand = sv.macro.ref.se @RANDOM() : () -> i32\r\n  %c0_i32 = hw.constant 0 : i32\r\n  seq.yield %rand, %c0_i32 : i32, i32\r\n} : !seq.immutable<i32>, !seq.immutable<i32>\r\n%r = seq.compreg %i, %clk initial %r_init : i32\r\n%u = seq.compreg %i, %clk initial %u_init : i32\r\n```\r\n\r\nOutput Verilog:\r\n```verilog\r\nreg [31:0] r;\r\ninitial\r\n  r = `RANDOM;\r\nreg [31:0] u = 32'h0;\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-26",
+  "closed_at": "2024-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

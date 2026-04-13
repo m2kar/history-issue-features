@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6767,
+  "issue_url": "https://github.com/llvm/circt/issues/6767",
+  "title": "[Comb][Canonicalize] Missing best effort dialect attribute propagation",
+  "body": "Similar to my previous issue https://github.com/llvm/circt/issues/5531, several canonicalizations drop attributes (except `sv.namehint`). While I agree that it is unsafe to propagate discardable attributes freely, I think that the current implementation might be slightly to conservative.\r\nAs @teqdruid pointed out in https://github.com/llvm/circt/pull/5532#discussion_r1251266106:\r\n> In general, dialect attributes should be propagated best effort, so I think it's appropriate to propagated them through the canonicalizers where it's obvious what the destination/source op is.\r\n\r\nIMHO one such example would be when the canonicalization rewrites the operation without changing the dialect operation class.\r\nHere is an example for the canonicalize pattern [`extract(olo, extract(ilo, x)) = extract(olo + ilo, x)`](https://github.com/llvm/circt/blob/c4038382fbbaea7b7b1abebaf4ba769d51609b11/lib/Dialect/Comb/CombFolds.cpp#L632):\r\n```\r\nmodule {\r\n  hw.module @attrsGone(in %arg0: i64, out res: i32) {\r\n    %0 = comb.extract %arg0 from 0 : (i64) -> i42\r\n    %1 = comb.extract %0 from 0 {custom_dialect.attr = \"test\"} : (i42) -> i32\r\n    hw.output %1 : i32\r\n  }\r\n}\r\n```\r\nCurrent result after `-canonicalize`:\r\n```\r\nmodule {\r\n  hw.module @attrsGone(in %arg0 : i64, out res : i32) {\r\n    %0 = comb.extract %arg0 from 0 : (i64) -> i32\r\n    hw.output %0 : i32\r\n  }\r\n}\r\n```\r\nWith a best effort propagation:\r\n```\r\nmodule {\r\n  hw.module @attrsGone(in %arg0 : i64, out res : i32) {\r\n    %0 = comb.extract %arg0 from 0 {custom_dialect.attr = \"test\"} : (i64) -> i32\r\n    hw.output %0 : i32\r\n  }\r\n}\r\n```",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-29",
+  "closed_at": "2024-03-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

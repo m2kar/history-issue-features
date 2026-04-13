@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7283,
+  "issue_url": "https://github.com/verilator/verilator/pull/7283",
+  "title": "Support named sequence declarations and instances in assertions ",
+  "body": "\r\n## Summary\r\nThis patch adds support for named sequence declarations (IEEE 1800-2023 16.7) and sequence instances (16.8) used inside assertion properties. Previously, Verilator rejected any `sequence ... endsequence` declaration with an `UNSUPPORTED` error at parse time, even for simple boolean-body sequences referenced in `assert property`. This patch moves the unsupported check from the parser to `V3AssertPre`, where sequence bodies are inlined at call sites, supporting formal/actual arguments and multiple references.\r\n\r\n## Reproducer\r\n```systemverilog\r\nmodule t (input clk);\r\n  logic a, b, c;\r\n\r\n  sequence seq_ab;\r\n    a && b;\r\n  endsequence\r\n\r\n  assert property (@(posedge clk) seq_ab |-> c);\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: t_sequence_ref.v:14:12: Unsupported: sequence\r\n   14 |   sequence seq_ab;\r\n      |            ^~~~~~\r\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.047\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n## Changes\r\n- `src/verilog.y`: Remove early `UNSUPPORTED` error from `sequence_declaration` grammar rule; sequences are now accepted at parse time\r\n- `src/V3Width.cpp`: Replace deletion of sequences with proper width-checking of sequence body expressions and formal arguments (`visit(AstSequence*)`)\r\n- `src/V3AssertPre.cpp`: Add `getSequenceBodyExprp()` to extract the body expression from a sequence declaration\r\n- `src/V3AssertPre.cpp`: Add `substituteSequenceCall()` to inline the sequence body at call sites, substituting formal arguments with actuals via `V3Task::taskConnects`\r\n- `src/V3AssertPre.cpp`: Add `visit(AstFuncRef*)` to detect sequence references and trigger inlining\r\n- `src/V3AssertPre.cpp`: Add post-inlining cleanup in `assertPreAll()` — delete inlined sequences, emit `UNSUPPORTED` for sequences still referenced in unsupported contexts\r\n- `src/V3AstNodeOther.h`: Update `AstSequence::m_referenced` comment to document lifecycle (set by `V3LinkResolve`, cleared by `V3AssertPre`)\r\n\r\n## Test\r\n- Added `test_regress/t/t_sequence_ref.{v,py}` — named sequence without arguments, overlapping/non-overlapping implication\r\n- Added `test_regress/t/t_sequence_ref_args.{v,py}` — named sequence with formal arguments, multiple references with different actuals\r\n- Updated `test_regress/t/t_sequence_sexpr_unsup.out` — golden file updated to reflect error now emitted from `V3AssertPre` instead of parser\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-19",
+  "closed_at": "2026-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

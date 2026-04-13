@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7269,
+  "issue_url": "https://github.com/llvm/circt/issues/7269",
+  "title": "[FIRRTL] FART: not totally idempotent - but may be close enough",
+  "body": "The FullAsynchronousResetTransform no longer removes its annotation, which can lead to problems where the pass is no longer idempotent. It seems like some work has gone in to minimizing the amount of work the pass does on subsequent runs, but there is at least one small issue, and possibly others.\r\ngiven:\r\n`/bin/circt-opt --pass-pipeline=\"builtin.module(firrtl.circuit(firrtl-infer-resets))\"`\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}]) attributes {convention = #firrtl<convention scalarized>} {\r\n    %bar_clock = firrtl.instance bar @Bar(in clock: !firrtl.clock)\r\n  }\r\n  firrtl.module private @Bar(in %clock: !firrtl.clock) {\r\n    %r = firrtl.reg %clock : !firrtl.clock, !firrtl.uint<8>\r\n  }\r\n}\r\n```\r\nthe first run yields:\r\n```mlir\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}]) attributes {convention = #firrtl<convention scalarized>} {\r\n      %bar_r, %bar_clock = firrtl.instance bar @Bar(in r: !firrtl.asyncreset, in clock: !firrtl.clock)\r\n      firrtl.matchingconnect %bar_r, %r : !firrtl.asyncreset\r\n    }\r\n    firrtl.module private @Bar(in %r: !firrtl.asyncreset, in %clock: !firrtl.clock) {\r\n      %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n      %r_0 = firrtl.regreset %clock, %r, %c0_ui8 {name = \"r\"} : !firrtl.clock, !firrtl.asyncreset, !firrtl.const.uint<8>, !firrtl.uint<8>\r\n    }\r\n  }\r\n ```\r\n the second run yields:\r\n ```mlir\r\n   firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}]) attributes {convention = #firrtl<convention scalarized>} {\r\n      %bar_r, %bar_clock = firrtl.instance bar @Bar(in r: !firrtl.asyncreset, in clock: !firrtl.clock)\r\n      firrtl.matchingconnect %bar_r, %r : !firrtl.asyncreset\r\n      firrtl.matchingconnect %bar_r, %r : !firrtl.asyncreset\r\n    }\r\n    firrtl.module private @Bar(in %r: !firrtl.asyncreset, in %clock: !firrtl.clock) {\r\n      %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n      %r_0 = firrtl.regreset %clock, %r, %c0_ui8 {name = \"r\"} : !firrtl.clock, !firrtl.asyncreset, !firrtl.const.uint<8>, !firrtl.uint<8>\r\n    }\r\n  }\r\n```\r\nEach run adds a new connect to the instance op. Although functionally equivalent, it would be best if the pass did nothing at all on the second run. We should audit other parts of this code to make sure that there aren't larger issues related to this.  Not removing the annotation is required as SFCCompat needs to be aware of its existence. ",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

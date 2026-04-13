@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 286,
+  "issue_url": "https://github.com/llvm/circt/issues/286",
+  "title": "Unable to lower to FIRRTL from handshake using -lower-handshake-to-firrtl with internally defined memref",
+  "body": "I have the following sample code in standard:\r\n\r\nfunc @test (%arg0: index) ->f32 {\r\n%0 = alloc() : memref<10xf32>\r\n%c0 = constant 0 : index\r\n%c10 = constant 10.0 : f32\r\nstore %c10, %0[%c0] : memref<10xf32>\r\n%5 = load %0[%c0] : memref<10xf32>\r\nreturn %5 : f32\r\n}\r\n\r\nWhich I can lower to Handshake dialect, obtaining:\r\n\r\nmodule {\r\n  handshake.func @test(%arg0: index, %arg1: none, ...) -> (f32, none) {\r\n    %0:3 = \"handshake.memory\"(%9#0, %9#1, %addressResults) {id = 0 : i32, ld_count = 1 : i32, lsq = false, st_count = 1 : i32, type = memref<10xf32>} : (f32, index, index) -> (f32, none, none)\r\n    %1:2 = \"handshake.fork\"(%0#1) {control = false} : (none) -> (none, none)\r\n    %2 = \"handshake.merge\"(%arg0) : (index) -> index\r\n    \"handshake.sink\"(%2) : (index) -> ()\r\n    %3:3 = \"handshake.fork\"(%arg1) {control = true} : (none) -> (none, none, none)\r\n    %4:3 = \"handshake.fork\"(%3#2) {control = true} : (none) -> (none, none, none)\r\n    %5 = \"handshake.join\"(%4#2, %1#1, %0#2) {control = true} : (none, none, none) -> none\r\n    %6 = \"handshake.constant\"(%4#1) {value = 0 : index} : (none) -> index\r\n    %7:2 = \"handshake.fork\"(%6) {control = false} : (index) -> (index, index)\r\n    %8 = \"handshake.constant\"(%4#0) {value = 1.000000e+01 : f32} : (none) -> f32\r\n    %9:2 = \"handshake.store\"(%8, %7#0, %3#1) : (f32, index, none) -> (f32, index)\r\n    %10 = \"handshake.join\"(%3#0, %1#0) {control = true} : (none, none) -> none\r\n    %11, %addressResults = \"handshake.load\"(%7#1, %0#0, %10) : (index, f32, none) -> (f32, index)\r\n    handshake.return %11, %5 : f32, none\r\n  }\r\n}\r\n\r\nBut when I try to lower that to FIRRTL from it, I get the following errors:\r\n\r\ncirct-opt: ../llvm/mlir/include/mlir/IR/Types.h:296: bool mlir::Type::isa() const [U = circt::firrtl::BundleType]: Assertion `impl && \"isa<> used on a null type.\"' failed.\r\nPLEASE submit a bug report to https://bugs.llvm.org/ and include the crash backtrace.\r\nStack dump:\r\n0. Program arguments: circt-opt -lower-handshake-to-firrtl test_1_HS.mlir \r\n1. In-Flight Diagnostics:\r\n    loc(\"test_1_HS.mlir\":2:3): error: Unsupported data type. Supported data types: integer (signed, unsigned, signless), index, none.\r\n    loc(\"test_1_HS.mlir\":3:12): error: Unsupported data type. Supported data types: integer (signed, unsigned, signless), index, none.\r\n    loc(\"test_1_HS.mlir\":3:12): error: Unsupported data type. Supported data types: integer (signed, unsigned, signless), index, none.\r\n\r\nWhich points to the arguments of the test function and the arguments of the handshake memory element. \r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-11-24",
+  "closed_at": "2020-11-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

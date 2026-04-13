@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3377,
+  "issue_url": "https://github.com/verilator/verilator/issues/3377",
+  "title": "CMake: Linker flags are lost when the verilated project is not the top-level executable",
+  "body": "This issue occurs only when threading is used and you have another level of targets after the target which has the verilator output associated with it.\r\n\r\nExample:\r\n```cmake\r\nadd_library(veri_lib some_source.cpp)\r\n\r\nfind_package(verilator HINTS $ENV{VERILATOR_ROOT})\r\nverilate(veri_lib top_hdl.v THREADS 2)\r\n\r\nadd_executable(self_tests self_test.cpp)\r\ntarget_link_libraries(self_tests PUBLIC veri_lib)\r\n\r\nadd_executable(manual_tests manual_test.cpp)\r\ntarget_link_libraries(manual_tests PUBLIC veri_lib)\r\n```\r\n\r\nThe generator expression in [verilator-config.cmake.in:337](https://github.com/verilator/verilator/blob/master/verilator-config.cmake.in#L337) won't apply anymore and both executables are missing the thread and atomic library.\r\n\r\nI added 2 executables just to illustrate a reasonable application. You save build time this way (files in `veri_lib` are only compiled once) without having to use ccache.\r\n\r\nI'll create a pull request which fixes this issue.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-11",
+  "closed_at": "2022-05-12",
+  "code_blocks": [
+    "add_library(veri_lib some_source.cpp)\r\n\r\nfind_package(verilator HINTS $ENV{VERILATOR_ROOT})\r\nverilate(veri_lib top_hdl.v THREADS 2)\r\n\r\nadd_executable(self_tests self_test.cpp)\r\ntarget_link_libraries(self_tests PUBLIC veri_lib)\r\n\r\nadd_executable(manual_tests manual_test.cpp)\r\ntarget_link_libraries(manual_tests PUBLIC veri_lib)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

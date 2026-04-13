@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4810,
+  "issue_url": "https://github.com/verilator/verilator/issues/4810",
+  "title": "Segfault when combining `--trace` and `-fno-inline`",
+  "body": "Hello! As always, thank you for Verilator!!\r\n\r\nOn git `master` and 5.018 on macOS/AArch64, I'm running into a segfault when I try to use both `--trace` and `-fno-inline`. The actual Verilog doesn't seem to matter; this input file suffices:\r\n\r\n```verilog\r\nmodule  TOP;\r\nendmodule\r\n```\r\n\r\nBoth of these runs work fine:\r\n\r\n```\r\n$ verilator_bin min.sv --debug --gdbbt --cc --trace\r\n$ verilator_bin min.sv --debug --gdbbt --cc -fno-inline\r\n```\r\n\r\nBut combining both `--trace` and `-fno-inline` results in this error:\r\n\r\n```\r\n$ verilator_bin min.sv --debug --gdbbt --cc --trace -fno-inline\r\nStarting Verilator 5.021 devel rev v5.020-18-g68e4eeb53\r\n- Verilator.cpp:616:  Option --verilate: Start Verilation\r\n- V3File.cpp:234:        --check-times failed: different command line\r\n[...]\r\n- V3Ast.cpp:1280:     Dumping obj_dir/Vmin_051_splitas.tree\r\n- V3TraceDecl.cpp:692:traceDeclAll: \r\nzsh: segmentation fault  [path]/bin/verilator_bin min.sv\r\n```\r\n\r\nHere is some location information from lldb:\r\n\r\n```\r\nProcess 64134 stopped\r\n* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0xf0)\r\n    frame #0: 0x00000001003d3118 verilator_bin`TraceDeclVisitor::fixupPlaceholder(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&, AstNodeStmt*) + 120\r\nverilator_bin`TraceDeclVisitor::fixupPlaceholder:\r\n->  0x1003d3118 <+120>: ldr    x8, [x8, #0xf0]\r\n    0x1003d311c <+124>: mov    w19, #0x2\r\n    0x1003d3120 <+128>: cbz    x8, 0x1003d3130           ; <+144>\r\n    0x1003d3124 <+132>: ldrh   w8, [x8, #0x40]\r\nTarget 0: (verilator_bin) stopped.\r\n(lldb) bt\r\n* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0xf0)\r\n  * frame #0: 0x00000001003d3118 verilator_bin`TraceDeclVisitor::fixupPlaceholder(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&, AstNodeStmt*) + 120\r\n    frame #1: 0x00000001003d0480 verilator_bin`TraceDeclVisitor::fixupPlaceholders() + 256\r\n    frame #2: 0x00000001003cfd28 verilator_bin`TraceDeclVisitor::TraceDeclVisitor(AstNetlist*) + 236\r\n    frame #3: 0x00000001003cf918 verilator_bin`V3TraceDecl::traceDeclAll(AstNetlist*) + 52\r\n    frame #4: 0x00000001000ef23c verilator_bin`verilate(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&) + 2768\r\n    frame #5: 0x00000001000ee044 verilator_bin`main + 444\r\n    frame #6: 0x00000001839ebf28 dyld`start + 2236\r\n(lldb) \r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n> What OS and distribution are you using?\r\n\r\nI reproduced this on revision 68e4eeb53e61ad3cbc7b00bb1ca70004e64c042b, the latest as of yesterday, and on a released version (5.018). All of this is on macOS 13.4.1 on an ARM machine.\r\n\r\nNotably, I also have access to another machine (x86_64 Linux) with Verilator 5.006, where this problem does not exist.\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nDefinitely! I admit I'm not sure exactly where to start, other than that this is clearly happening somewhere in the tracing machinery.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-07",
+  "closed_at": "2024-01-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

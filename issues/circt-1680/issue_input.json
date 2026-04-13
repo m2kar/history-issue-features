@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1680,
+  "issue_url": "https://github.com/llvm/circt/issues/1680",
+  "title": "[FIRRTL] (mux invalid) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 4352\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input inp_ab: SInt<43>\r\n    input inp_db: UInt<16>\r\n    output tmp73: SInt<43>\r\n    reg tmp67: SInt<39>, clock\r\n    tmp67 is invalid\r\n    tmp73 <= mux(head(inp_db, 1), tmp67, inp_ab)\r\n```\r\n\r\nCompiled with `firtool   --lower-to-hw --infer-widths --imconstprop --lowering-options=disallowPackedArrays,emittedLineLength=8192 --mlir-timing --verilog -o=$VFILE2` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\t// a_top_mod.fir:3:10\r\n  input         clock,\r\n  input  [42:0] inp_ab,\r\n  input  [15:0] inp_db,\r\n  output [42:0] tmp73);\r\n\r\n  assign tmp73 = inp_ab;\t// a_top_mod.fir:3:10\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input         clock,\r\n  input  [42:0] inp_ab,\r\n  input  [15:0] inp_db,\r\n  output [42:0] tmp73\r\n);\r\n  assign tmp73 = inp_db[15] ? $signed(43'sh0) : $signed(inp_ab);\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 43 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-31",
+  "closed_at": "2021-08-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

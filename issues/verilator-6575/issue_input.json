@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6575,
+  "issue_url": "https://github.com/verilator/verilator/issues/6575",
+  "title": "gcc throw \"lvalue required as left operand of assignment\" when compiling (buggy) verilated code.",
+  "body": "A compile time error is generated from g++ when compiling `https://github.com/pulp-platform/rv_tracer.git` (with traces enabled).\n\nI attached a minimal example derived from `rv_tracer` that retains the original structure. Below is the minimal example that can trigger the issue:\n\n```\n//\n// Minimal trigger:\n//\nmodule dest_slice_too_large();\nlogic [31:0] prdata_o;\nassign prdata_o[63:0] = 32'b0;\nendmodule\n```\n\nThe error in `rv_tracer` code is:\n* APB bus is 32 bit\n* Assignments to the data use: `prdata_o[XLEN-1:0] = ...`\nWith XLEN equal to 64, 3 warnings are produced:\n\n```\n      %Warning-SELRANGE: dest_slice_too_large.sv:32:25: Extracting 64 bits from only 32 bit number\n         32 |                 prdata_o[te_pkg::XLEN-1:0] = upper_cause_q;\n      %Warning-SELRANGE: dest_slice_too_large.sv:32:25: Selection index out of range: 63:0 outside 31:0\n         32 |                 prdata_o[te_pkg::XLEN-1:0] = upper_cause_q;\n      %Warning-WIDTHEXPAND: dest_slice_too_large.sv:32:44: Operator ASSIGN expects 64 bits on the Assign RHS, but Assign RHS's VARREF 'upper_cause_q' generates 32 bits.\n```\n\nIn this case I would expect the second SELRANGE warning would be an error.\nMinimum expectation would be that the generated code does not crash or throw compile-time errors\n\n[dest_slice_too_large.sv.txt](https://github.com/user-attachments/files/23017895/dest_slice_too_large.sv.txt)\n\n.\n\n# What output from that test indicates it is wrong\n\nA compile time error is generated with trace is enabled.\n```\n    Vdest_slice_too_large___024root__DepSet_hac016e96__0__Slow.cpp:31:5: error: lvalue required as left operand of assignment\n       31 |     (QData)((IData)(vlSelfRef.dest_slice_too_large__DOT__prdata_o)) = 0ULL;\n          |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n    make: *** [<>/verilator-5040/verilator/include/verilated.mk:272: Vdest_slice_too_large__ALL.o] Error 1\n```\n\n# What 'verilator' command line do we use to run your example?\n\n```\nverilator -cc -binary -fno-expand -Wno-fatal --trace-fst dest_slice_too_large.sv\n```\n\n# What 'verilator --version' are you using?  \n\nVerilator is somewhat recent, build from git. \n\n```\nVersions:\n    gcc (GCC) 15.2.1 20250808 (Red Hat 15.2.1-1)\n    Verilator 5.040 2025-08-30 rev v5.040\n```\n\n",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-21",
+  "closed_at": "2025-10-21",
+  "code_blocks": [
+    "//\n// Minimal trigger:\n//\nmodule dest_slice_too_large();\nlogic [31:0] prdata_o;\nassign prdata_o[63:0] = 32'b0;\nendmodule\n",
+    "      %Warning-SELRANGE: dest_slice_too_large.sv:32:25: Extracting 64 bits from only 32 bit number\n         32 |                 prdata_o[te_pkg::XLEN-1:0] = upper_cause_q;\n      %Warning-SELRANGE: dest_slice_too_large.sv:32:25: Selection index out of range: 63:0 outside 31:0\n         32 |                 prdata_o[te_pkg::XLEN-1:0] = upper_cause_q;\n      %Warning-WIDTHEXPAND: dest_slice_too_large.sv:32:44: Operator ASSIGN expects 64 bits on the Assign RHS, but Assign RHS's VARREF 'upper_cause_q' generates 32 bits.\n",
+    "    Vdest_slice_too_large___024root__DepSet_hac016e96__0__Slow.cpp:31:5: error: lvalue required as left operand of assignment\n       31 |     (QData)((IData)(vlSelfRef.dest_slice_too_large__DOT__prdata_o)) = 0ULL;\n          |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n    make: *** [<>/verilator-5040/verilator/include/verilated.mk:272: Vdest_slice_too_large__ALL.o] Error 1\n",
+    "verilator -cc -binary -fno-expand -Wno-fatal --trace-fst dest_slice_too_large.sv\n",
+    "Versions:\n    gcc (GCC) 15.2.1 20250808 (Red Hat 15.2.1-1)\n    Verilator 5.040 2025-08-30 rev v5.040\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

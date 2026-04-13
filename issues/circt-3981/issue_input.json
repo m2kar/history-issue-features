@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3981,
+  "issue_url": "https://github.com/llvm/circt/issues/3981",
+  "title": "[SV] Why does `IfDefOp::thenRegion` enforce SSA dominance?",
+  "body": "# Issue\r\nThe following code\r\n\r\n```mlir\r\nhw.module @m(%a: i8, %b: i8, %clk: i1) ->  () {\r\n    %0 = sv.reg {name = \"reg0\"} : !hw.inout<i8>\r\n    sv.alwaysff(posedge %clk) {\r\n        sv.passign %0, %1 : i8\r\n    }\r\n    %1 = comb.or %a, %b : i8\r\n}\r\n```\r\n\r\nworks and produces fine Verilog even though `%1` is used before it is defined.\r\n\r\nHowever, this code does not:\r\n\r\n```mlir\r\nhw.module @m(%a: i8, %b: i8, %clk: i1) ->  () {\r\n    sv.ifdef \"C\" {\r\n    %0 = sv.reg {name = \"reg0\"} : !hw.inout<i8>\r\n    sv.alwaysff(posedge %clk) {\r\n        sv.passign %0, %1 : i8\r\n    }\r\n    %1 = comb.or %a, %b : i8\r\n    }\r\n}\r\n```\r\n\r\nresulting in:\r\n```\r\n<stdin>:5:9: error: operand #1 does not dominate this use\r\n        sv.passign %0, %1 : i8\r\n        ^\r\n<stdin>:5:9: note: see current operation: \"sv.passign\"(%0, %1) : (!hw.inout<i8>, i8) -> ()\r\n<stdin>:7:10: note: operand defined here (op in a parent region)\r\n    %1 = comb.or %a, %b : i8\r\n         ^\r\n```\r\n\r\nNote the **only** difference is that the IR is now wrapped in an `sv.ifdef`.\r\n\r\n# Proposal\r\nI'm not extremely familiar with the semantics of regions, but my understanding is that in GraphRegions SSA dominance is not enforced, and `hw::ModuleOp` is such a type of region. From my understanding of Verilog `ifdef` semantics, there are no restrictions as to what can be inside such directives. So I would presume that we could allow the same inside `sv::IfDefOp`?\r\n\r\nHappy to discuss the requirement/use-case further.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-09-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

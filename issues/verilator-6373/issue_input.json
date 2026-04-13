@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6373,
+  "issue_url": "https://github.com/verilator/verilator/issues/6373",
+  "title": "Fix package imports not found after parameters applied",
+  "body": "VCS compiles w/o problem.\n\nCan you attach an example that shows the issue?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\n```\npackage uvm_pkg;\nvirtual class uvm_sequence #(type REQ = int);\n REQ                req;\nendclass\nendpackage // uvm_pkg\npackage s_pkg;\n  typedef enum bit[4:0] {\n   MEM_REQ               = 5'b00000\n  } P_Type_e;                    \nendpackage\npackage s_trgt_pkg;\n    import uvm_pkg::*;;\n    import s_pkg::*;\nclass s_trgt_txn;\n   P_Type_e p_type;\nendclass\nclass trgt_base_sequence extends uvm_sequence#(s_trgt_txn);\nendclass\nclass trgt_base_port_seq extends trgt_base_sequence;  \nendclass : trgt_base_port_seq\nclass p_mem_seq extends trgt_base_port_seq;\n   virtual task body();\n      if (!req.randomize() with { req.p_type == MEM_REQ; }) begin\n      end\n   endtask : body\nendclass : p_mem_seq\nendpackage\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator  --sv --cc [sv-bugpoint-minimized.sv](http://sv-bugpoint-minimized.sv/)\n%Error: sv-bugpoint-minimized.sv:23:49: Can't find definition of variable: 'MEM_REQ'\n   23 |       if (!req.randomize() with { req.p_type == MEM_REQ; }) begin\n      |                                                 ^~~~~~~\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n```\nverilator --version\nVerilator 5.041 devel rev v5.040-17-ga6f26b85b\n```\n\nWhat OS and distribution are you using?\n\n```\nuname -a\nLinux 4.18.0-553.22.1.el8_10.x86_64\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-03",
+  "closed_at": "2025-09-04",
+  "code_blocks": [
+    "package uvm_pkg;\nvirtual class uvm_sequence #(type REQ = int);\n REQ                req;\nendclass\nendpackage // uvm_pkg\npackage s_pkg;\n  typedef enum bit[4:0] {\n   MEM_REQ               = 5'b00000\n  } P_Type_e;                    \nendpackage\npackage s_trgt_pkg;\n    import uvm_pkg::*;;\n    import s_pkg::*;\nclass s_trgt_txn;\n   P_Type_e p_type;\nendclass\nclass trgt_base_sequence extends uvm_sequence#(s_trgt_txn);\nendclass\nclass trgt_base_port_seq extends trgt_base_sequence;  \nendclass : trgt_base_port_seq\nclass p_mem_seq extends trgt_base_port_seq;\n   virtual task body();\n      if (!req.randomize() with { req.p_type == MEM_REQ; }) begin\n      end\n   endtask : body\nendclass : p_mem_seq\nendpackage\n",
+    "verilator  --sv --cc [sv-bugpoint-minimized.sv](http://sv-bugpoint-minimized.sv/)\n%Error: sv-bugpoint-minimized.sv:23:49: Can't find definition of variable: 'MEM_REQ'\n   23 |       if (!req.randomize() with { req.p_type == MEM_REQ; }) begin\n      |                                                 ^~~~~~~\n",
+    "verilator --version\nVerilator 5.041 devel rev v5.040-17-ga6f26b85b\n",
+    "uname -a\nLinux 4.18.0-553.22.1.el8_10.x86_64\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

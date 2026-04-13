@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3330,
+  "issue_url": "https://github.com/verilator/verilator/issues/3330",
+  "title": "regressions in end of february 2022 commits",
+  "body": "Today I updated to 5b9806ae6d8a0311f941ac453267b3c79033c864 and noticed some regressions.\r\nI recompile Verilator rather often and this issues are probably from one of Feb 27 commits.\r\nI have not bisected the exact commit, for now my focus was to write a quick report, I could bisect if it would help.\r\nMy understanding of various `case` statement modifiers is still limited, so I am not sure whether the `case` statement related issue is a bug or a feature.\r\n\r\nI get a warning of overlapping case values:\r\n```\r\n%Warning-CASEOVERLAP: ../../hdl/tbn/riscv_asm_pkg.sv:185:3: Case values overlap (example pattern 0x0)\r\n                                                          : ... In instance riscv_asm_pkg\r\n  185 |   16'b0000_0000_000?_??00: disasm16 = $sformatf(\"ILLEGAL    RES\");   \r\n      |   ^~~~~~~~~~~~~~~~~~~~~~~\r\n                      ... Use \"/* verilator lint_off CASEOVERLAP */\" and lint_on around source to disable this message.\r\n```\r\nfor a `priority casez` statement:\r\n```\r\n// RV32 I base extension\r\nif (|(isa.spec.base | (RV_32I | RV_64I | RV_128I))) begin priority casez (op)\r\n  //  fedc_ba98_7654_3210\r\n  16'b0000_0000_0000_0000: disasm16 = $sformatf(\"ILLEGAL\");\r\n  16'b0000_0000_000?_??00: disasm16 = $sformatf(\"ILLEGAL    RES\");  // C.ADDI4SP, nzuimm=0, RES\r\n```\r\n\r\nThe other regressions was for a bug I reported about half a year ago and it was fixed recently, it might be a separate bug, but the same SystemVerilog code is affected:\r\n```\r\n%Error: Internal Error: ../../hdl/tbn/riscv_asm_pkg.sv:31:34: ../V3EmitC.cpp:1269: Unknown node type reached emitter: INITITEM\r\n   31 | localparam string GPR_N [0:31] = '{\"zero\", \"ra\", \"sp\", \"gp\", \"tp\", \"t0\", \"t1\", \"t2\", \"s0/fp\", \"s1\", \"a0\", \"a1\", \"a2\", \"a3\", \"a4\", \"a5\",\r\n      |                                  ^~\r\n```",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-01",
+  "closed_at": "2022-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

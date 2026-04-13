@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4433,
+  "issue_url": "https://github.com/verilator/verilator/issues/4433",
+  "title": "Passing by reference to task not behaving correctly",
+  "body": "Compiling the following module (called `my_test.sv`) with `verilator --binary --trace --assert -Wno-PINCONNECTEMPTY my_test.sv` and running it with `./obj_dir/Vmy_test` yields at the end `Should not get here, the task blocks indefinately` while it should be `Task exited`. The reason for it is that the passing by reference to the task does not work and it is just passed by value.\r\n\r\nThe received output is\r\n```\r\nStarting task\r\n0\r\n1\r\nShould not get here, the task blocks indefinately\r\n```\r\n\r\nwhile it should be\r\n\r\n```\r\nStarting task\r\n0\r\n1\r\n2\r\nTask exited\r\n```\r\n\r\n```\r\n`default_nettype none\r\n\r\nmodule my_test();\r\n    var logic   rst_bi;\r\n    var logic   clk_i;\r\n\r\n    initial begin\r\n        wait (rst_bi == 1'b1);\r\n        while (rst_bi == 1'b1) begin\r\n            clk_i = ~clk_i;\r\n            #10;\r\n        end\r\n    end\r\n\r\n    task automatic test_task(ref logic clk);\r\n        $display(\"0\");\r\n        wait (clk == 1'b0);\r\n        $display(\"1\");\r\n        wait (clk == 1'b1);\r\n        $display(\"2\");\r\n    endtask\r\n\r\n    initial begin\r\n        $dumpfile(\"test.vcd\");\r\n        $dumpvars;\r\n        rst_bi = 1'b0;\r\n        clk_i = 1'b0;\r\n        #10;\r\n        rst_bi = 1'b1;\r\n        #10;\r\n        wait (clk_i == 1'b0);\r\n        $display(\"Starting task\");\r\n        test_task(clk_i);\r\n        $display(\"Task exited\");\r\n        #100;\r\n        $finish;\r\n    end\r\n\r\n    initial begin\r\n        #1000;\r\n        $display(\"Should not get here, the task blocks indefinately\");\r\n        $finish;\r\n    end\r\nendmodule\r\n\r\n`default_nettype wire\r\n\r\n```",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-22",
+  "closed_at": "2023-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

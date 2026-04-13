@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 701,
+  "issue_url": "https://github.com/llvm/circt/issues/701",
+  "title": "[FIRRTL] wire inside always block",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input inp_a: {inp_b: {inp_j: SInt<11>}, inp_f: SInt<19>}\r\n    reg _tmp6: UInt<25>, clock with: (reset => (reset, UInt<25>(0)))\r\n    _tmp6 <= and(inp_a.inp_b.inp_j, SInt<25>(12345))\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl --enable-lower-types` produces this Verilog:\r\n\r\n```verilog\r\n// skipped defines\r\nmodule top_mod(\r\n  input        clock, reset,\r\n  input [10:0] inp_a_inp_b_inp_j,\r\n  input [18:0] inp_a_inp_f);\r\n\r\n  reg [24:0] _tmp6;\t// a_top_mod.fir:6:5\r\n\r\n  always_ff @(posedge clock) begin\t// a_top_mod.fir:6:5\r\n    if (reset)\t// a_top_mod.fir:6:5\r\n      _tmp6 <= 25'h0;\t// a_top_mod.fir:6:{5,56}\r\n    else\t// a_top_mod.fir:6:5\r\n      wire [24:0] _tmp = {{14{inp_a_inp_b_inp_j[10]}}, inp_a_inp_b_inp_j};\t// a_top_mod.fir:7:14\r\n      _tmp6 <= _tmp & 25'h3039;\t// a_top_mod.fir:7:{11,14,37}\r\n  end // always_ff @(posedge)\r\n  `ifndef SYNTHESIS\t// a_top_mod.fir:6:5\r\n    initial begin\t// a_top_mod.fir:6:5\r\n      `INIT_RANDOM_PROLOG_\t// a_top_mod.fir:6:5\r\n      `ifdef RANDOMIZE_REG_INIT\t// a_top_mod.fir:6:5\r\n        if (~reset)\t// a_top_mod.fir:6:5\r\n          _tmp6 = `RANDOM;\t// a_top_mod.fir:6:5\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  wire [24:0] _tmp = {{14{inp_a_inp_b_inp_j[10]}}, inp_a_inp_b_inp_j};\t// a_top_mod.fir:7:14\r\nendmodule\r\n```\r\n\r\nAn output Verilog has an error, declaring `wire` iside `always_ff` block.\r\n\r\n```verilog\r\n%Error: a_top_mod_new.sv:66:7: syntax error, unexpected wire\r\n   66 |       wire [24:0] _tmp = {{14{inp_a_inp_b_inp_j[10]}}, inp_a_inp_b_inp_j};  \r\n      |       ^~~~\r\n```",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-02",
+  "closed_at": "2021-03-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

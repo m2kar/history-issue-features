@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3105,
+  "issue_url": "https://github.com/verilator/verilator/issues/3105",
+  "title": "Optimize redundant Vtemp assignments",
+  "body": "Hi:\r\n    The testcase is quite simple:\r\n```verilog\r\nmodule t (\r\n    input   logic               clk,\r\n    input   logic   [1023:0]    din,\r\n    output  logic   [9:0]    dout\r\n);\r\n\r\nlogic   [9:0]    shift0;\r\nlogic   [9:0]    shift1;\r\n\r\nalways @ (posedge clk) begin\r\n    shift0 = {100'd0, din[1023-100:0]};\r\n    shift1 = {200'd0, din[1023-200:0]};\r\n\r\n    dout = shift0 & shift1;\r\nend\r\nendmodule\r\n```\r\nI'm using the master branch, and I add the -Wno-WIDTH flag.\r\nHere is the generated cpp code:\r\n```cpp\r\nVL_INLINE_OPT void Vdemo___024root___sequent__TOP__1(Vdemo___024root* vlSelf) {\r\n    // ...\r\n    __Vtemp_h40cba9a7__0[0U] = (Vdemo__ConstPool__CONST_he4ca4b97_0[0U] \r\n                                & vlSelf->din[0U]);\r\n    __Vtemp_h40cba9a7__0[1U] = (Vdemo__ConstPool__CONST_he4ca4b97_0[1U] \r\n                                & vlSelf->din[1U]);\r\n    __Vtemp_h40cba9a7__0[2U] = (Vdemo__ConstPool__CONST_he4ca4b97_0[2U] \r\n                                & vlSelf->din[2U]);\r\n    __Vtemp_h40cba9a7__0[3U] = (Vdemo__ConstPool__CONST_he4ca4b97_0[3U] \r\n                                & vlSelf->din[3U]);\r\n    // ...\r\n    __Vtemp_h40cba9a7__0[0x1aU] = (Vdemo__ConstPool__CONST_he4ca4b97_0[0x1aU] \r\n                                   & vlSelf->din[0x1aU]);\r\n    __Vtemp_h40cba9a7__0[0x1bU] = (Vdemo__ConstPool__CONST_he4ca4b97_0[0x1bU] \r\n                                   & vlSelf->din[0x1bU]);\r\n    __Vtemp_h40cba9a7__0[0x1cU] = (Vdemo__ConstPool__CONST_he4ca4b97_0[0x1cU] \r\n                                   & vlSelf->din[0x1cU]);\r\n    VL_EXTEND_WW(1024,924, __Vtemp_he753164e__0, __Vtemp_h40cba9a7__0);\r\n    t__DOT__shift0 = (0x3ffU & __Vtemp_he753164e__0[0U]);\r\n\r\n    __Vtemp_hb4749a7f__0[0U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[0U] \r\n                                & vlSelf->din[0U]);\r\n    __Vtemp_hb4749a7f__0[1U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[1U] \r\n                                & vlSelf->din[1U]);\r\n    __Vtemp_hb4749a7f__0[2U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[2U] \r\n                                & vlSelf->din[2U]);\r\n    __Vtemp_hb4749a7f__0[3U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[3U] \r\n                                & vlSelf->din[3U]);\r\n    // ...\r\n    __Vtemp_hb4749a7f__0[0x16U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[0x16U] \r\n                                   & vlSelf->din[0x16U]);\r\n    __Vtemp_hb4749a7f__0[0x17U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[0x17U] \r\n                                   & vlSelf->din[0x17U]);\r\n    __Vtemp_hb4749a7f__0[0x18U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[0x18U] \r\n                                   & vlSelf->din[0x18U]);\r\n    __Vtemp_hb4749a7f__0[0x19U] = (Vdemo__ConstPool__CONST_h2ccca7ce_0[0x19U] \r\n                                   & vlSelf->din[0x19U]);\r\n    VL_EXTEND_WW(1024,824, __Vtemp_he9adea71__0, __Vtemp_hb4749a7f__0);\r\n    t__DOT__shift1 = (0x3ffU & __Vtemp_he9adea71__0[0U]);\r\n    vlSelf->dout = ((IData)(t__DOT__shift0) & (IData)(t__DOT__shift1));\r\n}\r\n```\r\n\r\nI think there are 2 places can be optimized:\r\n1. __Vtemp_he753164e__0 has 1024bit, but only use 10bit, It's better to eliminate the rest variable and assignments\r\n2. Most bits of __Vtemp_h40cba9a7__0 and __Vtemp_hb4749a7f__0 are completely same. It's better to maintain 1 Vtemp and only assign once, rather than multiple Vtemps with multiple assignments\r\n\r\n",
+  "labels": [
+    "area: performance",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-19",
+  "closed_at": "2025-06-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

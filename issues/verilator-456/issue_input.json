@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 456,
+  "issue_url": "https://github.com/verilator/verilator/issues/456",
+  "title": "unnecessary %Warning-UNSIGNED: Comparison is constant due to unsigned arithmetic ?",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 456 from https://www.veripool.org\nOriginal Date: 2012-03-12\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe following test case:\r\n\r\n```\r\ntypedef logic signed [35-1:0] rc_t;\r\n\r\nmodule test_negative( output logic o,\r\n                       input rc_t   rc,\r\n                       input logic  clk);\r\n\r\n    localparam RATIO = 2;\r\n\r\n    rc_t rc_d[RATIO:1];\r\n\r\n    always_ff @(posedge clk) begin\r\n       integer  k;\r\n\r\n       rc_d[1] <= rc;\r\n       \r\n       for( k=2; k<RATIO+1; k++ ) begin\r\n          rc_d[k] <= rc_d[k-1];\r\n       end\r\n    end // always_ff @\r\n\r\n    assign o = rc_d[RATIO] < 0;\r\n\r\nendmodule // test_negative\r\n\n```\r\n\r\ncauses warning:\r\n\r\n```\r\nverilator -sv --sp --top-module test_negative test_negative.v\r\n%Warning-UNSIGNED: test_negative.v:21: Comparison is constant due to unsigned arithmetic\r\n%Warning-UNSIGNED: Use \"/* verilator lint_off UNSIGNED */\" and lint_on around source to disable this message.\r\n\n```\r\n\r\nHowever, simplified version:\r\n\r\n```\r\ntypedef logic signed [35-1:0] rc_t;\r\n\r\nmodule test_negative( output logic o,\r\n                       input rc_t   rc,\r\n                       input logic  clk);\r\n\r\n    assign o = rc < 0;\r\n\r\nendmodule // test_negative\r\n\n```\r\n\r\ndoes not cause warning.\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-03-12",
+  "closed_at": "2012-04-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1164,
+  "issue_url": "https://github.com/verilator/verilator/issues/1164",
+  "title": "Failed generate C++ code with unique casez when \"--assert\" argument",
+  "body": "---\n\n\nAuthor Name: **Enzo Chi**\nOriginal Redmine Issue: 1164 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator version: 3.902\r\n\r\nCommand for reproduce it: verilator --assert --cc unique_case.sv\r\n\r\nError Message:\r\n%Error: unique_case.sv:20: Unsupported tristate construct: EQ\r\n%Error: Exiting due to 1 error(s)\r\n%Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed /home/eda/verilator-3.902//verilator_bin --assert --cc unique_case.sv\r\n\r\n\r\nTest code: unique_case.sv\r\n\r\n```\r\nmodule unique_case (\r\n     input bit       clk,\r\n     input bit       rst,\r\n     input bit [3:0] sel,\r\n     input bit [3:0] a,\r\n     input bit       c,\r\n     output bit      dout\r\n     );\r\n\r\n     localparam logic DC  = 1'b?;\r\n\r\n     always_ff @(posedge clk) begin\r\n         if (rst) begin\r\n             dout <= '0;\r\n         end else begin\r\n             unique casez(sel)\r\n                 4'b0000: dout                  <= a[0];\r\n                 4'b001?: dout                  <= a[1];\r\n                 {1'b0, 1'b1, 1'b?, 1'b?}: dout <= a[2];\r\n                 {1'b1, 1'b?, 1'b?, DC}: dout   <= a[3];\r\n                 default: dout                  <= '0;\r\n             endcase // unique casez (sel)\r\n         end\r\n     end // always_ff @ (posedge clk)\r\n\r\nendmodule // unique_case\r\n\r\n\n```\r\n\r\nIt looks the user localparam in the unique casez cause the problem.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2017-05-17",
+  "closed_at": "2017-05-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9941,
+  "issue_url": "https://github.com/llvm/circt/pull/9941",
+  "title": "[FIRRTLToHW] Fix crash when lowering instance_choice with clock outputs",
+  "body": "When lowering instance_choice operations with clock-typed output ports,\nthe code was attempting to create sv.wire operations with !seq.clock as\nthe element type. However, !seq.clock is not a valid element type for\nhw.inout, causing an assertion failure.\n\nThe fix follows the same pattern used for XMR operations: use i1 wires\ninstead of !seq.clock wires, and convert to/from clock when reading/\nwriting:\n- When creating wires for clock outputs, use i1 type\n- When reading from the wire (for the result value), convert i1 to clock\n  using seq.to_clock\n- When writing to the wire (from instance outputs), convert clock to i1\n  using seq.from_clock\n\nThis allows instance_choice to work correctly with clock-typed ports\nwhile respecting the type constraints of hw.inout.\n\nFixes a crash with the error:\n  error: invalid element for hw.inout type '!seq.clock'\n  Assertion failed: (succeeded(ConcreteT::verifyInvariants(...)))\n\nAI-assisted-by: Augment (Claude Sonnet 4.5)\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>\n\n**This is DRAFT as I have not reviewed it yet!**\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-14",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

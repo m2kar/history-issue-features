@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3281,
+  "issue_url": "https://github.com/verilator/verilator/issues/3281",
+  "title": "Unable to run configure script in a single threaded environment",
+  "body": "I'm working in an environment where `libc++` and `libc++abi` have been built without support for threads. \r\n\r\nWhen I try and checkout `v4.216` of Verilator and build this from source I hit a configure error which states that `\"Verilator requires a C++11 or newer compiler.`\". When I trace this back through the `configure.ac` script I see that on [line 485](https://github.com/verilator/verilator/blob/434c3c3ef3ae751b0a9f2d5934c2d2e986e65e81/configure.ac#L485) it is generating a test program that looks something like this:\r\n\r\n```c\r\n#include <thread>\r\n#if (__cplusplus < 201103L)\r\n# error \"Too old\"\r\n#endif\r\n\r\nint main()\r\n{\r\n    return 0;\r\n}\r\n```\r\n\r\nThe particular issue I am facing is that `<thread>` does not exist on my system because `libc++` was not compiled with threading support enabled. \r\n\r\nHowever, I have patched `configure.ac` locally to remove the `#include <thread>` and things seem to then work fine. After looking through the history of this part of `configure.ac` it seems that this [commit](https://github.com/verilator/verilator/commit/698e0fbbd1e866dc8abaa4900a1b56ca7316378b) led to this change. My understanding of this is that prior to that change it was only looking for C++11 support if threading was enabled, in which case it made sense to check if the `<thread>` header existed on the system. It now seems that C++11 support is required unconditionally and so I'm wondering if this check should now omit the call to `#include <thread>` and instead just check the `__cplusplus` macro value only?\r\n\r\nI'm happy to submit my patch as a PR for this if it's a genuine issue. However, if I've misunderstood something then I'd be curious to know if building Verilator on a single threaded environment is something that is suppported.\r\n\r\nWhat OS and distribution are you using?\r\n\r\nAlpine 3.14.2 via a Docker image\r\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-18",
+  "closed_at": "2022-01-18",
+  "code_blocks": [
+    "#include <thread>\r\n#if (__cplusplus < 201103L)\r\n# error \"Too old\"\r\n#endif\r\n\r\nint main()\r\n{\r\n    return 0;\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

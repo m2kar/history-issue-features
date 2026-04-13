@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6549,
+  "issue_url": "https://github.com/verilator/verilator/issues/6549",
+  "title": "Verilator 5.034+ incorrectly reports nested interface-class error",
+  "body": "Thanks for taking the time to report this.\n\nCan you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n\n```systemverilog\npackage ipkg;\n  typedef interface class iclass;\n\n  interface class iclass;\n    pure virtual function void doit();\n  endclass\nendpackage\n\npackage epkg;\n  interface class cclass2 extends ipkg::iclass;\n    pure virtual function void doit2();\n  endclass\n\n  class cclass implements cclass2;\n    virtual function void doit();\n        $display(\"doit\");\n    endfunction\n    virtual function void doit2();\n        $display(\"doit2\");\n    endfunction\n  endclass\nendpackage\n\nmodule top;\n  import epkg::*;\n\n  initial begin\n    automatic cclass c = new();\n    c.doit();\n  end\nendmodule\n```\n\nThe example above uses a package-rooted reference to `ipkg::iclass` when extending it. \n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\nThis results in the following error:\n```\nverilator --binary iclass.sv \n%Error: iclass.sv:5:13: Interface class shall not be nested within another interface class. (IEEE 1800-2023 8.26)\n    5 |   interface class iclass;\n      |             ^~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.041 for more assistance.\n%Error: Exiting due to 1 error(s)\n```\n\nVerilator <= 5.032 and commerical toolchains accept this without error.\n\nExplicitly importing the referenced package appears to be a workaround. For example:\n\n```\npackage epkg;\n  import ipkg::*; // Workaround error with package-rooted reference\n  interface class cclass2 extends ipkg::iclass;\n    pure virtual function void doit2();\n  endclass\n\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --binary iclass.sv\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\n```\nVerilator 5.041 devel rev v5.040-288-g8785086bc\n```\n\nWhat OS and distribution are you using? Ubuntu 24.04\n\nMay we assist you in trying to fix this in Verilator yourself? Possibly, depending on how involved the issue is.\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-11",
+  "closed_at": "2025-10-11",
+  "code_blocks": [
+    "package ipkg;\n  typedef interface class iclass;\n\n  interface class iclass;\n    pure virtual function void doit();\n  endclass\nendpackage\n\npackage epkg;\n  interface class cclass2 extends ipkg::iclass;\n    pure virtual function void doit2();\n  endclass\n\n  class cclass implements cclass2;\n    virtual function void doit();\n        $display(\"doit\");\n    endfunction\n    virtual function void doit2();\n        $display(\"doit2\");\n    endfunction\n  endclass\nendpackage\n\nmodule top;\n  import epkg::*;\n\n  initial begin\n    automatic cclass c = new();\n    c.doit();\n  end\nendmodule\n",
+    "verilator --binary iclass.sv \n%Error: iclass.sv:5:13: Interface class shall not be nested within another interface class. (IEEE 1800-2023 8.26)\n    5 |   interface class iclass;\n      |             ^~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.041 for more assistance.\n%Error: Exiting due to 1 error(s)\n",
+    "package epkg;\n  import ipkg::*; // Workaround error with package-rooted reference\n  interface class cclass2 extends ipkg::iclass;\n    pure virtual function void doit2();\n  endclass\n\n",
+    "verilator --binary iclass.sv\n",
+    "Verilator 5.041 devel rev v5.040-288-g8785086bc\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

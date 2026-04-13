@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3815,
+  "issue_url": "https://github.com/verilator/verilator/issues/3815",
+  "title": "Bits left unset in function call",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nI started chasing this down with an error in the statement:\r\n\r\n    wire [839:0] large;\r\n    wire [103:0] value;\r\n\r\n    // ...\r\n\r\n    assign large = { {(840-104){1'b0}}, value };\r\n\r\nIn the VCD file, bit 124 was set in `large` following this assignment.  When I then applied bit-wise operations on `large`, bits were getting set that shouldn't have been.\r\n\r\nI then managed to chase this back further to the function two clock cycles before,\r\n\r\n    function [W-1:0] reverse(input [W-1:0] val);\r\n        integer i;\r\n    begin\r\n        for(i=0; i<W; i=i+1)\r\n            reverse[W-1-i] = val[i];    \r\n    end endfunction\r\n\r\nThe purpose of this function is to reverse the bits in the input `val` provided.  Key to this bug is that the function never initializes all of `reverse`.  It shouldn't need to, since all of the 104 bits produced by the function are initialized internally within the function.  However, because Verilator maps large vectors to 32-bit words in C/C++, what happens is that the upper (128-104=) 24 bits are not getting initialized.  These bits then contribute to the following logic in ... bad ways.  Specifically, I'm shifting and then ORing this value into an 840-bit gearbox, and some of the other (840-104) bits are getting set in that gearbox--thus breaking the rest of the algorithm.\r\n\r\nFor now I'm testing a fix whereby I set `reverse=0` prior to the for loop as a work around.\r\n\r\n_What 'verilator --version' are you using?  Did you try it with the git master version?_\r\n\r\nI tested with `Verilator 5.003 devel rev v5.002-41-g04f68cbd9`\r\n\r\n_What OS and distribution are you using?_\r\n\r\nLinux Ubuntu\r\n\r\n_May we assist you in trying to fix this in Verilator yourself?_\r\n\r\n<Gasp!>  Frankly, I wouldn't know where to start.",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-13",
+  "closed_at": "2022-12-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

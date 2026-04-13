@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1415,
+  "issue_url": "https://github.com/verilator/verilator/issues/1415",
+  "title": "Verilator generates calls to an undefined function named: VL_SHIFTR_QQW",
+  "body": "---\n\n\nAuthor Name: **Larry Lee** (@llee454)\nOriginal Redmine Issue: 1415 from https://www.veripool.org\n\nOriginal Assignee: Larry Lee (@llee454)\n\n---\n\nVerilator is generating calls to a undefined function named VL_SHIFTR_QQW.\r\n\r\nThis bug is nearly identical to that reported in [[1412-Verilator-Verilator-generates-calls-to-an-undefined-function-named-VL_SHIFTL_QQW]]\r\n\r\nI've found that defining this function in include/verilated.h fixes this issue. To resolve, simply add the following definition to include/verilated.h after VL_SHIFTR_IIW:\r\n\r\n```<code class=\"c\">\r\nstatic inline QData VL_SHIFTR_QQW(int obits,int,int rbits,QData lhs, WDataInP rwp) VL_MT_SAFE {\r\n     for (int i=1; i < VL_WORDS_I(rbits); ++i) {\r\n         if (VL_UNLIKELY(rwp[i])) {  // Huge shift 1>>32 or more\r\n             return 0;\r\n         }\r\n     }\r\n     return VL_CLEAN_QQ(obits,obits,lhs>>(static_cast<QData>(rwp[0])));\r\n}\r\n</code>\n```\r\n\r\nI've created a Git fork with the necessary changes that can be pulled into your Git repo: https://github.com/llee454/verilator\r\n\r\n- Larry Lee\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-04-05",
+  "closed_at": "2019-05-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5833,
+  "issue_url": "https://github.com/verilator/verilator/issues/5833",
+  "title": "Fix package reference not found type_id",
+  "body": "Another type_id case that got added to a future UVM release, as noted in #5826, but different case.\n\nBelow gives: `\n```\n%Error: Package/class for ':: reference' not found: 'type_id'\n   18 |                      t = BUSTYPE::type_id::create(\"t\");\n```\n@kbieganski analyzed (thanks) and: \"This case seems to break because of the default type parameter. uvm_object doesn't have type_id, but we try to link BUSTYPE::type_id (=uvm_object::type_id) in LinkDot which fails. We can defer it until after V3Param but then the instance with default params is still around, so we revisit it and have the same problem. We'd have to delete the default instances if unused after V3Param. I'm not familiar enough with that stage to know how difficult that is.\n\nWhich also sounds related to #4581 et al.\n\n```\n`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\npackage uvm_pkg;\n   virtual class uvm_void;\n   endclass\n   virtual class uvm_object extends uvm_void;\n   endclass\n   class uvm_report_object extends uvm_object;\n   endclass\n   virtual class uvm_component extends uvm_report_object;\n   endclass\n   class uvm_reg_predictor #(type BUSTYPE=uvm_object) extends uvm_component;\n      static function string type_name();\n         static string m_type_name;\n                  if (m_type_name == \"\") begin\n                     BUSTYPE t;\n                     t = BUSTYPE::type_id::create(\"t\");\n                     m_type_name = {\"uvm_reg_predictor #(\", t.get_type_name(), \")\"};\n                  end\n         return m_type_name;\n      endfunction\n   endclass\nendpackage\n\nclass my_bus extends uvm_pkg::uvm_component;\n   typedef my_bus type_id;\n   static function type_id create(string name);\n   endfunction\n   static function string get_type_name();\n      return \"my_bus\";\n   endfunction\nendclass\n\nmodule t;\n   initial begin\n      string s;\n      uvm_pkg::uvm_reg_predictor #(my_bus) rp;\n      rp = new;\n      s = rp.type_name();\n      `checks(s, \"uvm_reg_predictor #(my_bus)\");\n      $display(\"*-* All Finished *-*\");\n      $finish;\n   end\nendmodule\n```\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2025-03-07",
+  "closed_at": null,
+  "code_blocks": [
+    "%Error: Package/class for ':: reference' not found: 'type_id'\n   18 |                      t = BUSTYPE::type_id::create(\"t\");\n",
+    "`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\npackage uvm_pkg;\n   virtual class uvm_void;\n   endclass\n   virtual class uvm_object extends uvm_void;\n   endclass\n   class uvm_report_object extends uvm_object;\n   endclass\n   virtual class uvm_component extends uvm_report_object;\n   endclass\n   class uvm_reg_predictor #(type BUSTYPE=uvm_object) extends uvm_component;\n      static function string type_name();\n         static string m_type_name;\n                  if (m_type_name == \"\") begin\n                     BUSTYPE t;\n                     t = BUSTYPE::type_id::create(\"t\");\n                     m_type_name = {\"uvm_reg_predictor #(\", t.get_type_name(), \")\"};\n                  end\n         return m_type_name;\n      endfunction\n   endclass\nendpackage\n\nclass my_bus extends uvm_pkg::uvm_component;\n   typedef my_bus type_id;\n   static function type_id create(string name);\n   endfunction\n   static function string get_type_name();\n      return \"my_bus\";\n   endfunction\nendclass\n\nmodule t;\n   initial begin\n      string s;\n      uvm_pkg::uvm_reg_predictor #(my_bus) rp;\n      rp = new;\n      s = rp.type_name();\n      `checks(s, \"uvm_reg_predictor #(my_bus)\");\n      $display(\"*-* All Finished *-*\");\n      $finish;\n   end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7158,
+  "issue_url": "https://github.com/llvm/circt/pull/7158",
+  "title": "[ImportVerilog] [SROA] [Mem2Reg][Canonicalizers]Support Passes for Nested Type",
+  "body": "For the new concept of Moore dialect, some operations will be defined as memory-related operations. Modeling `memref` Dialect and `LLVM` dialect, the operation relationship is as follows:\r\n- `ReadOp` and `blockingAssignOp` are related to `loadOp` and `storeOp`.\r\n- `VariableOp` is related to `allocaOp`.\r\n\r\nHowever, the operations mentioned below are for basic types. This PR will support nested types in the following way:\r\n- `VariableOp` with nested types is still related to `allocaOp` (will be replaced with `structCreateOp` and `UnionCreateOp`).\r\n- `structExtractRefOp` is related to `storeOp`.\r\n- `structExtractOp` is related to `loadOp`.\r\n\r\nTo implement this:\r\n- Since these operations will be lowered to the `hw` dialect, the design largely refers to the `hw` dialect.\r\n\r\n- Add the trait `DestructurableAllocationOpInterface` for `VariableOp`.\r\n- Add the trait `DestructurableAccessorOpInterface` for `structExtractOp` and `structExtractRefOp`.\r\n- Implement the `DestructurableTypeInterface` for `structLikeType` and the `reftype` of `structLikeType`.\r\n\r\nFor local variables:\r\n- Use the SROA (Scalar Replacement of Aggregates) Pass to destructure all nested-type variables into basic-type variables.\r\n- Use the Mem2Reg (Memory to Register) Pass to replace variables imported by SROA with constants.\r\n\r\nFor global/module-level variables:\r\n- When importing Verilog, use `structInjectOp` rather than `blockingAssignOp`, because `structExtractRefOp` has the Destructurable trait, but global variables should not be destructured.\r\n- `structInjectOp` means creating a new struct with new values and other old values.\r\n- Use the canonicalizer Pass to fold duplicate injecting same field operations.\r\n- Use the canonicalizer Pass to explicitly show new struct creation.\r\n- Use the canonicalizer Pass to send source values directly and remove `structExtractOp`.\r\n\r\nAlso, remove some unnecessary spaces in other code.\r\n\r\nWhat's more:\r\n- Verify that the input of nested-type-related operations should match the field type defined.\r\n\r\nTo do:\r\n- Update the use of struct SSA values referring to the latest `structInjectOp` SSA values.\r\n- Design the method for union types.\r\n- Add and support the `dbg` dialect to keep local variables visible after SROA & Mem2Reg.\r\n",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-12",
+  "closed_at": "2024-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

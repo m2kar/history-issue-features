@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6983,
+  "issue_url": "https://github.com/verilator/verilator/issues/6983",
+  "title": "Parameterized class typedef as interface type parameter fails",
+  "body": "Hi,\n\nPR #6834 added support for using a parameterized class typedef as a module type parameter (fixing #6754). However, the same pattern doesn't work when the typedef is used as an interface type parameter instead.\n\n**Example:**\n\n```systemverilog\nclass B #(parameter int WIDTH=32);\n    typedef struct packed { logic [WIDTH-1:0] data; } pld_t;\nendclass\n\ninterface A #(parameter type PLD_T = logic);\n    PLD_T pld;\nendinterface\n\nmodule t;\n    // Using the typedef as an interface type parameter fails\n    A #(B#(64)::pld_t) w_A_Bpld ();\nendmodule\n```\n\n**Output:**\n\n```\n%Error: test.sv:11:26: Can't find typedef/interface: 'pld_t'\n                      : ... note: In instance 't'\n   11 |     A #(B#(64)::pld_t) w_A_Bpld ();\n      |                          ^~\n```\n\nIf I change `A` to a module instead of an interface, it works correctly (after PR #6834).\n\n**Analysis:**\n\nLooking at the debug output, it seems that interfaces are processed before modules in V3Param's work queue. When `cellPinCleanup()` runs for the interface cell, the `resolveDotToTypedef()` function (added in PR #6834) is called, but the parameterized class hasn't been specialized yet at that point. The DOT resolution is deferred (`deferring until post-V3Param`) but for interfaces the deferred resolution doesn't seem to trigger the class specialization path.\n\nI'm working on a fix that ensures `classRefDeparam()` gets called to specialize the class before resolving the typedef, similar to how it works for modules.\n\n**Command:**\n\n```bash\nverilator --cc test.sv\n```\n\n---\n\nVerilator 5.045 devel rev v5.044-62-ga05cbd838",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-01",
+  "closed_at": "2026-02-02",
+  "code_blocks": [
+    "class B #(parameter int WIDTH=32);\n    typedef struct packed { logic [WIDTH-1:0] data; } pld_t;\nendclass\n\ninterface A #(parameter type PLD_T = logic);\n    PLD_T pld;\nendinterface\n\nmodule t;\n    // Using the typedef as an interface type parameter fails\n    A #(B#(64)::pld_t) w_A_Bpld ();\nendmodule\n",
+    "%Error: test.sv:11:26: Can't find typedef/interface: 'pld_t'\n                      : ... note: In instance 't'\n   11 |     A #(B#(64)::pld_t) w_A_Bpld ();\n      |                          ^~\n",
+    "verilator --cc test.sv\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

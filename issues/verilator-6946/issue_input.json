@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6946,
+  "issue_url": "https://github.com/verilator/verilator/pull/6946",
+  "title": "Fix null pointer dereference in class member trigger expressions",
+  "body": "## Summary\r\n\r\n Trigger expressions for `@(...)` sensitivity lists are evaluated at simulation start, even for tasks that haven't been called yet. When sensitivity expressions access class members (e.g., `@(class_handle.event)` or `@(posedge class_handle.vif.signal)`), this caused null pointer dereferences because the class handle wasn't initialized with `new()` yet.\r\n\r\n  This fix adds null guards around trigger expression evaluation and related initialization/update statements in `V3SenExprBuilder`. The generated code now checks if the class reference is non-null before accessing its members, returning false for the trigger condition when null.\r\n\r\n  ## Example that previously crashed\r\n\r\n ```systemverilog\r\n  package my_pkg;\r\n\r\n    class my_driver;\r\n      virtual my_if vif;\r\n      event my_event;\r\n      // ...\r\n    endclass\r\n\r\n    task automatic my_task(my_driver drv);\r\n      fork\r\n        @(drv.my_event);           // Evaluated at time 0, before task called\r\n        @(posedge drv.vif.sig);    // Also evaluated at time 0\r\n        begin\r\n          #10;\r\n          -> drv.my_event;         // Trigger the event\r\n          drv.vif.sig = 1;         // Trigger the posedge\r\n        end\r\n      join_any\r\n    endtask\r\n\r\n  endpackage\r\n\r\n  module t;\r\n    my_pkg::my_driver drv;\r\n\r\n    initial begin\r\n      drv = new(vif);  // Class constructed at time 0\r\n      #20;\r\n      my_pkg::my_task(drv);  // Task called later - but triggers already evaluated\r\n    end\r\n  endmodule\r\n```\r\n  ## Changes\r\n\r\n  - Added hasClassMemberAccess() to detect class member access in expressions\r\n  - Added getBaseClassRef() to find the outermost class reference needing null-check\r\n  - Added wrapStmtWithNullCheck() and wrapExprWithNullCheck() helpers\r\n  - Applied null guards to pre-updates, post-updates, initializers, and trigger expressions\r\n  - Added regression test t_class_trigger_null.v\r\n\r\n  ## Regression test\r\n\r\n  t_class_trigger_null.v exercises three trigger patterns:\r\n  1. Class member event - @(h.my_event) - waits on an event declared inside a class\r\n  2. Posedge through virtual interface - @(posedge h.vif.sig) - edge detection on a signal accessed via class member virtual interface\r\n  3. Negedge through virtual interface - @(negedge h.vif.sig) - same pattern with negative edge\r\n\r\n  The test constructs the class at time 0, then calls the task at time 20. Before this fix, Verilator would crash with a null pointer dereference during elaboration because trigger expressions were evaluated before the task was ever called.\r\n\r\n  The test verifies that:\r\n  - Simulation completes without crashing\r\n  - All three trigger types fire exactly once\r\n  - The triggers respond correctly to their respective stimuli (event trigger, signal posedge, signal negedge)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-21",
+  "closed_at": "2026-01-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

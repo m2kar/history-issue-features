@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 762,
+  "issue_url": "https://github.com/verilator/verilator/issues/762",
+  "title": "Strange memory effect in pure combinational acyclic circuit",
+  "body": "---\n\n\nAuthor Name: **Clifford Wolf** (@cliffordwolf)\nOriginal Redmine Issue: 762 from https://www.veripool.org\nOriginal Date: 2014-05-10\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nConsider the following test case:\r\n\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test011.v<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test011.cc<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test011.sh<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test011_tb.v<br/>\r\n\r\nMost of the code is just there to confuse verilator. The important bit is this line:\r\n\r\n```assign { y[44:41], y[39:31], y[29:0] } = { 6'b000000, a0, 7'b0000000, y[40], y[30], y[30], y[30], y[30], 21'b000000000000000000000 };\n```\r\n\r\nBesides other things this connects `y[37:34]` directly to the input `a0`.\r\n\r\n\r\nThe test bench sets all input bits to zero, evaluates and prints `y[37:34]`. Then it sets all input bits to one, re-evaluates and prints `y[37:34]` again.\r\n\r\nOne would expect the output `0000` for the first iteration and `1111` for the second iteration. But the output is `0000` in both cases.\r\n\r\nIf the first iteration is skipped and the inputs are directly set to all-one then the output is `1111` as expected.\r\n\r\nThe circuit has no memory elements and is acyclic: http://i.imgur.com/K88J0ds.png\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-05-10",
+  "closed_at": "2014-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

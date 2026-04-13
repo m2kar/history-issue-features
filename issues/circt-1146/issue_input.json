@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1146,
+  "issue_url": "https://github.com/llvm/circt/pull/1146",
+  "title": "[FIRRTL] Handle registers and recursion during width inference",
+  "body": "* Extend the `InferWidths` pass to properly support recursive constraints. This is actually pretty straightforward, because the recursion either leaves the constraint unaffected (e.g. x >= x-1), or it renderes the constraint unsatisfiable (e.g. x >= x+1). Thus, to compute an actual value for a width, recursions can just be ignored.\r\n\r\n* Add a separate pass over the constraint expressions that analyses the recursions for unsatisfiability. This is the tricky part of the entire width inference process. This adds a `LinIneq` struct to represent a canonicalized linear inequality that may be recursive in a single variable. A depth-first pass over the constraint expressions recursively maps them to this canonicalized form, which mainly tracks three distinct aspects of an inequality: a recursive linear term, a non-recursive linear term, and trivial unsatisfiability. The various constraint expressions build different forms of this inequality, and operations such as `add`, `max`, and `min` can further combine them. The result is a single simplified expression for each free variable which indicates the constraints imposed on it that are dependent and independent of the variable itself. The constraint is unsatisfiable if the dependent part has a specific adverse structure. Otherwise it is satisfiable.\r\n\r\n* An interesting side-effect that @lattner already suspected is that the information gathered as part of the unsatisfiability analysis (the `LinIneq` structure) may be sufficient to already determine the value to assign to a given free variable. The analysis currently runs on the generated constraint expression graph, but may at a later stage very well use the IR ops and use-def lists directly. Using the IR would render construction of a separate expression graph unnecessary and would make width inference simpler. There is more work required to make this possible, especially to bring width inference to par with the Scala implementation, and to more precisely track operations such as `min` in `LinIneq` -- it's currently just upper-bounded as `max`.\r\n\r\n* While this commit specifically removes the bail-out on register ops, the actual implementation should be able to handle any kind of cyclic constraints, including wires and contra-connected modules.",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-25",
+  "closed_at": "2021-05-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

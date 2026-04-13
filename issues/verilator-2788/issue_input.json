@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2788,
+  "issue_url": "https://github.com/verilator/verilator/issues/2788",
+  "title": "Support runtime reference to cell/interface array",
+  "body": "Hello, \r\n\r\nI use several arrays of interfaces, which should be handled in a always_comb statement. The interface itself is a fifo input/output as defined by  https://github.com/pulp-platform/hwpe-stream/tree/master/rtl\r\n\r\nI use the following code, which should be easily unrollable:\r\n```\r\n`always_comb\r\nbegin : OBI_A_STREAM\r\n    // HANDSHAKE\r\n    // request if it is needed and the fifo is not full\r\n    obi_host_h2d.req = ((req_buffer_in.receiver == IDLE) || ( fifo_input.ready == 1'b0)) ? 1'b0 : 1'b1; \r\n    // save it if the request is granted\r\n    fifo_input.valid = obi_host_d2h.gnt;\r\n    // give feedback to the input fifo\r\n    for( integer i = 0; i < NB_CLIENTS; i++) begin\r\n        cfg_addr_stream[i].ready  = ((req_buffer_in.receiver == CFG) && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n        addr_stream[i].ready      = ((req_buffer_in.receiver == RD)  && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n        wr_stream[i].ready        = ((req_buffer_in.receiver == WR)  && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n    end\r\n````\r\nNB_CLIENTS is a fix parameter.\r\n\r\nThe error message from verilator 4.108 is:\r\n\r\n```\r\n`%Error: hwac_manager_obi.sv:137:25: Expecting expression to be constant, but variable isn't const: 'i'\r\n                                  : ... In instance hwac_top.i_hwac_manager.i_hwac_manager_obi\r\n  137 |         cfg_addr_stream[i].ready  = ((req_buffer_in.receiver == CFG) && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n      |                         ^\r\n%Error: hwac_manager_obi.sv:137:24: Could not expand constant selection inside dotted reference: 'i'\r\n                                  : ... In instance hwac_top.i_hwac_manager.i_hwac_manager_obi\r\n  137 |         cfg_addr_stream[i].ready  = ((req_buffer_in.receiver == CFG) && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n      |                        ^\r\n%Error: hwac_manager_obi.sv:138:21: Expecting expression to be constant, but variable isn't const: 'i'\r\n                                  : ... In instance hwac_top.i_hwac_manager.i_hwac_manager_obi\r\n  138 |         addr_stream[i].ready      = ((req_buffer_in.receiver == RD)  && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n      |                     ^\r\n%Error: hwac_manager_obi.sv:138:20: Could not expand constant selection inside dotted reference: 'i'\r\n                                  : ... In instance hwac_top.i_hwac_manager.i_hwac_manager_obi\r\n  138 |         addr_stream[i].ready      = ((req_buffer_in.receiver == RD)  && (req_buffer_in.client_id == i)) ? obi_host_d2h.gnt : 1'b0;\r\n      |                    ^`\r\n```\r\n\r\nI had the same already in another place of the same module. My current work-around is to pass it not directly to the interface but to a signal array and then to use a generate statement to pass the signal array to the interface array.\r\n\r\nConclusion: Assignment and Access (the same behavior) works with generate and genvar but not with for loop inside of an always statement. ",
+  "labels": [
+    "area: elaboration",
+    "resolution: duplicate",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-14",
+  "closed_at": "2024-09-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

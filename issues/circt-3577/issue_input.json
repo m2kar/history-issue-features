@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3577,
+  "issue_url": "https://github.com/llvm/circt/issues/3577",
+  "title": "[FSM] Tracking issue for canonicalization and optimization patterns",
+  "body": "This issue intends to serve as a place to dump ideas for possible canonicalization and optimizations of FSMs. Feel free to add new examples as well as implement those listed.\r\n\r\nOpen questions:\r\n* How do we best specify these rewrite patterns so they apply to as many FSM usecases as possible? e.g., ideally we'd like to be able to detect mutually exclusive states in an FSM regardless if we're using `comb` or `arith` operators.\r\n\r\n\r\n## FSM canonicalizations\r\nThese patterns should capture canonicalizations that are agnostic about the internal operations used within the FSM regions.\r\n\r\n### Unreachable states\r\nWas attempted in #3131 but an as of yet unresolved non deterministic error has prevented it from getting merged. Help wanted :).\r\n\r\n## HW optimizations\r\nThese patterns intends to apply to FSMs that have been generated as/lowered to HW-style FSMs. This implies that RTL dialect operations are used within the various regions, and it is these which we match on.\r\n\r\n### Mutually exclusive transitions\r\nIn the following, it can statically be determined that if the transition to `@seq_1_while_if guard` was not taken, the transition to `@fsm_exit guard` will always be taken.\r\n```mlir\r\nfsm.state @seq_1_while_header output {\r\n  fsm.output\r\n} transitions {\r\n  fsm.transition @seq_1_while_if guard {\r\n    fsm.return %lt_reg.out\r\n  }\r\n  fsm.transition @fsm_exit guard {\r\n    %true_0 = hw.constant true\r\n    %0 = comb.xor %lt_reg.out, %true_0 : i1\r\n    fsm.return %0\r\n  }\r\n}\r\n\r\n// rewrites to\r\n\r\nfsm.state @seq_1_while_header output {\r\n  fsm.output\r\n} transitions {\r\n  fsm.transition @seq_1_while_if guard {\r\n    fsm.return %lt_reg.out\r\n  }\r\n  fsm.transition @fsm_exit\r\n}\r\n\r\n\r\n```\r\n",
+  "labels": [
+    "help wanted",
+    "FSM"
+  ],
+  "state": "open",
+  "created_at": "2022-07-21",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

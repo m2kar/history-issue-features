@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 750,
+  "issue_url": "https://github.com/llvm/circt/issues/750",
+  "title": "RTL array_index_inout read vs. write (FIRRTL Memory Lowering Bug)",
+  "body": "Currently, the following RTL (which is a minimum example of a FIRRTL Memory Lowering bug) causes bad Verilog to be emitted:\r\n\r\n```mlir\r\nmodule attributes {firrtl.mainModule = \"Foo\"}  {\r\n  rtl.module @Foo(%clock: i1, %a: i1) -> () {\r\n    %false = rtl.constant false\r\n    %memory_r_en_pipe = sv.reg  : !rtl.inout<uarray<1xi1>>\r\n    %3 = sv.array_index_inout %memory_r_en_pipe[%false] : !rtl.inout<uarray<1xi1>>, i1\r\n    sv.alwaysff(posedge %clock)  {\r\n      sv.passign %3, %a : i1\r\n    }\r\n    sv.initial  {\r\n      sv.bpassign %3, %false : i1\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis produces:\r\n```verilog\r\nmodule Foo(\r\n  input clock, a);\r\n  reg memory_r_en_pipe[0:0];\t// Foo.mlir:4:25\r\n  wire _T = 1'h0;\t// Foo.mlir:3:14\r\n  wire _T_0 = memory_r_en_pipe[_T];\t// Foo.mlir:5:10\r\n  always_ff @(posedge clock)\t// Foo.mlir:6:5\r\n    _T_0 <= a;\t// Foo.mlir:7:7\r\n  initial\t// Foo.mlir:9:5\r\n    _T_0 = _T;\t// Foo.mlir:10:7\r\nendmodule\r\n```\r\n\r\nThe problem is that the `%3 = sv.array_index_inout` is a write accessor here. You don't want the temporary wire to be generated. \r\n\r\nAlternatively, if the accessor is duplicated and placed inside the always and initial blocks:\r\n```mlir\r\nmodule attributes {firrtl.mainModule = \"Foo\"}  {\r\n  rtl.module @Foo(%clock: i1, %a: i1) -> () {\r\n    %false = rtl.constant false\r\n    %memory_r_en_pipe = sv.reg  : !rtl.inout<uarray<1xi1>>\r\n    sv.alwaysff(posedge %clock)  {\r\n      %3 = sv.array_index_inout %memory_r_en_pipe[%false] : !rtl.inout<uarray<1xi1>>, i1\r\n      sv.passign %3, %a : i1\r\n    }\r\n    sv.initial  {\r\n      %4 = sv.array_index_inout %memory_r_en_pipe[%false] : !rtl.inout<uarray<1xi1>>, i1\r\n      sv.bpassign %4, %false : i1\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nEverything works fine:\r\n```verilog\r\nmodule Foo(\r\n  input clock, a);\r\n  reg memory_r_en_pipe[0:0];\t// Foo.mlir:4:25\r\n  wire _T = 1'h0;\t// Foo.mlir:3:14\r\n  always_ff @(posedge clock)\t// Foo.mlir:5:5\r\n    memory_r_en_pipe[_T] <= a;\t// Foo.mlir:6:12, :7:7\r\n  initial\t// Foo.mlir:9:5\r\n    memory_r_en_pipe[_T] = _T;\t// Foo.mlir:10:12, :11:7\r\nendmodule\r\n```\r\n\r\n### Background/Discussion\r\n\r\nThe memory lowering introduced in #585 was generating code like this and it used to work. However, something changed within the past week and I haven't bisected to see where. \r\n\r\nIt's not immediately clear to me if the bug is in what #585 is doing (it should put the `array_index_inout` inside the blocks) or if something is broke in the RTL -> Verilog path.\r\n\r\nIt seems weird to me that `array_index_inout` can seemingly be a read accessor or a write accessor, based on context. I may be misusing this, but we may want to go more towards the `alloca` + `load` + `store` type model to make this explicit. (Or maybe this already exists?)",
+  "labels": [
+    "bug",
+    "HW",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-11",
+  "closed_at": "2021-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

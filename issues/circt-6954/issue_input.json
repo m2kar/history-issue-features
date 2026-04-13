@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6954,
+  "issue_url": "https://github.com/llvm/circt/issues/6954",
+  "title": "[Python][HW] hw.WireOp inner_sym is inconvenient to use",
+  "body": "The move to using `InnerSymAttr` in https://github.com/llvm/circt/pull/5703 broke a somewhat obscure usage of the Python API for creating `hw.WireOp`s directly.\r\n\r\nThe old code used to look like this:\r\n\r\n```python\r\nop = hw.ConstantOp(ir.BoolAttr.get(True))\r\nwire_name = \"Example\"\r\nwire = hw.WireOp(op, name=wire_name, inner_sym=wire_name)\r\n```\r\nNow we have:\r\n```python\r\nop = hw.ConstantOp(ir.BoolAttr.get(True))\r\nwire_name = \"Example\"\r\nwire = hw.WireOp(op, name=wire_name,\r\n                 inner_sym=hw.InnerSymAttr.get(ir.StringAttr.get(wire_name)))\r\n```\r\nWhich doesn't seem better.\r\n\r\n`sv.WireOp()` got a `sym_name` parameter that does the right thing:\r\n```python\r\nif sym_name is not None:\r\n  attributes[\"inner_sym\"] = hw.InnerSymAttr.get(StringAttr.get(sym_name))\r\n```\r\nThe same fix should probably be applied to `WireOp`, and maybe just generally to all `hw` operations",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-04-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

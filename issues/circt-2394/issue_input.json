@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2394,
+  "issue_url": "https://github.com/llvm/circt/issues/2394",
+  "title": "[HWCleanup] Missed optimization for nested regions",
+  "body": "HWCleanup fails to optimize the following IR:\r\n```mlir\r\n// ./bin/circt-opt -hw-cleanup\r\nhw.module @foo() {\r\n  sv.initial {\r\n    sv.ifdef.procedural \"FOO\" {\r\n      sv.fwrite \"A\"\r\n    }\r\n  }\r\n  sv.initial {\r\n    sv.ifdef.procedural \"FOO\" {\r\n      sv.fwrite \"B\"\r\n    }\r\n  }\r\n}\r\n```\r\nThe current output is:\r\n```mlir\r\n hw.module @foo() {\r\n    sv.initial  {\r\n      sv.ifdef.procedural \"FOO\"  {\r\n        sv.fwrite \"A\"\r\n      }\r\n      sv.ifdef.procedural \"FOO\"  {\r\n        sv.fwrite \"B\"\r\n      }\r\n    }\r\n    hw.output\r\n}\r\n``` \r\nBut we want these `sv.idef.procedural` to be merged as well, like:  \r\n```mlir\r\nhw.module @foo() {\r\n    sv.initial  {\r\n      sv.ifdef.procedural \"FOO\"  {\r\n        sv.fwrite \"A\"\r\n        sv.fwrite \"B\"\r\n      }\r\n    }\r\n    hw.output\r\n  }\r\n```\r\nThis behavior is because we merge sub regions first:\r\nhttps://github.com/llvm/circt/blob/853cd4eb3b87db866461fafc1b57e2953a0c99c4/lib/Dialect/SV/Transforms/HWCleanup.cpp#L237-L240 \r\n\r\nIt can be fixed by changing the order of recursions but it would became O(N^2) time complexity if we do this naively. Therefore we have to do something smart there. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-27",
+  "closed_at": "2021-12-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

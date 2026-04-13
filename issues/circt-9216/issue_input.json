@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9216,
+  "issue_url": "https://github.com/llvm/circt/issues/9216",
+  "title": "circt-verilog --ir-hw produces multiple seq.firreg for a single Verilog reg",
+  "body": "multiple drivers maybe should error\n\n```\nmodule test (\n    input clk,\n    input rst_n,\n    input b,\n    output wire x\n);\n    reg a;\n    always @(posedge clk or negedge rst_n)\n        if (!rst_n)\n            a <= 0;\n        else if (b)\n            a <= 1;\n\n    always @(posedge clk or negedge rst_n)\n        if (!rst_n)\n            a <= 0;\n        else if (b)\n            a <= 0;\n    \n    assign x = a;\nendmodule\n```\nafter circt-veirlog --ir-hw\n```\nmodule {\n  hw.module @fifo(in %clk : i1, in %rst_n : i1, in %b : i1, out x : i1) {\n    %true = hw.constant true\n    %false = hw.constant false\n    %0 = seq.to_clock %clk\n    %1 = comb.xor %rst_n, %true : i1\n    %2 = comb.mux bin %b, %b, %a : i1\n    %a = seq.firreg %2 clock %0 reset async %1, %false : i1\n    %3 = comb.xor %b, %true : i1\n    %4 = comb.and %3, %a_0 : i1\n    %a_0 = seq.firreg %4 clock %0 reset async %1, %false {name = \"a\"} : i1\n    hw.output %a_0 : i1\n  }\n}\n```",
+  "labels": [
+    "bug",
+    "ImportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2025-11-09",
+  "closed_at": null,
+  "code_blocks": [
+    "module test (\n    input clk,\n    input rst_n,\n    input b,\n    output wire x\n);\n    reg a;\n    always @(posedge clk or negedge rst_n)\n        if (!rst_n)\n            a <= 0;\n        else if (b)\n            a <= 1;\n\n    always @(posedge clk or negedge rst_n)\n        if (!rst_n)\n            a <= 0;\n        else if (b)\n            a <= 0;\n    \n    assign x = a;\nendmodule\n",
+    "module {\n  hw.module @fifo(in %clk : i1, in %rst_n : i1, in %b : i1, out x : i1) {\n    %true = hw.constant true\n    %false = hw.constant false\n    %0 = seq.to_clock %clk\n    %1 = comb.xor %rst_n, %true : i1\n    %2 = comb.mux bin %b, %b, %a : i1\n    %a = seq.firreg %2 clock %0 reset async %1, %false : i1\n    %3 = comb.xor %b, %true : i1\n    %4 = comb.and %3, %a_0 : i1\n    %a_0 = seq.firreg %4 clock %0 reset async %1, %false {name = \"a\"} : i1\n    hw.output %a_0 : i1\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

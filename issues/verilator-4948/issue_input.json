@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4948,
+  "issue_url": "https://github.com/verilator/verilator/issues/4948",
+  "title": "Splitting heavy trace cpp files when --trace-max-array 131072 is used",
+  "body": "Hello!\r\n\r\nI have a small design and I would like to trace 2D arrays. I run Verilator with **--trace-max-array 131072** and this produces two heavy cpp files, 23M each. Each such file has 131072 statements of the form **bufp->chgCData(oldp+25,(vlSymsp->TOP__dut.__PVT__test_data[0]),8);** and **bufp->fullCData(oldp+14661,(vlSymsp->TOP__dut.__PVT__test_data[14658]),8);** \r\nAs a result, gcc takes forever and parallelization is not possible. What can help is splitting those statements to multiple functions and having multiple cpp files upon which make can happily apply parallelization.\r\nIs there an option for packing such statements into function, say, each having 1000 statements? In such a case I'd have a function calling ~132 functions and not 131072. \r\n\r\nI looked into the options and thought that I found the remedy - **--output-split-ctrace**. No, that didn't do the job. **--output-split-cfuncs** didn't help either. I got my best result with **--output-split 1** which split the 2 23MB files into 4 ~11MB each. So that allowed me to involve 2 cores, instead of 1, with make. Nice, but still not enough. The files produced still had this giant number of statements. What can be tried else?\r\n\r\nI would be very grateful for any help or guidance!\r\n\r\nThanks,\r\nAlexei",
+  "labels": [
+    "area: performance",
+    "area: tracing"
+  ],
+  "state": "open",
+  "created_at": "2024-03-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

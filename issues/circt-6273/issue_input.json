@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6273,
+  "issue_url": "https://github.com/llvm/circt/issues/6273",
+  "title": "[HW] Crash in `seq.firreg` canonicalizer",
+  "body": "When playing with some read-only memories in FIRRTL, I came across the following MLIR which causes a crash because the utility `hw::getBitWidth` only knows about HW types, but is being used on a `seq.clock`. This returns the `-1` \"unknown\" value and then blows up:\r\n\r\n```mlir\r\nhw.module @Foo(in %clock : !seq.clock, out r_data : !seq.clock) {\r\n  %0 = seq.const_clock  low\r\n  %1 = seq.firreg %1 clock %0 : !seq.clock\r\n  hw.output %1 : !seq.clock\r\n}\r\n```\r\n\r\n```\r\n# circt-opt -canonicalize Foo.mlir\r\n<unknown>:0: error: integer bitwidth is limited to 16777215 bits\r\nAssertion failed: (succeeded(ConcreteT::verify(getDefaultDiagnosticEmitFn(ctx), args...))), function get, file StorageUniquerSupport.h, line 181.\r\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\r\nStack dump:\r\n0.\tProgram arguments: firtool firrtl-snippets/circt/xxx.mlir\r\nStack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):\r\n0  firtool                  0x0000000104c17be0 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 88\r\n1  firtool                  0x0000000104c181fc PrintStackTraceSignalHandler(void*) + 28\r\n2  firtool                  0x0000000104c15d90 llvm::sys::RunSignalHandlers() + 152\r\n3  firtool                  0x0000000104c194d4 SignalHandler(int) + 276\r\n4  libsystem_platform.dylib 0x00000001a866aa24 _sigtramp + 56\r\n5  libsystem_pthread.dylib  0x00000001a863bc28 pthread_kill + 288\r\n6  libsystem_c.dylib        0x00000001a8549ae8 abort + 180\r\n7  libsystem_c.dylib        0x00000001a8548e44 err + 0\r\n8  firtool                  0x000000010556f174 mlir::IntegerType mlir::detail::StorageUserBase<mlir::IntegerType, mlir::Type, mlir::detail::IntegerTypeStorage, mlir::detail::TypeUniquer>::get<unsigned int, mlir::IntegerType::SignednessSemantics>(mlir::MLIRContext*, unsigned int, mlir::IntegerType::SignednessSemantics) + 152\r\n9  firtool                  0x000000010556ef74 mlir::IntegerType::get(mlir::MLIRContext*, unsigned int, mlir::IntegerType::SignednessSemantics) + 84\r\n10 firtool                  0x000000010604427c circt::hw::ConstantOp::build(mlir::OpBuilder&, mlir::OperationState&, llvm::APInt const&) + 60\r\n11 firtool                  0x0000000105ccaf6c circt::hw::ConstantOp mlir::OpBuilder::create<circt::hw::ConstantOp, llvm::APInt>(mlir::Location, llvm::APInt&&) + 132\r\n12 firtool                  0x000000010515ea7c circt::seq::FirRegOp::canonicalize(circt::seq::FirRegOp, mlir::PatternRewriter&) + 588\r\n```",
+  "labels": [
+    "bug",
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-09",
+  "closed_at": "2023-10-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9611,
+  "issue_url": "https://github.com/llvm/circt/issues/9611",
+  "title": "[FIRRTL] Const Canonicalizer Issue",
+  "body": "Doing another reduction, I hit a different const-related canonicalizer issue:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.module private @Bar() {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    %c0_ui32 = firrtl.constant 0 : !firrtl.uint<32>\n    %wire = firrtl.wire : !firrtl.uint<32>\n    %c0_ui10 = firrtl.constant 0 : !firrtl.const.uint<10>\n    %node = firrtl.node %c0_ui10 : !firrtl.const.uint<10>\n    %node_0 = firrtl.node %c0_ui1 {name = \"node\"} : !firrtl.uint<1>\n    %0 = firrtl.mux(%node_0, %node, %c0_ui32) : (!firrtl.uint<1>, !firrtl.const.uint<10>, !firrtl.uint<32>) -> !firrtl.uint<32>\n    firrtl.matchingconnect %wire, %0 : !firrtl.uint<32>\n  }\n  firrtl.extmodule @Foo()\n}\n```\n\n``` console\n# circt-opt -canonicalize Foo.mlir          \nFoo.mlir:9:10: error: 'firrtl.pad' op inferred type(s) '!firrtl.const.uint<32>' are incompatible with return type(s) of operation '!firrtl.uint<32>'\n    %0 = firrtl.mux(%node_0, %node, %c0_ui32) : (!firrtl.uint<1>, !firrtl.const.uint<10>, !firrtl.uint<32>) -> !firrtl.uint<32>\n         ^\nFoo.mlir:9:10: error: 'firrtl.pad' op failed to infer returned types\n    %0 = firrtl.mux(%node_0, %node, %c0_ui32) : (!firrtl.uint<1>, !firrtl.const.uint<10>, !firrtl.uint<32>) -> !firrtl.uint<32>\n         ^\nFoo.mlir:9:10: note: see current operation: %6 = \"firrtl.pad\"(%4) <{amount = 32 : i32}> : (!firrtl.const.uint<10>) -> !firrtl.uint<32>\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-05",
+  "closed_at": "2026-03-01",
+  "code_blocks": [
+    "\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

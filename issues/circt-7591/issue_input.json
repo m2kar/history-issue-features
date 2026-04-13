@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7591,
+  "issue_url": "https://github.com/llvm/circt/pull/7591",
+  "title": "[python] Add `walk_with_filter` to walk subset of IR",
+  "body": "This adds `walk_with_filter` python method to invoke callbacks only for subset of operations. We require GIL to call python function so this could improve performance of the tools based on Python API. This functionality could be better to be in upstream but for now we decided to add to CIRCT repo.\r\n\r\n\r\nIn the following benchmark there are 5*10^5 hw.constant ops and single hw.output op and it walks only hw.output op. The runtime is substantially faster.   \r\n```python\r\n\r\nimport circt\r\nfrom circt.dialects import hw\r\nfrom circt.support import walk_with_filter\r\n\r\nfrom circt.ir import (Context, Location, InsertionPoint, IntegerType,\r\n                      IntegerAttr, Module, WalkOrder,\r\n                      WalkResult)\r\n\r\nn = 500000\r\nwith Context() as ctx, Location.unknown():\r\n  circt.register_dialects(ctx)\r\n\r\n  i32 = IntegerType.get_signless(32)\r\n\r\n  m = Module.create()\r\n  with InsertionPoint(m.body):\r\n\r\n    def build(module):\r\n      elems = []\r\n      for i in range(n):\r\n          elems.append(hw.ConstantOp(IntegerAttr.get(i32, i)))\r\n    hw.HWModuleOp(name=\"test\", body_builder=build)\r\n  cnt = 0\r\n  def callback(op):\r\n    if isinstance(op.opview, hw.OutputOp):\r\n      global cnt\r\n      cnt += 1\r\n    return WalkResult.ADVANCE\r\n\r\n  from time import time\r\n  # Benchmark walk_with_filter\r\n  print(\"Starting walk_with_filter\")\r\n  start_time = time()\r\n  walk_with_filter(m.operation, [hw.OutputOp], callback, WalkOrder.POST_ORDER)\r\n  end_time = time()\r\n  print(f\"walk_with_filter elapsed time: {end_time - start_time:.6f} seconds cnt={cnt}\")\r\n\r\n  # Benchmark operation.walk\r\n  print(\"Starting operation.walk\")\r\n  start_time = time()\r\n  m.operation.walk(callback, WalkOrder.POST_ORDER)\r\n  end_time = time()\r\n  print(f\"operation.walk elapsed time: {end_time - start_time:.6f} seconds cnt={cnt}\")\r\n```\r\n```\r\nStarting walk_with_filter\r\nwalk_with_filter elapsed time: 0.005462 seconds cnt=1\r\nStarting operation.walk\r\noperation.walk elapsed time: 1.061360 seconds cnt=2\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-09-07",
+  "closed_at": "2024-09-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

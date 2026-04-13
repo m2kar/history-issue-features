@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8725,
+  "issue_url": "https://github.com/llvm/circt/issues/8725",
+  "title": "FIRParser: Errors during parsing only point at the .fir file",
+  "body": "We have been trying to move FIRRTL towards using \"constructively correct\" operations, and moving user facing errors away from using op verifiers, which mean that we are emitting more errors from the FIRRTL parser. While this seems generally good, as we have less things to check and won't be dumping internal IR state, I have noticed that these errors must point to a location in the `.fir` file, and can't point to a location in the Scala file.\n\nFor example:\n```scala\n//> using scala \"2.13.12\"\n//> using dep \"org.chipsalliance::chisel:6.7.0\"\n//> using plugin \"org.chipsalliance:::chisel-plugin:6.7.0\"\n//> using options \"-unchecked\", \"-deprecation\", \"-language:reflectiveCalls\", \"-feature\", \"-Xcheckinit\", \"-Xfatal-warnings\", \"-Ywarn-dead-code\", \"-Ywarn-unused\", \"-Ymacro-annotations\"\n\nimport chisel3._\n// _root_ disambiguates from package chisel3.util.circt if user imports chisel3.util._\nimport _root_.circt.stage.ChiselStage\nimport chisel3.probe._\n\nclass MyBundle() extends Bundle {\n  val a = Flipped(Bool())\n}\nclass Foo extends Module {\n  val a  = IO(new MyBundle)\n  val wire = Wire(new MyBundle())\n  forceInitial(RWProbeValue(wire), a)\n}\n\nobject Main extends App {\n  println(\n    ChiselStage.emitSystemVerilog(\n      gen = new Foo,\n      firtoolOpts = Array(\"-disable-all-randomization\", \"-strip-debug-info\")\n    )\n  )\n}\n```\n\nrunning `scala-cli chisel-example.scala`, gives:\n```\nCompiling project (Scala 2.13.12, JVM (17))\nCompiled project (Scala 2.13.12, JVM (17))\nException in thread \"main\" circt.stage.phases.Exceptions$FirtoolNonZeroExitCode: /sifive/tools/llvm/circt/1.125.0/bin/firtool returned a non-zero exit code. Note that this version of Chisel (6.7.0) was published against firtool version 1.62.1.\n------------------------------------------------------------------------------\nExitCode:\n1\nSTDOUT:\n\nSTDERR:\n<stdin>:9:5: error: expected passive value for force_initial source, got '!firrtl.bundle<a flip: uint<1>>'\n    force_initial(rwprobe(wire), a) @[chisel-example.scala 17:15]\n    ^\n```\n\nIt would be nicer if this error message was able to point directly to the input Scala file. I notice that as more checking is being done in Chisel itself, this kind of issue becomes harder to see.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2025-07-17",
+  "closed_at": null,
+  "code_blocks": [
+    "//> using scala \"2.13.12\"\n//> using dep \"org.chipsalliance::chisel:6.7.0\"\n//> using plugin \"org.chipsalliance:::chisel-plugin:6.7.0\"\n//> using options \"-unchecked\", \"-deprecation\", \"-language:reflectiveCalls\", \"-feature\", \"-Xcheckinit\", \"-Xfatal-warnings\", \"-Ywarn-dead-code\", \"-Ywarn-unused\", \"-Ymacro-annotations\"\n\nimport chisel3._\n// _root_ disambiguates from package chisel3.util.circt if user imports chisel3.util._\nimport _root_.circt.stage.ChiselStage\nimport chisel3.probe._\n\nclass MyBundle() extends Bundle {\n  val a = Flipped(Bool())\n}\nclass Foo extends Module {\n  val a  = IO(new MyBundle)\n  val wire = Wire(new MyBundle())\n  forceInitial(RWProbeValue(wire), a)\n}\n\nobject Main extends App {\n  println(\n    ChiselStage.emitSystemVerilog(\n      gen = new Foo,\n      firtoolOpts = Array(\"-disable-all-randomization\", \"-strip-debug-info\")\n    )\n  )\n}\n",
+    "Compiling project (Scala 2.13.12, JVM (17))\nCompiled project (Scala 2.13.12, JVM (17))\nException in thread \"main\" circt.stage.phases.Exceptions$FirtoolNonZeroExitCode: /sifive/tools/llvm/circt/1.125.0/bin/firtool returned a non-zero exit code. Note that this version of Chisel (6.7.0) was published against firtool version 1.62.1.\n------------------------------------------------------------------------------\nExitCode:\n1\nSTDOUT:\n\nSTDERR:\n<stdin>:9:5: error: expected passive value for force_initial source, got '!firrtl.bundle<a flip: uint<1>>'\n    force_initial(rwprobe(wire), a) @[chisel-example.scala 17:15]\n    ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

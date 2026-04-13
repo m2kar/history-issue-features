@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1627,
+  "issue_url": "https://github.com/llvm/circt/pull/1627",
+  "title": "[HWMemSimImpl] Remove procedural assign to wire",
+  "body": "Fix HWMemSimImpl bug where a wire was being procedurally assigned in RW\r\nport code generation.  Update the associated test to reflect this\r\nchange.\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>\r\n\r\nThe old `HWMemSimImpl` was generating logic that was assigning a net in a procedural block. Verilator nicely complains about this, e.g.:\r\n\r\n```\r\n%Error-PROCASSWIRE: /dev/stdin:25:5: Procedural assignment to wire, perhaps intended var (IEEE 1800-2017 6.5): '_T_1'\r\n                                   : ... In instance Qux.memory\r\n   25 |     _T_1 <= _T_2;\r\n      |     ^~~~\r\n%Error-PROCASSWIRE: /dev/stdin:30:9: Procedural assignment to wire, perhaps intended var (IEEE 1800-2017 6.5): '_T_1'\r\n                                   : ... In instance Qux.memory\r\n   30 |         _T_1 <= Memory[rw_addr_0];\r\n      |         ^~~~\r\n%Error: Exiting due to 2 error(s)\r\n        ... See the manual and https://verilator.org for more assistance.\r\n```\r\n\r\nIn a diff, this changes RW emission in the following way:\r\n\r\n```diff\r\ndiff --git a/B.sv b/A.sv\r\nindex 9df654a7..2dade0b5 100644\r\n--- a/B.sv\r\n+++ b/A.sv\r\n@@ -11,29 +11,22 @@ module FIRRTLMem_1_1_1_8_16_1_1_0(\r\n   input  [7:0] wo_data_0,\r\n   output [7:0] ro_data_0, rw_rdata_0);\r\n \r\n-  reg  [7:0] Memory[0:15];\r\n-  reg        _T;\r\n-  reg  [3:0] _T_0;\r\n-  wire [7:0] _T_1;\r\n+  reg [7:0] Memory[0:15];\r\n+  reg       _T;\r\n+  reg [3:0] _T_0;\r\n \r\n   always @(posedge ro_clock_0) begin\r\n     _T <= ro_en_0;\r\n     _T_0 <= ro_addr_0;\r\n   end // always @(posedge)\r\n-  wire [7:0] _T_2 = 8'bx;\r\n   always @(posedge rw_clock_0) begin\r\n-    _T_1 <= _T_2;\r\n     if (rw_en_0 & rw_wmask_0 & rw_wmode_0)\r\n       Memory[rw_addr_0] <= rw_wdata_0;\r\n-    else begin\r\n-      if (rw_en_0 & ~rw_wmode_0)\r\n-        _T_1 <= Memory[rw_addr_0];\r\n-    end\r\n   end // always @(posedge)\r\n   always @(posedge wo_clock_0) begin\r\n     if (wo_en_0 & wo_mask_0)\r\n       Memory[wo_addr_0] <= wo_data_0;\r\n   end // always @(posedge)\r\n-  assign ro_data_0 = _T ? Memory[_T_0] : _T_2;\r\n-  assign rw_rdata_0 = _T_1;\r\n+  assign ro_data_0 = _T ? Memory[_T_0] : 8'bx;\r\n+  assign rw_rdata_0 = rw_en_0 & ~rw_wmode_0 ? Memory[rw_addr_0] : 8'bx;\r\n endmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-24",
+  "closed_at": "2021-08-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

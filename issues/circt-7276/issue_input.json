@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7276,
+  "issue_url": "https://github.com/llvm/circt/issues/7276",
+  "title": "[FIRRTL] FART: Should not modify public module ports",
+  "body": "```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\"class\":\"sifive.enterprise.firrtl.FullAsyncResetAnnotation\", \"target\":\"~Foo|Foo>r\"}\r\n]]\r\n  public module Foo:\r\n    input c : Clock\r\n    input i : UInt<8>\r\n    input r : AsyncReset\r\n    output o : UInt<8>\r\n\r\n    inst bar of Bar\r\n    connect bar.c, c\r\n    connect bar.i, i\r\n    connect o, bar.o\r\n\r\n  public module Bar:\r\n    input c : Clock\r\n    input i : UInt<8>\r\n    output o : UInt<8>\r\n    reg r : UInt<8>, c\r\n    connect r, i\r\n    connect o, r\r\n```\r\nthrough `firtool` yields:\r\n```verilog\r\nmodule Bar(\r\n  input        r,\r\n               c,\r\n  input  [7:0] i,\r\n  output [7:0] o\r\n);\r\n```\r\n\r\nWe have modified the ports of Bar by adding `r`, changing its public interface.  I expect that boring the reset signal would not modify the public module interface, but I do not know exactly what should happen.  Possibly we cut the reset domain boundary at public modules, or maybe we clone `Bar` into a private module with the added port, and instantiate that instead under `Foo`.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

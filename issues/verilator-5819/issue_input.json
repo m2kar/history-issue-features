@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5819,
+  "issue_url": "https://github.com/verilator/verilator/issues/5819",
+  "title": "Intentional latch warning -- regression?",
+  "body": "Thanks for taking the time to report this.\n\nverilator v5.030 reports an warning on the following latch code which was not present in earlier versions.  I believe best practice for intentional latches is a non-blocking statement, so the warning is erroneous (correct me if I'm wrong). http://www.sunburst-design.com/papers/CummingsSNUG2000SJ_NBA_rev1_2.pdf\n\nCan you attach an example that shows the issue?  (Must be openly licensed, completely self-contaned so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\n```\nmodule bsg_dlatch #(parameter width_p = 0\n                   )\n  (input               clk_i\n  ,input [width_p-1:0] data_i\n  ,output logic [width_p-1:0] data_o\n  );\n\n  logic [width_p-1:0] data_r;\n  always_latch\n      if (clk_i)\n        data_r <= data_i;\n\n  assign data_o = data_r;\n\nendmodule\n```\n\n\n```\n%Warning-COMBDLY: /mnt/users/ssd0/homes/petrisko/research/black-parrot-sim/black-parrot/external/       basejump_stl/bsg_misc/bsg_dlatch.sv:18:16: Non-blocking assignment '<=' in combinational logic process\n\n                                  : ... This will be executed as a blocking assignment '='!\n   18 |         data_r <= data_i;\n      |                ^~\n                  ... For warning description see https://verilator.org/warn/COMBDLY?v=5.030\n                  ... Use \"/* verilator lint_off COMBDLY */\" and lint_on around source to disable this  message.\n                  *** See https://verilator.org/warn/COMBDLY before disabling this,\n                  else you may end up with different sim results.\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```verilator --cc --lint-only bsg_dlatch.sv```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\nVerilator 4.221 devel rev v4.220-4-g14d24213 -- no warning\n\nVerilator 5.030 2024-10-27 rev v5.030 -- has warning\n\nWhat OS and distribution are you using?\n\n```\n[petrisko@kk9 syn]$ lsb_release --all\nLSB Version:\t:core-4.1-amd64:core-4.1-ia32:core-4.1-noarch:cxx-4.1-amd64:cxx-4.1-ia32:cxx-4.1-noarch:desktop-4.1-amd64:desktop-4.1-ia32:desktop-4.1-noarch:languages-4.1-amd64:languages-4.1-noarch:printing-4.1-amd64:printing-4.1-noarch\nDistributor ID:\tCentOS\nDescription:\tCentOS Linux release 7.9.2009 (Core)\nRelease:\t7.9.2009\nCodename:\tCore\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nHappy to help\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-02",
+  "closed_at": "2025-03-02",
+  "code_blocks": [
+    "module bsg_dlatch #(parameter width_p = 0\n                   )\n  (input               clk_i\n  ,input [width_p-1:0] data_i\n  ,output logic [width_p-1:0] data_o\n  );\n\n  logic [width_p-1:0] data_r;\n  always_latch\n      if (clk_i)\n        data_r <= data_i;\n\n  assign data_o = data_r;\n\nendmodule\n",
+    "%Warning-COMBDLY: /mnt/users/ssd0/homes/petrisko/research/black-parrot-sim/black-parrot/external/       basejump_stl/bsg_misc/bsg_dlatch.sv:18:16: Non-blocking assignment '<=' in combinational logic process\n\n                                  : ... This will be executed as a blocking assignment '='!\n   18 |         data_r <= data_i;\n      |                ^~\n                  ... For warning description see https://verilator.org/warn/COMBDLY?v=5.030\n                  ... Use \"/* verilator lint_off COMBDLY */\" and lint_on around source to disable this  message.\n                  *** See https://verilator.org/warn/COMBDLY before disabling this,\n                  else you may end up with different sim results.\n",
+    "\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\nVerilator 4.221 devel rev v4.220-4-g14d24213 -- no warning\n\nVerilator 5.030 2024-10-27 rev v5.030 -- has warning\n\nWhat OS and distribution are you using?\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7271,
+  "issue_url": "https://github.com/llvm/circt/issues/7271",
+  "title": "[FIRRTL] FART: logic to reuse existing port can result in the wrong reset",
+  "body": "Given this FIRRTL:\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\"class\":\"sifive.enterprise.firrtl.FullAsyncResetAnnotation\", \"target\":\"~Foo|Foo>r\"}\r\n]]\r\n  public module Foo:\r\n    input p : UInt<1>\r\n    input r : AsyncReset\r\n    input c : Clock\r\n    inst bar of Bar\r\n    connect bar.r, asAsyncReset(UInt<1>(0))\r\n    connect bar.c, c\r\n\r\n  module Bar:\r\n    input c : Clock\r\n    input r : AsyncReset\r\n\r\n    reg reg : UInt<8>, c\r\n```\r\nWhen compiled with `firtool` with no additional options, we see InferResets uses the port `Bar.r` as the reset domain for the internals of `Bar`. \r\n ```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset [{class = \"sifive.enterprise.firrt\r\nl.FullAsyncResetAnnotation\"}], in %c: !firrtl.clock) attributes {convention = #firrtl<convention scalariz\r\ned>} {\r\n    %bar_c, %bar_r = firrtl.instance bar @Bar(in c: !firrtl.clock, in r: !firrtl.asyncreset)\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.const.uint<1>\r\n    %0 = firrtl.asAsyncReset %c0_ui1 : (!firrtl.const.uint<1>) -> !firrtl.const.asyncreset\r\n    %1 = firrtl.constCast %0 : (!firrtl.const.asyncreset) -> !firrtl.asyncreset\r\n    firrtl.matchingconnect %bar_r, %1 : !firrtl.asyncreset\r\n    firrtl.matchingconnect %bar_c, %c : !firrtl.clock\r\n  }\r\n  firrtl.module private @Bar(in %c: !firrtl.clock, in %r: !firrtl.asyncreset) {\r\n    %reg = firrtl.reg %c : !firrtl.clock, !firrtl.uint<8>\r\n  }\r\n}\r\n\r\n// -----// IR Dump After InferResets (firrtl-infer-resets) //----- //\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}], in %c: !firrtl.clock) attributes {convention = #firrtl<convention scalarized>} {\r\n    %bar_c, %bar_r = firrtl.instance bar @Bar(in c: !firrtl.clock, in r: !firrtl.asyncreset)\r\n    firrtl.matchingconnect %bar_r, %r : !firrtl.asyncreset\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.const.uint<1>\r\n    %0 = firrtl.asAsyncReset %c0_ui1 : (!firrtl.const.uint<1>) -> !firrtl.const.asyncreset\r\n    %1 = firrtl.constCast %0 : (!firrtl.const.asyncreset) -> !firrtl.asyncreset\r\n    firrtl.matchingconnect %bar_r, %1 : !firrtl.asyncreset\r\n    firrtl.matchingconnect %bar_c, %c : !firrtl.clock\r\n  }\r\n  firrtl.module private @Bar(in %c: !firrtl.clock, in %r: !firrtl.asyncreset) {\r\n    %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n    %reg = firrtl.regreset %c, %r, %c0_ui8 : !firrtl.clock, !firrtl.asyncreset, !firrtl.const.uint<8>, !firrtl.uint<8>\r\n  }\r\n}\r\n```\r\nI would expect a new port to be added to `Bar` and it to be connected to `Foo.r`.  This mistake happens because the logic in `InferResetsPass::determineImpl` tries to reuse existing reset ports in submodules, which it does by matching on the type and  port name, which is not nearly enough.  If we change the name of the port `Bar.r` to something other than `r`, then it will not reuse the port and will drive the correct reset signal to its target.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-02",
+  "closed_at": "2025-02-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

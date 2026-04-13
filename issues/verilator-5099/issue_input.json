@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5099,
+  "issue_url": "https://github.com/verilator/verilator/issues/5099",
+  "title": "Incorrect CSE in multi-drive conflict scenario",
+  "body": "[bug.zip](https://github.com/verilator/verilator/files/15200056/bug.zip)\r\n\r\nIt seems like incorrect CSE occurs in the attached multi-drive conflict scenario. In particular, a multi-driven conflicting wire seems to still be used for CSE even when its actual value is undefined due to the conflict.\r\n\r\nIn the [attached example](https://github.com/verilator/verilator/files/15200056/bug.zip), two independent 3-input ANDs are implemented via replication of the `Bug` module (which implements a single 3-input AND). The behavior of these ANDs should be entirely independent of one another. Due to erroneous CSE involving the `conflicting` output however, this is not the case.\r\n\r\nSV files again as snippets:\r\n```sv\r\nmodule Bug\r\n(\r\n    input wire a,\r\n    input wire b,\r\n    input wire c,\r\n\r\n    output wire conflicting,\r\n    output wire regular\r\n);\r\n\r\nassign conflicting = a & b;\r\nassign regular = a & b & c; // CSE turns this into seemingly correct `conflicting & c`\r\nendmodule\r\n```\r\n\r\n```sv\r\nmodule Top\r\n(\r\n    input wire a[1:0],\r\n    input wire b[1:0],\r\n    input wire c[1:0],\r\n    output wire regular[1:0]\r\n);\r\n\r\nwire conflict; // erroneously driven by both instances of mod\r\nBug bug[1:0](a, b, c, conflict, regular);\r\nendmodule\r\n```\r\n\r\nThe bug is also apparent in the generated CPP:\r\n```cpp\r\nTop__DOT__conflict = (vlSelf->a[1U] & vlSelf->b\r\n                        [1U]);\r\nvlSelf->regular[1U] = ((IData)(Top__DOT__conflict) \r\n                        & vlSelf->c[1U]);\r\nvlSelf->regular[0U] = ((IData)(Top__DOT__conflict) \r\n                        & vlSelf->c[0U]);\r\n```\r\n\r\nWhat 'verilator' command line do we use to run your example?\r\n`verilator --cc --exe --build -j 0 Top_tb.cpp Top.sv Bug.sv`\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n`Verilator 5.022 2024-02-24 rev UNKNOWN.REV`\r\n\r\nWhat OS and distribution are you using?\r\n`6.6.19-1-MANJARO`\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-03",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

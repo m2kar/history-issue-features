@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5542,
+  "issue_url": "https://github.com/verilator/verilator/pull/5542",
+  "title": "Fix reduction methods for verilated types",
+  "body": "Consider the following example:\r\n```systemverilog\r\nmodule reduction;\r\n  typedef struct { int x, y; } point_t;\r\n\r\n  initial begin\r\n    int sum_squares, multiplied_sum_squares;\r\n    point_t q[$] = '{point_t'{1, 2}, point_t'{2, 3}};\r\n    int extra_multipliers[$] = '{};\r\n\r\n    sum_squares = q.sum with (item.x * item.x + item.y * item.y);\r\n    multiplied_sum_squares = extra_multipliers.product * sum_squares;\r\n\r\n    $display(\"Sum of squared lengths: %0d\", sum_squares);\r\n    $display(\"Multiplied sum of squared lengths: %0d\", multiplied_sum_squares);\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nThis will produce an error (shortened):\r\n```gcc\r\n/mnt/more/Documents/verilator/include/verilated_types.h:837:43: error: no match for ‘operator+=’ (operand types are ‘Vreduction_reduction__DOT__point_t__struct__0’ and ‘unsigned int’)\r\n  837 |         for (const auto& i : m_deque) out += with_func(index++, i);\r\n      |                                       ~~~~^~~~~~~~~~~~~~~~~~~~~~~~                              ~~~~^~~~~~~~~~~~~~~~~~~~~~~~\r\n```\r\n\r\nbecause the return type of call to `sum` method is different than item's type.\r\n\r\nAdditionally in this example, I call `product` on an empty queue. I could not find anything that would address this case in the specs. Currently we return zero, but I think it makes more sense to return a neutral element instead. This also lets us simplify the code a bit. Fortunately for us, the current SystemVerilog specification does not permit operator overloading, meaning that we can easily construct such elements using integers.\r\n\r\nWhile fixing those issues, I also noticed a small bug in one of the existing implementations regarding `index` variable.\r\n\r\n------------------\r\n\r\nChanges introduced by this PR:\r\n\r\n* Fix return type for calls with `with` clause\r\n* Fix missing index incrementation for `.and with` calls\r\n* ~~For zero-length aggregates return neutral element, which depending on the operation can be something different than 0.~~",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-10-15",
+  "closed_at": "2024-10-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

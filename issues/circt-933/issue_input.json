@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 933,
+  "issue_url": "https://github.com/llvm/circt/issues/933",
+  "title": "Cross Module Reference (XMR) Primitive",
+  "body": "Add support for a cross module reference (XMR) operation to a core dialect and to SystemVerilog. The lowering of the core dialect XMR to SystemVerilog is either resolved through:\r\n1. Lowering to SystemVerilog XMRs\r\n2. Boring ports through the hierarchy\r\n\r\nThis should support the ability to differentiate specific instances in the design and not require an unfolded design. The following example shows what this could look like. Here, there is only one module `@Bar`, but there are different XMRs into different instances that follow different paths:\r\n\r\n```mlir\r\nrtl.module @Bar(%a: i1) -> (%b: i1) {\r\n  %x = sv.wire  : !rtl.inout<i1>\r\n  rtl.output %a : i1\r\n}\r\nrtl.module @Foo() -> () {\r\n  %bar1.b = rtl.instance \"bar1\" @Bar(%0) : (i1) -> i1\r\n  %bar2.b = rtl.instance \"bar2\" @Bar(%0) : (i1) -> i1\r\n\r\n  // Example XMR into bar1\r\n  %baz = rtl.xmr @Bar(\"bar1\"), %x : !rtl.inout<i1>\r\n  // Example XMR into bar2\r\n  %qux = rtl.xmr @Bar(\"bar2\"), %x : !rtl.inout<i1>\r\n}\r\n```\r\n\r\nThe above XMR syntax is totally made up. This only exists to get a discussion going.\r\n\r\n### Background\r\n\r\nThis notion of resolving XMRs is very similar to prior work on \"soft connects\". [[1]] Here, a string key is used to establish \"sources\" and \"sinks\" in the design. A Bluespec pass then resolves these handling one-to-many and many-to-one cases by inserting arbiters/queues in the design.\r\n\r\n[1]: http://people.csail.mit.edu/emer/papers/2009.07.dac.leap_softconnect.pdf\r\n\r\nChisel and the Scala FIRRTL Compiler (SFC) have a \"boring utils\" API. [[2]] This, like soft connects, relies on sources and sinks (implemented as FIRRTL annotations) that are keyed by a string. The SFC then resolves these using its `WiringTransform` that finds the least-common-ancestor (LCA) between the source and sink and wires them up. The Chisel API allows either downwards XMRs (by choosing the string key for the user and selectively disabling deduplication) or the less explicit string key approach.\r\n\r\n[2]: https://www.chisel-lang.org/api/3.4.2/chisel3/util/experimental/BoringUtils$.html\r\n\r\nVerilog has support for doing hierarchical references in downwards, upwards, and spooky-action-at-a-distance (see code snippet below). This issue is _not_ concerned with capturing the full power of hierarchical references other than downwards references in emitted Verilog.\r\n\r\n```verilog\r\nmodule Top();\r\n  Foo foo();\r\n  Bar bar();\r\n\r\n  logic x;\r\n\r\n  /* Downwards reference */\r\n  foo.x\r\n\r\nendmodule();\r\n\r\nmodule Foo();\r\n  logic x;\r\n\r\n  /* Upwards reference */\r\n  Top.x;\r\n\r\nendmodule\r\n\r\nmodule Bar();\r\n\r\n  /* Spooky-action-at-a-distance reference */\r\n  Top.foo.x;\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "enhancement",
+    "HW",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-20",
+  "closed_at": "2023-10-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

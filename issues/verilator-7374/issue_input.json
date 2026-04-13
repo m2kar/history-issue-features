@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7374,
+  "issue_url": "https://github.com/verilator/verilator/pull/7374",
+  "title": "Support sequence intersect operator",
+  "body": "## Summary\r\n\r\nThis patch adds support for the `intersect` sequence operator (IEEE 1800-2023\r\n16.9.6). `intersect` matches when both operand sequences match and have equal\r\nlength; if lengths differ, the match set is empty (constant-false).\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t (input clk);\r\n  logic a, b, c, d;\r\n  assert property (@(posedge clk) (a ##2 b) intersect (c ##2 d));\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: t.sv:3:36: Unsupported: intersect (in sequence expression)\r\n```\r\n\r\n## Changes\r\n\r\n- `verilog.y`: replace `BBUNSUP` with `AstSIntersect` node creation\r\n- `V3AstNodeExpr.h`: add `AstSIntersect` (AstNodeBiop subclass)\r\n- `V3Width.cpp`: handle `AstSIntersect` via `visit_log_and_or`, same as `AstSAnd`/`AstSOr`\r\n- `V3AssertProp.cpp`: add `lowerSeqIntersect()` -- computes constant delay sums; equal lengths lower as `and`, unequal lengths replace with constant-false; pure boolean operands lower to `LogAnd`; `RangeDelayExpander` rejects `##[m:n]` operands (dynamic length prevents pairing)\r\n- `V3AssertPre.cpp`: add `noSample(true)` to goto-rep counter variable, consistent with consecutive-rep counter\r\n- `V3Dfg.cpp`, `V3DfgCse.cpp`: add `AstSIntersect` to defensive `UASSERT_OBJ` switch cases\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_sequence_intersect.{v,py}` -- CRC-driven functional test: boolean intersect, same-length single-cycle and multi-cycle sequences, differing internal structure with equal total delay\r\n- Added `test_regress/t/t_sequence_intersect_range_unsup.{v,py,out}` -- verifies `##[m:n]` operands produce UNSUPPORTED diagnostic\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-04",
+  "closed_at": "2026-04-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7372,
+  "issue_url": "https://github.com/verilator/verilator/issues/7372",
+  "title": "Fix wait(0) causing caller to still continue",
+  "body": "Calling wait(0) in a task causes an upper calling task to keep going and not wait.\n\nThis was found by reducing the failing UVM tests/20sequences/90Mantis/8513_kill_sequence_activity and tests/20sequences/90Mantis/3129_seq_kill  (and likely others).\n\n@ArturBieniek4 might you be able to take a look?  Thanks!\n\n<details>\n<summary>Example</summary>\n\n```\n// verilog_format: off\n`define DBGF(msg)  do begin $write(\"- DBG[%0t] %s:%05d: %m: \", $time, `__FILE__, `__LINE__); $display msg; end while(0)\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n// verilog_format: on\n\n\nclass uvm_sequence;\n  bit m_called;\n  bit m_returned;\n\n  virtual task body();\n  endtask\n\n  virtual task start();\n    fork\n      begin\n        #0;\n        m_called = 1;\n        `DBGF((\"call body()\"));\n        body();\n        `DBGF((\"called body() SHOULD NOT GET HERE\"));\n        m_returned = 1;\n        #0;\n      end\n    join\n  endtask\nendclass\n\nclass blocking_sequence extends uvm_sequence;\n  task body();\n    `DBGF((\"body() about to wait(0)\"));\n    wait (0);\n    `DBGF((\"body() did wait(0) - properly don't get here\"));\n  endtask\nendclass\n\nmodule t;\n  bit timeout;\n  initial begin\n    blocking_sequence b;\n    b = new;\n    fork\n      begin\n        b.start();\n      end\n      begin\n        #10;\n        `DBGF((\"main timeout (as expected)\"));\n        timeout = 1;\n      end\n    join_any\n    `checkh(b.m_called, 1);\n    `checkh(b.m_returned, 0);\n    `checkh(timeout, 1);\n    $finish;\n  end\n\nendmodule\n```\n</details>",
+  "labels": [
+    "area: scheduling"
+  ],
+  "state": "open",
+  "created_at": "2026-04-04",
+  "closed_at": null,
+  "code_blocks": [
+    "// verilog_format: off\n`define DBGF(msg)  do begin $write(\"- DBG[%0t] %s:%05d: %m: \", $time, `__FILE__, `__LINE__); $display msg; end while(0)\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n// verilog_format: on\n\n\nclass uvm_sequence;\n  bit m_called;\n  bit m_returned;\n\n  virtual task body();\n  endtask\n\n  virtual task start();\n    fork\n      begin\n        #0;\n        m_called = 1;\n        `DBGF((\"call body()\"));\n        body();\n        `DBGF((\"called body() SHOULD NOT GET HERE\"));\n        m_returned = 1;\n        #0;\n      end\n    join\n  endtask\nendclass\n\nclass blocking_sequence extends uvm_sequence;\n  task body();\n    `DBGF((\"body() about to wait(0)\"));\n    wait (0);\n    `DBGF((\"body() did wait(0) - properly don't get here\"));\n  endtask\nendclass\n\nmodule t;\n  bit timeout;\n  initial begin\n    blocking_sequence b;\n    b = new;\n    fork\n      begin\n        b.start();\n      end\n      begin\n        #10;\n        `DBGF((\"main timeout (as expected)\"));\n        timeout = 1;\n      end\n    join_any\n    `checkh(b.m_called, 1);\n    `checkh(b.m_returned, 0);\n    `checkh(timeout, 1);\n    $finish;\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

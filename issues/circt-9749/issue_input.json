@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9749,
+  "issue_url": "https://github.com/llvm/circt/pull/9749",
+  "title": "[HW] HWVectorization Part 3: Structural Patterns",
+  "body": "**Context:** This PR is the third part of a series of incremental patches for the  `HWVectorization` pass. Building upon the bit-tracking infrastructure from Parts 1 and 2 (#9704 and #9739), this patch introduces Structural Vectorization: the ability to collapse N isomorphic scalar logic cones into a single wide operation.\r\n\r\n**Key Enhancements:**\r\n\r\n- **Structural Isomorphism Check:** The pass analyzes the scalar subgraph feeding each output bit and verifies that all N bit-slices are structurally equivalent up to a uniform bit-index offset. This enables collapsing patterns like N independent `AND/OR/XOR/MUX` gates into a single N-bit operation.\r\n```MLIR\r\n// Before: 4 independent XOR gates\r\n%xor0 = comb.xor %a0, %b0 : i1\r\n%xor1 = comb.xor %a1, %b1 : i1\r\n%xor2 = comb.xor %a2, %b2 : i1\r\n%xor3 = comb.xor %a3, %b3 : i1\r\n%out  = comb.concat %xor3, %xor2, %xor1, %xor0 : i1, i1, i1, i1\r\n\r\n// After: single 4-bit XOR\r\n%out = comb.xor %a, %b : i4\r\n```\r\n- **Shared Control Signal Handling:** Scalar signals shared across all bit lanes (e.g., a `MUX select` or an `AND enable`) are identified by `areSubgraphsEquivalent` as common leaves and passed directly to the wide operation, or broadcast via `comb.replicate` when used as data operands.\r\n```MLIR\r\n// Before: 4 muxes controlled by the same scalar %sel\r\n%m0 = comb.mux %sel, %a0, %b0 : i1\r\n%m1 = comb.mux %sel, %a1, %b1 : i1\r\n%m2 = comb.mux %sel, %a2, %b2 : i1\r\n%m3 = comb.mux %sel, %a3, %b3 : i1\r\n%out = comb.concat %m3, %m2, %m1, %m0 : i1, i1, i1, i1\r\n\r\n// After: single wide mux with shared scalar selector\r\n%out = comb.mux %sel, %a, %b : i4\r\n```\r\n\r\n- **Recursive Subgraph Reconstruction:** `vectorizeSubgraph` recursively rebuilds the scalar logic tree into its vectorized equivalent, supporting arbitrary depth (e.g., `(a[i] & b[i]) ^ c[i]` across all bits becomes `comb.and` followed by `comb.xor`).\r\n```MLIR\r\n// Before: 2-level cone, (a[i] & b[i]) ^ c[i] for each bit\r\n%and0 = comb.and %a0, %b0 : i1\r\n%and1 = comb.and %a1, %b1 : i1\r\n%xor0 = comb.xor %and0, %c0 : i1\r\n%xor1 = comb.xor %and1, %c1 : i1\r\n%out  = comb.concat %xor1, %xor0 : i1, i1\r\n\r\n// After: two wide ops preserving the original structure\r\n%and = comb.and %a, %b : i2\r\n%out = comb.xor %and, %c : i2\r\n```\r\n\r\n- **Multiple Output Support:** Each output port is analyzed and transformed independently, so modules with multiple vectorizable outputs (e.g.,  `out_xor` and `out_and`) are fully vectorized in a single pass.\r\n```MLIR\r\n// Before: two independent scalar cones feeding two outputs\r\n%out_xor = comb.concat %xor3, %xor2, %xor1, %xor0 : i1, i1, i1, i1\r\n%out_and = comb.concat %and3, %and2, %and1, %and0 : i1, i1, i1, i1\r\n\r\n// After: each output vectorized independently\r\n%out_xor = comb.xor %a, %b : i4\r\n%out_and = comb.and %a, %c : i4\r\n```\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

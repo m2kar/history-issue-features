@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1895,
+  "issue_url": "https://github.com/llvm/circt/pull/1895",
+  "title": "[Calyx] Add enhancements to common tail elimination for `IfOp`.",
+  "body": "This adds a pattern for when `then` and `else` regions are both `ParOp`s. It also takes into consideration the parent region of the `IfOp`, since we don't want to unintentionally change the behavior when pulling out `EnableOp`s. \r\n\r\nI also do not touch anything that's not immediately within the given `ParOp`'s body; doing so may also change the behavior of the program.\r\n\r\nThe case where the `then` and `else` regions are different, e.g. `SeqOp` and  `ParOp`, should never pull out an `EnableOp`; it will always produce worse code, e.g.\r\n```mlir\r\ncalyx.seq {\r\n  calyx.if {\r\n    calyx.par { ... calyx.enable @A }\r\n  } else {\r\n    calyx.seq { ... calyx.enable @A } \r\n  }\r\n}\r\n\r\n// Choice A: Place it in a SeqOp.\r\ncalyx.seq {\r\n  calyx.if {\r\n    calyx.par { ... }\r\n  } else {\r\n    calyx.seq { ... } \r\n  }\r\n  calyx.enable @A // Now, it is no longer parallelized for the `then` region.\r\n}\r\n\r\n// Choice B: Place it in a ParOp.\r\ncalyx.seq {\r\n  calyx.par {\r\n    calyx.if {\r\n      calyx.par { ... }\r\n    } else {\r\n      calyx.seq { ... } \r\n    }\r\n    calyx.enable @A  // This is just plain wrong.\r\n  } \r\n}\r\n```\r\n\r\nCloses #1861.",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-28",
+  "closed_at": "2021-09-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

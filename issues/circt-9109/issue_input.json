@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9109,
+  "issue_url": "https://github.com/llvm/circt/pull/9109",
+  "title": "[ImportVerilog] Add variableAssignCallback, allow LHS capture",
+  "body": "This patch extends ImportVerilog’s capture mechanism to include write-side\r\n(LHS) captures, complementing the existing read-side collection. Tasks and\r\nfunctions that assign to variables in an enclosing scope now have those refs\r\nadded as explicit function parameters during lowering.\r\n\r\n- **Context API**\r\n  - Introduce `variableAssignCallback: std::function<void(mlir::Operation *)>`.\r\n  - Both read and write callbacks are chained and restored via scope guards.\r\n\r\n- **Capture collection**\r\n  - **Reads**: keep existing `rvalueReadCallback` behavior.\r\n  - **Writes**: new callback fires on `moore.blocking_assign`,\r\n    `moore.nonblocking_assign`, and `moore.delayed_nonblocking_assign`.\r\n    The LHS ref (`getDst()`) is captured when it originates outside the\r\n    function’s region.\r\n\r\n- **Lowering changes**\r\n  - In `Expressions.cpp`, creation sites for blocking / (delayed) non-blocking\r\n    assigns invoke `variableAssignCallback`.\r\n  - In `Structure.cpp::convertFunction`, install both callbacks to accumulate\r\n    `captures`/`captureIndex` for the function, covering **both** reads and\r\n    writes.\r\n  - Existing `finalizeFunctionBodyCaptures` retypes the function to include the\r\n    new capture parameters and replaces internal uses with the new block args.\r\n\r\n- **`testLHSTaskCapture`** in `basic.sv`:\r\n  - Confirms that a task assigning to a parent variable correctly captures it as\r\n    an additional function argument.\r\n  - Ensures call sites and function bodies are lowered with consistent capture\r\n    semantics even when the function is defined *after* its use.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-18",
+  "closed_at": "2025-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

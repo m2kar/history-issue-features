@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1118,
+  "issue_url": "https://github.com/llvm/circt/issues/1118",
+  "title": "[FIRRTL] width infer (asSInt(UInt(#))) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output tmp73: SInt\r\n    tmp73 <= asSInt(UInt(\"h1088\"))\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\n// Standard header to adapt well known macros to our needs.\r\n\r\nmodule top_mod(\r\n  output [13:0] tmp73);\r\n\r\n  assign tmp73 = 14'h1088;\t// a_top_mod.fir:2:3, :4:14\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output [12:0] tmp73\r\n);\r\n  assign tmp73 = -13'shf78;\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Can't match gold port `tmp73_gold' to a gate port.\r\n```\r\n",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-21",
+  "closed_at": "2021-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

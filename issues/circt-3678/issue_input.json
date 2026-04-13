@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3678,
+  "issue_url": "https://github.com/llvm/circt/issues/3678",
+  "title": "[FIRRTL/IMCP] Suboptimal results with invalid states",
+  "body": "```mlir\r\nfirrtl.circuit \"Example\"  {\r\n  firrtl.module private @Test(in %in1: !firrtl.uint<1>, in %in2: !firrtl.uint<1>, in %clock: !firrtl.clock, out %out: !firrtl.uint<1>) {\r\n    %r = firrtl.reg  %clock  : !firrtl.uint<1>\r\n    %0 = firrtl.or %in1, %r : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n    firrtl.strictconnect %out, %0 : !firrtl.uint<1>\r\n    firrtl.strictconnect %r, %in2 : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Example(in %clock: !firrtl.clock, out %s: !firrtl.uint<1>) {\r\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n    %test_in1, %test_in2, %test_clock, %test_out = firrtl.instance test  @Test(in in1: !firrtl.uint<1>, in in2: !firrtl.uint<1>, in clock: !firrtl.clock, out out: !firrtl.uint<1>)\r\n    firrtl.strictconnect %test_clock, %clock : !firrtl.clock\r\n    firrtl.strictconnect %test_in1, %c0_ui1 : !firrtl.uint<1>\r\n    firrtl.strictconnect %test_in2, %c1_ui1 : !firrtl.uint<1>\r\n    firrtl.strictconnect %s, %test_out : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThe current result of `-firrtl-imconstprop`:\r\n```mlir\r\nfirrtl.circuit \"Example\"  {\r\n  firrtl.module private @Test(in %in1: !firrtl.uint<1>, in %in2: !firrtl.uint<1>, in %clock: !firrtl.clock, out %out: !firrtl.uint<1>) {\r\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    firrtl.strictconnect %out, %c1_ui1 : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Example(in %clock: !firrtl.clock, out %s: !firrtl.uint<1>) {\r\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n    %test_in1, %test_in2, %test_clock, %test_out = firrtl.instance test  @Test(in in1: !firrtl.uint<1>, in in2: !firrtl.uint<1>, in clock: !firrtl.clock, out out: !firrtl.uint<1>)\r\n    firrtl.strictconnect %test_clock, %clock : !firrtl.clock\r\n    firrtl.strictconnect %test_in1, %c0_ui1 : !firrtl.uint<1>\r\n    firrtl.strictconnect %test_in2, %c1_ui1 : !firrtl.uint<1>\r\n    firrtl.strictconnect %s, %test_out : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\n`%test_out` must be replaced by 1 but currently not. This is because `%out` is marked as overdefined in IMCP.  More specifically the lattice value of `%out` changes from 0 to 1 (and it causes unification failure). \r\n1. In the first visit of `%0 = firrtl.or %in1, %r`, the lattice states are `{%r: invalid, %in1: 0, %in2: 0}` and `or(invalid, 0)` is folded into `0`.  Therefore the state of `%0` becomes 0. \r\n2. However, after visiting `firrtl.strictconnect %r, %in2 : !firrtl.uint<1>`, the value of `r` becomes 1.\r\nAt this point, the lattice states are `{%r: 1, %in1: 0, %in2: 0, %0: 0}`.  \r\n3. Since the value of `r` is changed, we visit `%0` again. At this time, `firrtl.or(%r, %in1) = firrtl.or(1, 0)` so  we get `1` as a folded result.   So lattice value of `%0` becomes overdefined  ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-08-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

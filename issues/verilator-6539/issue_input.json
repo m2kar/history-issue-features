@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6539,
+  "issue_url": "https://github.com/verilator/verilator/issues/6539",
+  "title": "Returned big-endian array assigned to little-endian array parameter ignores left-to-right element mapping (IEEE 1800-2023 7.6)",
+  "body": "Thanks for taking the time to report this.\n\nCan you please attach an example that shows the issue or missing feature? \nAccording to Section 7.6 in IEEE 1800-2023, assigning an array in big-endian ordering to an array declared in little endian ordering should assign elements left-to-right:\n>Assignment shall be done by assigning each element of the source array to the corresponding element of the\n>target array. Correspondence between elements is determined by the left-to-right order of elements in each\n>array. For example, if array A is declared as int A[7:0] and array B is declared as int B[1:8], the\n>assignment A = B; will assign element B[1] to element A[7], and so on\n\nHowever, if the type returned by a function is a big-endian array and the output of the function is assigned to a little-endian array parameter, this does not hold - see the following example.\n\n```systemverilog\nmodule t(/* AUTOARG */);\n    typedef logic [31:0] be_unpacked_arr_t [8];\n    typedef logic [31:0] le_unpacked_arr_t [7:0];\n    function automatic be_unpacked_arr_t foo ();\n        be_unpacked_arr_t arr;\n        for (int i = 0; i < 8; i++) begin\n            arr[i] = i;\n        end\n        return arr;\n    endfunction\n\n    localparam le_unpacked_arr_t LE_PARAM = foo();\n\n    initial begin\n        for (int i = 0; i < 8; i++) begin\n            if (LE_PARAM[i] != 8 - 1 - i) $stop;\n        end\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n```\nWhat 'verilator' command line do we use to run your example?\nUsing the `test_regress` driver, or `verilator --binary -j 0 t/t.v`\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\nVerilator 5.040 2025-08-30 rev v5.040-50-g0a9d9db5a. Also tried with Verilator 5.041 devel rev v5.040-261-g832f41f0f, same result. \n\nThis test works with both Questa and XSim.\n\nWhat OS and distribution are you using?\nFedora 29",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-10-07",
+  "closed_at": null,
+  "code_blocks": [
+    "module t(/* AUTOARG */);\n    typedef logic [31:0] be_unpacked_arr_t [8];\n    typedef logic [31:0] le_unpacked_arr_t [7:0];\n    function automatic be_unpacked_arr_t foo ();\n        be_unpacked_arr_t arr;\n        for (int i = 0; i < 8; i++) begin\n            arr[i] = i;\n        end\n        return arr;\n    endfunction\n\n    localparam le_unpacked_arr_t LE_PARAM = foo();\n\n    initial begin\n        for (int i = 0; i < 8; i++) begin\n            if (LE_PARAM[i] != 8 - 1 - i) $stop;\n        end\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

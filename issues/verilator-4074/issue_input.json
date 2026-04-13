@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4074,
+  "issue_url": "https://github.com/verilator/verilator/issues/4074",
+  "title": "Internal error in static function if a loop variable is initialized in the loop",
+  "body": "The following leads to an internal error:\r\n\r\n```sv\r\nmodule m;\r\nfunction static void f();\r\n        for (int i=0; i<1; ++i) begin\r\n                int v = i;\r\n        end\r\nendfunction\r\nendmodule\r\n```\r\n\r\n```\r\n%Error: Internal Error: m.sv:4:11: ../V3Scope.cpp:80: Can't locate varref scope\r\n-node: VARREF 0x5555564bfd80 <e829> {d4al} @dt=0x5555564d44a0@(G/sw32)  unnamedblk1__DOT__i [RV] <- VAR 0x5555564d4570 <e903> {d3al} @dt=0x5555564d44a0@(G/sw32)  unnamedblk1__DOT__i [LOOP] [FUNC] [VAUTOM]  VAR\r\n    4 |   int v = i;\r\n      |           ^\r\n```\r\n\r\nRemoving the declaration from the for loop solves the issue:\r\n\r\n```sv\r\nmodule m;\r\nfunction static void f();\r\n        int i;\r\n        for (i=0; i<1; ++i) begin\r\n                int v = i;\r\n        end\r\nendfunction\r\nendmodule\r\n```\r\n\r\n\r\n---\r\n\r\nI tested also on Questa 2021.3. Questa does not even allow initializing a static variable as follows. But this may be idiosyncratic to Questa.\r\n\r\n```sv\r\nmodule m;\r\nfunction static void f();\r\n  int a = 0;\r\nendfunction\r\nendmodule\r\n```\r\n---\r\nI tested on the master. Error is related to b56e7f6 which adds support for static function variables.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-31",
+  "closed_at": "2025-08-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7146,
+  "issue_url": "https://github.com/verilator/verilator/issues/7146",
+  "title": "CASEINCOMPLETE reported for valid flop description",
+  "body": "Following example is a legit FLOP description. The case is \"incomplete\", meaning some values of STATE are not specified, but in the context of a sequential procedural block that means that the flop HOLDS the state for that case.\n\n```verilog\nmodule test(\n    input logic clk,\n    input logic [1:0] state,\n    output logic [3:0] x\n);\n    localparam IDLE   = 2'd0;\n    localparam ROTATE = 2'd1;\n    localparam DONE   = 2'd2;\n\n    always @(posedge clk) begin\n        case (state)\n            IDLE: x <= 1;\n            ROTATE: x <= 2;\n            DONE: x <= 3;\n        endcase\n    end\nendmodule\n```\n\nThis code is totally equivalent to adding a default branch in which we do `x <= x`, but it's redundant.\n\nRunning this code through verilator results in `CASEINCOMPLETE` warning:\n\n```\nverilator --trace --binary -Wno-TIMESCALEMOD -Wno-WIDTHTRUNC --top tb ../../rtl/cordic.v ../../tb/cordic_tb.v\n%Warning-CASEINCOMPLETE: ../../rtl/cordic.v:11:9: Case values incompletely covered (example pattern 0x3)\n   11 |         case (state)\n      |         ^~~~\n                         ... For warning description see https://verilator.org/warn/CASEINCOMPLETE?v=5.040\n                         ... Use \"/* verilator lint_off CASEINCOMPLETE */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\nmake: *** [Makefile:28: obj_dir/Vtb] Error 1\n```\nIs this a bug? In my opinion *yes*, since the incomplete case in the context of a procedural sequential block *is* a valid description (valid if for whatever reason we restrict ourselves to only describing valid synchronous logic in verilog, apart from that this is 100% valid LRM code), but I understand in the end it's a matter of conventions.\n\nIf we describe the same logic with `if` statements leaving unspecified the final `else` branch, which is the exact same logic as the case statement, we get no errors, which is inconsistent:\n\n```verilog\nmodule test(\n    input logic clk,\n    input logic [1:0] state,\n    output logic [3:0] x\n);\n    localparam IDLE   = 2'd0;\n    localparam ROTATE = 2'd1;\n    localparam DONE   = 2'd2;\n\n    always @(posedge clk) begin\n        if (state == IDLE) x <= 1;\n        else if (state == ROTATE) x <= 2;\n        else if (state == DONE) x <= 3;\n    end\nendmodule\n```\n\nI'd be open to trying out a solution if there's an agreement that this is something that needs to be solved.",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-25",
+  "closed_at": "2026-02-25",
+  "code_blocks": [
+    "module test(\n    input logic clk,\n    input logic [1:0] state,\n    output logic [3:0] x\n);\n    localparam IDLE   = 2'd0;\n    localparam ROTATE = 2'd1;\n    localparam DONE   = 2'd2;\n\n    always @(posedge clk) begin\n        case (state)\n            IDLE: x <= 1;\n            ROTATE: x <= 2;\n            DONE: x <= 3;\n        endcase\n    end\nendmodule\n",
+    "verilator --trace --binary -Wno-TIMESCALEMOD -Wno-WIDTHTRUNC --top tb ../../rtl/cordic.v ../../tb/cordic_tb.v\n%Warning-CASEINCOMPLETE: ../../rtl/cordic.v:11:9: Case values incompletely covered (example pattern 0x3)\n   11 |         case (state)\n      |         ^~~~\n                         ... For warning description see https://verilator.org/warn/CASEINCOMPLETE?v=5.040\n                         ... Use \"/* verilator lint_off CASEINCOMPLETE */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\nmake: *** [Makefile:28: obj_dir/Vtb] Error 1\n",
+    "module test(\n    input logic clk,\n    input logic [1:0] state,\n    output logic [3:0] x\n);\n    localparam IDLE   = 2'd0;\n    localparam ROTATE = 2'd1;\n    localparam DONE   = 2'd2;\n\n    always @(posedge clk) begin\n        if (state == IDLE) x <= 1;\n        else if (state == ROTATE) x <= 2;\n        else if (state == DONE) x <= 3;\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

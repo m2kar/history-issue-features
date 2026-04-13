@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2547,
+  "issue_url": "https://github.com/llvm/circt/pull/2547",
+  "title": "[FIRRTL] Fix printf-encoded lint issues",
+  "body": "Fix a bug when parsing certain types of printf-encoded\r\nasserts (\"assert:\", \"assume:\", \"cover:\" and \"assertNotX:\") to not add an\r\nunnecessary format string argument.  Instead, only add argumnets after\r\nthe first argument if any exist.  The latter case is extremely rare (to\r\nuse this from the Chisel APIs you would have to hand-craft a printf\r\noperation and not use the built-in helper utilities).\r\n\r\nChange Chisel asserts (\"Assertion failed:\") to always parse as immediate\r\nassertions.  These assertions are expected to have format string\r\narguments and this avoids a catch-22 with VCS lint warnings.  A\r\nconcurrent assertion can be constructed to have a format string,\r\nhowever, whichever way you craft it, VCS will give you a lint warning:\r\n\r\nIll-advised, unsampled option A:\r\n\r\n  assert_1: assert property (@(posedge clock) condition)\r\n    else $error(\"The value of 'foo' is %d\", foo);\r\n\r\nAdvised, sampled optiona B:\r\n\r\n  assert_2: assert property (@(posedge clock) condition)\r\n    else $error(\"The value of 'bar' is %d\", $sampled(bar));\r\n\r\nFor more information, see Section 16.9.3 of the SystemVerilog\r\nspecification (which is from where the above code snippet is adapted).\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-01",
+  "closed_at": "2022-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

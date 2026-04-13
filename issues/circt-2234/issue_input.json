@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2234,
+  "issue_url": "https://github.com/llvm/circt/pull/2234",
+  "title": "[ExportVerilog] Prepare modules before name legalization; NFC",
+  "body": "At the moment, the call to `legalizeGlobalNames` which populates the `GlobalNameTable` occurs *before* individual modules are prepared for emission. This is problematic because this preparation may spawn additional wires that require legalized names.\r\n\r\nThe call to `prepareHWModule` currently happens inside the parallel execution of `emitHWModule`, right at the start. This change moves the call to this function out of `emitHWModule` and into a parallel section before name legalization. Module preparation would already happen in parallel and before the module was emitted, but it occurring as part of `emitHWModule` would mean it happened intertwined with all the other emission code. Moving the call outside has the same effect, but gives a clean point in the code at which all modules are known to have been prepared, after which name legalization can be performed.\r\n\r\nThis unblocks future work in fixing the emission of `bind` statements, which rely on some of the wires introduced by `prepareHWModule` and require names for them.\r\n\r\nThis is intended to be a non-functional change except for a fix to a test affected by the currently broken bind emission above.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-24",
+  "closed_at": "2021-11-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

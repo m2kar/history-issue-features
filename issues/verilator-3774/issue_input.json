@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3774,
+  "issue_url": "https://github.com/verilator/verilator/issues/3774",
+  "title": "Verilator generates invalid C++ code when assigning an empty string to reg[63:0]",
+  "body": "Verilator generates C++ code that doesn't compile in a very specific situation: assignment of an empty string to a reg[63:0].\r\n\r\n### Version\r\nBug can be reproduced with verilator 4.216 or higher (still present in 5.002)\r\nversions 4.214 or lower don't show this behavior\r\nI believe it might have been introduced when fixing this issue: \"Display of empty string appears as space #3207\"\r\n\r\n### Reproduce\r\n```\r\nverilator -cc emtpy_string_bug.v\r\nmake -C obj_dir -f Vemtpy_string_bug.mk\r\n```\r\nC++ compiler error:\r\nVemtpy_string_bug___024root__DepSet_hdc33e5c4__0__Slow.cpp:14:22: error: cannot convert ‘std::string’ {aka ‘std::__cxx11::basic_string<char>’} to ‘QData’ {aka ‘long unsigned int’} in assignment\r\n\t            14 |     vlSelf->x = std::string(\"\");\r\n\r\n\r\nThe file **empty_string_bug.v** looks like this:\r\n\r\n```\r\nmodule empty_string_bug (\r\n\toutput reg[63:0] x\r\n);\r\nalways @* begin\r\n\tx = \"\"; \t        \r\nend\r\nendmodule\r\n```\r\n\r\nThe bug materializes only with 64 bit assignments. Any other number of bits produces a warning \r\n(%Warning-WIDTH: emtpy_string_bug.v:15:4: Operator ASSIGN expects 65 bits on the Assign \r\nRHS, but Assign RHS's CONST '\"\"' generates 64 bits) \r\nand the c++ code compiles fine after the warning is silenced with -Wno-lint option.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-22",
+  "closed_at": "2022-11-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

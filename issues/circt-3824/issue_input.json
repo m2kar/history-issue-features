@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3824,
+  "issue_url": "https://github.com/llvm/circt/issues/3824",
+  "title": "[StandardToHandshake] Warn when task pipelining is used with memory",
+  "body": "StandardToHandshake consumes a sequential input program and, by default, produces a circuit that can be executed in a pipelined manner. \r\nWhen a program uses memory, this transformation might introduce unexpected behavior. See the following example:\r\n\r\n```C\r\nint func(bool flag) {\r\n  static int mem[2] = {0,0};\r\n  int res;\r\n  if (flag) {\r\n    mem[0] = 1; // A0\r\n    // other stuff that introduces delay\r\n    res = mem[1]; // A1\r\n  } else {\r\n    mem[1] = 1; // A2\r\n    // other stuff that introduces delay\r\n    res = mem[0]; // A3\r\n  }\r\n  return res;\r\n}\r\n```\r\n\r\nInvoking the corresponding circuit with T0(flag = 1), and T1(flag = 0), will result in T1 returning 1, instead of 0. \r\n\r\nA user assumes that the pipeline doesn't change the semantics, e.g., T0 and T1 should appear as being executed sequentially. In the example, the memory access A2 will happen before A1, thus causing unexpected/faulty behavior.\r\n\r\nI suggest issuing a warning or even stopping the execution if memory together task pipelining is used. \r\n\r\nCC @mortbopet: This is something we didn't discuss so far, right?",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-09-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

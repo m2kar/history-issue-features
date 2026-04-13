@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2772,
+  "issue_url": "https://github.com/llvm/circt/issues/2772",
+  "title": "[ExportVerilog] Large expression spilling should respect disallowLocalVariables",
+  "body": "I'll add a reduced test case shortly, but the gist of this issue is large expressions can be spilled into a temporary wire in procedural regions, even when disallowLocalVariables is set. For example, in psuedo-ir:\r\n\r\n```mlir\r\nsv.always ... {\r\n  sv.if <huge expression> {\r\n  }\r\n}\r\n```\r\n\r\ncan become:\r\n\r\n```mlir\r\nsv.always ... {\r\n  wire _tmp = <huge expression>;\r\n  sv.if _tmp {\r\n  }\r\n}\r\n```\r\n\r\nI think we will need to enhance the large expression spilling logic to also respect `disallowLocalVariables`. Essentially, I believe we need something similar to this logic in PrepareForEmission: https://github.com/llvm/circt/blob/24a47bda3a264c6ec7b18c6f8bbac96295725d79/lib/Conversion/ExportVerilog/PrepareForEmission.cpp#L464-L466.\r\n\r\nThis issue is basically about addressing this comment: https://github.com/llvm/circt/blob/24a47bda3a264c6ec7b18c6f8bbac96295725d79/lib/Conversion/ExportVerilog/PrepareForEmission.cpp#L481-L484",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-15",
+  "closed_at": "2022-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

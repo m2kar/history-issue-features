@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4567,
+  "issue_url": "https://github.com/verilator/verilator/issues/4567",
+  "title": "Fix compile warning on unused member function variable",
+  "body": "If a class member function has an input variable that is not consumed, and the compiler warnings are on (e.g. when developing Verilator), the compiler gives an error message.\r\n\r\nPresumably we should suppress the warning, though I'd prefer to find a way to do this selectively so as to not mask real problems.\r\n\r\nBlocks #1538 compile time\r\n\r\nFound with UVM:\r\n\r\n```\r\nVt_uvm_todo_uvm_pkg__03a__03auvm_reg_field__Vclpkg__DepSet_h44eb293d__0.cpp: In member function 'void Vt_uvm_todo_uvm_pkg__03a__03auvm_reg_field::__VnoInFunc_con$\r\nVt_uvm_todo_uvm_pkg__03a__03auvm_reg_field__Vclpkg__DepSet_h44eb293d__0.cpp:15:343: error: parameter 'is_rand' set but not used [-Werror=unused-but-set-parameter$\r\n   15 | void Vt_uvm_todo_uvm_pkg__03a__03auvm_reg_field::__VnoInFunc_configure(VlProcessRef vlProcess, Vt_uvm_todo__Syms* __restrict vlSymsp, VlClassRef<Vt_uvm_t$\r\n      |                                                                                                                                                          $\r\n```\r\n\r\nTest case\r\n\r\n```\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2023 by Wilson Snyder.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\npackage uvm_pkg;\r\n\r\nclass uvm_reg_field; // extends uvm_object;\r\n   function void configure(bit overde, bit is_rand);\r\n      if (overde) is_rand = 0;\r\n      if (!is_rand) ;   // value.rand_mode(0);\r\n   endfunction\r\nendclass\r\n\r\nendpackage\r\n\r\nmodule t(/*AUTOARG*/);\r\n\r\n   initial begin\r\n      uvm_pkg::uvm_reg_field c = new;\r\n      c.configure(1, 0);\r\n      c.configure(0, 0);\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\n\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-15",
+  "closed_at": "2023-10-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

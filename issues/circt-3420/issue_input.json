@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3420,
+  "issue_url": "https://github.com/llvm/circt/pull/3420",
+  "title": "[ExportVerilog] Don't create temporary wires for rhs of assign",
+  "body": "This commit extends c36dd885 not to create a temporary wire for\r\nexpressions that are only used for assign op. This is safe because the\r\ntype of lhs should be expliclit.\r\n\r\n```mlir\r\nhw.module @NoExtraTemporaryWireForAssign(%a: i2) {\r\n  %0 = hw.struct_create (%a) : !hw.struct<foo: i2>\r\n  %1 = sv.wire : !hw.inout<struct<foo: i2>>\r\n  sv.assign %1, %0 : !hw.struct<foo: i2>\r\n  hw.output\r\n}\r\n```\r\n\r\nBefore:\r\n```verilog\r\n wire struct packed {logic [1:0] foo; } _GEN;\r\n\r\n wire struct packed {logic [1:0] foo; } _GEN_0 = '{foo: a}; \r\n assign _GEN = _GEN_0;\r\n```\r\nAfter:\r\n```verilog\r\n  wire struct packed {logic [1:0] foo; } _GEN; \r\n\r\n  assign _GEN = '{foo: a};  \r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-27",
+  "closed_at": "2022-07-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1215,
+  "issue_url": "https://github.com/llvm/circt/issues/1215",
+  "title": "[FIRRTL] (dshr, and) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_e: SInt<58>\r\n    output tmp116: UInt<58>\r\n    wire tmp109: SInt<58>\r\n    tmp109 <= dshr(inp_e, tail(UInt<21>(\"h1935b6\"), 11))\r\n    tmp116 <= and(asSInt(UInt<9>(\"o246\")), tmp109)\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [57:0] inp_e,\r\n  output [57:0] tmp116);\r\n\r\n  assign tmp116 = $signed(inp_e) >>> 58'sh1B6 & 58'hA6;\t// a_top_mod.fir:2:3, :6:15, :7:15\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [57:0] inp_e,\r\n  output [57:0] tmp116\r\n);\r\n  wire  _GEN_1 = inp_e[57];\r\n  wire [57:0] tmp109 = {58{_GEN_1}};\r\n  assign tmp116 = 58'sha6 & $signed(tmp109);\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 4 unproven $equiv cells in 'equiv_status -assert'.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-08",
+  "closed_at": "2021-06-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 420,
+  "issue_url": "https://github.com/verilator/verilator/issues/420",
+  "title": "verilator generates incorrect code when if/else is used inside function",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 420 from https://www.veripool.org\nOriginal Date: 2011-11-10\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nTest case:\r\n\r\n```\r\ntypedef logic [7-1:0] wb_ind_t;\r\ntypedef logic [7-1:0] id_t;\r\n\r\nmodule test ( output wb_ind_t out,\r\n               input id_t in );\r\n\r\n    function wb_ind_t line_wb_ind( id_t id );\r\n       if( id[$bits(id_t)-1] == 0 )\r\n         return {2'b00, id[$bits(wb_ind_t)-3:0]};\r\n       else\r\n         return {2'b01, id[$bits(wb_ind_t)-3:0]};\r\n    endfunction // line_wb_ind\r\n\r\n    assign out = line_wb_ind( in );\r\n\r\nendmodule // test\r\n\n```\r\n\r\n\r\nGenerated code:\r\n\r\n```\r\nvoid Vtest::_combo__TOP__2(Vtest__Syms* __restrict vlSymsp) {\r\n     VL_DEBUG_IF(VL_PRINTF(\"    Vtest::_combo__TOP__2\\n\"); );\r\n     Vtest* __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n     // Body\r\n     VL_ASSIGN_ISI(7,vlTOPp->__Vcellinp__v__in, vlTOPp->in);\r\n     // ALWAYS at test.v:14\r\n     vlTOPp->__Vfunc_v__DOT__line_wb_ind__0__id = vlTOPp->__Vcellinp__v__in;\r\n     {\r\n\t{\r\n\t    if ((0 == (1 & ((IData)(vlTOPp->__Vfunc_v__DOT__line_wb_ind__0__id) \r\n\t\t\t    >> 6)))) {\r\n\t\tvlTOPp->__Vfunc_v__DOT__line_wb_ind__0__Vfuncout \r\n\t\t    = (0x1f & (IData)(vlTOPp->__Vfunc_v__DOT__line_wb_ind__0__id));\r\n\t\tgoto __Vlabel2;\r\n\t    } else {\r\n\t\tgoto __Vlabel1;\r\n\t\tvlTOPp->__Vfunc_v__DOT__line_wb_ind__0__Vfuncout \r\n\t\t    = (0x20 | (0x1f & (IData)(vlTOPp->__Vfunc_v__DOT__line_wb_ind__0__id)));\r\n\t    }\r\n\t}\r\n\t__Vlabel2: ;\r\n     }\r\n     __Vlabel1: ;\r\n     vlTOPp->__Vcellinp__v__out = vlTOPp->__Vfunc_v__DOT__line_wb_ind__0__Vfuncout;\r\n}\r\n\n```\r\n\r\n*else* part is never executed because of goto in front of assignment.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2011-11-10",
+  "closed_at": "2011-11-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

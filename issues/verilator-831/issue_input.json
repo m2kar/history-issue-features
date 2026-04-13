@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 831,
+  "issue_url": "https://github.com/verilator/verilator/issues/831",
+  "title": "Gate optimizer: Can't replace lvalue assignments with const var",
+  "body": "---\n\n\nAuthor Name: **Jonathon Donaldson**\nOriginal Redmine Issue: 831 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI'm getting this extremely annoying internal error when verilating my code:\r\n\r\n```\r\n%Error: Internal Error: ../design/cpu/cpu_reg_file.sv:413: ../V3Gate.cpp:762: Can't replace lvalue assignments with const var\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n\n```\r\n\r\nThe code that's causing the error is as follows.\r\n\r\n```\r\nlogic [7:0] timer_T1;\r\n\r\nalways_ff @(posedge i_clk)\r\nbegin\r\n  if (i_rst || i_ls_en) begin\r\n     timer_T1 <= {$bits(timer_T1){1'b0}}; /////////// THIS IS LINE 413 ///////////\r\n  end else if (i_clk_en) begin\r\n\r\n     if (tick_T1)\r\n       timer_T1 <= {$bits(timer_T1){1'b0}};\r\n     else if (tick_8kHz)\r\n       timer_T1 <= timer_T1 + 1'b1;\r\n\r\n  end\r\nend\r\n\n```\r\n\r\nI can't figure out what the problem is. The first issue is that it's not clear to me what \"Can't replace lvalue assignments with const var\" means. But the most annoying part is that if I verilate the file standalone separate from the rest of the project source files with no source changes whatsoever then the module builds fine. That's a pain because I've been trying to create a very small example to reproduce the error that I can send you but I can't get the error to happen outside of this large project.\r\n\r\nAnother annoying part is that verilator seems to be totally arbitrary in what it chooses to report this error on. For example, I have the following always block immediately below the above code which is identical except the register name is different, and verilator does not report the internal error:\r\n\r\n```\r\nlogic [7:0] timer_T2;\r\n\r\nalways_ff @(posedge i_clk)\r\nbegin\r\n  if (i_rst || i_ls_en) begin\r\n     timer_T2 <= {$bits(timer_T2){1'b0}};\r\n  end else if (i_clk_en) begin\r\n\r\n     if (tick_T2)\r\n       timer_T2 <= {$bits(timer_T2){1'b0}};\r\n     else if (tick_8kHz)\r\n       timer_T2 <= timer_T2 + 1'b1;\r\n\r\n  end\r\nend\r\n\n```\r\n\r\nThere are other always blocks in the file that are all very similar. Some I get the error on some I don't. The only way I have been able to get rid of the error (just temporarily) is to delete the offending line completely. Obviously that breaks my design but it at least let's me get the rest of the project built - which did build without any additional errors.\r\n\r\nAny ideas? I'll keep trying to reproduce the error in a smaller example but I honestly don't think it's going to be possible. I've tried everything I can think of...\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2014-10-19",
+  "closed_at": "2019-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

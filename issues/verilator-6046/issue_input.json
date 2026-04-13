@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6046,
+  "issue_url": "https://github.com/verilator/verilator/pull/6046",
+  "title": "Fix packed array deduction",
+  "body": "I found some other cases that needs to be considered wrt #6042.  `t_bitsel_2d_slice` shows that a type reference can be hiding in the `fromp` of a SelExtract but not be a packed array of said type.  E.g.:\r\n```\r\nthe_two_dee[index_t'(5)][7:0] = 8'hab;\r\n```\r\nyields:\r\n```\r\n    1:2:2:2:2: SELEXTRACT 0x555556dd54a0 <e735#> {f20bh} @dt=0@\r\n    1:2:2:2:2:1: SELBIT 0x555556dd53f0 <e725#> {f20au} @dt=0@\r\n    1:2:2:2:2:1:1: PARSEREF 0x555556e74000 <e710#> {f20aj} @dt=0@  the_two_dee [TEXT]\r\n    1:2:2:2:2:1:2: CASTPARSE 0x555556dd92c0 <e711#> {f20bc} @dt=0@\r\n    1:2:2:2:2:1:2:1: CONST 0x555556ddf4a0 <e707#> {f20be} @dt=0x555556ddcc00@(G/swu32/3)  ?32?sh5\r\n    1:2:2:2:2:1:2:2: PARSEREF 0x555556e740d0 <e708#> {f20av} @dt=0@  index_t [TEXT]\r\n    1:2:2:2:2:2: CONST 0x555556ddf590 <e726#> {f20bi} @dt=0x555556ddcc00@(G/swu32/3)  ?32?sh7\r\n    1:2:2:2:2:3: CONST 0x555556ddf680 <e727#> {f20bk} @dt=0x555556d6c6c0@(G/swu32/1)  ?32?sh0\r\n```\r\n\r\nI changed the logic to only check to see if the parent of the ParseRef is a SelExtract which fixes that case.\r\n\r\nThe other scenario I'm now noticing is scoped types:\r\n```\r\n   foo #(.bar (some_package::two_bytes_t [3:0]))\r\n   foo_inst6 (.bar_size (bar_size6));\r\n```\r\ngives us:\r\n```\r\n    1:2:2: PIN 0x555556d47ce0 <e1104#> {f64al}  bar ->UNLINKED [.n]\r\n    1:2:2:1: DOT 0x555556e8a370 <e1105#> {f64bq} @dt=0@ [::]\r\n    1:2:2:1:1: CLASSORPACKAGEREF 0x555556e81380 <e1102#> {f64aq} @dt=0@  some_package -> UNLINKED\r\n    1:2:2:1:2: SELEXTRACT 0x555556e8a420 <e1103#> {f64bq} @dt=0@\r\n    1:2:2:1:2:1: PARSEREF 0x555556e81450 <e1098#> {f64be} @dt=0@  two_bytes_t [TEXT]\r\n    1:2:2:1:2:2: CONST 0x555556e85c20 <e1099#> {f64br} @dt=0x555556ddc900@(G/swu32/2)  ?32?sh3\r\n    1:2:2:1:2:3: CONST 0x555556e85d10 <e1100#> {f64bt} @dt=0x555556d6c6c0@(G/swu32/1)  ?32?sh0\r\n```\r\nBut then `LinkDotResolveVisitor` complains that it finds a PackArrayDType under a Dot.  I allowed that but now it's mad about Ranges and Consts.\r\n\r\nSo now I'm wondering if I should continue down this path.  Clearly we don't want to allow `some_package::5`.  I guess I could allow Ranges and Consts only if they are children of a PackArrayDType.  I could try to push the Dot down into the PackArrayDType when I deduce that, but then I'm worried I'm just going to start duplicating the Dot visitor.\r\n\r\nI'm going to start trying my initial thought, but if there's an obviously better way please let me know.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-28",
+  "closed_at": "2025-05-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

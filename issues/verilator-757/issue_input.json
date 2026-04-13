@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 757,
+  "issue_url": "https://github.com/verilator/verilator/issues/757",
+  "title": "Verilator ignores sense list of combo always block ",
+  "body": "---\n\n\nAuthor Name: **Jie Xu** (@jiexu)\nOriginal Redmine Issue: 757 from https://www.veripool.org\n\n\n\n---\n\nWhen investigating to improve the performance of Verilator-based simulator model, I found the following handling of combo blocks in Verilator:\r\n\r\n1) The sense list in always combo block is actually not really used. When forming AstActive, the sense list of combo always block is deleted.\r\n\r\n2) Instead Verilator will kind of take in all the AstVarRef on RHS as the sense item. This is reflected in V3Order.cpp when forming the graph. This in some cases will make the signal as Circular.\r\n\r\nWe have some cases where the above of handling will make Verilator generating at least inefficient(not know if incorrect) code. For example:\r\n\r\n```\r\nmodule test (a, b, result);\r\n\r\ninput  wire       a;\r\ninput  wire       b;\r\noutput wire [31:0] result;\r\n\r\nlogic [2:0] c;\r\n\r\nalways @(a,b)  // By doing this, the designer knows c is not a problem.\r\nbegin\r\n// c = 3'b0;  // by uncomenting this line, Verilator will not take c into sense list.\r\nc = c | (a << 1);\r\nc = c | (b << 2);\r\nend\r\n\r\nassign result[2:0] = c;\r\nendmodule\r\n\n```\r\n\r\nVerilator will take the @c@ into the @change_request@ list in this example. However here @c@ is an output and don't really need another loop to settle. \r\n\r\nThe big question here is which should we depends on, either the designer's list (@always(a,b))@) or all the VAR used as condition. IMHO, I believe we should respect the designer as he has the option @always*@ if he really want to take later case.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance",
+    "area: scheduling",
+    "effort: days",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2014-05-02",
+  "closed_at": "2022-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

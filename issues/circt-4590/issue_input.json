@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4590,
+  "issue_url": "https://github.com/llvm/circt/pull/4590",
+  "title": "[PrettifyVerilog] Don't sink expressions if their values might be changed in procedural regions",
+  "body": "It's incorrect to sink an expression if its subexpression is mutated by blocking assignments (or other side-effecting operations). This PR fixes the bug by checking the users of inout operations and preventing Prettify from sinking expressions. Since it's necessary to traverse the IR to analysis users, it might be costly without cache so I introduced a class `SideEffectTracker` to first store unsafe declarations and to provide APIs to answer immutability of expressions. \r\n\r\nFix https://github.com/llvm/circt/issues/4532 (though we still have a similar issue in Prepare spills expressions without considering blocking assignments). The output verilog is:\r\n```\r\nmodule Main(\r\n  input  [1:0] IA,\r\n               IB,\r\n  input        IS,\r\n  output [1:0] O);\r\n\r\n  reg        _GEN;\r\n  reg        _GEN_0;\r\n  reg        _GEN_1;\r\n  reg        _GEN_2;\r\n  wire [2:0] _GEN_3 = {{2{_GEN_0}}, _GEN} + {{2{_GEN_2}}, _GEN_1};\r\n  reg        _GEN_4;\r\n  reg        _GEN_5;\r\n  always_comb begin\r\n    if (IS) begin\r\n      _GEN = 1'h0;\r\n      _GEN_0 = 1'h0;\r\n      _GEN_1 = IB[0];\r\n      _GEN_2 = IB[1];\r\n    end\r\n    else begin\r\n      _GEN = IA[0];\r\n      _GEN_0 = IA[1];\r\n      _GEN_1 = 1'h1;\r\n      _GEN_2 = 1'h0;\r\n    end\r\n    if (_GEN_3[2:1] == 2'h1) begin\r\n      _GEN_4 = 1'h1;\r\n      _GEN_5 = 1'h0;\r\n    end\r\n    else if (_GEN_3[2:1] == 2'h2) begin\r\n      _GEN_4 = 1'h0;\r\n      _GEN_5 = 1'h1;\r\n    end\r\n    else begin\r\n      _GEN_4 = _GEN_3[0];\r\n      _GEN_5 = _GEN_3[1];\r\n    end\r\n  end // always_comb\r\n  assign O = {_GEN_5, _GEN_4};\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-01-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

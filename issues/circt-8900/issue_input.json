@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8900,
+  "issue_url": "https://github.com/llvm/circt/pull/8900",
+  "title": "[Moore] Add proper conversions between time and integer values",
+  "body": "Time values in Verilog are basically just plain 64 bit integers. This is an infinite source of frustration when trying to send time values between units with different timescales. The Moore dialect has a separate `!moore.time` type for this reason, allowing time values to be captured more precisely and converted to the equivalent `!llhd.time`.\r\n\r\nTo allow users to write `#5`, basically delaying execution for 5 times the local time scale value, add a `moore.time_to_int` and complementary `moore.int_to_time` operation. These allow time values to be cast from and to their equivalent integer number of femtoseconds.\r\n\r\nMake type conversions in ImportVerilog more conservative by refusing any conversion between packed and simple bit vector types if the packed type has any nested time value. For trivial casts between an integer and a time value, use the new `moore.time_to_int` and `moore.int_to_time` operations together with a `moore.mul` or `moore.divu` of the integer value by the local timescale value.\r\n\r\nAdd unsigned and signed division operators to `FVInt`.\r\n\r\nAdd a bunch of constant folders to the Moore dialect and switch over to `createOrFold` in most conversion functions to produce already-folded IR where possible.\r\n\r\nThis now allows circt-verilog to process statements like `#5` or `time t = 42`.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-29",
+  "closed_at": "2025-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

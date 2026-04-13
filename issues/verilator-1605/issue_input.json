@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1605,
+  "issue_url": "https://github.com/verilator/verilator/issues/1605",
+  "title": "for loop initialisation clause skipped",
+  "body": "---\n\n\nAuthor Name: **Andrew Holme**\nOriginal Redmine Issue: 1605 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe body of the first for loop in this code never executes because the condition clause is always false; however it seems the initialise clause is also (incorrectly) optimised away.\r\n\r\n```\r\nmodule top (\r\n  input  wire       clk,\r\n  input  wire       rst_n,\r\n  output reg  [1:0] out);\r\n  \r\n  reg [1:0] one, nil;\r\n  \r\n  localparam CORES=1;\r\n  \r\n  always @(posedge clk or negedge rst_n) begin\r\n     integer i;\r\n     if (!rst_n) begin\r\n       out <= 2'b0;\r\n       nil <= 2'b0;\r\n       one <= 2'b0;\r\n     end else begin   \r\n       for (i=0; i<CORES-1; i=i+1) begin // should always set i=0\r\n         nil[i] <= 1'b1; // never happens\r\n       end\r\n       // i should always be 0 here; but is 0 only in the first cycle after reset, then 1\r\n       out[i] <= 1'b1;\r\n       for (i=0; i<CORES; i=i+1) begin\r\n         one[i] <= 1'b1;\r\n       end\r\n     end\r\n  end\r\n  \r\nendmodule\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-15",
+  "closed_at": "2019-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

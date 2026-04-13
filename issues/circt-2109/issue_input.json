@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2109,
+  "issue_url": "https://github.com/llvm/circt/pull/2109",
+  "title": "[FIRRTL] Fix local wire/node resets not dominating inferred connections",
+  "body": "Fix an issue in `InferResets` where using a local wire or node as the async reset for the module could cause dominance issues when the wire was declared *after* some of things it would end up getting connected to. A typical example would be:\r\n\r\n    %reg = firrtl.reg %clock\r\n    %localReset = firrtl.wire /*FullAsyncResetAnnotation*/\r\n\r\nIn this case `InferResets` would decide to hook `%localReset` up to the register `%reg`, creating a dominance problem.\r\n\r\nThis commit changes the behavior of `InferResets` such that it moves the local reset declaration up to before the first thing it gets connected to, possibly converting a `NodeOp` to a `WireOp` if the node's input value blocks the move due to it not dominating the target site.\r\n\r\nThanks to @youngar for finding this issue!",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-09",
+  "closed_at": "2021-11-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

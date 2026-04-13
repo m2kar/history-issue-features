@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9045,
+  "issue_url": "https://github.com/llvm/circt/pull/9045",
+  "title": "[circt-verilog-lsp] Move to Slang's src mngr, drop LLVM src mngr",
+  "body": "- **Use Slang buffers as source of truth**\r\n  - Replace `llvm::SourceMgr`-centric code with direct use of `slang::SourceManager`.\r\n  - Add `slang::BufferID mainBufferId` and expose `getMainBufferID()`.\r\n\r\n- **Interval map now indexes Slang buffer pointers**\r\n  - New typedef: `using SlangBufferPointer = char const *;`.\r\n  - Change from `IntervalMap<const char*, …>` to `IntervalMap<SlangBufferPointer, …>` (half-open).\r\n  - Lookups are computed from `slang::SourceManager::getSourceText(buf).data() + offset`.\r\n\r\n- **Remove LLVM `SourceMgr` plumbing**\r\n  - Drop members/APIs: `sourceMgr`, `bufferIDMap`, `getSMLoc(...)`.\r\n  - Update `filePathMap` to store `(slang::BufferID, path)` pairs.\r\n  - `getOrOpenFile(...)` now assigns text via Slang (`driver.sourceManager.assignText(...)`) and caches the returned `BufferID`.\r\n\r\n- **Implement LSP UTF-16 to Slang UTF-8 conversion**\r\n  - Add `decodeUtf8(...)` and `lspPositionToOffset(...)` helpers.\r\n  - Use these helpers in `getLocationsOf(...)` and `findReferencesOf(...)` before interval lookups.\r\n  - Clamp positions past end-of-line to buffer end; avoid OOB pointer math.\r\n\r\n- **Definition & reference resolution updated**\r\n  - `getLspLocation(slang::SourceLocation/Range)` now uses Slang line/column and compares `loc.buffer()` directly to `mainBufferId`.\r\n  - `findReferencesOf(...)` / `getLocationsOf(...)` locate the interval by pointer into the **main** buffer.\r\n\r\n- **Top module discovery via syntax trees**\r\n  - Derive `driver.options.topModules` from `CompilationUnitSyntax` members by reading `ModuleDeclarationSyntax` headers (covers modules and packages).\r\n  - Avoid creating a separate `Compilation` just to enumerate tops.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-02",
+  "closed_at": "2025-10-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

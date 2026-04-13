@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4174,
+  "issue_url": "https://github.com/verilator/verilator/issues/4174",
+  "title": "Signed comparison fails for sizes not multiple of 8, or when reference value is read from a file",
+  "body": "Please regard the following code\r\nt.sv:\r\n```systemverilog\r\nmodule t;\r\n\r\n  parameter W=17;\r\n  \r\n  wire signed [W-1:0] op;\r\n  logic signed [W-1:0]  opref;\r\n  int fd;\r\n\r\n  assign op = 17'h1ffff;\r\n\r\n  initial begin\r\n    fd=$fopen(\"t.txt\", \"r\");\r\n    #1 $fscanf(fd, \"%d\", opref);\r\n    if(op !== opref) $display(\"Mismatch: op=%b, opref=%b\",op,opref);\r\n    else $display(\"pass\");\r\n    $fclose(fd);\r\n    $stop;\r\n  end\r\n\r\nendmodule: t\r\n``` \r\nt.txt:\r\n```\r\n-1\r\n```\r\n\r\nI run: \r\n``` shell\r\nverilator --binary t.sv ; ./obj_dir/Vt \r\n```\r\nI get this simulation output:\r\n```\r\nMismatch: op=11111111111111111, opref=11111111111111111\r\n```\r\nie. The comparison failed, although both signals are bit equivalent !\r\nInterestingly, this mismatch didn't occur if I set bit-width (W parameter) to 8 or 16.\r\nAlso, this mismatch does not happen if I set opref to -1 in the SV code, ie: if I replace the $fscanf line with:\r\n```systemverilog\r\n#1 opref=-1;\r\n```\r\nWhat 'verilator --version' are you using? \r\nVerilator 5.006 2023-01-22 rev (Debian 5.006-3)\r\n\r\nDid you try it with the git master version?\r\nNo\r\n\r\nWhat OS and distribution are you using?\r\nDebian bookworm on arm64\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nMaybe",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-07",
+  "closed_at": "2023-05-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

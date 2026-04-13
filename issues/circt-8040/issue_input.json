@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8040,
+  "issue_url": "https://github.com/llvm/circt/pull/8040",
+  "title": "[HW] Enable parametric polymorphism for module parameters ",
+  "body": "The current implementation of parametric polymorphism in modules, as described in the [CIRCT documentation](https://circt.llvm.org/docs/Dialects/HW/RationaleHW/#parameterized-modules), supports input and output types but does not extend to parameters.\r\n\r\nFor example, given a parameter `<DATA_WIDTH: i32>`, it is possible to define an argument like `in %input : !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>` , but it is not possible to define a parameter such as `<RESET_VALUE: !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>>`\r\n\r\nConsider the following code snippet:\r\n\r\n```mlir\r\nhw.module.extern @param_in_param< \r\n  RESET_VALUE: !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>, \r\n  DATA_WIDTH: i32 = 32\r\n>( \r\n  in %input : !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>, \r\n  out output : !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>\r\n)\r\n\r\nhw.module @param_in_param_inst(\r\n  in %input : i96,\r\n  in %clk : i1, \r\n  in %rst : i1, \r\n  out output : i96\r\n) {\r\n  %a.output = hw.instance \"a\" @param_in_param<\r\n    RESET_VALUE: i96 = 0, \r\n    DATA_WIDTH: i32 = 96\r\n  >(\r\n    input: %input: i96\r\n  ) -> (output: i96)\r\n  hw.output %a.output : i96\r\n}\r\n```\r\n\r\nIn this example, with the parameter `DATA_WIDTH: i32 = 96` , the argument `in %input`  of type `hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>` is correctly matched with `input: %input: i96` through a simple substitution. However, `circt-opt` fails to recognize that `RESET_VALUE: i96` is the equivalent to `RESET_VALUE: !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>` . Instead it emits the following error message: \r\n\r\n```\r\n<source>:4:15: error: 'hw.instance' op parameter \"RESET_VALUE\" should have type '!hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>' but has type 'i96'\r\n  %a.output = hw.instance \"a\" @param_in_param<RESET_VALUE: i96 = 0, DATA_WIDTH: i32 = 96>(input: %input: i96) -> (output: i96)\r\n              ^\r\n<source>:4:15: note: see current operation: %0 = \"hw.instance\"(%arg0) <{argNames = [\"input\"], instanceName = \"a\", moduleName = @param_in_param, parameters = [#hw.param.decl<\"RESET_VALUE\": i96 = 0> : i96, #hw.param.decl<\"DATA_WIDTH\": i32 = 96> : i32], resultNames = [\"output\"]}> : (i96) -> i96\r\n<source>:1:1: note: module declared here\r\nhw.module.extern @param_in_param<RESET_VALUE: !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>, DATA_WIDTH: i32 = 32>(in %input : !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>, out output : !hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>)\r\n^\r\nCompiler returned: 1\r\n```\r\n\r\nThis issue can be reproduced using the following demo: [Godbolt Link](https://godbolt.org/z/fzWrE3Ks6).\r\n\r\nMy proposed PR addresses this limitation and enables parametric polymorphism for module parameters, ensuring that types like `!hw.int<#hw.param.decl.ref<\"DATA_WIDTH\">>` are correctly recognized and validated.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-01-08",
+  "closed_at": "2025-01-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2677,
+  "issue_url": "https://github.com/verilator/verilator/issues/2677",
+  "title": "Support randc if only as alias to rand",
+  "body": "@kbieganski thanks for adding rand/randomize in #2607 \r\n\r\nDo you think you'll support randc soon?  If not can you please submit a pull to record usages of randc and alias them to rand?  Better than just ignoring randc.  If you'll start and finish on randc before release (early January) we can wait for that.\r\n\r\nI did some looking at randc and for a real implementation it looks like most simulators support at least 32-bits, so they aren't using a stack of values they shuffle, so they must be using some seeded algorithm.  One implementation would be to have a class instantiated per randc that generates values along these lines:\r\n\r\n```\r\nm_nrandLeft [bits-1:0];     // Number of random() calls left before reseed\r\nm_adder [bits-1:0];  // Random addition to value\r\nm_flipper [bits-1:0];   // Random bits to flip\r\nm_rotate [log2(bits)-1:0];   // Rotation of\r\n\r\nrandom_value() {\r\n  if (VL_UNLIKELY(!m_nrandLeft--)) {\r\n    m_nrandLeft = VL_MASK_Q(bits);\r\n    m_adder = random() & VL_MASK_Q(bits);\r\n    m_flipper = random() & VL_MASK_Q(bits);\r\n    m_rotate = random() % bits;\r\n  }\r\n  ++m_adder;\r\n  return VL_MASK_Q(bits) & rotate(m_adder ^ m_flipper, m_rotate);\r\n}\r\n```\r\n\r\nThis won't be great randomization but should be good enough and reasonably fast.",
+  "labels": [
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-07",
+  "closed_at": "2020-12-10",
+  "code_blocks": [
+    "m_nrandLeft [bits-1:0];     // Number of random() calls left before reseed\r\nm_adder [bits-1:0];  // Random addition to value\r\nm_flipper [bits-1:0];   // Random bits to flip\r\nm_rotate [log2(bits)-1:0];   // Rotation of\r\n\r\nrandom_value() {\r\n  if (VL_UNLIKELY(!m_nrandLeft--)) {\r\n    m_nrandLeft = VL_MASK_Q(bits);\r\n    m_adder = random() & VL_MASK_Q(bits);\r\n    m_flipper = random() & VL_MASK_Q(bits);\r\n    m_rotate = random() % bits;\r\n  }\r\n  ++m_adder;\r\n  return VL_MASK_Q(bits) & rotate(m_adder ^ m_flipper, m_rotate);\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

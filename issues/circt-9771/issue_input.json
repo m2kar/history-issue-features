@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9771,
+  "issue_url": "https://github.com/llvm/circt/pull/9771",
+  "title": "[ESI Runtime] Add statically typed port wrappers",
+  "body": "Add `TypedPorts.h` — a header-only library providing strongly-typed, non-owning wrappers around the ESI runtime's untyped port classes. Purely additive with no changes to existing port classes.\n\n## New APIs\n\n**`TypedWritePort<T>` / `TypedReadPort<T>`**\n- Verify type compatibility at `connect()` time via `if constexpr` dispatch over `_ESI_ID` structs, void, bool, signed/unsigned integers\n- Typed `write(const T&)` / `read() → T` APIs\n- Explicit void specializations\n- Unwraps `TypeAliasType` before comparison\n\n**`TypedFunction<ArgT, ResultT>`**\n- Non-owning wrapper around `FuncService::Function`\n- Implicitly constructible from `Function*` (`getAs<>` return):\n  ```cpp\n  TypedFunction<ArgStruct, ResultStruct> func = port.getAs<Function>();\n  func.connect();\n  ResultStruct res = func.call(arg).get();\n  ```\n- Four specializations for void/non-void arg/result combinations\n\n## Tests\n- **15 GTest unit tests** covering all verification paths, connect-time rejection, write round-trip, TypedFunction call round-trip\n- **Integration test** (`loopback_typed.cpp`) — typed variant of the loopback cosim test, wired into pytest",
+  "labels": [
+    "ESI"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-27",
+  "closed_at": "2026-03-02",
+  "code_blocks": [
+    "  TypedFunction<ArgStruct, ResultStruct> func = port.getAs<Function>();\n  func.connect();\n  ResultStruct res = func.call(arg).get();\n  "
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

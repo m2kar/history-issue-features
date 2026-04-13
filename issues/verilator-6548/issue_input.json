@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6548,
+  "issue_url": "https://github.com/verilator/verilator/issues/6548",
+  "title": "Multi-threaded simulation can be non-deterministic with racy input",
+  "body": "This is kind of a duplicate of #3359 / #3360, but I'm filing a new one rather than re-opening to focus the discussion. In #3359 / #3360 we didn't really confirm whether we are happy to live with this.\n\n---\n\nConsider this minimal example, which contains a race condition between the two always blocks (value of `b` depends on the execution order of the 2 blocks):\n\n```systemverilog\n module top(clk, a, b);\n     input clk;\n     wire logic clk;\n     output a;\n     int a = 0;\n     output b;\n     int b = 0;\n\n     always @(posedge clk) begin\n       a = a + 1;\n     end\n\n     always @(posedge clk) begin\n       b <= a + 1;\n     end\n   endmodule\n```\n\nThe MTask graph looks like this:\n\n<img width=\"650\" height=\"699\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/dba7339b-c78f-4259-a814-8e1e91101614\" />\n\n(This is after the 'FixDataHazards' step, but the final one is functionally the same).\n\n'mt2' writes `a`, 'mt4' reads `a`, but they have no defined ordering, and if they end up on different threads, the multi-threaded execution will be non-deterministic at run-time (that is, depending on thread scheduling, you will get different results on different runs). This seems pretty bad, as re-running the same simulation can produce different results. \n\n---\n\nt_flag_csplit has such a race and it's output is hence non-deterministic. Run this inside `test_regress/`:\n\n```\nwhile true; do ./t/t_flag_csplit.py --vltmt &> /dev/null && md5sum obj_vltmt/t_flag_csplit/simx.vcd ; done\n```\n\nAnd in another terminal:\n```\nstress -m $(nproc)\n```\n\nYou will see 2 different MD5 values reported\n\n---\n\nTo be clear, this has been the behaviour in multi-threaded mode forever. `FixDataHazards` in V3OrderParallel.cpp intended to fix these up, but it never did due to the bug described in #3359, which was there from day 1.\n\n---\n\nI can of course just fix `t_flag_csplit`, but non-determinism seems pretty bad for the user. (Ideally we should help them find races, but in a more direct way.)\n\nI'm leaning towards fixing `FixDataHazards` to insert just enough serialization for these R/W hazards to be made deterministic. Note we originally didn't merge #3360, because it had a big negative performance impact (the constraint can be more relaxed than that), but that fix in itself is not sufficient either (the OrderGraph does not encode some of these dependencies).\n\nI would appreciate your thoughts.\n\nShould I proceed? Or do we want to continue living with accepting non-deterministic simulation if the user design is racy? Should this be under an option (hard to test)? What performance penalty are we willing to accept?\n\n\n\n",
+  "labels": [
+    "area: scheduling",
+    "area: usability",
+    "status: discussion"
+  ],
+  "state": "open",
+  "created_at": "2025-10-10",
+  "closed_at": null,
+  "code_blocks": [
+    " module top(clk, a, b);\n     input clk;\n     wire logic clk;\n     output a;\n     int a = 0;\n     output b;\n     int b = 0;\n\n     always @(posedge clk) begin\n       a = a + 1;\n     end\n\n     always @(posedge clk) begin\n       b <= a + 1;\n     end\n   endmodule\n",
+    "while true; do ./t/t_flag_csplit.py --vltmt &> /dev/null && md5sum obj_vltmt/t_flag_csplit/simx.vcd ; done\n",
+    "stress -m $(nproc)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

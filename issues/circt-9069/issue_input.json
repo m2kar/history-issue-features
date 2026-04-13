@@ -1,0 +1,25 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9069,
+  "issue_url": "https://github.com/llvm/circt/issues/9069",
+  "title": "[BUG] Wrong propagation of reset signal and clock",
+  "body": "Hi there,\nI have found a bug in the code generation with the Calyx backend in the latest version of CIRCT. In the generated Verilog the reset signal are not used directly but they are renamed with a couple of wires:\n```\n  wire        ret_arg0_reg_clk = 1'bz;\t// adder.mlir:1:1\n  wire        ret_arg0_reg_reset = 1'bz;\n```\n\nHowever, the assignment is not correct and this causes the control FSM to hang. The bug is fixed by fixing the assignment:\n```\n  wire        ret_arg0_reg_clk = clk;\t// adder.mlir:1:1\n  wire        ret_arg0_reg_reset = reset;\n```\n\nTo reproduce the issue use the following `adder.mlir`:\n```\nfunc.func @adder(%a: i32, %b: i32) -> i32 {\n  %sum = arith.addi %a, %b : i32\n  return %sum : i32\n}\n```\n\nAnd the command `hlstool --calyx-hw adder.mlir --split-verilog -o=out`. The issue is in `out/adder.sv`.\nI can also provide a Verilator testbench if needed.\n\nEdit:\nI have managed to isolate the faulty pass. The problem happens at the canonicalization step at https://github.com/llvm/circt/blob/407c3d2de3a1f2814d317108e979115ddc9529f5/tools/hlstool/hlstool.cpp#L454\n\nYou can see this that here the clock and reset signals are passed to the FSM from the top module.\n```\nhlstool --calyx-hw adder.mlir --output-level=post-compile --ir\n```\n\nWhilst here two Z-constants are created:\n```\nhlstool --calyx-hw adder.mlir --output-level=rtl --ir\n```\n\nYou can isolate the problematic pass with:\n```\nhlstool --calyx-hw adder.mlir --output-level=post-compile --ir | circt-opt --lower-calyx-to-hw --canonicalize\n```\n(Simply remove `--canonicalize` to see how the clock and reset signals are still used before that).",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "open",
+  "created_at": "2025-10-08",
+  "closed_at": null,
+  "code_blocks": [
+    "  wire        ret_arg0_reg_clk = 1'bz;\t// adder.mlir:1:1\n  wire        ret_arg0_reg_reset = 1'bz;\n",
+    "  wire        ret_arg0_reg_clk = clk;\t// adder.mlir:1:1\n  wire        ret_arg0_reg_reset = reset;\n",
+    "func.func @adder(%a: i32, %b: i32) -> i32 {\n  %sum = arith.addi %a, %b : i32\n  return %sum : i32\n}\n",
+    "hlstool --calyx-hw adder.mlir --output-level=post-compile --ir\n",
+    "hlstool --calyx-hw adder.mlir --output-level=rtl --ir\n",
+    "hlstool --calyx-hw adder.mlir --output-level=post-compile --ir | circt-opt --lower-calyx-to-hw --canonicalize\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

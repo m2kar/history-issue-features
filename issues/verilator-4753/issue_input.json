@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4753,
+  "issue_url": "https://github.com/verilator/verilator/issues/4753",
+  "title": "\"Replication value of 0\" error inside unreachable code",
+  "body": "Essentially the same issue as #2866 #2625 and potentially more, Verilator complains about replication value of 0 inside unreachable code (example from [here](\r\nhttps://github.com/alexforencich/verilog-axi/blob/38915fb5330cb8270b454afc0140a94489dc56db/rtl/axi_adapter_wr.v#L356-L358)):\r\n\r\n```verilog\r\nparameter EXPAND = M_STRB_WIDTH > S_STRB_WIDTH;\r\n...\r\n    end else if (EXPAND) begin\r\n        // master output is wider; merge writes\r\n        m_axi_wdata_int = {(M_WORD_WIDTH/S_WORD_WIDTH){s_axi_wdata}};\r\n```\r\n\r\n```\r\n%Error: /local/home/pengxu/work-local/enzian-pio-nic/hw/deps/verilog-axi/rtl/axi_adapter_wr.v:358:55: Replication value of 0 is only legal under a concatenation (IEEE 1800-2017 11.4.12.1)  \r\n                                                                                                    : ... note: In instance 'PioNicEngine.axiAdapter.axi_adapter_wr_inst'\r\n  358 |         m_axi_wdata_int = {(M_WORD_WIDTH/S_WORD_WIDTH){s_axi_wdata}};                 \r\n      |                                                       ^\r\n```\r\n\r\nI would propose we take the same route as in #2754 and downgrade this error into a warning, maybe something called `ZEROREPL`; I can work on a PR if that's desirable.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-12-12",
+  "closed_at": "2024-01-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

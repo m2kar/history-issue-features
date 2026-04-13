@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2673,
+  "issue_url": "https://github.com/verilator/verilator/issues/2673",
+  "title": "Support split_var on misordered packed struct",
+  "body": "Hi:\r\n\r\nThis is a issue very similar to #2576 \r\n\r\nTestcase:\r\n```verilog\r\nmodule t (\r\n    input          clk,\r\n    input   logic  ready,\r\n    output  logic  rOut\r\n);\r\n\r\nstruct packed {\r\n    reg rIn;\r\n    reg rOut;\r\n    reg ready;\r\n} some;\r\n\r\nreg rIn;\r\nalways @ (posedge clk) begin\r\n    rIn <= ~rIn;\r\nend\r\n\r\nalways @ (*) begin\r\n    some.rIn = rIn;\r\n    rOut     = some.rOut;\r\nend\r\n\r\nalways @ (*) begin\r\n    some.ready = ready;\r\n    if (some.ready == 1)\r\n        some.rOut = some.rIn;\r\nend\r\n\r\nendmodule\r\n```\r\nThe input signal `ready` is equal to 1 during the evaluation, and here is the waveform:\r\n![0](https://user-images.githubusercontent.com/30991202/101273731-fc456c00-37d2-11eb-9da7-b72733e72b19.JPG)\r\nAs you can see, value of packed struct `some`, changes both at the posedge of clk and negedge of clk, which must be wrong.\r\n\r\n\r\nI think the reason is the same with #2576. In that issue, your workaround is adding commnet `/*verilator_split_var*/`, which is useful to that case, but useless to this one.\r\n\r\nI know it's a long term work to fix this bug, but can you add some mechanisms to get this around. For example, make `/*verilator_split_var*/` work when using packed struct.\r\n",
+  "labels": [
+    "status: ready",
+    "type: feature-non-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-06",
+  "closed_at": "2020-12-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

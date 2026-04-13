@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4871,
+  "issue_url": "https://github.com/llvm/circt/issues/4871",
+  "title": "[FIRRTL] Trivial Coverage Holes Possible in Mux Updates",
+  "body": "Both of the following FIRRTL circuits have trivial coverage holes which CIRCT does not remove. It would be useful if there was a way to remove these when possible.\r\n\r\nIn both of the following, the coverage hole exists because the condition `cond_0` is repeatedly used.\r\n\r\nConsider a `Mux` formulation to set the default value for a register:\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input cond_0: UInt<1>\r\n    input cond_1: UInt<1>\r\n    input d_0: UInt<1>\r\n    input d_1: UInt<1>\r\n    input d_2: UInt<1>\r\n    input d_3: UInt<1>\r\n    output q: UInt<1>\r\n\r\n    reg r: UInt<1>, clock\r\n\r\n    r <= mux(cond_0, d_0, d_1)\r\n\r\n    when cond_0:\r\n      r <= d_2\r\n    else when cond_1:\r\n      r <= d_3\r\n\r\n    q <= r\r\n```\r\n\r\nThis currently compiles to:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  clock,\r\n         cond_0,\r\n         cond_1,\r\n         d_0,\r\n         d_1,\r\n         d_2,\r\n         d_3,\r\n  output q\r\n);\r\n\r\n  reg r;\r\n  always @(posedge clock) begin\r\n    if (cond_0)\r\n      r <= d_2;\r\n    else if (cond_1)\r\n      r <= d_3;\r\n    else if (cond_0)\r\n      r <= d_0;\r\n    else\r\n      r <= d_1;\r\n  end // always @(posedge)\r\n  assign q = r;\r\nendmodule\r\n```\r\n\r\nAlternatively, the above can be rewritten using `when`/`else when` to show the problem more explicitly:\r\n```\r\ncircuit Bar:\r\n  module Bar:\r\n    input clock: Clock\r\n    input cond_0: UInt<1>\r\n    input cond_1: UInt<1>\r\n    input d_0: UInt<1>\r\n    input d_1: UInt<1>\r\n    input d_2: UInt<1>\r\n    input d_3: UInt<1>\r\n    output q: UInt<1>\r\n\r\n    reg r: UInt<1>, clock\r\n\r\n    when cond_0:\r\n      r <= d_2\r\n    else when cond_1:\r\n      r <= d_3\r\n    else when cond_0:\r\n      r <= d_0\r\n    else:\r\n      r <= d_1\r\n\r\n    q <= r\r\n```\r\n\r\n```verilog\r\nmodule Bar(\r\n  input  clock,\r\n         cond_0,\r\n         cond_1,\r\n         d_0,\r\n         d_1,\r\n         d_2,\r\n         d_3,\r\n  output q\r\n);\r\n\r\n  reg r;\r\n  always @(posedge clock) begin\r\n    if (cond_0)\r\n      r <= d_2;\r\n    else if (cond_1)\r\n      r <= d_3;\r\n    else if (cond_0)\r\n      r <= d_0;\r\n    else\r\n      r <= d_1;\r\n  end // always @(posedge)\r\n  assign q = r;\r\nendmodule\r\n```\r\n\r\nWe (due to designer pushback) have taken a stance that mux restructuring is a general anti-pattern. For experienced Chisel users, it prevents them from being able to structure muxes carefully for timing, physical design, or power reasons. However, we are then left with situations like this where obviously dead register updates are left around.\r\n\r\nThis could be fixed with a specialized pass looking for these things. Alternatively, moving more towards mux condition aggregation may fix this. (This is something that we have received explicit pushback on.)",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-22",
+  "closed_at": "2023-03-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

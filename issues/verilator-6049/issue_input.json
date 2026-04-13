@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6049,
+  "issue_url": "https://github.com/verilator/verilator/pull/6049",
+  "title": "Fix type operator for interface signals (#6050)",
+  "body": "This used to work:\r\n```\r\nlocalparam type intf_type = type(intf_pin.foo);\r\n```\r\nNow I'm getting:\r\n```\r\n%Error: Internal Error: t/t_param_type6.v:36:33: ../V3AstNodes.cpp:844: REFDTYPE not linked to type\r\n                                               : ... note: In instance 't.sub_eight'\r\n-node: REFDTYPE 0x555556ddf770 <e966> {f36bh} @dt=0@ -> UNLINKED\r\n   36 |     localparam type intf_type = type(intf_pin.foo);\r\n      |                                 ^~~~\r\n```\r\nbecause during `param()` we have this:\r\n```\r\n    1:2: PARAMTYPEDTYPE 0x555556e72b60 <e971> {f36av} u3=0x154 @dt=0@  intf_type -> REQUIREDTYPE 0x555556dd5e40 <e968> {f36av} @dt=0@\r\n    1:2:1: REQUIREDTYPE 0x555556dd5e40 <e968> {f36av} @dt=0@\r\n    1:2:1:1: REFDTYPE 0x555556ddf770 <e966> {f36bh} @dt=0@ -> UNLINKED\r\n    1:2:1:1:1: VARXREF 0x555556d4fa40 <e1014> {f36bv} @dt=0@  foo [RV] <- .=intf_pin VAR 0x555556d45e60 <e614> {f10ao} @dt=0@  foo [VSTATIC]  VAR\r\n```\r\nalso if I look at the `foo` Var, it has the wrong (default) parameter type.\r\n\r\nI assume this is because `param()` is happening before `linkDotParamed()`.  Can I defer some or all param'ing until after the dots are linked?  If so, is it possible that we'll have to repeatedly do these steps until it stabilizes?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-28",
+  "closed_at": "2025-06-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

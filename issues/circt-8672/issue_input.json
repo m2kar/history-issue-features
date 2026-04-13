@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8672,
+  "issue_url": "https://github.com/llvm/circt/issues/8672",
+  "title": "[FIRRTL] BlackBoxTargetDirAnno not respected for all black boxes",
+  "body": "This came up when looking into using `firrtl.transforms.BlackBoxTargetDirAnno` after #8669 was merged. Unfortunately I couldn't figure out a minimal example to recreate this issue. I'm attaching a Rocket Chip design generated from a Chipyard fork which is using Chisel 7.0.0-RC2 and `firtool-1.124.0`. When I add the following annotation to the design:\n\n```json\n  {\n    \"class\":\"firrtl.transforms.BlackBoxTargetDirAnno\",\n    \"targetDir\":\"black-boxes\"\n  }\n```\n\nI would expect all of the black box files to be placed in the `black-boxes` subdirectory inside the `firtool` output directory. However, when I run this command:\n\n```shell\nfirtool --annotation-file=rocket.annos.json --split-verilog -o out-dir rocket.fir\n```\n\nI see the following:\n\n```shell\n$ cat out-dir/firrtl_black_box_resource_files.f\nblack-boxes/ClockSourceAtFreqMHz.v\nblack-boxes/EICG_wrapper.v\nblack-boxes/GenericDigitalInIOCell.v\nblack-boxes/GenericDigitalOutIOCell.v\nblack-boxes/SimDRAM.cc\nblack-boxes/SimDRAM.v\nblack-boxes/SimJTAG.cc\nblack-boxes/SimJTAG.v\nblack-boxes/SimTSI.cc\nblack-boxes/SimTSI.v\nblack-boxes/SimUART.cc\nblack-boxes/SimUART.v\nblack-boxes/mm.cc\nblack-boxes/mm_dramsim2.cc\nblack-boxes/remote_bitbang.cc\nblack-boxes/testchip_htif.cc\nblack-boxes/testchip_tsi.cc\nblack-boxes/uart.cc\nplusarg_reader.v\n```\n\nNotably, `plusarg_reader.v` is placed directly in `out-dir`, rather than in the `black-boxes` subdirectory. Any ideas why this might be happening? You can recreate this by downloading the attached archive, and then running:\n\n```shell\n$ tar xf rocket-chip-black-box-path-error.tar.gz\n$ cd rocket-chip-black-box-path-error/\n$ ./run.sh\n```\n\n[rocket-chip-black-box-path-error.tar.gz](https://github.com/user-attachments/files/21134761/rocket-chip-black-box-path-error.tar.gz)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-09",
+  "closed_at": "2025-07-11",
+  "code_blocks": [
+    "  {\n    \"class\":\"firrtl.transforms.BlackBoxTargetDirAnno\",\n    \"targetDir\":\"black-boxes\"\n  }\n",
+    "firtool --annotation-file=rocket.annos.json --split-verilog -o out-dir rocket.fir\n",
+    "$ cat out-dir/firrtl_black_box_resource_files.f\nblack-boxes/ClockSourceAtFreqMHz.v\nblack-boxes/EICG_wrapper.v\nblack-boxes/GenericDigitalInIOCell.v\nblack-boxes/GenericDigitalOutIOCell.v\nblack-boxes/SimDRAM.cc\nblack-boxes/SimDRAM.v\nblack-boxes/SimJTAG.cc\nblack-boxes/SimJTAG.v\nblack-boxes/SimTSI.cc\nblack-boxes/SimTSI.v\nblack-boxes/SimUART.cc\nblack-boxes/SimUART.v\nblack-boxes/mm.cc\nblack-boxes/mm_dramsim2.cc\nblack-boxes/remote_bitbang.cc\nblack-boxes/testchip_htif.cc\nblack-boxes/testchip_tsi.cc\nblack-boxes/uart.cc\nplusarg_reader.v\n",
+    "$ tar xf rocket-chip-black-box-path-error.tar.gz\n$ cd rocket-chip-black-box-path-error/\n$ ./run.sh\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

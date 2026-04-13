@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1928,
+  "issue_url": "https://github.com/llvm/circt/issues/1928",
+  "title": "[Parameterized modules] Add a `hw.int<T>` type",
+  "body": "The next step in the journey for parameterized modules is to add parameterized types.  The first one that makes sense to add is a parameterized integer type.  Adding this is straight-forward now that parameter expressions are attributes, it roughly looks like:\r\n\r\n1) Add the type.  I suggest we make the width always be pinned to 32-bits to make the syntax cleaner and to line up with (non-System)Verilog better.\r\n2) Assert that the parameter expressions are only-valid expressions at construction time.\r\n3) We need operation verification to check that operations in a module only refer to valid parameterized types.  The delta with step 2 is that we need to make sure that referenced parameters are correctly defined and typed within the module, e.g. reject:\r\n\r\n```\r\nhw.module @foo<p1: i32>() {\r\n  someop: !hw.int<p2>  // invalid type in foo module because p2 isn't defined here.\r\n}\r\n```\r\n\r\n4) We need to handle parameter name legalization.  This is not at all straight-forward given our current design for name legalization, because renaming a parameter would require changing the types of arbitrary operations, something that is a bit crazy.  The right way to fix it is to complete Issue #1708, making the renaming completely a problem within the ExportVerilog pass.\r\n\r\n5) [x] The problem with this is that we need to change HWExportModuleHierarchy around.  I'll discuss this with richard.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-10-05",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

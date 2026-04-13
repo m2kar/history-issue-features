@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6051,
+  "issue_url": "https://github.com/llvm/circt/issues/6051",
+  "title": "[FIRRTL][LowerClasses] Handle wires of properties",
+  "body": "Input:\r\n\r\n```\r\nFIRRTL version 4.0.0\r\n\r\ncircuit WireProp:\r\n  module WireProp:\r\n    input in : String\r\n    output out : String\r\n\r\n    wire s : String\r\n    propassign s, in\r\n    propassign out, s\r\n```\r\n\r\nCurrent error:\r\n```\r\nwire-prop.fir:8:5: error: failed to legalize operation 'firrtl.wire' that was explicitly marked illegal\r\n    wire s : String\r\n    ^\r\nwire-prop.fir:8:5: note: see current operation: %0 = \"firrtl.wire\"() {annotations = [], name = \"s\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.string\r\n```\r\n\r\nThe above simple case can be canonicalized away by fixing/implementing #6049 , but there will still be wires in some scenarios (and passes my insert them at some point).\r\n\r\nHaven't looked too closely, but in case this helps:\r\n\r\nDue to single-connect nature of propassign, chasing through wires on one side (source, since we filter on those with dest of output port?) and collapsing might be enough? Graph regions save the def-before-use concerns, hopefully.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-06",
+  "closed_at": "2023-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

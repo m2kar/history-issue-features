@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7265,
+  "issue_url": "https://github.com/verilator/verilator/pull/7265",
+  "title": "Fix shift width mismatch in constraint solver SMT emission (#5420)",
+  "body": "## Summary\r\n\r\nFixes #5420. This patch fixes a solver error when constraint expressions contain shift operators whose operands have different bitvector widths. SMT-LIB2 `bvshl`/`bvlshr`/`bvashr` require both operands to have the same bitvector sort, but `ConstraintExprVisitor` passed shift operands to `editSMT()` at their original widths.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nclass AlignedPacket;\r\n  typedef logic [36:0] address_t;\r\n  typedef logic [3:0]  size_t;\r\n  rand address_t address;\r\n  rand size_t    size;\r\n  constraint c_aligned {\r\n    address % (1 << size) == 0;\r\n  }\r\nendclass\r\n\r\nmodule t;\r\n  initial begin\r\n    AlignedPacket pkt = new;\r\n    if (!pkt.randomize()) $stop;\r\n    $display(\"PASS\");\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Warning: .../include/verilated_random.cpp:642: Internal: Solver error:\r\n  (error \"line 11 column 330: Argument size at position 1 has sort (_ BitVec 4)\r\n  it does not match declaration (declare-fun bvshl ((_ BitVec 37) (_ BitVec 37)) (_ BitVec 37))\")\r\n```\r\n\r\n## Changes\r\n\r\n- Added `handleShift()` helper in `ConstraintExprVisitor` that zero-extends the RHS operand via `AstExtend` when narrower than LHS, propagating `user1()` (rand-variable dependency marker) to the new extend node\r\n- Added dedicated `visit(AstShiftL*)`, `visit(AstShiftR*)`, `visit(AstShiftRS*)` overrides that call `handleShift()` instead of falling through to the generic `visit(AstNodeBiop*)` handler\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_constraint_shift_width.{v,py}` -- tests mixed-width shifts in constraints: variable shift amount (37-bit LHS / 4-bit RHS), constant shift amount, and implication with shift\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-16",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

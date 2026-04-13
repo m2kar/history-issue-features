@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1782,
+  "issue_url": "https://github.com/verilator/verilator/issues/1782",
+  "title": "Question: verilator DPIâ€^O",
+  "body": "---\n\n\nAuthor Name: **Pinhas Krengel**\nOriginal Redmine Message: 1072 from https://www.veripool.org\n\n\n\n---\n\nI have downloaded and installed on my debian machine verilator (using apt-get install).\nIt works fine with simple examples, but fails when I use DPI System Task/Functions.\nIt compiles okay but fails in run time, because an export task function is not found:\n\"Testbench C called t_gen_stim but no such DPI export function name exists in ANY model.\"\n\nI have a SV bench, which calls a verilog DUT. The bench includes a task:\n\n```\n  export \"DPI-C\" task t_gen_stim;\n  task t_gen_stim;\n    input bit trd;\n    input bit twr;\n    $display(\"task drive %d %d at %d\", trd, twr, $time);\n    Trd=trd;\n    Twr=twr;\n  endtask\n\n```\n\nI have included the headers in my cpp bench as described in man pages:\n\n```\n#include \"Vpipe_fifo_tool.h\"\n#include \"Vpipe_fifo_tool__Dpi.h\"\n#include \"svdpi.h\"\n#include \"verilated.h\"\n...\n  svSetScope (svGetScopeFromName (\"u_dut\"));\n\n  while (!Verilated::gotFinish()) {\n...\n     t_gen_stim(entry.rd, entry.wr);\n\n```\n\nThis is my compile and run script:\n```\nclear;/usr/bin/verilator --trace --trace-depth 1 -sv -I./ --cc pipe_fifo_tool.sv --exe sim_main.cpp\ncd obj_dir\nmake -f Vpipe_fifo_tool.mk Vpipe_fifo_tool && echo \"make ended ok\"\n\n```\n\nCan you please help me to figure out what I do wrong.\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2013-05-04",
+  "closed_at": "2013-05-04",
+  "code_blocks": [
+    "  export \"DPI-C\" task t_gen_stim;\n  task t_gen_stim;\n    input bit trd;\n    input bit twr;\n    $display(\"task drive %d %d at %d\", trd, twr, $time);\n    Trd=trd;\n    Twr=twr;\n  endtask\n\n",
+    "#include \"Vpipe_fifo_tool.h\"\n#include \"Vpipe_fifo_tool__Dpi.h\"\n#include \"svdpi.h\"\n#include \"verilated.h\"\n...\n  svSetScope (svGetScopeFromName (\"u_dut\"));\n\n  while (!Verilated::gotFinish()) {\n...\n     t_gen_stim(entry.rd, entry.wr);\n\n",
+    "clear;/usr/bin/verilator --trace --trace-depth 1 -sv -I./ --cc pipe_fifo_tool.sv --exe sim_main.cpp\ncd obj_dir\nmake -f Vpipe_fifo_tool.mk Vpipe_fifo_tool && echo \"make ended ok\"\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

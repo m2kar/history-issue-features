@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3478,
+  "issue_url": "https://github.com/verilator/verilator/issues/3478",
+  "title": "Incorrect logic optimization ",
+  "body": "Failure seen on version 4.222\r\n\r\nRan on 4.224 and issue was resolved. I glanced at the release notes for 4.224 and nothing stood out to me as a fix for this, so raising this issue just in case.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```\r\nmodule WrapTest(\r\n  input   clock,\r\n  input   reset,\r\n  output  io_success\r\n);\r\n  reg [2:0] small_;\r\n  wire [3:0] nextSmall = small_ + 3'h1;\r\n  reg [4:0] largeOpt;\r\n  wire [4:0] nextLargeOpt = largeOpt + 5'h1;\r\n  wire [4:0] _T_10 = ~nextLargeOpt;\r\n  wire [4:0] _T_11 = largeOpt & _T_10;\r\n  assign io_success = nextSmall[3] & _T_11[4];\r\n  wire [3:0] _GEN_5 = reset ? 4'h0 : nextSmall;\r\n  always @(posedge clock) begin\r\n    small_ <= _GEN_5[2:0];\r\n    if (reset) begin\r\n      largeOpt <= 5'h0;\r\n    end else if (nextSmall[3]) begin\r\n      largeOpt <= nextLargeOpt;\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\nio_success ends up with an incorrect optimization. the last \"bitwise and\" should be shifted as well. \r\n```\r\n    vlSelf->io_success = (IData)(((((IData)(vlSelf->WrapTest__DOT__largeOpt) \r\n                                    >> 4U) & (((IData)(1U) \r\n                                               + (IData)(vlSelf->WrapTest__DOT__small_)) \r\n                                              >> 3U)) \r\n                                  & (~ ((IData)(1U) \r\n                                        + (IData)(vlSelf->WrapTest__DOT__largeOpt)))));\r\n```\r\n\r\n\r\nWhat OS and distribution are you using?\r\nrhel8\r\n",
+  "labels": [
+    "resolution: duplicate",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-28",
+  "closed_at": "2022-06-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

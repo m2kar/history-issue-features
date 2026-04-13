@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9482,
+  "issue_url": "https://github.com/llvm/circt/issues/9482",
+  "title": "[FIRRTL] Module ports get removed even when module is targeted by firrtl.simulation/firrtl.formal",
+  "body": "Consider this input FIRRTL:\n```\nFIRRTL version 6.0.0\ncircuit Foo :\n  public module Foo :\n    skip\n  simulation GrayCodeExhaustive of GrayCodeExhaustive_1 :\n  module GrayCodeExhaustive_1 :\n    input clock : Clock\n    input init : UInt<1>\n    output done : UInt<1>\n    output success : UInt<1>\n\n    connect done, UInt<1>(0h1)\n    connect success, UInt<1>(0h1)\n```\nWhen run through `firtool`, this produces the following error:\n```\nerror: 'firrtl.simulation' op target @GrayCodeExhaustive_1 must have at least 4 ports, got 0 instead\n  simulation GrayCodeExhaustive of GrayCodeExhaustive_1 :\n             ^\nnote: target defined here\n  module GrayCodeExhaustive_1 :\n  ^\n```\nI think this is a bug in dead code / dead port elimination: if a module is targeted by a `firrtl.simulation` or a `firrtl.formal` declaration, we cannot change its port list, because those declarations rely on the module having specific ports.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2026-01-20",
+  "closed_at": null,
+  "code_blocks": [
+    "FIRRTL version 6.0.0\ncircuit Foo :\n  public module Foo :\n    skip\n  simulation GrayCodeExhaustive of GrayCodeExhaustive_1 :\n  module GrayCodeExhaustive_1 :\n    input clock : Clock\n    input init : UInt<1>\n    output done : UInt<1>\n    output success : UInt<1>\n\n    connect done, UInt<1>(0h1)\n    connect success, UInt<1>(0h1)\n",
+    "error: 'firrtl.simulation' op target @GrayCodeExhaustive_1 must have at least 4 ports, got 0 instead\n  simulation GrayCodeExhaustive of GrayCodeExhaustive_1 :\n             ^\nnote: target defined here\n  module GrayCodeExhaustive_1 :\n  ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

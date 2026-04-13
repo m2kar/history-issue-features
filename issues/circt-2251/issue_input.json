@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2251,
+  "issue_url": "https://github.com/llvm/circt/pull/2251",
+  "title": "[FIRRTL] Improve canonicalization involving `invalidvalue`",
+  "body": "This extends the FIRRTL fold and canonicalization patterns to treat `invalidvalue` as a zero if it is an input to a primary operation. This is inline with what the Scala implementation of the FIRRTL compiler does.\r\n\r\nDoing this removes quite a few of the special cases where certain ops are aware of `invalidvalue`s and will fold as if it was a zero. The addition of the `getConstant`, `isConstantZero`, and `canonicalizePrimOp` helpers allow for most folders and canonicalizers to not having to bother with `invalidvalue`s, as these helpers implicitly map `invalidvalue`s to zero constants.\r\n\r\nThis also subsumes the work done in #2278 and #2198, which selectively added handling for `invalidvalue`s to the `PadPrimOp`.\r\n\r\nThe extension of the folders and canonicalizers now makes all the cases in `invalid-reg-fail.fir` pass, albeit some only after accepting that the MLIR implementation folds *additional* cases where the Scala one might just leave an operation untouched. These are marked with a `<-- fixed; upstream to Scala FIRRTL impl?` and should probably be upstreamed as additional canonicalizations on the Scala side as well.\r\n\r\n---\r\n*Original PR:*\r\n\r\nThis draft PR is an effort to make `invalidvalue` behave as zero during canonicalization, while still maintaining the `firrtl.invalidvalue` operations in the IR, which we use in a canonicalization of `MuxPrimOp` to properly do `WhenOp` expansion.\r\n\r\nWith a few additional helpers, we can make all the folds and canonicalizations work with `invalidvalue` as zero. However as a result some of the integration tests in `invalid-reg-pass.fir` start to fail, which I think indicates that `firtool` now folds things more aggressively than the Scala implementation.\r\n\r\nI don't know if it's worthwhile pursuing this effort, or whether we should rather try to match the Scala impl exactly (which would make logical equivalence pass, but is pretty tricky because we have to be bug-for-bug compatible).",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-29",
+  "closed_at": "2021-12-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

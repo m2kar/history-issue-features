@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7835,
+  "issue_url": "https://github.com/llvm/circt/issues/7835",
+  "title": "[FIRRTL] ModulePrefixAnnotation not working properly on Vec size 1 typed smems",
+  "body": "Similar issue to https://github.com/llvm/circt/issues/7788.\r\n\r\nConsider the following FIRRTL:\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"chisel3.ModulePrefixAnnotation\",\r\n    \"target\": \"~Top|Top>ram\",\r\n    \"prefix\":\"Foo_\"\r\n  }\r\n]]\r\n  public module Top :\r\n    input clock : Clock\r\n    input raddr : UInt<6>\r\n    input waddr : UInt<6>\r\n    input wdata : UInt<8>[1]\r\n    output rdata : UInt<8>[1]\r\n\r\n    smem ram : UInt<8>[1][64]\r\n\r\n    write mport w = ram[waddr], clock\r\n    connect w, wdata\r\n\r\n    node readAddr = raddr ; Avoid https://github.com/llvm/circt/issues/7834\r\n    read mport r = ram[readAddr], clock\r\n    connect rdata, r\r\n```\r\nIf you run this with Firtool 1.93.1, you will get:\r\n```verilog\r\nmodule ram_0_64x8(\r\n...\r\nendmodule\r\nmodule Top(\r\n...\r\n  ram_0_64x8 ram_0_ext (\r\n  ...\r\nendmodule\r\n```\r\n\r\nIf you remove all of the `[1]` (to make the data type of the smem no longer a Vec of size 1), the resulting memory will be prefixed as expected:\r\n```verilog\r\nmodule Foo_ram_64x8(\r\n...\r\nendmodule\r\nmodule Top(\r\n...\r\n  Foo_ram_64x8 ram_ext (\r\n  ...\r\nendmodule\r\n```\r\n\r\n**Note** this only applies to Vecs of size 1, things work properly if the Vec is size 2 or larger.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-19",
+  "closed_at": "2024-11-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

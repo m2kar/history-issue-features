@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6269,
+  "issue_url": "https://github.com/llvm/circt/pull/6269",
+  "title": "[PipelineToHW] Add optional power-on values to control registers",
+  "body": "```mlir\r\nhw.module @testPowerOn(in %arg0: i32, in %arg1: i32, in %go: i1, in %clk: !seq.clock, in %rst: i1, out out0: i32, out out1: i1) {\r\n  %0:2 = pipeline.scheduled(%a0 : i32 = %arg0, %a1 : i32 = %arg1) clock(%clk) reset(%rst) go(%go) entryEn(%s0_enable) -> (out: i32){\r\n    %1 = comb.sub %a0,%a1 : i32\r\n    pipeline.stage ^bb1 regs(%1 : i32, %a0 : i32)\r\n  ^bb1(%6: i32, %7: i32, %s1_enable : i1):  // pred: ^bb1\r\n    %8 = comb.add %6, %7 : i32\r\n    pipeline.return %8 : i32\r\n  }\r\n  hw.output %0#0, %0#1 : i32, i1\r\n}\r\n```\r\ngenerates the following SystemVerilog, provided the `poweron` option is enabled (`0` assigned to the stage enable register).\r\n```sv\r\nmodule testPowerOn(\r\n  input  [31:0] arg0,\r\n                arg1,\r\n  input         go,\r\n                clk,\r\n                rst,\r\n  output [31:0] out0,\r\n  output        out1\r\n);\r\n\r\n  reg [31:0] p0_stage0_reg0;\r\n  reg [31:0] p0_stage0_reg1;\r\n  always_ff @(posedge clk) begin\r\n    p0_stage0_reg0 <= arg0 - arg1;\r\n    p0_stage0_reg1 <= arg0;\r\n  end\r\n  reg        p0_stage1_enable = 1'h0;\r\n  always_ff @(posedge clk) begin\r\n    if (rst)\r\n      p0_stage1_enable <= 1'h0;\r\n    else\r\n      p0_stage1_enable <= go;\r\n  end\r\n  assign out0 = p0_stage0_reg0 + p0_stage0_reg1;\r\n  assign out1 = p0_stage1_enable;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-09",
+  "closed_at": "2023-10-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

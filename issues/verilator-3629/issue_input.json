@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3629,
+  "issue_url": "https://github.com/verilator/verilator/pull/3629",
+  "title": "Remove assignments with strengths weaker than strongest non-tristate RHS",
+  "body": "Adds another step of static resolution of signal strengths.\r\nAfter tristate propagation some statements may be known to not equal `z`. If such a statement exists, all weaker statements can be safely removed. Since the value of the RHS is generally unknown (the known values with all bits being the same), weaker of the strengths has to be taken into account.\r\nSo this step consists of just finding the strongest assignment with non-tristate RHS and removing all weaker or equal to it.\r\n\r\nAssignments with RHS marked as tristates can't be handled in such way, because if their RHS are equal to `z`, they should be skipped and it is generally not known at verilation time.\r\n\r\nI also added more tests to test the step added previously: https://github.com/antmicro/verilator-1/blob/610d30f6cc46f619fb4a8b7a8ef7f15b4591bad3/test_regress/t/t_strength_strongest_constant.v.\r\nThis test:\r\n```systemverilog\r\n  wire [1:0] b;\r\n  assign (weak0, supply1) b = '1;\r\n  assign b = clk1 ? '0 : 'z;\r\n```\r\nthrows error currently on master, because vertices of tristate graph aren't removed from the whole subtree of removed assignment, but only from its RHS node.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-16",
+  "closed_at": "2022-09-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

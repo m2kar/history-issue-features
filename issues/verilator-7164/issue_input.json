@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7164,
+  "issue_url": "https://github.com/verilator/verilator/pull/7164",
+  "title": "Enable V3LiftExpr with code coverage",
+  "body": "This is is up for discussion due to #7119. All coverage diffs are in combinational logic.\r\n\r\n---\r\n\r\nOne reason for the altered counts:\r\n\r\n```systemverilog\r\nfunction logic func_side_effect;\r\n  $display(\"SIDE EFFECT\");\r\n  return 1;\r\nendfunction\r\n \r\nassign c = func_side_effect() ? clk : 0;\r\n```\r\n\r\nwith LiftExpr, the function is inlined by V3Task without ExprStmt, so this is what reaches V3Split:\r\n\r\n```systemverilog\r\nalways_comb begin // ~ish\r\n    ++coverIncFunctionBody;\r\n    $display(\"SIDE EFFECT\");\r\n    lifted = 1;\r\n    c = lifted ? clk : 0;\r\nend\r\n```\r\n\r\nV3Split then splits this into 2, the end result of which is that it will look like the function body was executed once (which is correct as far as what we execute in the C++, but not as far as SV is concerned).\r\n\r\n```systemverilog\r\nalways_comb begin // has no sensitivities, executes once\r\n    ++coverIncFunctionBody;\r\n    $display(\"SIDE EFFECT\");\r\nend\r\nalways_comb begin // executes on every clk change\r\n    lifted = 1;\r\n    c = lifted ? clk : 0;\r\nend\r\n```\r\n\r\nTo fix this, V3Split would have to re-insert all sensitivities into all split blocks, which sounds like something we don't want.\r\n\r\n---\r\n\r\nThe counts now don't match with or without --trace-coverage. E.g. we have this:\r\n\r\n```systemverilog\r\n  assign a = x ? y : top_level_input;\r\n```\r\n\r\nWith LiftExpr, we can now optimise further and `a` is actually unused, so can be completely eliminated when not tracing (but the coverage increments are kept and work properly).\r\n\r\nHowever, because `a` is driven from a top level input, the assignment (and coverage increments) would be duplicated into ICO if it's not eliminated (with --trace), but not duplicated when eliminated (without --trace, thanks to LiftExpr), hence the diffs in counts between t_cover_line_cc and t_cover_line_trace.\r\n\r\n---\r\n\r\nLong term we want LiftExpr always on and fixing these might be a pain, but if we don't care about precise counts inside combinational blocks we can just merge this.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-01",
+  "closed_at": "2026-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

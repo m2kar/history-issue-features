@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2130,
+  "issue_url": "https://github.com/llvm/circt/issues/2130",
+  "title": "[FIRRTL] Preserve vectors in lowering",
+  "body": "Currently, LowerTypes flattens all aggregated types. Therefore, this firrrtl: \r\n```firrtl\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input a: UInt<1>[2][2]\r\n    output b: UInt<1>[2][2]\r\n\r\n    reg r: UInt<1>[2][2], clock\r\n    r <= a\r\n    b <= r\r\n```\r\nis converted into \r\n```verilog\r\nmodule Foo(     // foo.fir:2:10\r\n  input  clock, a_0_0, a_0_1, a_1_0, a_1_1,\r\n  output b_0_0, b_0_1, b_1_0, b_1_1);\r\n\r\n  reg r_0_0;    // foo.fir:7:5\r\n  reg r_0_1;    // foo.fir:7:5\r\n  reg r_1_0;    // foo.fir:7:5\r\n  reg r_1_1;    // foo.fir:7:5\r\n\r\n  always @(posedge clock) begin // foo.fir:8:7\r\n    r_0_0 <= a_0_0;     // foo.fir:8:7\r\n    r_0_1 <= a_0_1;     // foo.fir:8:7\r\n    r_1_0 <= a_1_0;     // foo.fir:8:7\r\n    r_1_1 <= a_1_1;     // foo.fir:8:7\r\n  end // always @(posedge)\r\n\r\n  assign b_0_0 = r_0_0; // foo.fir:2:10\r\n  assign b_0_1 = r_0_1; // foo.fir:2:10\r\n  assign b_1_0 = r_1_0; // foo.fir:2:10\r\n  assign b_1_1 = r_1_1; // foo.fir:2:10\r\nendmodule\r\n```\r\nbut preferably the following is better in terms of readability and simulation costs:\r\n```verilog\r\nmodule Foo(     // foo.fir:2:10\r\n  input             clock,\r\n  input  [1:0][1:0] a,\r\n  output [1:0][1:0] b);\r\n\r\n  reg [1:0][1:0] r;     // foo.fir:7:5\r\n\r\n  always @(posedge clock)       // foo.fir:8:7\r\n    r <= a;     // foo.fir:8:7\r\n  assign b = r; // foo.fir:2:10\r\nendmodule\r\n```\r\nIt is also better for bundles to be lowered into `sv.interface` but in the issue, I'd like to limit the scope to preserve vectors. \r\nI think base vector types(N-dim array not containing bundle) at leafs can be lowered directly.\r\n\r\nFor this, there are following tasks across several passes:\r\n\r\n- [x] #2131\r\n\r\n- [x] LowerToHW <br> Initialize random value for arrays <br> https://github.com/llvm/circt/pull/2143\r\n\r\n- [x] ExpandWhens <br> https://github.com/llvm/circt/pull/2286\r\n\r\n- [ ] LowerTypes <br> Change to do expand connections instead of lowering them into individual aggregates.\r\n https://github.com/llvm/circt/pull/2318\r\n\r\n\r\nMaybe outdated but related to:\r\n* https://github.com/llvm/circt/issues/123\r\n* https://llvm.discourse.group/t/firrtl-aggregate-types-discussion/1806/23",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2021-11-10",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

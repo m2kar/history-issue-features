@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2639,
+  "issue_url": "https://github.com/verilator/verilator/issues/2639",
+  "title": "Support unpacked array parameters in functions with complex assign",
+  "body": "Hi all,\r\n\r\nI'd like to understand from the snippet below what's the unsupported feature I'm trying to use cause there's nothing special on the implementation. It only iterates through the array defined as a localparam in a function based on an input parameter...\r\n\r\n```verilog\r\nfunction automatic s_noc_addr_t axi_dec_noc(logic [`AXI_ADDR_WIDTH-1:0] axi_addr);\r\n    s_noc_addr_t noc_addr;\r\n    noc_addr.x_dest = x_width_t'('0);\r\n    noc_addr.y_dest = y_width_t'('0);\r\n    noc_addr.invalid = '1;\r\n    for (int i=0;i<(NOC_SIZE-1);i++) begin\r\n      if (axi_addr >= noc_addr_map[`ADDR_BASE][i] && axi_addr <= noc_addr_map[`ADDR_UPPER][i]) begin\r\n        noc_addr.x_dest  = x_width_t'(noc_addr_map[`X_ADDR][i]);\r\n        noc_addr.y_dest  = y_width_t'(noc_addr_map[`Y_ADDR][i]);\r\n        noc_addr.invalid = '0;\r\n      end\r\n    end\r\n\r\n    return noc_addr;\r\nendfunction\r\n```\r\n\r\n```verilog\r\n`ifndef ADDR_NOC_MAPPING\r\n    `define ADDR_VEC_MAPPING      1\r\n    `define ADDR_BASE             0\r\n    `define ADDR_UPPER            1\r\n    `define X_ADDR                2\r\n    `define Y_ADDR                3\r\n    localparam [`AXI_ADDR_WIDTH-1:0] noc_addr_map [4][(`NOC_SIZE)-1:0] = '{\r\n      '{'h0000, 'h1000, 'h2000, 'h3000, 'h4000, 'h5000, 'h6000, 'h7000, 'h8000, 'h9000, 'hA000, 'hB000},\r\n      '{'h0FFF, 'h1FFF, 'h2FFF, 'h3FFF, 'h4FFF, 'h5FFF, 'h6FFF, 'h7FFF, 'h8FFF, 'h9FFF, 'hAFFF, 'hBFFF},\r\n      '{   'd0,    'd0,    'd0,    'd0,    'd1,    'd1,    'd1,    'd1,    'd2,    'd2,    'd2,    'd2},\r\n      '{   'd0,    'd1,    'd2,    'd3,    'd0,    'd1,    'd2,    'd3,    'd0,    'd1,    'd2,    'd3}\r\n    };\r\n`endif\r\n```\r\n\r\n\r\n```bash\r\nverilator -CFLAGS \" -g3 -Wall -Werror -DWAVEFORM=\\\"/tmp/ravenoc.fst\\\" -DEN_TRACE=\\\"1\\\"\" --top-module ravenoc --Mdir output --Wno-UNOPTFLAT -O3 --exe --threads  4 --trace --clk                 clk --trace-fst --trace-structs --trace-threads 4 --trace-underscore --trace-depth                      10000 --trace-max-array   10000 --trace-max-width 10000 --cc incdir+src/include +define+SIMULATION src/include/ravenoc_defines.svh src/include/ravenoc_structs.svh src/include/ravenoc_axi_structs.svh src/include/ravenoc_pkg.sv  src/ni/axi_slave_if.sv src/ravenoc.sv src/include/ravenoc_pkg.sv src/router/fifo.sv src/router/output_module.sv src/router/router_if.sv src/router/router_ravenoc.sv src/router/rr_arbiter.sv src/router/vc_buffer.sv src/router/input_router.sv src/router/input_module.sv src/router/input_datapath.sv tb/testbench.cpp -o ravenoc\r\n%Error-UNSUPPORTED: src/include/ravenoc_defines.svh:99:25: Unsupported: Parameters in functions with complex assign\r\n                                                         : ... In instance ravenoc\r\n   99 |     localparam [32-1:0] noc_addr_map [4][(3*4)-1:0] = '{\r\n      |                         ^~~~~~~~~~~~\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual and https://verilator.org for more assistance.\r\nmake: *** [output/Vravenoc.mk] Error 1\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-12",
+  "closed_at": "2020-11-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

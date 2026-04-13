@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6199,
+  "issue_url": "https://github.com/verilator/verilator/issues/6199",
+  "title": "Incorrect handling of `x` in if blocks (`if (x) else` ) ?",
+  "body": "Hello,\n\nI know this is related to #3645, but I thought this is not that much about x propagation than about the \"truthiness\" of `x`. And when I tested this with other simulators (on [edaplayground](https://edaplayground.com/x/Jrwi)) I got the output of 1, which is what I would have expected from hand execution.\n\n```sv\nmodule minimal_repro (\n    input logic clk,\n    output logic out2\n);\n    logic condition;\n    logic q1 = 1'bx;\n\n    always @(posedge clk) begin\n        q1 <= 0;\n    end\n    assign condition = ~q1;\n\n    always @(posedge clk) begin\n        if (condition) begin\n\n        end else begin\n            out2 <= 1'b1;\n        end\n    end\nendmodule\n\nmodule top;\n    logic clk;\n    logic out2;\n\n    minimal_repro uut (\n        .clk(clk),\n        .out2(out2)\n    );\n\n    initial begin\n        clk = 0;\n        #10;\n        repeat (5) begin\n            clk = 0;\n            #5;\n            clk = 1;\n            #5;\n            $write(\"out2: %b\\n\", out2);\n        end\n        $finish;\n    end\nendmodule\n```\n\nSimulated with `verilator --binary --exe --build -Mdir obj_dir --timing -sv top.sv -O3 --quiet && ./obj_dir/Vtop`\n\nThe verilator version is \n`Verilator 5.038 2025-07-08 rev v5.038` \n\nI am on linux (debian 12)\n\n> May we assist you in trying to fix this in Verilator yourself?\nI am not sure I am capable of solving this. \n\nI would have expected: \n| cycle | q1 | condition | out |\n|---------|-----|---------------|-------|\n| 0 | x | x | 1 |\n| 1 | 0 | 1 | 1 |\n| 2 | 0 | 1 | 1 |\n| 3 | 0 | 1 | 1 |\n| ... | 0 | 1 | 1 |\n\n\nBecause the if (condition) should be evaluated to false as x is not truthy, so out should be assigned the value 1 at first clock cycle, for the others it's value should not change. But I get `out2 = 0` at each step so I think this is a bug. (If it is not I am sorry to have bothered you.)\n\nThank you for the awesome work on verilator.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-19",
+  "closed_at": "2025-07-25",
+  "code_blocks": [
+    "module minimal_repro (\n    input logic clk,\n    output logic out2\n);\n    logic condition;\n    logic q1 = 1'bx;\n\n    always @(posedge clk) begin\n        q1 <= 0;\n    end\n    assign condition = ~q1;\n\n    always @(posedge clk) begin\n        if (condition) begin\n\n        end else begin\n            out2 <= 1'b1;\n        end\n    end\nendmodule\n\nmodule top;\n    logic clk;\n    logic out2;\n\n    minimal_repro uut (\n        .clk(clk),\n        .out2(out2)\n    );\n\n    initial begin\n        clk = 0;\n        #10;\n        repeat (5) begin\n            clk = 0;\n            #5;\n            clk = 1;\n            #5;\n            $write(\"out2: %b\\n\", out2);\n        end\n        $finish;\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

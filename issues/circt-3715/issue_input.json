@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3715,
+  "issue_url": "https://github.com/llvm/circt/issues/3715",
+  "title": "[FIRRTL][Ref] Determine rules about `ref.send` under `when`",
+  "body": "It's strange/nonsensical for the anchor of the dataflow to be conditional (send), it should be unconditional.  `resolve` does not have this issue.\r\n\r\nExample:\r\n```mlir\r\nfirrtl.circuit \"xmr\" {\r\n  firrtl.module private @Test(in %p: !firrtl.uint<1>, out %x: !firrtl.ref<uint<2>>) {\r\n    firrtl.when %p {\r\n      %zero = firrtl.constant 1 : !firrtl.uint<2>\r\n      %w = firrtl.wire : !firrtl.uint<2>\r\n      %1 = firrtl.ref.send %w : !firrtl.uint<2>\r\n      firrtl.strictconnect %x, %1 : !firrtl.ref<uint<2>>\r\n      firrtl.strictconnect %w, %zero : !firrtl.uint<2>\r\n    }\r\n  }\r\n  firrtl.module @xmr(in %p: !firrtl.uint<1>) {\r\n    %test_in, %test_x = firrtl.instance test @Test(in p: !firrtl.uint<1>, out x: !firrtl.ref<uint<2>>)\r\n    firrtl.strictconnect %test_in, %p : !firrtl.uint<1>\r\n    %x = firrtl.ref.resolve %test_x : !firrtl.ref<uint<2>>\r\n  }\r\n}\r\n```\r\n\r\nA `send` from within a `when` should work if the `resolve` is also in the same `when` block.\r\n\r\nEDIT: previously suggested this should be illegal, I think the above example is okay, if needs some work to make that seem natural.  Only one connect to the output ref port is allowed (already checked), but the above example is rejected due to not fully initializing `%x`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-08-12",
+  "closed_at": "2023-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

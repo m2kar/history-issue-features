@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6318,
+  "issue_url": "https://github.com/llvm/circt/issues/6318",
+  "title": "[SV] Combine RegOp/LogicOp -> `sv.var`",
+  "body": "We currently have two ops that behave differently (and are interpreted/handled differently), `sv.reg` and `sv.logic`.\r\n\r\nBoth claim to \"Declare a SystemVerilog Variable Declaration of 'reg' type.\" (or \"logic\"), but these are explicitly the same thing:\r\n\r\nFrom 6.11 of 1800-2012 (p68):\r\n\r\n> The keyword reg does not always accurately describe user intent, as it could be perceived to imply a\r\nhardware register. The keyword logic is a more descriptive term. logic and reg denote the same type.\r\n\r\nPresently looks like our `logic` is kinda treated like a wire (see #6317), and is not handled as `RegOp` everywhere.\r\n\r\nThere's a concrete reason we added this, so let's make sure those needs are still met  (something about `automatic logic` I believe).  Hopefully we can just collapse the two :crossed_fingers: .\r\n\r\nProposal (h/t to @fabianschuiki for good parts of this :wink: ):\r\n\r\n`sv.var` -- single op for variables.\r\n\r\nBoth this and `sv.wire` would optionally take RHS operand for declaration-time initialization -- for wires this is continuous and for variables this is one-time.  For net-type declarations (`sv.wire`) we can optimize continuous assignments into the `sv.wire` by adding the assignment RHS as an operand to accomplish what's done during emission presently.\r\n\r\n----\r\n\r\nI'd suggest we emit `sv.var` as `logic` instead of `reg` for basic four-state integer values, and continue with `T x` for other types (vector/struct), although we could include the `var` keyword to be explicit.\r\n\r\nThis would lose the ability to produce `reg`,  but this could be an emission option if becomes an issue.  LMK if you have any insights or concerns about tools or compatibility by this sort of change.",
+  "labels": [
+    "enhancement",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "open",
+  "created_at": "2023-10-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

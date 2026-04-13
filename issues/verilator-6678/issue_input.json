@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6678,
+  "issue_url": "https://github.com/verilator/verilator/issues/6678",
+  "title": "Fix intermittent storing to parameter variable error",
+  "body": "## Summary\n\nI am seeing an intermittent Verilator error:\n\n```\nStoring to parameter variable 'PARAM_WIDTH' in a context that is determined only at runtime\n```\n\nThis happens when a package parameter is passed into a parameterized virtual class and used inside a static function. The same design and the same Verilator binary sometimes succeed and sometimes fail. I mostly want to know if anyone else has seen something similar or has hints for debugging.\n\n## Verilator version\n\nWorking (no issue):\n\n* 5.034\n\nProblematic:\n\n* 5.039 devel\n* git rev `v5.036-456-g14ec6258d`\n\n## Error example\n\nPaths and identifiers simplified for privacy, but the pattern looks like:\n\n```text\n%Error: /path/to/file.sv:1452:110: Storing to parameter variable 'PARAM_WIDTH' in a context that is determined only at runtime\n 1452 |   result = ParamClass#(.SIZE(NUM_ENTRIES), .WIDTH(SOME_WIDTH), .LIMIT(PARAM_WIDTH))::compute_value(...);\n      |                                                                       ^~~~~~~~~~~\n%Error: Exiting due to 1 error(s)\n```\n\nSame sources, same binary, same command line:\n\n* Fails about 1–3% of runs\n* Succeeds about 97–99% of runs\n\n## Code pattern\n\nPackage with parameter and virtual class:\n\n```systemverilog\npackage pkg_param;\n\n  parameter int PARAM_WIDTH = 4;\n\n  virtual class ParamClass #(\n    parameter int SIZE  = 1,\n    parameter int WIDTH = 1,\n    parameter int LIMIT = 1\n  );\n    static function automatic int compute_value(int arg0, int arg1);\n      int local_limit;\n      local_limit   = LIMIT;\n      compute_value = arg0 - (arg1 < local_limit ? arg1 : local_limit);\n    endfunction\n  endclass\n\nendpackage\n```\n\nUse in a module:\n\n```systemverilog\nmodule top_module #(\n  parameter int NUM_ENTRIES = 128,\n  parameter int WIDTH_BITS  = 8\n) (\n  input  logic [WIDTH_BITS-1:0] in_id,\n  input  logic [31:0]           count,\n  output logic [WIDTH_BITS-1:0] out_id\n);\n\n  import pkg_param::*;\n\n  always_comb begin\n    out_id =\n      ParamClass#(\n        .SIZE (NUM_ENTRIES),\n        .WIDTH(WIDTH_BITS),\n        .LIMIT(PARAM_WIDTH)  // sometimes reported as \"storing to parameter variable\"\n      )::compute_value(in_id, count);\n  end\n\nendmodule\n```\n\nI tried multiple small toy designs that copy this pattern, but they do not reproduce the issue. On the real project a single Verilator run takes about 30 minutes just for verilating, and the error only appears with roughly a 1% to 3% chance per run. This makes it very hard to bisect or try many different versions.\n\nIf anyone has seen similar intermittent \"Storing to parameter variable\" errors with package parameters and virtual class static functions, or has hints on what to look at, I would appreciate any pointers. Right now I mainly want to know whether this is already a known issue or rings any bells.\n",
+  "labels": [
+    "area: elaboration",
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-11",
+  "closed_at": "2025-11-14",
+  "code_blocks": [
+    "Storing to parameter variable 'PARAM_WIDTH' in a context that is determined only at runtime\n",
+    "%Error: /path/to/file.sv:1452:110: Storing to parameter variable 'PARAM_WIDTH' in a context that is determined only at runtime\n 1452 |   result = ParamClass#(.SIZE(NUM_ENTRIES), .WIDTH(SOME_WIDTH), .LIMIT(PARAM_WIDTH))::compute_value(...);\n      |                                                                       ^~~~~~~~~~~\n%Error: Exiting due to 1 error(s)\n",
+    "package pkg_param;\n\n  parameter int PARAM_WIDTH = 4;\n\n  virtual class ParamClass #(\n    parameter int SIZE  = 1,\n    parameter int WIDTH = 1,\n    parameter int LIMIT = 1\n  );\n    static function automatic int compute_value(int arg0, int arg1);\n      int local_limit;\n      local_limit   = LIMIT;\n      compute_value = arg0 - (arg1 < local_limit ? arg1 : local_limit);\n    endfunction\n  endclass\n\nendpackage\n",
+    "module top_module #(\n  parameter int NUM_ENTRIES = 128,\n  parameter int WIDTH_BITS  = 8\n) (\n  input  logic [WIDTH_BITS-1:0] in_id,\n  input  logic [31:0]           count,\n  output logic [WIDTH_BITS-1:0] out_id\n);\n\n  import pkg_param::*;\n\n  always_comb begin\n    out_id =\n      ParamClass#(\n        .SIZE (NUM_ENTRIES),\n        .WIDTH(WIDTH_BITS),\n        .LIMIT(PARAM_WIDTH)  // sometimes reported as \"storing to parameter variable\"\n      )::compute_value(in_id, count);\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

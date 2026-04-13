@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1543,
+  "issue_url": "https://github.com/verilator/verilator/issues/1543",
+  "title": "Optimize performance of icache",
+  "body": "---\n\n\nAuthor Name: **Wilson Snyder** (@wsnyder)\nOriginal Redmine Issue: 1543 from https://www.veripool.org\n\n\n\n---\n\nFeature tracking bug.\r\n\r\nThe biggest performance cost presently is icache pressure.  We should figure out techniques to improve icache performance as this has the potential for 2x performance gains.\r\n\r\nFirst we need to hand-craft some experiments and possible solutions so we find a good path.\r\n\r\nOne idea is this:\r\n\r\nOne idea is to build new functions with generic input/outputs, then call those functions  (basically reverse-inline). This will result in more instructions, but less code size which will typically be beneficial especially if no branches are used.  One possible method:\r\n\r\nBuild a graph of common code and sights referencing that code.  This will look though the existing statements and convert I/O to that statement to generic variables. The code at that point forms a potential function which references those variables generically. If the number of vars is small, hash the potential function, so we now have a function signature, and create a graph from the potential call sight to the potential function.  Once the graph is built, find frequent common signatures, build a function corresponding signature, and replace the original logic with calls to that function.\r\n\r\nNote Verilator presently has a V3Combine step that finds multiple functions with identical code and combines them into a single function, but this is very limited.\r\n\n\n\n",
+  "labels": [
+    "area: performance",
+    "effort: weeks",
+    "type: feature-non-IEEE"
+  ],
+  "state": "open",
+  "created_at": "2019-10-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

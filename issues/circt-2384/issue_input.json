@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2384,
+  "issue_url": "https://github.com/llvm/circt/issues/2384",
+  "title": "[FIRRTL] FIRParserAsserts fails to detect print-encoded assertions when there is a subelement access",
+  "body": "```scala\r\ncircuit Foo:\r\n  module Foo :\r\n    input cond: UInt<1>\r\n    output io : { clock : Clock}\r\n\r\n    when cond :\r\n        printf(io.clock, UInt<1>(\"h0\"), \"assert: bar\")\r\n```\r\n`circt-translate --import-firrtl` generates\r\n```mlir\r\nfirrtl.module @Foo(in %cond: !firrtl.uint<1>, out %io: !firrtl.bundle<clock: clock>) {\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n    firrtl.when %cond  {\r\n      %0 = firrtl.subfield %io(0) : (!firrtl.bundle<clock: clock>) -> !firrtl.clock\r\n      firrtl.printf %0, %c0_ui1, \"assert: bar\" \r\n    }\r\n}\r\n```\r\nThe last print op must be converted into firrtl.assert by FIRParserAsserts. The bug is that we only pick when + printf pattern here:\r\nhttps://github.com/llvm/circt/blob/e5c4eacd1a9550bc51be65e70ed1f77618df2aa9/lib/Dialect/FIRRTL/Import/FIRParserAsserts.cpp#L240-L243\r\n\r\nWe must accept when + some other ops + printf pattern as well.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-23",
+  "closed_at": "2021-12-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

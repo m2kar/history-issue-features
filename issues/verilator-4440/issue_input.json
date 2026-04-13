@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4440,
+  "issue_url": "https://github.com/verilator/verilator/pull/4440",
+  "title": "Fix segfault on using type in parameterized classes without #() (#4281)",
+  "body": "This issue (#4281) is basically caused by two factors.\r\n\r\nThe first is that the code contains reference to a type declared inside a parameterized class (`C::a_ch_t`) and this should be reported as a \"Reference to parameterized class without #() (IEEE 1800-2017 8.25.1)\" error in V3LinkDot. However, the `LinkDotResolverVisitor::visit(AstRefDType* nodep)` mistakenly treat it as a normal class reference, so the type is resolved and the AstClassOrPackageRef is removed, preventing it from entering the checking function (`LinkDotResolverVisitor::visit(AstClassOrPackageRef* nodep)`) to emit the error. After it goes to V3Param, since the AstClassOrPackageRef was removed, V3Param may regard the referenced class as unused and then remove it, which caused the later segfault.\r\n\r\nBeside, the use of user2p in V3Param conflicts with the constant simulation function. It's now replaced with user4p to prevent any errors.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-26",
+  "closed_at": "2023-08-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

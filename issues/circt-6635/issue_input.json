@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6635,
+  "issue_url": "https://github.com/llvm/circt/issues/6635",
+  "title": "[FIRRTL] InferResets FullAsyncResetAnnotation produces invalid strictconnect",
+  "body": "Input (using firtool `CIRCT firtool-1.64.0g20240131_c811e2d`):\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Resets: %[[\r\n{\r\n  \"class\": \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\",\r\n  \"target\": \"~Resets|Child>rf_reset\"\r\n},\r\n{\r\n  \"class\": \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\",\r\n  \"target\": \"~Resets|ResetsC>r\"\r\n}\r\n]]\r\n  module Child:\r\n    input rf_reset : Reset\r\n\r\n  module Resets:\r\n    input r : AsyncReset\r\n\r\n    inst c of ResetsC\r\n    connect c.r, r\r\n    \r\n    \r\n  module ResetsC:\r\n    input r : AsyncReset\r\n\r\n    inst c of Child\r\n\r\n    wire rr : Reset\r\n    invalidate rr\r\n    connect c.rf_reset, rr\r\n```\r\n(may not be quite minimal)\r\n\r\n\r\nProduces bugged strictconnect:\r\n\r\n```\r\nresets.fir:25:5: error: 'firrtl.strictconnect' op failed to verify that operands must be structurally equivalent\r\n    inst c of Child\r\n    ^\r\nresets.fir:25:5: note: see current operation: \"firrtl.strictconnect\"(%0, %arg0) : (!firrtl.uint<1>, !firrtl.asyncreset) -> ()\r\n```\r\n\r\nThe operation is inserted here:\r\n\r\nhttps://github.com/llvm/circt/blob/6212d2ed21c4e06a982d9a253a6b60d24efbaa7f/lib/Dialect/FIRRTL/Transforms/InferResets.cpp#L1795",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-01",
+  "closed_at": "2024-02-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

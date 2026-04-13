@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5800,
+  "issue_url": "https://github.com/verilator/verilator/issues/5800",
+  "title": "error: default value for packed wire port results in syntax error",
+  "body": "I'm getting a syntax error when trying to compile a file with a default value for an input vector wire port unless I declare the wire as wire logic. A non-vector port compiles but generates a warning for a procedural assignment to a net type (but no such error if it's wire logic).\n\nI found this somewhat confusing since I was seeing errors in sims that compiled under xsim (which is admittedly permissive of many unspecified things), but after some digging in the spec I couldn't find why this wasn't syntactically valid. Also as best I can tell from the verilog spec (see the bottom of the post), `input wire` ports should infer to `input wire logic` by default \n\nSo I would expect this to be treated as a wire logic by default (no warning for a procedural assignment  and no syntax error).\n\nHere's a module that produces an error when linted.\n\n```\nmodule tricky_ports #()\n(\n    input wire [7:0] assigned_wire_vector = '0\n    // input wire assigned_single_wire = '0 // Generates a warning but does compile successfully\n);\nendmodule : tricky_ports\n```\n\nI get the following error when I run using:\n```\nrj@ubuntu20_04:~/misc/verilator$ bin/verilator --lint-only ./single_port.sv \n%Error: ../verilog-experiments/single_port.sv:8:43: syntax error, unexpected '=', expecting ')'\n    8 |     input wire [7:0] assigned_wire_vector = '0\n      |                                           ^\n%Error: Exiting due to 1 error(s)\n```\n\nChanging the declaration to `input wire logic [7:0] assigned_wire_vector = '0` results in a successful compilation.\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\nI ran this using latest master :`Verilator 5.033 devel rev v5.032-88-g7ec32799b`\nWhen I built this I did see some prints about bison version, but it seemed innocuous. \nMy bison version is 3.5.1 and I built verilator against g++-10\n\nWhat OS and distribution are you using?\nUbuntu 20.04\n\nMay we assist you in trying to fix this in Verilator yourself?\nI think it's relatively doubtful especially since the workaround of explicitly declaring wire logic solves the issue. I did look at the yak file a bit, but I've never used bison before so it would be quite outside my wheel house to root cause and solve.\n\nVerilator spec 23.2.2.3 refers to rules for port kind/data type.\nAs best I can tell from my reading \n> If the data type is omitted, it shall default to logic , except for interconnect ports, which have no\ndata type.\n> If the port kind is omitted:\n> For input and inout ports, the port shall default to a net of default net type. The default net\ntype can be changed using the `default_nettype compiler directive\n\nExample in this section seems to strongly suggest this should infer to wire logic and hence allow procedural assignments.\n>module mh5 (input x); // input wire logic x\n\nOverall this seems like a really minor issue with an easy workaround that's likely quite hard to fix so I'd understand it not really being worth dealing with, but I couldn't find any existing tracker that documents this behavior.\n\nAside: I think it's interesting that the dumped syntax tree entry for a single wire port with and without logic looks nearly identical:\n`    1:2: VAR 0x555556ff4d80 <e1306> {e12aq} @dt=0x555556fe4900@(G/w1)  assigned_single_wire [PI] INPUT [P] [VSTATIC]  WIRE`\n`\n    1:2: VAR 0x555556ff4d80 <e1306> {e12aw} @dt=0x555556fe4900@(G/w1)  assigned_single_wire [PI] INPUT [P] [VSTATIC]  WIRE\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: parser"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-23",
+  "closed_at": "2025-02-24",
+  "code_blocks": [
+    "module tricky_ports #()\n(\n    input wire [7:0] assigned_wire_vector = '0\n    // input wire assigned_single_wire = '0 // Generates a warning but does compile successfully\n);\nendmodule : tricky_ports\n",
+    "rj@ubuntu20_04:~/misc/verilator$ bin/verilator --lint-only ./single_port.sv \n%Error: ../verilog-experiments/single_port.sv:8:43: syntax error, unexpected '=', expecting ')'\n    8 |     input wire [7:0] assigned_wire_vector = '0\n      |                                           ^\n%Error: Exiting due to 1 error(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

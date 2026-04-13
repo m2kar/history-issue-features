@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8050,
+  "issue_url": "https://github.com/llvm/circt/issues/8050",
+  "title": "[LoopScheduleToCalyx] Fail due to op still in use",
+  "body": "When calling `circt-opt --lower-loopschedule-to-calyx ./test.mlir`,  `circt-opt` fail due to \n```\ncirct-opt: /home/kelvin/circt/llvm/mlir/lib/IR/PatternMatch.cpp:182: auto mlir::RewriterBase::eraseOp(mlir::Operation *)::(anonymous class)::operator()(mlir::Operation *) const: Assertion `mayBeGraphRegion(*op->getParentRegion()) && \"expected that op has no uses\"' failed.\n```\n\ntest.mlir:\n```mlir\nmodule {\n  func.func @foo(%arg0: i32) attributes {} {\n    %const = arith.constant 1 : index\n    loopschedule.pipeline II =  2 trip_count =  20 iter_args(%counter = %const) : (index) -> () {\n      %latch = arith.cmpi ult, %counter, %const : index\n      loopschedule.register %latch : i1\n    } do {\n      %stage0:2 = loopschedule.pipeline.stage start = 0 {\n        %op = arith.addi %counter, %const : index\n        %count = arith.addi %counter, %const : index\n        loopschedule.register %op, %count : index, index\n      } : index, index\n      %stage1 = loopschedule.pipeline.stage start = 1 {\n        loopschedule.register %stage0#0: index\n      } : index\n      %stage3 = loopschedule.pipeline.stage start = 7 {\n        %moreOp = arith.addi %stage1, %const : index\n        loopschedule.register %moreOp : index\n      } : index\n      loopschedule.terminator iter_args(%stage0#1), results() : (index) -> ()\n    }\n    return\n  }\n}\n```\n\nI have spent some time looking at what led to this, and it seems like the `%stage1` value is leading to the problem. \n\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-01-09",
+  "closed_at": "2025-01-09",
+  "code_blocks": [
+    "circt-opt: /home/kelvin/circt/llvm/mlir/lib/IR/PatternMatch.cpp:182: auto mlir::RewriterBase::eraseOp(mlir::Operation *)::(anonymous class)::operator()(mlir::Operation *) const: Assertion `mayBeGraphRegion(*op->getParentRegion()) && \"expected that op has no uses\"' failed.\n",
+    "module {\n  func.func @foo(%arg0: i32) attributes {} {\n    %const = arith.constant 1 : index\n    loopschedule.pipeline II =  2 trip_count =  20 iter_args(%counter = %const) : (index) -> () {\n      %latch = arith.cmpi ult, %counter, %const : index\n      loopschedule.register %latch : i1\n    } do {\n      %stage0:2 = loopschedule.pipeline.stage start = 0 {\n        %op = arith.addi %counter, %const : index\n        %count = arith.addi %counter, %const : index\n        loopschedule.register %op, %count : index, index\n      } : index, index\n      %stage1 = loopschedule.pipeline.stage start = 1 {\n        loopschedule.register %stage0#0: index\n      } : index\n      %stage3 = loopschedule.pipeline.stage start = 7 {\n        %moreOp = arith.addi %stage1, %const : index\n        loopschedule.register %moreOp : index\n      } : index\n      loopschedule.terminator iter_args(%stage0#1), results() : (index) -> ()\n    }\n    return\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

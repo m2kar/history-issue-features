@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6405,
+  "issue_url": "https://github.com/llvm/circt/issues/6405",
+  "title": "[FIRRTL] Property flow checking should ensure we can't assign an output to an output",
+  "body": "Here's the simplest example I came up with:\r\n\r\n```\r\nFIRRTL version 3.3.0\r\ncircuit Top :\r\n  module Top :\r\n    skip\r\n\r\n  class MyClass :\r\n    output out : Integer\r\n    propassign out, out\r\n```\r\n\r\nCurrently, this makes it to LowerClasses and then triggers an assert when we go to erase `MyClass`, because `out` still has uses (the `om.class.field` that the output propassign is converted to).\r\n\r\n```\r\nAssertion failed: (use_empty() && \"Cannot destroy a value that still has uses!\"), function ~IRObjectWithUseList, file UseDefLists.h, line 198.\r\n```\r\n\r\nI'm not sure where in the stack this flow checking should occur, but even handling it later in LowerClasses would at least give a better error message than the current one.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-11-10",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

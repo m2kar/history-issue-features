@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1369,
+  "issue_url": "https://github.com/verilator/verilator/issues/1369",
+  "title": "Raise error / warning on continous assignment to reg",
+  "body": "---\n\n\nAuthor Name: **Peter Gerst**\nOriginal Redmine Issue: 1369 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator does not throw error / warning on continuous assignment to a register. See the following example:\r\n\r\ncontent of wire_test.v:\r\n```\r\nmodule wire_test (\r\n     input clk,\r\n     input rst,\r\n     input in1,\r\n     input in2,\r\n     input mux,\r\n     output reg out\r\n);\r\n\r\n// caught by verilator git version 15af70\r\n// wire internal_reg;\r\nreg internal_reg;\r\nreg out_muxed;\r\n\r\nalways @(posedge clk) begin\r\n     if (rst) begin\r\n         internal_reg <= 1'b0;\r\n     end else begin\r\n         internal_reg <= in1;\r\n     end\r\nend\r\n\r\nassign out_muxed = (mux) ? internal_reg: in2;\r\nassign out = (rst) ? out_muxed : 1'b0;\r\n\r\nendmodule\r\n\n```\r\n\r\nCalling verilator as @verilator --lint-only wire_test.v@ does not complain about the assignment on _internal_reg_ and _out_ registers.\r\n\r\ngit version of verilator is used (last commit on Nov 26) but the issue is also present in version 4.006:\r\n```\r\n$ git log -n 1\r\ncommit 15af706286212c933595ba8228d2d334fb81e0f7 (HEAD -> master, origin/master, origin/HEAD)\r\nAuthor: Wilson Snyder <wsnyder@wsnyder.org>\r\nDate:   Mon Nov 26 19:09:08 2018 -0500\r\n\r\n     Fix crash due to cygwin bug in getline, #^A.\r\n\n```\r\n\r\nThis issue is in connection with forum message https://www.veripool.org/boards/3/topics/1559-Verilator-Verilator-fails-to-warn-error-on-procedural-assignment-to-wire that seems to be corrected: Procedural assignment to wire causes error message to be thrown using git version referenced above.\n\n\n",
+  "labels": [
+    "area: lint",
+    "area: data-types",
+    "effort: hours"
+  ],
+  "state": "closed",
+  "created_at": "2018-11-28",
+  "closed_at": "2025-08-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

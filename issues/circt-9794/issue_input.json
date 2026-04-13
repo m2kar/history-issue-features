@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9794,
+  "issue_url": "https://github.com/llvm/circt/pull/9794",
+  "title": "[VerifToSMT] Add meaningful name prefixes to BMC symbolic constants",
+  "body": "This adds descriptive name prefixes to `smt.declare_fun` ops created during the VerifToSMT BMC lowering. Previously, all symbolic constants were unnamed, resulting in auto-generated Z3 names (`x!0`, `x!1`, etc.) that made `--print-solver-output` model dumps unreadable.\r\n\r\nFree inputs are now named `input_N` and uninitialized registers `reg_N`, which flow through to `Z3_mk_fresh_const` as prefixes. This makes counter-example models from `--print-solver-output` immediately interpretable.\r\n### Example\r\n\r\nA counter that asserts it never reaches 5:\r\n```mlir\r\nhw.module @counter(in %clk: !seq.clock, in %data_in: i8, out out: i8) {\r\n%reg = seq.compreg %next, %clk : i8\r\n%c1 = hw.constant 1 : i8\r\n%next = comb.add %reg, %c1 : i8\r\n%c5 = hw.constant 5 : i8\r\n%not_five = comb.icmp ne %reg, %c5 : i8\r\nverif.assert %not_five : i1\r\nhw.output %reg : i8\r\n}\r\n```\r\n\r\n**Before** (`circt-bmc --print-solver-output`):\r\n```\r\n(declare-fun !1 () (_ BitVec 8))\r\n(assert (not (= (ite (distinct !1 #x05) #b1 #b0) #b1)))\r\n--- Model ---\r\n!1 -> #x05\r\n```\r\n\r\n**After:**\r\n```\r\n(declare-fun reg_0!1 () (_ BitVec 8))\r\n(assert (not (= (ite (distinct reg_0!1 #x05) #b1 #b0) #b1)))\r\n--- Model ---\r\nreg_0!1 -> #x05\r\n```\r\n\r\n`!1` becomes `reg_0!1` — immediately identifiable as the register\r\nvalue that hit the assertion violation at value 5.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-28",
+  "closed_at": "2026-03-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

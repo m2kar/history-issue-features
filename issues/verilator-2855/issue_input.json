@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2855,
+  "issue_url": "https://github.com/verilator/verilator/issues/2855",
+  "title": "Confusing behaviour for int enums in structs",
+  "body": "Consider the following code:\r\n```systemverilog\r\npackage test;\r\n\r\n  typedef enum int unsigned {\r\n    Mode0 = 0,\r\n    Mode1 = 1\r\n  } mode_e;\r\n\r\n  typedef struct packed {\r\n    mode_e a;\r\n    bit    b;\r\n  } foo_t;\r\n\r\n  parameter foo_t Foo0 = '{a: Mode0, b: 1'b0};\r\n  parameter foo_t Foo1 = '{a: 0,     b: 1'b0};\r\n\r\nendpackage\r\n```\r\n\r\nVerilator complains about the definition of `Foo0`:\r\n```\r\n> /opt/verilator-test/bin/verilator --lint-only test.sv\r\n%Warning-WIDTHCONCAT: test.sv:13:38: Unsized numbers/parameters not allowed in concatenations.\r\n   13 |   parameter foo_t Foo0 = '{a: Mode0, b: 1'b0};\r\n      |                                      ^\r\n                      ... Use \"/* verilator lint_off WIDTHCONCAT */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nIt seems that this is because it's treating `Mode0` as an unsized integer. However, it's fine with an explicit int (as passed to `Foo1`). It's also fine if I change the struct to contain an `int` instead of the enum type.\r\n\r\nChanging `mode_t` to be `enum bit [1:0]` is a work-around that silences the warning, but I don't think this behaviour is quite consistent. Is there some \"turn an enum value into an int\" step missing somewhere?\r\n\r\nEDIT: I forgot to give the verilator version. I'm seeing this with current tip of master (`Verilator 4.201 devel rev v4.200-39-g7ea014da`)",
+  "labels": [
+    "area: lint",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-26",
+  "closed_at": "2024-01-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

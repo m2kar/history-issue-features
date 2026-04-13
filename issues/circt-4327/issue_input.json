@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4327,
+  "issue_url": "https://github.com/llvm/circt/issues/4327",
+  "title": "[FIRRTL] CheckCombCycles is not checking Instance Input Port Bouncing",
+  "body": "Consider the following circuit:\r\n\r\n```\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    input a: UInt<1>\r\n  module Foo:\r\n    output a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar.a <= a\r\n    a <= bar.a\r\n```\r\n\r\nCurrently this does _not_ trip combinational cycle detection due to the cycle bouncing off the input port of an instance.\r\n\r\nThis produces a crash during a HW canonicalizer, but it should be caught in FIRRTL CheckCombCycles.\r\n\r\nThe SFC will catch this.\r\n\r\nThe relevant MLIR is:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\"  {\r\n    firrtl.extmodule private @Bar(in a: !firrtl.uint<1>)\r\n    firrtl.module @Foo(out %a: !firrtl.uint<1>) {\r\n      %bar_a = firrtl.instance bar interesting_name  @Bar(in a: !firrtl.uint<1>)\r\n      firrtl.strictconnect %bar_a, %a : !firrtl.uint<1>\r\n      firrtl.strictconnect %a, %bar_a : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-18",
+  "closed_at": "2022-11-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

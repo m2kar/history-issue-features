@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5548,
+  "issue_url": "https://github.com/llvm/circt/pull/5548",
+  "title": "[Pipeline] Refactor pipeline ops to include naming info",
+  "body": "The motivation for this refactor is to:\r\n* remove the entry block - there's a bunch of different entry block arguments that symbolize different things, so we're asking for errors if these are printed as default block arguments.\r\n* Add names to more things (pipeline, in and output ports).\r\n\r\n\r\nChanges are:\r\n* In the new format, there is no entry block (the entry block arguments is defined by the pipeline op). Furthermore, there is no `%s0_valid` signal, seeing as this is identical to the entry `%go` signal.\r\n* Pipeline inputs and external inputs are expressed as an initializer list with type information. LHS is the name of the SSA value inside the pipeline, and RHS is the value that is passed into the pipeline.\r\n*  Furthermore, also adds the ability to access clock, reset and stall signals from anywhere within the pipeline.\r\n* Adds an (optional) name to the pipeline which can be used during lowering.\r\n* Also makes the outputs named, which likewise can be used during lowering.\r\n\r\nAs an example (old vs new format):\r\n```mlir\r\nhw.module @testBasic(%arg0: i1, %clk: i1, %rst: i1) -> (out: i1) {\r\n  %0:2 = pipeline.scheduled(%arg0) clock %clk reset %rst go %arg0 : (i1) -> (i1) {\r\n  ^bb0(%a0: i1, %s0_valid: i1):\r\n    pipeline.return %a0 : i1\r\n  }\r\n  hw.output %0#0 : i1\r\n}\r\n```\r\n\r\nbecomes.\r\n\r\n```mlir\r\nhw.module @testBasic(%arg0: i1, %clk: i1, %rst: i1) -> (out: i1) {\r\n  %out, %done = pipeline.scheduled \"foo\" (%a0 : i1 = %arg0) clock(%c = %clk) reset(%r = %rst) go(%g = %arg0) -> (out : i1) {\r\n    pipeline.return %a0 : i1\r\n  }\r\n  hw.output %out : i1\r\n}\r\n```\r\n\r\nThis is fairly inspired by the SCF loop ops.\r\n\r\nLet me know what you think about the format - i'd like to nail it down before having to change _all_ the tests...",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-07",
+  "closed_at": "2023-07-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

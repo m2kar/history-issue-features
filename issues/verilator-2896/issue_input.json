@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2896,
+  "issue_url": "https://github.com/verilator/verilator/issues/2896",
+  "title": "Circular logic warning on same bus, but no actual circular logic was used",
+  "body": "> Can you attach an example that shows the issue?  \r\n\r\nI have the following code, in a file called adder.sv, that implements a very basic 4-bit adder:\r\n\r\n```\r\nmodule fa4 (input logic [3:0] a, b, input logic ci, output logic [3:0] s, output logic co);\r\n  logic [2:0] c;\r\n  fa f1 (.a(a[0]), .b(b[0]), .ci(ci),   .s(s[0]), .co(c[0]));\r\n  fa f2 (.a(a[1]), .b(b[1]), .ci(c[0]), .s(s[1]), .co(c[1]));\r\n  fa f3 (.a(a[2]), .b(b[2]), .ci(c[1]), .s(s[2]), .co(c[2]));\r\n  fa f4 (.a(a[3]), .b(b[3]), .ci(c[2]), .s(s[3]), .co(co));\r\nendmodule\r\n\r\nmodule fa (input logic a, b, ci, output logic s, co);\r\n  assign s = a ^ b ^ ci;\r\n  assign co = a&b | a&ci | b&ci;\r\nendmodule\r\n```\r\n\r\nI run the command `verilator --cc adder.sv`, expecting it to Verilate without warnings, but it throws the following one:\r\n\r\n```\r\n%Warning-UNOPTFLAT: adder.sv:2:15: Signal unoptimizable: Feedback to clock or circular logic: 'fa4.c'\r\n    2 |   logic [2:0] c;\r\n      |               ^\r\n                    ... Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n                    adder.sv:2:15:      Example path: fa4.c\r\n                    adder.sv:11:13:      Example path: ASSIGNW\r\n                    adder.sv:9:50:      Example path: fa4.__Vcellout__f2__co\r\n                    adder.sv:4:52:      Example path: ASSIGNW\r\n                    adder.sv:2:15:      Example path: fa4.c\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nI assume that Verilator sees the 3-bit intermediate carry-out \"c\" bus being used as both the input and output to a module, and throws this warning.  However, I'm using c[0] as the input, and c[1] as the output, so I didn't think that would constitute circular logic.\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nI have tested this on both Verilator 4.200 and 4.035 devel.\r\n\r\n> Would you be willing to try to fix Verilator yourself with assistance?\r\n\r\nUnfortunately, I do not have the technical expertise required to fix this problem myself.  I apologize if the warning is also just due to a lack of understanding on my part.\r\n\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-18",
+  "closed_at": "2021-04-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3154,
+  "issue_url": "https://github.com/verilator/verilator/issues/3154",
+  "title": "Dynamic cast in class method provokes error \"$time has no units\"",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\nThe testcase is derived from 't_castdyn.v' in the current test suite:\r\n\r\n```\r\npackage pkg;\r\n  class Base;\r\n  endclass\r\n  class BasedA extends Base;\r\n  endclass\r\n  class BasedB extends Base;\r\n  endclass\r\n\r\n  function automatic doit(Base b);\r\n          BasedA bb;\r\n          $cast(bb, b); // Okay\r\n  endfunction\r\n\r\n  class foo;\r\n        function doit(Base b);\r\n                BasedA bb;\r\n                $cast(bb, b); // Not okay\r\n        endfunction\r\n  endclass\r\n\r\nendpackage\r\n\r\nmodule t (/*AUTOARG*/);\r\n   import pkg::*;\r\n   int i;\r\n   int a;\r\n   int ao;\r\n\r\n\r\n\r\n   Base b;\r\n   Base bo;\r\n   BasedA ba;\r\n   BasedA bao;\r\n   BasedB bb;\r\n   BasedB bbo;\r\n\r\n   // ...\r\nendmodule\r\n```\r\n\r\nThe dynamic casts of classes in the 'initial' block in the module work fine, as does the dynamic cast in the package-level function.  The dynamic cast in the class method produces the following error:\r\n\r\n```\r\n%Error: Internal Error: t/t_castdyn.v:24:3: ../V3EmitCFunc.h:862: $time has no units\r\n                                          : ... In instance pkg::foo\r\n   24 |   $cast(bb, b);\r\n      |   ^~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\nI'm using 4.212\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\nAbsolutely. Give me a hint and I'm happy to submit a PR!\r\n",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-01",
+  "closed_at": "2021-10-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

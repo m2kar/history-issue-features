@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3313,
+  "issue_url": "https://github.com/llvm/circt/pull/3313",
+  "title": "[PrepareForEmission] Don't copy namehint to all sub expressions",
+  "body": "This commit fixes a (potential) bug that namehints of variadic ops are copied to all lowered sub expressions. \r\n\r\nFor example, \r\n```mlir\r\nhw.module @namehint_variadic(%a: i3) -> (b: i3) {\r\n  %0 = comb.add %a, %a, %a, %a, %a { sv.namehint = \"bar\" } : i3\r\n  hw.output %0 : i3\r\n}\r\n```\r\n`circt-opt -export-verilog`  currently transforms  IR above into:\r\n```mlir\r\nhw.module @namehint_variadic(%a: i3) -> (b: i3) {\r\n    %0 = comb.add %a, %a {sv.namehint = \"bar\"} : i3\r\n    %1 = comb.add %a, %a {sv.namehint = \"bar\"} : i3\r\n    %2 = comb.add %a, %1 {sv.namehint = \"bar\"} : i3\r\n    %3 = comb.add %0, %2 {sv.namehint = \"bar\"} : i3\r\n    hw.output %3 : i3\r\n}\r\n```\r\nCopying sv.namehint to all sub expression sounds weird even though it doesn't cause any bug (since namehints created here are not used at all). With this PR, the IR is transformed to:\r\n\r\n```mlir\r\nhw.module @namehint_variadic(%a: i3) -> (b: i3) {\r\n    %0 = comb.add %a, %a : i3\r\n    %1 = comb.add %a, %a : i3\r\n    %2 = comb.add %a, %1 : i3\r\n    %3 = comb.add %0, %2 {sv.namehint = \"bar\"} : i3\r\n    hw.output %3 : i3\r\n  }\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-09",
+  "closed_at": "2022-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

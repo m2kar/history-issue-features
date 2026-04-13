@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 929,
+  "issue_url": "https://github.com/llvm/circt/issues/929",
+  "title": "[FIRRTL] Verification for MuxPrimOp fails after canonicalization",
+  "body": "Input:\r\n```mlir\r\n// ./bin/firtool -canonicalize ./can.mlir\r\nfirrtl.circuit \"MuxInvalidOpt\" {\r\nfirrtl.module @MuxInvalidOpt(%in : !firrtl.uint<1>, %out : !firrtl.flip<uint<4>>) {\r\n  %c7_ui4 = firrtl.constant(7 : ui4) : !firrtl.uint<4>\r\n  %c1_ui2 = firrtl.constant(1 : ui2) : !firrtl.uint<2>\r\n  %c0_ui2 = firrtl.constant(0 : ui2) : !firrtl.uint<2>\r\n  %0 = firrtl.mux (%in, %c7_ui4, %c0_ui2) : (!firrtl.uint<1>, !firrtl.uint<4>, !firrtl.uint<2>) -> !firrtl.uint<4>\r\n  %1 = firrtl.mux (%in, %c1_ui2, %0) : (!firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<4>) -> !firrtl.uint<4>\r\n  firrtl.connect %out, %1 : !firrtl.flip<uint<4>>, !firrtl.uint<4>\r\n}\r\n}\r\n\r\n```\r\n\r\nError:\r\n```\r\n./can.mlir:10:8: error: 'firrtl.mux' op result type should be '!firrtl.uint<2>'\r\n  %1 = firrtl.mux (%in, %c1_ui2, %0) : (!firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<4>) -> !firrtl.uint<4>\r\n       ^\r\n./can.mlir:10:8: note: see current operation: %0 = \"firrtl.mux\"(%in, %c1_ui2, %c0_ui2) : (!firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint<4>\r\n```\r\n\r\nIR:\r\n```mlir\r\nfirrtl.circuit \"MuxInvalidOpt\"  {\r\n  firrtl.module @MuxInvalidOpt(%in: !firrtl.uint<1>, %out: !firrtl.flip<uint<4>>) {\r\n    %c1_ui2 = firrtl.constant(1 : ui2) : !firrtl.uint<2>\r\n    %c0_ui2 = firrtl.constant(0 : ui2) : !firrtl.uint<2>\r\n    %0 = firrtl.mux(%in, %c1_ui2, %c0_ui2) : (!firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint<4>\r\n    firrtl.connect %out, %0 : !firrtl.flip<uint<4>>, !firrtl.uint<4>\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-04-19",
+  "closed_at": "2021-04-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

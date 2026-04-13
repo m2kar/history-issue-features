@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1226,
+  "issue_url": "https://github.com/llvm/circt/pull/1226",
+  "title": "[FIRRTL] Make width inference ready for on-by-default",
+  "body": "This PR makes width inference more robust in the presence of not-yet-supported types and operations, skipping over them whenever they don't require any widths to be inferred (which is easy to check).\r\n\r\n`firtool` run with `--infer-widths` and without now produces the exact same output MLIR when run on circt/perf [test1](https://github.com/circt/perf/blob/trunk/regress/test1.fir), [test2](https://github.com/circt/perf/blob/trunk/regress/test2.fir), [test3](https://github.com/circt/perf/blob/trunk/regress/test3.fir), and on one of SiFive's small cores. This despite the fact that these tests contain unsupported aggregate types and operations -- but with no unknown widths.\r\n\r\nOnce we're happy with this, `--infer-widths` can become the inverse `--disable-infer-widths` with the pass running by default.\r\n\r\n### Details\r\n\r\n* Add a special `nil` constraint expression that is used as a placeholder for aggregate types and operations that are not yet\r\n  supported. Eventually this expression will go away again, but until everything is implemented we need a way to properly construct a constraint problem in the presence of unsupported types/ops.\r\n\r\n* Track locations in `declareVars` to improve error reporting. Uses of the location got dropped by the new `nil` expression, but they will make a comeback later when we have more complex types that might fail to map to constraint variables.\r\n\r\n* Add a `hasUninferredWidths` helper that checks whether a type, including aggregate types, contains any uninferred widths.\r\n\r\n* Add a fast path that just generates a `KnownExpr` for op results that have no uninferred widths, rather than inspecting the operation itself and trying to come up with a precise expression. This has two benefits:\r\n    1. It speeds up width inference since almost all expressions become \"terminal\" `KnownExpr` nodes in the graph, rather than building complex nested expressions for them (if they have a known width, that is).\r\n    2. Width inference now succeeds on inputs that contain types/ops not yet supported by width inference, as long as they don't contain any uninferred widths (i.e., width inference becomes better at not touching ops that need no widths to be inferred).\r\n\r\n* Add an error message targeted at compiler hackers in case the type update stage encounters a value for which the pass should have inferred a width, but for some reason didn't. This will trigger on structural problems like types/ops not being supported yet, but not on errors triggered by the user by constructing uninferrable constraints. This message will go away in the future as soon as `InferWidths` is comfortable with handling all FIRRTL ops and types. Until then, this should give @drom some hints at what flavors of width inference are yet to be implemented.",
+  "labels": [
+    "enhancement",
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-09",
+  "closed_at": "2021-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

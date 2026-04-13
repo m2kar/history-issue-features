@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3070,
+  "issue_url": "https://github.com/verilator/verilator/issues/3070",
+  "title": "Context of \"Multiple top level modules\" warning written to `cout` instead of `cerr` ",
+  "body": "\r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nRunning verilator with multiple top candidates leads to \"Multiple top level modules\", the warning itself is written to `stderr`, the remaining context (source of the affected module definition) are written to `stdout`. This is very noticeable when redirecting stderr to capture the warnings.\r\n\r\n```\r\nstderr: %Warning-MULTITOP: src/B.v:85:8: Multiple top level modules\r\nstderr:                                : ... Suggest see manual; fix the duplicates, or use --top-module to select top.\r\nstdout:                                 : ... Top module 'A'\r\nstdout:    3 | module A (\r\nstdout:      |        ^~~~~~~~~~~~\r\nstdout:                                 : ... Top module 'B'\r\nstdout:   85 | module B (\r\nstdout:      |        ^~~\r\n\r\n\r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n`stable` and current `master`\r\n\r\n```\r\nVerilator 4.211 devel rev v4.210-28-g1166728a\r\n```\r\n\r\n\r\n> Would you be willing to try to fix Verilator yourself with assistance?\r\n\r\nI've attached a [diff](https://github.com/verilator/verilator/files/6846325/diff.txt) , I think this is too trivial for a PR: change `cout` to `cerr` \r\n\r\n```\r\ndiff --git a/src/V3LinkLevel.cpp b/src/V3LinkLevel.cpp\r\nindex 52a0ac05..728073fc 100644\r\n--- a/src/V3LinkLevel.cpp\r\n+++ b/src/V3LinkLevel.cpp\r\n@@ -62,7 +62,7 @@ void V3LinkLevel::modSortByLevel() {\r\n                                           \"--top-module to select top.\"\r\n                                        << V3Error::warnContextNone());\r\n             for (AstNode* alsop : tops) {\r\n-                std::cout << secp->warnMore() << \"... Top module \" << alsop->prettyNameQ() << endl\r\n+                std::cerr << secp->warnMore() << \"... Top module \" << alsop->prettyNameQ() << endl\r\n                           << alsop->warnContextSecondary();\r\n             }\r\n         }\r\n```\r\n\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-20",
+  "closed_at": "2021-07-20",
+  "code_blocks": [
+    "stderr: %Warning-MULTITOP: src/B.v:85:8: Multiple top level modules\r\nstderr:                                : ... Suggest see manual; fix the duplicates, or use --top-module to select top.\r\nstdout:                                 : ... Top module 'A'\r\nstdout:    3 | module A (\r\nstdout:      |        ^~~~~~~~~~~~\r\nstdout:                                 : ... Top module 'B'\r\nstdout:   85 | module B (\r\nstdout:      |        ^~~",
+    "diff --git a/src/V3LinkLevel.cpp b/src/V3LinkLevel.cpp\r\nindex 52a0ac05..728073fc 100644\r\n--- a/src/V3LinkLevel.cpp\r\n+++ b/src/V3LinkLevel.cpp\r\n@@ -62,7 +62,7 @@ void V3LinkLevel::modSortByLevel() {\r\n                                           \"--top-module to select top.\"\r\n                                        << V3Error::warnContextNone());\r\n             for (AstNode* alsop : tops) {\r\n-                std::cout << secp->warnMore() << \"... Top module \" << alsop->prettyNameQ() << endl\r\n+                std::cerr << secp->warnMore() << \"... Top module \" << alsop->prettyNameQ() << endl\r\n                           << alsop->warnContextSecondary();\r\n             }\r\n         }"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

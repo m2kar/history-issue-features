@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5657,
+  "issue_url": "https://github.com/verilator/verilator/issues/5657",
+  "title": "Support Unpacked Structures' Constrained Randomization",
+  "body": "Currently, Verilator supports constrained randomization for **packed structures** by treating them as an integral type, aligning with the IEEE 1800-2023 standard. The `emitSMT` for packed structures (handled as `AstSel` in Verilator) utilizes the `extract` operation.\r\n\r\nHowever, unpacked structures are not yet supported in Verilator.\r\n\r\nFor the following test case:\r\n```\r\ntypedef struct {\r\n    rand bit [7:0] byte_value;\r\n    rand int int_value;\r\n} UnpackedStruct;\r\n\r\nclass UnpackedStructTest;\r\n    rand UnpackedStruct my_unpacked_struct;\r\n    // Constraint block for unpacked struct\r\n    constraint unpacked_struct_constraint {\r\n        my_unpacked_struct.byte_value inside {8'hA0, 8'hB0, 8'hC0};  // Constrain byte_value to specific values\r\n        my_unpacked_struct.int_value inside {[50:150]};              // Constrain int_value to be between 50 and 150\r\n    }\r\nendclass\r\n```\r\nWhen attempting to randomize, the following error occurs:\r\n```\r\n%Error: Internal Error: /home/yilou/Desktop/planv/PlanV_Verilator_Feature_Tests/planv_tests/feature_tests/constrained_random/random_variables/t_constraint_struct.sv:49:28: ../V3Randomize.cpp:883: Visit function missing? Constraint function missing for math node: STRUCTSEL 0x6201c09f9e00 {e49bc} u1=0x1 @dt=0x6201c09f9200@(G/w8)  byte_value\r\n   49 |         my_unpacked_struct.byte_value inside {8'hA0, 8'hB0, 8'hC0};   \r\n      |                            ^~~~~~~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html\r\n```\r\n\r\nWe are currently working on this and expected to support it soon.",
+  "labels": [
+    "resolution: fixed",
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-03",
+  "closed_at": "2025-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

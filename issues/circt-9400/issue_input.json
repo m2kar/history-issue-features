@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9400,
+  "issue_url": "https://github.com/llvm/circt/pull/9400",
+  "title": "[Arc] Fix state allocation alignment for non-power-of-2 IntegerTypes",
+  "body": "\r\n**Description:**\r\nThis PR fixes a bug in `computeLLVMBitWidth` where `IntegerType` state variables were allocating buffer space based on their logical bit width rather than their physical storage requirements in LLVM.\r\n\r\n**The Issue**\r\nWhen allocating state for non-power-of-2 integers (e.g., `i17`, `i33`), `AllocateState` calculates the size based on the exact bit width rounded up to the nearest byte (e.g., `i33` -> 5 bytes). However, LLVM backends promote these types to the next power-of-2 word size (e.g., `i33` -> `i64` -> 8 bytes) during storage.\r\n\r\nThis mismatch causes the allocator to place subsequent variables inside the memory footprint of the previous variable, resulting in data corruption (overlapping stores).\r\n\r\n**Reproduction**\r\nGiven a module with an `i33` output followed by an `i16` output:\r\n\r\n**MLIR:**\r\n```mlir\r\nmodule {\r\n  hw.module @LogicTestOperations_32(in %a : i32, out out_zext : i33, out out_trunc : i16) {\r\n    %false = hw.constant false\r\n    %0 = comb.concat %false, %a : i1, i32\r\n    %1 = comb.extract %a from 0 : (i32) -> i16\r\n    hw.output %0, %1 : i33, i16\r\n  }\r\n}\r\n```\r\n\r\n**Generated LLVM IR (Bug):**\r\nIn the generated IR below, the `i33` is stored at offset 8. The allocator assumes `i33` needs 5 bytes, so it places the next `i16` at offset 14 (aligned).\r\nHowever, `store i33` writes 8 bytes (offsets 8 to 16). The `store i16` at offset 14 overwrites the upper bytes of the `i33`.\r\n\r\n```llvm\r\ndefine void @LogicTestOperations_32_eval(ptr %0) {\r\n  ; ... load input ...\r\n  %5 = zext i32 %4 to i33\r\n  \r\n  ; Store i33 (requires 8 bytes physically: offset 8-16)\r\n  %6 = getelementptr i8, ptr %0, i32 8\r\n  store i33 %5, ptr %6, align 4\r\n\r\n  ; ... calculate trunc ...\r\n  \r\n  ; Store i16 (Allocated at offset 14 based on 5-byte size of previous i33)\r\n  ; THIS OVERWRITES byte 6 and 7 of the i33 above!\r\n  %9 = getelementptr i8, ptr %0, i32 14\r\n  store i16 %8, ptr %9, align 2\r\n  \r\n  ret void\r\n}\r\n```\r\n\r\n**The Fix**\r\nUpdated `computeLLVMBitWidth` to return `llvm::bit_ceil` of the integer width (minimum 8 bits), ensuring the allocator respects power-of-2 alignment required by LLVM storage.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-02",
+  "closed_at": "2026-01-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

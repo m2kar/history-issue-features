@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6042,
+  "issue_url": "https://github.com/verilator/verilator/pull/6042",
+  "title": "fix arrays of user defined types for parameter types",
+  "body": "These feel like they may be related, but I can break them apart if not.\r\n\r\nSomething has changed wrt arrays of user defined types.  With my changes `t_cast`  says:\r\n```\r\n%Error-UNSUPPORTED: t/t_cast.v:104:19: Unsupported: static cast to 'enum{}t.enum_t[3:0]' from 'logic[63:0]'\r\n                                     : ... note: In instance 't'\r\n  104 |       es = enums_t'(64'h0001_0001_0001_0001);\r\n      |                   ^\r\n```\r\n\r\nand `t_type_param` says:\r\n```\r\n%Error: t/t_type_param.v:49:16: Data type used where a non-data type is expected: 'some_struct_t'\r\n   49 |    foo #(.bar (some_struct_t [7:0]))\r\n      |                ^~~~~~~~~~~~~\r\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.037 for more assistance.\r\n%Error: Internal Error: t/t_type_param.v:49:30: ../V3Broken.cpp:168: Broken link in node (or something without maybePointedTo): 'fromp() && !(privateTypeTest<AstNodeExpr>(fromp()))' @ ./V3Ast__gen_impl.h:5839\r\n   49 |    foo #(.bar (some_struct_t [7:0]))\r\n      |                              ^\r\n```\r\n\r\nThe former is because `WidthVisitor::visit(AstCast*)` runs `computeCastable()` on the to and from types and finds `UNSUPPORTED`, but I'm not immediately spotting what's changed in this visitor or in the castable code.  Perhaps it's something with the datatypes themselves?\r\n\r\nAnyway, just digging in.  But posting now in case what's going on is obvious to others.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-27",
+  "closed_at": "2025-05-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

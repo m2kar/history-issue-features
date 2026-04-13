@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7369,
+  "issue_url": "https://github.com/verilator/verilator/pull/7369",
+  "title": "Fix parameter default comparison when value contains type cast (#6281)",
+  "body": "## Summary\r\n\r\nContinues the work from #6777 to fully close #6281.\r\n\r\nThe original issue — `Class_A#(32)` and `Class_A#(WIDTH_A)` (where\r\n`WIDTH_A = 32`) being treated as different specializations — was already\r\nresolved by the `ParameterizedHierBlocks::areSame` fallback added\r\nseparately.  A sub-case identified during that investigation remained\r\nopen: when the parameter default itself contains a type-cast literal\r\n(e.g. `parameter byte P = byte'(8)`), passing the same numeric value\r\nexplicitly (`#(8)`) still creates a spurious second specialization,\r\ncausing type-mismatch errors on assignment between instances.\r\n\r\nThis PR fixes that remaining case with a different strategy than #6777:\r\ninstead of re-typing the pin expression to the parameter's declared type\r\n(which requires V3Width information not yet available at this pass), we\r\nconstify only the default value and widen both constants to max(width)\r\nfor comparison.\r\n\r\n## Changes\r\n\r\n- In `cellPinCleanup()`, constify `modvarp->valuep()` when it is a\r\n  `Cast` or `CastSize` node, so the default value becomes a `Const`\r\n  available for comparison.  Restricted to `Cast`/`CastSize` to avoid\r\n  disturbing `Pattern`/`InitArray` defaults handled in earlier branches.\r\n- Added `paramConstsEqualAtMaxWidth()`: sign-extends both constants to\r\n  `max(width)` before comparing, handling the width mismatch between a\r\n  typed default and a 32-bit pin expression.\r\n- Extended the comparison in `cellPinCleanup()` to fall back to\r\n  `paramConstsEqualAtMaxWidth()` when `sameTree()` and `areSame()` both\r\n  fail.\r\n\r\n## Test\r\n\r\nAdded `test_regress/t/t_param_cast_default.{v,py}`:\r\n- Includes the original #6281 reproducer: `Class_A#(32)` vs\r\n  `Class_A#(WIDTH_A)` (localparam), confirming the earlier fix holds.\r\n- New coverage for the remaining case: `byte`/`int`/signed cast defaults\r\n  with default (`#()`) and explicit instances assigned to each other.\r\n- Multiple instances of the same template (template mutation safety),\r\n  module sub-instantiation.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-03",
+  "closed_at": "2026-04-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

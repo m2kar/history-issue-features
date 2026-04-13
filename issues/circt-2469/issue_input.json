@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2469,
+  "issue_url": "https://github.com/llvm/circt/pull/2469",
+  "title": "[GAA][RFC] Implementing the Guarded Atomic Action MLIR ",
+  "body": "Guarded Atomic Action is the essential part of [Bluespec](https://github.com/B-Lang-org/bsc) and [Koika](https://github.com/mit-plv/koika), which designs a rule-based semantic for circuit transition system.\r\n\r\nThis PR aims to prototype a GAA MLIR inside circuit as the backend to general GAA rule synthesis paradigm. A experimental frontend will be implemented based on Chisel3.\r\n\r\n## Implementation Roadmap\r\n1. Chisel3 now experimentally supports using panama binding to directly construct he MLIR Dialect from Scala. See chipsalliance/chisel#3466\r\n2. A temporary fork to Chisel3 may happen for adding operator via type class for binder being able to add new IR(this can be experimentally used for LTL, OM, and any other existing dialects)\r\n3. Then register GAA Dialect to Chisel3, using it as the frontend: A new named `rule` block IR in Chisel.\r\n\r\n4. Add GAA Scheduling analysis pass inside MLIR.\r\nThis is basically implementing a CF(conflict-free)/SC(sequential-composable) analysis with CIRCT, which should be an input to GAA scheduler.\r\n\r\n5. Construct the ME(mutually-exclusive) analysis, \r\nIMO, it may need the transition system backend implementation to CIRCT. It requires the SAT solver to check the mutually-exclusive relationship among CF rules.\r\nThis is useful for merging same combinational circuit among ME rules, which will significantly improve the PPA(Power, Performance, Area) of generated circuit. \r\n\r\n6. Send to BlueSpec/Koika Solver to schedule rule. \r\nThis may need additional middle IR to represent scheduling result. A specific design will be added later.\r\n\r\n7. Lowering to HW and emit correspond circuit. \r\nEssentially, Based on scheduling result, `Scheduler` should be a decode logic, containing its own IR. I plan to use Chisel Decoder to construct the decoder scheduler, and use Chisel to construct required datapath as well.\r\n\r\nSo this needs a pass to make CIRCT being able to invoking arbitrary program, then pass MLIR to which, wait it to consume MLIR and generating a lower IR.\r\nI believe this has been implemented by `hw-generator-callout`.\r\n\r\nHopefully this can be a good infrastructure to construct GAA-based circuits.\r\n\r\n## References\r\nFor more informations about GAA, please refer to:\r\n[1]D. L. Rosenband and Arvind, “Hardware synthesis from guarded atomic actions with performance specifications,” in ICCAD-2005. IEEE/ACM International Conference on Computer-Aided Design, 2005., San Jose, CA, 2005, pp. 784–791. doi: 10.1109/ICCAD.2005.1560170.\r\n[1]J. C. Hoe and Arvind, “Operation-centric hardware description and synthesis,” IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems, vol. 23, no. 9, pp. 1277–1288, Sep. 2004, doi: 10.1109/TCAD.2004.833614.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-17",
+  "closed_at": "2026-01-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

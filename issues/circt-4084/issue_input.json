@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4084,
+  "issue_url": "https://github.com/llvm/circt/issues/4084",
+  "title": "[ExportVerilog] Spill variable assigned but not declared",
+  "body": "I ran into this curious behavior of `ExportVerilog` where it would sometimes spill to a variable without actually declaring that variable. This seems to be very difficult to trigger -- I've had a hard time reducing this down since any small changes or shortening of the concats causes the issue to disappear.\r\n\r\nInput MLIR:\r\n```mlir\r\nhw.module public @Foo(%k0: i1, %k1: i1, %k2: i1) {\r\n  %0 = comb.concat %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0 : i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1\r\n  %1 = comb.concat %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1 : i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1\r\n  %2 = comb.concat %k2, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1, %k0, %k1 : i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1, i1\r\n  %3 = comb.or %0, %1, %2 : i12\r\n  %r = sv.reg : !hw.inout<i12>\r\n  sv.initial {\r\n    sv.passign %r, %3 : i12\r\n  }\r\n}\r\n```\r\n\r\nRunning through firtool produces the following Verilog (my indentation for clarity):\r\n```systemverilog\r\nmodule Foo(input k0, k1, k2);\r\n  reg [11:0] r;\r\n  initial begin\r\n    automatic logic [11:0] _GEN =\r\n        {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\r\n    automatic logic [11:0] _GEN_0 =\r\n        {k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1} |\r\n        {k2, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1};\r\n    automatic logic [11:0] _GEN_1 = _GEN_0;\r\n    _GEN_2 = {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\r\n    // ^^^--- note how _GEN_2 has never been declared\r\n    r <= _GEN_2 | _GEN_0;\r\n  end\r\nendmodule\r\n```\r\n\r\nNo idea how this happens. (Hot, highly uneducated guess: something about spilling to a variable while already spilling to a variable, and somehow corrupting text buffer pointers.)",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-12",
+  "closed_at": "2022-10-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

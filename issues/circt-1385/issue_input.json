@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1385,
+  "issue_url": "https://github.com/llvm/circt/issues/1385",
+  "title": "[FIRRTL] Width mismatch in random register initialization",
+  "body": "Register initialization does not take into account the size of the register.\r\n\r\nUsing a 3-bit register and compiling the resultant verilog with with `vcs -full64 -error\\=BMII,CFCOR,LFCOR,VCM-HFUFR,ULCO,WMIA-L +systemverilogext+sv +rad +define+RANDOMIZE_REG_INIT reg.sv` produces:\r\n\r\n```\r\nError-[WMIA-L] Width mismatch in assignment\r\nreg.sv, 50\r\n  Width mismatch between LHS and RHS is found in assignment:\r\n  The following 32-bit wide expression is assigned to a 3-bit LHS target:\r\n  Source info: r = $random;\r\n  Expression: r\r\n```\r\n\r\nFor example, for a 3 bit register, MFC produces:\r\n```verilog\r\nmodule Foo(\r\n  input        c, i,\r\n  output [2:0] o);\r\n\r\n  reg [2:0] r;\t// ./reg.fir:7:5\r\n   // ... snip...\r\n  `ifndef SYNTHESIS\t// ./reg.fir:7:5\r\n    initial begin\t// ./reg.fir:7:5\r\n      `INIT_RANDOM_PROLOG_\t// ./reg.fir:7:5\r\n      `ifdef RANDOMIZE_REG_INIT\t// ./reg.fir:7:5\r\n        if (~i)\t// ./reg.fir:7:5\r\n          r = `RANDOM;\t// ./reg.fir:7:5\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  assign o = r;\t// ./reg.fir:2:10\r\nendmodule\r\n```\r\n\r\nWhile SFC produces:\r\n```verilog\r\nmodule Foo(\r\n  input        c,\r\n  input        i,\r\n  output [2:0] o\r\n);\r\n`ifdef RANDOMIZE_REG_INIT\r\n  reg [31:0] _RAND_0;\r\n`endif // RANDOMIZE_REG_INIT\r\n  reg [2:0] r;\r\n   // ... snip...\r\ninitial begin\r\n  `ifdef RANDOMIZE\r\n    `ifdef INIT_RANDOM\r\n      `INIT_RANDOM\r\n    `endif\r\n    `ifndef VERILATOR\r\n      `ifdef RANDOMIZE_DELAY\r\n        #`RANDOMIZE_DELAY begin end\r\n      `else\r\n        #0.002 begin end\r\n      `endif\r\n    `endif\r\n`ifdef RANDOMIZE_REG_INIT\r\n  _RAND_0 = {1{`RANDOM}};\r\n  r = _RAND_0[2:0];\r\n`endif // RANDOMIZE_REG_INIT\r\n  `endif // RANDOMIZE\r\nend // initial\r\n`ifdef FIRRTL_AFTER_INITIAL\r\n`FIRRTL_AFTER_INITIAL\r\n`endif\r\n`endif // SYNTHESIS\r\nendmodule\r\n```\r\n\r\nThis FIRRTL file can be used to reproduce the issue.  Its is a little long to keep SFC from optimizing away the register.\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input c : Clock\r\n    input i : UInt<1>\r\n    output o : UInt<3>\r\n\r\n    reg r : UInt<3>, c\r\n    r <= UInt<1>(\"h0\")\r\n\r\n    when i :\r\n      r <= UInt<3>(\"h1\")\r\n\r\n    o <= r\r\n```\r\n\r\nThe SFC code to emit the right size is [here](https://github.com/chipsalliance/firrtl/blob/master/src/main/scala/firrtl/backends/verilog/VerilogEmitter.scala#L796).",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-07",
+  "closed_at": "2021-07-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

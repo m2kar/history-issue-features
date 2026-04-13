@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1269,
+  "issue_url": "https://github.com/llvm/circt/pull/1269",
+  "title": "[FIRRTL][InferWidths] Tighten LinIneq addition lower bounds, update solver",
+  "body": "* The way `LinIneq::add` derives a new maximum is overly pessimistic and can erroneously indicate cycles commonly found in designs as unbreakable. This adjusts the way the lower bound of the addition of two `LinIneq` terms is found, and makes it more mathematically rigorous. The resulting bound is also much tighter by trying to predict which one of the four possible combinations of added terms (max(a,b)+max(c,d) = max(a+c,a+d,b+c,b+d)) grows fastest as the value chosen for the recursive variable (an inferred width) grows larger.\r\n\r\n* Rewrite the portion of the constraint solver that finds the actual final values of variables. The new approach treats each variable independently, and is sensitive to the fact that the cycle breaking that is necessary on expressions may actually produce different values for an expression if \"viewed\" from a different variable. The prior approach did a simple depth-first traversal through the IR, which can lead to trouble when the first time a recursive variable is encountered is within the computation of another variable. This used to ignore the recursive term in the computation and assign the result as the overall result of the variable. However, this was a reduced value that skipped over parts that were irrelevant for the actual variable being computed. The new approach pays attention to this detail and treats variables independently, only memoizing computed values as globally-valid results if there were no cycles that had to be broken.\r\n\r\n* Add test cases that exercise these new capabilities.",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-14",
+  "closed_at": "2021-06-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

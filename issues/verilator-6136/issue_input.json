@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6136,
+  "issue_url": "https://github.com/verilator/verilator/issues/6136",
+  "title": "Verilog real ports are converted to uint64_t sc_signals when verilating to SystemC",
+  "body": "Verilog ports of  data type `real` are converted to sc_signals of data type `uint64_t` in the generated SystemC module. I would have expected this to generate sc_signals of data type `double`. This of course results in the desired values being rounded to integers.\n\nConverting the desired `double` value to `uint64_t` in `sc_main` by using `memcpy` , `reinterpret_cast`, or a union, and feeding it to the generated SystemC module results in the Verilog module seeing the raw `unsigned int` bits and not the intended `double`.\n\nFor example converting a double value of `0.8` results in an unsigned int of value `0x3FE999999999999A`.  I then pass that in as input to the generated SystemC module. Since SystemC converted the original `real` port to `uint64_t`, I would have expected it to convert my `uint64_t` value of `0x3FE999999999999A` back to a `real`. I do see this in the generated code so it knows it's supposed to be double:\n\n```\ntracep->declDouble(c+1,0,\"i_VDD\",-1, VerilatedTraceSigDirection::INPUT, VerilatedTraceSigKind::WIRE, VerilatedTraceSigType::DOUBLE, false,-1);\ntracep->declDouble(c+3,0,\"o_VDD\",-1, VerilatedTraceSigDirection::OUTPUT, VerilatedTraceSigKind::WIRE, VerilatedTraceSigType::DOUBLE, false,-1);\n```\n\nVerilating to pure C++ works as expected. The generated C++ code uses `double` for the signals.\n\nSample Verilog module (simple.sv):\n```\nmodule simple\n(\n    input real i_VDD,\n    output real o_VDD\n);\n\nalways @(i_VDD) begin\n    o_VDD <= i_VDD;\nend\n\nendmodule\n```\n\nGenerated SystemC module (Vsimple.h):\n```\nclass alignas(VL_CACHE_LINE_BYTES) Vsimple VL_NOT_FINAL : public ::sc_core::sc_module, public VerilatedModel {\n  private:\n    ...\n\n  public:\n    ...\n    // PORTS\n    // The application code writes and reads these signals to\n    // propagate new values into/out from the Verilated model.\n    sc_core::sc_in<uint64_t> &i_VDD;\n    sc_core::sc_out<uint64_t> &o_VDD;\n    ...\n}\n```\n\nWhat 'verilator' command line do we use to run your example?\n`verilator --sc --timing --trace --top-module simple simple.sv`\n\n`verilator --version`: Verilator 5.037 devel rev v5.036-175-g73696f0a7 (mod).\nSame result with version 5.034.\n\nWhat OS and distribution are you using?\nLinux RedHat 8.10\n\nMay we assist you in trying to fix this in Verilator yourself?\nI can take a stab at it, sure.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-28",
+  "closed_at": "2025-07-25",
+  "code_blocks": [
+    "tracep->declDouble(c+1,0,\"i_VDD\",-1, VerilatedTraceSigDirection::INPUT, VerilatedTraceSigKind::WIRE, VerilatedTraceSigType::DOUBLE, false,-1);\ntracep->declDouble(c+3,0,\"o_VDD\",-1, VerilatedTraceSigDirection::OUTPUT, VerilatedTraceSigKind::WIRE, VerilatedTraceSigType::DOUBLE, false,-1);\n",
+    "module simple\n(\n    input real i_VDD,\n    output real o_VDD\n);\n\nalways @(i_VDD) begin\n    o_VDD <= i_VDD;\nend\n\nendmodule\n",
+    "class alignas(VL_CACHE_LINE_BYTES) Vsimple VL_NOT_FINAL : public ::sc_core::sc_module, public VerilatedModel {\n  private:\n    ...\n\n  public:\n    ...\n    // PORTS\n    // The application code writes and reads these signals to\n    // propagate new values into/out from the Verilated model.\n    sc_core::sc_in<uint64_t> &i_VDD;\n    sc_core::sc_out<uint64_t> &o_VDD;\n    ...\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

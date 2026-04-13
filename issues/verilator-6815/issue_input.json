@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6815,
+  "issue_url": "https://github.com/verilator/verilator/pull/6815",
+  "title": "Inline small CFuncs to reduce function call overhead",
+  "body": "Resolves #2367\n\n## Summary\n\nAdd `--inline-cfuncs` and `--inline-cfuncs-product` options to inline small CFunc calls directly into their callers. This reduces function call overhead when `--output-split-cfuncs` places functions in separate compilation units that the C++ compiler cannot inline.\n\n**Two thresholds:**\n- `--inline-cfuncs <n>` (default 20): Always inline if function has ≤ n nodes\n- `--inline-cfuncs-product <n>` (default 200): Also inline if size × call_count ≤ n\n\n**Functions are inlined when they:**\n- Meet size thresholds above\n- Have no `$c()` statements\n- Have void return type\n- Are in the same scope as caller\n\n**Local variables** in inlined functions are cloned with unique names (`__Vinline_<func>_<var>`).\n\nAdds V3Stats tracking: `\"Optimizations, Inlined CFuncs\"`\n\nThis optimization is automatically disabled when `--prof-cfuncs` or `--trace` is used.\n\n## Changes from previous PR #6765\n\nBased on maintainer feedback:\n- Moved from V3OrderCFuncEmitter to separate V3InlineCFuncs pass (runs after V3Reloop)\n- Changed `--inline-cfuncs` from boolean to threshold option\n- Added second tunable `--inline-cfuncs-product` for size×calls threshold\n- Implemented variable merging (local variables now supported)\n- Added V3Stats tracking\n- No multithreading (single-threaded pass)\n\n## Updates (v3)\n\nAddressed file-specific review comments:\n- `t_opt_inline_cfuncs.py`: Use exact count instead of matching any\n- `t_timing_debug1.py`: Use `--binary` instead of `--exe --main --timing`\n- `t_verilated_debug.py`: Revert to empty flags to allow inlining\n\n## Updates (v4)\n\nAddressed file-specific review comments:\n- `t_opt_inline_cfuncs_threshold.py`: Use `--binary` and exact count (0)\n- `t_opt_inline_cfuncs_threshold.v`: Simplify if/else to use `$stop`\n- `t_timing_debug1.out`: Restored from master\n- `t_timing_debug1.py`: Added `-CFLAGS -DVL_DEBUG` to ensure debug output\n- `V3InlineCFuncs.cpp`: Use `VNVisitorConst` for better performance\n- `V3InlineCFuncs.cpp`: Add `!entryPoint()` check to `isInlineable()`\n\n## Updates (v5)\n\n- `t_opt_inline_cfuncs_threshold.py`: Use product threshold 0 to guarantee count of 0 regardless of test file contents\n\n## Test plan\n\n- [x] `make test` passes locally\n- [x] CI passes on fork\n- [x] `t_opt_inline_cfuncs.py` - verifies inlining happens\n- [x] `t_opt_inline_cfuncs_off.py` - verifies `--inline-cfuncs 0` disables\n- [x] `t_opt_inline_cfuncs_threshold.py` - tests threshold behavior (branch coverage)\n- [x] Documentation added to `docs/guide/exe_verilator.rst`\n- [x] ARGUMENT SUMMARY updated in `bin/verilator`\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+  "labels": [
+    "pr: rtlmeter",
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-14",
+  "closed_at": "2025-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

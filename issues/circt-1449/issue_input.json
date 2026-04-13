@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1449,
+  "issue_url": "https://github.com/llvm/circt/issues/1449",
+  "title": "[FIRRTL] Grand Central DataTap Needs to Tap in Parent Module",
+  "body": "Currently, if you try to data tap into the current module, the generated XMR will have no hierarchy.  I don't think this will resolve correctly.  Instead, there should be an additional level of hierarchy.\r\n\r\nConsider (and sorry for the verbosity) the following.  This is trying to tap `~Top|GCTDataTap>r`:\r\n\r\n```scala\r\ncircuit Top : %[\r\n[\r\n  {\r\n    \"class\": \"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"blackBox\": \"~Top|DataTap\",\r\n    \"keys\": [\r\n      {\r\n        \"class\": \"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\": \"~Top|GCTDataTap>r\",\r\n        \"portName\": \"~Top|DataTap>_0\"\r\n      }\r\n    ]\r\n  }\r\n]]\r\n  extmodule DataTap :\r\n    output _0 : UInt<1>\r\n\r\n    defname = DataTap\r\n\r\n  module Bar:\r\n    input clock: Clock\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    reg r : UInt<1>, clock\r\n\r\n    r <= a\r\n    b <= r\r\n\r\n\r\n  module GCTDataTap :\r\n    input clock : Clock\r\n    input a : UInt<1>\r\n    output b : UInt<1>\r\n\r\n    reg r : UInt<1>, clock\r\n\r\n    inst bar of Bar\r\n    bar.clock <= clock\r\n    bar.a <= a\r\n    r <= bar.b\r\n    b <= r\r\n\r\n    wire cloneType : UInt<1>\r\n    inst DataTap of DataTap\r\n    DataTap._0 is invalid\r\n    cloneType <= DataTap._0\r\n\r\n  module Top:\r\n    input clock: Clock\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst DUT of GCTDataTap\r\n    DUT.clock <= clock\r\n    DUT.a <= a\r\n    b <= DUT.b\r\n\r\n```\r\n\r\nThe generated XMR is:\r\n\r\n```verilog\r\nmodule DataTap_impl_0(\r\n  output _0);\r\n\r\n  assign _0 = r;        // gct/DataTap.fir:15:13\r\nendmodule\r\n```\r\n\r\nAnd for confirmation that this is a problem, Verilator can't find `r`:\r\n```\r\n%Error: /dev/stdin:37:15: Can't find definition of variable: 'r'\r\n   37 |   assign _0 = r;  \r\n      |               ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\nHowever, if I instead tap `~Top|Bar>r`, everything works.  This produces the following Verilog and Verilator is happy:\r\n\r\n```verilog\r\nmodule DataTap_impl_0(\r\n  output _0);\r\n\r\n  assign _0 = bar.r;    // gct/DataTap.fir:15:13\r\nendmodule\r\n```\r\n\r\n(Also, who knew that Verilator could handle hierarchical references?  To test this, I'm just using `firtool Foo.fir | verilator --lint-only /dev/stdin`.)",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-20",
+  "closed_at": "2022-07-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

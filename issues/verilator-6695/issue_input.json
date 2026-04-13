@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6695,
+  "issue_url": "https://github.com/verilator/verilator/issues/6695",
+  "title": "Fix initialization treated as continuous assignment",
+  "body": "> Thanks for taking the time to report this.\n> Can you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n>\n> What output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\nHere is a simple testcase that triggers the bug.\n\n```sv\nmodule bug(\n    input bit in,\n    input bit in2,\n    output bit out\n);\n    bit internal = in;\n    assign out = internal | in2;\nendmodule\n```\n\nand the testbench \n\n```sv\nmodule top;\n    logic out;\n    logic in;\n    logic in2;\n\n    bug dut (\n        .out(out),\n        .in(in),\n        .in2(in2)\n    );\n\n\n    initial begin\n        string line;\n        int fd;\n        int status;\n\n        in = 'h0;\n        in2 = 'h0;\n\n        #20;\n        in = 'h1;\n        #20;\n\n        $display(\"out: %b\", out);\n\n        assert(out == 0) else $fatal(0, \"Assertion failed: 'out' is not 0 at the end of simulation\");\n\n        $finish;\n    end\nendmodule\n```\n\nNormally internal should initialise to 0 as it is a two state variable, whatever the value of in. Nevertheless in this example the initialisation seems to become a continuous assignement. As out takes the value 1.\n\nThis does not seem to be always the case as if I remove the in2 variable and the | then the result is what is expected. \n\n> What 'verilator' command line do we use to run your example?\n\n```sh\nverilator --binary --exe --build -Mdir obj_dir -sv --timing testbench.sv -I bug.sv && ./obj_dir/Vtestbench\n```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\nI am using git upstream `Verilator 5.043 devel rev v5.042-59-gf32095dd1`\n\n> What OS and distribution are you using?\n\nLinux arch\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nProbably, if this does not seem to complicated I could investigate it.\n\n> (Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n\n((Normally it is not a duplicate, sorry if it is))\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-11-15",
+  "closed_at": null,
+  "code_blocks": [
+    "module bug(\n    input bit in,\n    input bit in2,\n    output bit out\n);\n    bit internal = in;\n    assign out = internal | in2;\nendmodule\n",
+    "module top;\n    logic out;\n    logic in;\n    logic in2;\n\n    bug dut (\n        .out(out),\n        .in(in),\n        .in2(in2)\n    );\n\n\n    initial begin\n        string line;\n        int fd;\n        int status;\n\n        in = 'h0;\n        in2 = 'h0;\n\n        #20;\n        in = 'h1;\n        #20;\n\n        $display(\"out: %b\", out);\n\n        assert(out == 0) else $fatal(0, \"Assertion failed: 'out' is not 0 at the end of simulation\");\n\n        $finish;\n    end\nendmodule\n",
+    "verilator --binary --exe --build -Mdir obj_dir -sv --timing testbench.sv -I bug.sv && ./obj_dir/Vtestbench\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

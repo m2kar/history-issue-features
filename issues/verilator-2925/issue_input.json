@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2925,
+  "issue_url": "https://github.com/verilator/verilator/issues/2925",
+  "title": "Improve large lookup tables",
+  "body": "I have a design which relies on large lookup tables/ROMs coded as very large Verilog constants. This eventually results in V3Premit inserting huge temporaries, and initializing them with inine code every time their use is reached:\r\n\r\nhttps://github.com/verilator/verilator/blob/8624ce6a84dcd0908a9d721420e1f790ffaf4ba1/src/V3Premit.cpp#L169-L187\r\n\r\nThis results in hundreds of machine instructions being spent on constant initialzing a stack variable on every cycle, all so we can do 2 indexed lookups into the temp. This is both slow at runtime and at compile time as it bloats the function sizes in a way that output split cannot chop up.\r\n\r\nAn impovement would be to emit these constants as static data. I can have a go at this and V3Table has some helpful analogous code. What I am struggling with, is that I see all static arrays emitted in EmitC are inialized with code in _ctor_var_reset, which is still a bit wasteful and also racy (though probably harmless) with multiple simulation context. Is there a reason why we don't just emit these as C static data initializer as in:\r\n```\r\nstatic int foo[] = { 1, 2, 3,4 .... };\r\n```\r\nI appreciate this only works for primitive data types, so some mechanism is needed for referencig these in eg VlWide types.\r\n\r\n",
+  "labels": [
+    "area: performance",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-06",
+  "closed_at": "2021-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

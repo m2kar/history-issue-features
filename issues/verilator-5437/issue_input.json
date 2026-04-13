@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5437,
+  "issue_url": "https://github.com/verilator/verilator/issues/5437",
+  "title": "Support for Constrained Randomization of Unpacked Arrays",
+  "body": "Hello,\r\n\r\nSince constrained random for packed arrays is now supported with the addition of astsel emitSMT(), I am now starting to explore the issue of constrained random for unpacked arrays. \r\n\r\nThis is a relatively complex problem because when array becomes unpacked, the best approach is not to treat it as a large chunk of data, but rather as an array data type. This approach will also help in solving issues related to dynamic arrays in the future.\r\n\r\nThe smt-lib2 logic QF_ABV supports arrays, allowing array reads and writes through select and store.\r\n\r\nSo far, I have modified ConstraintVisitor and parts of verilated_random.cpp, and I have successfully sent the correctly formatted array constraints to the solver and received correct results.\r\n\r\nThe current issue is that when parsing the solution, I need to assign each value of the unpacked array to the corresponding verilated variables.\r\n\r\nDoes anyone have any ideas on how this step should be done?\r\n\r\n\r\nCurrent progress:\r\nInput to solver:\r\n```\r\n(set-option :produce-models true)\r\n(set-logic QF_ABV)\r\n(define-fun __Vbv ((b Bool)) (_ BitVec 1) (ite b #b1 #b0))\r\n(define-fun __Vbool ((v (_ BitVec 1))) Bool (= #b1 v))\r\n(declare-fun unpacked_array () (Array (_ BitVec 32) (_ BitVec 32)))\r\n(assert (= #b1 (__Vbv (= (select unpacked_array #x00000000) #x00000007))))\r\n(assert (= #b1 (__Vbv (= (select unpacked_array #x00000001) #x00000008))))\r\n(check-sat)\r\n```\r\nOutput from solver:\r\n```\r\n((unpacked_array (store ((as const (Array (_ BitVec 32) (_ BitVec 32))) #x00000007)\r\n       #x00000001\r\n       #x00000008)))\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE",
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-06",
+  "closed_at": "2024-10-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

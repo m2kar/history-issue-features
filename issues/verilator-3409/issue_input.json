@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3409,
+  "issue_url": "https://github.com/verilator/verilator/issues/3409",
+  "title": "complex assign in always_comb",
+  "body": "\r\nversion ： git master  2022/5/7\r\ndemo：\r\n```\r\nmodule twocounter( din,row_idx, row_found);\r\n  input din;\r\n  output [1:0]row_idx;\r\n  output row_found; \r\n  reg [3:0] din;\r\n  reg [3:0] wide_din;\r\n  reg row_found;\r\n  reg [1:0]row_idx;\r\n\r\nalways_comb\r\nbegin : pricen_2d\r\n\tinteger x;\r\n\twide_din = {4{1'b0}};\r\n\twide_din[3:0] = din;\r\n\r\n\trow_idx = {2{1'b0}};\r\n\trow_found = 1'b0;\r\n\tfor (x = 0; $unsigned(x) < 4; x=x+1)\r\n\tbegin\r\n\t\trow_idx = !row_found?x[1:0] : row_idx;\r\n\t\trow_found = !row_found?wide_din[x]:row_found;\r\n\tend\r\nend\r\nendmodule\r\n```\r\n\r\ntrans code:\r\n```\r\n\r\n    // Init\r\n    CData/*0:0*/ __Vcellout__twocounter__row_found;\r\n    CData/*1:0*/ __Vcellout__twocounter__row_idx;\r\n    CData/*3:0*/ __Vcellinp__twocounter__din;\r\n    CData/*3:0*/ twocounter__DOT__wide_din;\r\n    // Body\r\n    VL_ASSIGN_ISI(4,__Vcellinp__twocounter__din, vlSelf->din);\r\n    twocounter__DOT__wide_din = __Vcellinp__twocounter__din;\r\n    __Vcellout__twocounter__row_found = (1U & (IData)(twocounter__DOT__wide_din));\r\n    __Vcellout__twocounter__row_idx = ((IData)(__Vcellout__twocounter__row_found)\r\n                                        ? 0U : 1U);\r\n    if (__Vcellout__twocounter__row_found) {\r\n        __Vcellout__twocounter__row_found = (1U & (IData)(__Vcellout__twocounter__row_found));\r\n        __Vcellout__twocounter__row_idx = __Vcellout__twocounter__row_idx;\r\n    } else {\r\n        __Vcellout__twocounter__row_found = (1U & ((IData)(twocounter__DOT__wide_din) \r\n                                                   >> 1U));\r\n        __Vcellout__twocounter__row_idx = 2U;         //   Example  din 4'b0010, row idx should be 1, not 2U\r\n    }\r\n    if (__Vcellout__twocounter__row_found) {\r\n        __Vcellout__twocounter__row_found = (1U & (IData)(__Vcellout__twocounter__row_found));\r\n        __Vcellout__twocounter__row_idx = __Vcellout__twocounter__row_idx;\r\n    } else {\r\n        __Vcellout__twocounter__row_found = (1U & ((IData)(twocounter__DOT__wide_din) \r\n                                                   >> 2U));\r\n        __Vcellout__twocounter__row_idx = 3U;\r\n    }\r\n    if (__Vcellout__twocounter__row_found) {\r\n        __Vcellout__twocounter__row_found = (1U & (IData)(__Vcellout__twocounter__row_found));\r\n        VL_ASSIGN_SII(1,vlSelf->row_found, 1U);\r\n    } else {\r\n        __Vcellout__twocounter__row_found = (1U & ((IData)(twocounter__DOT__wide_din) \r\n                                                   >> 3U));\r\n        VL_ASSIGN_SII(1,vlSelf->row_found, 0U);\r\n    }\r\n    VL_ASSIGN_SII(2,vlSelf->row_idx, __Vcellout__twocounter__row_idx);\r\n```\r\nexample:  For input 4'b0010(din), i think the output should be  row_id=1, \r\nBut in the logic above, what comes out is 2U.\r\n\r\nI have read the source code and preliminarily determine that the problem is in V3Life.cpp. However, I have no idea how to solve the problem ，need help",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-07",
+  "closed_at": "2022-05-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10192,
+  "issue_url": "https://github.com/llvm/circt/issues/10192",
+  "title": "[Synth][FunctionalReduction] Refine equiv class candidates using counterexamples",
+  "body": "When the SAT solver returns SAT, the resulting model provides a counterexample that distinguishes two nodes previously thought to be equivalent. This counterexample can be used to refine the entire set of candidates through resimulation: https://github.com/llvm/circt/blob/5e21c9594ca4bd4545fd8b4d8a07a6c6c68eb0c9/lib/Dialect/Synth/Transforms/FunctionalReduction.cpp#L571-L572\n\nThis is quite effective to reduce the number of SAT calls.\nSo certainly the API change would be:\n\n```cpp\n  struct CexPattern {\n    DenseMap<Value, bool> inputAssignment;\n  };\n\n  FailureOr<CexPattern> extractCounterexample();\n  DenseMap<Value, bool> simulateSinglePattern(const CexPattern &pattern);\n  void refineCandidateClass(SmallVector<std::pair<Value, bool>> &members,\n                            const DenseMap<Value, bool> &bitValues,\n                            SmallVector<SmallVector<std::pair<Value, bool>>> &newClasses);\n```\nand changing the verification loop from the current:\n```cpp\n  for (member in class.drop_front())\n    verifyEquivalence(representative, member);\n````\n  into a worklist:\n```cpp\n  SmallVector<SmallVector<Value>> pending = {members};\n  while (!pending.empty()) {\n    auto cls = pending.pop_back_val();\n    if (cls.size() <= 1) continue;\n\n    Value repr = chooseRepresentative(cls);\n    SmallVector<Value> proved{repr};\n    SmallVector<Value> disproved;\n\n    for (Value member : drop_front(cls)) {\n      switch (verifyEquivalence(repr, member)) {\n      case Proved:\n        proved.push_back(member);\n        break;\n      case Disproved: {\n        auto cex = extractCounterexample();\n        auto eval = simulateSinglePattern(*cex);\n        SmallVector<SmallVector<Value>> split;\n        refineCandidateClass(cls, eval, split);\n        pending.append(split.begin(), split.end());\n        goto next_class;\n      }\n      case Unknown:\n        // Give up a member. \n      }\n    }\n\n    recordProvenClass(proved);\n  next_class:;\n  }\n```\n\nThis is a rough sketch so there might be a better way to implement this. ",
+  "labels": [
+    "Synth"
+  ],
+  "state": "open",
+  "created_at": "2026-04-13",
+  "closed_at": null,
+  "code_blocks": [
+    "  struct CexPattern {\n    DenseMap<Value, bool> inputAssignment;\n  };\n\n  FailureOr<CexPattern> extractCounterexample();\n  DenseMap<Value, bool> simulateSinglePattern(const CexPattern &pattern);\n  void refineCandidateClass(SmallVector<std::pair<Value, bool>> &members,\n                            const DenseMap<Value, bool> &bitValues,\n                            SmallVector<SmallVector<std::pair<Value, bool>>> &newClasses);\n",
+    "  for (member in class.drop_front())\n    verifyEquivalence(representative, member);\n",
+    "  SmallVector<SmallVector<Value>> pending = {members};\n  while (!pending.empty()) {\n    auto cls = pending.pop_back_val();\n    if (cls.size() <= 1) continue;\n\n    Value repr = chooseRepresentative(cls);\n    SmallVector<Value> proved{repr};\n    SmallVector<Value> disproved;\n\n    for (Value member : drop_front(cls)) {\n      switch (verifyEquivalence(repr, member)) {\n      case Proved:\n        proved.push_back(member);\n        break;\n      case Disproved: {\n        auto cex = extractCounterexample();\n        auto eval = simulateSinglePattern(*cex);\n        SmallVector<SmallVector<Value>> split;\n        refineCandidateClass(cls, eval, split);\n        pending.append(split.begin(), split.end());\n        goto next_class;\n      }\n      case Unknown:\n        // Give up a member. \n      }\n    }\n\n    recordProvenClass(proved);\n  next_class:;\n  }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

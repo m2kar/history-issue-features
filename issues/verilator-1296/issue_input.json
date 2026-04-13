@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1296,
+  "issue_url": "https://github.com/verilator/verilator/issues/1296",
+  "title": "SystemVerilog logic array inside struct should warn on bad index",
+  "body": "---\n\n\nAuthor Name: **Sergi Granell** (@xerpi)\nOriginal Redmine Issue: 1296 from https://www.veripool.org\n\n\n\n---\n\nIt looks like when you have a logic array inside a struct, and you try to access a bit of that field directly, they indexing of the bits always start at 0 no matter the offset of the logic array.\r\n\r\n```\r\nmodule our();\r\n\ttypedef struct packed {\r\n\t\tlogic [31:20] imm;\r\n\t\tlogic [19:15] rs1;\r\n\t\tlogic [14:12] funct3;\r\n\t\tlogic [11:7] rd;\r\n\t\tlogic [6:0] opcode;\r\n\t} instruction_itype_t;\r\n\r\n\t/*\r\n\t * The bit 31, same as instr.imm[11] will be 1.\r\n\t */\r\n\tinstruction_itype_t instr = 32'ha0008093; /* addi x1, x1, -1536 # aa00 */\r\n\r\n\tlogic [11:0] imm;\r\n\tassign imm = instr.imm;\r\n\r\n\tinitial begin\r\n\t\t$display(\"instr: 0x%X\\n\", instr);\r\n\r\n\t\t$display(\"instr.imm: %b (0x%X)\", instr.imm, instr.imm);\r\n\t\t$display(\"imm:       %b (0x%X)\\n\", imm, imm);\r\n\r\n\t\t/*\r\n\t\t * Should print 1 and not 0!!\r\n\t\t */\r\n\t\t$display(\"instr.imm[11]: %d <-- should be 1 !!\", instr.imm[11]);\r\n\t\t/*\r\n\t\t * This prints 1 as expected.\r\n\t\t */\r\n\t\t$display(\"imm[11]:       %d\\n\", imm[11]);\r\n\r\n\t\t/*\r\n\t\t * Why is this working? That imm has 12 bits!\r\n\t\t */\r\n\t\t$display(\"instr.imm[31]: %d\", instr.imm[31]);\r\n\t\t$finish;\r\n\tend\r\nendmodule\r\n\n```\r\n \n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2018-03-29",
+  "closed_at": "2018-10-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

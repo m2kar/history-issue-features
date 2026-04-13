@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8863,
+  "issue_url": "https://github.com/llvm/circt/issues/8863",
+  "title": "[Comb] Concat/extract canonicalizer crashes on loop",
+  "body": "Consider the following input:\n```mlir\nhw.module @Foo(in %a : i1, in %b : i1, out z : i4) {\n  %0 = comb.extract %1 from 2 : (i4) -> i2\n  %1 = comb.concat %0, %b, %a : i2, i1, i1\n  hw.output %1 : i4\n}\n```\nRunning this through `circt-opt --canonicalize` crashes:\n```\nAssertion `op->use_empty() && \"expected 'op' to have no uses\"' failed.\n[...]\n #8 mlir::RewriterBase::eraseOp(mlir::Operation*)\n #9 mlir::RewriterBase::replaceOp(mlir::Operation*, mlir::ValueRange)\n#10 circt::replaceOpAndCopyNamehint(mlir::PatternRewriter&, mlir::Operation*, mlir::Value) \n#11 extractConcatToConcatExtract(circt::comb::ExtractOp, circt::comb::ConcatOp, mlir::PatternRewriter&)\n    /home/fabian/code/circt/lib/Dialect/Comb/CombFolds.cpp:513:3\n#12 circt::comb::ExtractOp::canonicalize(circt::comb::ExtractOp, mlir::PatternRewriter&)\n    /home/fabian/code/circt/lib/Dialect/Comb/CombFolds.cpp:578:12\n```\nThe input was generate from (loop is useless in practice but intentional):\n```systemverilog\nmodule Foo(input logic a, logic b, output logic [3:0] z);\n  logic [3:0] x;\n  always_comb begin\n    x[0] = a;\n    x[1] = b;\n  end\n  assign z = x;\nendmodule\n```",
+  "labels": [
+    "Comb"
+  ],
+  "state": "open",
+  "created_at": "2025-08-16",
+  "closed_at": null,
+  "code_blocks": [
+    "hw.module @Foo(in %a : i1, in %b : i1, out z : i4) {\n  %0 = comb.extract %1 from 2 : (i4) -> i2\n  %1 = comb.concat %0, %b, %a : i2, i1, i1\n  hw.output %1 : i4\n}\n",
+    "Assertion `op->use_empty() && \"expected 'op' to have no uses\"' failed.\n[...]\n #8 mlir::RewriterBase::eraseOp(mlir::Operation*)\n #9 mlir::RewriterBase::replaceOp(mlir::Operation*, mlir::ValueRange)\n#10 circt::replaceOpAndCopyNamehint(mlir::PatternRewriter&, mlir::Operation*, mlir::Value) \n#11 extractConcatToConcatExtract(circt::comb::ExtractOp, circt::comb::ConcatOp, mlir::PatternRewriter&)\n    /home/fabian/code/circt/lib/Dialect/Comb/CombFolds.cpp:513:3\n#12 circt::comb::ExtractOp::canonicalize(circt::comb::ExtractOp, mlir::PatternRewriter&)\n    /home/fabian/code/circt/lib/Dialect/Comb/CombFolds.cpp:578:12\n",
+    "module Foo(input logic a, logic b, output logic [3:0] z);\n  logic [3:0] x;\n  always_comb begin\n    x[0] = a;\n    x[1] = b;\n  end\n  assign z = x;\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2366,
+  "issue_url": "https://github.com/verilator/verilator/issues/2366",
+  "title": "Optimize ternary expressions with the same condition",
+  "body": "The code that makes LLVM's Jump Threading optimization explode in time on EL2 (as mentioned in #2365) is of the form:\r\n```\r\nx0 = cond0 ? then0 : else0;\r\nx1 = cond1 ? then1 : else1;\r\nx2 = cond2 ? then2 : else2;\r\n..\r\nxn = condn ? thenn : elsen;\r\n```\r\ncondN is pretty much always the same (reset signal, or reset combined with something else), thenN is an arbitrary expession and elseN is often constant 0. Otherwise the statements are largely independent. It think it would be worth trying a pass which rolls these up into:\r\n```\r\nif (cond) {\r\n  x0 = then0;\r\n  ...\r\n  xn = thenn;\r\n} else {\r\n  x0 = else0;\r\n  ...\r\n  xn = elsen;\r\n}\r\n```\r\nI am happy to have a stab at this but would appreciate some suggestion on which point in the pipeline this would be most appropriate, assuming you think this is useful. It might give use some of the gains that #2248 would yield. Also has a good chance of reducing code size incase the C compiler gave up merging the blocks because of complexity. Also if there is a standard mechanism which test if 2 trees (condN and condM in the example) are the same, please point me towards it.",
+  "labels": [
+    "area: performance",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2020-05-25",
+  "closed_at": "2020-05-30",
+  "code_blocks": [
+    "x0 = cond0 ? then0 : else0;\r\nx1 = cond1 ? then1 : else1;\r\nx2 = cond2 ? then2 : else2;\r\n..\r\nxn = condn ? thenn : elsen;",
+    "if (cond) {\r\n  x0 = then0;\r\n  ...\r\n  xn = thenn;\r\n} else {\r\n  x0 = else0;\r\n  ...\r\n  xn = elsen;\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

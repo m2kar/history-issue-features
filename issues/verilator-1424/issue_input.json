@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1424,
+  "issue_url": "https://github.com/verilator/verilator/issues/1424",
+  "title": "Verilator does not complain about invalid parameter declaration",
+  "body": "---\n\n\nAuthor Name: **Peter Gerst**\nOriginal Redmine Issue: 1424 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator fails to trow syntax error on parameter declaration without constant expression, like this:\r\n```\r\nparameter param1; /* constant expression is missing */\r\n\n```\r\n\r\nSee the following example codes.\r\n\r\nparameter_lint.v:\r\n```\r\nmodule parameter_lint (\r\n     input wire CLK,\r\n     input wire RST,\r\n     input wire in0,\r\n     output reg out0\r\n);\r\n\r\nparameter param0 = 0;\r\nparameter param1;\r\n\r\nalways @(posedge CLK) begin\r\n     if (RST) begin\r\n         out0 <= 0;\r\n     end else begin\r\n         out0 <= in0;\r\n     end\r\nend\r\n\r\nendmodule\r\n\r\n\n```\r\n\r\nparameter_main.v:\r\n\r\n```\r\nmodule parameter_main(\r\n     input wire CLK,\r\n     input wire RST,\r\n     input wire in0,\r\n     output reg out0\r\n);\r\n\r\nparameter_lint #(\r\n     .param1 (1'd0),\r\n     .param0 (1'd0)\r\n) inst0 (\r\n     .CLK (CLK),\r\n     .RST (RST),\r\n     .in0 (in0),\r\n     .out0 (out0)\r\n);\r\n\r\nendmodule\r\n\r\n\n```\r\n\r\nVerilator is called in the following way:\r\n```\r\n\r\n$ verilator --lint-only -Wall parameter_main.v\r\n\r\n\n```\r\n\r\nThe command above finishes without error. If I comment out the assignment of _param1_ in instantiation of _parameter_lint_ module in parameter_main.v I get internal error.\r\n\r\n```\r\n$ verilator --lint-only -Wall parameter_main.v\r\n%Error: Internal Error: parameter_lint.v:9: ../V3Param.cpp:277: Parameter without initial value\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed /usr/local/bin/verilator_bin --lint-only -Wall parameter_main.v\r\n\r\n\n```\r\n\r\nI used verilator release 4.012 built under cygwin.\r\n\r\nNormally i used to call Verilator with specifying verilog 2001 language standard that needs constant expression in parameter declaration. (Xilinx syntheser i used supports this standard.) It seems to be valid for SystemVerilog 2017 as well (http://ecee.colorado.edu/~mathys/ecen2350/IntelSoftware/pdf/IEEE_Std1800-2017_8299595.pdf, page 120).\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-04-30",
+  "closed_at": "2019-05-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

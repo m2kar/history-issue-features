@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7206,
+  "issue_url": "https://github.com/verilator/verilator/issues/7206",
+  "title": "[RFC] Experimental opt-in `--cuda`, inspired by GEM-style state-batched execution",
+  "body": "Translation assistance by ChatGPT\n\n  Hi ,\n  Before opening the PR, I’d like feedback on scope and acceptance criteria for an experimental, opt-in\n  `--sim-accel` sidecar path.\n\n  This work is inspired by GEM-style ideas (GPU-oriented boolean/dataflow evaluation and state batching),\n  but implemented as a Verilator-side experimental sidecar flow.\nhttps://github.com/NVlabs/GEM\n\n  ## Goal\n\n  Provide a **sidecar acceleration path** for research/benchmarking:\n  - opt-in only\n  - no change to standard Verilator runtime semantics\n  - explicit supported subset (not full coverage)\n\n  ## Non-goals (initial step)\n\n  - Not replacing normal Verilator runtime execution with CUDA\n  - Not full AST/operator coverage\n  - Not claiming universal speedup\n\n  ## Faster test cases (measured)\n\n  ### 1) Real module, large state batch (`cv32e40p_core`)\n  Command (equivalent flow):\n  ```bash\n  verilator/scripts/noc_cc_direct_cuda_bench.sh \\\n    --verilator ./bin/verilator \\\n    --top-module cv32e40p_core \\\n    --outdir /tmp/cv32_gpu_only_example \\\n    --nstates 131072 \\\n    --gpu-reps 200 \\\n    --cpu-reps 20 \\\n    -- -f <manifest-expanded flist>\n  ```\n• --gpu-reps and --cpu-reps are timing loop counts, not extra test vectors.\n\n  - --gpu-reps 200: run the GPU kernel 200 times and report average gpu_ms_per_rep\n  - --cpu-reps 20: run the CPU reference 20 times and report average cpu_ms_per_rep\n\n  Result:\n\n  - nvars=299, nstates=131072\n  - gpu_ms_per_rep=0.104023\n  - cpu_ms_per_rep=71.704341\n  - speedup_cpu_over_gpu=689.312116x\n  - mismatch=0\n  - cuda_assignw_supported=90, cuda_assignw_total=479, coverage=30.06%\n\n  ### 2) CV32 E2E proxy flow (coremark + same RTL set)\n\n  Result snapshot:\n\n  - gpu_ms_per_rep=0.015232\n  - cpu_ms_per_rep=15.391155\n  - speedup_cpu_over_gpu=1010.448722x\n  - mismatch=0\n  - coverage=30.06%\n\n  ## Also measured (for balance)\n\n  Small regression case (t_sim_accel_bench_exec) is GPU-unfavorable:\n\n  - nvars=7, nstates=8192\n  - gpu_ms_per_rep=0.009972\n  - cpu_ms_per_rep=0.006530\n  - speedup_cpu_over_gpu=0.654808x\n  - mismatch=0\n  - coverage=100.00%\n\n  So performance is strongly dependent on batching size (nstates), coverage, and design structure.\n\n  ## Correctness gates used\n\n  - CPU-vs-GPU output comparison in bench flow\n  - pass condition requires mismatch=0\n  - unsupported subset is reported explicitly (no silent “full acceleration” claim)\n\n  ## Environment\n\n  - Branch: feature/sim-accel-pr-clean-v2\n  - Commit: 672eae32a97af3125a9555b3e5ad5f545d19f573\n  - OS: Ubuntu 24.04.2 LTS (WSL2)\n  - CPU: Intel Core i7-14700F (14C/28T)\n  - GPU: NVIDIA GeForce RTX 4070 Ti SUPER (16GB)\n  - Driver: 566.36\n  - CUDA toolkit: nvcc 12.0 (runtime shown by nvidia-smi: CUDA 12.7)\n\n  ## Feedback requested\n\n  1. Is this acceptable as an initial opt-in sidecar-only step?\n  2. Is the sim-accel naming (backend / strategy) acceptable?\n  3. Are these correctness gates sufficient for an initial PR?\n  4. Preferred benchmark/reporting format for review?",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "open",
+  "created_at": "2026-03-06",
+  "closed_at": null,
+  "code_blocks": [
+    "  verilator/scripts/noc_cc_direct_cuda_bench.sh \\\n    --verilator ./bin/verilator \\\n    --top-module cv32e40p_core \\\n    --outdir /tmp/cv32_gpu_only_example \\\n    --nstates 131072 \\\n    --gpu-reps 200 \\\n    --cpu-reps 20 \\\n    -- -f <manifest-expanded flist>\n  "
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

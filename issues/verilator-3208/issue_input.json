@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3208,
+  "issue_url": "https://github.com/verilator/verilator/issues/3208",
+  "title": "Missing bits in display of a concat",
+  "body": "I have an example with this:\r\n```\r\n$display(\"%x\", t2);\r\n$display(\"%x\", { t2[15:8], 4'd0, t2[3:0] });\r\n```\r\nand Modelsim and Icarus output this as expected:\r\n```\r\nff0f\r\nff0f\r\n```\r\nbut Verilator seems to lose the upper bits in the second display:\r\n```\r\nff0f\r\n0f\r\n```\r\nI see that the following code was generated:\r\n```\r\nVL_WRITEF(\"%x\\n%x\\n\",16,vlTOPp->display_concat__DOT__t2,\r\n          8,(0xff0fU & (IData)(vlTOPp->display_concat__DOT__t2)));\r\n```\r\nI would guess that the `8` for the second argument is the problem.  Something must have computed the wrong size?\r\n\r\nHere is the self-contained example: [display_concat.tar.gz](https://github.com/verilator/verilator/files/7552767/display_concat.tar.gz)\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-17",
+  "closed_at": "2021-11-23",
+  "code_blocks": [
+    "$display(\"%x\", t2);\r\n$display(\"%x\", { t2[15:8], 4'd0, t2[3:0] });",
+    "VL_WRITEF(\"%x\\n%x\\n\",16,vlTOPp->display_concat__DOT__t2,\r\n          8,(0xff0fU & (IData)(vlTOPp->display_concat__DOT__t2)));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

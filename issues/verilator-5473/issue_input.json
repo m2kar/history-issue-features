@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5473,
+  "issue_url": "https://github.com/verilator/verilator/issues/5473",
+  "title": "Coverage count not updated during ConstPool lookup",
+  "body": "```\r\n$ verilator --version\r\nVerilator 5.028 2024-08-21 rev UNKNOWN.REV\r\n```\r\n\r\n[I have a simple 80-line UART Transmitter](https://gist.github.com/nickelpro/ce7677305dd57c2ba71eca46a062471a)\r\n\r\nThe final `always_comb` block, lines 69-79, are of concern:\r\n\r\n```verilog\r\nalways_comb begin\r\n  case (curState)\r\n    IDLE: nextState = enterStart ? START : curState;\r\n\r\n    START: nextState = DATA;\r\n\r\n    DATA: nextState = |writeCount ? curState : STOP;\r\n\r\n    STOP: nextState = enterStart ? START : IDLE;\r\n  endcase\r\nend\r\n```\r\n\r\nWhen verilating with `verilator --coverage --cc UartTx.sv`, we can see the coverage is correctly inserted for this block:\r\n```cpp\r\nvlSelf->__vlCoverInsert(&(vlSymsp->__Vcoverage[45]), first, \"UartTx.sv\", 71, 11, \".UartTx\", \"v_line/UartTx\", \"case\", \"71\");\r\nvlSelf->__vlCoverInsert(&(vlSymsp->__Vcoverage[46]), first, \"UartTx.sv\", 73, 12, \".UartTx\", \"v_line/UartTx\", \"case\", \"73\");\r\nvlSelf->__vlCoverInsert(&(vlSymsp->__Vcoverage[47]), first, \"UartTx.sv\", 75, 11, \".UartTx\", \"v_line/UartTx\", \"case\", \"75\");\r\nvlSelf->__vlCoverInsert(&(vlSymsp->__Vcoverage[48]), first, \"UartTx.sv\", 77, 11, \".UartTx\", \"v_line/UartTx\", \"case\", \"77\");\r\nvlSelf->__vlCoverInsert(&(vlSymsp->__Vcoverage[49]), first, \"UartTx.sv\", 69, 3, \".UartTx\", \"v_line/UartTx\", \"block\", \"69-70\");\r\n```\r\n\r\nThe logic for the block itself is generated as a ConstPool lookup, and the counts for these coverage points are not updated when evaluating that lookup:\r\n```cpp\r\n__Vtableidx1 = (((IData)(vlSelfRef.UartTx__DOT__writeCount) \r\n                    << 3U) | (((IData)(vlSelfRef.UartTx__DOT__enterStart) \r\n                            << 2U) | (IData)(vlSelfRef.UartTx__DOT__curState)));\r\nvlSelfRef.UartTx__DOT__nextState = VUartTx__ConstPool__TABLE_h5f91972e_0\r\n    [__Vtableidx1];\r\n```\r\nI would expect to see:\r\n```cpp\r\n++(vlSymsp->__Vcoverage[45]);\r\n++(vlSymsp->__Vcoverage[46]);\r\n// ...\r\n++(vlSymsp->__Vcoverage[49]);\r\n```\r\n\r\nNowehere in the generated code is an increment for these coverage points inserted, making it impossible to write tests to satisfy a coverage report.",
+  "labels": [
+    "resolution: fixed",
+    "area: coverage"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-20",
+  "closed_at": "2024-10-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

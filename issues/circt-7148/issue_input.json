@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7148,
+  "issue_url": "https://github.com/llvm/circt/issues/7148",
+  "title": "[HW] InstanceOp verifier failure",
+  "body": "If I create a module with parameter as:\r\n```\r\nhw.module @test<param: i32>(in in0: !esi.channel<!hw.int<#hw.param.decl.ref<\"param\">>>, out: ...) { ... }\r\n```\r\nThen instantiate it using a `!esi.channel`, say `channel0`:\r\n```\r\n%outputs = hw.instance \"test\" @test<param: i32 = 1>(in0: channel0 : !esi.channel<i1>) -> (out: ...)\r\n```\r\nThen this error will show up:\r\n```\r\n'hw.instance' op operand type #0 must be '!esi.channel<!hw.int<#hw.param.decl.ref<\"param\">>>', but got '!esi.channel<i1>'\r\n```\r\nHowever, if I directly use `!hw.int<#hw.param.decl.ref<\"param\">>` instead of wrap this in other types like `!esi.channel`, it will work with no problems. I guess there is something missing in the verifier of InstanceOp, specifically in the `evaluateParametricType` function, in which there should be another Case for `esi::ChannelType`?\r\nAny help would be great!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-06-10",
+  "closed_at": "2024-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

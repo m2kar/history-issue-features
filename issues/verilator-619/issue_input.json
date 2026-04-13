@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 619,
+  "issue_url": "https://github.com/verilator/verilator/issues/619",
+  "title": "Hierarchical parameter binding",
+  "body": "---\n\n\nAuthor Name: **Ed Lander**\nOriginal Redmine Issue: 619 from https://www.veripool.org\nOriginal Date: 2013-02-15\n\n\n---\n\nHi Wilson,\r\n\r\nFollowing on from ticket #602, here is our request for an enhancement to the recently implemented bind feature.\r\n\r\nWe've been seeing the following types of messages when trying to build our full design (inc. binds):\r\n\r\n%Error: <file>:<line>: Expecting expression to be constant, but can't convert a VARXREF '<parameter>' to constant.\r\n\r\n%Error: <file>:<line>: Can't convert defparam value to constant: Param <parameter> of <bound_instance>\r\n\r\nWe've driven your t_bind2.v test-case through the flow, and noticed that the parameters don't include hierarchical references:\r\n\r\n    bind targetmod mycheck\r\n      #(\r\n        .param2(param2),\r\n        .param3(param3)\r\n        )\r\n    i_mycheck (.p2(p2), .p3(p3), .*);\r\n\r\nOur original example was like this, eg:\r\n\r\n  bind i_targetmod mycheck #(\r\n     .param2(param2),\r\n     .param3(top.param3)\r\n  ) i_mycheck(.p2(p2), .p3(top.p3), .*);\r\n\r\nOnce correcting the bind to module (not instance), we see the same Errors:\r\n\r\n%Error: bind_example.sv:32: Expecting expression to be constant, but can't convert a VARXREF 'param3' to constant.\r\n\r\n%Error: bind_example.sv:32: Can't convert defparam value to constant: Param param3 of i_mycheck\r\n\r\nSimplifying the bind to this is OK:\r\n\r\n  bind targetmod mycheck #(\r\n     .param2(param2)\r\n  ) i_mycheck(.p2(p2), .p3(top.p3), .*);\r\n\r\nSo the hierarchical references for the port binding is fine, but it seems like the hierarchical references for the parameters is not. Is this in line with your intention?\r\n\r\nI've attached a test-case that Verilator is happy with, without hierarchical parameter references. To produce the Errors, simply switch in the commented bind statement.\r\n\r\nCheers, Ed\n\n\n",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-15",
+  "closed_at": "2013-02-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

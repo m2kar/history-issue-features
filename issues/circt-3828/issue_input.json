@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3828,
+  "issue_url": "https://github.com/llvm/circt/issues/3828",
+  "title": "[LowerToHW] Make mux result pragmas optional",
+  "body": "PR #3404 introduced the emission of pragmas alongside multiplexer results:\r\n```scala\r\ncircuit MultibitMux: \r\n  module MultibitMux :\r\n    input a : UInt<1>[3]\r\n    input sel : UInt<2>\r\n    output b : UInt<1>\r\n    b <= a[sel]\r\n```\r\n```verilog\r\nmodule MultibitMux(\r\n  ...\r\n  wire _GEN;\r\n\r\n  wire [2:0] _GEN_0 = {{a_2}, {a_1}, {a_0}};\r\n  assign _GEN = _GEN_0[sel] /* cadence map_to_mux */;   /* synopsys infer_mux_override */\r\n  assign b = &sel ? a_0 : _GEN;\r\nendmodule\r\n```\r\n\r\nThis happens unconditionally. The problem is that for passes/tools that would like to analyze the HW lowering from FIRRTL, information is lost: the assignment is emitted as an `sv.verbatim` operation, which essentially removes the assignment from the IR and makes it hard to analyze. https://github.com/llvm/circt/blob/b77d81787ab37151bc579f2545e2369a328d7523/lib/Conversion/FIRRTLToHW/LowerToHW.cpp#L3411-L3430\r\n\r\nIt would be great to expose this mapping through a lowering option, such that users intending to further process the HW output (without the intent to go straight to SV) can disable the pragmas and retain the assignment information.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-09-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

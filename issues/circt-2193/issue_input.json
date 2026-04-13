@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2193,
+  "issue_url": "https://github.com/llvm/circt/pull/2193",
+  "title": "[IntegrationTest] Disable lint width warning",
+  "body": "The integration test is failing because of verilator width warning.\r\nIt seems like this is a verilator bug, and the output is legal. \r\nSo this commit adds a comment to disable the width check.\r\n\r\nThe test started failing after in-lining was enabled for `ArraySliceOp` in https://github.com/llvm/circt/commit/9a59ecf2f1012d16f05755218edd6328d145280f \r\nThe output verilog snippet from `lint.mlir` that is triggering the warning:\r\n``` \r\n input  [3:0]      a\r\n input  [9:0][3:0] array\r\n output [2:0][3:0] r29\r\n...\r\n assign r29 = array[a + 4'h1 +: 3];\r\n```\r\nVerilator warning:\r\n```\r\n%Warning-WIDTH: out.v:43:24: Operator ADD expects 32 bits on the LHS, but LHS's CONST '4'h1' generates 4 bits.\r\n                           : ... In instance TESTSIMPLE\r\n   43 |   assign r29 = array[a + 4'h1 +: 3];\r\n      |                        ^\r\n                ... For warning description see https://verilator.org/warn/WIDTH?v=4.204\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: out.v:43:24: Operator ADD expects 32 bits on the RHS, but RHS's VARREF 'a' generates 4 bits.\r\n                           : ... In instance TESTSIMPLE\r\n   43 |   assign r29 = array[a + 4'h1 +: 3];\r\n      |                        ^\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\n\r\n\r\n\r\nThere is still some confusion, whether this is a legal syntax, here is a test case that I was playing with,\r\nhttps://www.edaplayground.com/x/gj_J\r\n\r\nAlso, the IEEE std 1800 2017 , section 7.4.6 `Indexing and slicing of arrays`, \r\nspecifies the part select operation on packed arrays..\r\n\r\n```\r\nAn expression can select part of a packed array, or any integer type, which is assumed to be numbered down\r\nto 0.\r\nThe term part-select refers to a selection of one or more contiguous bits of a single-dimension packed array.\r\n```\r\n```\r\nThe term slice refers to a selection of one or more contiguous elements of an array.\r\nNOTE—IEEE Std 1364-2005 only permitted a single element of an array to be selected.\r\n```\r\n```\r\nOne or more contiguous elements can be selected using a slice name. A slice name of a packed array is a\r\npacked array. A slice name of an unpacked array is an unpacked array.\r\n\r\nThe size of the part-select or slice shall be constant, but the position can be variable.\r\nSlices of an array can only apply to one dimension, but other dimensions can have single index values in an\r\nexpression.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-16",
+  "closed_at": "2021-11-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

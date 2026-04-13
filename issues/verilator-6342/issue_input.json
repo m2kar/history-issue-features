@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6342,
+  "issue_url": "https://github.com/verilator/verilator/issues/6342",
+  "title": "Verilator internal fault when using `localparam` and an interface with `parameter type`.",
+  "body": "Here is a simple interface definition:\n```systemverilog\ninterface test_if #(parameter type sig_type = logic [3:0]);\n    sig_type sig;\nendinterface\n```\n\nThe following module using the above interface fails:\n```systemverilog\nmodule test();\n    test_if #(.sig_type(logic [7:0])) itf();\n    localparam integer sigw = $bits(itf.sig);\n    initial $display(sigw);\nendmodule\n```\n\nHowever the following modules do *NOT* fail:\n```systemverilog\nmodule test();\n    test_if #(.sig_type(logic [3:0])) itf(); // NOTE: this matches the default type in the interface definition\n    localparam integer sigw = $bits(itf.sig);\n    initial $display(sigw);\nendmodule\n```\n```systemverilog\nmodule test();\n    test_if #(.sig_type(logic [7:0])) itf();\n    initial $display($bits(itf.sig)); // NOTE: this uses the width directly\nendmodule\n```\n\nThe `verilator` command I am using is: `verilator -sv --cc test.sv`.\n\nThe `verilator` version I am using is: `Verilator 5.039 devel rev v5.038-237-g8868d459a` which was `master` as of today.\n\nI am using Ubuntu 24.04 and compiled the `master` branch myself.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-28",
+  "closed_at": "2025-09-20",
+  "code_blocks": [
+    "interface test_if #(parameter type sig_type = logic [3:0]);\n    sig_type sig;\nendinterface\n",
+    "module test();\n    test_if #(.sig_type(logic [7:0])) itf();\n    localparam integer sigw = $bits(itf.sig);\n    initial $display(sigw);\nendmodule\n",
+    "module test();\n    test_if #(.sig_type(logic [3:0])) itf(); // NOTE: this matches the default type in the interface definition\n    localparam integer sigw = $bits(itf.sig);\n    initial $display(sigw);\nendmodule\n",
+    "module test();\n    test_if #(.sig_type(logic [7:0])) itf();\n    initial $display($bits(itf.sig)); // NOTE: this uses the width directly\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

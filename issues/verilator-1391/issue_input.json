@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1391,
+  "issue_url": "https://github.com/verilator/verilator/issues/1391",
+  "title": "Trying to cast non-static DPI export functions to (void *)",
+  "body": "---\n\n\nAuthor Name: **Stan Sokorac**\nOriginal Redmine Issue: 1391 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI've been using about a year old version of Verilator, and when I try to switch to the latest stable, I'm running into this problem... \r\n\r\nThe design__Syms.cpp file contains a number of \"exportInsert\" calls for each of the DPI functions that I have scattered all over the design:\r\n\r\n```\r\n\t__Vscope_path_to_my_block.exportInsert(__Vfinal,\"my_dpi_function\", (void*)(&my_block::__Vdpiexp_path_to_my_block));@\r\n\n```\r\n\r\nThere's a few hundred of these, and each of these lines is trying to cast the address of a function to (void *) pointer. I run into compile problems here because some of these functions it is trying to cast are static, and those are fine to get an address of like this, and some are not static and can't be cast to (void *) without an instance of the object. I can't figure out why Verilator would generate some of these as static and some not... Every one of my DPI functions is the same, auto-generated code that looks like:\r\n\r\n```\r\n export \"DPI-C\" function my_dpi_function_name;\r\n function int my_dpi_function_name() ;\r\n     return signal_value ; \r\n  endfunction \r\n\n```\r\n\r\nI can't see any pattern in which ones are chosen to be static and which are not....  \r\n\r\nIn the ~1 year old version that I was previously using, I've checked that all DPI functions were generated as static member functions, and hence I had no compile problems.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-01-12",
+  "closed_at": "2019-01-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6938,
+  "issue_url": "https://github.com/llvm/circt/issues/6938",
+  "title": "[Arc] Generates signalling code",
+  "body": "`comb.divs` (and probably `comb.divu`) generate code that causes a `SIGFPE` signal on my system, due to division by zero.\r\n\r\nBelow is a small sample that should be equivalent to `b == 0 ? 0 : a / b`, which results in\r\n```\r\n$ ./build/bin/arcilator --jit-entry=main --run build/bin/div.mlir \r\noutput = 7ffeb8e6e2a0\r\n```\r\nwhen run with `--jit`.\r\n\r\n```\r\n// RUN: arcilator %s --run --jit-entry=main | FileCheck %s\r\n// REQUIRES: arcilator-jit\r\n// CHECK: output = 0\r\n\r\nhw.module @Baz(in %a: i8, in %b: i8, out c: i8) {\r\n  %zero = hw.constant 0 : i8\r\n  %0 = comb.divs %a, %b : i8\r\n  %2 = comb.icmp bin eq %zero, %b : i8\r\n  %3 = comb.mux bin %2, %zero, %0 : i8\r\n  hw.output %3: i8\r\n}\r\n\r\nfunc.func @main() {\r\n  %eight = arith.constant 8 : i8\r\n  %zero = arith.constant 0 : i8\r\n\r\n  arc.sim.instantiate @Baz as %model {\r\n    arc.sim.set_input %model, \"a\" = %eight : i8, !arc.sim.instance<@Baz>\r\n    arc.sim.set_input %model, \"b\" = %zero : i8, !arc.sim.instance<@Baz>\r\n    \r\n    arc.sim.step %model : !arc.sim.instance<@Baz>\r\n  \r\n    %res = arc.sim.get_port %model, \"c\" : i8, !arc.sim.instance<@Baz>\r\n    arc.sim.emit \"output\", %res : i8\r\n  }\r\n\r\n  return\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-21",
+  "closed_at": "2024-05-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9960,
+  "issue_url": "https://github.com/llvm/circt/pull/9960",
+  "title": "[ImportVerilog][Moore][Moor2ToCore][Sim][SimToSv] Preserve full DPI semantics through lowering",
+  "body": "Introduce a semantic DPI representation in Moore and Sim and preserve that information through lowering instead of collapsing DPI declarations and calls to plain function calls too early.\r\n\r\nThis is necessary to model SystemVerilog DPI behavior faithfully across import and lowering. In particular, the lowering needs to preserve declaration-driven call semantics such as explicit returns, output and inout behavior, and boundary cases like open arrays where handle-passed ports cannot be recovered from type information alone after conversion to !llvm.ptr.\r\n\r\nMain points:\r\n- add dedicated Moore and Sim DPI declaration/call operations together with the ImportVerilog option to emit them\r\n- extend the DPI ops with attributes that preserve explicit-return and by-reference semantics so call operands and results are derived from the DPI declaration rather than reconstructed ad hoc\r\n- keep non-input open arrays handle-passed through Moore and Sim lowering instead of mis-modeling them as SSA results\r\n- update MooreToCore, LowerDPIFunc, and SimToSV to lower the preserved semantics consistently to the existing DPI-C ABI path\r\n- add the required verifier, test, documentation, and build updates to support the new lowering path\r\n\r\nNew semantics for ImportVerilog are under `emitMooreDPICall` option. Enabled from `circt-verilog` using `-emit-moore-dpi-call`\r\n\r\nAI-Assisted-by: GitHub Copilot with GPT-5.4 agent\r\n\r\n## Additional notes to reviewer\r\n\r\nI am aware of the fact that this is not a small PR, and  that it crosses several modules to properly implement correct lowering.\r\nI didn't think it required splitting but It can be done.\r\n\r\nA follow-up PR will enhance LowerDPIFunc with support for lowering !llvm.ptr arguments. Alternatively we should consider adding an open array type to Sim \r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-17",
+  "closed_at": "2026-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

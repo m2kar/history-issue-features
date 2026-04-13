@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2095,
+  "issue_url": "https://github.com/llvm/circt/issues/2095",
+  "title": "[comb] missing peepholes:",
+  "body": "Here are some random missing peepholes seen in generated verilog from RocketCore.fir in the testsuite:\r\n\r\n- [x] This: \r\n\r\n```\r\nwire [2:0] _T_1 = {reg_debug, reg_mstatus_prv};    // reg_mstatus_prv is two bits\r\nwire _T_57 = _T_1 > 3'h1;\r\n```\r\ncould be: `wire _T_57 = {reg_debug, reg_mstatus_prv[1]} != 0;`\r\n\r\n - [x] This could simplify too: `wire _T_20 = (_T_18 & 3'h3) > 3'h1;`\r\n---\r\n\r\n- [x] This: `wire [63:0] _T_0 = _T ? ~io_in2 : io_in2;`\r\n\r\ncould be strength reduced to: `wire [63:0] _T_0 = sext(_T)^io_in2;`\r\n\r\n---\r\n\r\n - [x] This `_T_167 = _T_51 ? ~_T_83 | _T_160 : _T_160;` could be `_T_160 | (sext(_T_51&~T_83)`\r\nSimilarly `_T_51 ? _T_83 & _T_161 : _T_161` and `_T_79 ? ~_T_80 & reg_mstatus_sie : reg_mstatus_sie`\r\n\r\n---\r\n\r\n- [x] This: `io_in1[31] ? 32'hFFFFFFFF : 32'h0;` could be turned into a sext.\r\n\r\n---\r\n\r\n- [x] This happens a lot in the ALU module:\r\n\r\n```\r\nwire [31:0] _T_10 = _T_9 & 32'hFF00FF00;\r\nwire [15:0] _T_14 = _T_10[15:0] | ...\r\n```\r\n\r\ncould be: `wire [15:0] _T_14 = {_T_9[15:8], 8'h0}`\r\n\r\n---\r\n\r\n- [x] This is from FPU.fir: ` wbInfo_0_cp <= _T_81 ? (_T_197 ? mem_cp_valid : _T_190) : _T_190;`\r\n\r\nCould be: `wbInfo_0_cp <= (_T_81 & _T_197) ? mem_cp_valid : _T_190;`\r\n\r\nThis happens a bunch of times, e.g. `wbInfo_1_single <= _T_81 ? (_T_200 ? mem_ctrl_single : _T_194) : _T_194;`\r\n\r\n---\r\n\r\n- [x] This happens in IntToFP from FPU.fir: `wire [32:0] _T_23 = _T_22 ? {1'h0, _T_21} : {_T_21[31], _T_21};`\r\n\r\nThis could be: `wire [32:0] _T_23 = { _T_22 ? 1'h0 : _T_21[31], _T_21};` which then further simplifies.\r\n\r\n---\r\n\r\n- [x] This could simplify away the intermediate and (T_26 has multiple uses) from RVCExpander / RocketCore.fir:\r\n\r\n```\r\nwire [4:0] _T_26 = _T_25 & 5'hF; \r\nwire [4:0] _T_28 = _T_26 & 5'h7;\r\n```\r\n\r\n - [x] This could be reassembled into a larger extract and sext (RocketCore.fir):\r\n\r\n```\r\n = {io_in1[0], io_in1[1], io_in1[2], io_in1[3], io_in1[4], ... }\r\n\r\nwire _T_12 = _T_11[31];\r\n{_T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12,\r\n _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_12, _T_11[31:0]};\r\n```",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-07",
+  "closed_at": "2021-11-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

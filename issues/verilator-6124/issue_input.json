@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6124,
+  "issue_url": "https://github.com/verilator/verilator/issues/6124",
+  "title": "Support casting between `byte []`, `byte [$]` and `string` types",
+  "body": "The latest Git version as always.\n\nI would like to be able to cast between dynamic byte arrays `byte []` and `string` types. I did a bit of testing on EDA playground and other simulators seem to support this. https://www.edaplayground.com/x/YK6B\n\n```systemverilog\n  typedef byte unsigned array_t [];\n  typedef byte unsigned queue_t [$];\n  \n  string str_hello = \"Hello world!\";\n  byte tmp_hello [12] = '{8'h48, 8'h65, 8'h6C, 8'h6C, 8'h6F, 8'h20, 8'h77, 8'h6F, 8'h72, 8'h6C, 8'h64, 8'h21};\n  string str;\n  array_t tmp;\n\n  initial begin\n    tmp = array_t'(str_hello);\n    str = string'(tmp_hello);\n  end\n```\n\nA bit of reasoning behind the request.\n\nI am writing a GDB stub in SV, it only requires a bit of DPI to handle sockets, especially non-blocking read. SV strings work rather well, especially since they allow dynamic indexing with `substr(int i, int j)`. But I also wish to transfer binary data, where strings have a limitation:\n\n> A string variable shall not contain the special character \"\\0\". Assigning the value 0 to a string character shall be ignored.\n\nI could not find much in the SV standard about casting between strings and unpacked arrays. In principle strings are interpreted as packed arrays. But I need (would like to use) dynamic arrays which are unpacked.\nIn principle I could use streaming operators for the conversion, and while I use them occasionally, I find them difficult to remember.\n\nSo the SV standard lacks any explicit description for such a cast, but it does document \"21.3.4.4 Reading binary data\" which is kind of similar at least for casting from string to unpacked array.\n\nOther simulators also support some implicit casting, like using arrays, where a function/task expects a string, but I don't mind using explicit casting.",
+  "labels": [
+    "area: data-types",
+    "type: feature-IEEE"
+  ],
+  "state": "open",
+  "created_at": "2025-06-25",
+  "closed_at": null,
+  "code_blocks": [
+    "  typedef byte unsigned array_t [];\n  typedef byte unsigned queue_t [$];\n  \n  string str_hello = \"Hello world!\";\n  byte tmp_hello [12] = '{8'h48, 8'h65, 8'h6C, 8'h6C, 8'h6F, 8'h20, 8'h77, 8'h6F, 8'h72, 8'h6C, 8'h64, 8'h21};\n  string str;\n  array_t tmp;\n\n  initial begin\n    tmp = array_t'(str_hello);\n    str = string'(tmp_hello);\n  end\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

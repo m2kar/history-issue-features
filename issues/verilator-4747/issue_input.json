@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4747,
+  "issue_url": "https://github.com/verilator/verilator/pull/4747",
+  "title": "Fix typedefs pointing to parameterized classes",
+  "body": "`::` references with typedefed types are parsed using `AstClassOrPackageRef` node. This is the AST of `type_id::create_object()` (from the test I added):\r\n```\r\n    1:2:2:2:3: DOT 0x555556e05ef0 <e845#> {d28az} @dt=0@ [::]\r\n    1:2:2:2:3:1: CLASSORPACKAGEREF 0x555556e11520 <e841#> {d28aq} @dt=0@  type_id cpkg=0x555556e134a0 -> TYPEDEF 0x555556e134a0 <e828#> {d24bl} @dt=0@  type_id -> REFDTYPE 0x555556e133b0 <e827#> {d24aj} @dt=0@  uvm_object_registry -> UNLINKED\r\n    1:2:2:2:3:2: FUNCREF 0x555556dfdb80 <e842#> {d28az} @dt=0@  create_object -> UNLINKED\r\n```\r\nCurrently on master, if `AstClassOrPackageRef` node points to a typedef which points to a parameterized class type, Verilator treats it as a reference to an instance with default parameters and marks that it is used. It causes problems if the default values of parameters are incorrect, e.g. the default type is a virtual class and `new` is used on an object of that type (like in the test I added).\r\n\r\nThis PR fixes the problem, by skipping these false class references.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-12-08",
+  "closed_at": "2023-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3631,
+  "issue_url": "https://github.com/verilator/verilator/issues/3631",
+  "title": "warning not disabled despite /* verilator lint_off MULTIDRIVEN */ and /* verilator lint_on MULTIDRIVEN */ around the code",
+  "body": "Verilator seems to ignore /* verilator lint_off MULTIDRIVEN */ and /* verilator lint_on MULTIDRIVEN */ that I place around the code to disable the `Warning-MULTIDRIVEN` warning. However, the options `-Wno-MULTIDRIVEN` on the command line does suppress the warning. But this is not what I want. \r\nUsing the following code \r\n```\r\nmodule test \r\n#(parameter W_CNT=11) \r\n(\r\n    input  logic i_rst_n      , // active low asynchronous reset\r\n    input  logic i_clk        , // clock\r\n    output logic [W_CNT-1:0] o_q\r\n);\r\n//------------------------------------------\r\n//VARS\r\n//------------------------------------------\r\ngenvar i;\r\nalways_ff @(posedge i_clk or negedge i_rst_n) begin\r\n    if ( i_rst_n== 1'b0) begin\r\n        o_q[0] <= 1'b1;  \r\n    end else begin\r\n/* verilator lint_off MULTIDRIVEN */\r\n            o_q[0] <= ! o_q[0]; \r\n/* verilator lint_on MULTIDRIVEN */\r\n    end\r\nend\r\n  generate\r\n      for (i=1; i <= W_CNT-1; i++) begin : async_o\r\n          always_ff @( negedge o_q[i-1] or negedge i_rst_n) begin\r\n              if ( i_rst_n== 1'b0) begin\r\n                  o_q[i] <= 1'b0;  \r\n              end else begin \r\n/* verilator lint_off MULTIDRIVEN */\r\n                  o_q[i] <= ! o_q[i]; \r\n/* verilator lint_on MULTIDRIVEN */\r\n              end\r\n          end\r\n      end : async_o\r\n  endgenerate\r\nendmodule\r\n```\r\nAnd running it trough verilator\r\n`/cad/verilator/4.226/bin/verilator --lint-only test.sv --top-module test`\r\nI do get the following error message.\r\n```\r\n%Warning-MULTIDRIVEN: test.sv:15:30: Signal has multiple driving blocks with different clocking: 'o_q'\r\n                      test.sv:37:19: ... Location of first driving block\r\n   37 |                   o_q[i] <= ! o_q[i]; \r\n      |                   ^~~\r\n                      test.sv:26:13: ... Location of other driving block\r\n   26 |             o_q[0] <= ! o_q[0]; \r\n      |             ^~~\r\n                      ... For warning description see https://verilator.org/warn/MULTIDRIVEN?v=4.226\r\n                      ... Use \"/* verilator lint_off MULTIDRIVEN */\" and lint_on around source to disable this message.\r\n%Warning-UNOPT: test.sv:15:30: Signal unoptimizable: Feedback to public clock or circular logic: 'o_q'\r\n   15 |     output logic [W_CNT-1:0] o_q\r\n      |                              ^~~\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\nI have tried putting the lint_off/on in different location in the code but the result is the same. \r\n\r\nBTW: I do not understand why I am getting the `Warning-UNOPT` warning either. \r\n\r\nWhat 'verilator --version' are you using?  \r\nVerilator 4.226 2022-08-31 rev v4.226\r\nWhat OS and distribution are you using?\r\nCentos7\r\n\r\n\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-19",
+  "closed_at": "2022-09-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

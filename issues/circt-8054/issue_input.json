@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8054,
+  "issue_url": "https://github.com/llvm/circt/issues/8054",
+  "title": "[Python] MacOS wheel builds fail after successfully building and installing CIRCTPythonModules.",
+  "body": "This appears to have been failing since we updated LLVM to integrate the upstream MLIR switch to nanobind for the core dialect [here](https://github.com/llvm/circt/commit/387291f6444ace38a132599a158db390bed3b92a). \n\nI'm planning to remove this for now, since no one seems to care about MacOS wheels, and we have finite space in PyPI for CIRCT.\n\nI do want to leave my thoughts, such as they are, in case anyone wants to try to pick this up.\n\nThere are a number of failed Upload Wheels jobs that I manually ran while testing, but take a look at one of the failures that was scheduled on main: https://github.com/llvm/circt/actions/runs/12632127552\n\nIn the failing MacOS job, it gets to the build_ext step, which is supposed to be a [no-op](https://github.com/llvm/circt/blob/4e478778cbe593af34695c2f454986a34b24c156/lib/Bindings/Python/setup.py#L133), but instead tries to run a half-baked C compile command, which fails: https://github.com/llvm/circt/actions/runs/12632127552/job/35195198998#step:6:7419\n\n```\n  [...]\n  [100%] Built target install-CIRCTPythonModules\n  running build_ext\n  building 'circt._mlir_libs._mlir' extension\n  clang -bundle -undefined dynamic_lookup -g -arch x86_64 -o build/lib.macosx-10.9-x86_64-cpython-310/circt/_mlir_libs/_mlir.cpython-310-darwin.so\n  clang: error: no input files\n  error: command '/usr/bin/clang' failed with exit code 1\n```\n\nIn a passing Linux job, the build_ext step really is a no-op: https://github.com/llvm/circt/actions/runs/12632127552/job/35195198360#step:6:7819\n\n```\n  [...]\n  [100%] Built target install-CIRCTPythonModules\n  Detected static linked python. Faking a library for cmake.\n  running build_ext\n  running build_scripts\n```\n\nI tried a few things here. For one, I set a breakpoint in the NoopBuildExtension [method](https://github.com/llvm/circt/blob/4e478778cbe593af34695c2f454986a34b24c156/lib/Bindings/Python/setup.py#L133), and it never seems to get called. To sanity check myself, I did set a breakpoint in the CustomBuild, before and after [build_py](https://github.com/llvm/circt/blob/4e478778cbe593af34695c2f454986a34b24c156/lib/Bindings/Python/setup.py#L42), and the breakpoint before build_py was hit, but the failing build_ext step was run before the breakpoint after build_py was hit. So I think there is something wonky going on with setuptools/distutils, which has its own little command running framework. It feels like somehow that is conjuring a build_ext that isn't our overridden one.\n\nI don't know why this would have changed recently. I don't know of anything upstream that would affect this, but maybe I'm missing something. I do know that we have an open ended setuptools dependency, which I don't like, so I tried pinning it to the oldest version of setuptools we can use, and that didn't fix this. I also know we recently switched to macos-13 runners, so perhaps that is related.\n\nFor now, I will plan to remove MacOS wheel builds in https://github.com/llvm/circt/pull/8051.",
+  "labels": [
+    "Python"
+  ],
+  "state": "open",
+  "created_at": "2025-01-09",
+  "closed_at": null,
+  "code_blocks": [
+    "  [...]\n  [100%] Built target install-CIRCTPythonModules\n  running build_ext\n  building 'circt._mlir_libs._mlir' extension\n  clang -bundle -undefined dynamic_lookup -g -arch x86_64 -o build/lib.macosx-10.9-x86_64-cpython-310/circt/_mlir_libs/_mlir.cpython-310-darwin.so\n  clang: error: no input files\n  error: command '/usr/bin/clang' failed with exit code 1\n",
+    "  [...]\n  [100%] Built target install-CIRCTPythonModules\n  Detected static linked python. Faking a library for cmake.\n  running build_ext\n  running build_scripts\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

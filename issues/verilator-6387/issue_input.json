@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6387,
+  "issue_url": "https://github.com/verilator/verilator/pull/6387",
+  "title": "Improve `covergroup with function sample` handling ",
+  "body": "The current parser always creates a mocked zero-argument `sample()` method for covergroups, even when the covergroup is declared `with function sample(<formals>)`.  As a result, calls like `g1.sample(x)` triggered: `Too many arguments in function call to FUNC 'sample'`. An example might be:\r\n\r\n```\r\nmodule t;\r\n    covergroup cg(int x) with function sample(int addr, bit is_read);\r\n    endgroup\r\n\r\n    cg cov1 = new(42);\r\n\r\n    function void run();\r\n        cov1.sample(16, 1'b1);\r\n    endfunction\r\n```\r\n\r\nFix in this PR parses and attaches the declared formal parameter list to the covergroup’s sample method, and adds dedicated tests. \r\n\r\nAdditionally, because the current grammar allows illegal forms (e.g., `covergroup extends (tf_port_list) coverage_eventE`), this PR realigns the grammar with IEEE, eliminating this issue. The semantic actions are currently duplicated across the two `covergroup_declaration` alternatives. This is temporary - once proper `covergroup extends` handling lands, the duplication will go away, so extracting a helper now isn’t worthwhile.\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-05",
+  "closed_at": "2025-09-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6589,
+  "issue_url": "https://github.com/verilator/verilator/pull/6589",
+  "title": "Intermediate variables for function calls + expression coverage",
+  "body": "Follow up to #6135\r\n\r\nI was able to track down my `V3Broken` problem to the fact that class `random()` calls don't know they are impure until after `V3Random`.  I'm currently doing `clearCacheTree()` but perhaps I should be more surgical.\r\n\r\nAfter this `t_cover_expr` is working but `t_cover_line_expr_cc` (which uses the same Verilog) is running into a similar `V3Broken` problem.  This time it's on the `NodeFTask` instead of the `NodeFTaskRef`.  And `getPurityRecurse()` is returning false because `AstCoverInc` is not pure.  This confuses me somewhat.  I get that `AstCoverInc` is perturbing the coverage state, so yeah, a function that has one of them is not pure as far as the generated C++ goes.  But coverage isn't a thing described by the Verilog.  So from an RTL perspective the function in question is pure:\r\n```\r\n    function automatic bit invert(bit x);\r\n        return ~x;\r\n    endfunction\r\n```\r\nSo what should `AstNode::isPure()` mean?  Does it mean that the C++ function is pure or that the Verilog function is pure?\r\n\r\nClearing again in `V3Coverage` \"fixes\" the `V3Broken` problem but then `invert()` is marked as impure and ineligible for expression coverage which is not true.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-23",
+  "closed_at": "2025-10-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

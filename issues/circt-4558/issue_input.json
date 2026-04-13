@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4558,
+  "issue_url": "https://github.com/llvm/circt/pull/4558",
+  "title": "[FIRRTL] No final inst in ExtractInstances output",
+  "body": "Change the ExtractInstances pass to no longer include the final extracted instance in the output file it optionally generates.\r\n\r\nThe new format of this file has the _path to the module_ where the extracted instance used to be located as opposed to the _path to the pre-extracted instance_ with a name that is either the new name of the instance (MFC, previously) or the old instance name (SFC).\r\n\r\nConcretely, this changes the output from something like (MFC, previously):\r\n\r\n    clock_gate_0 -> Foo.bar.baz.gate_0\r\n    clock_gate_1 -> Foo.bar.gate_1\r\n\r\nTo:\r\n\r\n    clock_gate_0 -> Foo.bar.baz\r\n    clock_gate_1 -> Foo.bar\r\n\r\nHere, \"clock_gate_<n>\" is the name of the ports that a user is supposed to look at and \"gate_<n>\" is the name of the extracted instance outside of the module that contains these ports.  This is weird because it leaks information that is not supposed to be visible.  Specifically, this leaks that there is an instance called \"gate_<n>\" that is outside the design and not in \"Foo.bar.baz\" or \"Foo.bar\".  This post-extracted instance name is necessarily uniqued within the module where it was extracted (\"gate_0\" and \"gate_1\" could be generated if multiple instances with the same name, \"gate\",are extracted).\r\n\r\nThe Scala-based FIRRTL Compiler (SFC) does something different, but also wrong.  The SFC will emit the above like:\r\n\r\n    clock_gate_0 -> Foo.bar.baz.gate\r\n    clock_gate_1 -> Foo.bar.gate\r\n\r\nHere, \"gate\" is the original name of the instance.  However, \"gate\", like \"gate_<n>\", does not match the name of anything in either \"Foo.bar.baz\" or \"Foo.bar\" as this instance was extracted.\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-01-19",
+  "closed_at": "2023-01-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

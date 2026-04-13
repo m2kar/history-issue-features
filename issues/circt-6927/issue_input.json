@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6927,
+  "issue_url": "https://github.com/llvm/circt/issues/6927",
+  "title": "[FIRRTL] sizeof intrinsic doesn't work on bundles",
+  "body": "Consider this IR:\r\n```\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(in %i: !firrtl.bundle<a: clock>, out %out: !firrtl.uint<32>) attributes {convention = #firrtl<convention scalarized>} {\r\n      %0 = firrtl.int.sizeof %i : (!firrtl.bundle<a: clock>) -> !firrtl.uint<32>\r\n      firrtl.strictconnect %out, %0 : !firrtl.uint<32>\r\n    }\r\n  }\r\n```\r\n\r\n(produced from:\r\n```\r\nFIRRTL version 4.0.0\r\ncircuit Foo :\r\n  public module Foo:\r\n    input i : { a : Clock }\r\n    output out : UInt<32>\r\n\r\n    connect out, intrinsic(circt_sizeof : UInt<32>, i)\r\n```\r\n)\r\n\r\nFeeding into firtool produces:\r\n\r\n```\r\nintrinsic_sizeof.fir:7:18: error: SizeOf should have been resolved.\r\n    connect out, intrinsic(circt_sizeof : UInt<32>, i)\r\n                 ^\r\nintrinsic_sizeof.fir:7:18: note: see current operation: %3 = \"firrtl.int.sizeof\"(%2) : (!firrtl.bundle<a: clock>) -> !firrtl.uint<32>\r\nintrinsic_sizeof.fir:7:18: error: 'firrtl.int.sizeof' op LowerToHW couldn't handle this operation\r\n    connect out, intrinsic(circt_sizeof : UInt<32>, i)\r\n                 ^\r\nintrinsic_sizeof.fir:7:18: note: see current operation: %3 = \"firrtl.int.sizeof\"(%2) : (!firrtl.bundle<a: clock>) -> !firrtl.uint<32>\r\n```\r\n\r\ncc #6926 ",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-17",
+  "closed_at": "2024-05-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

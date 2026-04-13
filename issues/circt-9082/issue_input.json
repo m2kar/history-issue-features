@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9082,
+  "issue_url": "https://github.com/llvm/circt/pull/9082",
+  "title": "[circt-lsp-server] Make time source injectable",
+  "body": "Introduce an injectable clock and test-only wait shim to remove real sleeps\r\nfrom `PendingChanges` logic in tests, while preserving production behavior.\r\n\r\n### PendingChangesMap Changes\r\n\r\n- Add an **injectable time source**:\r\n  - `using SteadyClock = std::chrono::steady_clock;`\r\n  - `using NowFn = std::function<SteadyClock::time_point()>;`\r\n  - Store `NowFn nowFn` and a `bool useManualClock` in `PendingChangesMap`.\r\n- Replace direct calls to `std::chrono::steady_clock::now()` with `nowFn()`.\r\n- Add `waitForMinMs(uint64_t ms, SteadyClock::time_point start)`:\r\n  - **Prod path**: `std::this_thread::sleep_for(ms)`.\r\n  - **Test path** (`useManualClock`): busy-wait with `std::this_thread::yield()` until `nowFn()` reaches target.\r\n- New ctor overload for tests:\r\n  - `PendingChangesMap(unsigned maxThreads, NowFn now)` -> enables manual clock mode.\r\n- Dtor now calls `abort()` to ensure all pending work is cleared on teardown.\r\n- Replace sleep in debounce worker:\r\n  - `sleep_for(ms)` -> `waitForMinMs(ms, scheduleTime)`.\r\n\r\n### PendingChangesMap Unit Test Changes\r\n\r\n- Add `ManualClock` with manual advancement (`advanceMs`) and `now()` accessor.\r\n- Utility `advanceTestTime(clock, ms)` that advances test time and yields.\r\n- `CallbackCapture::waitFor()` now uses a tight fixed 1ms window (no per-call timeout arg).\r\n- Refactor tests to:\r\n  - Construct `PendingChangesMap` with manual clock (`PendingChangesMap(2, [&]{ return clock.now(); })`).\r\n  - Advance time deterministically instead of sleeping.\r\n  - Validate debounce min/obsolete/max-cap behaviors without flakiness.\r\n- Adjust debounce cap in `MaxCapForcesFlushDuringContinuousTyping` to 100ms to tighten assertions.\r\n- Sprinkle end-of-test large time advances to flush any queued workers.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-10",
+  "closed_at": "2025-10-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

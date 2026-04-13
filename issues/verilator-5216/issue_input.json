@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5216,
+  "issue_url": "https://github.com/verilator/verilator/issues/5216",
+  "title": "Warning-INITIALDLY with module or interface tasks, but not with class tasks",
+  "body": "While trying out workarounds for #5116, I came across this behavior:\r\nWriting non-blocking assignments in tasks do not yield an `INITIALDLY` warning if the task belongs to a class, but it does if the task belongs to an interface or a module. Examples (compiled with `verilator --binary --build <file>.sv`):\r\n\r\nClass tasks with virtual interfaces (Compiles and runs correctly):\r\n```sv\r\ninterface INTF ();\r\n    logic [7:0] field1; logic [7:0] field2;\r\nendinterface\r\n\r\nclass driver;\r\n    virtual INTF intf;\r\n\r\n    function new(virtual INTF intf);\r\n        this.intf = intf;\r\n    endfunction\r\n\r\n    task automatic set_fields();\r\n        intf.field1 <= #5ns 42;\r\n        #3ns;\r\n        intf.field2 = 12;\r\n    endtask\r\nendclass\r\n\r\nmodule top ();\r\n    INTF intf ();\r\n    driver drv = new(intf);\r\n\r\n    initial begin\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        drv.set_fields();\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        #3ns;\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nInterface tasks (`%Warning-INITIALDLY: initialdly_interface.sv:5:21`):\r\n```sv\r\ninterface INTF ();\r\n    logic [7:0] field1; logic [7:0] field2;\r\n\r\n    task automatic set_fields();\r\n        intf.field1 <= #5ns 42;\r\n        #3ns;\r\n        intf.field2 = 12;\r\n    endtask\r\nendinterface\r\n\r\nmodule top ();\r\n    INTF intf();\r\n\r\n    initial begin\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        intf.set_fields();\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        #3ns;\r\n        $display(\"%d %d | Time: %t\", intf.field1, intf.field2, $time);\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nModule tasks (`%Warning-INITIALDLY: initialdly_module.sv:3:16`):\r\n```sv\r\nmodule driver( output logic [7:0] field1, output logic [7:0] field2 );\r\n    task automatic set_fields();\r\n        field1 <= #5ns 42;\r\n        #3ns;\r\n        field2 = 12;\r\n    endtask\r\nendmodule\r\n\r\nmodule top ();\r\n    logic [7:0] f1, f2;\r\n\r\n    driver i_drv(f1, f2);\r\n\r\n    initial begin\r\n        $display(\"%d %d | Time: %t\", f1, f2, $time);\r\n        i_drv.set_fields();\r\n        $display(\"%d %d | Time: %t\", f1, f2, $time);\r\n        #3ns;\r\n        $display(\"%d %d | Time: %t\", f1, f2, $time);\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nIs this behavior intended? If not, how hard would it be to make the non-blocking assignments work in at least `module` tasks as well?",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-07-01",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

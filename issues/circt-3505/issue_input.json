@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3505,
+  "issue_url": "https://github.com/llvm/circt/issues/3505",
+  "title": "[FIRRTL][LowerTypes] DontTouch on an instance port moves the dont touch on to the instance",
+  "body": "I am mostly curious if this is what is supposed to happen, and there doesn't appear to be any tests of this behavior.\r\n\r\nA don't touch on an instance's port is moved to the instance itself during LowerTypes:\r\n```mlir\r\nfirrtl.circuit \"Test\" {\r\n  firrtl.module @Test() {\r\n    %foo_x = firrtl.instance foo @Foo(in x : !firrtl.bundle<y : uint<1>> [{circt.fieldID = 1, class = \"firrtl.transforms.DontTouchAnnotation\"}])\r\n  }\r\n  firrtl.module @Foo(in %x : !firrtl.bundle<y : uint<1>>) { }\r\n}\r\n```\r\n\r\n`/bin/circt-opt --firrtl-lower-types ./test3.mlir`\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Test\"  {\r\n    firrtl.module @Test() {\r\n      %foo_x_y = firrtl.instance foo sym @symfoo  @Foo(in x_y: !firrtl.uint<1>)\r\n    }\r\n    firrtl.module @Foo(in %x_y: !firrtl.uint<1>) {\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-11",
+  "closed_at": "2023-04-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

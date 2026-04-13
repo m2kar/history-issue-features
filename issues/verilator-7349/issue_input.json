@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7349,
+  "issue_url": "https://github.com/verilator/verilator/issues/7349",
+  "title": "[BUG] Verilator accepts wrong syntax",
+  "body": "### Version\nVerilator 5.046 (2026-02-28)\n\n### Description\nA named procedural block written at module scope without a procedural context is accepted without warning, even though the syntax is invalid SystemVerilog.\n\nExample:\n```\n    bad_block: begin\n        logic [7:0] a = 8'h55;\n    end\n```\n\nAt module scope, a bare named `begin ... end` block is not a valid construct. The correct form is inside a procedural block such as `initial begin : bad_block ... end`. However, Verilator accepts the invalid syntax silently, which can mask parser/grammar issues and lead to non-portable code.\n\n### Expected behavior\n```Verilator should reject the module-scope named block:\n    bad_block: begin\n        logic [7:0] a = 8'h55;\n    end\n```\n\nIt should report a syntax error (or at minimum a warning/error indicating this construct is invalid outside a procedural block).\n\n### Observed behavior\nVerilator accepts the invalid module-scope named block without error or warning.\n\n### Cross-check\n- ModelSim: rejects the syntax\n- Icarus Verilog: rejects the syntax\n- Verisim: accepts the syntax with warning\n- Verilator: accepts the syntax without warning\n\n### Reproducer\ndut\n```systemverilog\nmodule test;\n\nbad_block: begin\n    logic [7:0] a = 8'h55;\nend\n\n// correct\ninitial begin : bad_block\n    logic [7:0] a = 8'h55;\nend\n\nendmodule\n```\n\nverilator commands\n```verilator --lint-only -Wall test.sv```",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-31",
+  "closed_at": "2026-03-31",
+  "code_blocks": [
+    "bad_block: begin\n        logic [7:0] a = 8'h55;\n    end",
+    "It should report a syntax error (or at minimum a warning/error indicating this construct is invalid outside a procedural block).\n\n### Observed behavior\nVerilator accepts the invalid module-scope named block without error or warning.\n\n### Cross-check\n- ModelSim: rejects the syntax\n- Icarus Verilog: rejects the syntax\n- Verisim: accepts the syntax with warning\n- Verilator: accepts the syntax without warning\n\n### Reproducer\ndut"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

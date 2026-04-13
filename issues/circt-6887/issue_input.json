@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6887,
+  "issue_url": "https://github.com/llvm/circt/pull/6887",
+  "title": "[LowerToHW] Wrap signed operands of `PrintFOp` in sv `$signed()`",
+  "body": "When we have a firrtl printf operation with `SInt` operands, it gets lowered something like this:\r\n\r\n```verilog\r\n//FIRRTL version 3.3.0\r\n//circuit Test :\r\n// module Test :\r\n//    input clock : Clock\r\n//    input reset : UInt<1>\r\n//    input a : SInt<8>\r\n//    node int = SInt<8>(-0h10)\r\n//\r\n//    printf(clock, UInt<1>(0h1), \"int : %d %d\\n\", int, add(a, int)) : printf_1\r\n\r\n[...]\r\n  input [7:0] a\r\n[...]\r\n$fwrite(32'h80000002, \"int : %d %d\\n\", 8'hF0, {a[7], a} - 9'h10);\r\n[...]\r\n```\r\n\r\nAs far as verilog is concerned, the operands to `$fwrite` are unsigned, which means that we get inconvenient printing for negative decimals. This patch wraps signed operands of `firrtl.printf` in `$signed()` during lowering. This is realized as `sv.system \"signed\" ...` for now. In the next step, we could introduce a separate `sv.signed()` Op and insert this in places where we need this conversion.\r\n\r\nWith this patch, the above firrtl gets lowered like this:\r\n```verilog\r\n$fwrite(32'h80000002, \"int : %d %d\\n\", $signed(8'hF0),\r\n                $signed({a[7], a} - 9'h10));\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-04-02",
+  "closed_at": "2024-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

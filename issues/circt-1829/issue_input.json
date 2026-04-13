@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1829,
+  "issue_url": "https://github.com/llvm/circt/pull/1829",
+  "title": "[PyCDE] An update for parameterized extern modules",
+  "body": "When instantiating two parameterized extern modules, both map to the same module which causes generation to fail if port types are not the same between the two parameterizations.\r\n\r\nMinimal example demonstrating problem:\r\n```\r\n@module\r\nclass MyModule:\r\n    clk = Input(types.i1)\r\n    data_in = Input(dim(6))\r\n\r\n    @generator\r\n    def construct(mod):\r\n        inst_a = ExternMod(DW=2)(\r\n            clk=mod.clk,\r\n            data_in=mod.data_in[0:2]\r\n        )\r\n        inst_b = ExternMod(DW=4)(\r\n            clk=mod.clk,\r\n            data_in=mod.data_in[2:6]\r\n        )\r\n        return {}\r\n\r\n@externmodule\r\ndef ExternMod(DW: int):\r\n\r\n    class Mod:\r\n        clk = Input(types.i1)\r\n        data_in = Input(dim(DW))\r\n\r\n    return Mod\r\n\r\n```\r\n\r\nMultiple parameterizations of the same extern module will still map to the same pycde module object. The module object tracks a single `extern_mod` variable which is ultimately used for all parameterizations. One solution is to track parameters and have a separate `extern_mod` object for each parameter set.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-09-21",
+  "closed_at": "2021-09-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

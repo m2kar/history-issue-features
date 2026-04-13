@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5172,
+  "issue_url": "https://github.com/verilator/verilator/issues/5172",
+  "title": "The table optimization can lead to a compiler error when the optimized variable is of real type",
+  "body": "When enabled, the table optimization will generate code that creates a warning at compilation. This prevents the executable form being compiled with default arguments.\r\n\r\n```Verilog\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2024.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\nmodule test;\r\n\r\nreg [2:0] foo;\r\nreal bar;\r\n\r\nalways @(foo) begin\r\n  case (foo)\r\n    3'd0:   bar = 0.0;\r\n    3'd1:   bar = 1.0;\r\n    3'd2:   bar = 2.0;\r\n    3'd3:   bar = 3.0;\r\n    3'd4:   bar = 4.0;\r\n    3'd5:   bar = 5.0;\r\n    3'd6:   bar = 6.0;\r\n    3'd7:   bar = 7.0;\r\n  endcase\r\nend\r\n\r\ninitial begin\r\n  foo = 0;\r\n  bar = 0;\r\n  #10 foo = 3'd6;\r\n\r\n  $write(\"\",bar); // Force bar to be used, avoid optimizing out\r\n  $finish;\r\nend\r\n\r\n\r\nendmodule;\r\n```\r\nWhen compilating the Verilated code, i get the warning : `Vtest__ConstPool_0.cpp:12:2: error: narrowing conversion of ‘1.0e+0’ from ‘double’ to ‘long unsigned int’ [-Wnarrowing]` for every `real` value of the `case`.\r\n\r\nThis arises from the way the tables are stored in the const pools : if they are not a string, Verilator gives them the 64bit size equivalent `QData` (from the `real` size) but writes the `double` values. I think I have an acceptable fix.\r\n\r\nTo run the example, i use `verilator --cc --exe --build --timing --main -O3 test.v`\r\n\r\nThis bug was discovered in Verilator v5.022 and is still present on the git master.\r\n\r\nI am using Pop!OS 22.04 LTS (based on Ubuntu 22.04).",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-11",
+  "closed_at": "2024-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

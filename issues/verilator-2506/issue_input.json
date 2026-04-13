@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2506,
+  "issue_url": "https://github.com/verilator/verilator/issues/2506",
+  "title": "Slice of unpacked array with non-zero origin cause incorrect C++ code",
+  "body": "Confirmed in the latest master dbb69412e56ebd66e3a88a0589c5f061db496269. (this issue seems not so new thogh)\r\n\r\nI made a small test https://github.com/yTakatsukasa/verilator/commit/acdfb1b07c80de35ae96686245d6ca6f6673c856 in  https://github.com/yTakatsukasa/verilator/tree/unpack_slice.\r\n\r\n```systemverilog\r\nmodule t (\r\n   clk\r\n   );\r\n   input clk;\r\n\r\n   // unpack_sig0[6] and unpack_sig1[6] are expected to have the\r\n   // same value regard less of their extent\r\n   logic unpack_sig0 [0:6];\r\n   logic unpack_sig1 [3:6];\r\n\r\n   always @(posedge clk) begin\r\n      unpack_sig0[3] <= 1'b1;\r\n      unpack_sig1[3] <= 1'b1;\r\n      unpack_sig0 [4:6] <= unpack_sig0[3:5];\r\n      unpack_sig1 [4:6] <= unpack_sig1[3:5];\r\n   end\r\n\r\n   int c = 0;\r\n   always @(posedge clk) begin\r\n      c <= c + 1;\r\n      if (c == 4) begin\r\n         if (!unpack_sig0[6] || !unpack_sig1[6]) $stop;\r\n         $write(\"*-* All Finished *-*\\n\");\r\n         $finish;\r\n      end else begin\r\n         if (unpack_sig0[6] || unpack_sig1[6]) $stop;\r\n      end\r\n   end\r\nendmodule\r\n```\r\n\r\n`unpack_sig0` and `unpack_sig1` are used in the same way. The only difference is existence of unused extent of `[0:2]`.\r\nThe value of `unpack_sig0` and `unpack_sig1` are different.\r\nC++ compiler shows warnings for Verilated code as below.\r\n```\r\nIn file included from Vt__ALL.cpp:3:\r\n./Vt.cpp:103:43: warning: array index 4 is past the end of the array (which contains 4 elements) [-Warray-bounds]\r\n    __Vdlyvval__t__DOT__unpack_sig1__v2 = vlTOPp->t__DOT__unpack_sig1\r\n                                          ^\r\n```\r\n\r\nI suspect V3WidthSel.cpp, but not yet found where to fix.",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2020-08-21",
+  "closed_at": "2020-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

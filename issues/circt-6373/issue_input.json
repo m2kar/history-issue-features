@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6373,
+  "issue_url": "https://github.com/llvm/circt/issues/6373",
+  "title": "[Arc] Support hw.wires of aggregate types",
+  "body": "When i run `arcilator` with `$ ./arcilator a.mlir --state-file=a.json` i get the following error:\r\n```\r\na.mlir:9:23: error: 'arc.tap' op operand #0 must be signless integer, but got '!hw.struct<valid: i1, bits: i1>'\r\n    %_registers_0_T = hw.wire %2 sym @sym_0  : !hw.struct<valid: i1, bits: i1>\r\n                      ^\r\na.mlir:9:23: note: see current operation: \"arc.tap\"(%5) {name = \"_registers_0_T\"} : (!hw.struct<valid: i1, bits: i1>) -> ()\r\n```\r\n\r\n`a.mlir`:\r\n```\r\nmodule {\r\n  hw.module @Barrier(in %clock : !seq.clock, in %reset : i1, in %io_input : !hw.array<1xstruct<valid: i1, bits: i1>>, out io_output : !hw.array<1xstruct<valid: i1, bits: i1>>) {\r\n    %false = hw.constant false\r\n    %0 = hw.array_get %io_input[%false] : !hw.array<1xstruct<valid: i1, bits: i1>>, i1\r\n    %valid = hw.struct_extract %0[\"valid\"] : !hw.struct<valid: i1, bits: i1>\r\n    %registers = seq.firreg %3 clock %clock sym @sym {firrtl.random_init_start = 0 : ui64} : !hw.array<1xstruct<valid: i1, bits: i1>>\r\n    %1 = hw.array_get %registers[%false] : !hw.array<1xstruct<valid: i1, bits: i1>>, i1\r\n    %2 = comb.mux bin %valid, %0, %1 : !hw.struct<valid: i1, bits: i1>\r\n    %_registers_0_T = hw.wire %2 sym @sym_0  : !hw.struct<valid: i1, bits: i1>\r\n    %3 = hw.array_create %_registers_0_T : !hw.struct<valid: i1, bits: i1>\r\n    hw.output %registers : !hw.array<1xstruct<valid: i1, bits: i1>>\r\n  }\r\n}\r\n```\r\n\r\n",
+  "labels": [
+    "Arc"
+  ],
+  "state": "open",
+  "created_at": "2023-11-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

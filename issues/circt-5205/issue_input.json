@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5205,
+  "issue_url": "https://github.com/llvm/circt/issues/5205",
+  "title": "[FIRRTL] Exporter prints invalid probe of constant (, inline expressions?)",
+  "body": "Cannot probe inline expressions, probe target must be a static reference to a declaration (in current spec anyway).\r\n\r\nConsider:\r\n\r\n```mlir\r\nfirrtl.circuit \"ProbeConstant\" {\r\n  firrtl.module @ProbeConstant(out %bore: !firrtl.probe<uint<1>>) {\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1> {name = \"internalWire\"}\r\n    %0 = firrtl.ref.send %c0_ui1 : !firrtl.uint<1>\r\n    firrtl.ref.define %bore, %0 : !firrtl.probe<uint<1>>\r\n  }\r\n}\r\n```\r\n\r\nWhich becomes:\r\n\r\n```firrtl\r\ncircuit ProbeConstant :\r\n  module ProbeConstant :\r\n    output bore : Probe<UInt<1>>\r\n\r\n    define bore = probe(UInt<1>(0)) @[export_probe_constant.mlir 5:5]\r\n```\r\n\r\nWhich is invalid and does not parse:\r\n\r\n```\r\n<stdin>:5:25: error: use of unknown declaration 'UInt'\r\n    define bore = probe(UInt<1>(0)) @[export_probe_constant.mlir 5:5]\r\n```\r\n\r\nNot sure what approach works best with Exporter, but strategies such as giving expression a name with a node (or wire if non-passive) would give something to probe.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-05-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

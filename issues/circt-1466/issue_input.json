@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1466,
+  "issue_url": "https://github.com/llvm/circt/issues/1466",
+  "title": "[FIRRTL][IMConstProp] Bug with Instance Input -> Wire -> Output",
+  "body": "Here's a fun one.  Consider the following FIRRTL dialect.  There is an _input port_ of an instance connected to a wire connected to an output, `b`. What should the value of `b` be?  \r\n\r\n```mlir\r\nfirrtl.circuit \"Top\"   {\r\n  firrtl.extmodule @Ext(in %a: !firrtl.uint<1>)\r\n  firrtl.module @Top(in %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n    %ext_a = firrtl.instance @Ext  {name = \"ext\"} : !firrtl.uint<1>\r\n    firrtl.connect %ext_a, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n    %w = firrtl.wire  : !firrtl.uint<1>\r\n    firrtl.connect %w, %ext_a : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %b, %w : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }  \r\n}\r\n```\r\n\r\nIMConstProp is botching this.  It removes the wire and connects `%b` to invalid.\r\n\r\nI.e., if you compile this with: `circt-opt Top.mlir -pass-pipeline='firrtl.circuit(firrtl-imconstprop)'` you get:\r\n\r\n```verilog\r\nfirrtl.circuit \"Top\"   {\r\n  firrtl.extmodule @Ext(in %a: !firrtl.uint<1>)\r\n  firrtl.module @Top(in %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n    %ext_a = firrtl.instance @Ext  {name = \"ext\"} : !firrtl.uint<1>\r\n    firrtl.connect %ext_a, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %b, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nFor a perhaps easier to read version of the above, you can compile the following FIRRTL text:\r\n\r\n```scala\r\ncircuit Top:\r\n  extmodule Ext:\r\n    input a: UInt<1>\r\n\r\n  module Top:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst ext of Ext\r\n    ext.a <= a\r\n\r\n    wire w: UInt<1>\r\n    w <= ext.a\r\n\r\n    b <= w\r\n```\r\n\r\nWith CIRCT you get:\r\n\r\n```verilog\r\nmodule Top(\r\n  input  a,\r\n  output b);\r\n\r\n  Ext ext (\t// Top.fir:9:5\r\n    .a (a)\r\n  );\r\n  assign b = 1'h0;\t// Top.fir:5:10, :12:5\r\nendmodule\r\n```\r\n\r\nWith the Scala FIRRTL Compiler (SFC) you get:\r\n\r\n```verilog\r\nmodule Top(\r\n  input   a,\r\n  output  b\r\n);\r\n  wire  ext_a;\r\n  Ext ext (\r\n    .a(ext_a)\r\n  );\r\n  assign b = ext_a;\r\n  assign ext_a = a;\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-22",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

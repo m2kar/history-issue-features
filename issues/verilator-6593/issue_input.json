@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6593,
+  "issue_url": "https://github.com/verilator/verilator/issues/6593",
+  "title": "repeat(@posedge) inside a task causes incorrect timing on second call",
+  "body": "When using repeat(N) @(posedge CLK); inside a task, Verilator produces incorrect timing behavior only on the second call of the task.\n\n\nVerilator 5.041 devel rev v5.040-333-gd864057a6\n\n--------------------------------------------------------------------------------\n```\n`timescale 1ns/1ps\n`default_nettype none\n\nmodule tb();\n\n  // VCD or FST Dump\n  initial\n    if( $test$plusargs (\"WAVE\") ) begin\n      $dumpfile(\"wave_test1.dump\");\n      $dumpvars(0, tb);\n    end\n\n  parameter int PREOD = 100;          // 100ns(10MHz)\n\n  bit CLK;\n\n  localparam int H_PREOD = PREOD / 2;\n  always #H_PREOD\n    CLK = ~CLK;\n\n\n  task automatic next_bit();    // NG\n    repeat(4)\n      @(posedge CLK);\n  endtask\n\n/*\n  task automatic next_bit();    // OK\n    repeat(3)\n      @(posedge CLK);\n\n    @(posedge CLK);\n  endtask\n*/\n\n  bit [3:0] cnt = 0;\n\n  task test_txd();\n    cnt = 0;    \n    next_bit();\n    for(int i=0; i < 8; i++) begin\n      ++cnt;\n      next_bit();\n    end\n\n    ++cnt;\n    next_bit();\n  endtask\n\n\n  initial begin\n    test_txd();\n    test_txd();\n\n    repeat(10) @(posedge CLK);\n    $finish;    \n  end\n\nendmodule\n```\n--------------------------------------------------------------------------------\n\n<img width=\"1127\" height=\"612\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/c6662bb8-ff29-4d32-8d0a-e3d327f7df42\" />",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-25",
+  "closed_at": "2025-10-25",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`default_nettype none\n\nmodule tb();\n\n  // VCD or FST Dump\n  initial\n    if( $test$plusargs (\"WAVE\") ) begin\n      $dumpfile(\"wave_test1.dump\");\n      $dumpvars(0, tb);\n    end\n\n  parameter int PREOD = 100;          // 100ns(10MHz)\n\n  bit CLK;\n\n  localparam int H_PREOD = PREOD / 2;\n  always #H_PREOD\n    CLK = ~CLK;\n\n\n  task automatic next_bit();    // NG\n    repeat(4)\n      @(posedge CLK);\n  endtask\n\n/*\n  task automatic next_bit();    // OK\n    repeat(3)\n      @(posedge CLK);\n\n    @(posedge CLK);\n  endtask\n*/\n\n  bit [3:0] cnt = 0;\n\n  task test_txd();\n    cnt = 0;    \n    next_bit();\n    for(int i=0; i < 8; i++) begin\n      ++cnt;\n      next_bit();\n    end\n\n    ++cnt;\n    next_bit();\n  endtask\n\n\n  initial begin\n    test_txd();\n    test_txd();\n\n    repeat(10) @(posedge CLK);\n    $finish;    \n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

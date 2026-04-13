@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3363,
+  "issue_url": "https://github.com/verilator/verilator/pull/3363",
+  "title": "Timing support",
+  "body": "Adds timing support to Verilator. It makes it possible to use delays,\r\nevent controls within processes (not just at the start), wait\r\nstatements, and forks.\r\n\r\nBuilding a design with those constructs requires a compiler that\r\nsupports C++20 coroutines (GCC 10, Clang 5).\r\n\r\nThe basic idea is to have processes and tasks with delays/event controls\r\nimplemented as C++20 coroutines. This allows us to suspend and resume\r\nthem at any time.\r\n\r\nThere are five main runtime classes responsible for managing suspended\r\ncoroutines:\r\n* `VlCoroutineHandle`, a wrapper over C++20's `std::coroutine_handle`\r\n  with move semantics and automatic cleanup.\r\n* `VlDelayScheduler`, for coroutines suspended by delays. It resumes\r\n  them at a proper simulation time.\r\n* `VlTriggerScheduler`, for coroutines suspended by event controls. It\r\n  resumes them if its corresponding trigger was set.\r\n* `VlForkSync`, used for syncing `fork..join` and `fork..join_any`\r\n  blocks.\r\n* `VlCoroutine`, the return type of all verilated coroutines. It allows\r\n  for suspending a stack of coroutines (normally, C++ coroutines are\r\n  stackless).\r\n\r\nThere is a new visitor in `V3Timing.cpp` which:\r\n  * scales delays according to the timescale,\r\n  * simplifies intra-assignment timing controls and net delays into\r\n    regular timing controls and assignments,\r\n  * simplifies wait statements into loops with event controls,\r\n  * marks processes and tasks with timing controls in them as\r\n    suspendable,\r\n  * creates delay, trigger scheduler, and fork sync variables,\r\n  * transforms timing controls and fork joins into C++ awaits\r\n\r\nThere are new functions in `V3SchedTiming.cpp` (used by `V3Sched.cpp`)\r\nthat integrate static scheduling with timing. This involves providing\r\nexternal domains for variables, so that the necessary combinational\r\nlogic gets triggered after coroutine resumption, as well as statements\r\nthat need to be injected into the design eval function to perform this\r\nresumption at the correct time.\r\n\r\nThere is also a function that transforms forked processes into separate\r\nfunctions.\r\n\r\nSee the comments in `verilated_timing.h`, `verilated_timing.cpp`,\r\n`V3Timing.cpp`, and `V3SchedTiming.cpp`, as well as the internals\r\ndocumentation for more details.\r\n\r\nSigned-off-by: Krzysztof Bieganski <kbieganski@antmicro.com>",
+  "labels": [
+    "area: scheduling",
+    "effort: weeks",
+    "status: assigned",
+    "v5"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-24",
+  "closed_at": "2022-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

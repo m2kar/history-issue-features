@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 821,
+  "issue_url": "https://github.com/llvm/circt/issues/821",
+  "title": "[FIRRTL] (neg) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 9902\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_f: UInt<2>\r\n    output tmp32: SInt<3>\r\n    tmp32 <= neg(inp_f)\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl --enable-lower-types` produces this Verilog:\r\n\r\n```verilog\r\n// Standard header to adapt well known macros to our needs.\r\n\r\nmodule top_mod(\r\n  input  [1:0] inp_f,\r\n  output [2:0] tmp32);\r\n\r\n  assign tmp32 = 3'h0 - {inp_f[1], inp_f};\t// a_top_mod.fir:3:3, :6:14\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT --dont-fold div` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [1:0] inp_f,\r\n  output [2:0] tmp32\r\n);\r\n  assign tmp32 = 2'h0 - inp_f;\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nyosys 0\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\nyosys 1\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\nyosys 2\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-24",
+  "closed_at": "2021-03-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4189,
+  "issue_url": "https://github.com/llvm/circt/pull/4189",
+  "title": "[Seq] Add `seq.fifo` ODS and rationale",
+  "body": "The `seq.fifo` operation intends to capture the semantics of a FIFO which eventually map to some form of on-chip resources. By having a FIFO abstraction, we provide an abstraction that can be targeted for target-specialized implementations, as well as default behavioral lowerings (based on `seq.hlmem`).\r\n\r\n## Option 1: A `seq.fifo` op\r\n\r\nThe `seq.fifo` in- and output values consists of:\r\n- **Inputs**:\r\n  - clock, reset\r\n  - input data\r\n  - read/write enable\r\n- **Outputs**:\r\n  - output data\r\n  - full, almost full, empty, almost empty flags\r\n\r\nTo start with, the FIFO operation is configurable with the following parameters:\r\n1. Depth (cycles)\r\n2. Differing in- and output widths (e.g. write `i32`, read 2x`i16`).\r\n3. Almost empty/full thresholds (optional). If not provided, these will\r\n    be asserted when the FIFO is empty/full.\r\n\r\nGenerally speaking, additional attributes can be added freely in order to further specialize the configuration (that is, provide information to a specific lowering pass) so that should take care of any lowering-specific information that needs to be provided.  \r\nHowever, this op should ideally capture all possible in/outputs ports that we want (.. do we want dual clock support ?).\r\n\r\nLike `seq.hlmem` there are no guarantees that all possible fifo configuration are able to be lowered. Available lowering passes will pattern match on the requested fifo configuration - it is then up to the user to ensure that they're requesting a configuration which is realizable by some pass.\r\n\r\n## Option 2: A `seq.fifo` and `seq.flag_fifo` op\r\n\r\nThe `seq.flag_fifo` would have the FIFO flags built in. Is it more appropriate (from an IR/compiler point of view) to have a single `count` output, and it is then the users responsibility to implement flags (`cmpi` ops) based on this count? We could also have two operations, a `seq.flag_fifo` and `seq.fifo` wherein the former will lower to the latter.\r\n\r\n## Option 3: Fifo ports attached to an `seq.hlmem`\r\n\r\nIn this model, the `seq.hlmem` continues to be a memory declaration. However, we'll add additional fifo read/write ports - different ports may have different properties or in/output values (just like our existing read and write ops).\r\n\r\n```mlir\r\n%handle = seq.hlmem %clk, %rst : !seq.hlmem<4xi32>\r\n%out, %full, %almost_full = seq.fifo.flagged_read %handle, %rden\r\n%empty, %almost_empty = seq.fifo.flagged_write %handle, %wren\r\n```\r\n\r\nAdditionally, this model would support mixing fifo access with normal read/write access to a given backing memory - something which may be needed in certain edge cases.\r\n\r\nLet me know your thoughts - I hope this issue can be a place where we can land on a well-designed IR representation of a FIFO... and then actual lowering can come down the road.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-26",
+  "closed_at": "2023-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

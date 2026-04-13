@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2548,
+  "issue_url": "https://github.com/llvm/circt/issues/2548",
+  "title": "[ExportVerilog] Concurrent Assertion Messages Should Use $sampled (maybe)",
+  "body": "Currently, we emit concurrent assertions with format strings like:\r\n\r\n```verilog\r\nassert_1: assert property (@(posedge clock) foo) else $error(\"hello world: %d\", foo);\r\n```\r\n\r\nHowever, this is ill-advised by the System Verilog 2017 specification (Section 16.9.3). The advised way is to use `$sampled`:\r\n\r\n```verilog\r\nassert_2: assert property (@(posedge clock) foo) else $error(\"hello world: %d\", $sampled(foo));\r\n```\r\n\r\nHowever, either choice here hits different VCS lint warnings which can be seen in this [EDA Playground sketch](https://www.edaplayground.com/x/c7my).  We either get without using `$sampled`:\r\n\r\n```\r\nLint-[SVA-NSVU] Non-sampled variable used\r\ntestbench.sv, 15\r\n\"foo\"\r\n  Non-sampled variable \"foo\" is used in action block of assertion.\r\n```\r\n\r\nOr with using `$sampled`:\r\n\r\n```\r\nLint-[SVA-AECASR] Assertion evaluation can affect simulation results\r\ntestbench.sv, 16\r\n\"$sampled(foo)\"\r\n  The assertion contains function call \"$sampled(foo)\" which can have side \r\n  effects.\r\n  Shutting of this assertion may cause change in simulation behavior.\r\n```\r\n\r\nIdeally we pick the SV 2017-advised option of `$sampled`, but also figure out how to emit lint waivers (either inline or in a file) that enable this to not generate warnings (or errors if one of these has been promoted to such by a build system).\r\n\r\nh/t @drom for helping figure out the SV-advised approach.\r\n\r\nRelevant section of the spec:\r\n<img width=\"917\" alt=\"Screen Shot 2022-02-01 at 11 17 54\" src=\"https://user-images.githubusercontent.com/1018530/152006954-9cf10941-a828-4ead-9312-a8bed2288134.png\">\r\n\r\n\r\n",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-01",
+  "closed_at": "2022-02-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

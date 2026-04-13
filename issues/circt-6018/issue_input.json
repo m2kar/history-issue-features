@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6018,
+  "issue_url": "https://github.com/llvm/circt/pull/6018",
+  "title": "[Pipeline] Add non-stallable pipeline stages",
+  "body": "For:\r\n```mlir\r\nhw.module @testStallability(%arg0: i32, %go: i1, %clk: i1, %rst: i1, %stall: i1) -> (out: i32) {\r\n  %out, %done = pipeline.scheduled \"MyPipeline\"(%a0 : i32 = %arg0)\r\n      stall(%s = %stall) clock(%c = %clk) reset(%r = %rst) go(%g = %go)\r\n      {stallability = [true, false, true]} -> (out : i32) {\r\n    pipeline.stage ^bb1 regs(\"a0\" = %a0 : i32)\r\n  ^bb1(%a0_0: i32, %s1_enable: i1):  // pred: ^bb0\r\n    pipeline.stage ^bb2 regs(\"a0\" = %a0_0 : i32)\r\n  ^bb2(%a0_1: i32, %s2_enable: i1):  // pred: ^bb1\r\n    pipeline.stage ^bb3 regs(\"a0\" = %a0_1 : i32)\r\n  ^bb3(%a0_2: i32, %s3_enable: i1):  // pred: ^bb2\r\n    pipeline.return %a0_2 : i32\r\n  }\r\n  hw.output %out : i32\r\n}\r\n```\r\n\r\ngenerates the following stallable (first) and non-stallable (second) stages:\r\n\r\n```sv\r\nmodule testStallability_MyPipeline_s0(\r\n  input  [31:0] a0,\r\n  input         enable,\r\n                stall,\r\n                clk,\r\n                rst,\r\n  output [31:0] a0_out,\r\n  output        valid\r\n);\r\n\r\n  wire        _GEN = ~stall;\r\n  reg  [31:0] a0_0;\r\n  always_ff @(posedge clk) begin\r\n    if (enable & _GEN)\r\n      a0_0 <= a0;\r\n  end\r\n  reg         stage0_valid;\r\n  always_ff @(posedge clk) begin\r\n    if (rst)\r\n      stage0_valid <= 1'h0;\r\n    else begin\r\n      if (_GEN)\r\n        stage0_valid <= enable;\r\n    end\r\n  end\r\n  assign a0_out = a0_0;\r\n  assign valid = stage0_valid;\r\nendmodule\r\n\r\nmodule testStallability_MyPipeline_s1(\r\n  input  [31:0] a0_in,\r\n  input         enable,\r\n                stall,\r\n                clk,\r\n                rst,\r\n  output [31:0] a0_out,\r\n  output        valid\r\n);\r\n\r\n  reg [31:0] a0;\r\n  always_ff @(posedge clk)\r\n    a0 <= a0_in;\r\n  reg        stage1_valid;\r\n  always_ff @(posedge clk) begin\r\n    if (rst)\r\n      stage1_valid <= 1'h0;\r\n    else\r\n      stage1_valid <= enable;\r\n  end\r\n  assign a0_out = a0;\r\n  assign valid = stage1_valid;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-01",
+  "closed_at": "2023-09-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

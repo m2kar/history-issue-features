@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6175,
+  "issue_url": "https://github.com/verilator/verilator/issues/6175",
+  "title": "Fix: class assignment to virtual interface not propagating",
+  "body": "We found a bug where assigning to a `virtual interface` from inside a class **does not propagate** correctly through module-level connections to another `virtual interface`.\n\nBelow is a minimal reproducible example. It works correctly for direct assignments in the module, but fails when the same assignment is made via a class method. Direct assignment (vif_write.data = 8'hA5) works as expected. **Class method assignment** (writer.write_data(8'hB7)) **does not propagate** through to vif_read.\n\nWe’re adding this to our development list, but we would greatly appreciate any suggestions or ideas for how to properly fix this. If the issue lies in how virtual interface triggers are scheduled or bound, we are happy to explore possible patches.\n\nThanks in advance!\n\nTest Case：\n\n```systemverilog\ntimescale 1ns/1ps\n\ninterface INTF();\n    logic [7:0] data;\nendinterface\n\nclass Writer;\n    virtual INTF vif;\n    function new(virtual INTF vif);\n        this.vif = vif;\n    endfunction\n\n    task write_data(logic [7:0] d);\n        vif.data = d;\n    endtask\nendclass\n\nmodule t_failed();\n    logic [7:0] data;\n\n    INTF intf_read();\n    INTF intf_write();\n\n    assign intf_read.data = data;\n    assign data = intf_write.data;\n\n    virtual INTF vif_read, vif_write;\n    Writer writer;\n\n    initial begin\n        vif_write = intf_write;\n        vif_read  = intf_read;\n\n        vif_write.data = 8'hA5;\n\n        #1ns;\n        $display(\"vif_write.data  = %02x\", vif_write.data); // Expected = A5\n        $display(\"intf_write.data = %02x\", intf_write.data);\n        $display(\"module.data     = %02x\", data);\n        $display(\"intf_read.data  = %02x\", intf_read.data);\n        $display(\"vif_read.data   = %02x\", vif_read.data);\n\n        #1ns;\n        if (vif_read.data !== 8'hA5) $stop;\n\n        #1ns;\n        writer = new(vif_write);\n        #1ns;\n        writer.write_data(8'hB7);\n\n        #1ns;\n        $display(\"vif_write.data  = %02x\", vif_write.data); // Expected = B7\n        $display(\"intf_write.data = %02x\", intf_write.data);\n        $display(\"module.data     = %02x\", data);\n        $display(\"intf_read.data  = %02x\", intf_read.data); // Unexpected Bug Here\n        $display(\"vif_read.data   = %02x\", vif_read.data);  // Unexpected Bug Here\n\n        if (vif_read.data !== 8'hB7) $stop;\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\n    \nendmodule\n\n",
+  "labels": [
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-14",
+  "closed_at": "2025-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

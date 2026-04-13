@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4607,
+  "issue_url": "https://github.com/verilator/verilator/issues/4607",
+  "title": "Internal error and invalid lifetime errors with clocking blocks & repeat loops",
+  "body": "Thanks for the super quick fix for #4593!\r\nExpanding the scope of Verilator on my end and found some more edge cases related to clocking blocks that Verilator disagrees with. This is a pruned down version of a pretty common pattern I have in a few of my regression tests.\r\n\r\nThere are a few internal errors in here, but all appear to be related to how loops in forked processes are verilated, so including them together in this testcase.\r\n\r\n# Example file `test.sv`\r\n```systemverilog\r\nmodule tb();\r\n    logic clk = 0;\r\n    logic x;\r\n    logic y;\r\n\r\n    always #1ns clk = ~clk;\r\n\r\n    assign y = x;\r\n\r\n    default clocking cb @(posedge clk);\r\n        output #1ns x;\r\n        input #1step y;\r\n    endclocking\r\n\r\n    initial begin\r\n        cb.x <= '0;\r\n        ##2;\r\n        fork\r\n            begin\r\n                repeat(5) begin\r\n                    cb.x <= ~cb.y;\r\n                    @cb;\r\n                end\r\n            end\r\n            begin\r\n                repeat(4) begin\r\n                    ##1;\r\n                end\r\n            end\r\n        join_any\r\n        disable fork;\r\n        $finish();\r\n    end\r\nendmodule\r\n```\r\n\r\n# Command-line & error\r\n```bash\r\n$ ./verilator/bin/verilator --sv --binary  test.sv\r\n%Error-LIFETIME: test.sv:20:17: Invalid reference: Process might outlive variable `__Vrepeat0`.\r\n                                    : ... note: In instance 'tb'\r\n                                    : ... Suggest use it as read-only to initialize a local copy at the beginning of the process, or declare it as static. It is also possible to refer by reference to objects and their members.\r\n   20 |                 repeat(5) begin\r\n      |                 ^~~~~~\r\n                 ... For error description see https://verilator.org/warn/LIFETIME?v=5.017\r\n%Error: Internal Error: test.sv:22:22: ../V3Fork.cpp:599: Variable's lifetime is unknown. Can't determine if a capture is necessary.\r\n                                           : ... note: In instance 'tb'\r\n   22 |                     @cb;\r\n      |                      ^~\r\n```\r\n\r\n# Version & OS\r\n* Verilator 5.017 devel rev v5.014-234-g33c5b5feb\r\n* Ubuntu 22.04\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-23",
+  "closed_at": "2025-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3319,
+  "issue_url": "https://github.com/llvm/circt/issues/3319",
+  "title": "[FIRRTL] Missed optimization for name-preserved nodes",
+  "body": "In the following example, I would expect both cover statements to be removed by constant propagation.  Instead, only the first cover, which is fed by a wire, is removed.\r\n```firrtl\r\ncircuit Foo:\r\n  module X:\r\n    output o : UInt<1>\r\n    o <= UInt<1>(0)\r\n\r\n  module Foo:\r\n    input clock: Clock\r\n    input i : UInt<1>\r\n\r\n    inst x of X\r\n\r\n    wire w : UInt<1>\r\n    w <= and(x.o, i)\r\n    cover(clock, w, UInt<1>(1), \"\")\r\n\r\n    node n = and(x.o, i)\r\n    cover(clock, n, UInt<1>(1), \"\")\r\n```\r\n\r\n```verilog\r\nmodule Foo(     // ./test.fir:6:10\r\n  input clock,\r\n        i);\r\n\r\n  wire w = 1'h0;        // ./test.fir:10:5, :12:5\r\n  wire n = 1'h0;        // ./test.fir:10:5, :16:5\r\n\r\n  always @(posedge clock)       // ./test.fir:14:5\r\n    cover(n);   // ./test.fir:16:5, :17:5\r\n  X x ();       // ./test.fir:10:5\r\nendmodule\r\n```\r\n\r\nThe wire's cover is removed due to a canonicalizer which forwards constants \"around\" a name-preserved wire which doesn't exist for nodes:\r\n```\r\nfirrtl.module @Foo(in %clock: !firrtl.clock, in %i: !firrtl.uint<1>) {\r\n  %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n  %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n  %x_o = firrtl.instance x  @X(out o: !firrtl.uint<1>)\r\n  %w = firrtl.wire   : !firrtl.uint<1>\r\n  %0 = firrtl.and %c0_ui1, %i : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n  firrtl.strictconnect %w, %0 : !firrtl.uint<1>\r\n  firrtl.cover %clock, %w, %c1_ui1, \"\"  {eventControl = 0 : i32, isConcurrent = false}\r\n  %n = firrtl.node  %0  : !firrtl.uint<1>\r\n  firrtl.cover %clock, %n, %c1_ui1, \"\"  {eventControl = 0 : i32, isConcurrent = false}\r\n}\r\n// -----// IR Dump After Canonicalizer //----- //\r\nfirrtl.module @Foo(in %clock: !firrtl.clock, in %i: !firrtl.uint<1>) {\r\n  %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n  %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n  %x_o = firrtl.instance x  @X(out o: !firrtl.uint<1>)\r\n  %w = firrtl.wire   : !firrtl.uint<1>\r\n  firrtl.strictconnect %w, %c0_ui1 : !firrtl.uint<1>\r\n  firrtl.cover %clock, %c0_ui1, %c1_ui1, \"\"  {eventControl = 0 : i32, isConcurrent = false}\r\n  %n = firrtl.node  %c0_ui1  : !firrtl.uint<1>\r\n  firrtl.cover %clock, %n, %c1_ui1, \"\"  {eventControl = 0 : i32, isConcurrent = false}\r\n}\r\n```\r\nThe first cover statement is later removed after lowering to the SV dialect.\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-09",
+  "closed_at": "2022-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

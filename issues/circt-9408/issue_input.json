@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9408,
+  "issue_url": "https://github.com/llvm/circt/issues/9408",
+  "title": "[FIRRTL] IMDCE doesn't understand domain ports' users",
+  "body": "IMDCE needs to be taught about domain port users, otherwise it will delete them.  While I'm surprised this isn't a verifier crash, it still drops associations when their domain is dead.\n\nHere's an example that may be a bit more complicated than necessary:\n\n``` firrtl\nFIRRTL version 6.0.0\n\ncircuit Dead:\n  domain MyDomains:\n\n  module Child:\n    input d: Domain of MyDomains\n    input e: Domain of MyDomains\n    input x: UInt<1> domains [d]\n    input clock: Clock domains [e]\n\n    node n = unsafe_domain_cast(x, e)\n    printf(clock, UInt<1>(1), \"%d\\n\", n)\n\n  public module Dead:\n    input d: Domain of MyDomains\n    input e: Domain of MyDomains\n    input x : UInt<1> domains [d]\n    input clock: Clock domains [e]\n\n    inst c of Child\n    connect c.x, x\n    domain_define c.d = d\n    domain_define c.e = e\n    connect c.clock, clock\n```\n\nBuilding this with domain inference (`--domain-mode=infer-all`) and with and without optimizations (``, `--disable-opt`) yields MLIR that associates `Child>x` with domain `d` without optimizations but not when optimizations are enabled.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-05",
+  "closed_at": "2026-01-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

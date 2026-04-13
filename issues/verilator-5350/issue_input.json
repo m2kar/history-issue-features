@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5350,
+  "issue_url": "https://github.com/verilator/verilator/issues/5350",
+  "title": "Assignments to structure elements from multiple locations can lead to assignment being skipped",
+  "body": "Verilator version: Verilator 5.027 devel rev v5.026-110-g18fc3e608\r\nOS: Ubuntu 22.04 LTS\r\nWe are open to solving the issue ourself with some help.\r\n\r\nWhen the RTL has an instance of a packed struct whose elements are assigned in multiple places, for example in multiple procedural blocks or procedural blocks and output ports of a module, the assignment of a structure member can be skipped or incorrect. \r\n\r\nIn the attached regression test, a module outputs both one-hot and binary versions of a value. Internal to the module, a packed struct was added to hold the values that drive the two output ports. One of the structure elements is assigned by an `assign` statement, and the other is assigned via an `always_comb` block. It appears that the conditional assignment in the always_comb block is skipped.\r\n\r\nFor this test, the problem will not occur if we add `/*verilator split_var*/` to the structure variable declaration. However, in the original case in which we discovered this, when we add that pragma, we get the following error:\r\n\r\n```'structure_variable_name' has split_var metacomment but will not be split because its bit range cannot be determined statically```\r\n\r\nIt’s not clear what it is about the specific struct that causes Verilator to emit this error, and we were unable to recreate this behavior in our regression test.\r\n\r\n[t_split_var_comb.zip](https://github.com/user-attachments/files/16552297/t_split_var_comb.zip)\r\n\r\n```\r\n\r\nmodule Test\r\n(\r\n    input wire clk,\r\n    input wire rst,\r\n\r\n    output logic [1:0] one_hot,\r\n    output logic binary\r\n);\r\n   always_ff @(posedge clk) begin\r\n      one_hot[1] <= one_hot[0];\r\n      one_hot[0] <= one_hot[1];\r\n\r\n      if (rst) begin\r\n         one_hot <= 2'b01;\r\n      end\r\n   end\r\n\r\n   struct packed {\r\n      logic [1:0] one_hot;\r\n      logic binary;\r\n   } nets_in_struct;\r\n  \r\n   assign nets_in_struct.one_hot = one_hot;\r\n\r\n   always_comb begin      \r\n      nets_in_struct.binary = '0;\r\n\r\n      if (nets_in_struct.one_hot[1]) begin\r\n         nets_in_struct.binary = 1'b1;\r\n      end\r\n\r\n      binary = nets_in_struct.binary;        \r\n   end\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-08",
+  "closed_at": "2025-09-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

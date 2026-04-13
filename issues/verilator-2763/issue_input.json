@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2763,
+  "issue_url": "https://github.com/verilator/verilator/issues/2763",
+  "title": "error due to no-timescale on primitive",
+  "body": "The simulation needs to read the library sim file which includes the udp.\r\n`timescale is in the library sim file. but verilator can't handle it.\r\nHere is the code to reproduce the issue.\r\n\r\n**top.v**\r\n\r\n```verilog\r\n`timescale 1ns/1ns\r\nmodule top;\r\n\r\n\r\nwire out;\r\nwire in; \r\nreg clk;\r\nalways #1 clk = ~clk;\r\n\r\nreg clr_;\r\nreg set_;\r\n\r\nreg VDD;\r\nreg VSS;\r\nreg NOTIFIER;\r\n\r\nudp_dff_PWR_scl2mc_cin28hpm_base_svt_c31 u0(out, in, clk, clr_, set_, VDD, VSS, NOTIFIER);\r\n\r\nendmodule\r\n```\r\n**udp.v**\r\n\r\n```verilog\r\n`timescale 1ns/1ns\r\n\r\n`celldefine\r\nprimitive udp_dff_PWR_scl2mc_cin28hpm_base_svt_c31 (out, in, clk, clr_, set_, VDD, VSS, NOTIFIER);\r\noutput out;\r\ninput in, clk, clr_, set_, VDD, VSS, NOTIFIER;\r\nreg out;\r\n\r\ntable\r\n\r\n//in    clk     clr_    set_    VDD     VSS     NOTIFIER    :Qt     :Qt+1\r\n0       r       ?       1       1       0       ?       :   ?   :   0;\r\n1       r       1       ?       1       0       ?       :   ?   :   1;\r\n1       *       1       ?       1       0       ?       :   1   :   1;\r\n0       *       ?       1       1       0       ?       :   0   :   0;\r\n?       f       ?       ?       1       0       ?       :   ?   :   -;\r\n*       b       ?       ?       1       0       ?       :   ?   :   -;\r\n?       ?       ?       0       1       0       ?       :   ?   :   1;\r\n?       b       1       *       1       0       ?       :   1   :   1;\r\n1       x       1       *       1       0       ?       :   1   :   1;\r\n?       ?       0       1       1       0       ?       :   ?   :   0;\r\n?       b       *       1       1       0       ?       :   0   :   0;\r\n0       x       *       1       1       0       ?       :   0   :   0;\r\n?       ?       ?       ?       ?       ?       ?       :   ?   :   x;\r\n\r\nendtable //udp_dff_PWR_scl2mc_cin28hpm_base_svt_c31\r\nendprimitive\r\n`endcelldefine\r\n\r\n`celldefine\r\nmodule and_gate(in1, in2, out);\r\ninput in1;\r\ninput in2;\r\noutput out;\r\n\r\nassign out = in1 & in2;\r\nendmodule\r\n`endcelldefine\r\n```\r\n\r\nhere is the command:\r\n\r\n```shell\r\nverilator --cc test.v --bbox-unsup -Wno-STMTDLY  --timescale 1ns/1ns  --top-module top -v udp.v\r\n```\r\n\r\nHere is the error msg:\r\n\r\n```\r\n%Error-TIMESCALEMOD: udp.v:4:11: Timescale missing on this module as other modules have it (IEEE 1800-2017 3.14.2.2)\r\n                     test.v:2:8: ... Location of module with timescale\r\n    2 | module top;\r\n      |        ^~~\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual and https://verilator.org for more assistance.\r\n```",
+  "labels": [
+    "area: lint",
+    "resolution: fixed",
+    "effort: minutes"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-22",
+  "closed_at": "2021-01-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

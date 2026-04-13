@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2713,
+  "issue_url": "https://github.com/llvm/circt/issues/2713",
+  "title": "[FIRRTL] Dedup makes port NLAs point at the module",
+  "body": "Under certain circumstances, the deduplication pass changes NLAs pointing to a module port and makes them point at the surrounding module instead. After some `circt-reduce` and manual cleanup:\r\n```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.nla @nla_1 [#hw.innerNameRef<@Foo::@b1>, #hw.innerNameRef<@Bar_43::@out>]\r\n  firrtl.extmodule @Bar_42(out out: !firrtl.clock)\r\n  firrtl.extmodule @Bar_43(out out: !firrtl.clock sym @out [{circt.nonlocal = @nla_1}])\r\n  firrtl.module @Foo() {\r\n    %b0_out = firrtl.instance b0 @Bar_42(out out: !firrtl.clock)\r\n    %b1_out = firrtl.instance b1 sym @b1 \r\n      {annotations = [{circt.nonlocal = @nla_1, class = \"circt.nonlocal\"}]} @Bar_43(out out: !firrtl.clock)\r\n  }\r\n  // NLAs after `circt-opt --firrtl-dedup`:\r\n  // firrtl.nla @nla_1 [#hw.innerNameRef<@Foo::@b1>, @Bar_42]\r\n}\r\n```\r\nNote how the last path segment of `@nla_1` changes from `#hw.innerNameRef<@Bar_43::@out>` to `@Bar_43`.\r\n\r\nThe behaviour seems to be limited to NLAs on modules that were dropped in favor of another, identical module. The following just defines three redundant modules with NLAs, and all but the first see this behaviour:\r\n```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.nla @nla_1 [#hw.innerNameRef<@Foo::@b0>, #hw.innerNameRef<@Bar_42::@out>]\r\n  firrtl.nla @nla_2 [#hw.innerNameRef<@Foo::@b1>, #hw.innerNameRef<@Bar_43::@out>]\r\n  firrtl.nla @nla_3 [#hw.innerNameRef<@Foo::@b2>, #hw.innerNameRef<@Bar_44::@out>]\r\n  firrtl.extmodule @Bar_42(out out: !firrtl.clock sym @out [{circt.nonlocal = @nla_1}])\r\n  firrtl.extmodule @Bar_43(out out: !firrtl.clock sym @out [{circt.nonlocal = @nla_2}])\r\n  firrtl.extmodule @Bar_44(out out: !firrtl.clock sym @out [{circt.nonlocal = @nla_3}])\r\n  firrtl.module @Foo() {\r\n    %b0_out = firrtl.instance b0 sym @b0\r\n      {annotations = [{circt.nonlocal = @nla_1, class = \"circt.nonlocal\"}]} @Bar_42(out out: !firrtl.clock)\r\n    %b1_out = firrtl.instance b1 sym @b1\r\n      {annotations = [{circt.nonlocal = @nla_2, class = \"circt.nonlocal\"}]} @Bar_43(out out: !firrtl.clock)\r\n    %b2_out = firrtl.instance b2 sym @b2\r\n      {annotations = [{circt.nonlocal = @nla_3, class = \"circt.nonlocal\"}]} @Bar_44(out out: !firrtl.clock)\r\n  }\r\n  // NLAs after `circt-opt --firrtl-dedup`:\r\n  // firrtl.nla @nla_1 [#hw.innerNameRef<@Foo::@b0>, #hw.innerNameRef<@Bar_42::@out>]\r\n  // firrtl.nla @nla_2 [#hw.innerNameRef<@Foo::@b1>, @Bar_42]\r\n  // firrtl.nla @nla_3 [#hw.innerNameRef<@Foo::@b2>, @Bar_42]\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-02",
+  "closed_at": "2022-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

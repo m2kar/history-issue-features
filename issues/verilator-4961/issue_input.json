@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4961,
+  "issue_url": "https://github.com/verilator/verilator/issues/4961",
+  "title": "Not implemented pure virtual method does not prevent compilation",
+  "body": "Hi! I've found out that Verilator just ignores not implemented `pure virtual` methods, and moreover even allows to call them.\r\nHowever, user expectations are that there is a compile-time guarantee that non-complete class construction is impossible. Excerpt from standard:\r\n\r\n>8.21 Abstract classes and pure virtual methods \r\n>\r\n>Abstract classes may be extended to further abstract classes, but all pure virtual methods shall have\r\n>overridden implementations in order to be extended by a non-abstract class. **By having implementations for\r\n>all its methods, the class is complete and may now be constructed.**\r\n\r\nTested code (compiles and runs without any errors):\r\n\r\n```verilog\r\nmodule test;\r\n  virtual class foo;\r\n    pure virtual function void print();\r\n  endclass\r\n  \r\n  class bar extends foo; // <--- print() is not implemented\r\n    string message = \"I'm bar class\";\r\n  endclass\r\n  \r\n  initial begin\r\n    bar obj = new(); //<--- not complete class can be constructed\r\n    $display(obj.message);\r\n    obj.print(); //<--- not implemented method can be called\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nMost of big3 simulators raise a compilation error with something like \"Non-abstract derived class 'bar' inherits unimplemented virtual method 'print' from parent class 'foo'.\"\r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-171-gba47da658\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-11",
+  "closed_at": "2024-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

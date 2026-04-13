@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6144,
+  "issue_url": "https://github.com/llvm/circt/issues/6144",
+  "title": "Inline add in element-select context may be problematic",
+  "body": "I am using chisel 6.0-M3 with firtool version 1.54.0.\r\n\r\nTo descride the issue, may I put an example here:\r\n\r\n``` scala\r\nclass our extends Module {\r\n  val in = IO(Input(UInt(5.W)))\r\n  val testvar = VecInit.tabulate(32)(i => (114514+i).U(39.W))\r\n  printf(p\"in:$in, output:${testvar(in + 1.U)}\\n\");\r\n  when(in === 31.U) {\r\n    stop()\r\n  }\r\n}\r\n```\r\n\r\nThe chisel code above would generate verilog output like:\r\n\r\n``` verilog\r\nmodule our(\r\n  input       clock,\r\n              reset,\r\n  input [4:0] in\t// src/main/scala/gcd/GCD.scala:13:14\r\n);\r\n\r\n  `ifndef SYNTHESIS\t// src/main/scala/gcd/GCD.scala:15:9\r\n    always @(posedge clock) begin\t// src/main/scala/gcd/GCD.scala:15:9\r\n      if ((`PRINTF_COND_) & ~reset) begin\t// src/main/scala/gcd/GCD.scala:15:9\r\n        automatic logic [31:0][38:0] _GEN =\r\n          {39'h1BF71,\r\n           // ------ many lines ------\r\n           39'h1BF52};\t// src/main/scala/gcd/GCD.scala:15:9\r\n        $fwrite(32'h80000002, \"in:%d, output:%d\\n\", in, _GEN[in + 5'h1]);\t// src/main/scala/gcd/GCD.scala:15:{9,40}\r\n      end\r\n      if ((`STOP_COND_) & (&in) & ~reset)\t// src/main/scala/gcd/GCD.scala:15:9, :16:11, :17:9\r\n        $finish;\t// src/main/scala/gcd/GCD.scala:17:9\r\n    end // always @(posedge)\r\n  `endif // not def SYNTHESIS\r\nendmodule\r\n```\r\n\r\nHere, we may focus on the `_GEN[in + 5'h1]` in the `$fwrite` line. Accroding to what @wsnyder mentioned in https://github.com/verilator/verilator/issues/4498, when `in` equals to `5'd31`, `_GEN[in + 5'h1]` is not necessarily equals to `_GEN[5'h0]`, which is inconsistent with the semanteme of `+` in chisel.\r\n\r\nI am not pretty sure whether what I mentioned above is correct, but if we wrap `in + 5'h1` in concat context, i.e. `_GEN[{in + 5'h1}]`, the result would always be correct (here \"correct\" refers to being consistent with chisel's semanteme), accroding to IEEE 1800-2017 _11.6.1 Rules for expression bit lengths_, where it states that all operands in a concat expression are self-determined. That means `Length({in + 5'h1}) = Length(in + 5'h1) = max{Length(in), Length(5'h1)} = 5`. I also tested this on verilator, and it did output as what I expected.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-09-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

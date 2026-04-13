@@ -1,0 +1,25 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6236,
+  "issue_url": "https://github.com/verilator/verilator/issues/6236",
+  "title": "typedef for queue causes \"Unsupported/illegal unbounded ('$') in this context.\"",
+  "body": "Thanks for taking the time to report this.\n\nThis code works on other simulators, but fails to verilate\n```\nmodule top;\n    initial begin\n        typedef byte unsigned byte_q_t[$];\n        byte_q_t data;\n        data = {1, 2, 3, 4, 5};\n        $display(\"data: %p\", data);\n        data = data[3:$];\n        $display(\"data: %p\", data);\n    end\nendmodule\n```\nThe error is:\n```\n%Error-UNSUPPORTED: queue_typedef.sv:8:23: Unsupported/illegal unbounded ('$') in this context.\n                                         : ... note: In instance 'top'\n    8 |         data = data[3:$];\n      |                       ^\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.036\n%Error: Exiting due to 1 error(s)\n```\nIf I remove the typedef then it works as expected:\n```\nmodule top;\n    initial begin\n        byte unsigned data[$];\n        data = {1, 2, 3, 4, 5};\n        $display(\"data: %p\", data);\n        data = data[3:$];\n        $display(\"data: %p\", data);\n    end\nendmodule\n\n```\noutput:\n```\ndata: '{'h1, 'h2, 'h3, 'h4, 'h5} \ndata: '{'h4, 'h5} \n```\nThe typedef should work, and it's necessary because you can't declare a function that returns a queue, or define an array of queues without a typedef.  I have seen other problems when using typedefs, but this is the first one I have narrowed down to this small of an example.\n\nWhat 'verilator' command line do we use to run your example?\n```\nverilator -j $(nproc) -o foo --binary queue_typedef.sv && obj_dir/foo\n```\nWhat 'verilator --version' are you using?\n```\nVerilator 5.036 2025-04-27 rev v5.036\n```\nDid you try it with the git master version?  No\n\nWhat OS and distribution are you using?  Tested on both archlinux and Rocky Linux 9.6\n\nMay we assist you in trying to fix this in Verilator yourself?  Yes, if you'd like\n\n",
+  "labels": [
+    "area: data-types"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-28",
+  "closed_at": "2025-07-28",
+  "code_blocks": [
+    "module top;\n    initial begin\n        typedef byte unsigned byte_q_t[$];\n        byte_q_t data;\n        data = {1, 2, 3, 4, 5};\n        $display(\"data: %p\", data);\n        data = data[3:$];\n        $display(\"data: %p\", data);\n    end\nendmodule\n",
+    "%Error-UNSUPPORTED: queue_typedef.sv:8:23: Unsupported/illegal unbounded ('$') in this context.\n                                         : ... note: In instance 'top'\n    8 |         data = data[3:$];\n      |                       ^\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.036\n%Error: Exiting due to 1 error(s)\n",
+    "module top;\n    initial begin\n        byte unsigned data[$];\n        data = {1, 2, 3, 4, 5};\n        $display(\"data: %p\", data);\n        data = data[3:$];\n        $display(\"data: %p\", data);\n    end\nendmodule\n\n",
+    "data: '{'h1, 'h2, 'h3, 'h4, 'h5} \ndata: '{'h4, 'h5} \n",
+    "verilator -j $(nproc) -o foo --binary queue_typedef.sv && obj_dir/foo\n",
+    "Verilator 5.036 2025-04-27 rev v5.036\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

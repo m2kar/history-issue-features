@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5763,
+  "issue_url": "https://github.com/llvm/circt/issues/5763",
+  "title": "[ExportVerilog] verif.assert triggers pretty printer assertion",
+  "body": "```\r\nhw.module @Foo(%a: i3) {\r\n  %c-1_i3 = hw.constant -1 : i3\r\n  %0 = comb.extract %a from 0 : (i3) -> i1\r\n  %1 = comb.icmp bin eq %a, %c-1_i3 : i3\r\n  %2 = comb.and bin %1, %0 : i1\r\n  verif.assert %2 : i1\r\n}\r\n```\r\nRunning this through `firtool` (no options needed) triggers an assertion in the pretty printer:\r\n```\r\nfirtool: /home/fabian/code/circt/lib/Support/PrettyPrinter.cpp:285: auto circt::pretty::PrettyPrinter::print(const circt::pretty::PrettyPrinter::FormattedToken &)::(anonymous class)::operator()(const circt::pretty::EndToken *) const: Assertion `!printStack.empty() && \"more ends than begins?\"' failed.\r\n[...]\r\n#10 0x000055f64008abe2 circt::pretty::Token::getKind() const /home/fabian/code/circt/include/circt/Support/PrettyPrinter.h:102:43\r\n#11 0x000055f64008abe2 circt::pretty::TokenBase<circt::pretty::BreakToken, (circt::pretty::Token::Kind)1>::classof(circt::pretty::Token const*) /home/fabian/code/circt/include/circt/Support/PrettyPrinter.h:108:51\r\n[...]\r\n#22 0x000055f64008abe2 circt::pretty::PrettyPrinter::advanceLeft() /home/fabian/code/circt/lib/Support/PrettyPrinter.cpp:224:14\r\n#23 0x000055f64008ae03 circt::pretty::PrettyPrinter::checkStream() /home/fabian/code/circt/lib/Support/PrettyPrinter.cpp:203:10\r\n#24 0x000055f64008a509 circt::pretty::PrettyPrinter::add(circt::pretty::Token) /home/fabian/code/circt/lib/Support/PrettyPrinter.cpp:118:3\r\n#25 0x000055f63f993fcb emitOperation((anonymous namespace)::VerilogEmitterState&, mlir::Operation*) /home/fabian/code/circt/lib/Conversion/ExportVerilog/ExportVerilog.cpp:0:0\r\n[...]\r\n#31 0x000055f63f9c7490 circt::ExportVerilog::StringOrOpToEmit::setString(llvm::StringRef) /home/fabian/code/circt/lib/Conversion/ExportVerilog/ExportVerilogInternals.h:201:5\r\n#32 0x000055f63f9c7490 circt::ExportVerilog::SharedEmitterState::emitOps(std::vector<circt::ExportVerilog::StringOrOpToEmit, std::allocator<circt::ExportVerilog::StringOrOpToEmit>>&, llvm::raw_ostream&, bool)::$_65::operator()(circt::ExportVerilog::StringOrOpToEmit&) const /home/fabian/code/circt/lib/Conversion/ExportVerilog/ExportVerilog.cpp:5899:16\r\n[...]\r\n```\r\nProbably related to the emission of `verif.assert` doing something fishy. I was tracking down a different failure related to `verif.assert` where the number of opening and closing parentheses don't match. Accidentally stumbled across this there.",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-02",
+  "closed_at": "2023-08-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

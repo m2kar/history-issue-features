@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8657,
+  "issue_url": "https://github.com/llvm/circt/issues/8657",
+  "title": "Imported verilog flips output",
+  "body": "```verilog\nmodule conc(\n  input wire [63:0] arg0,\n  output wire [63:0] result0\n);\n  wire [31:0] arg0_unflattened[2];\n  assign arg0_unflattened[0] = arg0[31:0];\n  assign arg0_unflattened[1] = arg0[63:32];\n\n  assign result0 = {arg0_unflattened[1], arg0_unflattened[0]};\nendmodule\n```\n\nPost\n\n```\n./bin/circt-verilog | ./bin/circt-opt --export-verilog\n```\n\nwe get\n\n```verilog\nmodule conc(\t// <stdin>:2:3\n  input  [63:0] arg0,\t// <stdin>:2:22\n  output [63:0] result0\t// <stdin>:2:39\n);\nmodule conc(\n\n  assign result0 = {arg0[31:0], arg0[63:32]};\t// <stdin>:3:10, :4:10, :5:10, :6:5\nendmodule\n```\n\n(doing it inlined rather than assigning to unflattened first results in result0 = argo)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-07",
+  "closed_at": "2025-07-08",
+  "code_blocks": [
+    "module conc(\n  input wire [63:0] arg0,\n  output wire [63:0] result0\n);\n  wire [31:0] arg0_unflattened[2];\n  assign arg0_unflattened[0] = arg0[31:0];\n  assign arg0_unflattened[1] = arg0[63:32];\n\n  assign result0 = {arg0_unflattened[1], arg0_unflattened[0]};\nendmodule\n",
+    "./bin/circt-verilog | ./bin/circt-opt --export-verilog\n",
+    "module conc(\t// <stdin>:2:3\n  input  [63:0] arg0,\t// <stdin>:2:22\n  output [63:0] result0\t// <stdin>:2:39\n);\nmodule conc(\n\n  assign result0 = {arg0[31:0], arg0[63:32]};\t// <stdin>:3:10, :4:10, :5:10, :6:5\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

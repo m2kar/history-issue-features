@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4111,
+  "issue_url": "https://github.com/llvm/circt/issues/4111",
+  "title": "[CreateSiFiveMetadata][firtool] Memory metadata isn't emitted without \"--split-verilog\" option",
+  "body": "CIRCT version: `72f4c3f7`\r\n\r\n### Issue\r\n\r\nI'm trying to test out generating Rocket Chip RTL with CIRCT (testing out this PR https://github.com/ucb-bar/chipyard/pull/1239), and I noticed some strange behavior while trying to toggle between enabling the `firtool` option `--split-verilog` and disabling it: when that option is present, the `--repl-seq-mem-file=<PATH-TO-FILE>` option functions as expected, and we get an output file with memory metadata. However, when `--split-verilog` is removed, the memory metadata file isn't generated.\r\n\r\nI'm invoking `firtool` in these two ways:\r\n\r\n```\r\nfirtool \\\r\n    --format=fir \\\r\n    -O=release \\\r\n    --emit-metadata \\\r\n    <many more options ...> \\\r\n    --repl-seq-mem \\\r\n    --repl-seq-mem-circuit=TestHarness \\\r\n    --repl-seq-mem-file=./RocketConfig.mems.conf \\\r\n    --annotation-file=../RocketConfig.sfc.anno.json \\\r\n    --split-verilog \\\r\n    -o ./ \\\r\n    path/to/file.fir\r\n```\r\nvs\r\n```\r\n﻿firtool \\\r\n    --format=fir \\\r\n    -O=release \\\r\n    --emit-metadata \\\r\n    <many more options ...> \\\r\n    --repl-seq-mem \\\r\n    --repl-seq-mem-circuit=TestHarness \\\r\n    --repl-seq-mem-file=./RocketConfig.mems.conf \\\r\n    --annotation-file=../RocketConfig.sfc.anno.json \\\r\n    -o ./output.sv \\\r\n    path/to/file.fir\r\n```\r\n\r\n### Expected Behavior\r\n\r\nThe file specified by `--repl-seq-mem-file` should be generated, regardless of the presence of the `--split-verilog` flag.\r\n\r\n### Reproducing\r\n\r\nI'm attaching an archive which contains the input annotation and FIR files, as well as a script to run the test. To run the test, invoke:\r\n\r\n```\r\n./run-test.sh\r\n```\r\n\r\nMake sure `firtool` is on your PATH when you run this. The test will invoke `firtool` twice, once with `--split-verilog`, and once without. The output with `--split-verilog` will end up in `./output-dir-split`, and the output without `--split-verilog` will end up in `./output-dir-no-split`.\r\n\r\nYou should notice that the file specified in `--repl-seq-mem-file` gets generated in `./output-dir-split`:\r\n\r\n```\r\n$ cat output-dir-split/RocketConfig.mems.conf\r\nname cc_dir_ext depth 1024 width 136 ports mrw mask_gran 17\r\nname cc_banks_0_ext depth 16384 width 64 ports rw\r\nname data_arrays_0_ext depth 512 width 256 ports mrw mask_gran 8\r\nname tag_array_ext depth 64 width 88 ports mrw mask_gran 22\r\nname tag_array_0_ext depth 64 width 84 ports mrw mask_gran 21\r\nname data_arrays_0_0_ext depth 512 width 128 ports mrw mask_gran 32\r\nname l2_tlb_ram_0_ext depth 1024 width 44 ports rw\r\nname mem_ext depth 512 width 64 ports mrw mask_gran 8\r\n```\r\n\r\nHowever, that file isn't present in `output-dir-no-split`:\r\n\r\n```\r\n$ ls output-dir-no-split\r\nRocketConfig.sv\r\n```\r\n\r\nBefore re-running the test, make sure to remove `﻿output-dir-no-split` and `output-dir-split`.\r\n\r\n[circt-test.tar.gz](https://github.com/llvm/circt/files/9790916/circt-test.tar.gz)",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-10-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

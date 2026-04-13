@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9959,
+  "issue_url": "https://github.com/llvm/circt/issues/9959",
+  "title": "[firtool][repl-seq-mem] `firtool --repl-seq-mem` drops `loadMemoryFromFileInline` initialization metadata from companion output",
+  "body": "## Summary\n\nWhen a memory uses `loadMemoryFromFileInline`, running `firtool` with `--repl-seq-mem` appears to lose the memory initialization-file metadata in the companion output.\n\nAs a result, downstream external-memory generators can reconstruct the memory shape and ports, but cannot preserve the original `$readmemh(...)` initialization semantics.\n\n## Expected behavior\n\nIf a memory is annotated with `loadMemoryFromFileInline`, then after `--repl-seq-mem` the companion output should still preserve enough information to represent the memory-file initialization.\n\nFor example, the companion metadata could include an `init_file` field or another structured representation of the memory-file annotation.\n\n## Version\n\n- Chisel: 6.6.0\n- firtool: 1.73.0\n- Scala: 2.13.15\n\n## Actual behavior\n\nAfter `--repl-seq-mem`, the companion output only contains memory geometry / port information such as:\n\n- `name`\n- `depth`\n- `width`\n- `ports`\n- `mask_gran`\n\nbut no initialization-file path.\n\nThis means a downstream tool can generate an external memory module, but cannot emit `$readmemh(...)` for a memory that originally used `loadMemoryFromFileInline`.\n\n## Minimal reproducer shape\n\nIn Chisel, the memory is created like this:\n\n```scala\nval rom = SyncReadMem(byteTableDepth, UInt(32.W))\nloadMemoryFromFileInline(rom, romFile)\n```\n\nThen SystemVerilog is emitted with:\n\n```scala\nChiselStage.emitSystemVerilogFile(\n  new Top,\n  firtoolOpts = Array(\n    \"--repl-seq-mem\",\n    \"--repl-seq-mem-file=out.sv.conf\"\n  )\n)\n```\n\n## Observed companion output\n\nThe generated `.sv.conf` contains entries like:\n\n```text\nname some_memory_ext depth 8192 width 32 ports read\n```\n\nNo initialization-file field is present.\n\nThe generated SystemVerilog only contains an external-memory placeholder such as:\n\n```verilog\n// external module some_memory_ext\n```\n\nso the original `$readmemh(...)` information is no longer available to downstream tools.\n\n## Functional impact\n\nWithout `--repl-seq-mem`, the memory initialization is preserved in the generated Verilog.\n\nWith `--repl-seq-mem`, the initialization-file information is not preserved in the companion output, so a downstream external-memory flow cannot reconstruct equivalent behavior.\n\n## Question\n\nIs this an intended limitation of `--repl-seq-mem`, or should memory-file initialization metadata be preserved in the companion output?\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-17",
+  "closed_at": null,
+  "code_blocks": [
+    "val rom = SyncReadMem(byteTableDepth, UInt(32.W))\nloadMemoryFromFileInline(rom, romFile)\n",
+    "ChiselStage.emitSystemVerilogFile(\n  new Top,\n  firtoolOpts = Array(\n    \"--repl-seq-mem\",\n    \"--repl-seq-mem-file=out.sv.conf\"\n  )\n)\n",
+    "name some_memory_ext depth 8192 width 32 ports read\n",
+    "// external module some_memory_ext\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

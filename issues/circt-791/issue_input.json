@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 791,
+  "issue_url": "https://github.com/llvm/circt/issues/791",
+  "title": "[FIRRTL] Lowertypes connect doesnot preserve source destination after lowering",
+  "body": "The type lowering of aggregate connect operation does not preserve source and destination\r\n```FIR\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input a_d: UInt<1>[2]\r\n    output a_q: UInt<1>[2]\r\n\r\n    reg r: UInt<1>[2], clock\r\n\r\n    r <= a_d\r\n    a_q <= r\r\n```\r\ngenerates this IR before lowering\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(%clock: !firrtl.clock, %a_d: !firrtl.vector<uint<1>, 2>, %a_q: !firrtl.flip<vector<uint<1>, 2>>) {\r\n      %r = firrtl.reg %clock {name = \"r\"} : (!firrtl.clock) -> !firrtl.vector<uint<1>, 2>\r\n      firrtl.connect %r, %a_d : !firrtl.vector<uint<1>, 2>, !firrtl.vector<uint<1>, 2>\r\n      firrtl.connect %a_q, %r : !firrtl.flip<vector<uint<1>, 2>>, !firrtl.vector<uint<1>, 2>\r\n    }\r\n  }\r\n}\r\n```\r\nIR after LowerFIRRTLTypes, \r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(%clock: !firrtl.clock, %a_d_0: !firrtl.uint<1>, %a_d_1: !firrtl.uint<1>, %a_q_0: !firrtl.flip<uint<1>>, %a_q_1: !firrtl.flip<uint<1>>) {\r\n    %r_0 = firrtl.reg %clock {name = \"r_0\"} : (!firrtl.clock) -> !firrtl.uint<1>\r\n    %r_1 = firrtl.reg %clock {name = \"r_1\"} : (!firrtl.clock) -> !firrtl.uint<1>\r\n    firrtl.connect %a_d_0, %r_0 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %a_d_1, %r_1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %a_q_0, %r_0 : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n    firrtl.connect %a_q_1, %r_1 : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\nHere the ```firrtl.connect %a_d_0, %r_0 ``` is incorrect, it should instead be ```firrtl.connect  %r_0, %a_d_0``` ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-03-19",
+  "closed_at": "2021-03-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6918,
+  "issue_url": "https://github.com/verilator/verilator/pull/6918",
+  "title": "Fix large array initialization for I/O ports (#6904)",
+  "body": " When you have a large array (>256 elements) with wide elements (>64 bits) on an output port like this:\r\n\r\n  \r\n```\r\n  output logic [64:0] my_array [257];\r\n  assign my_array = '{default: '0};\r\n```\r\n  \r\n Verilator generated broken C++ code that wouldn't compile. The generated code was missing the left-hand side of the assignment, producing something like {{0, 0, ...}}; instead of my_array = {{0, 0, ...}};. I believe this was introduced in commit e2f5854 as mentioned in the GH issue. The problem seems to be that output ports are declared as raw C arrays and the assignment is broken, whilst VLUnpacked does support this. I made the below changes, let me know if this is short sighted, there are bigger things to do, I also added some tests.\r\n\r\n  1. V3Slice.cpp: Don't use this optimization for I/O ports - expand them element-by-element instead\r\n  2. V3EmitCFunc.h: Make sure array initializers always emit the left-hand side of the assignment\r\n\r\n  ---",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-01-12",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

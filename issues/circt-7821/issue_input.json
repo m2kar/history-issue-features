@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7821,
+  "issue_url": "https://github.com/llvm/circt/issues/7821",
+  "title": "[Calyx] Floating Point Comparisons",
+  "body": "I'm going to support the lowering of [`arith.maximumf`](https://mlir.llvm.org/docs/Dialects/ArithOps/#arithcmpf-arithcmpfop) to Calyx dialect, for the sake of ReLU operations in neural networks. It's going to be a bit tricky since it involves ordered and unordered comparisons, where there might be NaNs in the latter case. \r\n\r\nWhat do you think about it? If we have the bit vector representation, it's easy to determine NaN by looking at the relevant bits; but how should Calyx determine if it's NaN given that we are passing regular decimal numbers as inputs (like 4.20)? Let's assume it's IEEE754 standard for now.\r\n\r\nAnd I took some inspirations from the existing pass, [`-arith-expand`](https://mlir.llvm.org/docs/Passes/#-arith-expand) path, which legalizes operations such as `maximumf` to the operations that LLVM can support,  from:\r\n```mlir\r\n%2 = arith.maximumf %0, %1 : f32\r\n```\r\nwe get:\r\n```mlir\r\n%2 = arith.cmpf ugt, %0, %1 : f32\r\n%3 = arith.select %2, %0, %1 : f32\r\n%4 = arith.cmpf uno, %1, %1 : f32\r\n%5 = arith.select %4, %1, %3 : f32\r\n```\r\n\r\nIf we have to use similar comparison operators, how does Calyx library ops support unordered comparisons?\r\n\r\nThoughts? @rachitnigam @andrewb1999 @cgyurgyik ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-15",
+  "closed_at": "2024-11-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

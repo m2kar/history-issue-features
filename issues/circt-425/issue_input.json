@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 425,
+  "issue_url": "https://github.com/llvm/circt/pull/425",
+  "title": "[FIRRTL] Convert register clock, reset, and init to passive during parsing",
+  "body": "Align the FIRRTL parser with the Scala FIRRTL Compiler (SFC) so that it accepts circuits where the clock, reset, or initialization are flipped. E.g., they are output ports.\r\n\r\nThis PR splits out  non-controversial stuff in #381. These circuits, if lowered to RTL, will have the appropriate synthetic wires added. I spot checked the RTL and Verilog output and this looked good.\r\n\r\nE.g., the following circuit:\r\n\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input clkIn: Clock\r\n    output clkOut: Clock\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    clkOut <= clkIn\r\n    reg r: UInt<1>, clkOut\r\n\r\n    r <= a\r\n    b <= r\r\n```\r\n\r\nIs parsed into the following FIRRTL dialect:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(%clkIn: !firrtl.clock, %clkOut: !firrtl.flip<clock>, %a: !firrtl.uint<1>, %b: !firrtl.flip<uint<1>>) {\r\n      firrtl.connect %clkOut, %clkIn : !firrtl.flip<clock>, !firrtl.clock\r\n      %0 = firrtl.asPassive %clkOut : (!firrtl.flip<clock>) -> !firrtl.clock\r\n      %r = firrtl.reg %0 {name = \"r\"} : (!firrtl.clock) -> !firrtl.uint<1>\r\n      firrtl.connect %r, %a : !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %b, %r : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nIn RTL this becomes (verbatim stuff pruned):\r\n\r\n```mlir\r\nmodule attributes {firrtl.mainModule = \"Foo\"}  {\r\n  rtl.module @Foo(%clkIn: i1, %a: i1) -> (%clkOut: i1, %b: i1) {\r\n    %0 = rtl.wire : !rtl.inout<i1>\r\n    rtl.connect %0, %clkIn : i1\r\n    %r = sv.reg : !rtl.inout<i1>\r\n    %1 = rtl.read_inout %0 : !rtl.inout<i1>\r\n    sv.always posedge %1  {\r\n      sv.passign %r, %a : i1\r\n    }\r\n    %2 = rtl.read_inout %r : !rtl.inout<i1>\r\n    rtl.output %1, %2 : i1, i1\r\n  }\r\n}\r\n```\r\n\r\nAnd the following Verilog:\r\n```verilog\r\nmodule Foo(\r\n  input  clkIn, a,\r\n  output clkOut, b);\r\n\r\n  wire _T;\t// Foo.fir:2:3\r\n  reg  r;\t// Foo.fir:9:5\r\n\r\n  assign _T = clkIn;\t// Foo.fir:8:12\r\n  wire _T_0 = _T;\t// Foo.fir:11:7\r\n  always @(posedge _T_0)\t// Foo.fir:11:7\r\n    r <= a;\t// Foo.fir:11:7\r\n  assign clkOut = _T_0;\t// Foo.fir:2:3\r\n  assign b = r;\t// Foo.fir:2:3\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-10",
+  "closed_at": "2021-01-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

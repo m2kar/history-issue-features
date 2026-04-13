@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2653,
+  "issue_url": "https://github.com/llvm/circt/issues/2653",
+  "title": "[FIRRTL] Assertion type `trueOrIsX` looks like it has some problems",
+  "body": "When using `trueOrIsX`, SFC will error if the condition is `1`, MFC will error if the condition is `1` or `x`.  In addition to this, it looks like we need to include all outer conditions when comparing to `x`.\r\n```\r\nwhen a:\r\n  when b:\r\n    trueOrIsX(clock, message)\r\n```\r\n```\r\nSFC: (a & b) && (a & b) !== 1'bx\r\nMFC: a & (b | b === 1'bx)\r\n```\r\n\r\nFull example:\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1>\r\n    input b: UInt<1>\r\n    input clock: Clock\r\n\r\n    when a:\r\n      when b:\r\n        printf(clock, UInt<1>(\"h1\"), \"Assertion failed: [verif-library-assert]<extraction-summary>{\\\"predicateModifier\\\":{\\\"type\\\":\\\"trueOrIsX\\\"},\\\"format\\\":{\\\"type\\\":\\\"ifElseFatal\\\"},\\\"baseMsg\\\":\\\"Assertion failed (verification library): Test assert\\\"}</extraction-summary>\\n    at Assert.scala:71 chisel3.assert(predicate, flag + exStr, msgArgs: _*)(sourceInfo, compileOptions)\\n\") : printf @[ToTL.scala 163:49]\r\n  ```\r\n  \r\nI could not get the small example to go through SFC as is, I added the assert to an existing module and this is post ExtractTestCode.  Here is SFC:\r\n```verilog\r\n//VCS coverage exclude_file\r\nmodule SiFive_AHBToTL_assert(\r\n  input   clock,\r\n  input   a,\r\n  input   b\r\n);\r\n  wire  _GEN_0 = b & a;\r\n  `ifndef SYNTHESIS\r\n  always @(posedge clock) begin\r\n    `ifdef ASSERT_VERBOSE_COND\r\n    if (`ASSERT_VERBOSE_COND) begin\r\n    `endif\r\n      if ((_GEN_0 && ~(^(_GEN_0) === 1'bx))) begin\r\n        $error(\"Assertion failed (verification library): Test Assert\");\r\n      end\r\n    `ifdef ASSERT_VERBOSE_COND\r\n    end\r\n    `endif\r\n    `ifdef STOP_COND\r\n    if (`STOP_COND) begin\r\n    `endif\r\n      if ((_GEN_0 && ~(^(_GEN_0) === 1'bx))) begin\r\n        $fatal;\r\n      end\r\n    `ifdef STOP_COND\r\n    end\r\n    `endif\r\n  end\r\n  `endif // SYNTHESIS\r\n\r\nendmodule\r\n```\r\n\r\nMFC:\r\n```verilog\r\nmodule Foo(     // ./test.fir:2:10\r\n  input a, b, clock);\r\n\r\n  always @(posedge clock) begin // ./test.fir:8:7\r\n    `ifndef SYNTHESIS   // ./test.fir:8:7\r\n      if (a & (b | b === 1'bx)) begin   // ./test.fir:8:7\r\n        if (`ASSERT_VERBOSE_COND_)      // ./test.fir:8:7\r\n          $error(\"Assertion failed (verification library): Test assert\");       // ./test.fir:8:7\r\n        if (`STOP_COND_)        // ./test.fir:8:7\r\n          $fatal;       // ./test.fir:8:7\r\n      end\r\n    `endif\r\n  end // always @(posedge)\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-19",
+  "closed_at": "2022-02-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

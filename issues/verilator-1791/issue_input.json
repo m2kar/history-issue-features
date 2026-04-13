@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1791,
+  "issue_url": "https://github.com/verilator/verilator/issues/1791",
+  "title": "Question: Improving handling of gated clocks.",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Message: 1139 from https://www.veripool.org\n\n\n\n---\n\nConsider the following Verilog\n\n```\n    input clk;\n\n    reg gated_clk_en = 1'b0 ;\n    reg [1:0] pc = 2'b0;\n    reg [1:0] res = 2'b0;\n\n    wire gated_clk = gated_clk_en & clk;\n\n    always @(posedge clk) begin\n       pc <= pc + 1;\n       gated_clk_en <= 1'b1;\n    end\n\n    always @(posedge gated_clk) begin\n       res <= pc;\n    end\n\n```\n\nOnce the gated clock is enabled, one would expect the value of @res@ to lag that of @pc@ by one cycle. It is a delayed assignment, so in the second @always@ block, @res@ picks up the value of @pc@ _before_ it is incremented in the first block. A VCD trace shows this is what happens in simulation.\n\nBut in Verilator this is not the case. A VCD trace shows that @res@ tracks the value of @pc@ cycle by cycle. In the second @always@ block, @res@ picks up the value of @pc@ _after_ it is incremented in the first block. This would be correct if clk and gated_clk where independent. However in this case, one is derived from the other by continuous assignment, so the two @always@ blocks should be evaluated in the _same_ delta cycle, and _res_ should pick up the old value of _pc_.\n\nThe problem is caused in @V3Order.cpp@, which adds an extra loop in @processCircular()@ for internally generated clocks. The commenting indicates this is to fix races, as illustrated in @t_clk_dpulse@, which is an example of using MULTIDRIVEN signals.\n\nIn this example we can fix the result by marking @gated_clk_en@ using @/* verilator clock_enable */@. From looking at V3Order.cpp, I think this effectively breaks the loop, even if the generated clock vertex is marked circular.\n\nHowever should this really be necessary? Finding all the clock enables in a big design is laborious. I tried disabling the code for in @processCircular()@ for internally generated clocks. This caused 4 regression failures. However two of those were tests which are marked to fail with Verilator, but pass in simulation, so arguably it is a neutral change (those two could now be marked as passes).\n\nI'm not really advocating this, or at least only with a flag to control it. But I wonder if there is a more subtle test that could be used in @processCircular()@ to only add that loop when it is really needed. Any ideas?\n\nWhat I'd really like is a way to indicate the relationship between the two clock domains in the above example, to get a proper ordering. They are separate domains, so I can't just merge the domains. V3Order.cpp will determine that @pc@ is in the @@(posedge clk)@ domain, with its PRE and POST in the @@(posedge clk or posedge v.gated_clk)@ domain. @res@ is in the @@(posedge v.gated_clk)@ domain, with its PRE and POST in the @[settle]@ domain. I can merge the @@(posedge clk)@ and @@(posedge clk or posedge v.gated_clk)@ domains, but that doesn't get me far enough. I can't merge in the @@(posedge v.gated_clk)@, since it is active less often than the @@(posedge clk)@ domain, let I need to show there is a relationship, so that PRE assigns in the two are done together, followed by general assignments, followed by POST assigns. Is there a way I can add a dependency between @res@ and the POST of @pc@, to keep the ordering correct.\n\nSo far my experiments with V3Order.cpp have demonstrated a) how hard it is to change and b) that I still don't really understand the code properly. I've a number of ideas on improvements in this area, but I thought I'd start the discussion here first.\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2013-05-30",
+  "closed_at": "2013-05-31",
+  "code_blocks": [
+    "    input clk;\n\n    reg gated_clk_en = 1'b0 ;\n    reg [1:0] pc = 2'b0;\n    reg [1:0] res = 2'b0;\n\n    wire gated_clk = gated_clk_en & clk;\n\n    always @(posedge clk) begin\n       pc <= pc + 1;\n       gated_clk_en <= 1'b1;\n    end\n\n    always @(posedge gated_clk) begin\n       res <= pc;\n    end\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

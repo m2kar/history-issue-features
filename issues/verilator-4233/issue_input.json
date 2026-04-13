@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4233,
+  "issue_url": "https://github.com/verilator/verilator/pull/4233",
+  "title": "Fix missing assignment for wide unpacked structs",
+  "body": "``` systemverilog\r\nmodule t ();\r\n    typedef struct {\r\n        bit [`WIDE_WIDTH-1:0] data;\r\n    } wide_t;\r\n\r\n    logic [`WIDE_WIDTH-1:0] ldata;\r\n    wide_t wide_0;\r\n\r\n    initial begin\r\n        wide_0.data = `WIDE_WIDTH'hda7ada7a;\r\n        ldata = wide_0.data;\r\n\r\n        if (ldata != `WIDE_WIDTH'hda7ada7a)\r\n            $stop();\r\n\r\n        $write(\"*-* All Finished *-*\\n\");\r\n        $finish();\r\n    end\r\nendmodule\r\n```\r\nwith `WIDE_WIDTH=128`, this test fails. But it works with `WIDE_WIDTH=129`.\r\n\r\nI found that it is caused by V3EmitCFunc failed to emit a complete line for `AstNodeAssign` with `AstStructSel` as its rhs.\r\nAdding one line fixes the problem, but I am not sure if it is related to V3Premit.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-05-25",
+  "closed_at": "2023-05-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

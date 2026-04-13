@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5649,
+  "issue_url": "https://github.com/verilator/verilator/issues/5649",
+  "title": "Internal error when assigning a hierarchical reference of an interface to a wire",
+  "body": "Assigning a hierarchical reference of an interface to a wire results in an internal error instead of reporting an error.\r\n\r\n```SystemVerilog\r\ninterface A;\r\nendinterface\r\n\r\nmodule B#(parameter P);\r\n  A a();\r\nendmodule\r\n\r\nmodule test;\r\n  B #(0) b();\r\n  wire xxx = b.a;\r\nendmodule\r\n```\r\n\r\nResults in an internal error:\r\n\r\n```\r\n%Error: Internal Error: bug.sv:10:16: /path/to/verilator/src/V3Broken.cpp:168: Broken link in node (or something without maybePointedTo): 'm_varp && !m_varp->brokeExists()' @ /path/to/verilator/build/src/V3Ast__gen_impl.h:4717\r\n                                     : ... note: In instance 'test'\r\n   10 |   wire xxx = b.a;\r\n      |                ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nHowever, when `B` is not parameterized, Verilator issues an error, which is the expected behavior:\r\n\r\n```SystemVerilog\r\ninterface A;\r\nendinterface\r\n\r\nmodule B;\r\n  A a();\r\nendmodule\r\n\r\nmodule test;\r\n  B b();\r\n  wire xxx = b.a;\r\nendmodule\r\n```\r\n\r\n```\r\n%Error: bug3.sv:10:16: Operator ASSIGNW expected non-interface on Assign RHS but 'a__Viftop' is an interface.\r\n                     : ... note: In instance 'test'\r\n   10 |   wire xxx = b.a;\r\n      |                ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\nSimilarly, when `B` is parameterizd with a default value and `b` is instantiated with the default value, an error is reported as expected.\r\n\r\n```SystemVerilog\r\ninterface A;\r\nendinterface\r\n\r\nmodule B#(parameter P=0);\r\n  A a();\r\nendmodule\r\n\r\nmodule test;\r\n  B #(0) b();\r\n  wire xxx = b.a;\r\nendmodule\r\n```\r\n\r\nOnly when the parameter value at instantiation is different from the default value, there is an internal error:\r\n\r\n```SystemVerilog\r\ninterface A;\r\nendinterface\r\n\r\nmodule B#(parameter P=0);\r\n  A a();\r\nendmodule\r\n\r\nmodule test;\r\n  B #(1) b();\r\n  wire xxx = b.a;\r\nendmodule\r\n```\r\n\r\n> What 'verilator' command line do we use to run your example?\r\n\r\n`verilator --timing --trace --top-module test --binary bug.sv`\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.030 and latest master.\r\n\r\n> What OS and distribution are you using?\r\n\r\nUbuntu 22.04 under WSL.\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nIf this look like someone who is a Verilator beginner could reasonably handle.\r\n",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-30",
+  "closed_at": "2025-10-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

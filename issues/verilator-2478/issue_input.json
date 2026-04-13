@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2478,
+  "issue_url": "https://github.com/verilator/verilator/issues/2478",
+  "title": "VCS: \"Warning-[DCTL] Decimal constant too large\" when compiling --protect_lib output",
+  "body": "In my case --protect_lib output contains:\r\n    localparam int protectlib_hash__V = 4287673301;\r\n\r\nWhich yields the following on compilation:\r\nWarning-[DCTL] Decimal constant too large\r\n/usr/julien/fias_core/tb/verilator/obj/verilated_riscv_cpu.sv, 337\r\n  Decimal constant '4287673301' is too large as a 32bit signed constant, it \r\n  should be smaller than 2147483648.\r\n  VCS is using converted signed value '-7293995' instead.\r\n  To make it an unsigned constant, please use sized constant format.\r\n\r\nThe following patch resolves the issue:\r\n```cpp\r\n--- a/src/V3ProtectLib.cpp\r\n+++ b/src/V3ProtectLib.cpp\r\n@@ -197,7 +197,7 @@ private:\r\n         // CPP hash value\r\n         addComment(txtp, fl, \"Hash value to make sure this file and the corresponding\");\r\n         addComment(txtp, fl, \"library agree\");\r\n-        m_hashValuep = new AstTextBlock(fl, \"localparam int protectlib_hash__V = \");\r\n+        m_hashValuep = new AstTextBlock(fl, \"localparam int protectlib_hash__V = 32'd\");\r\n         txtp->addNodep(m_hashValuep);\r\n         txtp->addText(fl, \"\\n\");\r\n```\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: portability"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-24",
+  "closed_at": "2020-08-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

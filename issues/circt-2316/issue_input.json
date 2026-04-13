@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2316,
+  "issue_url": "https://github.com/llvm/circt/pull/2316",
+  "title": "[FIRRTL] Fix index overflows during subaccess lowering",
+  "body": "Fix an issue in `LowerTypes` around `SubaccessOp`s, where narrow index expressions could cause constant overflows. If the subaccess index had fewer bits than necessary to address all elements of the vector, the comparisons between that index and a constant generated for every element would see the constant overflow for all the elements beyond reach.\r\n\r\nFor example, using a 2-bit index `x` to access a 5-element vector `y` would generate comparisons as follows:\r\n\r\n- `x == 0 : i2`\r\n- `x == 1 : i2`\r\n- `x == 2 : i2`\r\n- `x == 3 : i2`\r\n- `x == 0 : i2` (4 overflows in the 2-bit constant)\r\n\r\nThis fixes the issue by choosing the width of the constants according to `ceil(log2(vectorLength))`, which is guaranteed to always have enough bits to represent all vector indices. This makes the generated equality checks compare numbers of potentially different bit widths, which is fine in FIRRTL.\r\n\r\nFixes #2315.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-09",
+  "closed_at": "2021-12-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

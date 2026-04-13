@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7347,
+  "issue_url": "https://github.com/llvm/circt/issues/7347",
+  "title": "[FIRRTL] Incorrect Output Directory for Multiply Instantiate Module in Layer",
+  "body": "I'm seeing what I think is incorrect behavior for output directories for the following circuit:\r\n\r\n``` firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Foo|Bar>b\"\r\n  },\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Foo|Baz>b\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.TestBenchDirAnnotation\",\r\n    \"dirname\": \"verification/testbench\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\": \"~Foo|Bar\"\r\n  }\r\n]]\r\n  layer A, bind, \"verification/testbench\":\r\n\r\n  module Baz:\r\n    wire b: UInt<1>\r\n    invalidate b\r\n\r\n  module Bar:\r\n    wire b: UInt<1>\r\n    invalidate b\r\n\r\n    layerblock A:\r\n      inst baz_0 of Baz\r\n      inst baz_1 of Baz\r\n\r\n  public module Foo:\r\n\r\n    inst bar of Bar\r\n```\r\n\r\nWhat I am seeing is the following:\r\n\r\n```\r\n# rm -rf design && firtool TestBenchDirAnnotation.fir -o design -split-verilog && tree design\r\ndesign\r\n├── Bar.sv\r\n├── filelist.f\r\n└── verification\r\n    ├── Baz.sv\r\n    └── testbench\r\n        ├── Bar_A.sv\r\n        ├── Foo.sv\r\n        └── layers_Foo_A.sv\r\n```\r\n\r\nIt is unexpected that `Baz.sv` is located under `design/verification/`. It is expected that this should be under `design/verification/testbench/`.\r\n\r\nInterestingly, if I instead _singly-instantiate_ Baz, I get the right output:\r\n\r\n``` firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Foo|Bar>b\"\r\n  },\r\n  {\r\n    \"class\": \"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\": \"~Foo|Baz>b\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.TestBenchDirAnnotation\",\r\n    \"dirname\": \"verification/testbench\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\": \"~Foo|Bar\"\r\n  }\r\n]]\r\n  layer A, bind, \"verification/testbench\":\r\n\r\n  module Baz:\r\n    wire b: UInt<1>\r\n    invalidate b\r\n\r\n  module Bar:\r\n    wire b: UInt<1>\r\n    invalidate b\r\n\r\n    layerblock A:\r\n      inst baz_0 of Baz\r\n\r\n  public module Foo:\r\n\r\n    inst bar of Bar\r\n```\r\n\r\nWhen compiled, produces:\r\n\r\n```\r\n# rm -rf design && firtool TestBenchDirAnnotation.fir -o design -split-verilog && tree design\r\ndesign\r\n├── Bar.sv\r\n├── filelist.f\r\n└── verification\r\n    └── testbench\r\n        ├── Bar_A.sv\r\n        ├── Baz.sv\r\n        ├── Foo.sv\r\n        └── layers_Foo_A.sv\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-18",
+  "closed_at": "2024-07-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

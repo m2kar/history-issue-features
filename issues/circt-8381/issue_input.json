@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8381,
+  "issue_url": "https://github.com/llvm/circt/pull/8381",
+  "title": "[LLHD] Update Deseq pass to work with process results",
+  "body": "Add an updated version of the desequentialization pass. This new version expects all probes and drives to have been hoisted out of processes, and for the processes to produce the interesting signals as a result. Resets can now be distinguished from clocks more reliably. The previous version of the pass is left untouched for now, since it is used in the circt-verilog pipeline. Once process lowering also works with process results, we can get rid of the old pass implementations in one go.\r\n\r\nThis pass is an absolute headache to implement because of the fuzzy and ill-defined Verilog and VHDL semantics it has to match. I expect us to iterate heavily on this in the future, along the definition of `llhd.process` and potentially process flavors that are more convenient to analyze.\r\n\r\nIn particular, the pass has to do a lot of things in one go: it checks whether a process has only a single wait, if the wait carries past values into the present as block arguments, whether the IR expresses a posedge/negedge detection based on past and present values, whether the process properly observes the necessary triggers values, and it has to match the detected triggers against a very narrow list of things that a register can represent.\r\n\r\nLife would be easier if we had a more restricted form of processes that already express the basic structure of a loop through a single wait, observed triggers, and which past values are required. This would then also allow us to detect and generate latches, which are missing completely right now.\r\n\r\nThe pass currently performs a data flow analysis by propagating DNFs and tables of potential result values across a lattice. I'm not too happy with this implementation, and doing a depth-first traversal of the IR may be a better approach in the future. We should probably revisit this once we have improved the process op a bit and update this pass again.\r\n\r\nThis commit also adds an implementation of the Disjunctive Normal Form as a way of expressing and manipulating boolean functions. This is necessary to reliably detect if a process computes the posedge or negedge of a value. In the future we may want to switch this to a more compact representation of the underlying truth table, which can be done fairly efficiently using APInt. The current implementation of `DNF::optimize()` already does this internally. Note that DNFs are very inefficient at representing arbitrary boolean functions, as they have a tendency to grow exponentially. Therefore care must be taken that only operations on potential trigger values of sequential processes are captured in the DNF, and all other values are kept as opaque values. This keeps the complexity bounded.",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-01",
+  "closed_at": "2025-04-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

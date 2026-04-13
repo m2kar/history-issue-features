@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 10071,
+  "issue_url": "https://github.com/llvm/circt/pull/10071",
+  "title": "[Moore] Unify random builtins into urandom_range, add lowering",
+  "body": "Replace the three separate `moore.builtin.random`, `moore.builtin.urandom`, and `moore.builtin.urandom_range` ops with a single `moore.builtin.urandom_range` that takes (minval, maxval, optional seed ref).\r\n\r\nThe three SystemVerilog random functions are all equivalent to a call to `urandom_range` with different bounds:\r\n- `$random` and `$urandom` → `urandom_range(0, 2^32-1)`\r\n- `$urandom_range(max)` → `urandom_range(0, max)`\r\n- `$urandom_range(max, min)` → `urandom_range(min, max)`\r\n\r\nThe optional seed is modeled as a `ref<i32>` (an inout parameter per the SV spec) rather than an rvalue.\r\n\r\nMooreToCore lowers this to a call to an external\r\n`@__circt_urandom_range(i32, i32, ptr) -> i32` function. When a seed ref is present, the current value is probed into an alloca before the call and driven back with an epsilon time delta after.\r\n\r\nAlso extend `BoolCastOpConversion` to handle `f64` inputs via `arith.cmpf`.",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-27",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3875,
+  "issue_url": "https://github.com/verilator/verilator/issues/3875",
+  "title": "Fix `Broken link in node` on interface modport import",
+  "body": "#3874 contains the test code which leads to the error. The modifications stated in the comments lead to a successful compilation:\r\n\r\n```sv\r\ninterface intf #(A=0);  // `A=1` ok\r\n        typedef logic logic_t;\r\n\r\n        function logic_t f();  // logic_t => `logic` ok\r\n                return 0;\r\n        endfunction\r\n\r\n        modport if_m (\r\n                import f\r\n        );\r\nendinterface\r\n\r\nmodule system;\r\n        intf #(1) intf1();  // `1` => `0` ok.\r\n        m m0(.*);\r\nendmodule\r\n\r\nmodule m (intf.if_m intf1);\r\n//using `initial` ok\r\n        if (intf1.f())  // `if(0)` ok\r\n                $error();\r\n```\r\n\r\nError:\r\n\r\n```\r\n%Error: Internal Error: t/t_interface_parameter_function.v:12:11: ../V3Broken.cpp:173: \r\nBroken link in node (or something without maybePointedTo):\r\n'm_refDTypep && !m_refDTypep->brokeExists()' @ ../V3AstNodes.cpp:1784\r\n   12 |  function logic_t f();\r\n      |           ^~~~~~~\r\n```\r\n\r\nNo errors in Vivado.",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-14",
+  "closed_at": "2026-03-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

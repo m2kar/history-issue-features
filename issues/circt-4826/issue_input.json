@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4826,
+  "issue_url": "https://github.com/llvm/circt/pull/4826",
+  "title": "[FIRRTLToHW] Simplify lowerRegConnect, support HW wires",
+  "body": "Simplify the `lowerRegConnect` function such that it rejects subfield, subindex, and subaccesses on its left hand side. Consensus after some discussion in #4826 is that any subaccesses on the left hand side of a connect should be handled in a pre-pass that refactors the assignment in the exact way that `lowerRegConnect` used to do until now. This significantly simplifies the implementation of `LowerToHW` and moves the complexities of sink subaccesses into a dedicated pass.\r\n\r\nRename the `lowerRegConnect` function to `lowerConnect` and make it work with `hw::WireOp` in addition to `seq::FirRegOp`.\r\n\r\nThis removes the need to carry a separate `regMapping` for the backedges used as the `next` value of registers. Instead, `lowerConnect` directly inspects the operation on the LHS of the connect and does the right thing if it's a `seq::FirRegOp` or `hw::WireOp`.\r\n\r\nThe lowering of FIRRTL connect and strictconnect now first attempt to materialize connects in wires and regs directly through `lowerConnect`, and only if that's not possible (e.g. because the LHS is not a `seq::FirRegOp` or `hw::WireOp`) does it resort to generating assign ops.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-14",
+  "closed_at": "2023-03-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

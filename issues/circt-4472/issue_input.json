@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4472,
+  "issue_url": "https://github.com/llvm/circt/issues/4472",
+  "title": "[ExportVerilog] Unnecessary temporary wire for bitcast op used only by concat",
+  "body": "input:\r\n```mlir\r\nhw.module @casts(%in1: i7, %in2: !hw.array<8xi4>) -> (out: i39) {\r\n  %r2 = hw.bitcast %in2 : (!hw.array<8xi4>) -> i32\r\n  %0 = comb.concat %in1, %r2: i7, i32\r\n\r\n  hw.output %0 : i39\r\n}\r\n```\r\ncurrent output:\r\n```verilog\r\nmodule casts(   // foo.mlir:1:1\r\n  input  [6:0]      in1,\r\n  input  [7:0][3:0] in2,\r\n  output [38:0]     out);\r\n\r\n  wire [31:0] _GEN = /*cast(bit[31:0])*/in2;    // foo.mlir:2:9\r\n  assign out = {in1, _GEN};     // foo.mlir:2:9, :3:8, :5:3\r\nendmodule\r\n````\r\n\r\nWe can remove `_GEN` if `_GEN` is used only by concat.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-12-21",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

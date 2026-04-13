@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1494,
+  "issue_url": "https://github.com/llvm/circt/issues/1494",
+  "title": "[FIRRTL] SFC Invalid Interpretation",
+  "body": "The FIRRTL spec treats invalid as undefined.  However, the Scala FIRRTL Compiler has a context-sensitive definition of invalid: either (1) constant zero or (2) undefined. This has the huge potential for implementation mismatches between the Scala FIRRTL Compiler (SFC) and CIRCT.\r\n\r\nCurrently, the SFC will typically optimize invalids that hit primops as constant zero.  E.g., SFC will optimize the following to `b <= a`.\r\n\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    wire w: UInt<1>\r\n    w is invalid\r\n\r\n    b <= xor(a, w)\r\n```\r\n\r\nConversely, a FIRRTL compiler could optimize this to `b is invalid` because `xor(_, invalid) -> invalid` (a boolean operator of an undefined value should itself be undefined).\r\n\r\nIn other situations, the SFC may treat invalid like undefined. Both `when` and `validif` interpret invalid in this way.\r\n\r\nEither:\r\n```scala\r\ncircuit DontCareMux :\r\n  module DontCareMux :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output io : {flip en : UInt<1>, out : UInt<8>}\r\n\r\n    node _T = validif(io.en, UInt<7>(\"h07b\"))\r\n    io.out <= _T\r\n```\r\n\r\nOr:\r\n\r\n```scala\r\ncircuit DontCareMux :\r\n  module DontCareMux :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output io : {flip en : UInt<1>, out : UInt<8>}\r\n\r\n    wire _T: UInt<7>\r\n    _T is invalid\r\n    when io.en :\r\n      _T <= UInt<7>(\"h07b\")\r\n    io.out <= _T\r\n```\r\n\r\nWill both compile, in the SFC, to `io.out <= UInt<7>(\"h07b\")`.  However, if a `mux` construction is used, this will produce a default assignment of zero in the following, similar construction. (Arguably, the mux construction is an oversight and https://github.com/chipsalliance/firrtl/issues/2011 is a request to align `mux` with `when`/`validif`.):\r\n\r\n```scala\r\n    wire _T_1 : UInt<7>\r\n    _T_1 is invalid\r\n    node _T = mux(io.en, UInt<7>(\"h07b\"), _T_1)\r\n    io.out <= _T\r\n```\r\n\r\nThere is a further example of weird behavior in https://github.com/chipsalliance/firrtl/issues/2011#issuecomment-749745556 which shows that certain optimizations are disallowed if there is a requirement that an invalid source always returns the same value.\r\n\r\ntl;dr: the SFC will typically interpret invalid as zero, but will selectively interpret invalid as undefined. I think this can be all cleaned up with an early pass that converts invalids to zeros (when appropriate) and leaves other invalids around for undefined-style optimization. This can then be enabled with an `-sfc-compat` option (or something like that).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-07-29",
+  "closed_at": "2021-08-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

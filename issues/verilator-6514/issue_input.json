@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6514,
+  "issue_url": "https://github.com/verilator/verilator/pull/6514",
+  "title": "Support disabling blocks containing forks",
+  "body": "It adds support for disabling blocks that contain forks, but aren't inside forks themselves.\r\nThe handling is similar to the ones of  previous cases. For each `disable` statement a queue of `std::process` is created which contains processes that entered into the block to which the `disable` statement points to. The `disable` statement is replaced with the call of `disableFork` on each element of the queue and a jump to the end of the block.\r\n\r\nCurrently, the test I temporarily committed gives wrong results: https://github.com/antmicro/verilator/commit/80ba0e38f176f55fab92ee51a3613a7776758736. It is because it enters into this case: https://github.com/antmicro/verilator/blob/7a61f8a55fb5d429273a8119f498512c1acd1fa7/src/V3LinkJump.cpp#L426-L430 (even on master). I wanted to merge this case with the case above (which I added in this PR), but it broke a few tests. Some of them started requiring the `--timing` flag and at least one failed because the usage of `std::process` was added to the function that is used on the RHS of the parameter assignment and as a result, that function stopped being constant. This test is https://github.com/verilator/verilator/blob/7d4e5595d06fe971449eb17faeef4f8628549fe1/test_regress/t/t_unroll_nested_param.v.\r\n\r\nAnother thing that I committed and reverted is throwing `UNSUPPORTED` warning on `disable` statement pointing to a block that is inside a function. In such a case we can't detect if that function is called inside a fork and if it is, it will be handled wrong. It broke existing tests, such as `t_altera_lpm_ram_dp`, because its code contains `disable` pointing to a block that is inside a task: https://github.com/verilator/verilator/blob/7d4e5595d06fe971449eb17faeef4f8628549fe1/test_regress/t/t_altera_lpm.v#L280\r\n\r\nThese two problems exist currently on master, I just found them during the work on this PR. Do you have any idea what to do with them? The best thing that comes to my mind is to restore my reverted commits, but use the old handling in case when no forks are present in the user code.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-30",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

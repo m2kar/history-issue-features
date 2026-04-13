@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2807,
+  "issue_url": "https://github.com/verilator/verilator/issues/2807",
+  "title": "Improve gated clock support in hierarhical verilation",
+  "body": "If a hierarchical block creates a gated clock inside it, the simulation result may be wrong. (It took several days to figure out).\r\n\r\nThanks to #2172, just marking the original clock as `clocker` is enough.\r\n\r\nHere are some random ideas to improve.\r\n- Warn if clock is gated inside a hierarchical block and advise to add `--clk` option\r\n- Set `--clk` option when Verilating a hierarchical block if `--clk` is set to the top module\r\n  - When Verilating a hierarchical block `sub` as below,  `--clk subclk` must be set, `--clk clk` is not correct.\r\n\r\n\r\n```systemverilog\r\nmodule top(input clk /*verilator clocker*/);\r\n  wire subclk = clk;\r\n  sub i_sub(.subclk(subclk));\r\nendmodule\r\n\r\nmodule sub(input subclk); /* verilator hier_block*/\r\n  wire gated_clk = subclk | some_gate_ctrl_signal;\r\n  always_ff @(posedge gated_clk) ....\r\nendmodule\r\n```",
+  "labels": [
+    "status: discussion",
+    "type: feature-non-IEEE",
+    "area: wrong runtime result"
+  ],
+  "state": "open",
+  "created_at": "2021-02-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

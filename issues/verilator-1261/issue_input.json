@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1261,
+  "issue_url": "https://github.com/verilator/verilator/issues/1261",
+  "title": "verilator generates bad C++ with --public for real module parameters",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 1261 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilog:\r\n\r\n```\r\nmodule ClockSkew ( clkin, clkout );\r\n  timeunit 1ns;\r\n  timeprecision 1ps;\r\n\r\n  parameter DELAY_RTL = 0.0;\r\n  parameter DELAY_GL = 0.0;\r\n\r\n  input clkin;\r\n  output clkout;\r\n\r\n  reg clkskew;\r\n\r\n  always @(*) begin\r\n`ifdef GATE_LEVEL\r\n     if (DELAY_GL > 0) clkskew = #DELAY_GL clkin ;\r\n`else\r\n     if (DELAY_RTL > 0) clkskew = #DELAY_RTL clkin ;\r\n`endif\r\n     else clkskew = clkin ;\r\n  end\r\n\r\n  assign clkout = clkskew ;\r\n\r\nendmodule\r\n\r\n...\r\n\r\nClockSkew #(.DELAY_RTL(0.0), .DELAY_GL(0.2)) ClockSkew (\r\n  .clkout(ClockSkew_clkout),\r\n  .clkin(ClockSkew_clkin))\r\n\n```\r\n\r\nC++ error:\r\n\r\n```\r\nIn file included from /scratch/mikeyang/federation.gamma04/csrc/verilator-main.cpp:7:0:\r\n./VTestDriver.h:337476:142: error: enumerator value for TestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_RTL^@^Y is not an integer constant\r\n      enum _QDataTestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_RTL { TestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_RTL = 0.0};\r\n                                                                                                                                               ^\r\n./VTestDriver.h:337477:140: error: enumerator value for ^@^XTestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_GL^@^Y is not an integer constant\r\n      enum _QDataTestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_GL { TestDriver__DOT__testHarness__DOT__ClockSkew__DOT__DELAY_GL = 2.00000000000000011e-01};\r\n                                                                                                                                             ^\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2018-01-13",
+  "closed_at": "2018-02-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

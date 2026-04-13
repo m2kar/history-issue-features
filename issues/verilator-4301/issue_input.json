@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4301,
+  "issue_url": "https://github.com/verilator/verilator/issues/4301",
+  "title": "Add error when DPI export multiple tasks with the same name",
+  "body": "When I want to export multiple tasks with the same name, the generated code is compiled incorrectly.I'm using the 5.012 tag version. I remember the previous version didn't report errors.\r\nThe following is an example:\r\n```verilog\r\nmodule sub1;\r\n   reg  [127:0] data [7:0];\r\n\r\n   export \"DPI-C\" task write_data;\r\n   task write_data;\r\n   input [2:0] iA;\r\n   input [127:0] iD;\r\n   begin\r\n      data[iA] = iD;\r\n   end\r\n   endtask\r\n\r\nendmodule\r\n\r\nmodule sub2;\r\n   reg  [31:0] data [7:0];\r\n\r\n   export \"DPI-C\" task write_data;\r\n   task write_data;\r\n   input [2:0] iA;\r\n   input [31:0] iD;\r\n   begin\r\n      data[iA] = iD;\r\n   end\r\n   endtask\r\n   \r\nendmodule\r\n\r\nmodule top;\r\n\r\n   sub1 u_sub1();\r\n   sub2 u_sub2();\r\n\r\n   initial begin\r\n      $display(\"Hello World!\");\r\n      $finish;\r\n   end\r\n\r\nendmodule\r\n```\r\nThe generated code is as follows:\r\n```cpp\r\n// Verilated -*- C++ -*-\r\n// DESCRIPTION: Verilator output: Symbol table internal header\r\n//\r\n// Internal details; most calling programs do not need this header,\r\n// unless using verilator public meta comments.\r\n\r\n#ifndef VERILATED_VTOP__SYMS_H_\r\n#define VERILATED_VTOP__SYMS_H_  // guard\r\n\r\n#include \"verilated.h\"\r\n\r\n// INCLUDE MODEL CLASS\r\n\r\n#include \"Vtop.h\"\r\n\r\n// INCLUDE MODULE CLASSES\r\n#include \"Vtop___024root.h\"\r\n\r\n// DPI TYPES for DPI Export callbacks (Internal use)\r\nusing Vtop__Vcb_write_data_t = void (*) (Vtop__Syms* __restrict vlSymsp, CData/*2:0*/ iA, IData/*31:0*/ iD);\r\nusing Vtop__Vcb_write_data_t = void (*) (Vtop__Syms* __restrict vlSymsp, CData/*2:0*/ iA, VlWide<4>/*127:0*/ iD);\r\n\r\n// SYMS CLASS (contains all model state)\r\nclass Vtop__Syms final : public VerilatedSyms {\r\n  public:\r\n    // INTERNAL STATE\r\n    Vtop* const __Vm_modelp;\r\n    bool __Vm_didInit = false;\r\n\r\n    // MODULE INSTANCE STATE\r\n    Vtop___024root                 TOP;\r\n\r\n    // SCOPE NAMES\r\n    VerilatedScope __Vscope_top__u_sub1;\r\n    VerilatedScope __Vscope_top__u_sub2;\r\n\r\n    // CONSTRUCTORS\r\n    Vtop__Syms(VerilatedContext* contextp, const char* namep, Vtop* modelp);\r\n    ~Vtop__Syms();\r\n\r\n    // METHODS\r\n    const char* name() { return TOP.name(); }\r\n} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);\r\n\r\n#endif  // guard\r\n\r\n```\r\n\r\nThe compile error is as follows:\r\n```log\r\nVtop__Syms.h:21:7: error: conflicting declaration ‘using Vtop__Vcb_write_data_t = void (*)(class Vtop__Syms*, using CData = uint8_t, struct VlWide<4>)’\r\n   21 | using Vtop__Vcb_write_data_t = void (*) (Vtop__Syms* __restrict vlSymsp, CData/*2:0*/ iA, VlWide<4>/*127:0*/ iD);\r\n      |       ^~~~~~~~~~~~~~~~~~~~~~\r\nVtop__Syms.h:20:7: note: previous declaration as ‘using Vtop__Vcb_write_data_t = void (*)(class Vtop__Syms*, using CData = uint8_t, using IData = uint32_t)’\r\n   20 | using Vtop__Vcb_write_data_t = void (*) (Vtop__Syms* __restrict vlSymsp, CData/*2:0*/ iA, IData/*31:0*/ iD);\r\n      |       ^~~~~~~~~~~~~~~~~~~~~~\r\n```",
+  "labels": [
+    "area: lint",
+    "resolution: fixed",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-19",
+  "closed_at": "2023-06-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

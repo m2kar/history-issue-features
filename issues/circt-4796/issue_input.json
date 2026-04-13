@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4796,
+  "issue_url": "https://github.com/llvm/circt/pull/4796",
+  "title": "[FIRRTL][InferWidths] Honor upper bounds on AttachOp",
+  "body": "Fix an issue in `InferWidths` where analog values attached to each other would not produce proper errors if the widths are unsatisfiable. For example, the following is unsatisfiable but successfully infers to an incorrect width:\r\n\r\n```\r\nfirrtl.module @AnalogWidths(\r\n  in %a: !firrtl.analog,\r\n  out %b: !firrtl.analog<2>,\r\n  out %c: !firrtl.analog<1>\r\n) {\r\n  firrtl.attach %a, %b : !firrtl.analog, !firrtl.analog<2>\r\n  firrtl.attach %a, %c : !firrtl.analog, !firrtl.analog<1>\r\n}\r\n```\r\n\r\nThe `AttachOp` imposes a `lhs >= rhs` *and* `lhs <= rhs` constraint, which is supposed to devolve into `lhs == rhs`. However, `InferWidths` ignores upper bound constraints like `expr <= 42` since the original Scala implementation used to violate upper bounds in obscure and wild ways (see #1088).\r\n\r\nThis commit adds an optional upper bound to variables which is checked after width inference. Specifically `AttachOp` is made to generate these upper bound constraints. Proper error messages on unsatisfiable widths should now be produced.\r\n\r\nFixes #4786.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-09",
+  "closed_at": "2023-03-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

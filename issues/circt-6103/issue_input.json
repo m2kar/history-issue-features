@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6103,
+  "issue_url": "https://github.com/llvm/circt/issues/6103",
+  "title": "[FIRRTL] Uninitialized input port error for Integer input, IMDCE bug",
+  "body": "Simple class with input driven by an integer:\r\n\r\n```firrtl\r\nFIRRTL version 3.2.0\r\ncircuit InputProp:\r\n  class Test :\r\n    input in : Integer\r\n\r\n  module InputProp:\r\n    object o of Test\r\n    propassign o.in, Integer(5)\r\n```\r\n\r\nMLIR before lower-classes:\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"InputProp\" {\r\n    firrtl.class private @Test(in %in: !firrtl.integer) {\r\n    }\r\n    firrtl.module @InputProp() attributes {convention = #firrtl<convention scalarized>} {\r\n      %o = firrtl.object @Test(in in: !firrtl.integer)\r\n      %0 = firrtl.object.subfield %o[in] : !firrtl.class<@Test(in in: !firrtl.integer)>\r\n      %1 = firrtl.integer 5\r\n      firrtl.propassign %0, %1 : !firrtl.integer\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-11",
+  "closed_at": "2023-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8634,
+  "issue_url": "https://github.com/llvm/circt/pull/8634",
+  "title": "Initialising the Datapath Dialect for Lowering Arithmetic Operators to Gates",
+  "body": "The datapath dialect will be used as part of the growing synthesis capabilities, where arithmetic operators such as comb.mul and multi-input comb.add can be lowered to gates via the datapath dialect. The datapath dialect allows us to directly express efficient circuits such as compressor trees, in the IR itself, allowing us to manipulate and combine arithmetic operations.\r\n\r\nThe key idea is to view datapath operators as generators of circuits that satisfy some contract, for example in the case of the `datapath.compress` summing it's results is equivalent to summing it's inputs. This allows us to defer implementing these critical circuits until later in the synthesis flow. \r\n\r\nIn a simple example, we can fold a*b+c using the datapath dialect to remove a carry-propagate adder:\r\n```mlir\r\n%0 = comb.mul %a, %b : i4\r\n%1 = comb.add %0, %c : i4\r\n```\r\nWhich is equivalent to:\r\n```mlir\r\n%0:4 = datapath.pp %a, %b : 4 x i4\r\n%1:2 = datapath.compress %0#0, %0#1, %0#2, %0#3, %c : 5 x i4 -> (i4, i4)\r\n%2 = comb.add %1#0, %1#1 : i4\r\n```\r\n\r\nThis is the first in a series of PRs to add datapath synthesis capabilities that will include the following (implemented but not merged):\r\n1. Comb to Datapath pass\r\n2. Datapath to Comb pass - for lowering datapath ops to comb gates\r\n3. Datapath to SMT - for contract verification\r\n4. Incorporating datapath passes into circt-synth\r\n5. Replicate adds pass - to enable unsharing for better delay performance",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-01",
+  "closed_at": "2025-07-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

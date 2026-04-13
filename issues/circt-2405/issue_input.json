@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2405,
+  "issue_url": "https://github.com/llvm/circt/pull/2405",
+  "title": "[ExportVerilog] Make `hoistNonSideEffectExpr` hoist inout chains",
+  "body": "This commit fixes the crash of disallowLocalVars mode for the IR with\r\narray_index_inout/struct_field_inout and sv.read_inout, for example: \r\n```mlir\r\n// circt-opt --lowering-options=disallowLocalVariables --export-verilog\r\nhw.module @Foo(%clock: i1) {\r\n    %false = hw.constant false\r\n    %c0_i16 = hw.constant 0 : i16\r\n    %status_regs = sv.reg : !hw.inout<array<1xi32>>\r\n    sv.always posedge %clock  {\r\n      %0 = sv.array_index_inout %status_regs[%false] : !hw.inout<array<1xi32>>, i1\r\n      %1 = sv.read_inout %0 : !hw.inout<i32>\r\n      %2 = comb.extract %1 from 0 : (i32) -> i16\r\n      %3 = comb.concat %c0_i16, %2 : i16, i16\r\n      sv.passign %0, %3 : i32\r\n    }\r\n}\r\n```  \r\n\r\nCurrently `hoistNonSideEffectExpr` doesn't hoist inouts\r\n because they are considered to be lvalues\r\n(hence `%0` in the example is not hoisted).\r\nThis is true only if they are not read. The values read from them are \r\nnot hoisted since their operands (array_index_inout/struct_field_inout) \r\nare not hoisted. Therefore we have to hoist array_index_inout/struct_field_inout \r\nas well as read_inout op.\r\n\r\nWill close https://github.com/llvm/circt/issues/2404.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-29",
+  "closed_at": "2022-01-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

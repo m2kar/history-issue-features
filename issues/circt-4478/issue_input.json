@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4478,
+  "issue_url": "https://github.com/llvm/circt/pull/4478",
+  "title": "[LowerSeqToSV] Initialize register element individually",
+  "body": "This commit changes initialization of array/struct registers. Previously an aggregate register was initialized with a single concat op with bitcast. Verilator creates a large number of local variables in verilated code, which caused stack-overflow while simulation execution.\r\n\r\n\r\nFor example, \r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<32>[2]\r\n    input clock: Clock\r\n    output b: UInt<32>[2]\r\n    reg r : UInt<32>[2], clock\r\n    r <= a\r\n    b <= r\r\n```\r\n\r\n`$ firtool tmp.fir -preserve-aggregate=1d-vec -preserve-public-types=false`\r\n\r\nbefore:\r\n```verilog\r\n        _RANDOM_0 = `RANDOM;\r\n        _RANDOM_1 = `RANDOM;\r\n        r = /*cast(bit[1:0][31:0])*/{_RANDOM_0, _RANDOM_1};\r\n```\r\nafter:\r\n```verilog\r\n        _RANDOM_0 = `RANDOM;\r\n        _RANDOM_1 = `RANDOM;\r\n        r[1'h0] = _RANDOM_0;\r\n        r[1'h1] = _RANDOM_1;\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-22",
+  "closed_at": "2022-12-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

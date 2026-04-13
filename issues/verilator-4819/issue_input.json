@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4819,
+  "issue_url": "https://github.com/verilator/verilator/issues/4819",
+  "title": "Compilation error on interface class usage",
+  "body": "Hello! The code below does not compile. Are interface classes supported?\r\n\r\n```verilog\r\nmodule reproducer;\r\n  interface class Courier;\r\n    pure virtual function deliver();\r\n  endclass\r\n\r\n  class Person implements Courier;\r\n    virtual function deliver();\r\n      $display(\"Doing slow delivery\");\r\n    endfunction\r\n  endclass\r\n\r\n  class Vehicle; endclass\r\n  class Car extends Vehicle implements Courier;\r\n    virtual function deliver();\r\n      $display(\"Doing fast delivery\");\r\n    endfunction\r\n  endclass\r\n\r\n  function do_delivery(Courier courier);\r\n    courier.deliver();\r\n  endfunction\r\n\r\n  initial begin\r\n    Car truck = new();\r\n    do_delivery(truck); // !!!! this leads to compilation error\r\n    $finish();\r\n  end\r\nendmodule\r\n````\r\n\r\nError as follows:\r\n\r\n```bash\r\nIn file included from /space/tools/verilator/v5.020/share/verilator/include/verilated.h:942,\r\n                 from Vreproducer__pch.h:21,\r\n                 from Vreproducer.cpp:4,\r\n                 from Vreproducer__ALL.cpp:3:\r\n/space/tools/verilator/v5.020/share/verilator/include/verilated_types.h: In instantiation of ‘VlClassRef<T_Class>& VlClassRef<T_Class>::operator=(const VlClassRef<T_OtherClass>&) [with T_OtherClass = Vreproducer_reproducer__03a__03aCar; T_Class = Vreproducer_reproducer__03a__03aCourier]’:\r\nVreproducer_reproducer__DepSet_h37a7cadd__0__Slow.cpp:22:39:   required from here\r\n/space/tools/verilator/v5.020/share/verilator/include/verilated_types.h:1681:20: error: comparison between distinct pointer types ‘Vreproducer_reproducer__03a__03aCourier*’ and ‘Vreproducer_reproducer__03a__03aCar*’ lacks a cast\r\n 1681 |         if (m_objp == copied.m_objp) return *this;\r\n      |             ~~~~~~~^~~~~~~~~~~~~~~~\r\n/space/tools/verilator/v5.020/share/verilator/include/verilated_types.h:1683:25: error: cannot convert ‘Vreproducer_reproducer__03a__03aCar* const’ to ‘Vreproducer_reproducer__03a__03aCourier*’ in assignment\r\n 1683 |         m_objp = copied.m_objp;\r\n      |                  ~~~~~~~^~~~~~\r\n      |                         |\r\n      |                         Vreproducer_reproducer__03a__03aCar* const\r\nmake: *** [/space/tools/verilator/v5.020/share/verilator/include/verilated.mk:269: Vreproducer__ALL.o] Error 1\r\nmake: Leaving directory '/space/projects/verilator-bug-report/obj_dir'\r\n%Error: make -C obj_dir -f Vreproducer.mk -j 1 exited with 2\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /space/tools/verilator/v5.020/bin/verilator_bin reproducer.sv --cc --binary --timing -Wno-IGNOREDRETURN -O1 -o Vreproducer --top-module reproducer\r\n```\r\n\r\n>What 'verilator' command line do we use to run your example?\r\n```bash\r\nverilator reproducer.sv --cc --binary --timing -Wno-IGNOREDRETURN -O1 -o Vreproducer --top-module reproducer\r\n```\r\n\r\n>What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.020 2024-01-01 rev v5.020\r\n\r\n>What OS and distribution are you using?\r\n\r\nUbuntu 22.04.3 LTS\r\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-10",
+  "closed_at": "2024-01-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

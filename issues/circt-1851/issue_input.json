@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1851,
+  "issue_url": "https://github.com/llvm/circt/issues/1851",
+  "title": "[FIRRTL] (mem) sv.alwaysff should be in a non-procedural region",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 51\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input inp_k: SInt<0>\r\n    input inp_cb: UInt<0>\r\n    mem tmp153:\r\n      data-type => SInt<4>\r\n      depth => 9\r\n      read-latency => 1\r\n      write-latency => 2\r\n      read-under-write => undefined\r\n      reader => r0\r\n      writer => w0\r\n      writer => w1\r\n      writer => w2\r\n    tmp153.r0.clk <= clock\r\n    tmp153.r0.en <= asUInt(inp_k)\r\n    tmp153.r0.addr <= asUInt(SInt<31>(-596888200))\r\n    tmp153.w0.clk <= clock\r\n    tmp153.w0.en <= head(UInt<18>(\"o14004\"), 1)\r\n    tmp153.w0.addr <= inp_cb\r\n    tmp153.w0.data <= inp_k\r\n    tmp153.w0.mask <= asUInt(SInt<26>(\"h1875d5c\"))\r\n    tmp153.w1.clk <= clock\r\n    tmp153.w1.en <= head(asUInt(SInt<4>(0)), 1)\r\n    tmp153.w1.addr <= asUInt(inp_k)\r\n    tmp153.w1.data <= SInt<31>(\"h13a08ea3\")\r\n    tmp153.w1.mask <= asUInt(inp_k)\r\n    tmp153.w2.clk <= clock\r\n    tmp153.w2.en <= head(asUInt(SInt<26>(\"o-45356020\")), 1)\r\n    tmp153.w2.addr <= asUInt(inp_k)\r\n    tmp153.w2.data <= inp_k\r\n    tmp153.w2.mask <= asUInt(inp_k)\r\n    node tmp154 = tmp153.r0.data\r\n```\r\n\r\nCompiled with `firtool  --verilog -o=$VFILE2` produces this Error:\r\n\r\n```mlir\r\n<unknown>:0: error: sv.alwaysff should be in a non-procedural region\r\n<unknown>:0: note: see current operation: \"sv.alwaysff\"(%arg13) ( {\r\n  \"sv.passign\"(%27, %arg14) : (!hw.inout<i1>, i1) -> ()\r\n},  {\r\n}) {clockEdge = 0 : i32, resetStyle = 0 : i32} : (i1) -> ()\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-22",
+  "closed_at": "2021-09-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

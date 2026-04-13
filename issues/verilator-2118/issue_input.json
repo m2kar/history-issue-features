@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2118,
+  "issue_url": "https://github.com/verilator/verilator/pull/2118",
+  "title": "WIP: Waveform replay tool",
+  "body": "Here's a minimally functional version of the replay tool discussed in #1523.  I wouldn't spend too much time reviewing the code yet (unless you want to, in which case I'll be glad to field comments).  However, I'd like to make sure this is headed in a direction that we're all happy with.\r\n\r\nAs discussed in the issue, the flow is:\r\n1. verilator_replay foo.fst (currently no Perl wrapper, so run verilator_replay_bin_dbg)\r\n2. verilator foo.v Vfoo_replay.cpp (the latter comes from step 1)\r\n3. make -f Vfoo.mk \r\n4. Vfoo foo.fst\r\n\r\nMy immediate goal is to be able to use the tool to benchmark different sim environments against native C++ Verilator sims.  However, I'm trying to do this in a way which will get us to other simulators as discussed in the issue.  Right now I have a `--vlt` option on verilator_replay which tells the tool to emit the Verilator glue code for a replay.  I think we should be able to make DPI and/or VPI variants for simulator agnostic replay.  VPI may not even need verilator_replay because you can inspect the design via the VPI, but we may end up wanting the front end tool just to make it easier to select options, etc. via the command line.  We'll see.\r\n\r\nI'm currently using t_case_reducer as my guinea pig.  To reproduce my current results, run:\r\n```\r\ntest_regress/t/t_case_reducer.pl --trace\r\ncp test_regress/obj_vlt/t_case_reducer/simx.fst t_case_reducer.fst\r\nbin/verilator_replay_bin_dbg --fst t_case_reducer.fst --scope top.t.test --debug --vlt --replay-top top.t.test. |& tee Vt_case_reducer_replay.cpp\r\nbin/verilator --trace-fst --cc --exe -CFLAGS \"-I$PWD/obj_dir -I$PWD/include -DVM_PREFIX=Vt_case_reducer -DVM_TRACE\" -LDFLAGS \"-lz\" +define+REPLAY_HACK test_regress/t/t_case_reducer.v include/verilated_replay_main.cpp include/verilated_replay.cpp include/verilated_replay_common.cpp Vt_case_reducer_replay.cpp \r\nmake -C obj_dir/ -f Vt_case_reducer.mk CXXFLAGS=\"-g -O0\"\r\nobj_dir/Vt_case_reducer t_case_reducer.fst\r\ngtkwave replay.fst\r\n```\r\n\r\nI have a ton of TODOs in here.  Most are notes to myself, but some are broader questions.  I'll put some inline comments in to point those ones out.\r\n\r\nPlease let me know if this approach seems good or if you think there are any changes in direction I should take.",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2020-01-18",
+  "closed_at": "2020-11-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

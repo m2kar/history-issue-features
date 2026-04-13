@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2722,
+  "issue_url": "https://github.com/llvm/circt/issues/2722",
+  "title": "[FIRRTL] Dedup does not support strict connect",
+  "body": "Dedup needs to be expanded to support `strictconnect` ops, handling them the same way it handles regular `connect` ops.  This is not a huge issue because there are no strictconnect ops coming from Chisel and it doesn't normally see any of these ops.\r\n`./bin/firtool -dedup ./test.mlir`\r\n```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.extmodule @Bar(in io: !firrtl.bundle<a: uint<1>>)\r\n  firrtl.extmodule @Baz(in io: !firrtl.bundle<b: uint<1>>)\r\n  firrtl.module @Foo() {\r\n    %bar_io = firrtl.instance bar  @Bar(in io: !firrtl.bundle<a: uint<1>>)\r\n    %baz_io = firrtl.instance baz  @Baz(in io: !firrtl.bundle<b: uint<1>>)\r\n    %w = firrtl.wire  : !firrtl.bundle<b: uint<1>>\r\n    firrtl.strictconnect %w, %baz_io : !firrtl.bundle<b: uint<1>>\r\n  }\r\n}\r\n```\r\n```mlir\r\n./test.mlir:8:5: error: 'firrtl.strictconnect' op requires all operands to have the same type\r\n    firrtl.strictconnect %w, %baz_io : !firrtl.bundle<b: uint<1>>\r\n    ^\r\n./test.mlir:8:5: note: see current operation: \"firrtl.strictconnect\"(%2, %1) : (!firrtl.bundle<b: uint<1>>, !firrtl.bundle<a: uint<1>>) -> ()\r\n// -----// IR Dump After Dedup Failed //----- //\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.extmodule\"() ({\r\n  }) {annotations = [], parameters = [], portAnnotations = [], portDirections = false, portNames = [\"io\"], portSyms = [\"\"], portTypes = [!firrtl.bundle<a: uint<1>>], sym_name = \"Bar\"} : () -> ()\r\n  \"firrtl.module\"() ({\r\n    %0 = \"firrtl.instance\"() {annotations = [], lowerToBind = false, moduleName = @Bar, name = \"bar\", portAnnotations = [[]], portDirections = false, portNames = [\"io\"]} : () -> !firrtl.bundle<a: uint<1>>\r\n    %1 = \"firrtl.instance\"() {annotations = [], lowerToBind = false, moduleName = @Bar, name = \"baz\", portAnnotations = [[]], portDirections = false, portNames = [\"io\"]} : () -> !firrtl.bundle<a: uint<1>>\r\n    %2 = \"firrtl.wire\"() {annotations = [], name = \"w\"} : () -> !firrtl.bundle<b: uint<1>>\r\n    \"firrtl.strictconnect\"(%2, %1) : (!firrtl.bundle<b: uint<1>>, !firrtl.bundle<a: uint<1>>) -> ()\r\n  }) {annotations = [], parameters = [], portAnnotations = [], portDirections = 0 : i0, portNames = [], portSyms = [], portTypes = [], sym_name = \"Foo\"} : () -> ()\r\n}) {annotations = [], name = \"Foo\"} : () -> ()\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-03",
+  "closed_at": "2022-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

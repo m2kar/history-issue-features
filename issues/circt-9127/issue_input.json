@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9127,
+  "issue_url": "https://github.com/llvm/circt/pull/9127",
+  "title": "[Moore] Add classDecl, handles, and basic class ops",
+  "body": "**Summary**\r\n- Add a first-class **class system** to the Moore dialect: a class handle type, class declaration ops (fields & methods), and basic runtime ops (`class.new`, `class.field_ref`).\r\n- Teach the Verilog importer to **recognize SystemVerilog classes**, emit class declarations, lower `new` expressions, and lower **member access** through the new ops.\r\n- Wire in verifiers, builders, printing formats, and comprehensive tests.\r\n\r\n- **New type**\r\n  - `!moore.class.object<@C>` (`ClassHandleType`) — an opaque handle to a class instance.\r\n    - Added to `UnpackedType::classof`.\r\n\r\n- **New attributes / enums**\r\n  - `ClassFlags` (Concrete, Abstract, Interface, Final)\r\n  - `FieldVisibility` (Public, Protected, Local)\r\n  - `FieldLifetime` (Automatic, Static)\r\n  - `ClassFlagsAttr`, `FieldVisibilityAttr`, `FieldLifetimeAttr`\r\n\r\n- **New class declaration ops**\r\n  - `moore.class.classdecl` (symbol + single-block region; optional `extends`/`implements`)\r\n  - `moore.class.propertydecl` (name, type, visibility, lifetime)\r\n  - `moore.class.declend` (implicit region terminator)\r\n\r\n- **New runtime class ops**\r\n  - `moore.class.new : <@C>` → `!moore.class.object<@C>`\r\n  - `moore.class.field_ref %inst, @field : <…> , <ref<T>>` — typed reference into an object\r\n\r\n- **Import / lowering**\r\n  - Class declarations materialized at module scope with flags, base class, and implemented interfaces.\r\n  - `new` expressions lowered to `moore.class.new`.\r\n  - Class **member access** lowers to `moore.class.field_ref` (no unnecessary reads).\r\n  - `TypeVisitor` now maps Slang `ClassType` -> `ClassHandleType`, declaring class on demand.\r\n\r\n- **Verifiers**\r\n  - `ClassNewOp`: verify referenced class symbol names a `moore.class.classdecl`.\r\n  - `ClassFieldRefOp`: verify base is `!moore.ref<class.object<…>>`, field exists in class, and result element type matches field type.\r\n  - `ClassDeclOp`: region contains only `class.propertydecl`, `class.methoddecl`, and terminator.\r\n\r\n- **Tests**\r\n  - `test/Conversion/ImportVerilog/classes.sv`\r\n    - Flags (Concrete/Abstract/Interface), inheritance, implements (single & multiple)\r\n    - Packages, nested classes, class-in-module, `new` construction, property emission and order\r\n\r\n  - `test/Dialect/Moore/classes.mlir`\r\n    - Round-trip coverage for `classdecl`, properties, interfaces, extends/implements combinations\r\n\r\nThis patch does **not** yet lower class method bodies or virtual dispatch; only declarations and\r\nsimple ops needed by member access and `new`. IR remains stable for non-class features; changes are additive with minimal churn.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-22",
+  "closed_at": "2025-10-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

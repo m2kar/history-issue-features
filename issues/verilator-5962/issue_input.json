@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5962,
+  "issue_url": "https://github.com/verilator/verilator/issues/5962",
+  "title": "Potential bug in evaluating combinatorial wrapping to 0",
+  "body": "Hi, I think I may have encountered a bug in Verilator version 5.034. I'm using cocotb to invoke Verilator for simulating a FIFO.\n\nI'm checking the FIFO is full by matching the write pointer address against the read pointer address as:\n`assign FIFO_FULL  = (((wr_adr + 1)) == rd_adr);`\nFor this case FIFO full doesn't assert even when the wr_adr value reaches 511 (where wr_adr + 1 would hit 512 and wrap to equal 0). Instead to force verilator to reach the correct value I have to wrap the addition with a modulo operator (and add a lint off rule):\n`assign FIFO_FULL  = (((wr_adr + 1)%512) == rd_adr); /* verilator lint_off WIDTHEXPAND */`\n\nIt also works on the synchronous logic for wr_adr if it's incremented past 511. So I suspect this is just a width check issue on the combinatorial side.\n\nI've attached the full testbench for more detail.\n[verilator_test.zip](https://github.com/user-attachments/files/19929707/verilator_test.zip)",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-27",
+  "closed_at": "2025-04-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

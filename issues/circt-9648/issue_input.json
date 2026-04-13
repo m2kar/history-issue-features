@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9648,
+  "issue_url": "https://github.com/llvm/circt/issues/9648",
+  "title": "[circt-verilog][hw] --ir-hw timeout in canonicalize after llhd-sig2reg on cyclic hw.struct_inject/hw.bitcast",
+  "body": "## Title\n\n[circt-verilog][hw] `--ir-hw` timeout in canonicalize after `llhd-sig2reg` on cyclic `hw.struct_inject`/`hw.bitcast`\n\n## Summary\n\n`circt-verilog --ir-hw` hangs (timeout) on a minimal valid SystemVerilog testcase.\n\nThe timeout is inside `circt-verilog` LLHD->core lowering (not in `arcilator`).\n\n## Reproducer\n\n```systemverilog\nmodule M(output logic O);\n  typedef struct packed { logic a; logic b; } S;\n  S s;\n  always_comb s.b = 0;\n  assign O = s.a;\nendmodule\n```\n\n## Commands\n\n```bash\n# Hangs\ntimeout 20s circt-verilog --ir-hw bug.sv\n\n# Control: succeeds\ntimeout 20s circt-verilog --ir-llhd bug.sv\n```\n\n## Actual vs Expected\n\n- Actual: `--ir-hw` times out (exit code `124`, no diagnostics).\n- Expected: `--ir-hw` should terminate and emit HW/core IR (or emit a proper diagnostic), but not hang.\n\n## Where It Hangs\n\nPass bisection of the LLHD->core sequence shows first timeout at:\n\n- `canonicalize{...}` right after `llhd-sig2reg, cse`\n\n## Evidence (IR before failing canonicalize)\n\n```mlir\n%1 = hw.bitcast %3 : (!hw.struct<a: i1, b: i1>) -> i2\n%2 = hw.bitcast %1 : (i2) -> !hw.struct<a: i1, b: i1>\n%3 = hw.struct_inject %2[\"b\"], %false : !hw.struct<a: i1, b: i1>\n%a = hw.struct_extract %2[\"a\"] : !hw.struct<a: i1, b: i1>\n```\n\nThis creates a cycle: `%3 -> %1 -> %2 -> %3`.\n\n## Suspected Root Cause\n\nNon-converging canonicalization on cyclic aggregate update pattern involving `hw.struct_inject` + `hw.bitcast` produced after `llhd-sig2reg`.\n\nLikely relevant code:\n\n- `tools/circt-verilog/circt-verilog.cpp`\n- `lib/Dialect/HW/HWOps.cpp` (`StructInjectOp::canonicalize`, `BitcastOp::canonicalize`, `StructExtractOp::canonicalize`)\n\n## Environment\n\n- CIRCT: `firtool-1.139.0`\n- LLVM: `22.0.0git`\n- slang: `9.1.0+0`\n- OS: Linux x86_64\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-11",
+  "closed_at": null,
+  "code_blocks": [
+    "module M(output logic O);\n  typedef struct packed { logic a; logic b; } S;\n  S s;\n  always_comb s.b = 0;\n  assign O = s.a;\nendmodule\n",
+    "# Hangs\ntimeout 20s circt-verilog --ir-hw bug.sv\n\n# Control: succeeds\ntimeout 20s circt-verilog --ir-llhd bug.sv\n",
+    "%1 = hw.bitcast %3 : (!hw.struct<a: i1, b: i1>) -> i2\n%2 = hw.bitcast %1 : (i2) -> !hw.struct<a: i1, b: i1>\n%3 = hw.struct_inject %2[\"b\"], %false : !hw.struct<a: i1, b: i1>\n%a = hw.struct_extract %2[\"a\"] : !hw.struct<a: i1, b: i1>\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

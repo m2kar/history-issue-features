@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5727,
+  "issue_url": "https://github.com/llvm/circt/issues/5727",
+  "title": "[FIRRTL] Lower XMR assumes unique port names",
+  "body": "FIRRTL's `LoweXMR` pass will currently produce invalid IR if it is given a module which has duplicate port names.\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(out %a: !firrtl.probe<uint<1>>, out %a0: !firrtl.probe<uint<1>>) attributes {convention = #firrtl<convention scalarized>, portNames = [\"a\", \"a\"]} {\r\n    %b = firrtl.wire interesting_name : !firrtl.uint<1>\r\n    %0 = firrtl.ref.send %b : !firrtl.uint<1>\r\n    firrtl.ref.define %a, %0 : !firrtl.probe<uint<1>>\r\n    %1 = firrtl.ref.send %b : !firrtl.uint<1>\r\n    firrtl.ref.define %a0, %1 : !firrtl.probe<uint<1>>\r\n  }\r\n}\r\n```\r\n\r\nThis produces:\r\n\r\n```\r\n# circt-opt Foo.mlir -firrtl-lower-xmr                                   \r\nfirrtl-snippets/issues/x.mlir:3:5: error: redefinition of symbol named 'ref_Foo_Foo_a'\r\n    firrtl.module @Foo(out %a: !firrtl.probe<uint<1>>, out %a0: !firrtl.probe<uint<1>>) attributes {convention = #firrtl<convention scalarized>, portNames = [\"a\", \"a\"]} {\r\n    ^\r\nfirrtl-snippets/issues/x.mlir:3:5: note: see current operation: \"sv.macro.decl\"() {sym_name = \"ref_Foo_Foo_a\"} : () -> ()\r\nfirrtl-snippets/issues/x.mlir:3:5: note: see existing symbol definition here\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-07-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

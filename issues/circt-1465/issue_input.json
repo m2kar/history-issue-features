@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1465,
+  "issue_url": "https://github.com/llvm/circt/issues/1465",
+  "title": "[FIRRTL][IMConstProp] Bug with Self-Driven Register",
+  "body": "IMConstProp is botching the following example. Start with an oscillator called `foobar` that toggles every cycle:\r\n\r\n```mlir\r\nfirrtl.module @Foo(in %clock: !firrtl.clock, out %a: !firrtl.uint<1>) {\r\n  %foobar = firrtl.reg %clock  : (!firrtl.clock) -> !firrtl.uint<1>\r\n  %0 = firrtl.not %foobar : (!firrtl.uint<1>) -> !firrtl.uint<1>\r\n  firrtl.connect %foobar, %0 : !firrtl.uint<1>, !firrtl.uint<1>\r\n  firrtl.connect %a, %foobar : !firrtl.uint<1>, !firrtl.uint<1>\r\n}\r\n```\r\n\r\nAfter IMConstprop, this will produce:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\"   {\r\n  firrtl.module @Foo(in %clock: !firrtl.clock, out %a: !firrtl.uint<1>) {\r\n    %foobar = firrtl.reg %clock  : (!firrtl.clock) -> !firrtl.uint<1>\r\n    firrtl.connect %a, %foobar : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThe self connection is removed which is illegal to do.  I haven't looked at IMConstProp to see what might be going on here.\r\n\r\nFor possibly easier inspection, this is taken from the following FIRRTL text:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    output a: UInt<1>\r\n\r\n    reg foobar: UInt<1>, clock\r\n\r\n    foobar <= not(foobar)\r\n    a <= foobar\r\n```\r\n\r\nGoing all the way to Verilog gives us (trimming randomization logic):\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  clock,\r\n  output a);\r\n\r\n  reg foobar;\t// Tmp.fir:6:5\r\n  assign a = foobar;\t// Tmp.fir:2:10\r\nendmodule\r\n```\r\n\r\nThe Scala FIRRTL Compiler (SFC) produces:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input   clock,\r\n  output  a\r\n);\r\n  reg  foobar;\r\n  assign a = foobar;\r\n  always @(posedge clock) begin\r\n    foobar <= ~foobar;\r\n  end\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-22",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

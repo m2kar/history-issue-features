@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2940,
+  "issue_url": "https://github.com/llvm/circt/issues/2940",
+  "title": "[Seq][FIRRTL][SV] `seq.firreg` register to represent FIRRTL registers",
+  "body": "In an internal SiFive project, we need a compact register representation which can be analysed and transformed after lowering to HW. \r\n\r\nAt this stage, the design of the op it motivated by the need for a dependency analysis. Unfortunately, on the SV representation,\r\nsuch an analysis is not possible without explicit knowledge of the ops. On SV, the dependency between a register and the value assigned to it can be identified only by inspecting the LHS and RHS of SV assignment ops and following control dependencies through enclosing `if` and `always` statements. However, in a form similar to `seq.compreg`, the dependency can be immediately analysed by following the values used by the op defining the register, which immediately enumerate the clock, next value and any reset signals.\r\n\r\nIn an initial phase, we wish to add a `seq.firreg` op that simplifies analyses, minimally impacting the quality of the emitted Verilog. In LowerToHW, registers are defined by `firrtl::RegOp`, `firrtl::RegResetOp` and associated `firrtl::ConnectOp`, `firrtl::StrictConnectOp` and `firrtl::PartialConnectOp` equivalents. On the SV side, registers lower to `sv.always` blocks with nested `sv.if` statements and an `initial` block that provides randomised preset values. Both the upstream and the downstream ops are subject to future improvements and changes: as a consequence, the first version of `seq.firreg` aims to simply be an intermediary between these ops, capturing all information from FIRRTL that is required to lower equivalent SV.\r\n\r\nFrom the FIRRTL side, at the `LowerToHW` stage, each register is supposed to be connected by a single connect instruction. Consequently, the value a register takes in a clock cycle is determined by a unique connect associated with it. `seq.firreg` aims to make this invariant explicit, accepting a single argument which specifies the next value. As a side effect, this introduces explicit cycles into the graph. This form is vital for dependency analysis, as it allows the dependencies to be tracked without knowledge of the op. While the op itself might change in the future, presently we aim to nail this invariant down.\r\n\r\nIn the form drafted so far, `seq.firreg` takes an optional reset signal, reset value and a flag indicating whether the reset is synchronous or asynchronous. This information is captured to emit SV `always` and `if` statements identically to `LowerToHW` and is subject to refinement in the future. No custom parser is provided yet and the syntax is slightly awkward and subject to change.\r\n\r\nCurrently, the following patches are involved in the initial implementation of `seq.firreg`:\r\n\r\n* #2939 tentatively adds a `seq.FirReg` op \r\n* #2945 draft for the documentation",
+  "labels": [
+    "FIRRTL",
+    "Seq"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-21",
+  "closed_at": "2022-08-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6417,
+  "issue_url": "https://github.com/llvm/circt/issues/6417",
+  "title": "[HW] Unkown location attributes on HWModule ports missing in serialized IR",
+  "body": "Follow-up on #6388/#6416\r\n\r\nThe merged PR hotfixes the crash during compilation, but there remain inconsistencies in the serialized output format.\r\nPushing the example of #6388  through `circt-opt --mlir-print-debuginfo --mlir-print-local-scope` prints:\r\n\r\n```\r\nmodule {\r\n  hw.module @test(in %I : i1, out O : i1) {\r\n    hw.output %I : i1 loc(\"<stdin>\":3:9)\r\n  } loc(\"<stdin>\":2:5)\r\n} loc(\"<stdin>\":1:1)\r\n```\r\n\r\nThe explicitly unknown locations are missing. Parsing and printing this output again produces:\r\n\r\n```\r\nmodule {\r\n  hw.module @test(in %I : i1 loc(\"<stdin>\":2:22), out O : i1 loc(\"<stdin>\":2:35)) {\r\n    hw.output %I : i1 loc(\"<stdin>\":3:9)\r\n  } loc(\"<stdin>\":2:5)\r\n} loc(\"<stdin>\":1:1)\r\n```\r\n\r\nWhile this could likely be fixed in `module_like_impl::printModuleSignatureNew`, this indicates that there is a semantic difference between having no location vs. having an unknown location. So, removing unknown location attributes from ports and reconstructing them on demand could be problematic in general. There are also concerns regarding performance (see #6257).",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-11-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

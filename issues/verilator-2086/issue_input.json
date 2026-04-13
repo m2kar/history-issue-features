@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2086,
+  "issue_url": "https://github.com/verilator/verilator/issues/2086",
+  "title": "Inconsistent Parameter resolution in generate block",
+  "body": "I'm showing two failing code and two passing codes. Only the generate block is different in each case.\r\n\r\n### Failing Code 1\r\n\r\nHere `if` condition is inside `always_comb`\r\n\r\n```systemverilog\r\nmodule t();\r\n\r\n    localparam D_WIDTH = 16;\r\n    logic [D_WIDTH-1:0] a, b, c;\r\n\r\n    generate\r\n        always_comb begin\r\n            if (D_WIDTH > 2*D_WIDTH) begin\r\n                {a, b} = c[2*D_WIDTH-1:0];\r\n            end\r\n        end\r\n    endgenerate\r\n\r\nendmodule\r\n```\r\n\r\n### Error\r\n```\r\nverilator -cc --exe -Mdir sim_build -DCOCOTB_SIM=1 --top-module t --vpi --public-flat-rw --prefix Vtop -o t -LDFLAGS \"-L `dirname /home/nndurj/Dev/OpenSource/cocotb_test/tests/build/libs/x86_64/libvpi.so` -lvpi -lgpi -lcocotb -lgpilog -lcocotbutils\"  /home/nndurj/Dev/OpenSource/cocotb_test/tests/../hdl/test.v /home/nndurj/miniconda3/envs/cocotb/lib/python3.7/site-packages/cocotb/share/lib/verilator/verilator.cpp\r\n%Error: /home/nndurj/Dev/OpenSource/cocotb_test/tests/../hdl/test.v:9: Extracting 32 bits from only 16 bit number\r\n                                                                     : ... In instance t\r\n                {a, b} = c[2*D_WIDTH-1:0];\r\n                          ^\r\n%Warning-SELRANGE: /home/nndurj/Dev/OpenSource/cocotb_test/tests/../hdl/test.v:9: Selection index out of range: 31:0 outside 15:0\r\n                                                                                : ... In instance t\r\n                {a, b} = c[2*D_WIDTH-1:0];\r\n                          ^\r\n                   ... Use \"/* verilator lint_off SELRANGE */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 error(s), 1 warning(s)\r\n\r\n```\r\n\r\n### Passing Code 1\r\n\r\nHere `if` condition is outside of `always_comb`\r\n\r\n```systemverilog\r\nmodule t();\r\n\r\n    localparam D_WIDTH = 16;\r\n    logic [D_WIDTH-1:0] a, b, c;\r\n\r\n    generate\r\n        if (D_WIDTH > 2*D_WIDTH) begin\r\n            always_comb begin\r\n                {a, b} = c[2*D_WIDTH-1:0];\r\n            end\r\n        end\r\n    endgenerate\r\n\r\nendmodule\r\n```\r\n\r\n## Passing Code 2\r\n\r\n`if` condition is inisde `always_comb`\r\n\r\n```systemverilog\r\nmodule t();\r\n\r\n    localparam D_WIDTH = 16;\r\n    logic [D_WIDTH-1:0] a, b, c;\r\n\r\n    generate\r\n        always_comb begin\r\n            if (D_WIDTH > 2*D_WIDTH) begin\r\n                a = c[0 +:D_WIDTH];\r\n                b = c[D_WIDTH +:D_WIDTH];\r\n            end\r\n        end\r\n    endgenerate\r\n\r\nendmodule\r\n```\r\n\r\n### Failing Code 2\r\n```systemverilog\r\nmodule t();\r\n\r\n    localparam D_WIDTH = 16;\r\n    logic [D_WIDTH-1:0] a, b, c;\r\n\r\n    generate\r\n        always_comb begin\r\n            if (D_WIDTH > 2*D_WIDTH) begin\r\n                a = c[0 +:D_WIDTH];\r\n                b = c[2*D_WIDTH-1 :D_WIDTH];\r\n            end\r\n        end\r\n    endgenerate\r\n\r\nendmodule\r\n```\r\n### Error \r\n```\r\n%Warning-SELRANGE: /home/nndurj/Dev/OpenSource/cocotb_test/tests/../hdl/test.v:10: Selection index out of range: 31:16 outside 15:0\r\n                                                                                 : ... In instance t\r\n                b = c[2*D_WIDTH-1 :D_WIDTH];\r\n                     ^\r\n                   ... Use \"/* verilator lint_off SELRANGE */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```",
+  "labels": [
+    "area: lint",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2020-01-01",
+  "closed_at": "2020-01-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

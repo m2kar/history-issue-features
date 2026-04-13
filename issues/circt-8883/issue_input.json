@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8883,
+  "issue_url": "https://github.com/llvm/circt/pull/8883",
+  "title": "[Moore] Add more precise conversion ops",
+  "body": "Extend the Moore dialect with the following new conversion operations:\r\n\r\n- `moore.packed_to_sbv` to convert any packed type to its simple bit vector equivalent (i.e., an integer);\r\n- `moore.sbv_to_packed` to do the reverse;\r\n- `moore.logic_to_int` to convert from a four-valued integer to a two-valued integer;\r\n- `moore.int_to_logic` to convert from a two-valued integer to a four-valued integer; and\r\n- `moore.to_builtin_bool` to convert from a single bit `moore::IntType` to a single bit builtin `mlir::IntegerType`.\r\n\r\nAdjust the `ImportVerilog` pass to generate these new conversion ops instead of the old whole-sale `moore.conversion`. Having smaller, more precise conversion ops will make lowering to the core dialects easier in the future, especially once we fully support four-valued types and time values.\r\n\r\nIn the future, we may also want to create conversion ops from and to some of the unpacked types such as strings, unpacked arrays, queues, etc. These will require special care in the lowering, likely expanding to runtime function calls.\r\n\r\nThe long-term plan is to get rid of `moore.conversion` altogether and replace it with simpler, dedicated conversion ops.\r\n\r\nMost of this commit is just mechanically threading-through the new cast operations. They all lower to the same bitcast (or a passthrough) in HW as the `moore.conversion` op. This should result in no effective change at the core dialect level.\r\n\r\nI ran this on [circt-tests] and the Snitch core in [arc-tests], with no change in output.\r\n\r\n[circt-tests]: github.com/circt/circt-tests\r\n[arc-tests]: github.com/circt/arc-tests",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-22",
+  "closed_at": "2025-08-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

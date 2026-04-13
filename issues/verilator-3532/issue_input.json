@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3532,
+  "issue_url": "https://github.com/verilator/verilator/issues/3532",
+  "title": "`t_flag_help` doesn't actually test all executables it tries to.",
+  "body": "The [`t_flag_help`](https://github.com/verilator/verilator/blob/master/test_regress/t/t_flag_help.pl) doesn't actually test all executables it tries to.\r\nAll test cases write to a file with the same name. However, the file contents read by  [`file_grep`](https://github.com/verilator/verilator/blob/master/test_regress/driver.pl#L2424) are [cached](https://github.com/verilator/verilator/blob/master/test_regress/driver.pl#L2463-L2474), so it always greps output of the first executable.\r\nThe grep actually fails for output of some tested executables. Due to this, the test fails when run in parallel execution mode (`make test_regress SCENARIOS='--vlt --dist' DRIVER_FLAGS=\"--j $(nproc) --quiet\"` with `Parallel::Forker` installed).\r\n\r\nTested branch: master\r\n\r\nThe test fix is below. I didn't create PR because the fixed test fails and I'm not sure how you would like to handle it.\r\n\r\n```diff\r\ndiff --git a/test_regress/t/t_flag_help.pl b/test_regress/t/t_flag_help.pl\r\nindex cb38bfb87..e65223006 100755\r\n--- a/test_regress/t/t_flag_help.pl\r\n+++ b/test_regress/t/t_flag_help.pl\r\n@@ -12,18 +12,21 @@ scenarios(dist => 1);\r\n\r\n # See also t_flag_version.pl\r\n\r\n+use File::Basename;\r\n+\r\n sub check {\r\n     my $interpreter = shift;\r\n     my $prog = shift;\r\n+    my $logfile = \"$Self->{obj_dir}/t_help.\" . basename($prog) . \".log\";\r\n\r\n     run(fails => 0,\r\n         cmd => [$interpreter, $prog, \"--help\"],\r\n-        logfile => \"$Self->{obj_dir}/t_help.log\",\r\n+        logfile => $logfile,\r\n         tee => 0,\r\n         verilator_run => 1,\r\n         );\r\n\r\n-    file_grep(\"$Self->{obj_dir}/t_help.log\", qr/DISTRIBUTION/i);\r\n+    file_grep($logfile, qr/DISTRIBUTION/i);\r\n }\r\n\r\n foreach my $prog (\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: tests"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-06",
+  "closed_at": "2022-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

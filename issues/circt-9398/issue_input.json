@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9398,
+  "issue_url": "https://github.com/llvm/circt/issues/9398",
+  "title": "[FIRRTL] Add Domain Info to WireOp",
+  "body": "Currently, there's no way to verify the legality of `firrtl.domain.define` when a `WireOp` is involved. E.g., the following is trivially an error after domain inference, but there is no way to actually enshrine the legality/illegality in the IR:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.domain @ClockDomain\n  firrtl.domain @PowerDomain\n  firrtl.module @Foo(\n    in %in: !firrtl.domain of @ClockDomain,\n    out %out: !firrtl.domain of @PowerDomain\n  ) {\n    %w = firrtl.wire : !firrtl.domain // We don't have syntax or storage to mark the domain that %w is in.\n    firrtl.domain.define %w, %in\n    firrtl.domain.define %out, %w\n  }\n}\n```\n\nModify FIRRTL's `WireOp` to include optional domain information, i.e., a `DominInfoAttr`. Update passes to support this.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-30",
+  "closed_at": "2026-03-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

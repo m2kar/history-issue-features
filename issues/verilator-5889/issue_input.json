@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5889,
+  "issue_url": "https://github.com/verilator/verilator/issues/5889",
+  "title": "Fix mis-reported circular logic",
+  "body": "```\nUbuntu 22.04.4 LTS\nVerilator 5.035 devel rev v5.034-87-gb9a571916\n```\n\nHello. I am encountering a \"circular logic\" error on a post-synthesis design. I don't believe there should be any error. This is a minimal example:\n\n```verilog\n// test.v\nmodule VCC(output P);\n  assign P = 1;\nendmodule\n\nmodule GND(output G);\n  assign G = 0;\nendmodule\n\nmodule CARRY2(\n  output [1:0] CO,\n  input        CI,\n  input  [1:0] DI, S\n);\n  assign CO[0] = S[0] ? CI    : DI[0];\n  assign CO[1] = S[1] ? CO[0] : DI[1];\nendmodule\n\nmodule A;\n  wire const0;\n  wire ci;\n  GND GND (\n    .G(const0)\n  );\n  CARRY2 CARRY2 (\n    .CO(),\n\n    .CI(ci),\n    .DI({const0,const0}),\n    .S({const0,const0})\n  );\nendmodule\n```\n\n```bash\nverilator --lint-only test.v --top A\n```\n\n```\n%Error: Internal Error: test.v:15:23: ../V3Gate.cpp:872: Circular logic should have been rejected by okVisitor\n   15 |   assign CO[0] = S[0] ? CI    : DI[0];\n      |                       ^\n```\n\nThanks! I can try taking a look soon",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-27",
+  "closed_at": "2025-03-28",
+  "code_blocks": [
+    "Ubuntu 22.04.4 LTS\nVerilator 5.035 devel rev v5.034-87-gb9a571916\n",
+    "// test.v\nmodule VCC(output P);\n  assign P = 1;\nendmodule\n\nmodule GND(output G);\n  assign G = 0;\nendmodule\n\nmodule CARRY2(\n  output [1:0] CO,\n  input        CI,\n  input  [1:0] DI, S\n);\n  assign CO[0] = S[0] ? CI    : DI[0];\n  assign CO[1] = S[1] ? CO[0] : DI[1];\nendmodule\n\nmodule A;\n  wire const0;\n  wire ci;\n  GND GND (\n    .G(const0)\n  );\n  CARRY2 CARRY2 (\n    .CO(),\n\n    .CI(ci),\n    .DI({const0,const0}),\n    .S({const0,const0})\n  );\nendmodule\n",
+    "verilator --lint-only test.v --top A\n",
+    "%Error: Internal Error: test.v:15:23: ../V3Gate.cpp:872: Circular logic should have been rejected by okVisitor\n   15 |   assign CO[0] = S[0] ? CI    : DI[0];\n      |                       ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

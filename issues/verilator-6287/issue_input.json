@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6287,
+  "issue_url": "https://github.com/verilator/verilator/issues/6287",
+  "title": "Conditional compiler definitions for CMake build always set",
+  "body": "Running a pretty old testbench with a current release of verilator and CMAKE, I noticed that the compile definitions for the target are now always set to 0 or 1. Previously, they were only set if the corresponding target property was true. This causes issues with my testbench, which relies on these definitions to be set conditionally.\n\nThe affected definitions are:\n- VM_COVERAGE\n- VM_SC\n- VM_TRACE\n- VM_TRACE_VCD\n- VM_TRACE_FST\n- VM_TRACE_SAIF\n\nThis is breaking legacy SystemC/C++ code of the form:\n#ifdef VM_TRACE\n    // some code\n#endif\n\nWhere the VM_TRACE definition is always set (set to 1 or 0).\n\nCurrent behaviour generates the following compiler command line:\n\n/usr/bin/c++ -DVM_COVERAGE=0 -DVM_SC=1 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0 -I/home/... ...\n\nExpected Behaviour:\n/usr/bin/c++ -DVM_SC -I/home/... ...\n\nI don't know if this is the intended behavior from the Verilator team, but it seems at odds with standard practice.\n\n\nWhat 'verilator' command line do we use to run your example?\n\nCMake based design using the following verilate call:\n\nverilator_link_systemc(simple)\nverilate(simple\n        TOP_MODULE\n            crc16\n        PREFIX \"HDL_CRC\"\n        SYSTEMC\n        INCLUDE_DIRS\n            hdl\n        #TRACE_FST  <- The offending code when commented off\n        SOURCES\n        ../../hdl/crc/crc16.sv\n)\n\nWhat 'verilator --version' are you using?  \n    git master version\n\nWhat OS and distribution are you using?\n    Ubuntu 24.04 on AMD64\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-13",
+  "closed_at": "2025-08-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4391,
+  "issue_url": "https://github.com/verilator/verilator/issues/4391",
+  "title": "Unlinked when getting bit width of type defined in parameterized class",
+  "body": "```\r\nXXX@MacBook-Pro-8 tb % verilator --binary --timing -o intf_test intf_test.sv\r\n%Error: Internal Error: intf_test.sv:28:22: ../V3Width.cpp:1804: Unlinked\r\n                                          : ... In instance top\r\n   28 |    xxx_class#(Cfg0)::cmd_tag_t tag, tag_q;\r\n      |                      ^~~~~~~~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```\r\n\r\npackage pf;\r\n   typedef struct packed {\r\n      int unsigned CcNumTl;\r\n      int unsigned PqSize;\r\n   } cfg_t;\r\nendpackage\r\n\r\nvirtual class xxx_class #(parameter pf::cfg_t Cfg);\r\n   typedef struct packed {\r\n      logic [$clog2(Cfg.CcNumTl)-1:0] tl_index;\r\n      logic [$clog2(Cfg.PqSize)-1:0] pq_index;\r\n   } cmd_tag_t;\r\nendclass\r\n\r\nmodule mod2  #(parameter p_width=16) (\r\n   output logic [p_width-1:0] q,\r\n   input logic [p_width-1:0] d\r\n);\r\n   assign q = d;\r\nendmodule\r\n\r\nmodule top();\r\n   localparam pf::cfg_t Cfg0 = '{\r\n      CcNumTl:8\r\n      ,PqSize:12\r\n   };\r\n\r\n   xxx_class#(Cfg0)::cmd_tag_t tag, tag_q;\r\n\r\n   mod2 #($bits(tag)) t0(tag_q, tag);\r\n\r\n   initial begin\r\n      #100;\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n```\r\nXXX@MacBook-Pro-8 tb % verilator --version\r\nVerilator 5.013 devel rev v5.012-68-g959387b69\r\n```\r\n\r\nWhat OS and distribution are you using?\r\n```\r\nXXX@MacBook-Pro-8 tb % uname -a\r\nDarwin MacBook-Pro-8.local 22.5.0 Darwin Kernel Version 22.5.0: Mon Apr 24 20:53:19 PDT 2023; root:xnu-8796.121.2~5/RELEASE_ARM64_T6020 arm64\r\n```\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nUnsure.  Suspect related to #3441, #2783, #4256\r\n\r\n\r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-27",
+  "closed_at": "2025-12-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

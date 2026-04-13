@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4373,
+  "issue_url": "https://github.com/verilator/verilator/issues/4373",
+  "title": "BLKANDBLK error on SV queue",
+  "body": "Version: Verilator 5.012 2023-06-13 rev v5.012-1-g9fb17e532\r\n\r\nHi, I'm trying to reuse some DPI code that makes use of SV queues but am seeing an error reported.  Initially I realised that this probably isn't supported as it's not synthesisable but I found at least one other ticket with someone using a queue so thought I'd check.\r\n\r\n```\r\n%Error-BLKANDNBLK: src/idex_vip_swd_if_dpi_wrapper_0/src/rtl/swd_if_dpi_wrapper.sv:53:16: Unsupported: Blocked and non-blocking assignments to same variable: 'u_swd_if_dpi.swj_seq_data_queue'\r\n                                                                                        : ... In instance chip_sim_tb\r\n   53 |   bit [31:0]   swj_seq_data_queue  [$];\r\n      |                ^~~~~~~~~~~~~~~~~~\r\n                   src/idex_vip_swd_if_dpi_wrapper_0/src/rtl/swd_if_dpi_wrapper.sv:105:17: ... Location of blocking assignment\r\n  105 |   function void grpc_server_swj_sequence_push( input bit [31:0] value );\r\n      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n                   src/idex_vip_swd_if_dpi_wrapper_0/src/rtl/swd_if_dpi_wrapper.sv:163:30: ... Location of nonblocking assignment\r\n  163 |               swj_seq_data_r <= swj_seq_data_queue.pop_front();\r\n      |                              ^~\r\n%Error: Internal Error: src/idex_vip_swd_if_dpi_wrapper_0/src/rtl/swd_if_dpi_wrapper.sv:163:33: ../V3Delayed.cpp:564: <= on read+write method\r\n                                                                                              : ... In instance chip_sim_tb\r\n  163 |               swj_seq_data_r <= swj_seq_data_queue.pop_front();\r\n      |                                 ^~~~~~~~~~~~~~~~~~\r\n```\r\n\r\nThe SV itself is pretty simple.  I declare the queue, it gets pushed by a DPI call and then popped in an always block.\r\n\r\n```systemverilog\r\n\r\n  bit [31:0]   swj_seq_data_queue  [$];\r\n\r\n  function void grpc_server_swj_sequence_push( input bit [31:0] value );\r\n    swj_seq_data_queue.push_back(value);\r\n  endfunction\r\n\r\n  always_ff @(posedge clk or negedge rst_n) begin : swj_seq_write_data_fifo\r\n    if (!rst_n) begin\r\n      swj_seq_data_r       <= '0;\r\n      swj_seq_data_valid_r <= '0;\r\n    end else begin\r\n      case(swj_seq_data_valid_r)\r\n        1'b0 : begin\r\n          if (swj_seq_data_queue.size() > 0) begin\r\n            swj_seq_data_r       <= swj_seq_data_queue.pop_front();\r\n            swj_seq_data_valid_r <= '1;\r\n          end\r\n        end\r\n        <snip>\r\n```\r\n\r\nAny reason I can't do this?",
+  "labels": [
+    "good first issue",
+    "area: elaboration",
+    "effort: days",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-19",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

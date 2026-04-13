@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1705,
+  "issue_url": "https://github.com/llvm/circt/issues/1705",
+  "title": "[FIRRTL] (mem) Procedural assignment to wire ",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 1\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input inp_bb: SInt<24>\r\n    input inp_g: UInt<0>\r\n    mem tmp173:\r\n      data-type => SInt<5>\r\n      depth => 2\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n      reader => r0\r\n      writer => w0\r\n    tmp173.r0.clk <= clock\r\n    tmp173.r0.en <= head(UInt<4>(\"h6\"), 1)\r\n    tmp173.r0.addr <= asUInt(SInt<30>(\"o-744515272\"))\r\n    tmp173.w0.clk <= clock\r\n    tmp173.w0.en <= head(asUInt(inp_bb), 1)\r\n    tmp173.w0.addr <= inp_g\r\n    tmp173.w0.data <= asSInt(inp_g)\r\n    tmp173.w0.mask <= inp_g\r\n```\r\n\r\nCompiled with `firtool   --lower-to-hw --infer-widths --imconstprop --lowering-options=disallowPackedArrays,emittedLineLength=8192 --mlir-timing --verilog -o=$VFILE2` produces this Verilog:\r\n\r\n```verilog\r\nmodule FIRRTLMem_1_1_0_5_2_0_1_0(\t// a_top_mod.fir:7:5\r\n  input        ro_clock_0, ro_en_0, ro_addr_0, wo_clock_0, wo_en_0, wo_addr_0, wo_mask_0,\r\n  input  [4:0] wo_data_0,\r\n  output [4:0] ro_data_0);\r\n\r\n  reg [4:0] Memory[0:1];\r\n\r\n  wire _T = wo_en_0 & wo_mask_0;\r\n  wire [4:0] _T_0 = Memory[wo_addr_0];\r\n  always @(posedge wo_clock_0) begin\r\n    if (_T)\r\n      _T_0 <= wo_data_0;\r\n  end // always @(posedge)\r\n  assign ro_data_0 = ro_en_0 ? Memory[ro_addr_0] : 5'bx;\t// a_top_mod.fir:7:5\r\nendmodule\r\n\r\nmodule top_mod(\t// a_top_mod.fir:3:10\r\n  input        clock,\r\n  input [23:0] inp_bb);\r\n\r\n  wire [4:0] tmp173_ro_data_0;\t// a_top_mod.fir:7:5\r\n\r\n  FIRRTLMem_1_1_0_5_2_0_1_0 tmp173 (\t// a_top_mod.fir:7:5\r\n    .ro_clock_0 (clock),\r\n    .ro_en_0    (1'h0),\t// a_top_mod.fir:16:21\r\n    .ro_addr_0  (1'h0),\t// a_top_mod.fir:16:21\r\n    .wo_clock_0 (clock),\r\n    .wo_en_0    (inp_bb[23]),\t// a_top_mod.fir:19:21\r\n    .wo_addr_0  (1'h0),\t// a_top_mod.fir:16:21\r\n    .wo_mask_0  (1'h0),\t// a_top_mod.fir:16:21\r\n    .wo_data_0  (5'h0),\t// a_top_mod.fir:21:20\r\n    .ro_data_0  (tmp173_ro_data_0)\r\n  );\r\nendmodule\r\n```\r\n\r\n```\r\nVerilator 4.211 devel rev v4.210-70-gc69ddc46\r\n```\r\n\r\nGives the following error:\r\n\r\n```\r\n%Error-PROCASSWIRE: a_top_mod.fir.mfc.v:12:7: Procedural assignment to wire, perhaps intended var (IEEE 1800-2017 6.5): '_T_0'\r\n                                            : ... In instance top_mod.tmp173\r\n   12 |       _T_0 <= wo_data_0;\r\n      |       ^~~~\r\n                    ... For error description see https://verilator.org/warn/PROCASSWIRE?v=4.211\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-03",
+  "closed_at": "2021-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

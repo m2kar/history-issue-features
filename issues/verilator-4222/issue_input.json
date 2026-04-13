@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4222,
+  "issue_url": "https://github.com/verilator/verilator/issues/4222",
+  "title": "Erroneous BLKSEQ warning",
+  "body": "The following code:\r\n\r\n```\r\n\r\nmodule verilator_blocking\r\n  (\r\n   input logic [2:0] state,\r\n   output logic [31:0] b,\r\n   input clk\r\n   );\r\n\r\n   function logic [31:0 ] toto () ;\r\n      logic [31:0] res;\r\n      res = 10;\r\n\r\n      return res;\r\n   endfunction\r\n\r\n   always @(posedge clk) begin\r\n      b <= 0;\r\n      if(state != 2) begin\r\n         b <= toto();\r\n      end\r\n   end\r\n\r\nendmodule;\r\n```\r\n\r\ngenerates the following warning since version 5:\r\n\r\n```\r\nverilator --no-timing --lint-only -Wall verilator_blocking.sv\r\n%Warning-BLKSEQ: verilator_blocking.sv:10:11: Blocking assignment '=' in sequential logic process\r\n                                            : ... Suggest using delayed assignment '<='\r\n   10 |       res = 10;\r\n      |           ^\r\n                 ... For warning description see https://verilator.org/warn/BLKSEQ?v=5.010\r\n                 ... Use \"/* verilator lint_off BLKSEQ */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n\r\n```\r\n\r\nThis looks like a bug to me. I don't even think functions can have non-blocking assignments anyway.",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-24",
+  "closed_at": "2023-05-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

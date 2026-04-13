@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8498,
+  "issue_url": "https://github.com/llvm/circt/pull/8498",
+  "title": "[LLHD] Fix handling of conditional drives",
+  "body": "The Mem2Reg pass in LLHD does not correctly handle multiple conditional drives and mixes of unconditional and conditional drives to the same signal. In its current implementation, a conditional drive completely replaces any previous drive as if it were unconditional. This is not correct, since a conditional drive only supersedes a prior drive if it is enabled. Similarly, a conditional drive to a signal that is later probed has to insert a mux to either forward the new value if the drive is enabled, or the current value of the signal if it is disabled.\r\n\r\nThis commit extends the Mem2Reg pass to handle these situations properly:\r\n\r\nThe backward propagation across the lattice is updated to forward the need for a definition in case the drive is conditional. This is required since the drive being disabled means that a previous drive or probe must be able to provide a definition.\r\n\r\nThe forward propagation across the lattice is updated to only kill incoming reaching definitions when a drive is unconditional. If it is conditional, the drive has to insert a multiplexer between the incoming definition if the drive is disabled, or the driven value if the drive is enabled.\r\n\r\nNew `resolveDefinitions` methods on `DriveNode`s insert multiplexers as necessary and aggregates drive conditions using OR ops. This ensures that multiple conditional drives in sequence collapse to a single drive where the driven value is selected with a multiplexer and the enable condition is derived as the OR of all conditional drives before the collapse.\r\n\r\nAn additional lit test covers the problematic cases that were not handled properly before.\r\n\r\nFixes #8494",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-21",
+  "closed_at": "2025-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

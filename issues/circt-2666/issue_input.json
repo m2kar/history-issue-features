@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2666,
+  "issue_url": "https://github.com/llvm/circt/issues/2666",
+  "title": "[Comb] Canonicalize using De Morgan's laws",
+  "body": "I just realized on an example that we were emitting `~(~a | ~b)` in Verilog. Could it be that we are missing De Morgan's laws as canonicalizations to reduce the number of inversions in an expression? For example, the above begs to be emitted as `a & b`.\r\n\r\n### Example\r\n```mlir\r\n// foo.mlir\r\nhw.module @Foo(%a: i1, %b: i1) -> (c: i1) {\r\n  %true = hw.constant true\r\n  %0 = comb.xor %true, %a : i1\r\n  %1 = comb.xor %true, %b : i1\r\n  %2 = comb.or %0, %1 : i1\r\n  %3 = comb.xor %true, %2 : i1\r\n  hw.output %3 : i1\r\n}\r\n```\r\n```systemverilog\r\n// firtool --verilog foo.mlir\r\nmodule Foo(\r\n  input  a, b,\r\n  output c);\r\n\r\n  assign c = ~(~a | ~b);\r\nendmodule\r\n```",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-21",
+  "closed_at": "2022-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

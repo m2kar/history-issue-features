@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6987,
+  "issue_url": "https://github.com/verilator/verilator/issues/6987",
+  "title": "Bad associative array default needs a verilator error instead of a c++ compile error",
+  "body": "Here's a simple example of something I ran into:\n```verilog\nmodule top;\n    typedef byte unsigned word_t[4];\n    word_t words[longint unsigned] = '{default:'1};\n\n    initial begin\n        for(int i = 0; i < 4; i++) begin\n            $display(\"words[23][%0d]: 'h%h\", i, words[23][i]);\n        end\n    end\nendmodule\n```\nWith a commercial simulator it just silently converts that `1 to a value that \"works\" (which is not very helpful), with verilator I get a C++ compiler error (which is hard to decipher):\n```\nIn file included from Vassociative_array_of_array_with_default__ALL.cpp:8:\nVassociative_array_of_array_with_default___024root__0__Slow.cpp: In function ‘void Vassociative_array_of_array_with_default___024root___eval_initial__TOP(Vassociative_array_of_array_with_default___024root*)’:\nVassociative_array_of_array_with_default___024root__0__Slow.cpp:31:30: error: cannot convert ‘unsigned int’ to ‘const VlUnpacked<unsigned char, 4>&’\n   31 |                  .setDefault(0xffU).at(0x0000000000000017ULL)\n      |                              ^~~~~\n      |                              |\n      |                              unsigned int\n```\nSeems like it should be caught during verilation.\n\nWhat 'verilator' command line do we use to run your example?\n\nverilator -j \"$(nproc)\" --binary <filename>\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\nLatest master: g996ae35a1\n\nWhat OS and distribution are you using?\n\nrocky linux 9\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nsure",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-02",
+  "closed_at": "2026-02-02",
+  "code_blocks": [
+    "module top;\n    typedef byte unsigned word_t[4];\n    word_t words[longint unsigned] = '{default:'1};\n\n    initial begin\n        for(int i = 0; i < 4; i++) begin\n            $display(\"words[23][%0d]: 'h%h\", i, words[23][i]);\n        end\n    end\nendmodule\n",
+    "In file included from Vassociative_array_of_array_with_default__ALL.cpp:8:\nVassociative_array_of_array_with_default___024root__0__Slow.cpp: In function ‘void Vassociative_array_of_array_with_default___024root___eval_initial__TOP(Vassociative_array_of_array_with_default___024root*)’:\nVassociative_array_of_array_with_default___024root__0__Slow.cpp:31:30: error: cannot convert ‘unsigned int’ to ‘const VlUnpacked<unsigned char, 4>&’\n   31 |                  .setDefault(0xffU).at(0x0000000000000017ULL)\n      |                              ^~~~~\n      |                              |\n      |                              unsigned int\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

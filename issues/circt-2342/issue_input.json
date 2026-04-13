@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2342,
+  "issue_url": "https://github.com/llvm/circt/issues/2342",
+  "title": "[ExportVerilog] Invalid emission of mux of aggregates + extract",
+  "body": "```mlir\r\n// circt-opt %s -export-verilog\r\nhw.module @muxAggregate(%cond: i1, %a: !hw.struct<c: i1>, %b: !hw.struct<c: i1>) -> (out: i1) {\r\n    %0 = comb.mux %cond, %a, %b : !hw.struct<c: i1>\r\n    %1 = hw.struct_extract %0[\"c\"] : !hw.struct<c: i1>\r\n    hw.output %1 : i1\r\n}\r\n```\r\nwill become\r\n```sv\r\nmodule muxAggregate(      // foo.mlir:2:3\r\n  input                            cond,\r\n  input  struct packed {logic c; } a, b,\r\n  output                           out);\r\n\r\n  assign out = (cond ? a : b).c;        // foo.mlir:3:12, :4:12, :5:5\r\nendmodule\r\n```\r\n`(cond?a:b).c` causes a syntax error so we need to spill mux into a temporary wire. ",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-14",
+  "closed_at": "2021-12-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

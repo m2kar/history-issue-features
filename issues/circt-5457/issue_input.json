@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5457,
+  "issue_url": "https://github.com/llvm/circt/pull/5457",
+  "title": "[SeqToSV] Add `clock_gate` lowering",
+  "body": "... for those times when you don't want to externalize a clock gate. My immediate use for this is to not have to worry about placing clock gate modules into output/search folders when running integration tests for ops that use clock gates. Obviously, the clock gate externalization pass can be run prior to SV lowering to skip this. Secondly, i prefer that all ops have _some_ way of reaching emission without having to worry about external collateral.\r\n\r\nThe implementation exports as the following `sv`:\r\n\r\n```sv\r\nmodule cg1(\r\n  input  clk,\r\n         enable,\r\n  output gclk\r\n);\r\n\r\n  reg cg_en_latch;\r\n  always @(edge clk or edge enable) begin\r\n    if (~clk)\r\n      cg_en_latch <= enable;\r\n  end\r\n  assign gclk = clk & cg_en_latch;\r\nendmodule\r\n\r\nmodule cg2(\r\n  input  clk,\r\n         enable,\r\n         test_enable,\r\n  output gclk\r\n);\r\n\r\n  wire _GEN = enable | test_enable;\r\n  reg  cg_en_latch;\r\n  always @(edge clk or edge _GEN) begin\r\n    if (~clk)\r\n      cg_en_latch <= _GEN;\r\n  end\r\n  assign gclk = clk & cg_en_latch;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-22",
+  "closed_at": "2023-06-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

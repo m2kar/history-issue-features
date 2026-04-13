@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 623,
+  "issue_url": "https://github.com/verilator/verilator/issues/623",
+  "title": "Non-single bit wide signal pos/negedge sensitivity",
+  "body": "---\n\n\nAuthor Name: **Jason McMullan** (@ezrec)\nOriginal Redmine Issue: 623 from https://www.veripool.org\nOriginal Date: 2013-02-21\n\n\n---\n\nIn the following code snippets, while functionally identical, only the latter will compile under Verilator.\r\n\r\nIs there a compelling reason why Verilator can't split multibit signals automatically in the sensitivity list?\r\n\r\nFirst example: testcase_multi.v\r\n```\r\nmodule testcase_multi(\r\n     input [1:0] state,\r\n     output [1:0] value\r\n);\r\n\r\nreg [1:0] value;\r\n\r\nalways @(state) begin\r\n     case (state)\r\n     2'h0: value <= 2'h1;\r\n     2'h1: value <= 2'h2;\r\n     2'h2: value <= 2'h3;\r\n     2'h3: value <= 2'h4;\r\n     endcase\r\nend\r\n\r\nendmodule\r\n\n```\r\n\r\nFails to compile:\r\n```\r\n$ /opt/verilator/bin/verilator --cc testcase_multi.v \r\n%Error: testcase_multi.v:9: Unsupported: Non-single bit wide signal pos/negedge sensitivity: state\r\n%Error: testcase_multi.v:3: Unsupported: Clock edge on non-single bit signal: state\r\n%Error: Exiting due to 2 error(s)\r\n%Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed verilator_bin --cc testcase_multi.v\r\n\n```\r\n\r\nSecond test case, with the multi-bit signals split: testcase_multi_split.v\r\n```\r\nmodule testcase_multi_split(\r\n     input [1:0] state,\r\n     output [1:0] value\r\n);\r\n\r\nreg [1:0] value;\r\n\r\nalways @(state[0] or state[1]) begin\r\n     case (state)\r\n     2'h0: value <= 2'h1;\r\n     2'h1: value <= 2'h2;\r\n     2'h2: value <= 2'h3;\r\n     2'h3: value <= 2'h4;\r\n     endcase\r\nend\r\n\r\nendmodule\r\n\n```\r\n\r\nThis version compiles as expected.\r\n\n\n\n",
+  "labels": [
+    "resolution: wontfix",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-21",
+  "closed_at": "2013-02-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

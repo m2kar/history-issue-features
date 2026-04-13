@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2983,
+  "issue_url": "https://github.com/verilator/verilator/issues/2983",
+  "title": "Can't get the value that would be assigned in the next GEN-FOR iteration.",
+  "body": "Hi,\r\nI‘m using the release version of verilator-4.202 and here is my testcase:\r\n```verilog\r\n// t.v\r\nmodule t (\r\n    input   logic   clk\r\n);\r\n\r\nlogic [7:0]    mx;\r\nlogic [7:0]    A[3];\r\nlogic [7:0]    B[3];\r\n\r\nalways @ (posedge clk) begin\r\n    mx <= mx + 1'b1;\r\n    $write(\"\\n -- %d\\n\", mx);\r\n    $write(\"A:   %d    %d    %d\\n\", A[0], A[1], A[2]);\r\n    $write(\"B:   %d    %d    %d\\n\", B[0], B[1], B[2]);\r\n\r\n    if (mx == 'd5) begin\r\n        $finish;\r\n    end\r\nend\r\n\r\ngenvar i;\r\ngenerate\r\n    for (i = 0; i < 3; i++) begin\r\n        if (i == 2) begin\r\n            always @ (*) begin\r\n                A[i] = mx;\r\n                B[i] = mx;\r\n            end\r\n        end\r\n        else begin\r\n            always @ (*) begin\r\n                A[i] = mx;\r\n                B[i] = A[i+1]; // Use the value that would be assigned in the next GEN-FOR iteration.\r\n            end\r\n        end\r\n    end\r\nendgenerate\r\n\r\nendmodule\r\n\r\n```\r\nAnd the output is:\r\n```txt\r\n --   0\r\nA:     0      0      0\r\nB:     0      0      0\r\n\r\n --   1\r\nA:     1      1      1\r\nB:     0      1      1\r\n\r\n --   2\r\nA:     2      2      2\r\nB:     1      2      2\r\n\r\n --   3\r\nA:     3      3      3\r\nB:     2      3      3\r\n\r\n --   4\r\nA:     4      4      4\r\nB:     3      4      4\r\n\r\n --   5\r\nA:     5      5      5\r\nB:     4      5      5\r\n```\r\nIn my RTL design, `B[0]` should be equal to `A[1]`, but it’s not the case.\r\n\r\nPost part of the output cpp file here:\r\n```cpp\r\n// ...\r\n    vlTOPp->t__DOT__mx = __Vdly__t__DOT__mx;\r\n    vlTOPp->t__DOT__A[2U] = vlTOPp->t__DOT__mx;\r\n    vlTOPp->t__DOT__B[2U] = vlTOPp->t__DOT__mx;\r\n    vlTOPp->t__DOT__A[0U] = vlTOPp->t__DOT__mx;\r\n    vlTOPp->t__DOT__B[0U] = vlTOPp->t__DOT__A[1U]; // B[0] is assigned by A[1]\r\n    vlTOPp->t__DOT__A[1U] = vlTOPp->t__DOT__mx; // A[1] is ready.\r\n    vlTOPp->t__DOT__B[1U] = vlTOPp->t__DOT__A[2U];\r\n// ...\r\n```\r\nAs you can see, the `B[0]` is assigned by `A[1]`  before `A[1]` is ready. This must be wrong.\r\n\r\nI guess this is a bug of Verilator, what's your opinion.\r\n",
+  "labels": [
+    "status: ready",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-27",
+  "closed_at": "2025-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

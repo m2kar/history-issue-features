@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1800,
+  "issue_url": "https://github.com/verilator/verilator/issues/1800",
+  "title": "Question: Sync/Async input ",
+  "body": "---\n\n\nAuthor Name: **Roberto Guerra**\nOriginal Redmine Message: 1180 from https://www.veripool.org\n\n\n\n---\n\nDear gentlman,\n\nI would need your help in order to understand the following behavior of C++ code produced by Verilator.\n\nI have to describe in Verilog this simple circuit:\n!FF2.png!\n\nVerilog code I have written is:\n\n```\nmodule Top( \n     input clock_i,\n     input [31:0] data_i,\n     \n     output [31:0] data_o,\n     output [31:0] data_delayed_o);    \n        \n     reg [31:0] data_o;\n     reg [31:0] data_delayed_o;\n             \n         \n     always @(posedge clock_i)\n     begin\n         data_delayed_o <= data_o;\n     end \n     \n     assign data_o = data_i;\n     \nendmodule\n\n```\n\nI have connected to C++ with:\n\n```\nVTop *top;\n\nint main(int argc, char** argv, char** env){\n\t\t\n\tfor(time = 0; time < 10; time++)\n\t{\n\t\ttop->clock_i = (time == 0) ? 0 : !top->clock_i;\n\t\tif ( ((time % 2) != 0) && (time > 2))\n\t\t{\n\t\t\ttop->addr_i = 0xA0 + time;\n\t\t}\n\t\ttop->eval();\n\t\t// Read outputs\n\t}\n\t// Print signals\n\ttop->final();\n}\n\n```\n\nIt works well: I get what I have expected that is *data_delayed_o* signal is delayed of one clock period respect to *data_i* signal as shown in figure below. But if I remove *data_o* signal from module output list I will not get the delay, but *data_i* and *data_delayed_o* are exactly the same.\n\nPlease, have you some suggestions about how I can remove *data_o* signal from output list without getting the error?\n\nThanks in advanced\n\nRoberto\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2013-06-26",
+  "closed_at": "2013-06-26",
+  "code_blocks": [
+    "module Top( \n     input clock_i,\n     input [31:0] data_i,\n     \n     output [31:0] data_o,\n     output [31:0] data_delayed_o);    \n        \n     reg [31:0] data_o;\n     reg [31:0] data_delayed_o;\n             \n         \n     always @(posedge clock_i)\n     begin\n         data_delayed_o <= data_o;\n     end \n     \n     assign data_o = data_i;\n     \nendmodule\n\n",
+    "VTop *top;\n\nint main(int argc, char** argv, char** env){\n\t\t\n\tfor(time = 0; time < 10; time++)\n\t{\n\t\ttop->clock_i = (time == 0) ? 0 : !top->clock_i;\n\t\tif ( ((time % 2) != 0) && (time > 2))\n\t\t{\n\t\t\ttop->addr_i = 0xA0 + time;\n\t\t}\n\t\ttop->eval();\n\t\t// Read outputs\n\t}\n\t// Print signals\n\ttop->final();\n}\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

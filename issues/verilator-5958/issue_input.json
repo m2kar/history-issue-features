@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5958,
+  "issue_url": "https://github.com/verilator/verilator/pull/5958",
+  "title": "Fix --x-initial and --x-assign random stability (#2662)",
+  "body": "We recently noticed that seeds were not portable between builds w/ and w/o `--trace`.  This is because the two have different numbers of `VL_RAND_RESET_*()` calls.  This is a proof of concept which, while not fully fleshed out, does resolve the issue for us (at least in limited testing).\r\n\r\nWe can work around this by setting `--x-initial` and `--x-assign` to `0`.  However, this is obviously not ideal.\r\n\r\nThe basic idea is that since `VL_RAND_RESET_*()` call may be optimized away (or differently) between builds, we don't let these calls advance the PRNG stream.  Instead we calculate salt values during verilation (based on the AST or RTL path or something stable) and run the PRNG algorithm on that without modifying its state.\r\n\r\nOpen items:\r\n- in `*rand64()`, if `reset` is true return the next value per the algorithm after the state has been salted, but do not update the sate (instead of the simple XOR which is there now)\r\n- compute salts for various places which emit hard-coded salts currently (should be stable between verilations and w/ and w/o `--trace`\r\n- tests\r\n\r\nI recognize that this isn't foolproof since one could:\r\n```\r\nint value;\r\nalways_ff @(posedge clk) value = $random();\r\n```\r\nAnd if `value` isn't used then I assume Verilator can prune it when we're running w/o `--trace`.  However, this scenario feels a lot more obvious / straightforward to deal with whereas `x` randomization is very pervasive and implicit.\r\n\r\nAnyway, I wanted to get initial thoughts on this before I went further.  Please advise.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-25",
+  "closed_at": "2025-05-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

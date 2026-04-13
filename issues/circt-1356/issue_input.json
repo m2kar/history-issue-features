@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1356,
+  "issue_url": "https://github.com/llvm/circt/issues/1356",
+  "title": "Syntax error in generated System Verilog with struct in register.",
+  "body": "I'm looking at a case like the following:\r\n\r\n```mlir\r\nhw.module @Test(%in: !hw.struct<a: i1, b: i1>, %clk: i1) -> (%out: !hw.struct<a: i1, b: i1>) {\r\n  %0 = seq.compreg %in, %clk : !hw.struct<a: i1, b: i1>\r\n  hw.output %0 : !hw.struct<a: i1, b: i1>\r\n}\r\n```\r\n\r\nThe desire is to register a packed struct. Technically, we're trying to register a packed array of packed structs, but just a struct is sufficient to demonstrate this issue.\r\n\r\nI think it should be legal to register a packed struct, or a packed array of packed structs, but please stop me here if I'm wrong.\r\n\r\nTo lower this, I am using the following passes:\r\n\r\n```sh\r\ncirct-opt test.mlir -lower-seq-to-sv -hw-legalize-names\r\n```\r\n\r\nWhich produces:\r\n\r\n```mlir\r\nmodule  {\r\n  hw.module @Test(%in: !hw.struct<a: i1, b: i1>, %clk: i1) -> (%out: !hw.struct<a: i1, b: i1>) {\r\n    %_T = sv.reg  : !hw.inout<struct<a: i1, b: i1>>\r\n    %0 = sv.read_inout %_T : !hw.inout<struct<a: i1, b: i1>>\r\n    sv.alwaysff(posedge %clk)  {\r\n      sv.passign %_T, %in : !hw.struct<a: i1, b: i1>\r\n    }\r\n    hw.output %0 : !hw.struct<a: i1, b: i1>\r\n  }\r\n}\r\n```\r\n\r\nUnless I'm missing something, so far so good. The issue is in the generated System Verilog.\r\n\r\nI'm using:\r\n\r\n```sh\r\ncirct-translate -export-verilog\r\n```\r\n\r\nWhich produces:\r\n\r\n```verilog\r\nmodule Test(\r\n  input  struct packed {logic a; logic b; } in,\r\n  input                                     clk,\r\n  output struct packed {logic a; logic b; } out);\r\n\r\n  reg struct packed {logic a; logic b; } _T;\t// <stdin>:3:11\r\n\r\n  always @(posedge clk)\t// <stdin>:5:5\r\n    _T <= in;\t// <stdin>:6:7\r\n  assign out = _T;\t// <stdin>:4:10, :8:5\r\nendmodule\r\n```\r\n\r\nThis seems like a faithful translation of the IR, but the issue is on the `reg` line.\r\n\r\nRunning that through Verilator with:\r\n\r\n```sh\r\nverilator -sv -lint-only\r\n```\r\n\r\nProduces these errors:\r\n\r\n```sh\r\n%Error: /tmp/a:6:7: syntax error, unexpected struct\r\n    6 |   reg struct packed {logic a; logic b; } _T;\r\n      |       ^~~~~~\r\n%Error: /tmp/a:6:40: syntax error, unexpected '}'\r\n    6 |   reg struct packed {logic a; logic b; } _T;\r\n      |                                        ^\r\n%Error: Exiting due to 2 error(s)\r\n```\r\n\r\nIf I manually remove the `reg ` from the System Verilog, Verilator doesn't complain. @teqdruid has reported the same behavior from Questa. My reading of section 6.8 of the spec seems to confirm the removal of `reg ` is correct: in the grammar defined in section 6.8, `data_type` appears to support `reg` or a `struct` type, but not `reg struct ...`.\r\n\r\nIs this something we can adjust in the ExportVerilog handling of registers of structs (and arrays of structs)? If there's consensus that this is the right line of thought, I can take that task.",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-01",
+  "closed_at": "2022-02-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

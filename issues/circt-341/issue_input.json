@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 341,
+  "issue_url": "https://github.com/llvm/circt/pull/341",
+  "title": "Canonicalize all CIRCT translation libraries",
+  "body": "Hi everyone!  I went a bit off the rails on this one, and did some things differently than MLIR.  I think it's worth noting that IREE puts translation into a global Translation folder.  MLIR does not seem to have consistent naming for what I'm calling `export` and `import`.  Some names they use are are `parse`, `serialize`, and `translateTo`.  I'm not really happy with where `export-verilog` ended up. \r\n\r\n----\r\n\r\nThe MLIR glossary says: `translation` is the transformation of code\r\nrepresented in an external (non-MLIR) representation into a semantically\r\nequivalent representation in MLIR (i.e. importing ), or the inverse\r\n(i.e. exporting ).  This change tries to reflect that concept in our\r\ndirectory structure and code.\r\n\r\nTranslation libraries were moved into dialect specific Translation\r\nfolders.  In the case of emitting FIRRTL/RTL/SV as Verilog, it was added\r\nto a global Translation directory, as this code stretches across several\r\ndialects.\r\n\r\nSpecfically:\r\n- FIRRTL parser to `circt/Dialect/FIRRTL/Translation/Import.h`\r\n- LLHD verilog emitter to `circt/Dialect/LLHD/Translation/Export.h`\r\n- Verilog emission to `circt/Translation/Verilog/Export.h`\r\n\r\nAll CIRCT translation libraries are now declared using\r\n`add_circt_translation_library`.  This adds each translation library to\r\nthe `CIRCT_TRANSLATION_LIBS` global property. This is use to simplify\r\nlinking for `circt-translate`.\r\n\r\nInitAllTranslations.h was added to provide a way of easilly loading all\r\ntranslations.  Differently than MLIR, this file includes every\r\ntranslation header file.\r\n\r\n`circt-translate` was updated to use an MLIR provided main function.\r\nThis had a side effect of omitting some diagnostic information when\r\nrunning `circt-translate --verify-diagnostics`, and one test case had to\r\nbe updated.\r\n\r\nIn the future the `circt-translate` commands should be updated to\r\nexpress exporting or importing, instead of parsing and emitting.\r\nConsistent use of this terminology will help different between MLIR IR\r\nand external formats.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-12-18",
+  "closed_at": "2020-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

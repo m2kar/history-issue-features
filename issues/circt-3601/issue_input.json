@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3601,
+  "issue_url": "https://github.com/llvm/circt/issues/3601",
+  "title": "[CalyxToFSM] Controller FSM outlining and instantiation",
+  "body": "#3595 introduced FSM materialization for the Calyx control program. In this, an FSM was materialized with top-level I/O corresponding to the `go, done` ports of the `compiledGroups` within the control program.\r\n\r\nThe final step in control schedule lowering is to outline the FSM into `module` scope and replace it with an `fsm.hwinstance` operation. When doing this, we need to define the I/O of the `fsm.hwinstance` operation:\r\n1. inputs will be `group_done` signals for the compiled groups\r\n2. outputs will be `group_go` signals to the compiled groups\r\n\r\nThe ideal place to do this is to modify the [remove-groups](https://github.com/llvm/circt/blob/f739c60260298751a3c86d8b991917547af6eab1/lib/Dialect/Calyx/Transforms/RemoveGroups.cpp) pass by:\r\n1. Perform the conversion as it exists now but instead by using backedges for the `group_go` signals to each group, and recording the `group_done` signals for each group.\r\n2. Walk the FSM and gather all SSA values referenced within it, add these as additional inputs to the FSM\r\n3. outline the `fsm.machine` into module scope\r\n4. replace it with a `fsm.hwinstance`, with `group_done` operands sorted by the `compiledGroups` attribute and SSA input operands by the info from step 2.\r\n5. Replace the `group_go` backedges with the results of the `fsm.hwinstance` operation.",
+  "labels": [
+    "good first issue",
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-26",
+  "closed_at": "2023-01-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

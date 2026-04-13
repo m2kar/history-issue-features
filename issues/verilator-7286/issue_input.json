@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7286,
+  "issue_url": "https://github.com/verilator/verilator/pull/7286",
+  "title": "Support property-local variables and sequence match items",
+  "body": "## Summary\r\n\r\nThis patch adds support for property-local variable declarations (IEEE 1800-2023 16.10) and sequence match item assignments (IEEE 1800-2023 16.11), enabling patterns such as `(expr, var = val) |=> consequent` in SVA properties.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t (input clk);\r\n  int cyc = 0;\r\n  logic valid;\r\n\r\n  property p_nonoverlap;\r\n    int prev;\r\n    @(posedge clk)\r\n    (valid, prev = cyc) |=> (cyc == prev + 1);\r\n  endproperty\r\n  assert property (p_nonoverlap);\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: t.v:8:11: Unsupported: sequence match items\r\n    8 |     (valid, prev = cyc) |=> (cyc == prev + 1);\r\n      |           ^\r\n%Error-UNSUPPORTED: t.v:6:9: Unsupported: property variable declaration\r\n    6 |     int prev;\r\n      |         ^~~~\r\n%Error: Exiting due to 2 error(s)\r\n```\r\n\r\n## Changes\r\n\r\n- `src/verilog.y`: Remove `BBUNSUP` for `property_declarationBody` with `assertion_variable_declarationList`, passing local variable AST nodes through instead of deleting them. Remove `BBUNSUP` for sequence match items in `sexpr`, wrapping them in `AstExprStmt`.\r\n- `src/V3AssertPre.cpp` (`substitutePropertyCall`): After substituting property port arguments, lower property-local (non-port) variables to module-level `MODULETEMP` variables with unique `__Vpropvar` names and update references in the cloned property body.\r\n- `src/V3AssertPre.cpp` (`visit(AstImplication*)`): Extract match item assignments from `AstExprStmt` in the antecedent, substitute property-local variable references in the consequent with the assigned expressions, wrapping in `AstPast` for non-overlapping (`|=>`) implications.\r\n- `src/V3AssertPre.cpp` (`getPropertyExprp`): Skip `AstInitialStaticStmt`/`AstInitialAutomaticStmt` nodes (variable initializers) when locating the `AstPropSpec` body.\r\n- `src/V3Width.cpp` (`visit(AstProperty*)`): Iterate `AstInitialStaticStmt`/`AstInitialAutomaticStmt` nodes under `AstProperty` instead of hitting `v3fatalSrc`.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_sequence_local_var.{v,py}` -- property-local variables with overlapping (`|->`), non-overlapping (`|=>`), and parameterized property instantiation scenarios.\r\n- Updated `test_regress/t/t_property_var_unsup.out` -- removed now-supported \"property variable declaration\" and \"sequence match items\" error messages.\r\n- Updated `test_regress/t/t_property_sexpr_parse_unsup.out` -- removed now-supported \"property variable declaration\" and \"sequence match items\" error messages.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-19",
+  "closed_at": "2026-03-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

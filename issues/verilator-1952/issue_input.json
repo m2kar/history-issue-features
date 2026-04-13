@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1952,
+  "issue_url": "https://github.com/verilator/verilator/issues/1952",
+  "title": "Question: verilator unpacked dimension signal dependency without circular logic error",
+  "body": "---\n\n\nAuthor Name: **Christopher Russell**\nOriginal Redmine Message: 2451 from https://www.veripool.org\n\n\n\n---\n\nAfter reviewing the similarity of my issue to the issue here:\nhttps://www.veripool.org/issues/739-Verilator-Multidimensional-arrays-and-UNOPTFLAT-warning#note-1\n\nI would like to ask the complexity needed to modify verilator to treat unpacked dimensions of a single signal as separate signals for the purpose of circular logic detection.  This becomes very useful for scalable algorithms in verilog where the current dimension has dependence on the result of the previous dimension.\n\nI mainly concerned about this statement if I don't fix this issue:\n\"(Unfortunately) There are other bugs about UNOPTFLAT here, for example #^A on a version of this with bit numbers. In brief the cost is as much as dividing performance of your whole model by the number of loops; Verilator reevaluates ALL combinatorial code when a change occurs, and there may be a change for each loop.\"\n\nTake the below code for example with a priority built in:\n```\nlogic [NUM_FOO-2:0] select [NUM_FOO-1:0];\nlogic foo [NUM_FOO-1:0];\nalways_comb begin\n  for(int i = 0; i < NUM_FOO; i++) begin\n     foo[i] = { /* default logic goes here which could be complex */ };\n     for(int previous = i-1; previous >= 0; previous--) begin\n       if(select[i][previous]) begin\n         foo[i] = foo[previous];\n         break;\n       end\n     end\n  end\nend\n\n```\n\nI get a circular logic fail here although each unpacked dimension doesn't have circular dependence. If each foo[i] was treated as a foo_0, foo_1, foo_2 then things would be fine I assume.\n\nI assume the always_comb solution to this problem may be difficult but would verilator be able to work around the dependence if each iteration was in a generate loop so that the code generation stage could unroll it?\n\n```\nlogic [NUM_FOO-2:0] select [NUM_FOO-1:0];\nlogic foo [NUM_FOO-1:0];\ngenerate\n  for(i = 0; i < NUM_FOO; i++) begin\n     always_comb begin\n       foo[i] = { /* default logic goes here which could be complex */ };\n       for(int previous = i-1; previous >= 0; previous--) begin\n         if(select[i][previous]) begin\n           foo[i] = foo[previous];\n           break;\n         end\n       end\n     end\n  end\nendgenerate\n\n```\n\n      \n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2017-12-27",
+  "closed_at": "2017-12-27",
+  "code_blocks": [
+    "logic [NUM_FOO-2:0] select [NUM_FOO-1:0];\nlogic foo [NUM_FOO-1:0];\nalways_comb begin\n  for(int i = 0; i < NUM_FOO; i++) begin\n     foo[i] = { /* default logic goes here which could be complex */ };\n     for(int previous = i-1; previous >= 0; previous--) begin\n       if(select[i][previous]) begin\n         foo[i] = foo[previous];\n         break;\n       end\n     end\n  end\nend\n\n",
+    "logic [NUM_FOO-2:0] select [NUM_FOO-1:0];\nlogic foo [NUM_FOO-1:0];\ngenerate\n  for(i = 0; i < NUM_FOO; i++) begin\n     always_comb begin\n       foo[i] = { /* default logic goes here which could be complex */ };\n       for(int previous = i-1; previous >= 0; previous--) begin\n         if(select[i][previous]) begin\n           foo[i] = foo[previous];\n           break;\n         end\n       end\n     end\n  end\nendgenerate\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

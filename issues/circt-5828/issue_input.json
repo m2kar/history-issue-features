@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5828,
+  "issue_url": "https://github.com/llvm/circt/issues/5828",
+  "title": "[calyx-to-hw] calyx.instance bug.",
+  "body": "I'm trying to use calyx for multi-component design, but I seem to be running into bugs when I use `-lower-calyx-to-hw`.After a period of exploration I have located the problem.I think there are two reasons.\r\n```\r\n# Here's the example I wrote.\r\n# You can run circt-opt calyx-multi-component.mlir -lower-calyx-to-fsm -materialize-calyx-to-fsm -calyx-remove-groups-fsm -lower-calyx-to-hw to reproduce.\r\nmodule attributes {calyx.entrypoint = \"main\"} { \r\ncalyx.component @identity(%in: i32, %go: i1 {go}, %clk: i1 {clk}, %reset: i1 {reset}) -> (%out: i32, %done: i1 {done}) {\r\n  %r.in, %r.write_en, %r.clk, %r.reset, %r.out, %r.done = calyx.register @r : i32, i1, i1, i1, i32, i1\r\n  %c1_1 = hw.constant 1 : i1\r\n  %true = hw.constant true\r\n  calyx.wires {\r\n    calyx.group @save {\r\n      calyx.assign %r.in = %in : i32 \r\n      calyx.assign %r.write_en = %c1_1 : i1 \r\n      calyx.group_done %r.done : i1\r\n   } \r\n    calyx.assign %out = %r.out :i32\r\n  }\r\n\r\n  calyx.control {\r\n    calyx.seq {\r\n      calyx.enable @save\r\n    }\r\n }\r\n}\r\n\r\ncalyx.component @main(%go: i1 {go}, %clk: i1 {clk}, %reset: i1 {reset}) -> (%done: i1 {done}) {\r\n  %id.in, %id.go, %id.clk, %id.reset, %id.out, %id.done = calyx.instance @id of @identity : i32, i1, i1, i1, i32, i1\r\n  %r.in, %r.write_en, %r.clk, %r.reset, %r.out, %r.done = calyx.register @r : i32, i1, i1, i1, i32, i1 \r\n  %c1_1 = hw.constant 1 : i1\r\n  %c1_10 = hw.constant 10 : i32\r\n\r\n  calyx.wires {\r\n    calyx.group @run_id {\r\n      calyx.assign %id.in = %c1_10 : i32\r\n      calyx.assign %id.go = %c1_1 : i1\r\n      calyx.group_done %id.done : i1\r\n    }\r\n\r\n    calyx.group @use_id {\r\n      calyx.assign %r.in = %id.out : i32\r\n      calyx.assign %r.write_en = %c1_1: i1\r\n      calyx.group_done %r.done: i1\r\n    }\r\n  }\r\n\r\n  calyx.control {\r\n    calyx.seq {\r\n      calyx.invoke @id(%id.in = %c1_10) -> (i32)\r\n      calyx.invoke @id(%id.in = %c1_10) -> (i32) \r\n      calyx.enable @run_id\r\n      calyx.enable @use_id\r\n    }\r\n  }\r\n}\r\n}\r\n```\r\n\r\n\r\n[Here](https://github.com/llvm/circt/blob/8cb55c277790e23818c84957c357d156b14a0e19/lib/Conversion/CalyxToHW/CalyxToHW.cpp#L168) cell will call getPortInfo, but cell could be `calyx.instance`, `calyx.instance` will look up the referenced component through the symbol table, look up `calyx.component` and then convert to `ComponentInterface` to get some port information,you can see [here](https://github.com/llvm/circt/blob/8cb55c277790e23818c84957c357d156b14a0e19/lib/Dialect/Calyx/CalyxOps.cpp#L1547), but by this time `calyx.component` has already been lowered to `hw.module`, so the conversion is doomed to fail and will return a nullptr.\r\n\r\n[convertPrimitiveOp](https://github.com/llvm/circt/blob/8cb55c277790e23818c84957c357d156b14a0e19/lib/Conversion/CalyxToHW/CalyxToHW.cpp#L181) I don't think `calyx.instance` is included, I think the calyx.instance lower to hw is not implemented.\r\n\r\nIt actually took some time to locate this bug, I was actually heading towards fixing it, but I don't seem to have too many good ideas right now.",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "open",
+  "created_at": "2023-08-11",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

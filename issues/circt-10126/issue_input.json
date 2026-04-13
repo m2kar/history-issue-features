@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 10126,
+  "issue_url": "https://github.com/llvm/circt/pull/10126",
+  "title": "[Moore][ImportVerilog][MooreToCore] Add DPI call semantics to Moore",
+  "body": "# Description\r\n\r\nAdd moore.func.dpi and moore.func.dpi.call ops that use sim::DPIFunctionType to represent DPI-imported function declarations with first-class direction keywords (in/out/inout/return/ref). DPI-C imports are unconditionally lowered through this path, preserving DPI semantics (explicit return values, by-reference open-array arguments) through the Moore→Sim lowering pipeline.\r\n\r\n- MooreOps: DPIFuncOp stores sim::DPIFunctionType with custom parser/printer reusing shared helpers from SimTypes. Verifier delegates to DPIFunctionType::verify(). FuncDPICallOp models call sites with typed operands/results.\r\n- MooreDialect: Added sim::SimDialect as a dependent dialect.\r\n- ImportVerilog: FunctionLowering uses std::variant to hold either FunctionOpInterface or DPIFuncOp, with overloaded create() factory, isDPI()/isCoroutine() queries, and uniform accessors (getSymNameAttr, getFunctionType, getLoc, emitError). getDPISignature() builds DPIFunctionType directly; non-input open-array arguments use Ref direction.\r\n- MooreToCore: DPIFuncOpConversion iterates DPIFunctionType arguments, converts types, and lowers to sim::DPIFuncOp. FuncDPICallOpConversion lowers to sim::DPICallOp.\r\n- Tests: DPI declaration, call-site, open-array, chandle, and out/inout result-capture patterns covered in basic.sv. Full-pipeline HW-level checks in dpi-extern-decl.sv. MooreToCore lowering tested in moore-dpi-call-lowering.mlir. Error cases in errors.mlir.\r\n\r\nAI-Assisted-by: GitHub Copilot CLI with GPT-5.4 and Claude Opus 4.6\r\n\r\nThis is the second of a 2 PR series introducing full sematic preserving DPI calls from SystemVerilog through Moore to Sim.\r\nSee: #9977 ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-04-05",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

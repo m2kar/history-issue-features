@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1736,
+  "issue_url": "https://github.com/verilator/verilator/issues/1736",
+  "title": "Question: asynchronous resettable flops and its reset values",
+  "body": "---\n\n\nAuthor Name: **Yung-Ching Hsiao**\nOriginal Redmine Message: 660 from https://www.veripool.org\n\n\n\n---\n\nHi,\n\nWe have success verilated our design and the verilated model passed simulations. However, we found one issue regarding the reset values of asynchronous resettable flops:\n\nThe verilated flop will not reset to the reset value unless a reset_n negedge or a clock posedge is triggered. This will become a problem when\n1. flop does not receive clock during reset\n2. AND the initial value of reset_n is 0 (no negedge)\n\nIn our case,  we have (1)  because the flop is clock-gated, and (2) because reset is generated from verilog testbench which has been relying on 4-state simulation where x->0 is counted as negedge.\n\nWe are currently working around this problem by changing the reset generation to create a 1->0 negedge in the testbench but we are wondering if it makes sense to initialize the flop output to the reset value (see below)\n\nGiven a flop below:\n--------------------------------------------------------------------------\nmodule flop(qqqq, d, clk, reset_n);\noutput [2:0] qqqq;\ninput [2:0] d;\ninput clk;\ninput reset_n;\nreg [2:0] qqqq;\n\nalways @(posedge clk or negedge reset_n) begin\n         if (!reset_n) begin\n                 qqqq <= 3'b101;\n         end\n         else begin\n                 qqqq <= d;\n         end\nend\nendmodule\n--------------------------------------------------------------------------\n\nThe verilated code below:\n--------------------------------------------------------------------------\nvoid Vflop::_sequent__TOP__3(Vflop__Syms* __restrict vlSymsp) {\n     VL_DEBUG_IF(VL_PRINTF(\"    Vflop::_sequent__TOP__3\\n\"); );\n     Vflop* __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\n     // Body\n     // ALWAYS at flop.v:8\n     vlTOPp->__Vcellinp__v__qqqq = ((IData)(vlTOPp->__Vcellinp__v__reset_n)\n                                     ? (IData)(vlTOPp->__Vcellinp__v__d)\n                                     : 5);\n     VL_ASSIGN_SII(3,vlTOPp->qqqq, vlTOPp->__Vcellinp__v__qqqq);\n}\n\nvoid Vflop::_eval(Vflop__Syms* __restrict vlSymsp) {\n     /* ... */\n     if ((((IData)(vlTOPp->__Vcellinp__v__clk) & (~ (IData)(vlTOPp->__Vclklast__TOP____Vcellinp__v__clk)))\n          | ((~ (IData)(vlTOPp->__VinpClk__TOP____Vcellinp__v__reset_n))\n             & (IData)(vlTOPp->__Vclklast__TOP____VinpClk__TOP____Vcellinp__v__reset_n)))) {\n         vlTOPp->_sequent__TOP__3(vlSymsp);\n     }\n     /* ... */\n}\n\n/* constructor */\nVL_SC_CTOR_IMP(Vflop)\n{\n     //...\n     // Reset structure values\n     __Vcellinp__v__qqqq = VL_RAND_RESET_I(3);\n}\n\n--------------------------------------------------------------------------\n\nFrom the verilated code above,  \"__Vcellinp__v__qqqq\" is initialized to \neither (0) or random value initially and it will need a real 1->0 reset \nedge or a clock edge to get to settle to the proper reset value. This\nbehavior is a little bit different than the actual hardware where we\nexpect the reset value to be 3'b101 as soon as reset_n is 0 without clocks.\n\nHowever, if \"__Vcellinp__v__qqqq\" is initialized to the actual reset value,\nthe generated flop behavior could match the actually hardware. I wonder\nif it makes sense to do this change.\n\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2012-01-12",
+  "closed_at": "2012-01-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

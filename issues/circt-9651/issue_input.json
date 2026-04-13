@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9651,
+  "issue_url": "https://github.com/llvm/circt/pull/9651",
+  "title": "[MooreToCore][Sim] Implementation of queues in Sim",
+  "body": "This PR adds a new datatype to represent queues in the Sim dialect, as well as the following key operations:\r\n- `QueueEmptyOp` to create an empty queue.\r\n- `QueueSizeOp` to get the length of a queue.\r\n- `QueuePush{Front/Back}Op` creates a new queue with an element added to the beginning/end.\r\n- `QueuePop{Front/Back}Op` creates a new queue with one element removed from the beginning/end, returning the new queue and this element.\r\n\r\nThese are all pure operations, the idea being that later passes can avoid re-creating queues if not necessary.\r\n\r\nThe impure Moore ops for queues are lowered using the following strategy:\r\n- Determine the source operation for the `queue` argument.\r\n- Assuming this is a `ProbeOp`, note the signal being probed.\r\n- Emit a `DriveOp` which writes the updated queue back to the signal.\r\n\r\nDiscussion point: When is the assumption that a queue comes from a `ProbeOp` likely to be violated? One example I can think of is when returning a queue from a function call. In this case, though, the effect on the queue is impossible to observe. (Since queues are passed by value, and the the push/pop ops in Moore don't return anything.)\r\n\r\nIf @tobiasgrosser @Scheremo could perhaps review when available :)",
+  "labels": [
+    "Simulator",
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-11",
+  "closed_at": "2026-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

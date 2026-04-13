@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3609,
+  "issue_url": "https://github.com/verilator/verilator/issues/3609",
+  "title": "Support modules in generate blocks in vpi_iterate",
+  "body": "In vpi_iterate, there's no case for vpiInternalScope which I believe is the way we should be accessing scopes within a generate block. Currently, it's possible to get them by name, but within a module I want to be able to get a handle to the namespaces for generate blocks and use that again to get other attributes.\r\n\r\nTo adapt an example in t_vpi_var.v if we have\r\n```   \r\nmodule t ...;\r\n   ...\r\n   genvar i;\r\n   generate begin : gen_loop\r\n   for (i=1; i<=6; i=i+1) begin : arr\r\n     arr #(.LENGTH(i)) arr();\r\n   end\r\n   end endgenerate\r\n\r\nendmodule : t\r\n```\r\nAccording to my readings of 37.83 and 37.5 in IEEE1800, I believe it should work like the following in c++:\r\n```\r\n   gen_loop_h = vpi_iterate(vpiInternalScope, module_h);\r\n   gen_loop_gen_arr_h = vpi_iterate(vpiInternalScope, gen_loop_h);\r\n   gen_loop_gen_arr_0_h = vpi_handle_by_index(gen_loop_gen_arr_h, 0);\r\n   gen_loop_gen_arr_0_arra_h = vpi_iterate(vpiInternalScope, gen_loop_gen_arr_0_h);\r\n```\r\n\r\nI think the solution here would be to have the generate block identifier be a scope that somehow keeps track of its child scopes, but I'm open to ideas on how to get this working. ",
+  "labels": [
+    "resolution: fixed",
+    "effort: days",
+    "type: feature-IEEE",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-09",
+  "closed_at": "2024-03-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

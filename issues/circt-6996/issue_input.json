@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6996,
+  "issue_url": "https://github.com/llvm/circt/pull/6996",
+  "title": "[HW][FlattenIO] Flatten io arrays",
+  "body": "This is an attempt at following @uenoku's suggestions in https://github.com/llvm/circt/issues/6557#issuecomment-1884185136, by extending the `FlattenIO` pass flatten `hw::ArrayType` in addition to `hw::StructType`.\r\n\r\n@mortbopet how does this agree with your usage of `FlattenIO` with `ESI`? According to 062eab31a67c8a8418b2ba9fb4f1814cdca08783:\r\n>  My specific usecase for this is to be able to correctly lower ESI ports that are nested within a struct.\r\n\r\nIs this specific usecase covered by a test?\r\n\r\n```diff\r\ndiff --git a/test/Dialect/ESI/lowering.mlir b/test/Dialect/ESI/lowering.mlir\r\nindex b28197bcc..06d248133 100644\r\n--- a/test/Dialect/ESI/lowering.mlir\r\n+++ b/test/Dialect/ESI/lowering.mlir\r\n@@ -1,6 +1,6 @@\r\n // RUN: circt-opt %s --lower-esi-to-physical -verify-diagnostics | circt-opt -verify-diagnostics | FileCheck %s\r\n // RUN: circt-opt %s --lower-esi-ports -verify-diagnostics | circt-opt -verify-diagnostics | FileCheck --check-prefix=IFACE %s\r\n-// RUN: circt-opt %s --lower-esi-to-physical --lower-esi-ports --hw-flatten-io --lower-esi-to-hw -verify-diagnostics | circt-opt -verify-diagnostics | FileCheck --check-prefix=HW %s\r\n+// RUN: circt-opt %s --lower-esi-to-physical --lower-esi-ports --lower-esi-to-hw -verify-diagnostics | circt-opt -verify-diagnostics | FileCheck --check-prefix=HW %s\r\n \r\n hw.module.extern @Sender(in %clk: !seq.clock, out x: !esi.channel<i4>, out y: i8) attributes {esi.bundle}\r\n hw.module.extern @ArrSender(out x: !esi.channel<!hw.array<4xi64>>) attributes {esi.bundle}\r\n@@ -67,7 +67,7 @@ hw.module @add11(in %clk: !seq.clock, in %ints: !esi.channel<i32>, out mutatedIn\r\n }\r\n // HW-LABEL: hw.module @add11(in %clk : !seq.clock, in %ints : i32, in %ints_valid : i1, in %mutatedInts_ready : i1, out ints_ready : i1, out mutatedInts : i32, out mutatedInts_valid : i1, out c4 : i4) {\r\n // HW:   %{{.+}} = hw.constant 11 : i32\r\n-// HW:   [[RES0:%.+]] = comb.add %ints, %{{.+}} : i32\r\n+// HW:   [[RES0:%.+]] = comb.add %{{.+}}, %ints : i32\r\n // HW:   %{{.+}} = hw.constant 0 : i4\r\n // HW:   hw.output %mutatedInts_ready, [[RES0]], %ints_valid, %{{.+}} : i1, i32, i1, i4\r\n ```\r\n\r\nThe above changes seem to make the tests pass, but I imagine that I might be breaking something that I don't quite understand.\r\n\r\nWould it be preferable to template the `FlattenIO` pass over an aggregate type (`hw::StructType` or `hw::ArrayType` in practice)? Or to provide parameters to the pass describing what aggregate types to flatten? Any advice would be appreciated.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-05-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

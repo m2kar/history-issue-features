@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7379,
+  "issue_url": "https://github.com/verilator/verilator/pull/7379",
+  "title": "Support consecutive repetition [*N:M], [+], and [*] in sequence expressions",
+  "body": "## Summary\r\n\r\nThis patch extends Verilator's consecutive repetition support to cover range\r\nand unbounded forms -- `[*N:M]`, `[+]` (= `[*1:$]`), and `[*]` (= `[*0:$]`)\r\n-- when they appear as the leading element of a sequence expression (e.g.,\r\n`a[*1:3] ##1 b`). Standalone exact `[*N]` (N >= 2) was already handled by\r\n`V3AssertPre`; that path is unchanged.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t (input clk);\r\n  logic a, b;\r\n  assert property (@(posedge clk) a[*1:3] ##1 b);  // range\r\n  assert property (@(posedge clk) a[+]    ##1 b);  // one-or-more\r\n  assert property (@(posedge clk) a[*]    ##1 b);  // zero-or-more\r\nendmodule\r\n```\r\nOn master:\r\n\r\n```\r\n%Error-UNSUPPORTED: t.sv:3: Unsupported: consecutive repetition range in sequence expression\r\n%Error-UNSUPPORTED: t.sv:4: Unsupported: consecutive repetition range in sequence expression\r\n%Error-UNSUPPORTED: t.sv:5: Unsupported: consecutive repetition range in sequence expression\r\n```\r\n## Changes\r\n\r\n- src/V3AstNodeExpr.h: extend AstConsRep with op3 maxCountp (Optional[AstNodeExpr]) and m_unbounded bool; add second constructor for range/unbounded forms; update sameNode, dump, dumpJson.\r\n- src/V3AstNodes.cpp: implement AstConsRep::dump and dumpJson.\r\n- src/verilog.y: add grammar rules for [*N:M], [+], [*] in sexpr context; remove stale BBUNSUP placeholders for these forms from boolean_abbrev.\r\n- src/V3Width.cpp: validate maxCountp -- must be constant, >= min, and non-zero (IEEE 1800-2023 16.9.2).\r\n- src/V3AssertPre.cpp: add early return for range/unbounded forms so they reach V3AssertProp instead of the saturating-counter path.\r\n- src/V3AssertProp.cpp: add AssertPropConsRepVisitor -- runs before DFA graph building; intercepts AstSExpr nodes whose leading operand is AstConsRep; lowers to a PExpr forward-looking loop (count cycles of expr up to min, then try successor). Special-cases minN == 0 to skip an always-true cnt >= 0 comparison that would trigger -UNSIGNED. Standalone [+] and [*] lower to the expression itself (shortest non-vacuous match, matching simulator behavior). Standalone range with minN >= 2 reports UNSUPPORTED. Trailing ConsRep in a sequence expression reports UNSUPPORTED.\r\n\r\n## Tests\r\n\r\n- t_assert_prop_consec_rep: CRC functional test extended with` [*1:3] ##1 b, [+] ##1 b`, standalone` [+] |-> b, and [*] |-> b` cases; expected failure counts calibrated against simulation.\r\n- t_assert_prop_consec_rep_bad: error cases -- non-constant count, ` max < min `, non-constant max, `[*0], [*N:0]`.\r\n- t_assert_prop_consec_rep_unsup: unsupported cases -- non-`##1` delay, standalone range (`[*2:3] |-> 1`), trailing position (`b ##1 a[+]`).\r\n\r\n## Known Limitations\r\n\r\n- Trailing position (`b ##1 a[+]`) requires NFA; reports UNSUPPORTED.\r\n- Non-`##1` inter-repetition delay reports UNSUPPORTED.\r\n- Standalone range with minN >= 2 reports UNSUPPORTED.\r\n- `[*N:$] `(half-unbounded, N >= 2) not yet parsed; planned follow-up.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-05",
+  "closed_at": "2026-04-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

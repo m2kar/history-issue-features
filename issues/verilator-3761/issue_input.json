@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3761,
+  "issue_url": "https://github.com/verilator/verilator/issues/3761",
+  "title": "Parameter enum casting incorrectly throws error",
+  "body": "https://github.com/verilator/verilator/commit/d25834e57b77fd9712628143646ddd82a8de3c1d\r\n recently introduced this check\r\n\r\n## Test Case\r\n```\r\nmodule t;\r\n\r\n   typedef enum {ZERO, ONE, TWO} e_t;\r\n\r\n   localparam e_t param_enum = e_t'(0);\r\n\r\nendmodule\r\n```\r\n\r\nincorrectly produces\r\n\r\n```\r\n======================================================================\r\nvlt/t_enum_type_elaborate: ==================================================\r\n        perl /usr/scratch/anolte/local/verilator/test_regress/../bin/verilator --prefix Vt_enum_type_elaborate --x-assign unique -cc -Mdir obj_vlt/t_enum_type_elaborate --fdedup --debug-check --comp-limit-members 10 --lint-only --clk clk  -f input.vc +define+TEST_OBJ_DIR=obj_vlt/t_enum_type_elaborate t/t_enum_type_elaborate.v    > obj_vlt/t_enum_type_elaborate/vlt_compile.log\r\n%Error-ENUMVALUE: t/t_enum_type_elaborate.v:11:19: Illegal implicit conversion to enum 't.e_t' from 'logic[31:0]' (IEEE 1800-2017 6.19.3)\r\n                                                 : ... In instance t\r\n                                                 : ... Suggest use enum's mnemonic, or static cast\r\n   11 |    localparam e_t param_enum = e_t'(0);\r\n      |                   ^~~~~~~~~~\r\n                  ... For error description see https://verilator.org/warn/ENUMVALUE?v=5.003\r\n%Error: Exiting due to 1 error(s)\r\n%Warning: vlt/t_enum_type_elaborate: Exec of perl failed: %Error-ENUMVALUE: t/t_enum_type_elaborate.v:11:19: Illegal implicit conversion to enum 't.e_t' from 'logic[31:0]' (IEEE 1800-2017 6.19.3)\r\n\r\nvlt/t_enum_type_elaborate: %Error: Exec of perl failed: %Error-ENUMVALUE: t/t_enum_type_elaborate.v:11:19: Illegal implicit conversion to enum 't.e_t' from 'logic[31:0]' (IEEE 1800-2017 6.19.3)\r\nvlt/t_enum_type_elaborate: FAILED: Exec of perl failed: %Error-ENUMVALUE: t/t_enum_type_elaborate.v:11:19: Illegal implicit conversion to enum 't.e_t' from 'logic[31:0]' (IEEE 1800-2017 6.19.3)\r\n==SUMMARY: Passed 0  Failed 1  Unsup 0  Time 0:00\r\n\r\n======================================================================\r\n```\r\nsaying that the rhs is logic[31:0]\r\n\r\nRunning on Debian GNU/Linux 10, latest commit ef72b73a5957d365ebbb461d0f5be7847aceb7bf",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-18",
+  "closed_at": "2022-11-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

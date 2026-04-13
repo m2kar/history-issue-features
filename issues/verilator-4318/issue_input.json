@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4318,
+  "issue_url": "https://github.com/verilator/verilator/issues/4318",
+  "title": "Class - vif reference throws CPP redeclaration error",
+  "body": "Thanks for taking the time to report this.\r\n\r\n```verilog\r\ninterface if_1;\r\n  bit clk;\r\nendinterface : if_1\r\n\r\nclass drv_c;\r\n  virtual if_1 vif;\r\n\r\n  virtual task run();\r\n    @(posedge vif.clk);\r\n   // Below line causes Verilator CPP error\r\n  //  Commenting out below line works \r\n    @(posedge vif.clk);\r\n  endtask : run\r\nendclass : drv_c\r\n\r\nmodule m;\r\n  drv_c d_0;\r\n\r\n  if_1 u_if_1 ();\r\n\r\n  initial begin\r\n    d_0 = new();\r\n    d_0.vif = u_if_1;\r\n    //d_0.run();\r\n    $finish(2);\r\n  end\r\nendmodule : m\r\n\r\n\r\n```\r\n\r\nLog:\r\n```log\r\nVclk_blk___024unit__03a__03adrv_c__Vclpkg__DepSet_h69446cda__0.cpp: In member function ‘virtual VlCoroutine Vclk_blk___024unit__03a__03adrv_c::__VnoInFunc_run(Vclk_blk__Syms*)’:\r\nVclk_blk___024unit__03a__03adrv_c__Vclpkg__DepSet_h69446cda__0.cpp:42:18: error: redeclaration of ‘CData __Vtrigprevexpr_he98b049f__0’\r\n   42 |     CData/*0:0*/ __Vtrigprevexpr_he98b049f__0;\r\n      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nVclk_blk___024unit__03a__03adrv_c__Vclpkg__DepSet_h69446cda__0.cpp:19:18: note: ‘CData __Vtrigprevexpr_he98b049f__0’ previously declared here\r\n   19 |     CData/*0:0*/ __Vtrigprevexpr_he98b049f__0;\r\n      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nmake: *** [/home/srini/tools/vlator/git_vlator/verilator//include/verilated.mk:245: Vclk_blk__ALL.o] Error 1\r\nmake: Leaving directory '/home/srini/proj/CVC_Labs/vsv_labs_2014/lab5/run_dir/obj_dir'\r\n%Error: make -C obj_dir -f Vclk_blk.mk -j 1 exited with 2\r\n```\r\n\r\nWhat I noticed is the first reference to \"posedge vif.clk\" works, the second one throws this error.\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n> Verilator 5.013 devel rev v5.008-304-gdfbd711e1 (mod)\r\n\r\nWhat OS and distribution are you using?\r\n\r\n> Windows, WSL\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n> Yes, but my exposure to Verilator source code is minimal, will attempt. \r\n",
+  "labels": [
+    "area: scheduling",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-27",
+  "closed_at": "2023-07-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

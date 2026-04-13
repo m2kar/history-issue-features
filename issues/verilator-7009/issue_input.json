@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7009,
+  "issue_url": "https://github.com/verilator/verilator/issues/7009",
+  "title": "Parametrized hierarchical blocks are broken",
+  "body": "This line, added in a730daabef6f57fc13884f2dc3934568f50142ae disables prametrized hierarchical block lookup in the final re-integration run:\nhttps://github.com/verilator/verilator/blob/60b52a4986281fff3e809a6df8764a7154dce90e/src/V3Param.cpp#L102-L103\n\nIt gates the first term in this condition:\nhttps://github.com/verilator/verilator/blob/60b52a4986281fff3e809a6df8764a7154dce90e/src/V3Param.cpp#L1336\n\nThe effect is that in the final run, the stubs added for parametrized hierarchical blocks are ignored, and all the parametrized hierarchical blocks referenced from the root are re-compiled in the final run.\n\nTo demonstrate, add a print of `modelp->hierName()` in `VerilatedContext::addModel`, then run `t_hier_block.py`, it will show that the `delay` modules are not added as sub-models.\n\nAlternatively, add `$display(\"foobar\")\"` inside `module delay` in the same test, then grep the generated sources for `foobar`. You will find it in both the compiled `Vdelay*` sub models, and in the root model. (They should only appear in the sub models)\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

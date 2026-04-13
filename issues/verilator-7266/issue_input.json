@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7266,
+  "issue_url": "https://github.com/verilator/verilator/pull/7266",
+  "title": "Support dynamic array .size in inline randomize() with constraints (#7258)",
+  "body": "## Summary\r\nFixes #7258 (partial). This patch adds support for `.size` on dynamic arrays and queues inside inline `randomize() with {}` constraints. Previously, `.size` in inline constraints triggered a `CONSTRAINTIGN` warning and was silently ignored, while the same construct worked correctly in class-level constraints.\r\n\r\n## Reproducer\r\n```systemverilog\r\nclass Packet;\r\n  rand int unsigned m_length;\r\n  rand byte m_data[];\r\n  constraint c_length { m_length inside {[1:16]}; }\r\nendclass\r\n\r\nmodule t;\r\n  initial begin\r\n    Packet pkt = new;\r\n    // .size in inline constraint -- worked in class constraints, failed here\r\n    int ok = pkt.randomize() with {\r\n      m_data.size == m_length;\r\n    };\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Warning-CONSTRAINTIGN: Unsupported: randomizing this expression, treating as state\r\n    ... m_data.size == m_length;\r\n              ^~~~\r\n```\r\nThe `.size` constraint is silently dropped, so the array is not resized and the constraint is not enforced.\r\n\r\n## Changes\r\n- `src/V3Randomize.cpp`: Added pre-scan of the captured `with {}` expression tree for `DYN_SIZE`/`ASSOC_SIZE` method calls before passing to `ConstraintExprVisitor`. For each `.size` call on a rand dynamic/queue array, creates a size variable (reusing `createOrGetSizeVar` helper), replaces the `.size` node with a VarRef to the size variable, appends a `size >= 0` constraint, and generates a post-solve resize statement guarded by solver success.\r\n- `src/V3Randomize.cpp`: Extracted `createOrGetSizeVar` and `createSizeGteZeroConstraint` as shared helpers, deduplicating the existing class-level constraint path.\r\n- `test_regress/t/t_randomize_method_types_unsup.out`: Updated golden output -- `.size` in inline constraints no longer produces `CONSTRAINTIGN`.\r\n\r\n## Test\r\n- Added `test_regress/t/t_constraint_dyn_size_inline.{v,py}` -- tests inline `.size` constraints with multiple dynamic arrays, cross-field size binding, and `foreach` element constraints.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-16",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4820,
+  "issue_url": "https://github.com/verilator/verilator/issues/4820",
+  "title": "commit 95c4ade causes new maybe-uninitialized errors/warnings when building user code",
+  "body": "I'm sure @gezalore's commit 95c4ade (2023-10-24) is great in general, but it has the side effect of causing new compiler warnings/errors when building user code.\r\nFor example with g++ 12.2.0:\r\n```\r\n/redacted/share/verilator/include/verilated_fst_c.cpp: In member function ‘void VerilatedFst::declare(uint32_t, const char*, int, VerilatedTraceSigDirection, VerilatedTraceSigKind, VerilatedTraceSigType, bool, int, bool, int, int)’:\r\n/redacted/share/verilator/include/verilated_fst_c.cpp:218:33: warning: ‘varDir’ may be used uninitialized [-Wmaybe-uninitialized]\r\n  218 |             = fstWriterCreateVar(m_fst, varType, varDir, bits, name_str.c_str(), 0);\r\n      |               ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n/redacted/share/verilator/include/verilated_fst_c.cpp:177:15: note: ‘varDir’ was declared here\r\n  177 |     fstVarDir varDir;\r\n      |               ^~~~~~\r\n```\r\n\r\nDepending on some mix of configuration and compiler version, I've seen it show up either as a harmless-but-ugly warning, or as a fatal error (`cc1plus: all warnings being treated as errors`).\r\n\r\nA brainless one-line patch eliminates the regression, and is unlikely to change any actual behavior:\r\n```\r\ndiff --git a/include/verilated_fst_c.cpp b/include/verilated_fst_c.cpp\r\nindex 79c5c9ee9..ffc78ec99 100644\r\n--- a/include/verilated_fst_c.cpp\r\n+++ b/include/verilated_fst_c.cpp\r\n@@ -174,7 +174,7 @@ void VerilatedFst::declare(uint32_t code, const char* name, int dtypenum,\r\n\r\n     if (dtypenum > 0) fstWriterEmitEnumTableRef(m_fst, m_local2fstdtype[dtypenum]);\r\n\r\n-    fstVarDir varDir;\r\n+    fstVarDir varDir = FST_VD_IMPLICIT;\r\n     switch (direction) {\r\n     case VerilatedTraceSigDirection::INOUT: varDir = FST_VD_INOUT; break;\r\n     case VerilatedTraceSigDirection::OUTPUT: varDir = FST_VD_OUTPUT; break;\r\n```\r\n\r\nOf course, one can also work around the effect by adding `-CFLAGS -Wno-maybe-uninitialized`\r\nto the verilator command line.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-12",
+  "closed_at": "2024-01-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5381,
+  "issue_url": "https://github.com/verilator/verilator/issues/5381",
+  "title": "Improper continuous assignment bug",
+  "body": "Test case here: https://github.com/verilator/verilator/pull/5380\r\n```\r\n// this should be an initial assignment, but verilator thinks it's a continous assignment\r\nlogic temp0 = bar_in.field0;\r\n// If it is observed (verilator public, coverage, etc.), then it switches correctly to initial\r\n// logic temp0 /* verilator public */  = bar_in.field0;\r\n```\r\nIt's almost never intended to assign initial with another signal, however it is technically the correct interpretation of the syntax. Slang has a [warning](https://sv-lang.com/warning-ref.html#static-init-value) for this.\r\n\r\nVerilator interprets it as continuous, but interprets it correctly as initial when run under public, coverage, and perhaps other observability modifiers. \r\n\r\nI think the verilator test suite should have a few different testing environments to override some flags that shouldn't change the output of tests- like running with public, coverage, or tracing. It could also have a mode that randomly publicizes some wires and not others. We discovered this bug by running with an increased observability mode, causing some tests to fail.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-08-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

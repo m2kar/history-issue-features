@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4041,
+  "issue_url": "https://github.com/llvm/circt/pull/4041",
+  "title": "[LowerSeqToSV] Keep self assignments",
+  "body": "This fixes the same issue for LowerSeqToSV as https://github.com/llvm/circt/pull/3763. Xprop build requires all registers to be assigned at least once. However LowerSeqToSV removed all self connections. This PR fixes the issue by keeping toplevel self assignments. \r\nFor example:\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1>\r\n    input clock: Clock\r\n    output b: UInt<1>\r\n\r\n    reg r: UInt<1>, clock\r\n    r <= mux(bits(add(a, a), 0, 0), a, r)\r\n    b <= r\r\n```\r\n\r\nw/o PR\r\n```\r\n\r\nmodule Foo(\r\n  input  a,\r\n         clock,\r\n  output b);\r\n\r\n  reg r;\r\n `ifndef SYNTHESIS\r\n```\r\n\r\nw/ PR:\r\n```\r\n  reg r;\r\n  always @(posedge clock)\r\n    r <= r;\r\n  `ifndef SYNTHESIS\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-02",
+  "closed_at": "2022-10-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

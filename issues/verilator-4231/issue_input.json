@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4231,
+  "issue_url": "https://github.com/verilator/verilator/issues/4231",
+  "title": "Signal incorrectly detected as multi-driven",
+  "body": "The following code:\r\n\r\n```\r\ninterface test_if #(parameter int AA = 2, BB=5);\r\n\r\n   logic [AA-1 : 0]     a;\r\n   logic [BB-1 : 0]     b;\r\n   logic                c;\r\n   logic                d;\r\n\r\n   modport slave (input  a,\r\n                  input  b,\r\n                  input  c,\r\n                  input  d);\r\n\r\n   modport master (output a,\r\n                   output b,\r\n                   output c,\r\n                   output d);\r\n\r\nendinterface : test_if\r\n\r\nmodule test\r\n  (input logic [28:0]  a,\r\n   output logic [28:0] b);\r\n\r\n   always_comb begin\r\n      b = a;\r\n   end\r\nendmodule\r\n\r\nmodule multi_driven\r\n  (\r\n   input logic [20-1 : 0] data_in,\r\n   output logic [20-1 : 0] data_out,\r\n   test_if.slave  test_if_in,\r\n   test_if.master test_if_out\r\n   );\r\n\r\n   test test_inst\r\n     (\r\n      .a({data_in,\r\n          test_if_in.a,\r\n          test_if_in.b,\r\n          test_if_in.c,\r\n          test_if_in.d}),\r\n      .b({data_out,\r\n          test_if_out.a,\r\n          test_if_out.b,\r\n          test_if_out.c,\r\n          test_if_out.d}));\r\n\r\nendmodule;\r\n```\r\n\r\nGives the following warnings:\r\n\r\n```\r\nverilator --no-timing --lint-only -Wall multi_driven.sv\r\n%Warning-DECLFILENAME: multi_driven.sv:1:11: Filename 'multi_driven' does not match IFACE name: 'test_if'\r\n    1 | interface test_if #(parameter int AA = 2, BB=5);\r\n      |           ^~~~~~~\r\n                       ... For warning description see https://verilator.org/warn/DECLFILENAME?v=5.010\r\n                       ... Use \"/* verilator lint_off DECLFILENAME */\" and lint_on around source to disable this message.\r\n%Warning-MULTIDRIVEN: multi_driven.sv:32:28: Bits [19:0] of signal 'data_out' have multiple combinational drivers\r\n                      multi_driven.sv:44:8: ... Location of first driver\r\n   44 |       .b({data_out,\r\n      |        ^\r\n                      multi_driven.sv:44:8: ... Location of other driver\r\n   44 |       .b({data_out,\r\n      |        ^\r\n                      multi_driven.sv:32:28: ... Only the first driver will be respected\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\nThis signal doesn't seem to be multi-driven to me and moving `data_out` around in the concatenation makes the warning disappear. ",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-25",
+  "closed_at": "2023-06-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

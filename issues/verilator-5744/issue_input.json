@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5744,
+  "issue_url": "https://github.com/verilator/verilator/issues/5744",
+  "title": "Optimize labels as final `if` block statement",
+  "body": "There are extra JumpGo/JumpLabels which can be optimized away, when the Go is the final statement of an if or else statement block.  Example current C code is this:\n\n```\n         if (...) {\n             m_is_registered__Vfuncrtn = this->__PVT__m_registered;\n             goto __Vlabel7;\n         }\n         __Vlabel7: ;\n\n```\n\nExample Verilog code:\n\n```\nclass uvm_object;\nendclass\n\nclass uvm_callback;\nendclass\n\nclass uvm_callbacks #(type T=uvm_object, type CB=uvm_callback);\n   bit m_registered = 1;\n   virtual function bit m_is_registered(uvm_object obj, uvm_callback cb);\n      if (m_is_for_me(cb) && m_am_i_a(obj)) begin   // <--- here\n         return m_registered;\n      end\n   endfunction\n\n   virtual function bit m_is_for_me(uvm_callback cb);\n      CB this_cb;\n      // verilator lint_off WIDTHTRUNC\n      return ($cast(this_cb, cb));\n      // verilator lint_on WIDTHTRUNC\n   endfunction\n\n   virtual function bit m_am_i_a(uvm_object obj);\n      T this_t;\n      // verilator lint_off WIDTHTRUNC\n      return ($cast(this_t, obj));\n      // verilator lint_on WIDTHTRUNC\n   endfunction\nendclass\n\nclass my_object extends uvm_object;\nendclass\n\nclass my_callback extends uvm_callback;\nendclass\n\nclass other_object extends uvm_object;\nendclass\n\nmodule t(/*AUTOARG*/);\n\n   initial begin\n      my_object obj;\n      other_object oobj;\n      my_callback cb;\n      uvm_callbacks#(my_object, my_callback) ucs;\n      bit i;\n\n      obj = new;\n      oobj = new;\n      cb = new;\n      ucs = new;\n\n      i = ucs.m_is_registered(obj, cb);\n      if (i !== 1) $stop;\n      i = ucs.m_is_registered(oobj, cb);\n      if (i !== 0) $stop;\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\n\nendmodule\n\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-22",
+  "closed_at": "2025-01-25",
+  "code_blocks": [
+    "         if (...) {\n             m_is_registered__Vfuncrtn = this->__PVT__m_registered;\n             goto __Vlabel7;\n         }\n         __Vlabel7: ;\n\n",
+    "class uvm_object;\nendclass\n\nclass uvm_callback;\nendclass\n\nclass uvm_callbacks #(type T=uvm_object, type CB=uvm_callback);\n   bit m_registered = 1;\n   virtual function bit m_is_registered(uvm_object obj, uvm_callback cb);\n      if (m_is_for_me(cb) && m_am_i_a(obj)) begin   // <--- here\n         return m_registered;\n      end\n   endfunction\n\n   virtual function bit m_is_for_me(uvm_callback cb);\n      CB this_cb;\n      // verilator lint_off WIDTHTRUNC\n      return ($cast(this_cb, cb));\n      // verilator lint_on WIDTHTRUNC\n   endfunction\n\n   virtual function bit m_am_i_a(uvm_object obj);\n      T this_t;\n      // verilator lint_off WIDTHTRUNC\n      return ($cast(this_t, obj));\n      // verilator lint_on WIDTHTRUNC\n   endfunction\nendclass\n\nclass my_object extends uvm_object;\nendclass\n\nclass my_callback extends uvm_callback;\nendclass\n\nclass other_object extends uvm_object;\nendclass\n\nmodule t(/*AUTOARG*/);\n\n   initial begin\n      my_object obj;\n      other_object oobj;\n      my_callback cb;\n      uvm_callbacks#(my_object, my_callback) ucs;\n      bit i;\n\n      obj = new;\n      oobj = new;\n      cb = new;\n      ucs = new;\n\n      i = ucs.m_is_registered(obj, cb);\n      if (i !== 1) $stop;\n      i = ucs.m_is_registered(oobj, cb);\n      if (i !== 0) $stop;\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n   end\n\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

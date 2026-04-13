@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7651,
+  "issue_url": "https://github.com/llvm/circt/pull/7651",
+  "title": "[FIRRTL] Re-implement old EmitOMIR ports logic in LowerClasses.",
+  "body": "This transformation used to exist in EmitOMIR to detect the presence of a specific field, and use it to add another specific field on the fly. While we could do this through other means downstream, for full compatibility we are re-implementing this logic.\r\n\r\nBecause we are already doing many expensive passes through the object IR, this is implemented throughout the existing methods in LowerClasses, rather than adding a new pass or a new traversal to an existing pass.\r\n\r\nOne consequence of this choice is we do need to perform some global mutation to, e.g., allocate new hierpath ops in a method that was previously parallelized internally to the pass. Rather than reworking things or executing that method serially, this patch adds a mutex to each instance of the pass, and uses the mutex around those global mutations. This should be a fair tradeoff, because in practice we actually only add this new field to one or two objects in the entire IR.\r\n\r\nOtherwise, this is fairly straightforward. When we are declaring classes, we check if we need to add the extra field. When we are adding class bodies, we check if we need to add the extra block argument. When we are converting object instances, we check if we need to supply the extra argument. It is in this final case that we actually make a list of objects. Now that we are off the JSON based OMIR, this is the proper way to add a new field with the same type.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-10-01",
+  "closed_at": "2024-10-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

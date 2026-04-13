@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3509,
+  "issue_url": "https://github.com/verilator/verilator/issues/3509",
+  "title": "Wire tie-off causing bad logic optimization",
+  "body": "Verilator Version: 4.224\r\n\r\nVerilated code is exhibiting wrong behavior in the follow scenario. `wire_2` will never be valid since bit[3] is tied off to 0, making the condition impossible. Unfortunately, it looks as though the verilated code drops the upper bit and only compares bit[2] from `wire_0`. I did run it against version 4.204 and observed the correct logic behavior being generated. \r\n\r\n```\r\nmodule dut();\r\n\r\nlogic [2:0] wire_0;\r\nlogic [3:0] wire_1;\r\nlogic wire_2;\r\n\r\nassign wire_1 = {1'h0, wire_0};\r\n\r\nassign wire_2 = wire_1[3:2] == 2'h2 & wire_1[1:0] != 2'h3;\r\n\r\nendmodule\r\n```\r\n\r\nVerilated code snippet\r\n```\r\nbufp->fullBit(oldp+3,((IData)(((~ ((IData)(vlSelf->dut__DOT__wire_0) \r\n                                       >> 2U)) & (3U \r\n                                                  != \r\n                                                  (3U \r\n                                                   & (IData)(vlSelf->dut__DOT__wire_0)))))));\r\n```\r\n\r\nVerilator cmd used:\r\n```\r\n/usr/bin/perl /verilator/4.224/bin/verilator --cc --exe -sv --assert --vpi --top-module dut --timescale 1ps/1ps -Wno-LATCH --language 1800-2009 dut.sv +libext+.v+.sv --trace --report-unoptflat --timescale 1ps/1ps -Wno-LATCH -Wno-STMTDLY -Wno-WIDTH -Wno-UNUSED --x-assign unique --error-limit 9999 --inline-mult 100000 --output-split 1000000 --output-split-cfuncs 5000 --output-split-ctrace 4000 --no-threads -DTEST_HARNESS=VTestDriver -DVL_USER_FINISH -DVL_USER_FATAL  -LDFLAGS -Wl,-rpath=.\r\n```\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-21",
+  "closed_at": "2022-07-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

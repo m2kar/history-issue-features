@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6611,
+  "issue_url": "https://github.com/verilator/verilator/pull/6611",
+  "title": "Don't pick initial random values for verilator-created variables",
+  "body": "I'm struggling to create a reproducer for this one but wanted to first discuss my current solution.  The problem we ran into involves code that looks something like:\r\n```verilog\r\nlogic [N:0] foo;\r\nalways_comb foo[0] = bar;\r\nfor (k = 1; k < N+1; k++) begin : gen_loop\r\n    always_ff @(posedge clk) foo[k] <= foo[k-1];\r\n```\r\nwhere `bar` is an input port which is connected to `'1`.\r\n\r\nOur tests were failing in unexpected ways and we tracked it down to the fact that `foo[0]` was low, which was unexpected since `bar` was high.  The problem only presents with `--x-initial unique`.  Also, we have a number of instances of this logic but only some are affected.\r\n\r\nVerilator is creating `VdlyMask` variables for `foo` because it is assigned via both blocking and non-blocking assignments.  And (I believe) due to output cfuncs splitting some of these `VdlyMask` variables are local to `Vtop_Foo___nba_sequent__*_0()` and some belong to `vlSelf` (again, I believe) because they are used across `Vtop_Foo___nba_sequent__*_[01]()`.  The ones that belong to `vlSelf` are initialized in `*___ctor_var_reset()` using `VL_SCOPED_RAND_RESET_I()` whereas the ones which are local to the one NBA function are initialized to `0`.\r\n\r\nI think the rest of the story here is that the low bit of the `VdlyMask` variable should always be zero allowing the sequential assignment of that bit to be unperturbed during NBA.  However, because `VdlyMask` is randomized it can cause the mask to be wrong and then the initial assignment is incorrect and things fall apart from there.\r\n\r\nQuestions:\r\nIs it intended that block, module and stmt temp vars should be randomized with `--x-initial`?\r\n\r\nMy problem with creating a reproducer is that I can observe the problem when verilating our many source files, but when I squash the source via `verilator -E` (in preparation for sv-bugpoint) the issue does not present on the squashed file (I'm running `-E` with all the same flag as when I observe the issue).  Does anyone know if code that has already been preprocessed with output split differently than code which has not?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-29",
+  "closed_at": "2025-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

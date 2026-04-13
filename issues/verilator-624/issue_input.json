@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 624,
+  "issue_url": "https://github.com/verilator/verilator/issues/624",
+  "title": "$fopen(\"file\") should have an implicit mode of \"w\"",
+  "body": "---\n\n\nAuthor Name: **Jason McMullan** (@ezrec)\nOriginal Redmine Issue: 624 from https://www.veripool.org\nOriginal Date: 2013-02-22\n\n\n---\n\nThe following testcase illustrates the issue:\r\n\r\n```\r\nmodule testcase_file ();\r\ninteger fd;\r\ninitial begin\r\n     fd = $fopen(\"file.txt\");\r\n     $fdisplay(fd, \"Hello World\\n\");\r\n     $fclose(fd);\r\nend\r\nendmodule\r\n\n```\r\n\r\nCompiling with verilator results in a syntax error:\r\n```\r\n$ verilator --cc testcase_fopen.v \r\n%Error: testcase_fopen.v:4: syntax error, unexpected ')'\r\n%Error: Exiting due to 1 error(s)\r\n%Error: Command Failed /usr/bin/verilator_bin --cc testcase_fopen.v\r\n\n```\r\n\r\n\r\nThe following patch resolves this issue:\r\n\r\n```\r\ndiff --git a/src/verilog.y b/src/verilog.y\r\nindex fa0a208..a7d084f 100644\r\n--- a/src/verilog.y\r\n+++ b/src/verilog.y\r\n@@ -2185,6 +2185,7 @@ statementVerilatorPragmas<nodep>:\r\n foperator_assignment<nodep>:\t// IEEE: operator_assignment (for first part of expression)\r\n \t\tfexprLvalue '=' delayE expr\t{ $$ = new AstAssign($2,$1,$4); }\r\n \t|\tfexprLvalue '=' yD_FOPEN '(' expr ',' expr ')'\t{ $$ = new AstFOpen($3,$1,$5,$7); }\r\n+\t|\tfexprLvalue '=' yD_FOPEN '(' expr ')'\t{ $$ = new AstFOpen($3,$1,$5,  new AstConst($<fl>1,V3Number(V3Number::VerilogString(),$<fl>5,GRAMMARP->deQuote($<fl>5, \"w\")))); }\r\n \t//\r\n \t//UNSUP\t~f~exprLvalue '=' delay_or_event_controlE expr { UNSUP }\r\n \t//UNSUP\t~f~exprLvalue yP_PLUS(etc) expr\t\t{ UNSUP }\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-22",
+  "closed_at": "2013-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4042,
+  "issue_url": "https://github.com/llvm/circt/issues/4042",
+  "title": "[FIRRTL] Old-style GCT Taps Compose Weirdly with ExtractInstances",
+  "body": "If you use an old-style Grand Central tap to tap a port of a module which is extracted, the resulting XMR can go outside of the scope of the design under test (DUT). This creates a situation where the resultant XMR in the Data Tap external module points to something outside the DUT. If the user then tries to compile just the DUT, elaboration then fails.\r\n\r\nThings look correct when using new-style Grand Central taps, though! (Or: dataflow always beats spooky annotations.)\r\n\r\nI do not view this as an actual bug in Grand Central taps, Extract Instances, or in the annotations that compose these (e.g., MarkDUTAnnotation). Instead, I view this as user error arising from the strange ways that all these baroque features interact.\r\n\r\nI.e., this is a \"won't fix\" right now and is \"fixed\" by switching to new-style taps.\r\n\r\nTo reproduce this, you can use the following circuit:\r\n\r\n```\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.ExtractClockGatesFileAnnotation\",\r\n    \"filename\": \"ClockGates.txt\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\": \"Foo|Bar\"\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"blackBox\": \"~Foo|DataTap\",\r\n    \"keys\": [\r\n      {\r\n        \"class\": \"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\": \"~Foo|Foo/bar:Bar>sub.a\",\r\n        \"portName\": \"~Foo|DataTap>_0\"\r\n      }\r\n    ]\r\n  },\r\n  {\r\n    \"class\": \"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"keys\": [\r\n      {\r\n        \"class\": \"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\": \"~Foo|Foo/bar:Bar>sub.a\",\r\n        \"sink\": \"~Foo|Bar>newTap\"\r\n      }\r\n    ]\r\n  }\r\n]]\r\n  extmodule EICG_wrapper:\r\n    output a: UInt<1>\r\n\r\n    defname = EICG_wrapper\r\n\r\n  extmodule DataTap:\r\n    output _0: UInt<1>\r\n\r\n  module Bar:\r\n    output a: UInt<1>\r\n\r\n    inst sub of EICG_wrapper\r\n    inst oldTap of DataTap\r\n\r\n    wire newTap: UInt<1>\r\n    newTap is invalid\r\n\r\n    a <= xor(oldTap._0, newTap)\r\n\r\n  module Foo:\r\n    output a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    a <= bar.a\r\n```\r\n\r\nThis produces the following Verilog. `oldTap` is driven by an XMR to goes above the DUT. `newTap` is driven by the port on `Foo` that extraction creates.\r\n\r\n```verilog\r\n// external module EICG_wrapper\r\n\r\n// VCS coverage exclude_file\r\nmodule DataTap_impl_0(\r\n  output _0);\r\n\r\n  assign _0 = Foo.sub.a;\r\nendmodule\r\n\r\nmodule Bar(\r\n  input  clock_gate_0_a,\r\n  output a);\r\n\r\n  wire _oldTap__0;\r\n  wire _GEN = clock_gate_0_a;\r\n  DataTap_impl_0 oldTap (\r\n    ._0 (_oldTap__0)\r\n  );\r\n  assign a = _oldTap__0 ^ Bar._GEN;\r\nendmodule\r\n\r\nmodule Foo(\r\n  output a);\r\n\r\n  wire _sub_a;\r\n  Bar bar (\r\n    .clock_gate_0_a (_sub_a),\r\n    .a              (a)\r\n  );\r\n  EICG_wrapper sub (\r\n    .a (_sub_a)\r\n  );\r\nendmodule\r\n\r\n\r\n// ----- 8< ----- FILE \"ClockGates.txt\" ----- 8< -----\r\n\r\nclock_gate_0 -> Bar.sub\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-10-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

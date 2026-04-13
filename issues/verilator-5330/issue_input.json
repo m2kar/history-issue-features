@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5330,
+  "issue_url": "https://github.com/verilator/verilator/issues/5330",
+  "title": "Trying to create array of strings causes Verilator to segfault, not sure why",
+  "body": "Thanks for taking the time to report this.\r\n\r\n**Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)**\r\nThe issue is when I code in an array of strings like this:\r\n```\r\noutput reg [`STR_ARRAY_MAX(`OUTPUT_STR_LEN):0] instruction_str [(`NUM_STAGES - 1):0];\r\n```\r\nI get the following error\r\n```\r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec /opt/verilator/share/verilator/bin/verilator_bin --Wall --trace --exe --build -j 20 --Mdir verilator -I../../hw/rtl/inc -I../../hw/rtl/src -Irtl/inc -Irtl/src -Isim/inc --top-module tb_top --cc ../../hw/rtl/src/risc_v_alu_controller.v ../../hw/rtl/src/risc_v_alu.v ../../hw/rtl/src/risc_v_register_file.v ../../hw/rtl/src/risc_v_instruction_memory.v ../../hw/rtl/inc/risc_v_alu.vh ../../hw/rtl/inc/risc_v_instructions.vh rtl/src/tb_function_decoder.v rtl/src/tb_immediate_decoder.v rtl/src/tb_register_decoder.v rtl/src/tb_top.v rtl/inc/tb_strings.vh sim/src/main.cpp\r\nmake: *** [Makefile:58: Vtb_top.mk] Error 255\r\n```\r\nRunning verilator with ```--debug``` and ```--gdbbt``` flags, the trace routes the problem here:\r\n```\r\nThread 1 \"verilator_bin_d\" received signal SIGSEGV, Segmentation fault.\r\nWidthVisitor::visit (this=0x7fffffffd3b0, nodep=0x555556ed8580) at ../V3Width.cpp:163\r\n163         bool prelim() const { return m_stage & PRELIM; }\r\n```\r\n\r\nBut when I split the array into two separate variables like this:\r\n```\r\noutput reg [`STR_ARRAY_MAX(`OUTPUT_STR_LEN):0] instruction_str0;\r\noutput reg [`STR_ARRAY_MAX(`OUTPUT_STR_LEN):0] instruction_str1;\r\n```\r\nIt compiles normally without warning. I write to instruction string variables using ```$sformat```. In theory it takes up the same amount of space. It doesn't matter how large either \"dimension\" of the array is, it always segfaults. Perhaps it has something to do with writing strings to array elements?\r\n\r\n**What 'verilator' command line do we use to run your example?**\r\n```\r\nverilator --Wall  \\\r\n        --trace \\\r\n        --exe \\\r\n        --build \\\r\n        -j `nproc` \\\r\n        --Mdir verilator \\\r\n        -I../../hw/rtl/inc \\\r\n        -I../../hw/rtl/src \\\r\n        -Irtl/inc \\\r\n        -Irtl/src \\\r\n        -Isim/inc \\\r\n        --top-module tb_top \\\r\n        --cc \\\r\n         ../../hw/rtl/src/risc_v_alu_controller.v  ../../hw/rtl/src/risc_v_alu.v  ../../hw/rtl/src/risc_v_register_file.v  ../../hw/rtl/src/risc_v_instruction_memory.v \\\r\n        ../../hw/rtl/inc/risc_v_alu.vh ../../hw/rtl/inc/risc_v_instructions.vh \\\r\n        rtl/src/tb_function_decoder.v rtl/src/tb_immediate_decoder.v rtl/src/tb_register_decoder.v rtl/src/tb_top.v \\\r\n        rtl/inc/tb_strings.vh \\\r\n        sim/src/main.cpp\r\n```\r\n\r\n**What 'verilator --version' are you using?  Did you try it with the git master version?**\r\n```\r\nVerilator 5.027 devel rev v5.026-101-gf4cb2c8cf\r\n```\r\n\r\n**What OS and distribution are you using?**\r\nWSL2 Debian Bookworm on Windows 10\r\n\r\n**May we assist you in trying to fix this in Verilator yourself?**\r\nYes\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-06",
+  "closed_at": "2024-08-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

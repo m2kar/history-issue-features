@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7370,
+  "issue_url": "https://github.com/llvm/circt/issues/7370",
+  "title": "[FIRRTL] Fix use of layer-enabled rwprobe's with force, force_initial",
+  "body": "```firrtl\r\nFIRRTL version 4.0.0\r\n\r\ncircuit L:\r\n  layer T, bind:\r\n\r\n  public module L:\r\n    output p : RWProbe<UInt<1>, T>\r\n\r\n    layerblock T:\r\n      wire w : UInt<1>\r\n      connect w, UInt<1>(0)\r\n      define p = rwprobe(w)\r\n      force_initial(p, UInt<1>(1))\r\n```\r\n\r\nFails while verifying constraint on `force_initial` which expects the destination type to be something that can be inferred from the source (rwprobe of that type):\r\n\r\n```\r\nlayers-rwprobe-5.fir:13:7: error: 'firrtl.ref.force_initial' op failed to verify that reference type of dest should be RWProbe of src\r\n      force_initial(p, UInt<1>(1))\r\n      ^\r\nlayers-rwprobe-5.fir:13:7: note: see current operation: \"firrtl.ref.force_initial\"(%2, %arg0, %1) : (!firrtl.uint<1>, !firrtl.rwprobe<uint<1>, @T>, !firrtl.const.uint<1>) -> ()\r\n```\r\n\r\nI believe the introduction of colors means that these operations no longer can infer/omit the type of their rwprobe argument, since it's unknown the layers that may be present.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-22",
+  "closed_at": "2024-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

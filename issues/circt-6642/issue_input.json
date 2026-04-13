@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6642,
+  "issue_url": "https://github.com/llvm/circt/pull/6642",
+  "title": "[HW] HWModule: store input port locations only on block args",
+  "body": "On modules we keep an array attribute `port_locs` for port location information.  On regular HWModules specifically, which have a body block, we copy the input port location to the entry block arguments, for error messages and such. This is violating the \"single source of truth\" principle for input port location info, so we added a verifier that ensured the block argument locations were always kept in sync with the port location attributes. This lead to another problem: if you print our IR in the generalized format and try to read it back in, by default with `-mlir-print-debug-info` printing turned off, it will end up throwing away the location on the blocks. When the IR is read back in, the block arguments will have new location information corresponding to the intermediate file, while the location array maintains the old locations. This trips the verifier since the port attribute location will be out of sync with the block argument location.\r\n\r\nTo fix this problem, this changes the HWModule op to record input port locations only on the blocks, and to store the output port locations in a new `result_locs` array.  The other module types remain the same.  Now, when printing in the generic format, input ports will lose their original location information, but the result locations will remain the same.  If printing with debug information, then both will retain their original locations.\r\n\r\nAs an example:\r\n```mlir\r\n// locs.mlir\r\nhw.module @B(in %a: i1, out nameOfPortInSV: i1) {\r\n  hw.output %a: i1\r\n}\r\n```\r\nPrinting without the debug information with`circt-opt -mlir-print-op-generic locs.mlir | ./bin/circt-opt --mlir-print-debuginfo` gives:\r\n```mlir\r\n#loc2 = loc(\"<stdin>\":4:8)\r\n#loc3 = loc(\"locs.mlir\":1:29)\r\nmodule {\r\n  hw.module @B(in %a : i1 loc(#loc2), out nameOfPortInSV : i1 loc(#loc3)) {\r\n    hw.output %a : i1 loc(#loc4)\r\n  } loc(#loc1)\r\n} loc(#loc)\r\n#loc = loc(\"<stdin>\":2:1)\r\n#loc1 = loc(\"<stdin>\":3:3)\r\n#loc4 = loc(\"<stdin>\":5:5)\r\n```\r\nPrinting with the debug information with `circt-opt -mlir-print-op-generic --mlir-print-debuginfo locs.mlir | ./bin/circt-opt --mlir-print-debuginfo` gives:\r\n```mlir\r\n#loc2 = loc(\"locs.mlir\":1:17)\r\n#loc3 = loc(\"locs.mlir\":1:29)\r\nmodule {\r\n  hw.module @B(in %a : i1 loc(#loc2), out nameOfPortInSV : i1 loc(#loc3)) {\r\n    hw.output %a : i1 loc(#loc4)\r\n  } loc(#loc1)\r\n} loc(#loc)\r\n#loc = loc(\"locs.mlir\":0:0)\r\n#loc1 = loc(\"locs.mlir\":1:1)\r\n#loc4 = loc(\"locs.mlir\":2:3)\r\n```\r\n\r\nCloses #5484.",
+  "labels": [
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-03",
+  "closed_at": "2024-02-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

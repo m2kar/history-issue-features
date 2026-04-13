@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3395,
+  "issue_url": "https://github.com/verilator/verilator/issues/3395",
+  "title": "Side effect function inside unsatisfied if condition get executed",
+  "body": "**Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)**\r\n\r\n```sv\r\ntypedef struct {int pc} state_t;\r\n\r\nfunction int A(inout state_t state);\r\n  state.pc++;\r\n  return 1;\r\nendfunction\r\n\r\nfunction int B(inout state_t state);\r\n  state.pc++;\r\n  return 2;\r\nendfunction\r\n\r\nmodule test(input logic clk);\r\n  int value = 0;\r\n  state_t state;\r\n  always @(posedge clk) begin\r\n    if (condition) value = A(state);\r\n    else begin\r\n      value = B(state);\r\n      // $display(\"difference\");\r\n    end\r\n    // or\r\n    value = condition ? A(state) : B(state);\r\n  end\r\nendmodule\r\n```\r\nThe code above will increment pc twice regardless of the condition. However when I uncomment `$display(\"difference\")`, it works fixes: increments pc once. I am not sure if the code snippet provided above will reproduce the bug. But the code in my repo does.\r\n\r\nIf statement: https://github.com/weisrc/nesv/blob/main/src/cpu/matrix/1.sv#L7\r\nFunction 1: https://github.com/weisrc/nesv/blob/main/src/cpu/actions/addressing.sv#L66\r\nFunction 2:  https://github.com/weisrc/nesv/blob/main/src/cpu/actions/addressing.sv#L85\r\nOutput: https://github.com/weisrc/nesv/runs/6122372041?check_suite_focus=true#step:4:579\r\n\r\n**With `$display(\"difference\")`**\r\nIf statement: https://github.com/weisrc/nesv/blob/main/src/cpu/matrix/1.sv#L11\r\nOutput: https://github.com/weisrc/nesv/runs/6122595622?check_suite_focus=true#step:4:578\r\n\r\n**What 'verilator --version' are you using?**  \r\nVerilator 4.218 2022-01-17 rev UNKNOWN.REV\r\n**Did you try it with the git master version?**\r\nNo\r\n**What OS and distribution are you using?**\r\nArch Linux\r\n\r\n**May we assist you in trying to fix this in Verilator yourself?**\r\nYes, please! (I am relatively new to verilog, so I don't think I can do much on my own.)\r\n\r\nThank you! Verilator is amazing!",
+  "labels": [
+    "status: ready",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-22",
+  "closed_at": "2025-09-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

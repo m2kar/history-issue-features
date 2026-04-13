@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1597,
+  "issue_url": "https://github.com/llvm/circt/issues/1597",
+  "title": "[Calyx] Define a Cell Interface.",
+  "body": "A `Cell` compromises of Calyx component instances and primitives.\r\n\r\nAn `InstanceOp` retrieves its port names and directions from the referenced component. A primitive should define port names and directions, as seen with the RegisterOp: \r\n\r\nhttps://github.com/llvm/circt/blob/486429901e4f794b5ac5008cfb25d1cda579c592/include/circt/Dialect/Calyx/CalyxPrimitives.td#L33-L40\r\n\r\nE.g.\r\n\r\n```\r\n/// Op Interface for cells.\r\ndef CellInterface : OpInterface<\"CellInterface\"> {\r\n  let cppNamespace = \"::circt::calyx\";\r\n  let description = [{\r\n    This is an op interface for Calyx Cells. Cells consist\r\n    of primitives and instances of components.\r\n  }];\r\n  let methods = [\r\n    InterfaceMethod<\r\n      \"This returns the port names associated with the cell.\",\r\n      \"SmallVector<StringRef>\", \"portNames\"\r\n    >\r\n    // Also add interface method for port directions.\r\n  ];\r\n}\r\n```\r\n\r\nWe can then add `DeclareOpInterfaceMethods<CellInterface>` to the `CalyxCell` class to ensure each `Cell` has the proper methods defined.\r\n\r\nReasoning: This ensures each `Cell` defines a `portNames` and `portDirections` function. These are used for readability, and (eventually) verification (e.g. we should never be trying to drive an output port). \r\n\r\nOnce support for this is implemented, the following locations should be refactored:\r\n- [x] iterating over in- and output ports of a InstaceOp in https://github.com/llvm/circt/blob/main/lib/Dialect/Calyx/CalyxOps.cpp#L95\r\n- [x] verify direction of both destination and source of AssignOp (see: #1661). The destination should be Input, and the source should be Output.\r\n    #1697 ",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-18",
+  "closed_at": "2021-09-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

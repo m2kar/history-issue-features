@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2343,
+  "issue_url": "https://github.com/llvm/circt/issues/2343",
+  "title": "[LowerToHW] Invalid lowering of register assignments through subindex/subfield",
+  "body": "```mlir\r\n; firtool -verilog -lower-types=false\r\nfirrtl.module @AggregateRegAssign(in %clock: !firrtl.clock, in %value: !firrtl.uint<1>) {\r\n      %reg = firrtl.reg %clock  : !firrtl.vector<uint<1>, 1>\r\n      %0 = firrtl.subindex %reg[0] : !firrtl.vector<uint<1>, 1>\r\n      firrtl.connect %0, %value : !firrtl.uint<1>, !firrtl.uint<1>\r\n}\r\n```\r\ncurrently generates something like this: \r\n```sv\r\nmodule AggregateRegAssign(      // foo.mlir:2:1\r\n  input clock, value);\r\n\r\n  reg [0:0] reg_0;      // foo.mlir:3:14\r\n  assign reg_0[1'h0] = value;   // foo.mlir:3:14, :4:12, :5:7\r\nendmodule\r\n```\r\nWe have to put assignment into always statement. This is a bug of `FIRRTLLowering::visitStmt(ConnectOp)`.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-15",
+  "closed_at": "2021-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

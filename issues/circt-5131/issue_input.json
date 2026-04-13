@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5131,
+  "issue_url": "https://github.com/llvm/circt/pull/5131",
+  "title": "[circt-reduce] Infrastructure improvements, bug fixes, and additional tests",
+  "body": "This implements some improvements to the circt-reduce infrastructure, fixes a few bugs, and adds more tests. More precisely:\r\n* Split the `Reduction.cpp` file into a file containing the Reduction pattern base class implementations, one file per dialect for dialect specific patterns, a file for generic patterns, a file containing utilities to be shared across the dialect and generic pattern files\r\n* Move the files containing dialect specific patterns to the corresponding dialect folder and use a new dialect interface to register them in `circt-reduce`. This is done in a way that only the patterns of dialects which were loaded during parsing are registered.\r\n* Add tests to check that the correct set of patterns are registered after parsing\r\n* Also move the regression tests to the corresponding dialect folders, but keep the generic patterns and tool specific tests in the `circt-reduce` test folder\r\n* Fix some existing reduce patterns: `hw-operand-forwarder` didn't check if the operand and result values were the same in which case circt-reduce would just crash, `hw-constantifier` only checked if one of the result values is an integer, but then assumed that all of them are integers in the rewrite function.\r\n* In the `PassReduction` constructor, the nesting of the pass manager was not handled correctly for non-nested passes (it tried to apply it to `ModuleOp` operations nested inside the root `ModuleOp`, also add support for passes operating on `hw.module`\r\n* Add `hw-module-externalizer` reduction pattern\r\n* Add a simple pattern for the Arc dialect\r\n* A few more minor improvements\r\n\r\nAs a case study I reverted the combinational loop fix of LowerState (#5068) and ran circt-reduce on largeBoomConfig on the HW/Comb level. Before it took 237 sec to get to final size of 2105 (as reported by circt-reduce). With this PR applied it takes 86 sec to get a size of 905. Additionally, I checked for rocket on the firrtl level. With this PR it takes 483 sec to get a size of 20827, while without the PR, I cancelled after 824 sec where it was at a size of 522332.",
+  "labels": [
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-04",
+  "closed_at": "2023-05-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

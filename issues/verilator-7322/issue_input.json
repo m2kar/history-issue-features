@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7322,
+  "issue_url": "https://github.com/verilator/verilator/pull/7322",
+  "title": "Fix false ASSIGNIN on interface input ports driven from outside",
+  "body": "## Summary\r\n\r\nThis patch fixes a false ASSIGNIN error when driving an interface input port from the instantiating scope via continuous assignment, which is legal per IEEE 1800-2023 Section 25.4. \r\n\r\nA gap found in CVV integration: https://github.com/openhwgroup/core-v-verif/pull/2724\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\ninterface my_if (input logic clk);\r\nendinterface\r\n\r\nmodule t;\r\n  logic master_clk;\r\n  my_if vif(.clk());\r\n  assign vif.clk = master_clk;  // Legal but triggers ASSIGNIN\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-ASSIGNIN: Assigning to input/const variable: 'clk'\r\n```\r\n\r\n## Changes\r\n\r\n- `V3Width.cpp`: Added `m_ifaceVars` set, populated via `foreach<AstVar>` when visiting `AstIface` modules, to track variables declared inside interfaces\r\n- `V3Width.cpp`: In the ASSIGNIN check, skip the warning when the target variable belongs to an interface and the current module context is not that interface (`!m_ifaceVars.count(varp) || VN_IS(m_modep, Iface)`)\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_interface_input_port_assign.{v,py}` -- drives interface input ports from instantiating scope (single port, multi-port, parameterized, consumer module)\r\n- Added `test_regress/t/t_interface_input_port_assign_noinl.py` -- same test with `-fno-inline`\r\n- Added `test_regress/t/t_interface_input_port_assign_bad.{v,py,out}` -- assigning to interface input from inside the interface still produces ASSIGNIN\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-25",
+  "closed_at": "2026-03-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

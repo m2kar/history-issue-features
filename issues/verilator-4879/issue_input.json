@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4879,
+  "issue_url": "https://github.com/verilator/verilator/issues/4879",
+  "title": "Cannot use literal as index when forcing memory element",
+  "body": "Hello!\r\n\r\nWhen trying to force a memory element using an integer literal (or a variable with a width of 1 bit) as an index, an error `error: invalid types 'CData {aka unsigned char}[unsigned int]' for array subscript` occurs at compile time. This error does not occur if you use a variable with a width greater than one bit.\r\n\r\n**Success (use multi-bit variable as index):**\r\n\r\n```systemverilog\r\nmodule example_1;\r\n  bit memory[3];\r\n  bit [1:0] index = 0;\r\n\r\n  initial begin\r\n    force memory[index] = 1;\r\n    release memory;\r\n\r\n    #1;\r\n    $display(memory[0]);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nCommand: `verilator --binary -j 0 -Wall example_1.sv`\r\n\r\n**Failure (use literal as index):**\r\n\r\n```systemverilog\r\nmodule example_2;\r\n  bit memory[3];\r\n\r\n  initial begin\r\n    force memory[0] = 1;\r\n    release memory;\r\n\r\n    #1;\r\n    $display(memory[0]);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nCommand: `verilator --binary -j 0 -Wall example_2.sv`\r\n\r\nOutput:\r\n\r\n```text\r\necho \"\" > Vexample_2__ALL.verilator_deplist.tmp\r\nIn file included from Vexample_2__ALL.cpp:5:\r\nVexample_2___024root__DepSet_h3de49710__0.cpp: In function 'VlCoroutine Vexample_2___024root___eval_initial__TOP__Vtiming__0(Vexample_2___024root*)':\r\nVexample_2___024root__DepSet_h3de49710__0.cpp:25:45: error: invalid types 'CData {aka unsigned char}[unsigned int]' for array subscript\r\n   25 |     vlSelf->example_2__DOT__memory__VforceEn[0U] = 1U;\r\n      |                                             ^\r\nmake: *** [/usr/local/share/verilator/include/verilated.mk:266: Vexample_2__ALL.o] Error 1\r\n```\r\n\r\n**Failure (use single-bit variable as index):**\r\n\r\n```systemverilog\r\nmodule example_3;\r\n  bit memory[2];\r\n  bit index = 0;\r\n\r\n  initial begin\r\n    force memory[index] = 1;\r\n    release memory;\r\n\r\n    #1;\r\n    $display(memory[0]);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nCommand: `verilator --binary -j 0 -Wall example_3.sv`\r\n\r\nOutput:\r\n\r\n```text\r\necho \"\" > Vexample_3__ALL.verilator_deplist.tmp\r\nIn file included from Vexample_3__ALL.cpp:5:\r\nVexample_3___024root__DepSet_hf1c8cca3__0.cpp: In function 'VlCoroutine Vexample_3___024root___eval_initial__TOP__Vtiming__0(Vexample_3___024root*)':\r\nVexample_3___024root__DepSet_hf1c8cca3__0.cpp:25:45: error: invalid types 'CData {aka unsigned char}[unsigned int]' for array subscript\r\n   25 |     vlSelf->example_3__DOT__memory__VforceEn[0U] = 1U;\r\n      |                                             ^\r\nmake: *** [/usr/local/share/verilator/include/verilated.mk:266: Vexample_3__ALL.o] Error 1\r\n```\r\n\r\n---\r\n\r\nVerilator version (git master): `Verilator 5.021 devel rev UNKNOWN.REV`\r\n\r\nOS (verilator devcontainer): Ubuntu 22.04.3 LTS",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-05",
+  "closed_at": "2024-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

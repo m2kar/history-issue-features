@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3507,
+  "issue_url": "https://github.com/verilator/verilator/pull/3507",
+  "title": "Build the run-time into libverilated.a ahead of time",
+  "body": "This is a draft of building the run-time lib into an archive ahead of time. I wanted to run it past you to see if you would be happy with this before I do more work on it.\r\n\r\nIt's actually a surprisingly small patch that mostly works. Namely, the failures left in the test suite are kind of trivial and relate to selecting the debug/release variants of the run-time lib.\r\n\r\nverilator_ext_tests and XiangShan build fine. OpenTitan needs fixing the support for overriding vl_stop, but that's quite easy in this model.\r\n\r\nChanges to user interface for simple users (those that use the default makefile/cmake):\r\n\r\n1. Ideally, selecting the debug build of the run-time library would have to change a bit. Currently we use -DVL_DEBUG=1 or -UVL_DEBUG. It would be unfortunate if we had to scan the CPPFLAGS to see which one to pick up, so maybe add an explicit make parameter VL_DEBUG=1/0 (CMake should be able to pick up the right one based on the CMake build type). (This is the cause of the remaining upstream test failures.\r\n\r\n2. Because we build the run-time ahead of time, the SystemC library is kind of baked in. Although we only use the SystemC headers during build type, (and binaries during testing), it would still likely less problematic to require Verilator be built against the specific SystemC library the user intends to use. For this we should add a `--with-systemc` option to configure, which defaults to the system version (if any).\r\n\r\nChanges for advanced users:\r\n\r\nInstead of picking up the particular source files, link against the appropriate flavour of libverilator_rt that lives in the `lib/` directory.\r\n\r\nThe nice thing about using an archive is that overriding vl_stop/vl_finish and friends just works by putting them into separate object files during the library build (and using the correct link order, namely libverilator_rt after all user archives), and ensuring they are pulled in if the user provides them from archives themselves.\r\n\r\nWe could also just apply this to v5 if you prefer, due to the [hopefully minor] user perceptible changes.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-21",
+  "closed_at": "2022-10-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

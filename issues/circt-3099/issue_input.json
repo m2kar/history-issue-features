@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3099,
+  "issue_url": "https://github.com/llvm/circt/pull/3099",
+  "title": "[LowerToHW] Lower node op with a symbol into read_inout op",
+  "body": "This PR changes to lower node ops with symbols into read_inout ops of wires.\r\nConsidering the concept of the current name preservation, \"nodes become wires \r\nif they have names\", it would be nice to use existing named wires as much as possible. \r\nThis change basically disables optimizations across named nodes at comb levels, \r\nso we can prevent canonicalizers from duplicating expressions. \r\n\r\nThis change reduces 30% temporary wires and 50% lint warnings related to dead wires \r\nin the large design while improving the simulation performance as well.\r\n\r\ne2e example:\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input data : UInt<1>[4]\r\n    output z : UInt<4>\r\n    node cat_lo = cat(data[1], data[0]);\r\n    node cat_hi = cat(data[3], data[2]);\r\n    node v = cat(cat_hi, cat_lo);\r\n    z <= v\r\n```\r\n\r\nAfter:\r\n```verilog\r\n  assign cat_lo = {data_1, data_0};\r\n  assign cat_hi = {data_3, data_2};\r\n  assign v = {cat_hi, cat_lo};\r\n  assign z = v;\r\n```\r\n\r\nBefore:\r\n```verilog\r\n  assign cat_lo = {data_1, data_0};\r\n  assign cat_hi = {data_3, data_2};\r\n  assign v = {data_3, data_2, data_1, data_0};\r\n  assign z = v;\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-11",
+  "closed_at": "2022-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

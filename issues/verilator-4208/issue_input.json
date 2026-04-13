@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4208,
+  "issue_url": "https://github.com/verilator/verilator/pull/4208",
+  "title": "Move suspendable detection to a separate visitor",
+  "body": "Currently, `V3Timing.cpp` contains a single visitor that simultaneously detects which parts of the AST are suspendable and also modifies the AST to use more C++-like constructs. There are problems with this approach:\r\n- It's hard to understand what's happening. People hate reading this code.\r\n- It's bug prone, see #4169. There are still some bugs related to this when verilating UVM. At least one bug is easily reproducible on current `master` (see the test case added in this PR).\r\n\r\nThis patch makes the implementation of the detection and propagation of the suspendable property simpler and easier to read. More importantly, there are no more jumps around the AST with the `visit` functions, which in some cases could result in incorrect visitor context while in the `visit` function. See the added test, which would cause Verilator to segfault before this patch.\r\n\r\nIn testing, verilation performance was not shown to be affected by this change. Though there is a slight performance improvement from this patch, due to adding one more check before refreshing class member cache.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-05-17",
+  "closed_at": "2023-05-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

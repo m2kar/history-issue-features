@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7679,
+  "issue_url": "https://github.com/llvm/circt/issues/7679",
+  "title": "[FIRRTL] FSRT: not finding all no-reset registers",
+  "body": "```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\r\n   \"class\": \"circt.FullResetAnnotation\",\r\n   \"target\": \"~Foo|Foo>r\",\r\n   \"resetType\": \"sync\"\r\n  }\r\n]]\r\n  public module Foo:\r\n    input c : Clock\r\n    input i : UInt<8>\r\n    input r : UInt<1>\r\n    output o : UInt<8>\r\n    \r\n    wire w : UInt<8>\r\n    reg reg : UInt<8>, c with:\r\n      reset => (r, w)\r\n    connect w, reg\r\n    connect reg, i\r\n    connect o, reg\r\n```\r\ngives:\r\n```verilog\r\nmodule Foo(\r\n  input        c,\r\n  input  [7:0] i,\r\n  input        r,\r\n  output [7:0] o\r\n);\r\n\r\n  reg [7:0] reg_0;\r\n  always @(posedge c) begin\r\n    if (r)\r\n      reg_0 <= reg_0;\r\n    else\r\n      reg_0 <= i;\r\n  end // always @(posedge)\r\n  `ifdef ENABLE_INITIAL_REG_\r\n    `ifdef FIRRTL_BEFORE_INITIAL\r\n      `FIRRTL_BEFORE_INITIAL\r\n    `endif // FIRRTL_BEFORE_INITIAL\r\n    initial begin\r\n      automatic logic [31:0] _RANDOM[0:0];\r\n      `ifdef INIT_RANDOM_PROLOG_\r\n        `INIT_RANDOM_PROLOG_\r\n      `endif // INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM[/*Zero width*/ 1'b0] = `RANDOM;\r\n        reg_0 = _RANDOM[/*Zero width*/ 1'b0][7:0];\r\n      `endif // RANDOMIZE_REG_INIT\r\n    end // initial\r\n    `ifdef FIRRTL_AFTER_INITIAL\r\n      `FIRRTL_AFTER_INITIAL\r\n    `endif // FIRRTL_AFTER_INITIAL\r\n  `endif // ENABLE_INITIAL_REG_\r\n  assign o = reg_0;\r\nendmodule\r\n```\r\nBesides the fact that we are missing a canonicalization, it is pretty clear here that the register does not have a reset, and so the FSRT should have added a reset to it.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-10-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

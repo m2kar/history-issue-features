@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2730,
+  "issue_url": "https://github.com/verilator/verilator/issues/2730",
+  "title": "Generate for loop makes unsigned var leading to false INFINITELOOP",
+  "body": "Hello:\r\n\r\nI'm using verilator-4.106, and here is my testcase:\r\n```verilog\r\n// demo.v\r\nmodule t #(\r\n    parameter   PIPE = 4\r\n)(\r\n    input               clk,\r\n    input   [15:0]      rem_i,\r\n    output  [1:0]       rem_o[PIPE]\r\n);\r\n\r\ngenvar i;\r\ngenerate\r\nfor (i = 0; i < PIPE; i++) begin: SUB_PIPE\r\n\r\n    localparam P_START = i + 1;\r\n    localparam P_STOP  = i;\r\n\r\n    sub #(\r\n        .P_STOP     (P_STOP)\r\n    ) U_SUB (\r\n        .clk        (clk),\r\n        .rem_i      (rem_i),\r\n        .rem_o      (rem_o[PIPE])\r\n    );\r\n\r\nend\r\nendgenerate\r\n\r\nendmodule\r\n\r\n//\r\nmodule sub #(\r\n    parameter P_START = 1,\r\n    parameter P_STOP  = 0\r\n)(\r\n    input               clk,\r\n    input       [15:0]  rem_i,\r\n    output  reg [1:0]   rem_o\r\n);\r\n\r\nalways @ (*) begin\r\n    for (int i = P_START; i >= P_STOP; i--) begin\r\n        rem_o[i] = rem_i[i+1];\r\n    end\r\nend\r\n\r\nendmodule\r\n\r\n```\r\n```\r\nverilator --cc demo.v\r\n```\r\n```\r\n%Warning-UNSIGNED: demo.v:41:29: Comparison is constant due to unsigned arithmetic\r\n                               : ... In instance t.SUB_PIPE[0].U_SUB\r\n   41 |     for (int i = P_START; i >= P_STOP; i--) begin\r\n      |                             ^~\r\n                   ... Use \"/* verilator lint_off UNSIGNED */\" and lint_on around source to disable this message.\r\n%Warning-INFINITELOOP: demo.v:41:5: Infinite loop (condition always true)\r\n                                  : ... In instance t.SUB_PIPE[0].U_SUB\r\n   41 |     for (int i = P_START; i >= P_STOP; i--) begin\r\n      |     ^~~\r\n- V3Simulate.h:348:   Unknown node type in SimulateVisitor: WHILE\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\nI can't find any \"Infinite loop\" in my testcase, but veriltor report a Warning-INFINITELOOP.\r\nIn my opinion, it is a incorrect report.\r\nWhat do you think? Is this warning reported correctly?\r\n\r\nIf you agree with me, I think the reason is that:\r\nVerilator mark the local parameter \"P_STOP\" in module \"t\" as a unsigned value of 0,1,2,3 when unrolling the genfor statements in `V3Unroll.cpp`, and then the property would be propagated to the for statement in module \"sub\", making the condition of comparing with a unsigned value always true.\r\n\r\nI don't know why the value always be unsigned as unrolling. Maybe keep it signed can just fix this problem.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: data-types"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-28",
+  "closed_at": "2021-01-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9743,
+  "issue_url": "https://github.com/llvm/circt/pull/9743",
+  "title": "[FIRRTL] Add CheckInstanceChoice pass to reject nested instance choices",
+  "body": "This commit introduces a verification pass to ensure that instance choices don't nest, since nested instance choices are challenging to compose with layer bind convention.\r\n\r\nFor example:\r\n\r\n```scala\r\n\r\nFIRRTL version 100.0.0\r\n\r\ncircuit Top:\r\n  option Platform:\r\n    FPGA\r\n    ASIC\r\n  \r\n  option Optimization:\r\n    Low\r\n    High\r\n\r\n  layer Verification, bind:\r\n\r\n\r\n  module A:\r\n    input clock: Clock\r\n\r\n    node result = UInt<8>(42)\r\n\r\n    layerblock Verification:\r\n      node debug_value = UInt<8>(255)\r\n      printf(clock, UInt<1>(1), \"Module A: result = %d, debug_value = %d\\n\", result, debug_value)\r\n\r\n  module B:\r\n    input clock: Clock\r\n\r\n  module ASICOptimizationWrapper:\r\n    input clock: Clock\r\n\r\n    instchoice b of A, Optimization:\r\n      High => A\r\n      Low => B\r\n\r\n    connect b.clock, clock\r\n\r\n  module FPGAOptimizationWrapper:\r\n    input clock: Clock\r\n\r\n    instchoice b of A, Optimization:\r\n      Low => A\r\n      High => B\r\n\r\n    connect b.clock, clock\r\n\r\n  module PlatformWrapper:\r\n    input clock: Clock\r\n\r\n    instchoice b of ASICOptimizationWrapper, Platform:\r\n      ASIC => ASICOptimizationWrapper\r\n      FPGA => FPGAOptimizationWrapper\r\n\r\n    connect b.clock, clock\r\n  \r\n  public module Top:\r\n    input clock: Clock\r\n\r\n    inst platform of PlatformWrapper\r\n    connect platform.clock, clock\r\n\r\n```\r\n\r\nModule A is instantiated by nested instance choice in 5 out of 9 possible settings (`(Platform::default & Optimization::default)`, `(default & High)`, `(ASIC & default)`, `(ASIC & High)`, `(FPGA & Low)`). It also has a Verification layer.\r\n\r\nThe bind statement should be elaborated only when these specific settings are met. We could use a macro to describe this logic, but that is too complicated for this first version. Hence this PR bans nested instances so that we can make the condition much simpler (there will be no conjunction `&`). \r\n\r\nInstanceChoiceInfo is introduced to check paths from the top down. If it finds \"nested\" choices, it will fail.\r\n\r\nRight now, InstanceChoiceInfo is not built as a standard MLIR Analysis because it could fail. It will be used later in the LowerLayer to handle these choices.\r\nAI-assisted-by: Augment (Claude Sonnet 4.5)\r\n\r\n\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

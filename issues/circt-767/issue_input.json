@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 767,
+  "issue_url": "https://github.com/llvm/circt/pull/767",
+  "title": "Start adding Python bindings for RTL dialect.",
+  "body": "Sharing work in progress here, but I can't actually get this to work. In the test case, I can build an RTL constant op with the line:\r\n\r\n```py\r\nrtl.ConstantOp(i32, a50)\r\n```\r\n\r\nBut when I go to print out the operations, I get this error:\r\n\r\n```\r\ndialect has no registered attribute printing hook\r\nUNREACHABLE executed at /home/mikeurbach/alloy/external/llvm-project/mlir/include/mlir/IR/Dialect.h:89!\r\nAborted (core dumped)\r\n```\r\n\r\nSome notes:\r\n\r\n* I also tried going through `ctx.dialects.rtl.ConstantOp` to build the op, but that leads to the same error\r\n* If I remove the line to build an `rtl.ConstantOp`, the test passes and prints out the `std.ConstantOp` no problem\r\n* If I remove the call to `circt.register_dialects`, and instead say `ctx.allow_unregistered_dialect = True`, it will correctly print out the `rtl.ConstantOp` in generic form\r\n* I was really confused by the error and couldn't figure out how to get a backtrace, so I hacked up `Dialect.h` to print the dialect namespace in that assertion... and it printed the empty string, which I think indicates `printAttribute` was invoked on the Standard dialect?\r\n* I've also tried registering the dialects on the context with a call like this: https://github.com/llvm/mlir-npcomp/blob/main/lib/CAPI/Registration.cpp#L16, or like this: https://github.com/llvm/llvm-project/blob/main/mlir/lib/CAPI/Registration/Registration.cpp#L15, directly inside the `register_dialects` method in `CIRCTModule`. This leads to the same error, and the registration calls in the current revision seem more in line with layering Python bindings on the CAPI, so that's what I've been testing.\r\n\r\nI'm pretty stumped about what's going on. Since the error literally mentions dialects and registration, I'm pattern matching this as a dialect registration issue. But, I'm able to build ops no problem, and it only seems to be an issue when I try to print them. Not sure if that is any clue...\r\n\r\nI've been trying to see what the Standard dialect does that our RTL dialect doesn't. I think I've got all the bindings set up the same, so I'm wondering if the handling in the MLIR Python bindings is subtly doing something differently for in-tree dialects versus ones we define. It seems like the MLIR Python bindings always just load the context with all the in-tree dialects on construction: https://github.com/llvm/llvm-project/blob/main/mlir/lib/Bindings/Python/IRModules.cpp#L460\r\n\r\n@GeorgeLyon not sure if you've seen anything like this, but does it ring a bell?\r\n@stellaraccident I believe this should be a minimal Python dialect bindings setup. If you have any free cycles, do you mind giving a once over to sanity check this?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-03-14",
+  "closed_at": "2021-03-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

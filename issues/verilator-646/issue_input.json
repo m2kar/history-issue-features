@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 646,
+  "issue_url": "https://github.com/verilator/verilator/issues/646",
+  "title": "Asignments of arithmetic operations embedded in a concatenation cause wrong conditional paths to be taken",
+  "body": "---\n\n\nAuthor Name: **Daniel Bone**\nOriginal Redmine Issue: 646 from https://www.veripool.org\nOriginal Date: 2013-05-19\n\n\n---\n\nTrying to use a single wire concatenated with a vector to capture an addition overflow was causing a mismatch between the waveform value and the conditional branch taken for the value of that wire. \r\n\r\nI suspect the wire is being incremented beyond its range of 0 to 1, causing the if statement to treat it as 2 rather than 0 following 2 assignments via addition overflow.\r\n\r\nSolved the issue by using a seperate vector packed with the operands to preform the addition on and then unpack afterwards.\r\n\r\n//Code snippet\r\n> @reg [5:0] bank_ptr_ff;@\r\n\r\n> @wire [5:0] bank_ptr_nxt;@\r\n\r\n> \r\n> @reg bank_sel_ff;@\r\n\r\n> @wire bank_sel_nxt;@\r\n\r\n> \r\n> @always (bank_wr or bank_ptr_ff or bank_sel_ff or bank_wr_size)@\r\n\r\n> > @begin@\r\n> \r\n> > @if (bank_wr)@\r\n> \r\n> > @begin@\r\n> \r\n> > > @{1'b0, bank_sel_nxt, bank_ptr_nxt} = {bank_sel_ff, bank_ptr_ff} + @\r\n> > > @{1'b0, bank_wr_size};@\r\n> \r\n> > @end@\r\n\r\n> > @else@\r\n> \r\n> > @begin@\r\n> \r\n> > > @{bank_sel_nxt, bank_ptr_nxt} = {bank_sel_ff, bank_ptr_ff};@\r\n> \r\n> > @end@\r\n> \r\n> \r\n> @end@\r\n> \r\n> @assign wr_en_nxt = wrap;@\r\n\r\n> @assign wr_sel_nxt = bank_sel_ff;@\r\n\r\n> \r\n> @assign data_o = (wr_sel_ff == 1'b0) ? bank_1_ff : bank_2_ff;@\r\n\r\n> @assign wr_o = wr_en_ff;@\r\n\r\n\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2013-05-19",
+  "closed_at": "2013-08-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

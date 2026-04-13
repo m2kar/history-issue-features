@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4055,
+  "issue_url": "https://github.com/verilator/verilator/pull/4055",
+  "title": "Fix task calls as fork statements",
+  "body": "This is a fun one.\r\n\r\nBefore this patch, calling tasks directly under forks would result in each statement of these tasks being executed concurrently. This was due to Verilator inlining tasks most of the time. Such inlined tasks' statements would simply replace the original call, and there would be no indication that these used to be grouped together. Ultimately resulting in `V3Timing` treating each statement as a separate process. Something like this:\r\n```systemverilog\r\n    task foo;\r\n        #1 if ($time != 1) $stop;\r\n        #1 if ($time != 2) $stop;\r\n        #1 if ($time != 3) $stop;\r\n    endtask\r\n\r\n    initial fork foo; join\r\n```\r\nwould turn into this:\r\n```systemverilog\r\n    initial fork\r\n        #1 if ($time != 1) $stop;\r\n        #1 if ($time != 2) $stop;\r\n        #1 if ($time != 3) $stop;\r\n    join\r\n```\r\n\r\nThe solution is simply to wrap each fork sub-statement in a begin in `V3Begin` (except for the ones that are begins, as that would be pointless). `V3Begin` is already aware of forks, and is supposed to avoid issues like this one, so it seems like a natural fit. This also protects us from similar bugs, i.e. if some statement gets replaced or expanded into multiple statements.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-21",
+  "closed_at": "2023-03-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

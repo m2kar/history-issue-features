@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5254,
+  "issue_url": "https://github.com/verilator/verilator/pull/5254",
+  "title": "V3EmitC: Use a reference instead of a pointer for VlSelf",
+  "body": "Currently, we use pointers for VlSelf and dereference it every time we process the RTL. However, when the C++ compiler sees a pointer instead of a reference, it will lose a dereferenceable attribute, so the compiler can not speculatively load the value of the pointer and must generate more branches to prevent the unnecessary deference of the pointer. This will cause more branches to be generated in the final binary, which increases the burden on CPU branch prediction. Even worse, the branch footprint in Verilator generated code on large RTL designs such as XiangShan already suppresses the size of the branch target buffer of CPUs we use now, which will cause more branch misprediction and performance degradation.\r\n\r\nThus, we should use a reference instead of a pointer for VlSelf to tell the C++ compiler that the value of VlSelf is always dereferenceable, and the compiler can speculatively load the value of VlSelf without generating more branches.\r\n\r\nA simple evaluation performed on XiangShan commit 136f64975e with LLVM16 packaged by Debian (version 16.0.6 (27+b1)) based on Verilator commit 6882f8c55e with 1 thread EMU running 2 iter coremark workload on OpenXiangShan/ready-to-run commit 24ab7d76e5 on Intel 13900K shows sampled branch instructions reduced from 132746731584 to 121130263138 (-8.75%), the running time reduced from 838.95s to 753.43s (-10.19%).\r\n\r\nThis increases l1-dcache-loads from 414383597179 to 426881071898 (+3.02%) and slightly increases l1-dcache-load-misses from 33706712758 to 33967571525 (+0.77%), but the LLC load-misses are reduced from 203290290 to 139019005 (-31.62%), maybe because the branch misprediction of wrong path is reduced. I also tested this on 8 threads EMU with Clang PGO as our routine to use Verilated XiangShan on 7950X3D + LLVM 14 and 13900K + LLVM 16. All show a slight improvement in performance even though we reduced the branches with PGO on and slightly increased the load instructions. And I haven't found any performance degradation on Verilated XiangShan RTL so far.\r\n\r\nThis change also allows more compiler optimization to be performed in verilator-generated code. I am currently working on it.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-12",
+  "closed_at": "2024-07-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

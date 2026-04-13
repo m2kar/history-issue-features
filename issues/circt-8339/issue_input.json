@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8339,
+  "issue_url": "https://github.com/llvm/circt/pull/8339",
+  "title": "[FIRRTL] Add \"special substitutions\" to printfs",
+  "body": "Implement parsing/emission of a new substitution format for FIRRTL. This allows for special double curly brace quoted strings to be used to mean \"special\" substitutions. Currently, the only one supported is `SimulationTime`. We plan to add `HierarchicalName`, too.\r\n\r\nE.g., this will parse the following differently if the FIRRTL version is 4.2.0:\r\n\r\n``` firrtl\r\nFIRRTL version 4.2.0\r\ncircuit Foo :\r\n  public module Foo :\r\n    input clock: Clock\r\n\r\n    printf(clock, UInt<1>(1), \"[{{SimulationTime}}]: hello world\")\r\n```\r\n\r\nThis becomes:\r\n\r\n``` mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(in %clock: !firrtl.clock) attributes {convention = #firrtl<convention scalarized>} {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.const.uint<1>\r\n      firrtl.printf %clock, %c1_ui1, \"[{{}}]: hello world\" {specialSubstitutions = [#firrtl<printfSubstitution SimulationTime>]}  : !firrtl.clock, !firrtl.const.uint<1>\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-03-21",
+  "closed_at": "2025-03-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

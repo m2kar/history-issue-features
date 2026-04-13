@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3634,
+  "issue_url": "https://github.com/verilator/verilator/issues/3634",
+  "title": "Comment lines that start with verilator trigger strange error message and kill the run",
+  "body": "# Verilator comment pattern breaks verilation\r\n\r\n## Version\r\n```\r\n$ verilator --version\r\nVerilator 4.224 2022-06-19 rev UNKNOWN.REV\r\n```\r\n\r\n## Example file \r\nThe HEREIS doc generates an example .sv file\r\nNote the comment line's structure\r\n```\r\ncat > BlackBoxAdderWrapper.sv <<-EOF\r\nmodule BlackBoxAdderWrapper(\r\n  input        clock,\r\n               reset,\r\n  input  [7:0] io_a,\r\n               io_b,\r\n  output [7:0] io_q);\r\n\r\n  BlackBoxAdder m (\t// VerilatorExample.scala:33:19\r\n    .a (io_a),\r\n    .b (io_b),\r\n    .q (io_q)\r\n  );\r\nendmodule\r\n\r\n// -------\r\nmodule BlackBoxAdder(a, b, q);\r\n  input [7:0] a, b;\r\n  output [7:0] q;\r\n  assign q = a + b;\r\nendmodule\r\nEOF\r\n```\r\n\r\n## Run verilator with this command\r\nThe HEREIS document creates a bash script to run verilator with a typical flag configuration\r\n```\r\ncat > run_verilator.sh <<-EOF\r\nverilator \\\r\n--cc \\\r\n--exe \\\r\nBlackBoxAdderWrapper-harness.cpp \\\r\n--assert \\\r\n--coverage-user \\\r\n-Wno-fatal \\\r\n-Wno-WIDTH \\\r\n-Wno-STMTDLY \\\r\n--top-module \\\r\nBlackBoxAdderWrapper \\\r\n+define+TOP_TYPE=VBlackBoxAdderWrapper \\\r\n-CFLAGS \\\r\n    \"-O1 \\\r\n    -DVL_USER_STOP \\\r\n    -DVL_USER_FATAL \\\r\n    -DVL_USER_FINISH \\\r\n    -DTOP_TYPE=VBlackBoxAdderWrapper \\\r\n    -include \\\r\n    VBlackBoxAdderWrapper.h \\\r\n    -fPIC \\\r\n    -shared \\\r\n    -I'/Library/Java/JavaVirtualMachines/jdk-11.0.13.jdk/Contents/Home/include' \\\r\n    -I'/Library/Java/JavaVirtualMachines/jdk-11.0.13.jdk/Contents/Home/include/darwin' \\\r\n    -fvisibility=hidden\" \\\r\n-Mdir \\\r\n./verilated \\\r\n-LDFLAGS \\\r\n    \"-shared \\\r\n    -dynamiclib \\\r\n    -fvisibility=hidden\" \\\r\nBlackBoxAdderWrapper.sv\r\nEOF\r\n```\r\n\r\n## Fails to complete\r\nrun the bash script `sh run_verilator.sh` and the\r\noutput of the operation for me reports the error\r\n``` \r\n%Error: BlackBoxAdderWrapper.sv:8:21: Unknown verilator comment: '/*verilator Example.scala:33:19*/'\r\n    8 |   BlackBoxAdder m ( /*verilator Example.scala:33:19*/ \r\n      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n## Incontrast\r\nRemove the comment from the line \r\n``` \r\n  BlackBoxAdder m (\t// VerilatorExample.scala:33:19\r\n```\r\nto \r\n```\r\n  BlackBoxAdder m (\t// OtherCommentExample.scala:33:19\r\n```\r\nAnd rerun the `run_verilator.sh` runs successfully.\r\nIt seems like a comment that begins with verilator kicks off something.\r\n\r\n\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-22",
+  "closed_at": "2022-09-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

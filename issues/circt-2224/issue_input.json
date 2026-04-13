@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2224,
+  "issue_url": "https://github.com/llvm/circt/issues/2224",
+  "title": "[ExportVerilog] Symbols defined in `IfDefOp` regions are not added to symbol cache",
+  "body": "Symbols get added to the symbol cache in `gatherFiles` ([specifically this `TypeSwitch`](https://github.com/llvm/circt/blob/d2e29b53634ca64d66c1d32f57210f4ec40d0fe5/lib/Conversion/ExportVerilog/ExportVerilog.cpp#L4073)). The typeswitch doesn't include logic for `IfDefOp`, which must be recursive. It's not only difficult to make this function recursive it's not clear that it makes sense to let operations not at the top level get emitted to different files.\r\n\r\nI think populating the symbol cache should be divorced from gathering the files. (The function documentation for `gatherFiles` doesn't mention populating the symbol cache anyway.) @lattner what do you think?\r\n\r\nFor reference, I came across this bug in an effort to put `TypeScopeOp` in an `IfDefOp` as a c-style header guard, so really any solution that results in `TypeScopeOp` symbols inside of `IfDefOp`s making it into the symbol cache satisfies my immediate needs. This problem seemed bigger than that.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2021-11-20",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

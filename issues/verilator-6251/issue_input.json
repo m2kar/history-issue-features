@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6251,
+  "issue_url": "https://github.com/verilator/verilator/issues/6251",
+  "title": "Fix tristate receivers not seeing immediate tristate driver value updates",
+  "body": "The following code executes wrong, when run like this: \n\n- `verilator --binary --timing --debug --top-module helper hdl/helper.sv ` , followed by\n\n- `obj_dir/Vhelper` :\n\n```\nmodule helper\n  (\n   output reg dout\n   );\n   reg [31:0] datav;\n   initial begin : ASSIGNING_Z_IS_SIGNIFICANT\n      dout = 1'bz;\n      for (int i = 0 ; i < 1000 ; i++) begin : MAIN_LOOP\n\n         datav[31:0] = $urandom;\n         dout = datav[31];\n\n         if (dout != datav[31])\n           $fatal (1, $sformatf(\"Unexpected behavior encountered. %1d %08x\", dout, datav));\n\n      end\n   end\nendmodule\n```\n\nWhat I expect to happen: The code runs silently.\nWhat happens: The text \"Unexpected behavior encoutered\" goes to console.\n\nLooking at compiled C code, it seems as if the assignment was optimized away incorrectly, and a different random values were given to `dout`and `datav`. Bug hides itself if I do not initialize dout to `z`, or do not make it a module output.\n\nTested with these combinations:\n\nVerilator 5.036 2025-04-27 rev v5.036 over Red Hat Enterprise Linux 8.10 (Ootpa)\nVerilator 5.039 devel rev UNKNOWN.rev over Debian GNU/Linux 13 (trixie)\n\nThe latter is a blind compile of the latest commit in master branch on July 31st.\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-08-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module helper\n  (\n   output reg dout\n   );\n   reg [31:0] datav;\n   initial begin : ASSIGNING_Z_IS_SIGNIFICANT\n      dout = 1'bz;\n      for (int i = 0 ; i < 1000 ; i++) begin : MAIN_LOOP\n\n         datav[31:0] = $urandom;\n         dout = datav[31];\n\n         if (dout != datav[31])\n           $fatal (1, $sformatf(\"Unexpected behavior encountered. %1d %08x\", dout, datav));\n\n      end\n   end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

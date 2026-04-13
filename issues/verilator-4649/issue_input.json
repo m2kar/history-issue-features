@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4649,
+  "issue_url": "https://github.com/verilator/verilator/pull/4649",
+  "title": "Fix handling of static keyword in methods",
+  "body": "Method declaration may have `static` keyword in two places. One is before `function`/`task` and it means that the method is static. `automatic` keyword can't be used in that place. The other place is after `function`/`task` and it means that the default lifetime of local function variables is static. There may be also `automatic` used.\r\n\r\nCurrently Verilator handles `static` keyword in both places as it was at the beginning of a declaration. This PR fixes it.\r\n\r\nOne thing is still wrong. It is the setting lifetime to ports. Currently a lifetime of a port is set to automatic if it is a port of a class method. Otherwise no lifetime is set:\r\nhttps://github.com/verilator/verilator/blob/c241ec90ec9a3454678cec1b4e9cde08bed05158/src/V3LinkParse.cpp#L302-L308\r\nIt is incorrect. The section 13.3.2 of IEEE Std 1800-2017 says:\r\n> Variables declared in static tasks, including input , output , and inout type arguments, shall retain their\r\nvalues between invocations.\r\n\r\nSo we should assign a lifetime to all function arguments according to the default lifetime of `function`/`task`. I decided to leave it as it is for now, because it is a separate problem.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-31",
+  "closed_at": "2023-10-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

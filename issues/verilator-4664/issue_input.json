@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4664,
+  "issue_url": "https://github.com/verilator/verilator/issues/4664",
+  "title": "Fix interface parameters used by upper generate loop resolve late",
+  "body": "I'm using Verilator 5.018 2023-10-30 rev UNKNOWN.REV in Ubuntu 22.04\r\n\r\nSomething wrong is happening when I refer to a parameter in an interface in a for-loop of a generate statement:\r\n\r\nInterface with a parameter:\r\n\r\nintf.sv\r\n~~~~\r\ninterface intf\r\n#(\r\n parameter WIDTH = 10\r\n) (\r\n  input clk\r\n);\r\n\r\nendinterface\r\n~~~~\r\n\r\nTop level module:\r\n\r\ntop.sv:\r\n~~~~\r\nmodule top ( input clk );\r\n\r\nintf #(.WIDTH(10)) g (.clk (clk));\r\n\r\nt i_t ( .g (g) );\r\n\r\nendmodule\r\n~~~~\r\n\r\nSub module where we instantiate a new interface:\r\n\r\nt.sv\r\n~~~~\r\nmodule t  ( intf g );\r\n\r\nintf #(.WIDTH(20)) h (.clk(g.clk));   // Override WIDTH\r\n\r\nu i_u  ( .g (h) );  // Pass in new interface\r\n\r\nendmodule\r\n~~~~\r\n\r\nModule with generate:\r\n\r\nu.sv:\r\n~~~~\r\nmodule u ( intf g );\r\n\r\nlogic [3:0] array[g.WIDTH:0];   <---- g.WIDTH is 20 here, correct.\r\n\r\ngenvar i;\r\ngenerate\r\n  for (i = 0; i != g.WIDTH; i = i + 1)   <--- g.WIDTH is 10 here??? This is wrong.\r\n  //for (i = 0; i != 20; i = i + 1)   <---- It should be this!\r\n    tt i_tt(.g (g), .o (array[i]));\r\nendgenerate\r\n\r\nendmodule\r\n~~~~\r\n\r\ntt.sv\r\n~~~~\r\nmodule tt\r\n  (\r\n  intf g,\r\n  output logic [3:0] o\r\n  );\r\n\r\nassign o = 4'd7;\r\n\r\nendmodule\r\n~~~~\r\n\r\n\r\nYou can see that when I used a constant 20 (instead of \"g.WIDTH\") I get these additional lines in \r\n\r\nVtop___024root__DepSet_heccd7ead__0__Slow.cpp\r\n\r\n(I was diffing the generated files to find the differences in this test case, in one case with \"i != 20\" and the other with \"i != g.WIDTH\")\r\n\r\n~~~~\r\n39a40,49\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xaU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xbU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xcU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xdU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xeU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0xfU] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0x10U] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0x11U] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0x12U] = 7U;\r\n>     vlSelf->top__DOT__i_t__DOT__i_u__DOT__array[0x13U] = 7U;\r\n~~~~\r\n\r\nI can see that the array sized with \"g.WIDTH\" has the right size:\r\n\r\nVtop___024root.h:  \r\n~~~~\r\n  VlUnpacked<CData/*3:0*/, 21> top__DOT__i_t__DOT__i_u__DOT__array;\r\n~~~~\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-02",
+  "closed_at": "2023-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

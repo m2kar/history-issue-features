@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3706,
+  "issue_url": "https://github.com/verilator/verilator/pull/3706",
+  "title": "Stack overflow detection on Linux.",
+  "body": "The PR adds a code that detects segmentation faults caused by stack overflow. If one is detected, it prints the following message and calls default segfault handler which terminates the process with appropriate exit code.\r\n```\r\nSegmentation fault due to stack overflow.\r\nTry increasing stack size limit using `ulimit -s` command.\r\n```\r\nOther segmentation faults are handled as before, i.e. by calling default segfault handler.\r\n\r\nThe handler works in every thread which called `V3Os::setupThreadSegfaultSignalHandler();` function. For now this is just the main thread, but the code should work without changes with incoming support for worker threads.\r\n\r\n## Why?\r\n\r\nVerilator uses a lot of recursion (visitors). We have one design which causes so much nested function calls that the default system stack (8MB) is not enough.\r\nI think that segmentation faults are usually seen as a result of a bug, so the short explanation when this is not really the case might be useful for users.\r\n\r\n## Testing\r\n\r\nGenerate a sample SV file which causes a lot of recursion to happen in Verilator:\r\n```bash\r\ngen_sv_array() {\r\n    local -ri w=$1\r\n    local -ri h=$2\r\n    local i j\r\n    printf 'module foo;\\n  wire[%d:0][2:0] a = {' $(($w * $h))\r\n    for ((i=0;i<$h;i++)); do\r\n        printf '\\n    ';\r\n        for ((j=0;j<$w;j++)); do\r\n            printf \"{3'h0},\"\r\n        done\r\n    done\r\n    printf \"\\n  {3'h0}};\\nendmodule\\n\"\r\n}\r\n\r\ngen_sv_array 256 256 > test.sv\r\n```\r\n\r\n### Stack overflow test\r\n\r\nSet stack size to 8MB and run verilator in a subshell.\r\nSubshell (i.e. separate process) is used for convenience - `ulimit` sets hard limit in the calling process (and its subprocesses), which can't be inceased later.\r\n```bash\r\n( ulimit -s $((1024 * 8)); verilator --cc --sv ./test.sv; )\r\n```\r\noutput:\r\n> ```\r\n>\r\n> Segmentation fault due to stack overflow.\r\n> Try increasing stack size limit using `ulimit -s` command.\r\n>\r\n> %Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n> %Error: Command Failed /home/mglb/projects/Verilator/repos/verilator/bin/verilator_bin --cc --sv ./test.sv\r\n> ```\r\n\r\n### Null pointer dereference test\r\n\r\n`verilator_bin` is used below to see the real exit code.\r\n\r\n```bash\r\n( ulimit -s $((1024 * 8)); verilator_bin -debug-sigsegv --cc --sv ./test.sv; echo $? )\r\n```\r\noutput (139 means segmentation fault):\r\n> ```\r\n> 139\r\n> ```\r\n\r\n### Successful execution test\r\n\r\nSet large stack size (32MB) and run verilator in a subshell.\r\n```bash\r\n( ulimit -s $((1024 * 32)); verilator --cc --sv ./test.sv; )\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-25",
+  "closed_at": "2023-05-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

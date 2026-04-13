@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2295,
+  "issue_url": "https://github.com/llvm/circt/issues/2295",
+  "title": "[FIRRTL/IMConstantProp] Explosive time consumption of IMCP",
+  "body": "From https://github.com/llvm/circt/commit/c351dc601722fbb3d5884ce786bf67321c63b0dc, we are spending explosive time(50 minutes!) in IMCP  for the chipyard test.\r\nhttps://github.com/circt/perf/blob/gh-pages/chipyard.TestHarness.RocketSmall1Medium1Big1_BoomMedium1Large1Mega1.top.v.lo-2021-12-05.log\r\n![Screenshot from 2021-12-06 16-47-29](https://user-images.githubusercontent.com/19691120/144858177-b35fe788-eb1e-4dd4-bcee-7b6619a8e561.png)\r\n\r\nI suspect this comes from the visiting order of operations in IMCP. Currently, IMCP visits an operation immediately if a lattice value of one of its operands changes. I think this is the problem: Fox example,\r\n```\r\nregisters: reg1, reg2, reg3, reg4, ...., reg_m\r\n\r\nreg1 <= UInt(1)\r\nreg2 <= UInt(2)\r\nreg3 <= UInt(3)\r\n....\r\nreg_m <= UInt(m)\r\n\r\nsum <= add(reg1, reg2, reg3, ..., reg_m)\r\n\r\nuse1 <= unary_op(sum)\r\nuse2 <= unary_op(use1)\r\nuse3 <= unary_op(use2)\r\nuse4 <= unary_op(use3)\r\n...\r\nuse_n <= unrary_op(use_{n-1}) \r\n```\r\nIn this example, we first visit reg1's initialization and then we visit all use-chains of `reg1`. So we visit `sum, use1, use2, use3, ..., use_n` (under the condition that `reg2, reg3 ...., reg_m` are invalid values). After that, we visit `reg2`'s initialization and then we again compute all the values of `sum, use1, use2, ..., use_n`. This repeats until `reg_m` so it will become O(nm) computations eventually. If we change the traversal order from LIFO to FIFO we can initialize all the registers before visiting their use-chains.\r\n\r\nThis behaviour is not exposed because we gave up invalid canonicalizations in many cases before. I have some fixes in my mind:\r\n1. Change the order of traversal from LIFO to FIFO. It is sufficient to use queue instead of stack as a data structure of `changedLatticeValueWorklist`. I locally confirmed that this works well for the chipyard test.\r\n2. Construct a dependency graph and visit based on SCC. \r\n\r\nWDYT @lattner?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-06",
+  "closed_at": "2021-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

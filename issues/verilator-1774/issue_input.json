@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1774,
+  "issue_url": "https://github.com/verilator/verilator/issues/1774",
+  "title": "Question: using split VCD trace",
+  "body": "---\n\n\nAuthor Name: **Frederic Requin**\nOriginal Redmine Message: 1021 from https://www.veripool.org\n\n\n\n---\n\nHello,\n\nfirst, thanks for this wonderful tool !!\nFYI, it is 40x faster than Active HDL LE.\n\nIn my simulation, I am generating VCD traces (like verybody else :-) ).\nThey quickly become huge over long simulation so I decided to use the openNext() method.\nThe problem with openNext() is that only the first segment contains and header, making others segments unreadable by regular VCD viewers.\nI also tried to close() then open() another VCD file. In that case, the executable crashes when trying to create the third VCD file.\nWhen I analyze the headers of the first two VCD files, they are not identical : it looks like new identifiers are given to the same signals.\nI am wondering if the crash is due to verilator running out of identifiers.\n\nAlso, I am using time scaled VCD (to have the correct clock period in the VCD trace).\nI did not find any good example so it might be useful that I post my code :\n```\n#include \"VTop.h\"\n#include \"verilated.h\"\n\n#if VM_TRACE\n#include \"verilated_vcd_c.h\"\n#endif\n\n// Number of simulation cycles\n#define NUM_CYCLES  ((vluint64_t)5*86000000)\n// Half period (in ps) of a 27.000 MHz clock\n#define HALF_PER_PS ((vluint64_t)18518)\n\nint main(int argc, char **argv, char **env)\n{\n  // Half cycles\n  vluint64_t hcycle;\n  \n  Verilated::commandArgs(argc, argv);\n  // Init top verilog instance\n  VTop* top = new VTop;\n\n#if VM_TRACE\n  // Init VCD trace dump\n  Verilated::traceEverOn(true);\n  VerilatedVcdC* tfp = new VerilatedVcdC;\n  top->trace (tfp, 99);\n  tfp->spTrace()->set_time_resolution (\"1 ps\");\n  tfp->open (\"Trace.vcd\");\n#endif\n\n  // Run simulation for NUM_CYCLES clock periods\n  for (hcycle = 0; hcycle < (NUM_CYCLES * 2); )\n  {\n     // Reset ON during 12 cycles\n     top->CPU_RESET_n = (hcycle < (vluint64_t)24) ? 0 : 1;\n     // Toggle clock\n     top->FPGA_CLK    = top->FPGA_CLK ^ 1;\n     // Evaluate verilated model\n     top->eval ();\n\n#if VM_TRACE\n     // Dump signals into VCD file\n     if (tfp) tfp->dump (hcycle * HALF_PER_PS);\n#endif\n\n     // Next half cycle\n     hcycle++;\n\n     if (Verilated::gotFinish())  exit(0);\n  }\n  top->final();\n  \n#if VM_TRACE\n  if (tfp) tfp->close();\n#endif\n\n  exit(0);\n}\n\n```\n\nLast but not least, I have created a SDR SDRAM C++ model and a VGA output C++ BMP dump class.\nI think it might be useful to others.\nIs there any plan to add source from contributors ?\n\nRegards,\n\nFrederic Requin\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-non-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-23",
+  "closed_at": "2013-05-22",
+  "code_blocks": [
+    "#include \"VTop.h\"\n#include \"verilated.h\"\n\n#if VM_TRACE\n#include \"verilated_vcd_c.h\"\n#endif\n\n// Number of simulation cycles\n#define NUM_CYCLES  ((vluint64_t)5*86000000)\n// Half period (in ps) of a 27.000 MHz clock\n#define HALF_PER_PS ((vluint64_t)18518)\n\nint main(int argc, char **argv, char **env)\n{\n  // Half cycles\n  vluint64_t hcycle;\n  \n  Verilated::commandArgs(argc, argv);\n  // Init top verilog instance\n  VTop* top = new VTop;\n\n#if VM_TRACE\n  // Init VCD trace dump\n  Verilated::traceEverOn(true);\n  VerilatedVcdC* tfp = new VerilatedVcdC;\n  top->trace (tfp, 99);\n  tfp->spTrace()->set_time_resolution (\"1 ps\");\n  tfp->open (\"Trace.vcd\");\n#endif\n\n  // Run simulation for NUM_CYCLES clock periods\n  for (hcycle = 0; hcycle < (NUM_CYCLES * 2); )\n  {\n     // Reset ON during 12 cycles\n     top->CPU_RESET_n = (hcycle < (vluint64_t)24) ? 0 : 1;\n     // Toggle clock\n     top->FPGA_CLK    = top->FPGA_CLK ^ 1;\n     // Evaluate verilated model\n     top->eval ();\n\n#if VM_TRACE\n     // Dump signals into VCD file\n     if (tfp) tfp->dump (hcycle * HALF_PER_PS);\n#endif\n\n     // Next half cycle\n     hcycle++;\n\n     if (Verilated::gotFinish())  exit(0);\n  }\n  top->final();\n  \n#if VM_TRACE\n  if (tfp) tfp->close();\n#endif\n\n  exit(0);\n}\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

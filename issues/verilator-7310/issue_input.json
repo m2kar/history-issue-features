@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7310,
+  "issue_url": "https://github.com/verilator/verilator/pull/7310",
+  "title": "Support SVA goto repetition [->N] in concurrent assertions",
+  "body": "## Summary\r\n\r\nThis patch adds support for the goto repetition operator `expr[->N]` in concurrent assertions, as defined in IEEE 1800-2023 Section 16.9.2. The goto repetition matches when the boolean expression occurs exactly N times, not necessarily on consecutive clock cycles. The range form `[->M:N]` remains unsupported.\r\n\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  logic clk, req, ack;\r\n  assert property (@(posedge clk) req[->2] |-> ack);\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: test.sv:3:38: Unsupported: [-> boolean abbrev expression\r\n    3 |   assert property (@(posedge clk) req[->2] |-> ack);\r\n      |                                      ^~~\r\n%Error-UNSUPPORTED: test.sv:3:41: Unsupported: boolean abbrev (in sequence expression)\r\n    3 |   assert property (@(posedge clk) req[->2] |-> ack);\r\n      |                                         ^\r\n```\r\n\r\n## Changes\r\n\r\n- `verilog.y`: Add `[->N]` production in `sexpr` rule creating `AstSExprGotoRep`; remove old `[->` catch-all from `boolean_abbrev`; keep range form `[->M:N]` as UNSUPPORTED\r\n- `V3AstNodeExpr.h`: Add `AstSExprGotoRep` node with `exprp` (boolean) and `countp` (repetition count)\r\n- `V3Width.cpp`: Type-check expr as boolean, propagate count width, set result to bit\r\n- `V3AssertPre.cpp`: Lower `[->N]` to counter-based loop via `createGotoRepPExpr()` -- counts N occurrences of `$sampled(expr)` across clock cycles; handle both standalone and implication-antecedent contexts; add `validateGotoRepCount()` helper for error checking\r\n- `V3EmitV.cpp`: Add `visit(AstSExprGotoRep*)` for `--lint-only` / `--xml-only` re-emission\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_assert_goto_rep.{v,py}` -- functional test with N=1/2/3, overlapping (`|->`), and non-overlapping (`|=>`) implications\r\n- Added `test_regress/t/t_assert_goto_rep_bad_count.{v,py,out}` -- error test for non-constant and zero count\r\n- Updated `test_regress/t/t_sequence_sexpr_unsup.out` -- removed `[->` unsupported messages\r\n- Updated `test_regress/t/t_property_sexpr_parse_unsup.out` -- removed `[->` unsupported messages\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.\r\n",
+  "labels": [
+    "area: randomization",
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-22",
+  "closed_at": "2026-03-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6799,
+  "issue_url": "https://github.com/verilator/verilator/issues/6799",
+  "title": "Error-BLKANDNBLK: Incorrectly flags unpacked struct fields as mixed assignments",
+  "body": "```Bash\n$ verilator --version\nVerilator 5.034 2025-02-24 rev v5.034\n```\n\nVerilator throws an error message:\n` %Error-BLKANDNBLK: testcase.sv:15:6: Unsupported: Blocked and non-blocking assignments to same variable`\nin case of accessing separate fields of an unpacked structure:\n\n```SystemVerilog\nmodule testacase\n  (\n   input logic\t      clk,\n   input logic\t      i,\n   input logic\t      clear,\n   output logic [7:0] v);\n\n   \n   struct {\n     logic incr;\n     logic [7:0] value;\n   } cnt;\n\n\n   always_comb begin\n      cnt.incr = 0;\n      v = cnt.value;\n\n      if(i)\n        cnt.incr = 1;\n   end\n\n   always_ff @(posedge clk) begin\n      if( clear )\n        cnt.value <= 0;\n      if( cnt.incr )\n        cnt.value <= cnt.value + 1;\n   end\nendmodule\n```\n\nAccording to IEEE 1800-2023 9.2.2.2:\n```\n...\nThe variables written on the left-hand side of assignments shall not be written to by any other\nprocess. However, multiple assignments made to independent elements of a variable are allowed as\nlong as their longest static prefixes do not overlap (see 11.5.3). For example, an unpacked structure\nor array can have one bit assigned by an always_comb procedure and another bit assigned\ncontinuously or by another always_comb procedure, etc.\n...\n```\n\nThis bug is similar to #364",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-11",
+  "closed_at": "2025-12-11",
+  "code_blocks": [
+    "$ verilator --version\nVerilator 5.034 2025-02-24 rev v5.034\n",
+    "module testacase\n  (\n   input logic\t      clk,\n   input logic\t      i,\n   input logic\t      clear,\n   output logic [7:0] v);\n\n   \n   struct {\n     logic incr;\n     logic [7:0] value;\n   } cnt;\n\n\n   always_comb begin\n      cnt.incr = 0;\n      v = cnt.value;\n\n      if(i)\n        cnt.incr = 1;\n   end\n\n   always_ff @(posedge clk) begin\n      if( clear )\n        cnt.value <= 0;\n      if( cnt.incr )\n        cnt.value <= cnt.value + 1;\n   end\nendmodule\n",
+    "...\nThe variables written on the left-hand side of assignments shall not be written to by any other\nprocess. However, multiple assignments made to independent elements of a variable are allowed as\nlong as their longest static prefixes do not overlap (see 11.5.3). For example, an unpacked structure\nor array can have one bit assigned by an always_comb procedure and another bit assigned\ncontinuously or by another always_comb procedure, etc.\n...\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

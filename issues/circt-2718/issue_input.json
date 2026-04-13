@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2718,
+  "issue_url": "https://github.com/llvm/circt/issues/2718",
+  "title": "[firtool] Preserve Val Names Broken for Analog",
+  "body": "Chisel `val` name preservation, introduced in https://github.com/llvm/circt/pull/2676, has a bug where this will cause verification failures if there are analog types inside aggregates. \r\n\r\nConsider:\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input a: {flip a: UInt<1>, b: Analog<1>}\r\n    output b: {flip a: UInt<1>, b: Analog<1>}\r\n\r\n    wire w: {flip a: UInt<1>, b: Analog<1>}\r\n    w.a <= a.a\r\n\r\n    b.a <= w.a\r\n    attach(a.b, w.b, b.b)\r\n```\r\n\r\nWith `firtool Foo.fir` the verifier errors out:\r\n```\r\n# firtool Foo.fir\r\n./test.fir:6:5: error: analog types may not be connected\r\n    wire w: {flip a: UInt<1>, b: Analog<1>}\r\n    ^\r\n./test.fir:6:5: note: see current operation: \"firrtl.connect\"(%7, %4) : (!firrtl.bundle<a: uint<1>, b: analog<1>>, !firrtl.bundle<a flip: uint<1>, b: analog<1>>) -> ()\r\n```\r\n\r\nIf the wire's type is not passive (it has flips), then it needs to be a wire and then it will try to bulk connect the wire, and you can't connect analog. The parser should be modified to use `attach` for leaves that are analog.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-02",
+  "closed_at": "2022-03-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

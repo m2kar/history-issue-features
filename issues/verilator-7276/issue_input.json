@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7276,
+  "issue_url": "https://github.com/verilator/verilator/issues/7276",
+  "title": "Regression in t_stream_unpack_lhs",
+  "body": "This commit (https://github.com/verilator/verilator/commit/316fb02c60c543268824b2ed443fc584cb354095) introduced a bug which causes a regression test to fail (`t_stream_unpack_lhs`). Importantly Verilator shall be compiled with: \n```bash\nexport CC=\"gcc -DVL_LEAK_CHECKS\"\nexport CXX=\"g++ -DVL_LEAK_CHECKS\"\n```\n\nHere is a `Dockerfile` recreating the case:\n```dockerfile\nFROM debian:latest\n\nWORKDIR /app\n\nENV CC=\"gcc -DVL_LEAK_CHECKS\"\nENV CXX=\"g++ -DVL_LEAK_CHECKS\"\n\nRUN apt-get update && apt-get -y --no-install-recommends install \\\n      autoconf bc bison build-essential ca-certificates ccache clang \\\n      cmake flex gdb git gtkwave help2man libfl2 libfl-dev libclang-rt-18-dev \\\n      libgoogle-perftools-dev libsystemc libsystemc-dev perl wget python3-distro \\\n      z3 zlib1g zlib1g-dev time libssl-dev libbz2-dev libreadline-dev libsqlite3-dev \\\n      curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \\\n      liblzma-dev python3-openssl python3-venv mold python3-full python3-yaml\nRUN git clone https://github.com/veripool/vcddiff.git\nRUN make -C vcddiff\nRUN cp -p vcddiff/vcddiff /usr/local/bin/vcddiff\nRUN rm -rf vcddiff\n\n\nRUN git clone https://github.com/verilator/verilator.git verilator\nWORKDIR /app/verilator\nRUN git checkout 316fb02c60c543268824b2ed443fc584cb354095\nRUN autoconf\nRUN ./configure --enable-longtests --enable-ccwarn=yes --enable-dev-asan\n\nRUN make -j`nproc`\n\nENTRYPOINT [ \"/app/verilator/test_regress/t/t_stream_unpack_lhs.py\" ]\n```\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-18",
+  "closed_at": "2026-03-18",
+  "code_blocks": [
+    "export CC=\"gcc -DVL_LEAK_CHECKS\"\nexport CXX=\"g++ -DVL_LEAK_CHECKS\"\n",
+    "FROM debian:latest\n\nWORKDIR /app\n\nENV CC=\"gcc -DVL_LEAK_CHECKS\"\nENV CXX=\"g++ -DVL_LEAK_CHECKS\"\n\nRUN apt-get update && apt-get -y --no-install-recommends install \\\n      autoconf bc bison build-essential ca-certificates ccache clang \\\n      cmake flex gdb git gtkwave help2man libfl2 libfl-dev libclang-rt-18-dev \\\n      libgoogle-perftools-dev libsystemc libsystemc-dev perl wget python3-distro \\\n      z3 zlib1g zlib1g-dev time libssl-dev libbz2-dev libreadline-dev libsqlite3-dev \\\n      curl llvm libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev \\\n      liblzma-dev python3-openssl python3-venv mold python3-full python3-yaml\nRUN git clone https://github.com/veripool/vcddiff.git\nRUN make -C vcddiff\nRUN cp -p vcddiff/vcddiff /usr/local/bin/vcddiff\nRUN rm -rf vcddiff\n\n\nRUN git clone https://github.com/verilator/verilator.git verilator\nWORKDIR /app/verilator\nRUN git checkout 316fb02c60c543268824b2ed443fc584cb354095\nRUN autoconf\nRUN ./configure --enable-longtests --enable-ccwarn=yes --enable-dev-asan\n\nRUN make -j`nproc`\n\nENTRYPOINT [ \"/app/verilator/test_regress/t/t_stream_unpack_lhs.py\" ]\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

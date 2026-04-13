@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3684,
+  "issue_url": "https://github.com/verilator/verilator/issues/3684",
+  "title": "Add VERILATED_TIMING MACRO",
+  "body": "Thanks for taking the time to report this.\r\n\r\n> What would you like added/supported?\r\n\r\nAs a maintainer of library which serves many users with different versions of Verilator, I would like a way to switch implementations based on version numbers. \r\n\r\nSpecifically, we provide a clock generator which uses the standard #period/2 scheme: https://github.com/bespoke-silicon-group/basejump_stl/blob/master/bsg_test/bsg_nonsynth_clock_gen.v. Because v4 of Verilator did not support #delay, we also provide a DPI version of the clock generator which Verilator can drive.\r\n\r\nFor this, we currently have \r\n```\r\n`ifdef VERILATOR\r\ndpi_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`endif\r\n```\r\n\r\nSince v5 of Verilator supports #delay, we would like this to look like:\r\n```\r\n`ifdef VERILATOR\r\n`ifndef VERILATOR_V5\r\ndpi_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`endif\r\n```\r\n\r\nI suggest maybe:\r\nVERILATOR_VERSION_MAJOR (5, 6, 7...)\r\nVERILATOR_VERSION_MINOR (month of release? Not sure if there's an existing schema)\r\nVERILATOR_COMMIT_ID\r\n\r\nApologies if some of these exist already, but I only found verilator3 in the docs: https://veripool.org/guide/latest/extensions.html.\r\n\r\nIf you dislike this scheme, a macro for VERILATOR_DELAY_SUPPORT would solve this problem, since it is the most disruptive (and exciting) change for v5.\r\n\r\n> Can you attach an example that runs on other simulators?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nI'm not aware of commercial simulators providing this switch, but it's their loss :)\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nYes, if you point me to the correct place to add.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-17",
+  "closed_at": "2022-10-17",
+  "code_blocks": [
+    "`ifdef VERILATOR\r\ndpi_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`endif",
+    "`ifdef VERILATOR\r\n`ifndef VERILATOR_V5\r\ndpi_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`else\r\ndelay_clock_gen\r\n`endif"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

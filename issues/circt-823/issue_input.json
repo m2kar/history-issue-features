@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 823,
+  "issue_url": "https://github.com/llvm/circt/pull/823",
+  "title": "Support ReferenceTarget Annotations for Operations",
+  "body": "Add support for parsing Annotations that point at _local_ `ReferenceTarget`s. These are targets of the form:\r\n\r\n```\r\n~Circuit|Module>Reference\r\n```\r\n\r\nThese can point at a variety of things (items checked off are in the PR):\r\n\r\n- [x] Instances (using an `InstanceTarget` annotation is better here, but `ReferenceTarget` means the same thing)\r\n- [x] CMem\r\n- [x] SMem\r\n- [x] Wires\r\n- [x] Registers\r\n- [x] Nodes\r\n- [x] Memories\r\n\r\nPorts are not supported, due to expected churn related to arg attribute storage being changed in #872. For the time being, port targets sit in another, dependent PR.\r\n\r\nThe following are not supported as they have optional names that were [added in _to-be-released_ FIRRTL 1.5](https://github.com/chipsalliance/firrtl/pull/2057). This name support is necessary for something to be a valid target:\r\n- Stop\r\n- Print\r\n- Verification Statements\r\n\r\nCustom parsers/printers are added to elide the annotations if they are empty. Support is added to `LowerTypes` to copy annotations to operations that are split up.\r\n\r\nAll operations are handled similarly. Ports are handled differently. The PR is intentionally structured such that the first series of commits are all building the necessary support for reference target annotations, adding support to `CMemOp`, and writing tests for `CMemOp`. Everything after that is (mostly) a series of two commits: (1) adding support to an operation and (2) adding tests for that operation.\r\n\r\n### TODO\r\n\r\n- [x] Add tests for all cases above.\r\n  - [x] Test that anything lowered in LowerTypes has annotations copied\r\n- [x] Don't print annotations if they are empty (this automatically worked for module/circuit, but not here or not if there are other attributes?).\r\n\r\n### Example\r\n\r\nThe following inline Annotation, targets one instance of module `Bar`:\r\n```scala\r\ncircuit Foo: %[[{\"class\":\"firrtl.passes.InlineAnnotation\",\"target\":\"~Foo|Foo>bar1\"}]]\r\n  extmodule Bar:\r\n    input a: UInt<1>\r\n  module Foo:\r\n    input a: UInt<1>\r\n    inst bar1 of Bar\r\n    inst bar2 of Bar\r\n    bar1.a <= a\r\n    bar2.a <= a\r\n```\r\n\r\nThis is then applied only to the appropriate instance:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.extmodule @Bar(!firrtl.uint<1> {firrtl.name = \"a\"})\r\n  firrtl.module @Foo(%a: !firrtl.uint<1>) {\r\n    %bar1_a = firrtl.instance @Bar  {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}], name = \"bar1\", portNames = [\"a\"]} : !firrtl.flip<uint<1>>\r\n    %bar2_a = firrtl.instance @Bar  {name = \"bar2\", portNames = [\"a\"]} : !firrtl.flip<uint<1>>\r\n    firrtl.connect %bar1_a, %a : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n    firrtl.connect %bar2_a, %a : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n  }\r\n}\r\n```",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-25",
+  "closed_at": "2021-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

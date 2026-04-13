@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1321,
+  "issue_url": "https://github.com/llvm/circt/issues/1321",
+  "title": "[Calyx] ComponentOp interface",
+  "body": "Discussing @mikeurbach's points [in the last PR](https://github.com/llvm/circt/pull/1301#pullrequestreview-691094464), it seems that there are two current approaches to modeling a module-type op in MLIR currently. Right now, I’ve followed the `HW` approach: treat the ComponentOp like a function with arguments and results. E.g.\r\n```\r\ncalyx.component @MyComponent(%in1) -> (%out1) { ... }\r\n```\r\n\r\nThis means we’d also have to define a component cell (instance) in the following manner (pseudo-IR):\r\n```\r\n%c0.out1 = calyx.cell \"c0\" @MyComponent(%some_input)\r\n```\r\n\r\nHowever, within Calyx world, we are only declaring instances thus no connections are made until wires and control.\r\nE.g.\r\n```\r\ncomponent myComp(in1: 32) -> (out1: 32) { ... }\r\n\r\ncomponent main() -> () {\r\n  cells {\r\n    myComp = MyComp();\r\n  }\r\n  wires {\r\n  }\r\n  control {\r\n    invoke myComp(in1 = 1'd1)(out1 = someValue);\r\n  }\r\n}\r\n```\r\n\r\nIt feels kind of bad to lose the FunctionLike interface, given how closely a Component is to a function. Ideally we'd like to lazily make these connections after instantiation. Perhaps this means just using a non-FunctionLike interface and `Connect`s as modeled in `FIRRTL`/`LLHD` (and the Calyx language itself) is better.",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-24",
+  "closed_at": "2021-06-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

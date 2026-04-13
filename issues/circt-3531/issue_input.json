@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3531,
+  "issue_url": "https://github.com/llvm/circt/issues/3531",
+  "title": "[FIRRTL] Report error on duplicate inner symbols (IST verifier?)",
+  "body": "## Problem\r\n\r\nIn FIRRTL, inner symbols can be repeated without the verifier objecting.\r\n\r\n### Example\r\n\r\nHere's an example:\r\n\r\n**syms.mlir**:\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Syms\" {\r\n    firrtl.module @Syms() {\r\n      %w = firrtl.wire sym @x : !firrtl.uint<2>\r\n      %w2 = firrtl.wire sym @x : !firrtl.uint<2>\r\n      %c0_i2 = firrtl.constant 0 : !firrtl.uint<2>\r\n      firrtl.strictconnect %w, %c0_i2 : !firrtl.uint<2>\r\n      firrtl.strictconnect %w2, %w : !firrtl.uint<2>\r\n    }\r\n    sv.verbatim \"Testing InnerSym ref to '@Syms::@x': {{0}}\" { symbols = [ #hw.innerNameRef<@Syms::@x> ] }\r\n  }\r\n}\r\n```\r\n\r\nWhich with assertions disabled, firtool happily processes and produces:\r\n\r\n```\r\nmodule Syms();  // ./syms.mlir:3:5\r\n  wire [1:0] w = 2'h0;  // ./syms.mlir:4:12, :6:16\r\n  wire [1:0] w2;        // ./syms.mlir:5:13\r\n\r\n  assign w2 = w;        // ./syms.mlir:8:7\r\nendmodule\r\n\r\nTesting InnerSym ref to '@Syms::@x': w  // ./syms.mlir:10:5\r\n```\r\n\r\nThere *is* an assert that catches this, but it's while constructing IST's for purposes of verifying InnerRef's.  This would be good to be verifying explicitly and should produce a proper error message.\r\n\r\nThe assert at least means we're not likely to be encountering this in practice, I believe.\r\n\r\n## Proposed Solution(s)\r\n\r\nOne solution is to have a verifier for InnerSymbolTable (the trait, \"IST\").  This would check that all symbols are unique.\r\n\r\nVerifying this on the IST trait seems conceptually appropriate, but that means yet another place we're walking modules to check symbols which we're trying to do less frequently not more.  Note that we can't share the constructed IST from Passes or even between verifiers (AFAIK).  Pushing this up into the IRN (InnerRefNamespace) verifier (circuit-level) as it builds the IST's would be more efficient.\r\n\r\n## Related\r\ncc #3526, which is about similar issue in HW.\r\n\r\nPresently we have a verifier for checking that all inner symbols within an operation (fields) are unique.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-13",
+  "closed_at": "2022-08-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

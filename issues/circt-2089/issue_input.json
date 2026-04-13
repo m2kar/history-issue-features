@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2089,
+  "issue_url": "https://github.com/llvm/circt/issues/2089",
+  "title": "[FIRRTL] Free of Unalloc'd Pointer during Assert Parsing",
+  "body": "The following circuit is causing a free of an unallocated pointer crash inside `FIRParserAsserts.cpp`:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input a: UInt<1>\r\n\r\n    when a :\r\n      node b = eq(reset, UInt<1>(\"h0\"))\r\n      when b :\r\n        assert(clock, UInt<1>(\"h1\"), UInt<1>(\"h1\"), \"\") : assert_50\r\n        node c = eq(UInt<1>(\"h1\"), UInt<1>(\"h0\"))\r\n        when c :\r\n          printf(clock, UInt<1>(\"h1\"), \"Assertion failed: [verif-library-assert]<extraction-summary>{\\\"predicateModifier\\\":{\\\"type\\\":\\\"noMod\\\"},\\\"format\\\":{\\\"type\\\":\\\"ifElseFatal\\\"},\\\"labelExts\\\":[\\\"hello\\\"],\\\"baseMsg\\\":\\\"Assertion failed (verification library): hello  @[hello.scala 1337:42]\\\"}</extraction-summary>\\n    at world.scala:42 chisel3.assert(predicate, flag + exStr, msgArgs: _*)(sourceInfo, compileOptions)\\n\") : printf_50\r\n```\r\n\r\nI'm seeing:\r\n```\r\n# lldb firtool -- issues/free-unalloc.fir \r\n(lldb) target create \"firtool\"\r\nCurrent executable set to 'firtool' (x86_64).\r\n(lldb) settings set -- target.run-args  \"issues/free-unalloc.fir\"\r\n(lldb) r\r\nProcess 91940 launched: '/usr/bin/firtool' (x86_64)\r\nfirtool(91940,0x10499fe00) malloc: *** error for object 0x104d15c10: pointer being freed was not allocated\r\nfirtool(91940,0x10499fe00) malloc: *** set a breakpoint in malloc_error_break to debug\r\nProcess 91940 stopped\r\n* thread #1, queue = 'com.apple.main-thread', stop reason = signal SIGABRT\r\n    frame #0: 0x00007fff204c092e libsystem_kernel.dylib`__pthread_kill + 10\r\nlibsystem_kernel.dylib`__pthread_kill:\r\n->  0x7fff204c092e <+10>: jae    0x7fff204c0938            ; <+20>\r\n    0x7fff204c0930 <+12>: movq   %rax, %rdi\r\n    0x7fff204c0933 <+15>: jmp    0x7fff204baad9            ; cerror_nocancel\r\n    0x7fff204c0938 <+20>: retq   \r\nTarget 0: (firtool) stopped.\r\n(lldb) frame select 7\r\nframe #7: 0x00000001002b5fdf firtool`circt::firrtl::foldWhenEncodedVerifOp(builder=0x00007ffeefbfca60, whenStmt=WhenOp @ 0x00007ffeefbfc058) at FIRParserAsserts.cpp:302:11\r\n   299 \t          });\r\n   300 \t    }\r\n   301 \t    for (auto op : opsToErase)\r\n-> 302 \t      op->erase();\r\n   303 \t  }\r\n   304 \t\r\n   305 \t  builder.setInsertionPointAfter(whenStmt);\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-06",
+  "closed_at": "2021-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

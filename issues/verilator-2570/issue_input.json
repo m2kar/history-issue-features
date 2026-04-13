@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2570,
+  "issue_url": "https://github.com/verilator/verilator/issues/2570",
+  "title": "Error-BLKLOOPINIT for unroll count > 8192",
+  "body": "I got 2 BLKLOOPINIT errors:\r\n\r\n%Error-BLKLOOPINIT: spsb_Svt_1024x32m4_R.v:3637:28: Unsupported: Delayed assignment to array inside for loops (non-delayed is ok - see docs)\r\n : ... In instance genisys.mdio_master_i0.mdio_master_mac_i0.mem_wrpr_i0\r\n 3637 |       u_ram_core.memory[i] <= #0.005 {33{1'bx}};\r\n      |                            ^~\r\n%Error-BLKLOOPINIT: hdspmb_SegQ_Svt_8192x21m8_R.v:3330:28: Unsupported: Delayed assignment to array inside for loops (non-delayed is ok - see docs)\r\n                                                                                                                                                                                         : ... In instance genisys.plug_if_top_i0.mdio_slave_mwisfq_i0.mdio_slave_mac_i0.mem_wrpr_i0.mem_tech_lib_i0.mdio_slave_mem_21b_ram_sp_65536x21.mdio_slave_mem_21b_ram_sp_65536x21_i0.ROW[0].COL[0].tsmc_hdspmb_SegQ_Svt_8192x21m8_R_wrapper__i\r\n 3330 |       u_ram_core.memory[i] <= #0.005 {22{1'bx}};\r\n\r\n\r\nWhen I add --unroll-count 10240, the first error disaapears, second one persists. The loop count in that code is 8192:\r\n\r\n//  Flush all memory content\r\ntask xMemoryAll;\r\n  integer i;\r\n  begin\r\n    for (i = 0; i < 8192; i = i + 1) begin\r\n      **u_ram_core.memory[i] <= #0.005 {22{1'bx}}**;\r\n    end\r\n    if (f_print_info) $display (\"\\tINFO %m : memory is flushed at %t\", $realtime);\r\n  end\r\nendtask\r\n\r\n--unroll-stmts 8192 doesn't work.\r\n\r\nAny other way to get over this error?\r\n\r\nRegards,\r\nRay",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-09-25",
+  "closed_at": "2020-10-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

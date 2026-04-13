@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3719,
+  "issue_url": "https://github.com/verilator/verilator/issues/3719",
+  "title": "Add warning if unpacked array bound positive index is converted to negative",
+  "body": "alu_tb.sv:\r\n```systemverilog\r\nmodule alu_tb\r\n    (input clk);\r\n\r\nlogic [31:0] mem [32'h8000_0000 : 32'h8000_0000 + 2**16];\r\n//logic [31:0] mem [2**32];\r\n\r\ninitial begin\r\n    $readmemh(\"my.hex\", mem);\r\n    for(int i=0; i<20; ++i)\r\n        $display(\"%d: %h\", i, mem[32'h8000_0000+i]);\r\n    $finish;\r\nend\r\nendmodule\r\n```\r\n\r\nmy.hex:\r\n```\r\n@80000000\r\nB7C0EDFE 9380D0EA 37E176FF 130161F5\r\n```\r\n\r\n`tb.cpp`:\r\n<details><pre><code>\r\n#define vIncFile3(x) #x\r\n#define vIncFile2(x) vIncFile3(V##x.h)\r\n#define vIncFile(x) vIncFile2(x)\r\n#include vIncFile(TOP)\r\n\r\n#define VTOP3(x) V##x\r\n#define VTOP2(x) VTOP3(x)\r\n#define VTOP VTOP2(TOP)\r\n\r\n#include \"verilated.h\"\r\n\r\nint main(int argc, char** argv) {\r\n\tVerilatedContext context;\r\n\tcontext.traceEverOn(true);  // Enable signal dump generation\r\n\tcontext.commandArgs(argc, argv);  // Forward the arguments to the Verilated model\r\n\tVTOP top(&context);  // Instantiate the model\r\n\r\n\ttop.clk = 0;\r\n\twhile (!context.gotFinish()) {\r\n\t\t\tcontext.timeInc(1);  // Increment the time\r\n\t\t\ttop.clk = !top.clk;\r\n\t\t\ttop.eval();  // Evaluate the model\r\n\t}\r\n}\r\n</code></pre></details>\r\n\r\nCompiling & running\r\n```sh\r\nverilator \\\r\n        --top-module alu_tb \\\r\n        --assert \\\r\n        --cc \\\r\n        --exe \\\r\n        --build \\\r\n        --trace-fst \\\r\n        -j \\\r\n        -CFLAGS -DTOP=alu_tb \\\r\n alu_tb.sv tb.cpp\r\n\r\nobj_dir/Valu_tb --verbose\r\n```\r\noutputs:\r\n```\r\n%Error: my.hex:1: $readmem file address beyond bounds of array\r\nAborting...\r\nzsh: IOT instruction (core dumped)  obj_dir/Valu_tb --verbose\r\n```\r\n\r\nThe index `0x8000_0000` seems to cause the problem. If I reduce it to `0x800_0000` in both `my.hex` and `alu_tb.sv`, code works fine. I have the hunch that the array indexes are integers, so the range is -2^31 to 2^31-1. I would expect that Verilator outputs at least a warning during compilation.\r\n\r\nVerilator 4.228 2022-10-01. I did not try with the latest.\r\nOn Arch Linux\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nYes",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2022-10-31",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

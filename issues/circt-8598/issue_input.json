@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8598,
+  "issue_url": "https://github.com/llvm/circt/pull/8598",
+  "title": "[FIRRTL] Allow duplicate tracker annotations in LowerClasses.",
+  "body": "Historically, we would assert that every tracker was used exactly once. However, with certain combinations of multiple instantiation and dedup, we can run into duplicate trackers. Specifically, like in the test case, if there are two modules that dedup, but they are instantiated multiple times in modules that do not dedup, we can end up with duplicate trackers that point to the same thing. When dedup is working, the paths are distinct, and it is only at the end that we realize they are pointing to the same thing.\r\n\r\nThis handles that case, by actually checking the path associated with duplicated trackers. If the trackers ultimately ended up pointing to the same thing, this is now allowed. It is still an error to have the same tracker pointing to multiple different paths through the hierarchy.\r\n\r\nFinally, this removed the sentinel PathInfoTableEntry objects we would create simply to check uniqueness. Now that we are actually using the paths to confirm uniqueness or lack thereof, we don't need the sigil, and putting in a PathInfoTableEntry without a path means we can't perform the new check. These only existed for unused paths, which the situation described above in dedup can create. Since they're dead, we can now safely just skip them.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-24",
+  "closed_at": "2025-06-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

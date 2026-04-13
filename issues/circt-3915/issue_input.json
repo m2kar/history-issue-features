@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3915,
+  "issue_url": "https://github.com/llvm/circt/issues/3915",
+  "title": "[LowerSeqToSV] Move `RANDOM` calls into for statement",
+  "body": "Input:\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input d: UInt<49>\r\n    output q: UInt<49>\r\n\r\n    reg _r: UInt<49>, clock\r\n    _r <= d\r\n\r\n    reg r: UInt<49>, clock\r\n    r <= d\r\n\r\n    reg s: UInt<49>, clock\r\n    s <= d\r\n\r\n    q <= s\r\n```\r\ncurrent output:\r\n```verilog\r\n      automatic logic [31:0] _RANDOM_0;\r\n      automatic logic [31:0] _RANDOM_1;\r\n      automatic logic [31:0] _RANDOM_2;\r\n      automatic logic [31:0] _RANDOM_3;\r\n      automatic logic [31:0] _RANDOM_4;\r\n      `ifdef INIT_RANDOM_PROLOG_\r\n        `INIT_RANDOM_PROLOG_\r\n      `endif\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM_0 = `RANDOM;\r\n        _RANDOM_1 = `RANDOM;\r\n        _RANDOM_2 = `RANDOM;\r\n        _RANDOM_3 = `RANDOM;\r\n        _RANDOM_4 = `RANDOM;\r\n```\r\n\r\nIdeally it can be expressed as \r\n```verilog\r\n      automatic logic [31:0] _RANDOM [4:0];\r\n      `ifdef INIT_RANDOM_PROLOG_\r\n        `INIT_RANDOM_PROLOG_\r\n      `endif\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        for (i=0;i<4;i++)\r\n        _RANDOM[i] = `RANDOM;\r\n       ...\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-16",
+  "closed_at": "2023-07-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

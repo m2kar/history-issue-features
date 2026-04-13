@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6878,
+  "issue_url": "https://github.com/verilator/verilator/pull/6878",
+  "title": "Support `unique` constraints (1D static arrays) (#6810)",
+  "body": "## 1. Metadata Definition (`V3AstAttr.h`)\r\n**Change:** Added the `RANDOMIZER_UNIQUE` constant to the `VCMethod` enum.\r\n\r\n* **Purpose:** Establishes a formal compiler-internal handle for the \"unique\" operation. \r\n* **Role:** Allows later compiler passes (specifically the Emitter) to identify these specific nodes without relying on string matching or argument counting.\r\n\r\n---\r\n\r\n## 2. AST Transformation (`V3Randomize.cpp`)\r\n**Change:** Updated visitor for `AstConstraintUnique` to convert declarative constraints into procedural C++ method calls.\r\n\r\n* **Logic:**\r\n    * Iterates through variables within a `unique { ... }` block.\r\n    * **Registration:** For each array, it generates an `AstCMethodHard` node using the existing `RANDOMIZER_WRITE_VAR` enum to register the array's pointer, width, and name.\r\n    * **Constraint Application:** Generates a second `AstCMethodHard` node using the new `RANDOMIZER_UNIQUE` enum. This node carries the array name and the element count as arguments.\r\n    * **Injection:** These nodes are injected into the class's `randomize()` function or constructor (`new()`).\r\n* **Cleanup:** The original `AstConstraintUnique` node is unlinked and deleted after its procedural equivalents are created.\r\n\r\n---\r\n\r\n## Summary of Data Flow\r\n1.  **Frontend:** Verilator parses `unique {my_array}` into an `AstConstraintUnique` node.\r\n2.  **Middle-end:** `V3Randomize` replaces that node with a `RANDOMIZER_UNIQUE` method call.\r\n3.  **Runtime:** `verilated_random.cpp` prints the necessary distinct SMT calls\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-31",
+  "closed_at": "2026-01-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

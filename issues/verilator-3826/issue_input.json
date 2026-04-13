@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3826,
+  "issue_url": "https://github.com/verilator/verilator/issues/3826",
+  "title": "Support structs and struct-type arrays in constant functions",
+  "body": "In **parametric** elaboration of a circuit it is sometimes useful to resort to a function whose result is saved to an **array-type local parameter** for use in a **generate block**. The following snippet is working:\r\n```\r\nmodule mymodule;\r\n   localparam NUM_SUBELEMENTS = <parametrically determined>;\r\n\r\n   typedef integer list_t[NUM_SUB_ELEMENTS]; // integer-type array\r\n   \r\n   function list_t make_list;\r\n      for (int k=0; k<$size(make_list); ++j) begin\r\n         make_list[j] = <your algorithm here>;\r\n      end\r\n   endfunction\r\n\r\n   localparam list_t xx = make_list();\r\n\r\n   for (genvar j=0; j<$size(xx); +++j)\r\n        <connect wires according to const values in xx[j] >\r\nendmodule\r\n```\r\nBut if the base type of the array is not a simple variable, then verilator fails to elaborate:\r\n```\r\n   typedef struct {\r\n      integer \t  a;\r\n      integer \t  b;\r\n   } mystruct;\r\n\r\n   typedef mystruct list_t[NUM_SUBELEMENTS]; // stuct-type array\r\n   \r\n   function list_t make_list;\r\n      for (int k=0; k<$size(make_list); ++j) begin\r\n         make_list[j].a = <your algorithm here>;\r\n         make_list[j].b = <your algorithm here>;\r\n      end\r\n   endfunction\r\n```\r\ngives\r\n```\r\nVerilating design XXX.sv\r\n%Error: XXX.sv:166:27: Expecting expression to be constant, but can't determine constant for FUNCREF 'make_list'\r\n                                  : ... In instance XXX\r\n        XXX.sv:160:17: ... Location of non-constant ASSIGN: LHS isn't simple variable\r\n        XXX.sv:166:27: ... Called from make_list() with parameters:\r\n  166 |    localparam list_t xx = make_list();\r\n      |                           ^~~~~~~~~\r\n\r\n```\r\nThe request is of course whether it is possible to support this case.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2022-12-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

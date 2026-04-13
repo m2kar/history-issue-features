@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6442,
+  "issue_url": "https://github.com/verilator/verilator/issues/6442",
+  "title": "Sensitivity list on public_flat_rw attribute is redundant",
+  "body": "The user can provide a sensitivity list with the public_flat_rw attribute:\n\n```systemverilog\n  output int fr_a /*verilator public_flat_rw @(posedge t.monclk)*/\n```\n\nI believe the need for this was due to the fact that we needed to evaluate combinational logic when the signal changed externally, and there might not have been another signal feeding the same logic from the given event domain.\n\nHowever, since v5, the improved scheduler will replicate all combinational logic into the 'ico' scheduling region to make sure combinational logic dependent on inputs (including public_flat_rw signals) is current before evaluating the rest. (Maybe it shouldn't, but it does, and nobody seems to have complained in the last almost 3 years since the first v5 release).\n\nThis means the edge list on the attribute is redundant (and subsequently the `AstAlwaysPublic` node is also redundant). Removing it causes no test failures.\n\nCan we eliminate this? (Parse it for compatibility, but have no effect.)\n\nPS: Asking as this is the last thing causing memory leaks in the test suite.",
+  "labels": [
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-16",
+  "closed_at": "2025-09-16",
+  "code_blocks": [
+    "  output int fr_a /*verilator public_flat_rw @(posedge t.monclk)*/\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

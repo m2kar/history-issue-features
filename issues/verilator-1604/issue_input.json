@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1604,
+  "issue_url": "https://github.com/verilator/verilator/issues/1604",
+  "title": "Unknown node in split color() map on empty if",
+  "body": "---\n\n\nAuthor Name: **Andrew Holme**\nOriginal Redmine Issue: 1604 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\n```\r\n// This code compiles on Verilator 3.9xx; but 4.0xx fails with the error:\r\n// %Error: Internal Error: top.v:32: ../V3Split.cpp:658: Unknown node in split color() map\r\n\r\n`define COND (2'b10)\r\n\r\nmodule top (\r\n     input  wire clk,\r\n     input  wire aresetn\r\n);\r\n\r\n     reg [9:0] ten;\r\n     reg [1:0] two;\r\n\r\n     function [1:0] func(\r\n         input [1:0]  p0_x,\r\n         input [1:0]  p0_y,\r\n         input [1:0]  p1_x,\r\n         input [1:0]  p1_y,\r\n         input [1:0]  sel);\r\n\r\n         reg [1:0] rx;\r\n         reg [1:0] ry;\r\n\r\n     begin\r\n\r\n`ifdef NOT_DEF\r\n         // This way works\r\n         rx = sel == `COND ? p1_x : p0_x;\r\n         ry = sel == `COND ? p1_y : p0_y;\r\n`else\r\n         // This way fails to compile\r\n         if (sel == `COND)\r\n         begin\r\n           rx = p1_x;\r\n           ry = p1_y;\r\n         end else\r\n         begin\r\n           rx = p0_x;\r\n           ry = p0_y;\r\n         end\r\n`endif\r\n         func = 0;\r\n     end\r\n     endfunction\r\n\r\n     always @(*) begin\r\n         two = func(\r\n                     ten[8 +: 2],\r\n                     ten[6 +: 2],\r\n                     ten[4 +: 2],\r\n                     ten[2 +: 2],\r\n                     ten[0 +: 2]);\r\n     end\r\n\r\nendmodule\r\n\n```\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-15",
+  "closed_at": "2019-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

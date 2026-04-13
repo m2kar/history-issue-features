@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6008,
+  "issue_url": "https://github.com/verilator/verilator/issues/6008",
+  "title": "Wrong values of coverage counters",
+  "body": "When I generated a waveform of the simulation of the following module, I noticed that in one moment the coverage counters of `if` and `else` branches are both incremented. The problem is with `if`/`else` in the first `always`.\n```systemverilog\nmodule t (/*AUTOARG*/\n   // Inputs\n   clk\n   );\n\n   input clk;\n\n   integer cyc;\n   initial cyc=1;\n\n   logic      x;\n   always begin\n      if (cyc == 1) x = clk;\n      else x = 0;\n   end\n\n   always @ (posedge clk) begin\n      if (cyc != 0) begin\n         cyc <= cyc + 1;\n         if (cyc==10) begin\n            $write(\"*-* All Finished *-*\\n\");\n            $finish;\n         end\n      end\n   end\nendmodule\n```\nI ran verilator with options `--binary --coverage-line --trace-vcd --trace-coverage`.\nA convenient way of reproducing this is replacing the file `test_regress/t/t_cover_line.v` with my example and running `test_regress/t/t_cover_line_trace.py --golden`. The output vcd file is `test_regress/t/t_cover_line_trace.out`.\n\nI am attaching the part of the waveform that shows the problem.\n\n![Image](https://github.com/user-attachments/assets/c0c61689-3e83-4535-8128-0ac095d82414)",
+  "labels": [
+    "area: coverage",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-16",
+  "closed_at": "2025-05-19",
+  "code_blocks": [
+    "module t (/*AUTOARG*/\n   // Inputs\n   clk\n   );\n\n   input clk;\n\n   integer cyc;\n   initial cyc=1;\n\n   logic      x;\n   always begin\n      if (cyc == 1) x = clk;\n      else x = 0;\n   end\n\n   always @ (posedge clk) begin\n      if (cyc != 0) begin\n         cyc <= cyc + 1;\n         if (cyc==10) begin\n            $write(\"*-* All Finished *-*\\n\");\n            $finish;\n         end\n      end\n   end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9111,
+  "issue_url": "https://github.com/llvm/circt/pull/9111",
+  "title": "[ImportVerilog] [2/2] Add post-pass to rewrite recursive call sites",
+  "body": "\r\nThis change makes recursive subroutines with captured refs lower correctly by:\r\n1) **Deferring** capture operands at call sites while a callee is still being converted, and\r\n2) **Rewriting** all call sites after capture finalization to pass the right operands for both\r\n   internal (recursive) and external calls.\r\n\r\n- **Call emission guard**\r\n  - In `Expressions.cpp`, only append `lowering->captures` at call sites when\r\n    `!lowering->isConverting`. This prevents attempting to “materialize” captures\r\n    during a self-call while the callee’s body is still under construction.\r\n\r\n- **Post-pass call-site rewrite**\r\n  - Add `rewriteCallSitesToPassCaptures(func::FuncOp, ArrayRef<Value>)` in `Structure.cpp`.\r\n  - Finds all `func.call` uses of `callee` within its `ModuleOp`, snapshots them, and rebuilds:\r\n    - **Recursive (in-body) calls:** append the function’s **capture block arguments**\r\n      (the tail args of the entry block) to the call.\r\n    - **External calls:** append the **captured SSA values** collected during conversion.\r\n  - Uses `FlatSymbolRefAttr::get(callee)` for the rebuilt call.\r\n  - Invoked immediately after `finalizeFunctionBodyCaptures`.\r\n\r\n- **Tests**\r\n  - Extend `basic.sv` with `testRecursiveCaptureFunction`:\r\n    - Verifies external call passes `[[CAPTUREME]]` to `@fact`.\r\n    - Ensures `@fact`’s recursive in-body call appends `%arg1` (the capture block arg).\r\n    - Checks base case reads from `%arg1` and returns it.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-18",
+  "closed_at": "2025-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

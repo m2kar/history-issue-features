@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1639,
+  "issue_url": "https://github.com/llvm/circt/issues/1639",
+  "title": "[FIRRTL] (add(a, a)) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_db: SInt<38>\r\n    output tmp1972: SInt<39>\r\n    tmp1972 <= add(inp_db, inp_db)\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [37:0] inp_db,\r\n  output [38:0] tmp1972);\r\n\r\n  wire [38:0] _T = {inp_db[37], inp_db};\t// a_top_mod.fir:6:16\r\n  assign tmp1972 = {_T[38:1], 1'h0};\t// a_top_mod.fir:3:10, :6:16\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [37:0] inp_db,\r\n  output [38:0] tmp1972\r\n);\r\n  assign tmp1972 = $signed(inp_db) + $signed(inp_db);\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 37 unproven $equiv cells in 'equiv_status -assert'.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-25",
+  "closed_at": "2021-08-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

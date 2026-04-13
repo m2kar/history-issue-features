@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1483,
+  "issue_url": "https://github.com/llvm/circt/issues/1483",
+  "title": "[FIRRTL][ConstantProp] Constant propagation and expansion of muxes",
+  "body": "The following case of constant propagation of registers and speculative expansion of optimized muxes is not handled by circt.\r\nThe following FIRRTL program\r\n```scala\r\ncircuit Top :\r\n  module Top :\r\n    input clock : Clock\r\n    input en : UInt<1>\r\n    output out : UInt<1>\r\n    reg r1 : UInt<1>, clock\r\n    reg r2 : UInt<1>, clock\r\n    when en :\r\n      r1 <= UInt<1>(1)\r\n    r2 <= UInt<1>(0)\r\n    when en :\r\n      r2 <= r2\r\n    out <= xor(r1, r2)\r\n```\r\n`firrtl-1.5-SNAPSHOT` produces the following verilog\r\n```verilog\r\nmodule Top(\r\n  input   clock,\r\n  input   en,\r\n  output  out\r\n);\r\n  assign out = 1'h1;\r\nendmodule\r\n```\r\n`firtool` produces the following verilog\r\n```verilog\r\nmodule Top(\r\n  input  clock, en,\r\n  output out);\r\n  reg r2; // 26.fir:7:5\r\n  `ifndef SYNTHESIS // 26.fir:7:5\r\n    initial begin // 26.fir:7:5\r\n      automatic logic [31:0] _T_1;  // 26.fir:7:5\r\n      `INIT_RANDOM_PROLOG_  // 26.fir:7:5\r\n      `ifdef RANDOMIZE_REG_INIT // 26.fir:7:5\r\n        _T_1 = `RANDOM; // 26.fir:7:5\r\n        r2 = _T_1[0]; // 26.fir:7:5\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  wire _T = r2; // 26.fir:12:10\r\n  wire _T_0 = en & _T;  // 26.fir:12:10\r\n  always @(posedge clock) // 26.fir:12:10\r\n    r2 <= _T_0; // 26.fir:12:10\r\n  assign out = ~_T; // 26.fir:2:10, :13:12\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-27",
+  "closed_at": "2021-08-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

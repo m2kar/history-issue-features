@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2557,
+  "issue_url": "https://github.com/verilator/verilator/issues/2557",
+  "title": "Error when using internal generated clock.",
+  "body": "I found a mismatch between the waveforms and my RTL codes when I  using a generated clock inside a block triggered by the same clock.\r\nAfter debuging, I build the following concise testcase that can repeat my case.\r\n\r\ntestcase:\r\n```v\r\n// demo.v\r\nmodule top (\r\n    input   wire    clk,\r\n    input   wire    gate,\r\n    output  reg     f2\r\n);\r\nwire    clk1;\r\nreg     f0;\r\nreg     f1;\r\nassign clk1 = clk & (~gate);\r\nalways @ (posedge clk) begin\r\n    f0 <= ~f0;\r\n    f1 <= f0;\r\n    $display(\"{f0, f1, f2} == {%d, %d, %d}\", f0, f1, f2);\r\nend\r\nalways @ (posedge clk1) begin\r\n    if (clk1) begin\r\n        f2 <= f1;\r\n    end\r\nend\r\nendmodule\r\n```\r\nverilator arguments are `--cc`\r\nAnd here is my c++ wrapper\r\n```cpp\r\n// sim_main.cpp\r\n#include \"Vdemo.h\"\r\n#include \"verilated.h\"\r\n\r\nvluint64_t main_time = 0;\r\ndouble sc_time_stamp() { return main_time; }\r\n\r\nint main(int argc, char** argv, char** env) {\r\n    Verilated::commandArgs(argc, argv);\r\n    Vdemo* top = new Vdemo;\r\n    top->gate = 0;\r\n    while (!Verilated::gotFinish() && main_time < 40) {\r\n        top->eval();\r\n        main_time++;\r\n        top->clk = !top->clk;\r\n    }\r\n    delete top;\r\n    exit(0);\r\n}\r\n```\r\nThe output is clear to see the problem, where `f1` and `f2` flip simultaneously. But in my design, `f2` should delayed by `f1`\r\n```\r\n// screen output\r\n{f0, f1, f2} == {0, 0, 0}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n{f0, f1, f2} == {0, 1, 1}\r\n{f0, f1, f2} == {1, 0, 0}\r\n```\r\n\r\nIn my real project, codes like this were widely exist  and more complicated, I hope Verilator can do better in this situation. If you can't get what I mean, please let me know, I will explain more.\r\n\r\nLooking forward to your reply.\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-09-17",
+  "closed_at": "2021-01-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

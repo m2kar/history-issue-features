@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3157,
+  "issue_url": "https://github.com/verilator/verilator/issues/3157",
+  "title": "Spurious warning about \"circular logic\" in a full adder chain",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nThis 3-bit full adder implementation.\r\n\r\nSource:\r\n\r\nhttps://github.com/mcandre/toys/blob/master/rtl/systemverilog/wholeass/test_wholeass.sv#L1\r\n\r\nWhich passes this test suite:\r\n\r\nhttps://github.com/mcandre/toys/blob/master/rtl/systemverilog/wholeass/main.cpp\r\n\r\nWhen the line `/* verilator lint_off UNOPTFLAT */` is cleared out from the design, then Verilator reports this trace:\r\n\r\n```console\r\n%Warning-UNOPTFLAT: wholeass.sv:1:46: Signal unoptimizable: Feedback to clock or circular logic: 'test_wholeass.__Vcellout__genblk1[1].wa____pinNumber4'\r\n                                    : ... In instance test_wholeass\r\n    1 | module wholeass(input carry_in, a, b, output carry_out, sum);\r\n      |                                              ^~~~~~~~~\r\n                    test_wholeass.sv:4:1: ... note: In file included from test_wholeass.sv\r\n                    ... For warning description see https://verilator.org/warn/UNOPTFLAT?v=4.213\r\n                    ... Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n                    wholeass.sv:1:46:      Example path: test_wholeass.__Vcellout__genblk1[1].wa____pinNumber4\r\n                    test_wholeass.sv:19:58:      Example path: ASSIGNW\r\n                    test_wholeass.sv:12:18:      Example path: test_wholeass.carries\r\n                    wholeass.sv:3:22:      Example path: ASSIGNW\r\n                    wholeass.sv:1:46:      Example path: test_wholeass.__Vcellout__genblk1[1].wa____pinNumber4\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nNote that the generate syntax is not the problem: The same message appears even when the generator expression is written out a long, boilerplate manual form. With a unique name for the full adder instance and an effective value in place of _i_.\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nCurrent git master.\r\n\r\n```console\r\n$ verilator --version\r\nVerilator 4.213 devel rev v4.212-48-g2560fc86\r\n```\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\n\r\nI'm very new to RTL programming :P\r\n\r\nHere's a thought, maybe the circular logic scanner just doesn't take into account array indices. It's possible that the linter is confusing multiple reads and/or writes to the one array variable. Actually, we have three: The distinct array elements.",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-05",
+  "closed_at": "2021-10-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

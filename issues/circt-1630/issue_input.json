@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1630,
+  "issue_url": "https://github.com/llvm/circt/pull/1630",
+  "title": "[SCFToCalyx] Draft SCFToCalyx pass",
+  "body": "# SCF to Calyx conversion\r\n\r\nThis pass is intended to be part of a high-level synthesis flow for lowering SCF-based code into a statically scheduled FSMD model, through use of Calyx.\r\n\r\n**Preface**: this is early work and as such is heavily subject to change; I'm mainly hoping for comments on the big-picture and general lowering flow. Various things such as the lowering of `comb` and `return` operations are based on assumptions, and not necessarily the current gospel of the Calyx dialect. The hope for this PR is also to spur discussion regarding what is missing in the currect Calyx dialect to be able to write a complete front-end.\r\n\r\n## Design\r\n- The pass follows a partial lowering style, somewhat similar as to what is done in StandardToHandshake. Throughout lowering, state is maintained in the `ComponentLoweringState/ProgramLoweringState` objects, which act as key-value stores. (see: [1](https://github.com/llvm/circt/pull/1630/files#diff-159860a66be40b575200052287d986260fd5773a3ccd1b2d9a7ba52fdbf0a884R1212))\r\n- Basic block arguments are passed through registers  (see: [1](https://github.com/llvm/circt/pull/1630/files#diff-159860a66be40b575200052287d986260fd5773a3ccd1b2d9a7ba52fdbf0a884R674), [2](https://github.com/llvm/circt/pull/1630/files#diff-159860a66be40b575200052287d986260fd5773a3ccd1b2d9a7ba52fdbf0a884R636)).\r\n- Registers are for basic block arguments, while loop iter args and function return values.\r\n- The contents of basic blocks are executed sequentially in the control schedule. \r\n- The input program should be a combination of `scf` + `std` control flow operations and arithmetic operations.\r\n- Calyx uses if- and while constructs for specifying control flow in the schedule. To ensure that only while loops reaches the pass, I've [proposed a pass for converting SCF for loops to while loops](https://reviews.llvm.org/D108454).\r\n- Control flow backedges through branches are not supported (given the above). Instead, backedges are expected to be raised to while-loops before running the conversion pass.\r\n- Emitting the control schedule is done in two steps:\r\n  1. All possible control paths are traversed, and written in the schedule (simplifies writing the schedule). (see [1](https://github.com/llvm/circt/pull/1630/files#diff-159860a66be40b575200052287d986260fd5773a3ccd1b2d9a7ba52fdbf0a884R777))\r\n  2. A set of simplification patterns are then run to reduce the size of the schedule (see [1](https://github.com/llvm/circt/pull/1630/files#diff-159860a66be40b575200052287d986260fd5773a3ccd1b2d9a7ba52fdbf0a884R1166))\r\n- index types used in conjunction with memory accesses are truncated to integers of equal width as the address port which they target. Index types used in arithmetic, which are not trivially linked to some memref, are assumed to be 32-bits. Proper bitwidth inference should be handled in a future pass.\r\n\r\n",
+  "labels": [
+    "enhancement",
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-24",
+  "closed_at": "2021-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

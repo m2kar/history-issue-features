@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4428,
+  "issue_url": "https://github.com/llvm/circt/issues/4428",
+  "title": "[Comb] Clarification on non-two-state operations",
+  "body": "#3766 introduced the `twoState` attribute to many operators in comb, but I am struggling to get the intended consequences of this flag not being set. The way I understand it, any transformation on operations without this flag should preserve the behavior for all (System)Verilog 4-state and VHDL 9-state values. However, apart form being highly restrictive, I do not think this is what the current implementation does. For example, the SV spec states: \r\n\r\n> For the arithmetic operators, if any operand bit value is the unknown value x or the high-impedance value z,\r\nthen the entire result value shall be x.\r\n\r\nThus, even trivial optimizations like `mul(a, 0) -> 0` would have to be disabled for any operation without the `twoState` attribute. Yet, \r\n\r\n```\r\n  hw.module @zeromult(%a: i8) -> (y: i8) {\r\n    %c0_i8 = hw.constant 0 : i8\r\n    %0 = comb.mul %a, %c0_i8 : i8\r\n    hw.output %0 : i8\r\n  }\r\n```\r\n\r\nis canonicalized to\r\n\r\n```\r\nhw.module @zeromult(%a: i8) -> (y: i8) {\r\n    %c0_i8 = hw.constant 0 : i8\r\n    hw.output %c0_i8 : i8\r\n  }\r\n```\r\neven without the `bin` flag. So, effectively the behavior seems to be undefined for non-two-state values at the moment or am I missing something? Personally, I think there needs to be a reasonable middle-ground between strictly preserving the behavior and completely ignoring the existence of non-two-state values, but we would have to specify it.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-12-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

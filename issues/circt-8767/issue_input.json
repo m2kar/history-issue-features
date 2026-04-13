@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8767,
+  "issue_url": "https://github.com/llvm/circt/issues/8767",
+  "title": "[FIRRTL] incorrect type inference for mux",
+  "body": "```firrtl\nFIRRTL version 4.1.0\ncircuit Foo:\n  public module Foo:\n    input sel1 : UInt<1>\n    input a : UInt<8>[1]\n    input b : UInt<8>\n    output o : UInt<8>\n    connect o,  mux(sel1, a, b)\n```\ngives:\n```mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.module @Foo(in %sel1: !firrtl.uint<1>, in %a: !firrtl.vector<uint<8>, 1>, in %b: !firrtl.uint<8>, out %o: !firrtl.uint<8>) attributes {convention = #firrtl<convention scalarized>} {\n    %0 = firrtl.mux(%sel1, %a, %b) : (!firrtl.uint<1>, !firrtl.vector<uint<8>, 1>, !firrtl.uint<8>) -> !firrtl.uint<8>\n    firrtl.matchingconnect %o, %0 : !firrtl.uint<8>\n  }\n}\n```\nAccording to the FIRRTL spec, mux requires that the high and low arguments are equivalent, and so this program should have been rejected.  Eventually, this crashes in `LowerToHW`. The code in `inferMuxReturnType` mistakenly assumes that the high signal is an `IntType` without checking:\n```c++\n  // Two different Int types can be compatible.  If either has unknown width,\n  // then return it.  If both are known but different width, then return the\n  // larger one.\n  if (type_isa<IntType>(low)) {\n    int32_t highWidth = high.getBitWidthOrSentinel();\n    int32_t lowWidth = low.getBitWidthOrSentinel();\n    if (lowWidth == -1)\n      return low.getConstType(outerTypeIsConst);\n    if (highWidth == -1)\n      return high.getConstType(outerTypeIsConst);\n    return (lowWidth > highWidth ? low : high).getConstType(outerTypeIsConst);\n  }\n```\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2025-07-23",
+  "closed_at": null,
+  "code_blocks": [
+    "FIRRTL version 4.1.0\ncircuit Foo:\n  public module Foo:\n    input sel1 : UInt<1>\n    input a : UInt<8>[1]\n    input b : UInt<8>\n    output o : UInt<8>\n    connect o,  mux(sel1, a, b)\n",
+    "firrtl.circuit \"Foo\" {\n  firrtl.module @Foo(in %sel1: !firrtl.uint<1>, in %a: !firrtl.vector<uint<8>, 1>, in %b: !firrtl.uint<8>, out %o: !firrtl.uint<8>) attributes {convention = #firrtl<convention scalarized>} {\n    %0 = firrtl.mux(%sel1, %a, %b) : (!firrtl.uint<1>, !firrtl.vector<uint<8>, 1>, !firrtl.uint<8>) -> !firrtl.uint<8>\n    firrtl.matchingconnect %o, %0 : !firrtl.uint<8>\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

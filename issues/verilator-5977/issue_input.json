@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5977,
+  "issue_url": "https://github.com/verilator/verilator/issues/5977",
+  "title": "Fix broken link in node on parameterized class typedef",
+  "body": "From https://github.com/pulp-platform/axi\n\n```\npackage axi_test;\n  class axi_ax_beat #(\n    parameter AW = 32,\n    parameter IW = 8 ,\n    parameter UW = 1\n  );\n    rand logic [IW-1:0] ax_id     = '0;\n    rand logic [AW-1:0] ax_addr   = '0;\n    logic [7:0]         ax_len    = '0;\n    logic [2:0]         ax_size   = '0;\n    logic [1:0]         ax_burst  = '0;\n    logic               ax_lock   = '0;\n    logic [3:0]         ax_cache  = '0;\n    logic [2:0]         ax_prot   = '0;\n    rand logic [3:0]    ax_qos    = '0;\n    logic [3:0]         ax_region = '0;\n    logic [5:0]         ax_atop   = '0;  \n    rand logic [UW-1:0] ax_user   = '0;\n  endclass\n\n  class axi_driver #(\n    parameter int  AW = 32  ,\n    parameter int  DW = 32  ,\n    parameter int  IW = 8   ,\n    parameter int  UW = 1   ,\n    parameter time TA = 0ns ,  \n    parameter time TT = 0ns    \n  );\n    typedef axi_ax_beat #(.AW(AW), .IW(IW), .UW(UW)) ax_beat_t;\n  endclass\nendpackage\n\nmodule tb_axi_bus_compare #(\n  parameter time TbTclk = 10ns,\n  parameter int unsigned TbAddrWidth = 32'd64,\n  parameter int unsigned TbDataWidth = 32'd128,\n  parameter int unsigned TbIdWidth = 32'd6,\n  parameter int unsigned TbUserWidth = 32'd2,\n  parameter bit TbWarnUninitialized = 1'b0,\n  parameter time TbApplDelay = 2ns,\n  parameter time TbAcqDelay = 8ns\n);\n\n  typedef axi_test::axi_driver #(\n    .AW(TbAddrWidth), .DW(TbDataWidth), .IW(TbIdWidth), .UW(TbUserWidth),\n    .TA(1ns), .TT(6ns)\n  ) drv_t;\n\n  localparam int StrbWidth = 1;\n\n  initial begin\n    automatic logic rand_success;\n    automatic drv_t::ax_beat_t aw_beat = new, ar_beat = new;\n\n    rand_success = aw_beat.randomize(); assert (rand_success);\n    aw_beat.ax_addr >>= $clog2(StrbWidth);  \n    aw_beat.ax_addr <<= $clog2(StrbWidth);\n\n     $finish();\n  end\nendmodule\n```\n\nVCS compiles w/o problem.\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --binary test.sv\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n```\nVerilator 5.037 devel rev v5.036-30-g11cfa61f8\n```\n\nWhat OS and distribution are you using?\n\n```\nLinux 5.14.0-503.38.1.el9_5.x86_64\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "area: parser",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-05",
+  "closed_at": "2026-03-25",
+  "code_blocks": [
+    "package axi_test;\n  class axi_ax_beat #(\n    parameter AW = 32,\n    parameter IW = 8 ,\n    parameter UW = 1\n  );\n    rand logic [IW-1:0] ax_id     = '0;\n    rand logic [AW-1:0] ax_addr   = '0;\n    logic [7:0]         ax_len    = '0;\n    logic [2:0]         ax_size   = '0;\n    logic [1:0]         ax_burst  = '0;\n    logic               ax_lock   = '0;\n    logic [3:0]         ax_cache  = '0;\n    logic [2:0]         ax_prot   = '0;\n    rand logic [3:0]    ax_qos    = '0;\n    logic [3:0]         ax_region = '0;\n    logic [5:0]         ax_atop   = '0;  \n    rand logic [UW-1:0] ax_user   = '0;\n  endclass\n\n  class axi_driver #(\n    parameter int  AW = 32  ,\n    parameter int  DW = 32  ,\n    parameter int  IW = 8   ,\n    parameter int  UW = 1   ,\n    parameter time TA = 0ns ,  \n    parameter time TT = 0ns    \n  );\n    typedef axi_ax_beat #(.AW(AW), .IW(IW), .UW(UW)) ax_beat_t;\n  endclass\nendpackage\n\nmodule tb_axi_bus_compare #(\n  parameter time TbTclk = 10ns,\n  parameter int unsigned TbAddrWidth = 32'd64,\n  parameter int unsigned TbDataWidth = 32'd128,\n  parameter int unsigned TbIdWidth = 32'd6,\n  parameter int unsigned TbUserWidth = 32'd2,\n  parameter bit TbWarnUninitialized = 1'b0,\n  parameter time TbApplDelay = 2ns,\n  parameter time TbAcqDelay = 8ns\n);\n\n  typedef axi_test::axi_driver #(\n    .AW(TbAddrWidth), .DW(TbDataWidth), .IW(TbIdWidth), .UW(TbUserWidth),\n    .TA(1ns), .TT(6ns)\n  ) drv_t;\n\n  localparam int StrbWidth = 1;\n\n  initial begin\n    automatic logic rand_success;\n    automatic drv_t::ax_beat_t aw_beat = new, ar_beat = new;\n\n    rand_success = aw_beat.randomize(); assert (rand_success);\n    aw_beat.ax_addr >>= $clog2(StrbWidth);  \n    aw_beat.ax_addr <<= $clog2(StrbWidth);\n\n     $finish();\n  end\nendmodule\n",
+    "verilator --binary test.sv\n",
+    "Verilator 5.037 devel rev v5.036-30-g11cfa61f8\n",
+    "Linux 5.14.0-503.38.1.el9_5.x86_64\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

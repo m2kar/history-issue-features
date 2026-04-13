@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2970,
+  "issue_url": "https://github.com/llvm/circt/pull/2970",
+  "title": "[FIRRTL] [CheckCombCycles] Improve error message by reconstructing a full cycle",
+  "body": "This is a follow-up onto https://github.com/llvm/circt/pull/2942\r\n\r\nThis commit tries improving an error message produced by recovering\r\na full cycle. Previously it didn't recurse into instance's internal so\r\nthe message is less verbose than SFC.\r\n\r\nFor example, the following IR contains a cycle through two instances \r\n`thru2` and `thru1`.\r\n\r\n```scala\r\ncircuit hasloops :\r\n module thru2 :\r\n   input in : UInt<1>  @[Bar.scala 33:38]\r\n   output out : UInt<1> @[Bar.scala 33:38]\r\n   out <= in @[Bar.scala 33:38]\r\n\r\n module thru1 :\r\n   input in : UInt<1> @[Bar.scala 33:38]\r\n   output out : UInt<1> @[Bar.scala 33:38]\r\n   out <= in @[Bar.scala 33:38]\r\n   inst inner of thru2 @[Bar.scala 33:38]\r\n   inner.in <= in\r\n   out <= inner.out\r\n\r\n module hasloops :\r\n   input clk : Clock\r\n   input a : UInt<1>\r\n   input b : UInt<1>\r\n   output c : UInt<1>\r\n   output d : UInt<1>\r\n   wire y : UInt<1> @[Bar.scala 33:38]\r\n   wire z : UInt<1> @[Bar.scala 33:38]\r\n   c <= b\r\n   inst inner of thru1 @[Bar.scala 33:38]\r\n   inner.in <= y\r\n   z <= inner.out\r\n   y <= z\r\n   d <= z\r\n```\r\nNew output:\r\n```\r\nfoo.fir:15:9: error: detected combinational cycle in a FIRRTL module\r\n module hasloops :\r\n        ^\r\nBar.scala:33:38: note: Instance hasloops.inner: in ---> out\r\nBar.scala:33:38: note: hasloops.inner.in\r\nBar.scala:33:38: note: Instance hasloops.inner.inner: in ---> out\r\nBar.scala:33:38: note: hasloops.inner.inner.in\r\nBar.scala:33:38: note: hasloops.inner.inner.out\r\nBar.scala:33:38: note: hasloops.inner.out\r\nBar.scala:33:38: note: hasloops._z\r\nBar.scala:33:38: note: hasloops._y\r\nBar.scala:33:38: note: hasloops.inner.in\r\n```\r\nPrevious output:\r\n```\r\nfoo.fir:15:9: error: detected combinational cycle in a FIRRTL module\r\n module hasloops :\r\n        ^\r\nBar.scala:33:38: note: hasloops.inner.in\r\nBar.scala:33:38: note: hasloops.inner.out\r\nBar.scala:33:38: note: hasloops._z\r\nBar.scala:33:38: note: hasloops._y\r\nBar.scala:33:38: note: hasloops.inner.in\r\n```\r\nSFC output:\r\n```\r\nhasloops.y\r\nhasloops.inner.in\r\nhasloops.inner.inner.in\r\nhasloops.inner.inner.out         @[Bar.scala 33:38]\r\nhasloops.inner.out\r\nhasloops.z\r\nhasloops.y\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-26",
+  "closed_at": "2022-04-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

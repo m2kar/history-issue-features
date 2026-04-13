@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 622,
+  "issue_url": "https://github.com/verilator/verilator/issues/622",
+  "title": "Public signal driven by C++ not propagating as expected",
+  "body": "---\n\n\nAuthor Name: **Jie Xu** (@jiexu)\nOriginal Redmine Issue: 622 from https://www.veripool.org\n\n\n\n---\n\nFor our simulation we need to drive/change some signals using C++ code. We do this both by change the c++ signal directly and/or using DPI functions.\r\n\r\nHowever, we notice that sometimes the change of signal by C++ code do NOT take further effect to change other signals.\r\n\r\nFor example, for the following verilog code:\r\n```\r\n`begin_keywords \"1800-2005\"\r\nmodule sim_top( clk, res);\r\n\r\ninput wire clk;\r\noutput wire res;\r\n\r\nreg we_a; // even not working with /*verilator public*/\r\n\r\nalways@(we_a)  \r\n// works if replaced upper line with always@(posedge clk)\r\nbegin\r\n     res = we_a;\r\nend\r\n// NOT working if replace above block as   assign res = we_a;\r\n\r\nexport \"DPI-C\" task write_we;\r\ntask    write_we;\r\n     input   bit in;\r\n     we_a = in;\r\nendtask\r\n\r\nendmodule\r\n\n``` \r\n\r\nIf we change the value of @we_a@ during simulation using the @write_we@ function, the value of @res@ will NOT changed. \r\n\r\nThe main reason here is that the signal @we_a@ was NOT driven by any other signals in the verilog code except the task. Then I guess Verilator will only initialize its value and further signal driven by @we_a@ in the beginning of simulation. No further updates are necessary for further simulation. \r\n\r\nHowever, this is not true if we change the value of @we_a@ using C++ code. \r\n\r\nPossible improvement to Verilator could be automatically detecting these signals:\r\n\r\n1) signal marked by /*verilator public*/;\r\n\r\n2) signal driven by exported verilog-tasks,\r\n\r\nand treating them just like input signals to the module. \r\n \r\n\r\nThe full test case is attached. \n\n\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-21",
+  "closed_at": "2017-03-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

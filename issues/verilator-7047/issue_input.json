@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7047,
+  "issue_url": "https://github.com/verilator/verilator/pull/7047",
+  "title": "Fix spurious MULTIDRIVEN warnings with -fno-inline (#7045)",
+  "body": "Fixes #7045\n\n## Summary\n- Fix spurious `MULTIDRIVEN` warnings when using `-fno-inline` on wires driven by multiple cell output ports\n- Discovered as part of a `-fno-inline` audit for #1539\n\n## Fix Details\n\n### Root Cause\nWithout inlining, `instAll()` in `V3Inst.cpp` creates `AstAssignW` continuous assignments for each cell's output port connection. When multiple cell instances have output ports connected to the same parent wire, `V3DfgSynthesize` flags it as `MULTIDRIVEN`. With inlining, each instance gets separate `__DOT__`-prefixed variables and the conflict doesn't arise.\n\nThese are structural port-connection drivers from cell instantiation, not user-written multi-driver errors.\n\n### Changes\n- **`src/V3AstNodeStmt.h`**: Add `fromPortConnection` flag to `AstNodeAssign`\n- **`src/V3Inst.cpp`**: Tag port-connection `AstAssignW` nodes created by `instAll()` with `fromPortConnection(true)`\n- **`src/V3DfgSynthesize.cpp`**: Suppress `MULTIDRIVEN` when all drivers of a variable are from port connections; if any driver is user code, still warn\n\n### Tests\n\n#### `t_cover_toggle_noinl`\nRuns `t_cover_toggle.v` with `-fno-inline --coverage-toggle`. Previously triggered spurious MULTIDRIVEN on `toggle_up` driven by two `alpha` instances.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-11",
+  "closed_at": "2026-02-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1568,
+  "issue_url": "https://github.com/llvm/circt/issues/1568",
+  "title": "[FIRRTL/ExportVerilog] Instance input expressions don't get emitted inline in practice",
+  "body": "ExportVerilog will happily emit input operands to instances inline, but we don't actually achieve this for MFC because of how FIRRTL instances work.  Consider something like:\r\n\r\n```\r\ncircuit top_mod :\r\n module mod_0 :\r\n   input input: UInt<8>\r\n\r\n module top_mod :\r\n   input value: UInt<7>\r\n   inst U1 of mod_0\r\n   U1.input <= add(value, UInt<7>(1))\r\n```\r\n\r\nWe currently print this to:\r\n\r\n```\r\nmodule top_mod(\r\n  input [6:0] value);\r\n\r\n  wire [7:0] _T;\t\r\n\r\n  mod_0 U1 (\r\n    .input_0 (_T)\r\n  );\r\n  assign _T = {1'h0, value} + 8'h1;\r\nendmodule\r\n```\r\n\r\nBut should be able to get:\r\n\r\n```\r\nmodule top_mod(\r\n  input [6:0] value);\r\n\r\n  mod_0 U1 (\r\n    .input_0 ({1'h0, value} + 8'h1)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe problem here is a phase ordering / cleanup issue: the input to export verilog has the add below the instance, so a wire is emitted to handle this:\r\n\r\n```\r\n hw.module @top_mod(%value: i7) {\r\n    %c1_i8 = hw.constant 1 : i8\r\n    %false = hw.constant false\r\n    hw.instance \"U1\" @mod_0(%1) : (i8) -> ()\r\n    %0 = comb.concat %false, %value : (i1, i7) -> i8\r\n    %1 = comb.add %0, %c1_i8 : i8\r\n    hw.output\r\n  }\r\n```\r\n\r\nOne simple solution to this is to just move all instances to the bottom of a module in PrettifyVerilog, does anyone object to that?",
+  "labels": [
+    "FIRRTL",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-13",
+  "closed_at": "2021-08-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

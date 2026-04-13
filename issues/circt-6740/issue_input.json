@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6740,
+  "issue_url": "https://github.com/llvm/circt/issues/6740",
+  "title": "[FIRRTLToHW] Conversion failure of invalidated wire of clock type",
+  "body": "The following fails verification after `circt-opt -lower-firrtl-to-hw`:\r\n\r\n``` mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module private @Foo() {\r\n    %a = firrtl.wire : !firrtl.clock\r\n    %b = firrtl.invalidvalue : !firrtl.clock\r\n    firrtl.strictconnect %a, %b : !firrtl.clock\r\n  }\r\n}\r\n```\r\n\r\nThis fails with:\r\n\r\n```\r\nTitan.mlir:4:10: error: 'hw.bitcast' op result #0 must be Type wherein the bitwidth in hardware is known, but got '!seq.clock'\r\n    %b = firrtl.invalidvalue : !firrtl.clock\r\n         ^\r\nTitan.mlir:4:10: note: see current operation: %2 = \"hw.bitcast\"(%0) : (i1) -> !seq.clock\r\n```\r\n\r\nThe illegal MLIR being produced is:\r\n\r\n``` mlir\r\n\"builtin.module\"() ({\r\n  \"hw.module\"() ({\r\n    %0 = \"hw.constant\"() {value = false} : () -> i1\r\n    %1 = \"hw.wire\"(%2) {name = \"a\"} : (!seq.clock) -> !seq.clock\r\n    %2 = \"hw.bitcast\"(%0) : (i1) -> !seq.clock\r\n    \"hw.output\"() : () -> ()\r\n  }) {comment = \"\", module_type = !hw.modty<>, parameters = [], per_port_attrs = [], result_locs = [], sym_name = \"Foo\", sym_visibility = \"private\"} : () -> ()\r\n}) : () -> ()\r\n```",
+  "labels": [
+    "good first issue",
+    "FIRRTL",
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2024-02-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

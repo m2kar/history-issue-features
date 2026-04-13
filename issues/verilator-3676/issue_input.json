@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3676,
+  "issue_url": "https://github.com/verilator/verilator/issues/3676",
+  "title": "V3DfgDfgToAst should have removed undriven sources on v5 master",
+  "body": "Hello, I have encountered a regression moving from v4->v5 of Verilator. I encountered this as part of the BlackParrot compilation, but narrowed down the issue to one specific BaseJump STL module.\r\n\r\n>Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```\r\nmodule bsg_encode_one_hot #(parameter width_p=8)\r\n(input [width_p-1:0] i\r\n ,output [$clog2(width_p)-1:0] addr_o\r\n);\r\n\r\n  localparam levels_lp = $clog2(width_p);\r\n  // adjust for non-power of two input\r\n  localparam aligned_width_lp = 1 << $clog2(width_p);\r\n\r\n  genvar level;\r\n  genvar segment;\r\n\r\n  wire [levels_lp:0][aligned_width_lp-1:0] addr;\r\n  wire [levels_lp:0][aligned_width_lp-1:0] v;\r\n\r\n  // base case, also handle padding for non-power of two inputs\r\n  assign v   [0] = i << (aligned_width_lp - width_p);\r\n  assign addr[0] = '0;\r\n\r\n  for (level = 1; level < levels_lp+1; level=level+1)\r\n    begin : rof\r\n      localparam segments_lp = 2**(levels_lp-level);\r\n      localparam segment_slot_lp = aligned_width_lp/segments_lp;\r\n      localparam segment_width_lp = level; // how many bits are needed at each level\r\n\r\n      for (segment = 0; segment < segments_lp; segment=segment+1)\r\n        begin : rof1\r\n          wire [1:0] vs = {\r\n                           v[level-1][segment*segment_slot_lp+(segment_slot_lp >> 1)]\r\n                           , v[level-1][segment*segment_slot_lp]\r\n                          };\r\n\r\n          assign v[level][segment*segment_slot_lp] = | vs;\r\n\r\n          if (level == 1)\r\n            assign addr[level][(segment*segment_slot_lp)+:segment_width_lp] = { vs[0] };\r\n          else\r\n            begin : fi\r\n              assign addr[level][(segment*segment_slot_lp)+:segment_width_lp]\r\n              = { vs[0]\r\n                 , addr[level-1][segment*segment_slot_lp+:segment_width_lp-1]\r\n                 | addr[level-1][segment*segment_slot_lp+(segment_slot_lp >> 1)+:segment_width_lp-1]\r\n                };\r\n            end\r\n        end\r\n    end\r\n\r\n  assign addr_o = addr[levels_lp][$clog2(width_p)-1:0];\r\n\r\nendmodule\r\n```\r\n\r\n>What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 5.001 devel rev v4.224-107-g5869fdf7f (git master)\r\nThe previous working version was Verilator 4.221 devel rev v4.220-4-g14d24213.\r\n\r\n>What OS and distribution are you using?\r\n\r\nCentos 7\r\n\r\n>May we assist you in trying to fix this in Verilator yourself?\r\n\r\nHappy to help turn this into a formal test case, but an actual fix would depend on the scope. Let me know if you need any more information. Thanks!\r\n\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-15",
+  "closed_at": "2022-10-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

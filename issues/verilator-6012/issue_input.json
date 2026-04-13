@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6012,
+  "issue_url": "https://github.com/verilator/verilator/pull/6012",
+  "title": "fix concatenation + type casting bug",
+  "body": "Something wrt casting has recently regressed.  This test yields the following error:\r\n```\r\n%Error: Internal Error: t/t_concatenate_casts.v:19:29: ../V3Width.cpp:7326: Node has no type                                                                                                                        \r\n                                                     : ... note: In instance 't'                                                                                                                                    \r\n-node: CAST 0x555557009900 <e1323#> {f19bd} @dt=0x555556fa2240@(w8)                                                                                                                                                 \r\n   19 |         the_foos[0] = {foo_t'(the_bars[1]), foo_t'(the_bars[0])};                                                                                                                                           \r\n      |                             ^                                                                                                                                                                               \r\n```\r\n\r\nI believe the comment associated with this assert is on point:\r\n```\r\n// Perhaps forgot to do a prelim visit on it?\r\n```\r\nbecause while other `SELBIT`s get `WidthSel`ed into `SEL`s with datatypes, `the_bars[1]` remains a `SELBIT`:\r\n```\r\n    1:2:2:2:1: REPLICATE 0x555557005600 <e803> {f19ax} @dt=0x5555570a2c00@(G/w0)\r\n    1:2:2:2:1:1: CONCAT 0x555557005550 <e796> {f19br} @dt=0@\r\n    1:2:2:2:1:1:1: CAST 0x555557009900 <e1323#> {f19bd} @dt=0x555556fa2240@(w8)\r\n    1:2:2:2:1:1:1:1: SELBIT 0x5555570053f0 <e1319#> {f19bn} @dt=0@\r\n    1:2:2:2:1:1:1:1:1: VARREF 0x5555570a6c30 <e1149> {f19bf} @dt=0@  the_bars [RV] <- VAR 0x555556f79d40 <e1224#> {f13ar} @dt=0x55555700de00@(w64)p[1:0]  the_bars [VSTATIC]  VAR\r\n    1:2:2:2:1:1:1:1:2: CONST 0x5555570a42d0 <e767> {f19bo} @dt=0x555556fa26c0@(G/swu32/1)  ?32?sh1\r\n    1:2:2:2:1:1:1:2: REFDTYPE 0x5555570a43c0 <e1320#> {f19ay} @dt=0x555556fa2240@(w8)  foo_t refdt=0x555556fa2240(w8) -> typedef=0x55555700ec30 -> BASICDTYPE 0x555556fa2240 <e1208#> {f10an} @dt=this@(w8)  logic kwd=logic range=[7:0]\r\n```\r\n\r\nI do see that `WidthVisitor::visit(AstCast*)` does get called on the cast above ^ but that `m_vup` is `FINAL` the one and only time that happens.  Not sure yet if that's a problem or not.\r\n\r\nStill trying to get my head around this, but any hints would be appreciated.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-16",
+  "closed_at": "2025-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

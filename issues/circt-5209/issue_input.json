@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5209,
+  "issue_url": "https://github.com/llvm/circt/issues/5209",
+  "title": "[FIRRTL] connection of consts verifier not flow sensitive",
+  "body": "I believe we are rejecting valid usages of const.\r\n```\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %in   : !firrtl.bundle<a flip: uint<1>>,\r\n                     out %out : !firrtl.bundle<a flip: const.uint<1>>) {\r\n    firrtl.connect %out, %in : !firrtl.bundle<a flip: const.uint<1>>, !firrtl.bundle<a flip: uint<1>>\r\n  }\r\n}\r\n```\r\nShould be valid FIRRTL, but we are getting:\r\n```\r\n./bin/firtool ./test2.mlir \r\n./test2.mlir:4:5: error: type mismatch between destination '!firrtl.bundle<a flip: const.uint<1>>' and source '!firrtl.bundle<a flip: uint<1>>'\r\n    firrtl.connect %out, %in : !firrtl.bundle<a flip: const.uint<1>>, !firrtl.bundle<a flip: uint<1>>\r\n    ^\r\n./test2.mlir:4:5: note: see current operation: \"firrtl.connect\"(%arg1, %arg0) : (!firrtl.bundle<a flip: const.uint<1>>, !firrtl.bundle<a flip: uint<1>>) -> ()\r\n```\r\n\r\nI believe the issue is that the verifier is not swapping the dest and src when there is a flip. Maybe need to do it here: https://github.com/llvm/circt/blob/main/lib/Dialect/FIRRTL/FIRRTLTypes.cpp#L697-L698\r\n\r\nIf I remove the `const` from the types, I get the following Verilog:\r\n```verilog\r\nmodule Foo(\r\n  input  out_a,\r\n  output in_a\r\n);\r\n\r\n  assign in_a = out_a;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-16",
+  "closed_at": "2023-05-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

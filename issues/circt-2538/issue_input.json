@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2538,
+  "issue_url": "https://github.com/llvm/circt/issues/2538",
+  "title": "[FIRRTL] unable to infer width with known input width",
+  "body": "Here is the input MLIR:\r\n```\r\nfirrtl.circuit \"Example\" {\r\n  firrtl.module @Example(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>, in %in: !firrtl.uint<2>, out %out: !firrtl.uint<2>) {\r\n    %_GEN_0 = firrtl.add %in, %in : (!firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint\r\n    %_out_T = firrtl.node %_GEN_0 : !firrtl.uint\r\n    %_GEN_1 = firrtl.add %in, %in : (!firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint\r\n    %_GEN_2 = firrtl.tail %_out_T, 1 : (!firrtl.uint) -> !firrtl.uint\r\n    %_out_T_1 = firrtl.node %_GEN_2 : !firrtl.uint\r\n    %_GEN_3 = firrtl.tail %_out_T, 1 : (!firrtl.uint) -> !firrtl.uint\r\n    firrtl.connect %out, %_out_T_1 : !firrtl.uint<2>, !firrtl.uint\r\n  }\r\n}\r\n```\r\nSince CIRCT doesn't have unknown type representation.(but it has unknown width), for each `PrimOp`, I inferred the return type of which, but left width unknown.\r\nWhen `firtool` parsing this result, `firtools` complains incompatible type and refuse to parse.\r\n```\r\n<stdin>:3:15: error: 'firrtl.add' op inferred type(s) '!firrtl.uint<3>' are incompatible with return type(s) of operation '!firrtl.uint'\r\n    %_GEN_0 = firrtl.add %in, %in : (!firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint\r\n              ^\r\n<stdin>:3:15: note: see current operation: %0 = \"firrtl.add\"(%arg2, %arg2) : (!firrtl.uint<2>, !firrtl.uint<2>) -> !firrtl.uint\r\n```\r\nI wonder if is possible to let MFC InferType automatically override unknown width and only show incompatible error on real incompatible type?",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-30",
+  "closed_at": "2023-11-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

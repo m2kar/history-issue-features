@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3601,
+  "issue_url": "https://github.com/verilator/verilator/pull/3601",
+  "title": "Handle signal strengths when the strongest signal is constant",
+  "body": "It is another approach to handle signal strength. Previous was there: https://github.com/verilator/verilator/pull/3580 and parsing phase is just copied.\r\nHere I add the handling of case when the strongest driver is a constant. I just find the strongest assignment with constant on RHS and then just remove all weaker or equally strong assignments.\r\n\r\nTo be more formal:\r\nI find the assignment of value 0 (size may be greater than 1) that has greatest strength (the one corresponding to 0) of all other assignments of 0.\r\nThen I do the same for value '1 and strength corresponding to value 1.\r\nThen I find greater of these two strengths. If they are equal I take the one that corresponds to 1.\r\nThen I remove all assignments that have strengths weaker or equal to the one I found.\r\nSo I remove all other assignments of constants on RHS and also all assignment that have both strengths non-greater that the one I found, because they are weaker not matter what is on RHS.\r\n\r\nAll assignments that are stronger than the one with strongest constant I leave as they are.\r\n\r\nThere is a possible problem with equally strong assignments, because multiple assignments with the same strength, but different values should result in `x` value, but these values are unsupported.\r\n\r\nIn some cases the first AstAssignW of some net was changed to AstAssign and put into `initial` block and the value of RHS is put into `valuep()`.\r\nI delayed this step to be happening after V3Tristate phase. I did this, because the value of the first assignment may be overwritten by some stronger assignment and also change of assignment type made the handling more complicated, because strengths can only be specified for continuous assignments.\r\nIt causes that two tests changed their error messages. In `t_bitsel_wire_array_bad` there is no instance information. I think that field was just removed in some earlier phase, because this change may delay the moment of printing such error. In `t_split_var_1_bad` one of error messages was replaced by 3 messages. I think that first of them is more accurate than the previous, but I wonder if I should try to remove two additional messages.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-06",
+  "closed_at": "2022-09-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

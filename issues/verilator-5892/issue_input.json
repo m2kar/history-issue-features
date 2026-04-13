@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5892,
+  "issue_url": "https://github.com/verilator/verilator/issues/5892",
+  "title": "Optimizations generate code that depends on assignment location",
+  "body": "Hello!\n... and the code either works as in Icarus Verilog, or not.\nPerhaps, this is rare case. But I'm using HDL which generates such Verilog code and now I'm blocked by verilator :(\n\nVerilator 5.035 devel rev v5.034-88-g8965401d1\n\nConsider this example:\n```\n$ cat a.v\nmodule test;\n\tinitial begin\n\t\ta = 0;\n\tend\n\treg a;\n\talways @(*) begin\n\t\ta <= 0;\n\t\tif (a == 0) begin\n\t\t\t$display(\"a == 0\");\n\t\tend\n\t\tif (a == 1) begin\n\t\t\t$display(\"a == 1\");\n\t\tend\n\t\ta <= 1;\n\tend\nendmodule\n```\n\n```\nverilator -Wno-fatal --cc --top test a.v\n```\n\nIt seems, verilator sees \"a <= 0\" and optimizes everything out and generates this code (which gives different result than Icarus Verilog):\n```\nVL_ATTR_COLD void Vtest___024root___eval_initial__TOP(Vtest___024root* vlSelf) {\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtest___024root___eval_initial__TOP\\n\"); );\n    Vtest__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\n    auto& vlSelfRef = std::ref(*vlSelf).get();\n    // Body\n    VL_WRITEF_NX(\"a == 0\\n\",0);\n}\n```\n\nIf I move \"a <= 0\" after (below) the if's:\n```\nmodule test;\n\tinitial begin\n\t\ta = 0;\n\tend\n\treg a;\n\talways @(*) begin\n\t\tif (a == 0) begin\n\t\t\t$display(\"a == 0\");\n\t\tend\n\t\tif (a == 1) begin\n\t\t\t$display(\"a == 1\");\n\t\tend\n\t\ta <= 0;\n\t\ta <= 1;\n\tend\nendmodule\n```\n\nthen verilator generates another code (which gives the same result as Icarus Verilog):\n```\nVL_INLINE_OPT void Vtest___024root___act_sequent__TOP__0(Vtest___024root* vlSelf) {\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtest___024root___act_sequent__TOP__0\\n\"); );\n    Vtest__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\n    auto& vlSelfRef = std::ref(*vlSelf).get();\n    // Body\n    if (VL_UNLIKELY(((1U & (~ (IData)(vlSelfRef.test__DOT__a)))))) {\n        VL_WRITEF_NX(\"a == 0\\n\",0);\n    }\n    if (VL_UNLIKELY((vlSelfRef.test__DOT__a))) {\n        VL_WRITEF_NX(\"a == 1\\n\",0);\n    }\n    vlSelfRef.test__DOT__a = 1U;\n}\n```\n\nIcarus Verilog gives the same result regardless of the \"a <= 0\" location, but verilator generates different code with different outcome.\nI suppose, Icarus Verilog behaves correctly, but verilator does not.\nWill it be difficult to fix this?",
+  "labels": [
+    "resolution: unplanned"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-27",
+  "closed_at": "2025-03-27",
+  "code_blocks": [
+    "$ cat a.v\nmodule test;\n\tinitial begin\n\t\ta = 0;\n\tend\n\treg a;\n\talways @(*) begin\n\t\ta <= 0;\n\t\tif (a == 0) begin\n\t\t\t$display(\"a == 0\");\n\t\tend\n\t\tif (a == 1) begin\n\t\t\t$display(\"a == 1\");\n\t\tend\n\t\ta <= 1;\n\tend\nendmodule\n",
+    "verilator -Wno-fatal --cc --top test a.v\n",
+    "VL_ATTR_COLD void Vtest___024root___eval_initial__TOP(Vtest___024root* vlSelf) {\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtest___024root___eval_initial__TOP\\n\"); );\n    Vtest__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\n    auto& vlSelfRef = std::ref(*vlSelf).get();\n    // Body\n    VL_WRITEF_NX(\"a == 0\\n\",0);\n}\n",
+    "module test;\n\tinitial begin\n\t\ta = 0;\n\tend\n\treg a;\n\talways @(*) begin\n\t\tif (a == 0) begin\n\t\t\t$display(\"a == 0\");\n\t\tend\n\t\tif (a == 1) begin\n\t\t\t$display(\"a == 1\");\n\t\tend\n\t\ta <= 0;\n\t\ta <= 1;\n\tend\nendmodule\n",
+    "VL_INLINE_OPT void Vtest___024root___act_sequent__TOP__0(Vtest___024root* vlSelf) {\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtest___024root___act_sequent__TOP__0\\n\"); );\n    Vtest__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\n    auto& vlSelfRef = std::ref(*vlSelf).get();\n    // Body\n    if (VL_UNLIKELY(((1U & (~ (IData)(vlSelfRef.test__DOT__a)))))) {\n        VL_WRITEF_NX(\"a == 0\\n\",0);\n    }\n    if (VL_UNLIKELY((vlSelfRef.test__DOT__a))) {\n        VL_WRITEF_NX(\"a == 1\\n\",0);\n    }\n    vlSelfRef.test__DOT__a = 1U;\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

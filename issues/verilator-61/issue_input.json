@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 61,
+  "issue_url": "https://github.com/verilator/verilator/issues/61",
+  "title": "Linting misses continuous assignments to registers",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 61 from https://www.veripool.org\nOriginal Date: 2009-01-26\n\n\n---\n\nI tried breaking some @UNOPTFLAT@ loops by taking some blocking assignments out of combinatorial @always@ blocks and setting them by continuous assignment. This satisfied verilator.\r\n\r\nBefore:\r\n\r\n```\r\nalways @(sprs_op or spr_addr or sys_data or spr_dat_mac or spr_dat_pic or spr_dat_pm or\r\n\tspr_dat_dmmu or spr_dat_immu or spr_dat_du or spr_dat_tt) begin\r\n\tcase (sprs_op)\t// synopsys parallel_case\r\n\t\t`OR1200_ALUOP_MTSR : begin\r\n\t\t\twrite_spr = 1'b1;\r\n\t\t\tread_spr = 1'b0;\r\n\t\t\tto_wbmux = 32'b0;\r\n\t\tend\r\n\t\t`OR1200_ALUOP_MFSR :\r\n...\r\n\n```\r\n\r\nAfter:\r\n\r\n```\r\nassign read_spr  = (sprs_op == `OR1200_ALUOP_MTSR ? 1'b0 :\r\n\t\t    sprs_op == `OR1200_ALUOP_MFSR ? 1'b1 : 1'b0);\r\nassign write_spr = (sprs_op == `OR1200_ALUOP_MTSR ? 1'b1 :\r\n\t\t    sprs_op == `OR1200_ALUOP_MFSR ? 1'b0 : 1'b0);\r\n    \r\nalways @(sprs_op or spr_addr or sys_data or spr_dat_mac or spr_dat_pic or spr_dat_pm or\r\n\tspr_dat_dmmu or spr_dat_immu or spr_dat_du or spr_dat_tt) begin\r\n\tcase (sprs_op)\t// synopsys parallel_case\r\n\t\t`OR1200_ALUOP_MTSR : begin\r\n\t\t\tto_wbmux = 32'b0;\r\n\t\tend\r\n\t\t`OR1200_ALUOP_MFSR : begin\r\n\n```\r\n\r\nAs a check, I reran my modified code through an event driven simulator (Icarus verilog). It barfed because I had not realized the entities concerned (@read_spr@ and @write_spr@) were registers, not wires, and you can't continuously assign to a register.\r\n\r\nIt would be nice if Verilator would pick up this error, along with all its other detailed linting.\r\n\r\nNot a problem for me, but added here for the record.\r\n\n\n\n",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2009-01-26",
+  "closed_at": "2009-01-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

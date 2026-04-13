@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1844,
+  "issue_url": "https://github.com/verilator/verilator/issues/1844",
+  "title": "Question: Can't get simple example to work",
+  "body": "---\n\n\nAuthor Name: **Yurii Monakov**\nOriginal Redmine Message: 1555 from https://www.veripool.org\n\n\n\n---\n\nHi All!\n\nI'm unable to get even simple Verilog -> C++ translation result to work.\nConsider simple edge detector module:\n```<code class=\"verilog\">\n/* timing parameters */\n`timescale 1ns / 100ps\n\n/**\tThis module detects input signal edge.\n * \\param clock Clock signal\n * \\param reset Reset signal\n * \\param in_en Input enable signal\n * \\param in Input signal\n * \\param[out] out Output signal\n */\nmodule edge_det(\n\tclock,\n\treset,\n\tin_en,\n\tin,\n\tout\n);\n\t/* inputs */\n\tinput\tclock;\t\t/**< Clock signal\t\t\t*/\n\tinput\treset;\t\t/**< Reset signal\t\t\t*/\n\tinput\tin_en;\t\t/**< Input enabled signal\t*/\n\tinput\tin;\t\t\t/**< Input signal\t\t\t*/\n\n\t/* outputs */\n\toutput\tout;\t\t/**< Output signal\t\t\t*/\n\n\t/* locals */\n\treg\t\tin_del;\t\t/**< Delayed input\t\t\t*/\n\n\t/* assignments */\n\tassign out = in_en && in && !in_del;\n\n\t/* delay input */\n\talways @(posedge clock or posedge reset) begin\n\t\tif(reset) begin\n\t\t\tin_del <= 1'b0;\n\t\tend else begin\n\t\t\tin_del <= in;\n\t\tend\n\tend\nendmodule\n</code>\n```\nAfter preprocessing by verilator write simple C++ testbench (taken from \"here\":http://rattus-pubis.blogspot.ru/2011/02/experimenting-with-verilator-counter.html):\n```<code class=\"cplusplus\">\n#include \"vour.h\"\n#include \"verilated.h\"\n#include \"verilated_vcd_c.h\"\n\nint main(int argc, char** argv)\n{\n\tVerilated::commandArgs(argc, argv);\n\n\t// init top verilog instance\n\tvour* top = new vour();\n\n\t// init trace dump\n\tVerilated::traceEverOn(true);\n\tVerilatedVcdC* tfp = new VerilatedVcdC;\n\n\ttop->trace(tfp, 99);\n\ttfp->open(\"edge_det.vcd\");\n\n\t// initialize simulation inputs\n\ttop->clock\t= 1;\n\ttop->reset\t= 1;\n\ttop->in_en\t= 1;\n\ttop->in\t\t= 0;\n\n\t // run simulation for 100 clock periods\n\t for(int i = 0; i < 100; i++)\n\t{\n\t\ttop->reset\t= (i < 5);\n\t\ttop->in\t\t= (i > 10);\n\n\t\tfor(int clk = 0; clk < 2; ++clk)\n\t\t{\n\t\t\ttop->eval();\n\t\t\ttfp->dump((2 * i) + clk);\n\n\t\t\ttop->clock = !top->clock;\n \t\t}\n\t}\n\ttfp->close();\n}\n</code>\n```\nAfter running this testbench open edge_det.vcd in gtkwave:\n\n!edge_det.png!\n\nAnd the test result is completely wrong. So the question is where I've made a mistake?\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2014-12-19",
+  "closed_at": "2014-12-19",
+  "code_blocks": [
+    "After preprocessing by verilator write simple C++ testbench (taken from \"here\":http://rattus-pubis.blogspot.ru/2011/02/experimenting-with-verilator-counter.html):\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

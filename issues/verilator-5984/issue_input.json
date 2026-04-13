@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5984,
+  "issue_url": "https://github.com/verilator/verilator/issues/5984",
+  "title": "--trace-fst causes internal error on unpacked array with shifted index assignment",
+  "body": "When using `--trace-fst`, Verilator hits an internal error if you assign to an unpacked array with shifted indices. Without `--trace-fst`, everything works fine. \n\n## Code Snippet\n\n```systemverilog\nmodule Test #(\n  localparam int DIM1 = 4,\n  localparam int DIM2 = 8,\n  localparam int SHIFT = 2\n) (\n  input logic [DIM1-1:0][DIM2-1:0] in\n);\n\n  logic [DIM1-1:0][DIM2+SHIFT-1:SHIFT] internal;\n\n  for (genvar dim1 = 0; dim1 < DIM1; dim1++) begin\n    for (genvar dim2 = 0; dim2 < DIM2; dim2++) begin\n      assign internal[dim1][dim2+SHIFT] = in[dim1][dim2];\n    end\n  end\n\n  for (genvar dim1 = 0; dim1 < DIM1; dim1++) begin\n    for (genvar dim2 = 0; dim2 < DIM2; dim2++) begin\n      always_ff @(negedge internal[dim1][dim2+SHIFT]) begin\n        $display(\"%0b\", internal[dim1][dim2+SHIFT]);\n      end\n    end\n  end\n\nendmodule\n```\n\nUse this command:\n\n```bash\nverilator test.sv --trace-fst --cc --exe --binary --main --top Test\n```\n\nIt only crashes if `--trace-fst` is used. Without it, no error.\n\nHere’s the error Verilator throws:\n\n```\n%Error: Internal Error: test.sv:9:40: ../V3FuncOpt.cpp:228: Inconsistent assignment\n   9 |   logic [DIM1-1:0][DIM2+SHIFT-1:SHIFT] internal;\n     |                                        ^~~~~~~~\n```\n\n## Version\n\nVerilator 5.036 (2025-04-27)\nUbuntu 22.04\nAlways reproducible with `--trace-fst`",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-05",
+  "closed_at": "2025-05-06",
+  "code_blocks": [
+    "module Test #(\n  localparam int DIM1 = 4,\n  localparam int DIM2 = 8,\n  localparam int SHIFT = 2\n) (\n  input logic [DIM1-1:0][DIM2-1:0] in\n);\n\n  logic [DIM1-1:0][DIM2+SHIFT-1:SHIFT] internal;\n\n  for (genvar dim1 = 0; dim1 < DIM1; dim1++) begin\n    for (genvar dim2 = 0; dim2 < DIM2; dim2++) begin\n      assign internal[dim1][dim2+SHIFT] = in[dim1][dim2];\n    end\n  end\n\n  for (genvar dim1 = 0; dim1 < DIM1; dim1++) begin\n    for (genvar dim2 = 0; dim2 < DIM2; dim2++) begin\n      always_ff @(negedge internal[dim1][dim2+SHIFT]) begin\n        $display(\"%0b\", internal[dim1][dim2+SHIFT]);\n      end\n    end\n  end\n\nendmodule\n",
+    "verilator test.sv --trace-fst --cc --exe --binary --main --top Test\n",
+    "%Error: Internal Error: test.sv:9:40: ../V3FuncOpt.cpp:228: Inconsistent assignment\n   9 |   logic [DIM1-1:0][DIM2+SHIFT-1:SHIFT] internal;\n     |                                        ^~~~~~~~\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

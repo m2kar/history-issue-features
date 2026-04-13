@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6750,
+  "issue_url": "https://github.com/verilator/verilator/issues/6750",
+  "title": "Fix constraint calling static member function",
+  "body": "On current git master:\n\n```\nmodule t;\n  class uvm_reg_field;\n    rand int m_value;\n  endclass\n\n  class reg_class;\n    rand int m_value;\n    rand uvm_reg_field _dummy;\n    constraint _dummy_is_reg {_dummy.m_value == m_value;}\n  endclass\n\n  class block_class;\n    rand reg_class m_r;\n  endclass\n\n  class tb_test;\n    virtual task run_phase(int phase);\n      block_class regmodel;\n      // verilator lint_off IGNOREDRETURN\n      void'(regmodel.randomize() with {m_r.m_value == 32'hA5;});\n      // verilator lint_on IGNOREDRETURN\n    endtask\n  endclass\nendmodule\n```\n\nVerilates but gives a compile error:\n```\nIn file included from Vt_0__ALL.cpp:8:\nVt_0_t__03a__03atb_test__Vclpkg__0.cpp: In constructor â\\200\\230Vt_0_t__03a__03atb_test::Vt_0_t__03a__03atb_test(Vt_0__Syms*)â\\200\\231:\nVt_0_t__03a__03atb_test__Vclpkg__0.cpp:21:34: error: invalid use of non-static data member â\\200\\230Vt_0_t__03a__03ablock_class::__PVT__constraintâ\\200\\231\n   21 |     Vt_0_t__03a__03ablock_class::__PVT__constraint.write_var(VL_NULL_CHECK(VL_NULL_CHECK(Vt_0_t__03a__03ablock_class::__PVT__m_r, \"t/t_0.v\", 28)\n      |                                  ^~~~~~~~~~~~~~~~~\nI\n```\n\nNote #6659 gets a similar error, but I think is unrelated, this one is due to a constraint issue, with it calling the constraint as a static function rather than method.  @YilouWang might you be interested in debugging?   Not critical for me, just blocks one UVM test, tests/70regs/80examples/01model/30nofield\n\n@",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-03",
+  "closed_at": "2025-12-11",
+  "code_blocks": [
+    "module t;\n  class uvm_reg_field;\n    rand int m_value;\n  endclass\n\n  class reg_class;\n    rand int m_value;\n    rand uvm_reg_field _dummy;\n    constraint _dummy_is_reg {_dummy.m_value == m_value;}\n  endclass\n\n  class block_class;\n    rand reg_class m_r;\n  endclass\n\n  class tb_test;\n    virtual task run_phase(int phase);\n      block_class regmodel;\n      // verilator lint_off IGNOREDRETURN\n      void'(regmodel.randomize() with {m_r.m_value == 32'hA5;});\n      // verilator lint_on IGNOREDRETURN\n    endtask\n  endclass\nendmodule\n",
+    "In file included from Vt_0__ALL.cpp:8:\nVt_0_t__03a__03atb_test__Vclpkg__0.cpp: In constructor â\\200\\230Vt_0_t__03a__03atb_test::Vt_0_t__03a__03atb_test(Vt_0__Syms*)â\\200\\231:\nVt_0_t__03a__03atb_test__Vclpkg__0.cpp:21:34: error: invalid use of non-static data member â\\200\\230Vt_0_t__03a__03ablock_class::__PVT__constraintâ\\200\\231\n   21 |     Vt_0_t__03a__03ablock_class::__PVT__constraint.write_var(VL_NULL_CHECK(VL_NULL_CHECK(Vt_0_t__03a__03ablock_class::__PVT__m_r, \"t/t_0.v\", 28)\n      |                                  ^~~~~~~~~~~~~~~~~\nI\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

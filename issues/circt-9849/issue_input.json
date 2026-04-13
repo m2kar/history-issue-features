@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9849,
+  "issue_url": "https://github.com/llvm/circt/pull/9849",
+  "title": "[HW] Remove hw.instance_choice",
+  "body": "This commit removes the hw.instance_choice operation from the HW dialect. HW instance_choice was meant to target from FIRRTL InstanceChoice, but in that case it's also necessary to implement FIRRTL ABI (very specialized macros + headers) in HW dialect, which is far from ideal and very challenging to carry ABI info to HW. Since firrtl.instance_choice is now lowered to implement FIRRTL ABI in LowerFIRRTLToHW we don't need HW instance choice anymore. \r\n\r\nI think one representation that feels acceptable to SV dialect is a module op whose name can be configured by a macro:\r\n```mlir\r\nsv.macro.decl @MacroModuleName\r\nsv.macro.module @Module macro @MacroModuleName(in %a: i1, in %b: i1, out: c)\r\nhw.module @FPGA_Target(..)\r\nhw.module @ASIC_Target(..)\r\nhw.module @Top(..) {\r\n %c = hw.instance inst @Module (...)\r\n}\r\nemit.file \"targets-Top-Platform-FPGA.sv\" {\r\n  sv.macro.define @MacroModuleName \"{{0}}\" (@FPGA_Target)\r\n}\r\nemit.file \"targets-Top-Platform-ASIC.sv\" {\r\n  sv.macro.define @MacroModuleName \"{{0}}\" (@ASIC_Target)\r\n}\r\n```\r\n```verilog\r\nmodule Top(){\r\n  `MacroModuleName inst (..)\r\n}\r\n\r\n// ----- \"targets-Top-Platform-FPGA.sv\"\r\n`define MacroModuleName FPGA_Target\r\n\r\n// ----- \"targets-Top-Platform-ASIC.sv\"\r\n`define MacroModuleName ASIC_Target\r\n```\r\n\r\nThis operation looks usable at least  for macro replacement IMO. \r\n\r\nAI-assisted by: Sonnet 4.5",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-05",
+  "closed_at": "2026-03-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

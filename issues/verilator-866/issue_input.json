@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 866,
+  "issue_url": "https://github.com/verilator/verilator/issues/866",
+  "title": "In 3.868, unable to $sscanf a string (system verilog)",
+  "body": "---\n\n\nAuthor Name: **David Pierce**\nOriginal Redmine Issue: 866 from https://www.veripool.org\nOriginal Date: 2014-12-24\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI have a DPI-C function that returns a string,\r\n\r\n    import \"DPI-C\" context function string getRPIPE(\r\n       input int fd, input int blocking\r\n    ); \r\n\r\nand a string variable,\r\n\r\n    string ipcstring;\r\n\r\nassigned to the string returned by the function,\r\n\r\n    ipcstring = getRPIPE(rxfile, 0);\r\n\r\nWhen I try this\r\n\r\n    if( $sscanf(ipcstring, \"write %d %d\", addrval, dataval) == 2 ) begin   // addrval and dataval are integers\r\n\r\nI get this\r\n\r\n```\r\nIn file included from Vclient__ALLcls.cpp:3:\r\n./Vclient.cpp:237:18: error: no matching function for call to 'VL_SSCANF_IQX'\r\n                     if ((2U == VL_SSCANF_IQX(64,vlTOPp->v__DOT__b0__DOT__ipcstring,\"writ...\r\n                                ^~~~~~~~~~~~~\r\n/usr/local/share/verilator/include/verilated.h:375:14: note: candidate function not viable: no\r\n       known conversion from 'string' (aka 'basic_string<char, char_traits<char>, allocator<char>\r\n       >') to 'QData' (aka 'unsigned long') for 2nd argument\r\nextern IData VL_SSCANF_IQX(int lbits, QData ld, const char* formatp, ...);\r\n              ^\r\n\n```\r\n\r\nHere's the verilator command line:\r\n```\r\nverilator --cc --exe --trace \\\r\n           --compiler gcc \\\r\n           -Wno-WIDTH -sv \\\r\n           -I/opt/tools/verilator-3.868/include/vltstd \\\r\n           client.sv \\\r\n           mybus_bfm.sv \\\r\n           dapfuncs.o sc_main.cpp -LDFLAGS -lc\r\n\n```\r\n\r\nAs a point of reference, the code works as is in both modelsim and ncsim\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2014-12-24",
+  "closed_at": "2015-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

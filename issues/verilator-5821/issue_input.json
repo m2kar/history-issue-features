@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5821,
+  "issue_url": "https://github.com/verilator/verilator/issues/5821",
+  "title": "Fix warnings with `--coverage-trace` and always_comb",
+  "body": "Hi,\n\nI'm new to both SystemVerilog and Verilator, so I'm trying some basic stuff to get to know both the language and tool better.\n\nI have the following files:\n\n```\n// imply.sv:\nmodule imply(input logic p, input logic q, output logic r);\n  always_comb begin\n    r = p | q;\n  end\nendmodule\n```\n\n```\n// imply_tb.sv:\nmodule imply_tb();\n  logic p;\n  logic q;\n  logic r;\n\n  imply dut(.p(p), .q(q), .r(r));\n\n  initial begin\n    p = 1;\n    q = 0;\n   $strobe(\"@%t: %d, %d, %d\", $time, p, q, r);\n  #1 $finish;\nendmodule\n```\n\n```\n// top.sv:\nmodule top;\n  imply_tb tb;\nendmodule\n```\n\nI'm running Verilator 5.028.\nSimulation works as expected when compiled with this command: `verilator +1800-2023ext+sv --assert --assert-case --binary -j 0 -O3 -Wall -Wpedantic --trace --timing top.sv`\n\nBut when I try to activate coverage by adding these flags: `--coverage --trace-coverage`, I get two weird warnings:\n\n```\n%Warning-ALWCOMBORDER: dut.sv:6:2: Always_comb variable driven after use: 'vlCoverageLineTrace_imply__6_block'\n                                   : ... note: In instance 'top.tb.dut'\n    6 |  always_comb begin\n      |  ^~~~~~~~~~~\n                       imply_tb.sv:15:1: ... note: In file included from 'imply_tb.sv'\n                       top.sv:20:1: ... note: In file included from 'top.sv'\n                       ... For warning description see https://verilator.org/warn/ALWCOMBORDER?v=5.028\n                       ... Use \"/* verilator lint_off ALWCOMBORDER */\" and lint_on around source to disable this message.\n%Warning-UNOPTFLAT: imply.sv:6:2: Signal unoptimizable: Circular combinational logic: 'top.tb.dut.vlCoverageLineTrace_imply__6_block'\n    6 |  always_comb begin\n      |  ^~~~~~~~~~~\n                    imply_tb.sv:15:1: ... note: In file included from 'imply_tb.sv'\n                    top.sv:20:1: ... note: In file included from 'top.sv'\n                    imply.sv:6:2:      Example path: top.tb.dut.vlCoverageLineTrace_imply__6_block\n                    imply.sv:6:2:      Example path: ALWAYS\n                    imply.sv:6:2:      Example path: top.tb.dut.vlCoverageLineTrace_imply__6_block\n%Error: Exiting due to 2 warning(s)\n```\n\nI don't get which variable is \"driven after use\" or leads to a \"circular combinational logic\".\nAny help?\n\nBest regards.",
+  "labels": [
+    "resolution: fixed",
+    "area: coverage"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-02",
+  "closed_at": "2025-03-03",
+  "code_blocks": [
+    "// imply.sv:\nmodule imply(input logic p, input logic q, output logic r);\n  always_comb begin\n    r = p | q;\n  end\nendmodule\n",
+    "// imply_tb.sv:\nmodule imply_tb();\n  logic p;\n  logic q;\n  logic r;\n\n  imply dut(.p(p), .q(q), .r(r));\n\n  initial begin\n    p = 1;\n    q = 0;\n   $strobe(\"@%t: %d, %d, %d\", $time, p, q, r);\n  #1 $finish;\nendmodule\n",
+    "// top.sv:\nmodule top;\n  imply_tb tb;\nendmodule\n",
+    "%Warning-ALWCOMBORDER: dut.sv:6:2: Always_comb variable driven after use: 'vlCoverageLineTrace_imply__6_block'\n                                   : ... note: In instance 'top.tb.dut'\n    6 |  always_comb begin\n      |  ^~~~~~~~~~~\n                       imply_tb.sv:15:1: ... note: In file included from 'imply_tb.sv'\n                       top.sv:20:1: ... note: In file included from 'top.sv'\n                       ... For warning description see https://verilator.org/warn/ALWCOMBORDER?v=5.028\n                       ... Use \"/* verilator lint_off ALWCOMBORDER */\" and lint_on around source to disable this message.\n%Warning-UNOPTFLAT: imply.sv:6:2: Signal unoptimizable: Circular combinational logic: 'top.tb.dut.vlCoverageLineTrace_imply__6_block'\n    6 |  always_comb begin\n      |  ^~~~~~~~~~~\n                    imply_tb.sv:15:1: ... note: In file included from 'imply_tb.sv'\n                    top.sv:20:1: ... note: In file included from 'top.sv'\n                    imply.sv:6:2:      Example path: top.tb.dut.vlCoverageLineTrace_imply__6_block\n                    imply.sv:6:2:      Example path: ALWAYS\n                    imply.sv:6:2:      Example path: top.tb.dut.vlCoverageLineTrace_imply__6_block\n%Error: Exiting due to 2 warning(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

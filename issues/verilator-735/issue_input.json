@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 735,
+  "issue_url": "https://github.com/verilator/verilator/issues/735",
+  "title": "Strange Verilator behavior with power, signdness and more",
+  "body": "---\n\n\nAuthor Name: **Clifford Wolf** (@cliffordwolf)\nOriginal Redmine Issue: 735 from https://www.veripool.org\nOriginal Date: 2014-04-08\n\n\n---\n\nThe following module should output 0x00000000 for a=0 and 0x010000ff for a=1. But Verilator GIT 5c39420 outputs 0xffffffff for a=1 instead.\r\n\r\n```\r\nmodule test004(a, y);\r\n  input a;\r\n  output [31:0] y;\r\n\r\n  wire [7:0] y0;\r\n  wire [7:0] y1;\r\n  wire [7:0] y2;\r\n  wire [7:0] y3;\r\n  assign y = {y0,y1,y2,y3};\r\n\r\n  localparam [7:0] v0 = +8'sd1 ** -8'sd2;\r\n  localparam [7:0] v1 = +8'sd2 ** -8'sd2;\r\n  localparam [7:0] v2 = -8'sd2 ** -8'sd3;\r\n  localparam [7:0] v3 = -8'sd1 ** -8'sd3;\r\n  localparam [7:0] zero = 0;\r\n\r\n  assign y0 = a ? v0 : zero;\r\n  assign y1 = a ? v1 : zero;\r\n  assign y2 = a ? v2 : zero;\r\n  assign y3 = a ? v3 : zero;\r\nendmodule\r\n\n```\r\n\r\nInterestingly the output value for y3 is correct, but setting y3 to a constant value (or otherwise removing the calculation for y3) makes the problem go away. Replacing a with 1 in the assign statements also does make the problem disappear.\r\n\r\nSelf-contained test case:<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test004.v<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test004.cc<br/>\r\nhttp://svn.clifford.at/handicraft/2014/verilatortest/test004.sh\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-04-08",
+  "closed_at": "2014-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

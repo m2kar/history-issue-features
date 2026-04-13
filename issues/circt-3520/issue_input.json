@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3520,
+  "issue_url": "https://github.com/llvm/circt/pull/3520",
+  "title": "[RFC] Add a dialect for SystemC emission",
+  "body": "## Introduction\r\n\r\n[SystemC](https://en.wikipedia.org/wiki/SystemC) is a library written in C++ to allow functional modeling of systems. The included event-driven simulation kernel can then be used to simulate a system modeled entirely in SystemC. Additionally, SystemC is a standard (IEEE Std 1666-2011) supported by several tools (e.g., Verilator) and can thus be used as an interface to such tools as well as between multiple systems that are internally using custom implementations.\r\n\r\nEnabling CIRCT to emit SystemC code provides another way (next to Verilog emission) to interface with the outside-world and at the same time provides another way to simulate systems compiled with CIRCT.\r\n\r\n## Lowering Chain\r\n\r\nIn a first step, lowering from [HW](https://circt.llvm.org/docs/Dialects/HW/) to the SystemC dialect will be implemented. A tool called ExportSystemC, which is analogous to ExportVerilog, will then take these SystemC and [Comb](https://circt.llvm.org/docs/Dialects/Comb/) operations to emit proper SystemC-C++ code that can be compiled using clang, GCC, or any other C++-compiler to produce the simulator binary. In the long run support for more dialects can be added, such as LLHD and SV.\r\n\r\nAs a simple example we take a look at the following HW module which just adds two numbers together:\r\n\r\n```mlir\r\nhw.module @adder (%a: i32, %b: i32) -> (c: i32) {\r\n    %sum = comb.add %a, %b : i32\r\n    hw.output %sum : i32\r\n}\r\n```\r\n\r\nIt will then be lowered to the following SystemC IR to make code emission easier for ExportSystemC:\r\n\r\n```mlir\r\nsystemc.module @adder(%a: i32, %b: i32) -> (%c: i32) {\r\n    systemc.ctor {\r\n        systemc.method @add\r\n    }\r\n    systemc.func @add() {\r\n        // c = a + b\r\n        %res = comb.add %a, %b : i32\r\n        systemc.con %c, %res : i32\r\n    }\r\n}\r\n```\r\n\r\nExportSystemC will then emit the following C++ code:\r\n\r\n```cpp\r\n#ifndef ADDER_H\r\n#define ADDER_H\r\n#include <systemc.h>\r\nSC_MODULE(adder) {\r\n    sc_in<sc_uint<32>> a;\r\n    sc_in<sc_uint<32>> b;\r\n    sc_out<sc_uint<32>> c;\r\n    SC_CTOR(adder) {\r\n        SC_METHOD(add);\r\n    }\r\n    void add() {\r\n        c = a + b;\r\n    }\r\n};\r\n#endif // ADDER_H\r\n```",
+  "labels": [
+    "SystemC"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-13",
+  "closed_at": "2022-07-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

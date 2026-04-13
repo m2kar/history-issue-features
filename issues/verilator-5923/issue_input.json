@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5923,
+  "issue_url": "https://github.com/verilator/verilator/issues/5923",
+  "title": "Interpreting a mix of `parameter`/`localparam`/omitted in a _parameter_port_list_",
+  "body": "This is not a Verilator issue, more a SV standard inconsistency, where Verilator could choose one of the two interpretations.\n\nI noticed differing interpretations in two tools, and I am not sure the SystemVerilog 2023 standard is clear about the correct interpretation.\n\nThe Questa simulator and Vivado synthesis tool interpret this _parameter_port_list_ differently:\n```\nmodule test #(\n    localparam int unsigned XLEN = 32,\n    int unsigned DATA_WIDTH = XLEN,\n    int unsigned ADDR_WIDTH = 24,\n    ...\n)(\n    ...\n);\n```\n\nThe Questa simulator will see `DATA_WIDTH` as a `parameter` which can be overriden during instantiation. Basically  interpreting the keyword omission as a `parameter`.\n\nThe Vivado Synthesis tool will see `DATA_WIDTH` as a `localparam`, as if when the keyword is omitted, the last included keyword is used. I did a few experiments and this seems to be the behavior. This it similar to port definitions, where the type is defined once for many signals:\n```\n    input logic [32-1:0] data_a, data_b,\n    ...\n```\n\nThe SystemVerilog 2023 standard only mentions this in one sentence \"The parameter keyword can be omitted in a parameter port list.\" in the section \"6.20.1 Parameter declaration syntax\". Maybe there is more elsewhere, but I did not really read everything.\n\nThe workaround is simple, it just adds a bit of verbosity. Never omit the `parameter`/`localparam` keywords.",
+  "labels": [
+    "resolution: no fix needed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-07",
+  "closed_at": "2025-04-07",
+  "code_blocks": [
+    "module test #(\n    localparam int unsigned XLEN = 32,\n    int unsigned DATA_WIDTH = XLEN,\n    int unsigned ADDR_WIDTH = 24,\n    ...\n)(\n    ...\n);\n",
+    "    input logic [32-1:0] data_a, data_b,\n    ...\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

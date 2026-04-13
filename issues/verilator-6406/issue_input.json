@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6406,
+  "issue_url": "https://github.com/verilator/verilator/pull/6406",
+  "title": "Fix AddressSanitizer issues",
+  "body": "These are all genuine bugs, brief descriptions.\r\n\r\n1. V3OrderCFuncEmitter.h used to delete a node early that was still reference in a graph dump later. Not a big deal, it can be deleted later at the end of V3Order.\r\n\r\n2. V3Param.cpp: this one is tricky. The variable referenced by AstVarXRef was deleted at the end of `visit(AstGenCase*)`, but then `visit(AstVarXRef*)` checks `nodep->varp()` (already deleted) to see if it's in an interface. Not sure the fix is right and likely there are other issued lurking here if we indeed need the interface fixup here.\r\n\r\n3. V3String::wildMatch is sometimes called with an empty 's' (the string we are matching against tha pattern 'p'), in which case it used to go off into the woods. Added check on call. An arbitrary number of `*` will still match the empty string.\r\n\r\n4. V3Task.cpp: There was an error reported for an unsupported construct, then a subsequent SEGV. Just signal the error upward so we bail on an error in a more graceful way.\r\n\r\n5. verylog.y: Some unsupported constructs failed to set the parsed node, so some memory thrash made it into some code downstream. Just parse these into nullptr.\r\n\r\nAlso increased the timeout on one test, which sometimes tripped with asan on GCC during heavy host load.\r\n\r\n---\r\n\r\n@wsnyder please have a look at point 2. V3Param.cpp",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-09",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

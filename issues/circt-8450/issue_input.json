@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8450,
+  "issue_url": "https://github.com/llvm/circt/issues/8450",
+  "title": "[firtool] Error while preserving aggregates (op using value defined outside the region)",
+  "body": "When compiling a Rocket-Chip-based Chisel design (Chipyard's `RocketConfig`) with any form of aggregate preservation turned on, I get a large number of errors like this, I believe during the `LowerLayers` pass:\n\n```\ngenerators/rocket-chip/src/main/scala/tilelink/Parameters.scala:1138:31: error: 'firrtl.subindex' op using value defined outside the region\ngenerators/rocket-chip/src/main/scala/tilelink/Parameters.scala:1138:31: note: see current operation: %656 = \"firrtl.subindex\"(<<UNKNOWN SSA VALUE>>) <{index = 1 : i32}> : (!firrtl.vector<uint<1>, 5>) -> !firrtl.uint<1>\ngenerators/rocket-chip/src/main/scala/tilelink/Monitor.scala:45:11: note: required by region isolation constraints\n```\n\nI use a private fork of Chipyard that is updated to a more recent snapshot of Chisel (upstream Chipyard only works with Chisel 6.x and firtool 1.75), so I'm uploading the `.fir` file that triggered these errors. This is the `rocket-chip` commit that I'm working with: https://github.com/chipsalliance/rocket-chip/commit/c9289f5a92f34ccbb62170bc507e7670b4989325\n\nChisel version: `7.0.0-M2+684-41db7047-SNAPSHOT`\nfirtool version: `1.114.1`\nPlatform: macOS 15.4.1\n\nThese errors are triggered when `--preserve-aggregate` is set to either `1d-vec`, `vec`, or `all` (preserving more aggregates triggers a larger number of errors).\n\nThis command recreates the error:\n\n```\nfirtool --preserve-aggregate=<anything> --split-verilog -o <output-dir> RocketConfig.fir\n```\n\nPlease let me know if I can provide any more context.\n\n[RocketConfig.fir.gz](https://github.com/user-attachments/files/19943606/RocketConfig.fir.gz)",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-28",
+  "closed_at": "2025-08-29",
+  "code_blocks": [
+    "generators/rocket-chip/src/main/scala/tilelink/Parameters.scala:1138:31: error: 'firrtl.subindex' op using value defined outside the region\ngenerators/rocket-chip/src/main/scala/tilelink/Parameters.scala:1138:31: note: see current operation: %656 = \"firrtl.subindex\"(<<UNKNOWN SSA VALUE>>) <{index = 1 : i32}> : (!firrtl.vector<uint<1>, 5>) -> !firrtl.uint<1>\ngenerators/rocket-chip/src/main/scala/tilelink/Monitor.scala:45:11: note: required by region isolation constraints\n",
+    "firtool --preserve-aggregate=<anything> --split-verilog -o <output-dir> RocketConfig.fir\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

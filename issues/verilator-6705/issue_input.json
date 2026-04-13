@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6705,
+  "issue_url": "https://github.com/verilator/verilator/pull/6705",
+  "title": "Extend VerilatedVar to hold ForceableInfo pointer",
+  "body": "This commit makes changes to the verilated `__Syms` file\r\nin order to convey additional information about the relation of a\r\nforceable signal to its force control signals without needing to rely on\r\nstring concatenation within `verilated_vpi.cpp`. This implementation\r\nbuilds upon PR https://github.com/verilator/verilator/pull/6704 and simplifies the implementation within\r\n`verilated_vpi.cpp`.\r\n\r\nThis is accomplished by adding a pointer to a `ForceableInfo` class object to\r\n`VerilatedVar`. It contains pointers to the `VerilatedVar`s for the\r\n`__VforceEn` and `__VforceVal` signals, owns a pointer to the\r\n`__VforceRd` signal's `VerilatedVar`, and contains information about the\r\nassignment (continuous or not) of the variable.\r\n\r\nIt obtains this information through an adapted `varInsert` function,\r\n`forceableVarInsert`, emitted from `V3EmitCSyms.cpp`. There, if a\r\nforceable signal is found, first the control signals are inserted into\r\nthe `m_varsp` map and their pointers are given to the the\r\n`forceableVarInsert` function. Within that function, the `ForceableInfo`\r\nobject is constructed and ownership given to the base signal's\r\n`VerilatedVar`.\r\n\r\nThe pointer to `__VforceRd` can be an owning pointer because the\r\n`__VforceRd` signal cannot be set as `public_flat_rw` or\r\n`public_flat_rd`, and so will never be added to the `VerilatedScope`.\r\nHence, the only instance of it exists in the `VerilatedVar` for its\r\nforceable base signal. The pointers to the `__VforceEn` and\r\n`__VforceVal` signals are already added to the `VerilatedScope` because\r\nthey are inherently public, so the base signal's `VerilatedVar`'s\r\n`ForceableInfo` must contain non-owning pointers to them.\r\n\r\nThis required some changes to the `VerilatedVar`: Its `m_namep` is now a\r\n`std::string` because the name of the `__VforceRd` signal is constructed\r\nat runtime, rather than passed as a `char*` literal as with the other\r\nsignals. It has received an owning `unique_ptr` to a `ForceableInfo`\r\nobject, which also necessitates re-introducing its move constructor to\r\nallow it to be moved into the `m_varsp` map.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-17",
+  "closed_at": "2025-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

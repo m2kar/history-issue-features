@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2504,
+  "issue_url": "https://github.com/llvm/circt/issues/2504",
+  "title": "[ExportVerilog] Incorrect verilog output for bitcast + zero width aggregate types",
+  "body": "We are emitting zero bit width array/struct as one bit element. This is problem when we use bitcast for them.\r\n\r\n```mlir\r\nhw.module @top(%source: i1) -> (b: !hw.struct<zero: !hw.array<1xi0>, c: i1>) {\r\n    %cast = hw.bitcast %source: (i1) -> !hw.struct<zero: !hw.array<1xi0>, c: i1>\r\n    hw.output %cast : !hw.struct<zero: !hw.array<1xi0>, c: i1>\r\n }\r\n```\r\n\r\n```sv\r\nmodule top(\t// out.mlir:2:3\r\n  input                                                            source,\r\n  output struct packed {logic [0:0]/*Zero Width*/ zero; logic c; } b);\r\n \r\n  assign b = source;\t// out.mlir:3:12, :4:5\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-01-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

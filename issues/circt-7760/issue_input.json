@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7760,
+  "issue_url": "https://github.com/llvm/circt/pull/7760",
+  "title": "[FIRRTL] Fix folding of when conditions into LTL properties",
+  "body": "Make ExpandWhen's folding of the when condition into LTL properties work for more inputs. This used to be very brittle and the condition would be mapped to a new implication around the entire property:\r\n\r\n    when (a):\r\n      assert(@(posedge clock) b |-> c)\r\n\r\nused to become\r\n\r\n    assert(a |-> @(posedge clock) b |-> c)\r\n\r\nThis commit improves on this by always pushing implications behind clocks, and by merging implications like `a |-> b |-> c` into a single `(a & b) |-> c`. As a result, ExpandWhens now produces the following output, which is more in line with what users expect:\r\n\r\n    assert(@(posedge clock) a & b |-> c)\r\n\r\nAlso add a FIR-to-Verilog test to nail this behavior down and ensure we don't regress on user expectations.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-31",
+  "closed_at": "2024-11-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

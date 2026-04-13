@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5102,
+  "issue_url": "https://github.com/verilator/verilator/issues/5102",
+  "title": "Assertion failure relating to typedefs of parameterized classes",
+  "body": "`typedef`-ing a parameterized class inside a parameterized submodule causes an assertion failure in `V3Broken.cpp`.\r\n\r\nTo reproduce, compile the following code with ``verilator --debug-check --trace --exe --build -j `nproc` --binary trigger_assertion.sv -o trigger_assertion`` (using the git master version):\r\n\r\n```systemverilog\r\nclass cls #(parameter int PARAM = 0);\r\nendclass\r\n\r\nmodule submod #(\r\n    parameter int P\r\n) ();\r\n    typedef cls #(\r\n        .PARAM(P) // does not neccessarily have to be P, can also be a constant\r\n    ) cls_t;\r\nendmodule;\r\n\r\nmodule top ();\r\n    submod #(\r\n        .P(42)\r\n    ) i_submod ();\r\nendmodule\r\n```\r\n\r\nThe following assertion failure will show up:\r\n```\r\n%Error: Internal Error: trigger_assertion.sv:7:13: ../V3Broken.cpp:168: Broken link in node (or something without maybePointedTo): 'm_classp && !m_classp->brokeExists()' @ ./V3Ast__gen_impl.h:969\r\n                                                 : ... note: In instance 'top.i_submod'\r\n    7 |     typedef cls #(\r\n      |             ^~~\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nInterestingly, note that\r\n```systemverilog\r\n// (typedef not in submodule)\r\n\r\nclass cls #(parameter int PARAM = 0);\r\nendclass\r\n\r\nmodule top();\r\n    typedef cls #(.PARAM(42)) cls_t;\r\nendmodule\r\n```\r\ndoes not trigger the assertion failure, nor does\r\n\r\n```systemverilog\r\n// (submodule without parameters)\r\n\r\nclass cls #(parameter int PARAM = 0);\r\nendclass\r\n\r\nmodule submod ();\r\n    typedef cls #(\r\n        .PARAM(42)\r\n    ) cls_t;\r\nendmodule;\r\n\r\nmodule top ();\r\n    submod i_submod ();\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-05-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5675,
+  "issue_url": "https://github.com/verilator/verilator/issues/5675",
+  "title": "Add lint check when a variable used in DUT is defined as an output in a clocking block",
+  "body": "I would like to withdraw my previous post (#5638). Please feel free to delete it.\r\n\r\nI realized that I did not fully understand clocking blocks. My apologies.\r\n\r\nDUT Example:\r\n\r\n```\r\n  logic [3:0] r_cnt;\r\n  always_ff @(posedge CLK, negedge RST_X)\r\n    if (~RST_X)\r\n      r_cnt <= '0;\r\n    else\r\n      r_cnt <= 4'(r_cnt + 1'b1);\r\n```\r\n\r\nBy defining a zero-skew (#0) clocking block as shown below:\r\n\r\n```\r\n  clocking cb @(posedge CLK);\r\n    output test;\r\n  endclocking\r\n```\r\n\r\nAt the point where the @(cb) is encountered within the initial block of the testbench, the execution waits for the block to be released in the Observed region. At this stage, the DUT execution has already completed up to the NBA (non-blocking assignment) phase.\r\nAssertion evaluations have not yet occurred at this point. If the testbench performs standard assignments (not using the clocking block definition) such as r_cnt = 0, the value will be overwritten.\r\nThis behavior aligns with the intended design.\r\n\r\nSubsequently, assertion evaluations are performed after this, which is also the expected behavior.\r\n\r\nIn Verilator, non-blocking assignments within the initial block are forcibly converted to blocking assignments.\r\nIf I understand correctly, this behavior is intentional, effectively prohibiting non-blocking assignments to regular variables in the initial block. I agree with this approach. For variables defined as output in a clocking block (e.g., cb.test), only non-blocking assignments are allowed, and blocking assignments result in an error.\r\nI believe this is a logical specification.\r\n\r\n\r\nMy Initial Misunderstanding\r\nAt first, I misunderstood the following:\r\nI defined the clocking block as below:\r\n\r\n```\r\n  clocking cb @(posedge CLK);\r\n    output r_cnt;\r\n  endclocking\r\n```\r\n\r\nThen, within the initial block, I wrote something like cb.r_cnt <= 123; and assumed it would be updated via Re-NBA (rescheduled non-blocking assignment). However, the assignment was ignored, which seemed strange to me.\r\n\r\nUpon further consideration, I realized that my understanding of clocking blocks was incomplete.\r\n\r\nFor variables like r_cnt that are modified in the DUT, forcibly changing their value (e.g., using force) might make sense. However, defining such variables as part of a clocking block in the DUT can lead to multiple drivers and effectively undermine the original purpose of the clocking block.\r\n\r\n\r\nFeature Request\r\nIf possible, could you make it so that an error occurs when a variable used in the DUT (like r_cnt) is defined as an output in a clocking block?\r\n\r\nAs I am currently unemployed, I have not been able to verify this behavior with tools like VCS or Xcelium. However, I recall that even a very old version of ModelSim (free edition) produced an error in such cases.\r\n\r\nThank you for your understanding and support.",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-12-13",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

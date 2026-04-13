@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4978,
+  "issue_url": "https://github.com/verilator/verilator/issues/4978",
+  "title": "Struct members are not truncated to their width properly",
+  "body": "Verilator version: `Verilator 5.023 devel rev v5.022-60-g953249aa4`\r\n\r\nTested on Kali Linux `6.5.0-kali3-arm64 #1 SMP Debian 6.5.6-1kali1 (2023-10-09) aarch64 GNU/Linux` and Debian `6.6.16-linuxkit #1 SMP Fri Feb 16 11:54:02 UTC 2024 x86_64 GNU/Linux`\r\n\r\nMinimal working example:\r\n```sv\r\nmodule Testbench;\r\n    typedef struct {\r\n        logic [4:0] id;\r\n    } TestStruct;\r\n\r\n    reg [7:0] r_id;\r\n\r\n    TestStruct ts;\r\n\r\n    initial begin\r\n        r_id = 42;\r\n        ts = '{id: r_id[4:0]};\r\n\r\n        $display(\"ts.id = %d\", ts.id);\r\n\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nCompile command:\r\n```sh\r\nverilator -O0 --binary Testbench.sv && obj_dir/VTestbench\r\n```\r\n\r\n`-O0` is required, or the packed assignment is optimized away.\r\n\r\nA slightly longer example that does not require `-O0`:\r\n\r\n```sv\r\nmodule Testbench;\r\n    typedef struct {\r\n        logic [4:0] id;\r\n    } TestStruct;\r\n\r\n    reg en;\r\n\r\n    reg [7:0] r_id;\r\n\r\n    TestStruct ts;\r\n\r\n    assign ts = '{id: en ? r_id[4:0] : 5'b0};\r\n\r\n    initial begin\r\n        en = 1;\r\n        r_id = 42;\r\n\r\n        #1;\r\n\r\n        $display(\"ts.id = %d\", ts.id);\r\n\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nAnyone would expect a `ts.id = 10` since it's 5 bits wide. But in the above examples `ts.id = 42` is printed, indicating that values are not properly truncated.\r\n\r\nI had a quick look into the generated C++ code and found this skeptical:\r\n```cpp\r\nVL_INLINE_OPT void VTestbench_Testbench___act_sequent__TOP__Testbench__0(VTestbench_Testbench* vlSelf) {\r\n    (void)vlSelf;  // Prevent unused variable warning\r\n    VTestbench__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+  VTestbench_Testbench___act_sequent__TOP__Testbench__0\\n\"); );\r\n    // Body\r\n    vlSelf->__PVT__ts = VTestbench_TestStruct__struct__0{\r\n        .__PVT__id = (CData)(((IData)(vlSelf->__PVT__en)\r\n                               ? VL_SEL_IIII(8, (IData)(vlSelf->__PVT__r_id), 0U, 5U)\r\n                               : 0U))};\r\n}\r\n```\r\nIn which no truncation is done. Interestingly enough, in the example that does not require `-O0`, if you change `5'b0` to just `0` then the generated code looks good and we have the expected result:\r\n```sv\r\nassign ts = '{id: en ? r_id[4:0] : 0};\r\n```\r\n```cpp\r\nVL_INLINE_OPT void VTestbench___024root___act_sequent__TOP__0(VTestbench___024root* vlSelf) {\r\n    (void)vlSelf;  // Prevent unused variable warning\r\n    VTestbench__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    VTestbench___024root___act_sequent__TOP__0\\n\"); );\r\n    // Body\r\n    vlSelf->Testbench__DOT__ts = VTestbench_Testbench__DOT__TestStruct__struct__0{\r\n        .__PVT__id = (CData)(((IData)(vlSelf->Testbench__DOT__en)\r\n                               ? (0x1fU & (IData)(vlSelf->Testbench__DOT__r_id))\r\n                               : 0U))};\r\n}\r\n```\r\nI'm no SystemVerilog expert, so any kind of comment is appreciated. Thanks!",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-13",
+  "closed_at": "2024-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

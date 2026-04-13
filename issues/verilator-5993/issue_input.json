@@ -1,0 +1,26 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5993,
+  "issue_url": "https://github.com/verilator/verilator/issues/5993",
+  "title": "Verilator outputs incorrect result for conditional ternary expression involving bit-slice and shift",
+  "body": "Here is the problematic code `test.v`:\n\n```verilog\n`timescale 1ns/1ps\nmodule top (in3, in4, out10);\n    input wire  [7:7] in3;\n    input wire [23:16] in4;\n    wire  [29:29] wire_2;\n    output wire  [28:14] out10;\n\n    assign wire_2 = (((in3) % 4'o16) ? {{4{14'b010111101}}} : (in4[18:18] >> 8'b0001));\n    assign out10 = wire_2;\nendmodule\n```\n\nAnd the corresponding testbench `tb.v`:\n\n```verilog\n`timescale 1ns/1ps\n\nmodule tb_dut_module;\n\n    reg  [7:7] in3;\n    reg signed [23:16] in4;\n    wire  [28:14] out10;\n\n    top uut  (\n        .in3(in3), .in4(in4), .out10(out10)\n    );\n\n    initial begin\n        #2000;\n        in3 = 0; in4 = 8'b0011_1010; \n        #2000;\n        $display(\"out10: %0d\\n\", out10);\n        $finish;\n    end\n\nendmodule\n```\n\nThe command to reproduce the issue:\n\n```\nverilator --binary -Wno-lint --timing test.v tb.v\n./obj_dir/Vtest\n```\n\nVerilator outputs:\n\n```\nout10: 1\n```\n\nHowever, Icarus Verilog outputs:\n\n```\nout10: 0\n```\n\nAnd after manual analysis, the correct output should indeed be `0`.\nSince `in3 = 0`, the expression:\n\n```verilog\nassign wire_2 = (((in3) % 4'o16) ? {{4{14'b010111101}}} : (in4[18:18] >> 8'b0001));\n```\n\nsimplifies to:\n\n```verilog\nassign wire_2 = (in4[2:2] >> 8'b0001);\n```\n\nGiven that `in4 = 8'b0011_1010`, `in4[2:2] = 0`, so:\n\n```verilog\n(in4[2:2] >> 8'b0001) == 0\n```\n\nTherefore:\n\n```verilog\nout10 = wire_2 = 0\n```\n\nSystem details:\n\n* Verilator version: Verilator 5.037 devel rev v5.036-44-ga80aa07de\n* OS: Ubuntu 22.04.5 LTS (Jammy) Kernel/Release: 22.04",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-08",
+  "closed_at": "2025-05-10",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule top (in3, in4, out10);\n    input wire  [7:7] in3;\n    input wire [23:16] in4;\n    wire  [29:29] wire_2;\n    output wire  [28:14] out10;\n\n    assign wire_2 = (((in3) % 4'o16) ? {{4{14'b010111101}}} : (in4[18:18] >> 8'b0001));\n    assign out10 = wire_2;\nendmodule\n",
+    "`timescale 1ns/1ps\n\nmodule tb_dut_module;\n\n    reg  [7:7] in3;\n    reg signed [23:16] in4;\n    wire  [28:14] out10;\n\n    top uut  (\n        .in3(in3), .in4(in4), .out10(out10)\n    );\n\n    initial begin\n        #2000;\n        in3 = 0; in4 = 8'b0011_1010; \n        #2000;\n        $display(\"out10: %0d\\n\", out10);\n        $finish;\n    end\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing test.v tb.v\n./obj_dir/Vtest\n",
+    "out10: 1\n",
+    "out10: 0\n",
+    "assign wire_2 = (((in3) % 4'o16) ? {{4{14'b010111101}}} : (in4[18:18] >> 8'b0001));\n",
+    "assign wire_2 = (in4[2:2] >> 8'b0001);\n",
+    "(in4[2:2] >> 8'b0001) == 0\n",
+    "out10 = wire_2 = 0\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

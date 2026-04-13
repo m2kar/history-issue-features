@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3536,
+  "issue_url": "https://github.com/llvm/circt/issues/3536",
+  "title": "[FIRRTL] Stable Randomization Across Optimization Modes",
+  "body": "For different cocktails of optimizations, Verilog generated from FIRRTL Dialect can produce different randomizations for the same seed.\r\n\r\nConsider the following circuit with three registers:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input d: UInt<4>\r\n    output q: UInt<4>\r\n\r\n    reg _r: UInt<4>, clock\r\n    _r <= d\r\n\r\n    reg r: UInt<4>, clock\r\n    r <= d\r\n\r\n    reg s: UInt<4>, clock\r\n    s <= d\r\n\r\n    q <= s\r\n```\r\n\r\nUnder `-preserve-values=all`, the randomization is:\r\n\r\n```verilog\r\n`define RANDOM $random\r\nreg [31:0] _RANDOM;\r\n_RANDOM = {`RANDOM};\r\n\r\n_r = _RANDOM[3:0];\r\nr = _RANDOM[7:4];\r\ns = _RANDOM[11:8];\r\n```\r\n\r\nUnder `-preserve-values=named`, the randomization is:\r\n\r\n```verilog\r\nr = _RANDOM[3:0];\r\ns = _RANDOM[7:4];\r\n```\r\n\r\nUnder `-preserve-values=none`, the randomization is:\r\n\r\n```verilog\r\ns = _RANDOM[3:0];\r\n```\r\n\r\n_For the exact same seed_ each circuit will produce a different result.\r\n\r\nThis is problematic for a situation where a user observes a failure at a higher optimization level and needs to debug it on a lower optimization level. It would be ideal if the randomization was portable across optimization levels.\r\n\r\nA naive approach would be to change the randomization to randomize all `n`-bit things with the same random value, at the cost of more correlated randomization and potentially making it harder to expose design bugs through random testing.\r\n\r\nNote: this example is specifically constructed to take advantage of value preservation. There may exist similar situations where a _used_ register is optimized away on one optimization level, but not on another. This is just the simplest example I could think of to show the problem.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-14",
+  "closed_at": "2023-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

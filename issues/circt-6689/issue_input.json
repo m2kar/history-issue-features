@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6689,
+  "issue_url": "https://github.com/llvm/circt/pull/6689",
+  "title": "[ExportVerilog] Fix crash on `sv.reg` with initial value",
+  "body": "When I tried lowering the output of test example in #6649 to SV it crashed in PrepareForEmission. The issue can be reduced to:\r\n\r\n```\r\n%false = hw.constant false\r\n%0 = comb.or %false, %1 : i1\r\n%reg = sv.reg init %false : !hw.inout<i1>\r\n%1 = sv.read_inout %reg : !hw.inout<i1>\r\n```\r\n\r\nThe presence of an initial value prevents the register and `ReadInOutOp` from being moved to the top of the module. The pass then attempts to create a temporary wire to remove the backedge on `%1`. This fails because the value is already an InOut type.\r\n\r\nThis PR changes `isMovableDeclaration` to allow operations to be lifted if all their operands are constant expressions, which in most cases should avoid the backedge for the `ReadInOutOp`. While this may technically break dominance, it should not cause a problem during emission as the constant expressions are emitted inline. (If it turns out to be a problem after all, we could also move the constants.)\r\n\r\nAdditionally, `lowerUsersToTemporaryWire` is adapted to handle InOut values in case a backedge remains.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-02-13",
+  "closed_at": "2024-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

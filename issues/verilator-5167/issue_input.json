@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5167,
+  "issue_url": "https://github.com/verilator/verilator/issues/5167",
+  "title": "segfault during tracing - repeated runs with default VerilatedContext",
+  "body": "Seen at ToT today, linux (ubuntu).\r\n\r\nThe verilated design is created on the stack as a local variable (technically a class member of a googletest fixture), then a loop runs the design calling `eval()` as per usual. Afterwards the test exits and everything is cleaned up (`trace_file->close()` is called too).\r\nIf the test is run again, with the same design, then I am seeing segfaults when tracing is enabled. In particular, a heap-use-after-free determined by gcc's `-fsanitize=address` at:\r\n```\r\n    #0 0x55c81f60458c in VerilatedModel::contextp() const /home/pieter/work/verilator/include/verilated.h:284                                                              \r\n    #1 0x55c81f758bd1 in VerilatedTrace<VerilatedFst, VerilatedFstBuffer>::addModel(VerilatedModel*) /home/pieter/work/verilator/include/verilated_trace_imp.h:632         \r\n```\r\nThere seems to be some cleanup happening of the static global default VerilatedContext when a design is destructed (in my case, when the stack variable goes out of scope), when tracing is enabled. If I create a new VerilatedContext and pass it to the design's constructor, there is no issue and things run fine.\r\n\r\nI am verilating the design with CMake, the `verilate` macro, with no additional args or flags other than `--trace-fst`. VCD tracing behaves the same way. And no issues using the default context when not tracing.",
+  "labels": [
+    "resolution: fixed",
+    "area: usability"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-10",
+  "closed_at": "2024-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8494,
+  "issue_url": "https://github.com/llvm/circt/issues/8494",
+  "title": "[LLHD] Mem2Reg does not properly combine enables of successive drives",
+  "body": "Consider the following input:\n```mlir\nhw.module @Foo(in %u: i42, in %v: i42, in %w: i42, in %q: i1, in %r: i1) {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %a = llhd.sig %u : i42\n  llhd.process {\n    llhd.drv %a, %u after %0 : !hw.inout<i42>\n    llhd.drv %a, %v after %0 if %q : !hw.inout<i42>\n    llhd.drv %a, %w after %0 if %r : !hw.inout<i42>\n    llhd.halt\n  }\n}\n```\nRunning this through `circt-opt --llhd-mem2reg` produces this result:\n```mlir\nhw.module @Foo(in %u : i42, in %v : i42, in %w : i42, in %q : i1, in %r : i1) {\n  %a = llhd.sig %u : i42\n  llhd.process {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    llhd.drv %a, %w after %0 if %r : !hw.inout<i42>\n    llhd.halt\n  }\n}\n```\nOnly the final drive is retained in the output. Instead, the final value should be `w` if `r`, or `v` if `q&!r`, or `u` otherwise.",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-19",
+  "closed_at": "2025-05-21",
+  "code_blocks": [
+    "hw.module @Foo(in %u: i42, in %v: i42, in %w: i42, in %q: i1, in %r: i1) {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %a = llhd.sig %u : i42\n  llhd.process {\n    llhd.drv %a, %u after %0 : !hw.inout<i42>\n    llhd.drv %a, %v after %0 if %q : !hw.inout<i42>\n    llhd.drv %a, %w after %0 if %r : !hw.inout<i42>\n    llhd.halt\n  }\n}\n",
+    "hw.module @Foo(in %u : i42, in %v : i42, in %w : i42, in %q : i1, in %r : i1) {\n  %a = llhd.sig %u : i42\n  llhd.process {\n    %0 = llhd.constant_time <0ns, 0d, 1e>\n    llhd.drv %a, %w after %0 if %r : !hw.inout<i42>\n    llhd.halt\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

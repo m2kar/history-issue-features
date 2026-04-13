@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4183,
+  "issue_url": "https://github.com/verilator/verilator/issues/4183",
+  "title": "`release` statements affect combo logic incorrectly",
+  "body": "Verilator revision befb415f278af51fc3ecc3dda1dfe820de023bd1, but the bug affects all v5 versions and some earlier ones.\r\n\r\nTest case:\r\n```systemverilog\r\n// verilator lint_off MULTIDRIVEN\r\nmodule t(input clk);\r\n  initial begin\r\n    $dumpfile(\"dump.vcd\");\r\n    $dumpvars;\r\n  end\r\n\r\n  logic [31:0] lhs1, lhs2, rhs;\r\n\r\n  always_comb lhs1 = rhs;\r\n  assign lhs2 = rhs;\r\n\r\n  always @(posedge clk) rhs = '1;\r\n\r\n  always @(negedge clk) begin\r\n    release lhs1;\r\n    release lhs2;\r\n  end\r\nendmodule\r\n```\r\n\r\nWaveform:\r\n\r\n![caliptra-bug-master](https://github.com/chipsalliance/caliptra-rtl/assets/9216518/f01abcaa-f9e1-495e-be47-1f7f7e9d456c)\r\n\r\n`lhs1` and `lhs2` are oscillating for some reason, when they should equal `rhs`.\r\n\r\nThe `always_comb` bug also appears on v4.228.\r\n\r\n![caliptra-bug-4 228](https://github.com/chipsalliance/caliptra-rtl/assets/9216518/08fedc7a-fe8e-417d-b763-bdc19693274d)\r\n\r\nThis seems to be causing a regression in Caliptra: https://github.com/chipsalliance/caliptra-rtl/issues/79",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-09",
+  "closed_at": "2023-05-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

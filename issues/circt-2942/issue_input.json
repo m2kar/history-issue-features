@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2942,
+  "issue_url": "https://github.com/llvm/circt/pull/2942",
+  "title": "[FIRRTL] [CheckCombCycle] Print a cycle while dumping signal names ",
+  "body": "This commit adds `print-simple-cycle` option to print a simple cycle (enabled by default).\r\nWith that option, CheckCombCycle pass prints signal names contained\r\nin a cycle (in the order of a cycle path) instead of dumping all\r\noperations in the scc. It is useful for chisel users to debug their\r\nchisel code since the cycle is actually a counterexample. Previous\r\nerror message (i.e. dumping all operations in SCC) is intentionally\r\nkept to test the cycle dectection algorithm.\r\n\r\nExample:\r\n```scala\r\n; Location is random\r\ncircuit hasloops :\r\n  module hasloops :\r\n    input clk : Clock @[Bar.scala 33:38]\r\n    input a : UInt<1> @[Bar.scala 33:38]\r\n    input b : UInt<1> @[Bar.scala 33:38]\r\n    output c : UInt<1> @[Bar.scala 33:38]\r\n    output d : UInt<1> @[Bar.scala 33:38]\r\n    wire y : UInt<1> @[Bar.scala 33:38]\r\n    wire z : UInt<1> @[Bar.scala 33:38]\r\n    c <= b @[Bar.scala 33:38]\r\n    mem m : \r\n      data-type => UInt<1>\r\n      depth => 2\r\n      read-latency => 0\r\n      write-latency => 1\r\n      reader => r\r\n      read-under-write => undefined\r\n    m.r.clk <= clk @[Bar.scala 33:38]\r\n    m.r.addr <= y @[Bar.scala 33:38]\r\n    m.r.en <= UInt(1) @[Bar.scala 33:38]\r\n    z <= m.r.data @[Bar.scala 33:38]\r\n    y <= z @[Bar.scala 33:38]\r\n    d <= z @[Bar.scala 33:38]\r\n```\r\nPreviously, we didn't consider cases where locations come from chisel. The error message for the above IR was: \r\n```\r\nfoo.fir:2:10: error: detected combinational cycle in a FIRRTL module\r\n  module hasloops :\r\n         ^\r\nBar.scala:33:38: note: this operation is part of the combinational cycle\r\nBar.scala:33:38: note: this operation is part of the combinational cycle\r\nBar.scala:33:38: note: this operation is part of the combinational cycle\r\n```\r\nNew error message:\r\n```\r\nfoo.fir:2:10: error: detected combinational cycle in a FIRRTL module\r\n  module hasloops :\r\n         ^\r\nBar.scala:33:38: note: hasloops.m.r.addr\r\nBar.scala:33:38: note: hasloops.m.r.data\r\nBar.scala:33:38: note: hasloops._z\r\nBar.scala:33:38: note: hasloops._y\r\n```\r\n\r\nSFC: \r\n```\r\nException in thread \"main\" firrtl.transforms.CheckCombLoops$CombLoopException: : [module hasloops] Combinational loop detected:\r\nhasloops.y\r\nhasloops.m.r.addr\t @[Bar.scala 33:38]\r\nhasloops.m.r.data\t\r\nhasloops.z\t @[Bar.scala 33:38]\r\nhasloops.y\t @[Bar.scala 33:38]\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-21",
+  "closed_at": "2022-04-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

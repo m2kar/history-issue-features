@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4542,
+  "issue_url": "https://github.com/verilator/verilator/issues/4542",
+  "title": "Warn on scheduling of non-inlined tasks/functions",
+  "body": "Verilator allows recursive functions since commit aa60847.\r\n\r\nHowever, the scheduler is still unable to peek into function calls. This means impure recursive functions are not being scheduled properly.\r\n\r\nConsider this example:\r\n\r\n```systemverilog\r\nmodule t;\r\n    logic bar, qux;\r\n\r\n    task foo(logic recurse);\r\n        if (recurse) foo(0);\r\n        else bar = ~bar;\r\n    endtask\r\n\r\n    assign qux = $c(\"1\") & bar;\r\n\r\n    initial begin\r\n        for (int i = 0; i < 10; i++) #1 foo(1);\r\n        #1 $finish;\r\n    end\r\n\r\n    always @(edge bar) $display(\"bar=%b\", bar);\r\n    always @(edge qux) $display(\"qux=%b\", qux);\r\nendmodule\r\n```\r\n\r\nThe output is:\r\n\r\n```\r\nbar=1\r\nbar=0\r\nbar=1\r\nbar=0\r\nbar=1\r\nbar=0\r\nbar=1\r\nbar=0\r\nbar=1\r\nbar=0\r\n- example.sv:13: Verilog $finish\r\n```\r\n\r\nSo `qux` is never written to. If you remove this part:\r\n\r\n```systemverilog\r\n        if (recurse) foo(0);\r\n        else /* keep the assignment */\r\n```\r\n\r\nThen the result is correct.\r\n\r\nI see two options:\r\n\r\n* Make the scheduler look into function calls to account for side effects. Doesn't seem too hard, but non-obvious issues may crop up.\r\n* Disallow recursive functions in synthesizable code, but keep them in verification/class code, as static scheduling doesn't affect it anyway. That way we can still have the recursion in UVM.",
+  "labels": [
+    "area: scheduling",
+    "status: ready",
+    "area: wrong runtime result"
+  ],
+  "state": "open",
+  "created_at": "2023-10-05",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

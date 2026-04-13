@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9052,
+  "issue_url": "https://github.com/llvm/circt/issues/9052",
+  "title": "[circt-verilog] Import difference of results in arcilator failure with remaining llhd constant_time",
+  "body": "Input test case:\n\n```verilog\nmodule bug (\n    input logic wr_clk,\n    input logic wr_data,\n    output logic [1:0] mem\n);\n`ifdef CASE_1\n  always_ff @(posedge (wr_clk)) begin\n      mem[0] <= wr_data;\n  end\n  always_ff @(posedge (wr_clk)) begin\n      mem[1] <= wr_data;\n  end\n`else\n  always_ff @(posedge (wr_clk)) begin\n      mem[0] <= wr_data;\n      mem[1] <= wr_data;\n  end\n`endif\nendmodule\n```\n\nthe two results in different outputs\n\n```mlir\nmodule {\n  hw.module @bug(in %wr_clk : i1 loc(#loc2), in %wr_data : i1 loc(#loc3), out mem : i2) {\n    %0 = comb.replicate %wr_data : (i1) -> i2 loc(#loc4)\n    %1 = seq.to_clock %wr_clk loc(#loc5)\n    %mem = seq.firreg %0 clock %1 : i2 loc(#loc5)\n    hw.output %mem : i2 loc(#loc1)\n  } loc(#loc1)\n} loc(#loc)\n```\n\nvs\n\n```mlir\nmodule {\n  hw.module @bug(in %wr_clk : i1 loc(#loc2), in %wr_data : i1 loc(#loc3), out mem : i2) {\n    %0 = llhd.constant_time <0ns, 0d, 1e> loc(#loc2)\n    %c0_i2 = hw.constant 0 : i2 loc(#loc4)\n    %mem = llhd.sig %c0_i2 : i2 loc(#loc4)\n    %1 = comb.extract %6 from 1 : (i2) -> i1 loc(#loc5)\n    %2 = comb.concat %1, %wr_data : i1, i1 loc(#loc5)\n    %3 = seq.to_clock %wr_clk loc(#loc4)\n    %mem_0 = seq.firreg %2 clock %3 {name = \"mem\"} : i2 loc(#loc4)\n    llhd.drv %mem, %mem_0 after %0 : !hw.inout<i2> loc(#loc4)\n    %4 = comb.extract %6 from 0 : (i2) -> i1 loc(#loc6)\n    %5 = comb.concat %wr_data, %4 : i1, i1 loc(#loc6)\n    %mem_1 = seq.firreg %5 clock %3 {name = \"mem\"} : i2 loc(#loc4)\n    llhd.drv %mem, %mem_1 after %0 : !hw.inout<i2> loc(#loc4)\n    %6 = llhd.prb %mem : !hw.inout<i2> loc(#loc4)\n    hw.output %6 : i2 loc(#loc1)\n  } loc(#loc1)\n} loc(#loc)\n```\n\n(splitting the mem output into 2 separate outputs also result in same output with and without def).",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-05",
+  "closed_at": "2025-11-24",
+  "code_blocks": [
+    "module bug (\n    input logic wr_clk,\n    input logic wr_data,\n    output logic [1:0] mem\n);\n`ifdef CASE_1\n  always_ff @(posedge (wr_clk)) begin\n      mem[0] <= wr_data;\n  end\n  always_ff @(posedge (wr_clk)) begin\n      mem[1] <= wr_data;\n  end\n`else\n  always_ff @(posedge (wr_clk)) begin\n      mem[0] <= wr_data;\n      mem[1] <= wr_data;\n  end\n`endif\nendmodule\n",
+    "module {\n  hw.module @bug(in %wr_clk : i1 loc(#loc2), in %wr_data : i1 loc(#loc3), out mem : i2) {\n    %0 = comb.replicate %wr_data : (i1) -> i2 loc(#loc4)\n    %1 = seq.to_clock %wr_clk loc(#loc5)\n    %mem = seq.firreg %0 clock %1 : i2 loc(#loc5)\n    hw.output %mem : i2 loc(#loc1)\n  } loc(#loc1)\n} loc(#loc)\n",
+    "module {\n  hw.module @bug(in %wr_clk : i1 loc(#loc2), in %wr_data : i1 loc(#loc3), out mem : i2) {\n    %0 = llhd.constant_time <0ns, 0d, 1e> loc(#loc2)\n    %c0_i2 = hw.constant 0 : i2 loc(#loc4)\n    %mem = llhd.sig %c0_i2 : i2 loc(#loc4)\n    %1 = comb.extract %6 from 1 : (i2) -> i1 loc(#loc5)\n    %2 = comb.concat %1, %wr_data : i1, i1 loc(#loc5)\n    %3 = seq.to_clock %wr_clk loc(#loc4)\n    %mem_0 = seq.firreg %2 clock %3 {name = \"mem\"} : i2 loc(#loc4)\n    llhd.drv %mem, %mem_0 after %0 : !hw.inout<i2> loc(#loc4)\n    %4 = comb.extract %6 from 0 : (i2) -> i1 loc(#loc6)\n    %5 = comb.concat %wr_data, %4 : i1, i1 loc(#loc6)\n    %mem_1 = seq.firreg %5 clock %3 {name = \"mem\"} : i2 loc(#loc4)\n    llhd.drv %mem, %mem_1 after %0 : !hw.inout<i2> loc(#loc4)\n    %6 = llhd.prb %mem : !hw.inout<i2> loc(#loc4)\n    hw.output %6 : i2 loc(#loc1)\n  } loc(#loc1)\n} loc(#loc)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4045,
+  "issue_url": "https://github.com/verilator/verilator/issues/4045",
+  "title": "MULTIDRIVEN with task and default driver regression?",
+  "body": "Thanks for taking the time to report this.\r\n\r\nWith Verilator version **Verilator 5.005 devel rev v5.004-86-g30fd49e21** the below testcase builds and simulates as expected (at least to me ;) ).  \r\n```\r\n/opt/verilator.prod/bin/verilator --binary --timing task_test.sv\r\n\r\necho \"\" > Vtask_test__ALL.verilator_deplist.tmp\r\nArchive ar -rcs Vtask_test__ALL.a Vtask_test__ALL.o\r\n/usr/bin/clang++  -Wl,-U,__Z15vl_time_stamp64v,-U,__Z13sc_time_stampv   verilated.o verilated_timing.o verilated_threads.o Vtask_test__ALL.a    -pthread -lpthread   -o Vtask_test\r\nrm Vtask_test__ALL.verilator_deplist.tmp\r\n\r\nXYZ@Mac-Studio bugs % ./obj_dir/Vtask_test\r\n- task_test.sv:41: Verilog $finish\r\ndone\r\n\r\n```\r\n\r\nWith Verilator version (latest master) **Verilator 5.009 devel rev v5.008-71-gf2aac8c49** I receive the following:\r\n\r\n```\r\n%Warning-MULTIDRIVEN: task_test.sv:13:7: Variable written to in always_comb also written by other process (IEEE 1800-2017 9.2.2.2): 'l0'\r\n                                       : ... In instance m_tb.m\r\n                      task_test.sv:13:7: \r\n   13 |       l0 = 'b0;\r\n      |       ^~\r\n                      task_test.sv:9:7: ... Location of other write\r\n    9 |       l0 = 'b1;\r\n      |       ^~\r\n                      ... For warning description see https://verilator.org/warn/MULTIDRIVEN?v=5.009\r\n                      ... Use \"/* verilator lint_off MULTIDRIVEN */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nPlease refer to the testcase below.  My perspective is that the above error is not correct in this case.  Since the task is called inside the same process as the default driver, this shouldn't be multidriven?  I.e. \"l0\" is ultimately driven by both the task and the default driver inside the same process.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```\r\n\r\nmodule mod #()(\r\n   input logic sel\r\n   ,output logic val\r\n);\r\n\r\n   logic l0;\r\n\r\n   task do_stuff();\r\n      l0 = 'b1;\r\n   endtask\r\n\r\n   always_comb begin\r\n      l0 = 'b0;\r\n\r\n      if(sel) begin\r\n         do_stuff();\r\n      end\r\n   end\r\n\r\n   assign val = l0;\r\n\r\nendmodule\r\n\r\nmodule m_tb#()();\r\n\r\n   logic sel;\r\n   logic val;\r\n\r\n   mod m(\r\n      .sel(sel)\r\n      ,.val(val)\r\n   );\r\n\r\n   initial begin\r\n      sel = 'b0;\r\n      #10;\r\n      sel = 'b1;\r\n      #10;\r\n      sel = 'b0;\r\n      #10;\r\n      $finish;\r\n   end\r\n\r\n   final begin\r\n      $display(\"done\");\r\n   end;\r\n\r\nendmodule\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nPlease see above\r\n\r\nWhat OS and distribution are you using?\r\n\r\n```\r\nXYZ@Mac-Studio bugs % uname -a\r\nDarwin Mac-Studio.local 22.2.0 Darwin Kernel Version 22.2.0: Fri Nov 11 02:03:51 PST 2022; root:xnu-8792.61.2~4/RELEASE_ARM64_T6000 arm64\r\n```\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-18",
+  "closed_at": "2026-01-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

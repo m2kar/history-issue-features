@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6028,
+  "issue_url": "https://github.com/llvm/circt/pull/6028",
+  "title": "[FIRRTL] Parse and lower Open Aggregates Wires",
+  "body": "Add support for parsing and lowering open aggregate wires. This currently works in a `firtool` pipeline so long as you run IMCP. I'm thinking about how to make it such that this optimization is not required for correctness (in `LowerClasses`). Currently `LowerClasses` will error out if the wires aren't removed.\r\n\r\nThere is fortunately already checking from `firrtl.propassign` that there are not multiple drivers.\r\n\r\nFull example:\r\n\r\n```\r\nFIRRTL version 4.0.0\r\ncircuit Foo :\r\n  module Foo :\r\n    output a : { b : Integer, c: UInt<1>}[1]\r\n\r\n    wire d : { e : Integer, f: UInt<1> }[1]\r\n    invalidate d[0].f\r\n\r\n    propassign d[0].e, Integer(1)\r\n    propassign a[0].b, d[0].e\r\n\r\n    connect d[0].f, UInt<1>(0)\r\n    connect a[0].c, d[0].f\r\n```\r\n\r\nProduces with this patch (`firtool -ir-hw`):\r\n\r\n```mlir\r\nmodule {\r\n  hw.module @Foo() -> (a_0_c: i1) {\r\n    %false = hw.constant false\r\n    hw.output %false : i1\r\n  }\r\n  om.class @Foo_Class() {\r\n    %0 = om.constant 1 : si4\r\n    om.class.field @a_0_b, %0 : si4\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-01",
+  "closed_at": "2023-09-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

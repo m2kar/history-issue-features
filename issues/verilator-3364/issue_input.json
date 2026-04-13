@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3364,
+  "issue_url": "https://github.com/verilator/verilator/issues/3364",
+  "title": "void'(some_queue.pop_front()); in the body of an if-stmt lints cleanly but fails to produce good cpp",
+  "body": "Seems related to a closed issue:\r\nhttps://github.com/verilator/verilator/issues/1641\r\n\r\nI will attempt to fix this myself, and I have to create a test_regress for it, but the gist is:\r\n\r\n```\r\nalways @(posedge clk) begin : some_queue_handler_fails\r\n  if (some_queue.size()) begin\r\n    void'(some_queue.pop_front());\r\n  end\r\nend\r\n\r\nalways @(posedge clk) begin : other_queue_handler_good\r\n  if (other_queue.size()) begin\r\n    other_queue = other_queue[1:$]; // pop front explicitly\r\n  end\r\nend\r\n```\r\n\r\nThe 'some_queue' case is giving me a verilator error like:\r\n```Vblahblah__DepSet_h311ab79c__0.cpp: In function ‘void Vblahblah___sequent__TOP__blah__0(Vblahblah*)’:\r\nVblahblah__DepSet_h311ab79c__0.cpp:99:53: error: expected ‘;’ before ‘}’ token\r\n             vlSelf->__PVT__some_queue.pop_front()}\r\n                                                     ^\r\n                                                     ;\r\nmake[1]: *** [/foo/verilated.mk:257: Vblah__ALL.o] Error 1\r\n```\r\n\r\n>What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 4.219 devel rev v4.218-44-gb5791192\r\n\r\n> What OS and distribution are you using?\r\n\r\nDebian, seems unrelated to OS though\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nI will try to track it down, seeing as explicit queue manipulation works.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-25",
+  "closed_at": "2022-08-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

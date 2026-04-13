@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2467,
+  "issue_url": "https://github.com/llvm/circt/pull/2467",
+  "title": "LLVM bump",
+  "body": "* mlir::Identifier deprecated\r\n* StringAttr::get(string, context) deprecated\r\n* Many api changes in std dialect e.g. op.res() ==> op.getRes()\r\n* getAsmBlockArgumentNames is moved to interface (https://reviews.llvm.org/D116018)\r\n* populateFuncOpTypeConversionPattern\r\n  => populateFunctionLikeOpTypeConversionPattern\r\n* SmallVector::set_size() becomes private (https://reviews.llvm.org/D115380) replaced with resize()\r\n* #dialect.mnemonic is elided by default https://reviews.llvm.org/D113873. For now, migrate by marking every type directive in asmFormat as `qualified`(https://reviews.llvm.org/D116905).\r\n* Indices of LLVM::GEPOp are now required to be constant (https://reviews.llvm.org/D116759)\r\n\r\nStill work in progress. One of the biggest updates is that  https://reviews.llvm.org/D113873 modifies operations defined by assemblyFormat to elide #dialect.mnemonic. I think for now it is better not to elide them because I guess `sv.reg<i42>` is more informative than `<i42>` (and also it is hard to update all tests).\r\n\r\nSo I think we might have to mark type directives in assembly formats as `qualified`  (introduced in https://reviews.llvm.org/D116905).\r\n\r\nThe build currently fails for some reason shown below  so feel free to push if you have the fix. Thanks!\r\n```cpp\r\n::llvm::APSInt ConstantOpAdaptor::value() {\r\n  auto attr = valueAttr();\r\n  return APSInt(attr.getValue(), !getType().isSigned());\r\n}\r\n\r\ninclude/circt/Dialect/FIRRTL/FIRRTL.cpp.inc: In member function ‘llvm::APSInt circt::firrtl::ConstantOpAdaptor::value()’:\r\ninclude/circt/Dialect/FIRRTL/FIRRTL.cpp.inc:4171:35: error: ‘getType’ was not declared in this scope; did you mean ‘IntType’?\r\n 4171 |   return APSInt(attr.getValue(), !getType().isSigned());\r\n      |                                   ^~~~~~~\r\n      |                                   IntType\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-16",
+  "closed_at": "2022-01-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

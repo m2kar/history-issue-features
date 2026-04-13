@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9131,
+  "issue_url": "https://github.com/llvm/circt/pull/9131",
+  "title": "Add sv.module.verbatim op and use for firrtl.extmodule with BlackBoxInlineAnno/BlackBoxPathAnno",
+  "body": "This PR adds an `sv.verbatim.module` op and lowers inline black boxes (`firrtl.extmodule` with `BlackBoxInlineAnno` or `BlackBoxPathAnno`) to the new op.\r\n\r\nEmitted verilog is semantically the same (there can be a difference in emission order)--so, this is mostly an IR-only change.\r\n\r\nBefore:\r\n\r\n- BlackBoxReader\r\n  - For each `firrtl.extmodule` with `BlackBoxInlineAnno` or `BlackBoxPathAnno`, create `emit.file` and `emit.verbatim` operations for the inline content\r\n- LowerToHW pass: For each `firrtl.extmodule`, creates a `hw.module.extern` operation\r\n\r\nAfter:\r\n\r\n- BlackBoxReader\r\n  - For each `firrtl.extmodule` with verbatim annotations:\r\n    - Process each `BlackBoxInlineAnno` and `BlackBoxPathAnno` to calculate the verbatim content and determine the output file path\r\n    - Store this information in a new annotation type designed for consumption by the LowerToHW pass\r\n    - Remove the original `BlackBoxInlineAnno`/`BlackBoxPathAnno` annotations\r\n- LowerToHW:\r\n  - For each `firrtl.extmodule` with the new verbatim annotation:\r\n    - On the first verbatim annotation encountered, create a `sv.verbatim.module` operation\r\n    - For additional verbatim annotations on the same module, add them to the `additional_files` attribute of the existing `sv.verbatim.module` operation\r\n    - Do not create `hw.module.extern` for modules with verbatim content\r\n\r\n### BlackBoxReader\r\n\r\nIt is a bit strange to partially lower the `BlackBoxInlineAnno` `BlackBoxPathAnno`. The intention here was to preserve the fragile logic around calculating output directories for black boxes.\r\n\r\nEventually, I think we can remove BlackBoxReader entirely and rely on AssignOutputDirs for this. Then, by the time we get to LowerToHW, we don't need to special case any of this stuff for black boxes.\r\n\r\n\r\n### Supporting multiple files\r\n\r\nfirtool currently accepts multiple instances of `BlackBoxInlineAnno` and `BlackBoxPathAnno` annotations. This is often used to include additional SV libraries, C files, or headers. In the future, we should disallow this and ensure that one module corresponds to one SV file. Before we do this however, we need to provide another mechanism for specifying external dependencies.\r\n\r\nThe `addition_files` attribute is a way to support the existing behavior in the meantime. Once we have addressed this tech-debt, we can just remove that attribute.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-23",
+  "closed_at": "2025-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6952,
+  "issue_url": "https://github.com/verilator/verilator/issues/6952",
+  "title": "Fix wrong runtime result from missing logic when use `-fno-gate`",
+  "body": "**Description**\n\nThank you for maintaining this great software. I've observed a functional mismatch between code compiled with -O0 and the default optimization level. The issue appears when a var type() variable is initialized directly with a ternary operator. The default optimization level produces the expected result, while the -O0 version appears to incorrectly evaluate the ternary condition.\n\n**Environment**\n\n* **Verilator Version:** Verilator 5.045 devel rev v5.044-84-g140b2f2b2\n* **OS:** Ubuntu 22.04.5 LTS\n\n**Reproduction Files**\n\n`top.v`\n\n```verilog\nmodule top\n  (\n   input  test_in, \n   output [7:0] dout\n   );\n\n  var type(dout) mut_term1 = (test_in ? 8'd100 : 8'd200);\n\n  assign dout = mut_term1;\n\nendmodule\n\n```\n\n`sim_main.cpp`\n\n```cpp\n#include \"Vtop.h\"\n#include \"verilated.h\"\n#include <iostream>\n\nint main(int argc, char** argv) {\n    VerilatedContext* contextp = new VerilatedContext;\n    Vtop* top = new Vtop{contextp};\n\n    // Case 1: test_in = 0\n    top->test_in = 0;\n    top->eval();\n    std::cout << \"test_in=\" << (int)top->test_in\n              << \" dout=\" << (int)top->dout << std::endl;\n\n    // Case 2: test_in = 1\n    top->test_in = 1;\n    top->eval();\n    std::cout << \"test_in=\" << (int)top->test_in\n              << \" dout=\" << (int)top->dout << std::endl;\n\n    delete top;\n    delete contextp;\n    return 0;\n}\n\n```\n**Command**\n\n```bash\nverilator -cc top.v --exe sim_main.cpp -O0 -Mdir obj_O0 --prefix Vtop\nmake -C obj_O0 -f Vtop.mk\n./obj_O0/Vtop > log_O0.txt\n\n```\n\n```bash\nverilator -cc top.v --exe sim_main.cpp -Mdir obj_default --prefix Vtop\nmake -C obj_default -f Vtop.mk\n./obj_default/Vtop > log_default.txt\n\n```\n\n**Result**\n\n```log_O0.txt```\n```\ntest_in=0 dout=200\ntest_in=1 dout=200\n```\n```log_default.txt```\n```\ntest_in=0 dout=200\ntest_in=1 dout=100\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-01-25",
+  "closed_at": null,
+  "code_blocks": [
+    "module top\n  (\n   input  test_in, \n   output [7:0] dout\n   );\n\n  var type(dout) mut_term1 = (test_in ? 8'd100 : 8'd200);\n\n  assign dout = mut_term1;\n\nendmodule\n\n",
+    "#include \"Vtop.h\"\n#include \"verilated.h\"\n#include <iostream>\n\nint main(int argc, char** argv) {\n    VerilatedContext* contextp = new VerilatedContext;\n    Vtop* top = new Vtop{contextp};\n\n    // Case 1: test_in = 0\n    top->test_in = 0;\n    top->eval();\n    std::cout << \"test_in=\" << (int)top->test_in\n              << \" dout=\" << (int)top->dout << std::endl;\n\n    // Case 2: test_in = 1\n    top->test_in = 1;\n    top->eval();\n    std::cout << \"test_in=\" << (int)top->test_in\n              << \" dout=\" << (int)top->dout << std::endl;\n\n    delete top;\n    delete contextp;\n    return 0;\n}\n\n",
+    "verilator -cc top.v --exe sim_main.cpp -O0 -Mdir obj_O0 --prefix Vtop\nmake -C obj_O0 -f Vtop.mk\n./obj_O0/Vtop > log_O0.txt\n\n",
+    "verilator -cc top.v --exe sim_main.cpp -Mdir obj_default --prefix Vtop\nmake -C obj_default -f Vtop.mk\n./obj_default/Vtop > log_default.txt\n\n",
+    "",
+    "",
+    ""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

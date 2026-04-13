@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6142,
+  "issue_url": "https://github.com/llvm/circt/pull/6142",
+  "title": "[Arc] Allow top-level logic in LowerState; detect clock edges",
+  "body": "Make the `LowerState` pass allow operations to remain in the top-level `arc.model` op after state lowering. This is necessary for lowering the model op into an `eval` function in the future. Make use of this new flexibility by inserting logic into the model that detects edges on the clocks of the `arc.clock_tree` ops. The clock trees no longer trigger on the clock itself, but are given an \"enable\" signal that indicates whether a clock edge has been observed.\r\n\r\nIn the future, we'll want to schedule the ops in the `arc.model` and lower it to a separate `eval` function, instead of throwing it away. In doing so the user will no longer have to manually call clock functions, but can call a singular `eval` function instead. A centralized function that performs model execution will also allow us to properly simulate clock edges occurring at the same time -- something which is impossible today.\r\n\r\nTogether with the `arc.clock_domain` op, this `eval` function will make the entire clock detection and grouping a performance optimization instead of a required transformation. Theoretically, even if we did not separate state with the same clock into dedicated clock functions, we'll still be able to generate an `eval` function, with all logic inlined. This will ultimately make the Arc dialect more robust and the transforms more composable.\r\n\r\nMost of the changes here will become obsolete once we enable the `IsolateClocks` pass, which handles the grouping of operations into a common clock region. At that point `LowerState` should become an almost trivial local lowering.",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-17",
+  "closed_at": "2023-09-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

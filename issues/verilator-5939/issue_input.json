@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5939,
+  "issue_url": "https://github.com/verilator/verilator/pull/5939",
+  "title": "Remove redundant edges in V3Trace. No functional change",
+  "body": "Many edges added by the following lines are redundant: https://github.com/verilator/verilator/blob/3ecd58460fcd2d043ac8a6c058c3b4e810431ad0/src/V3Trace.cpp#L916-L922\r\nThis code for each writable variable reference inside a function creates an edge between that function and that variable. It results in many duplicates.\r\nIt can be seen on [the graph](https://github.com/user-attachments/files/19791330/trace_pre.pdf) generated for the following code\r\n```systemverilog\r\nmodule prim_and2 (\r\n    input logic [9:0] in0_i\r\n);\r\nendmodule\r\n\r\nmodule prim_onehot_mux;\r\n  parameter int Width = 50;\r\n  parameter int Inputs = 10;\r\n  logic [ Width-1:0] in_i  [Inputs];\r\n  logic [Inputs-1:0] in_mux[ Width];\r\n  for (genvar b = 0; b < Width; ++b) begin : g_in_mux_outer\r\n    for (genvar i = 0; i < Inputs; ++i) begin : g_in_mux_inner\r\n      assign in_mux[b][i] = in_i[i][b];\r\n    end\r\n    prim_and2 u_mux_bit_and (.in0_i(in_mux[b]));\r\n  end\r\nendmodule\r\n```\r\nThen `rerouteEdges` is called, which multiplies duplicates much more:\r\nhttps://github.com/verilator/verilator/blob/3ecd58460fcd2d043ac8a6c058c3b4e810431ad0/src/V3Graph.cpp#L71-L77\r\n\r\nThis PR removes the redundant edges at the beginning and reduces the memory needed by verilation of some 9k lines of code design from 138GB to 8GB.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-17",
+  "closed_at": "2025-04-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

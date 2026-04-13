@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 675,
+  "issue_url": "https://github.com/verilator/verilator/issues/675",
+  "title": "Incorrect \"Selection index out of range\" - again",
+  "body": "---\n\n\nAuthor Name: **Roland Kruse**\nOriginal Redmine Issue: 675 from https://www.veripool.org\nOriginal Date: 2013-09-04\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThis may or may not be related to issue #477. Given the code\r\n```\r\n    reg  [7:0] x;\r\n    wire [3:0] en;\r\n    wire       sel;\r\n    wire       a;\r\n    \r\n    generate\r\n       genvar  g_k;\r\n       for ( g_k = 0; g_k < 8; g_k = g_k + 1 )\r\n         begin: g_index\r\n            always @* begin\r\n               if(g_k<4) begin\r\n                  x[g_k] = (sel == 1'b1) ? 1'b1 : (en[g_k] == 1'b0) ? 1'b1 : a;\r\n               end else begin\r\n                  x[g_k] = (sel == 1'b0) ? 1'b1 : (en[g_k-4] == 1'b0) ? 1'b1 : a;\r\n               end\r\n            end\r\n         end\r\n    endgenerate\r\n\n```\r\nI get the errors\r\n```\r\n  %Error: t/t_sel_index.v:36: Selection index out of range: 4:4 outside 3:0\r\n  %Error: t/t_sel_index.v:36: Selection index out of range: 5:5 outside 3:0\r\n  %Error: t/t_sel_index.v:36: Selection index out of range: 6:6 outside 3:0\r\n  %Error: t/t_sel_index.v:36: Selection index out of range: 7:7 outside 3:0\r\n\n```\r\nThe test case files are attached.\r\nIt seems like en[g_k] is evaluated even when g_k is greater than 3, despite the if (g_k<4) condition. Interestingly, that seems to not be the case with en[g_k-4] when g_k is less than 4.\r\n\r\nIndeed, if I remove the condition and just have\r\n```\r\n    generate\r\n       genvar  g_k;\r\n       for ( g_k = 0; g_k < 8; g_k = g_k + 1 )\r\n         begin: g_index\r\n\r\n            always @* begin\r\n               x[g_k] = (sel == 1'b1) ? 1'b1 : (en[g_k-4] == 1'b0) ? 1'b1 : a;\r\n            end\r\n         end\r\n    endgenerate\r\n\n```\r\nit compiles without error even though the index definitiely is out of range now when g_k is less than 4...\r\n\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-09-04",
+  "closed_at": "2013-09-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

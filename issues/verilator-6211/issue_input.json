@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6211,
+  "issue_url": "https://github.com/verilator/verilator/issues/6211",
+  "title": "Bug with DFG same component",
+  "body": "Hello,\n\nI'm encountering a bug while trying to run Yosys synthesis and then using Verilator. This example works with Verilator versions before 2025-07-15, but afterwards it's broken.\n\nIs it possibly that https://github.com/verilator/verilator/pull/6176 is the problem? @gezalore \n\nVersions:\n```bash\nLinux Mint 21.2\nVerilator 5.039 devel rev v5.038-26-gdb6b17fdb\n```\nExample:\n```verilog\nmodule mul (input [8:0] A, input [16:0] B, output [25:0] Y);\n  assign Y = $signed(A) * $signed(B);\nendmodule\n\nmodule A;\n  wire [26:0] C;\n  wire [26:0] D;\n  wire [8:0]  E;\n\n  mul mul (\n    .A(9'd10),\n    .B(17'h0cccd),\n    .Y({ C[26], C[9:0], D[15:1] })\n  );\n\n  assign E = { C[8:0] };\n  assign C[25:10] = {16{C[26]}};\n\nendmodule\n```\n\n```bash\nverilator --lint-only test.v --top A\n```\n\nOutput:\n```bash\n%Error: Internal Error: test.v:8:15: ../V3DfgDecomposition.cpp:354: Driver of DfgVertexVar must be in the same component\n    8 |   wire [26:0] D;\n      |               ^\n                        ... See the manual at https://verilator.org/verilator_doc.html?v=5.039 for more assistance.\n```\n\nIs there any more information that would be useful?",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-21",
+  "closed_at": "2025-07-22",
+  "code_blocks": [
+    "Linux Mint 21.2\nVerilator 5.039 devel rev v5.038-26-gdb6b17fdb\n",
+    "module mul (input [8:0] A, input [16:0] B, output [25:0] Y);\n  assign Y = $signed(A) * $signed(B);\nendmodule\n\nmodule A;\n  wire [26:0] C;\n  wire [26:0] D;\n  wire [8:0]  E;\n\n  mul mul (\n    .A(9'd10),\n    .B(17'h0cccd),\n    .Y({ C[26], C[9:0], D[15:1] })\n  );\n\n  assign E = { C[8:0] };\n  assign C[25:10] = {16{C[26]}};\n\nendmodule\n",
+    "verilator --lint-only test.v --top A\n",
+    "%Error: Internal Error: test.v:8:15: ../V3DfgDecomposition.cpp:354: Driver of DfgVertexVar must be in the same component\n    8 |   wire [26:0] D;\n      |               ^\n                        ... See the manual at https://verilator.org/verilator_doc.html?v=5.039 for more assistance.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4448,
+  "issue_url": "https://github.com/llvm/circt/issues/4448",
+  "title": "[FIRRTL] WireDFT Needs Hardening",
+  "body": "The `WireDFT` pass makes some assumptions about the structure of modules with the `EICG_wrapper` name. Specifically, I think it assumes that any module that starts with `EICG_wrapper` has a second port that is supposed to be hooked up. I _don't_ think this validates the name, type, or directionality.\r\n\r\nConsider:\r\n\r\n```\r\ncircuit Top: %[[\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\":\"~Top|Top\"\r\n  },\r\n  {\r\n    \"class\":\"sifive.enterprise.firrtl.DFTTestModeEnableAnnotation\",\r\n    \"target\":\"~Top|Top>test_en\"\r\n    },\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"~Top|Top>test_en\"\r\n  }\r\n]]\r\n  extmodule EICG_wrapper_Bar:\r\n    output a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n  module Foo:\r\n    inst bar of EICG_wrapper_Bar\r\n\r\n  module Top:\r\n    wire test_en: UInt<1>\r\n    test_en is invalid\r\n\r\n    inst foo of Foo\r\n```\r\n\r\nRunning this with `firtool Foo.fir` produces:\r\n\r\n```\r\n# firtool Tmp.fir -mlir-print-ir-after=firrtl-dft                       \r\nTmp.fir:19:10: error: connect has invalid flow: the destination expression \"bar.b\" has source flow, expected sink or duplex flow\r\n  module Foo:\r\n         ^\r\nTmp.fir:20:5: note: the destination was defined here\r\n    inst bar of EICG_wrapper_Bar\r\n    ^\r\n```\r\n\r\nThe output MLIR is:\r\n\r\n```mlir\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.extmodule\"() ({\r\n  }) {annotations = [], internalPaths = [], parameters = [], portAnnotations = [], portDirections = -1 : i2, portNames = [\"a\", \"b\"], portSyms = [], portTypes = [!firrtl.uint<1>, !firrtl.uint<1>], sym_name = \"EICG_wrapper_Bar\", sym_visibility = \"private\"} : () -> ()\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg0: !firrtl.uint<1>):\r\n    %0:2 = \"firrtl.instance\"() {annotations = [], moduleName = @EICG_wrapper_Bar, name = \"bar\", nameKind = #firrtl<name_kind droppable_name>, portAnnotations = [[], []], portDirections = -1 : i2, portNames = [\"a\", \"b\"]} : () -> (!firrtl.uint<1>, !firrtl.uint<1>)\r\n    \"firrtl.connect\"(%0#1, %arg0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n  }) {annotations = [], portAnnotations = [], portDirections = false, portNames = [\"test_en\"], portSyms = [], portTypes = [!firrtl.uint<1>], sym_name = \"Foo\", sym_visibility = \"private\"} : () -> ()\r\n  \"firrtl.module\"() ({\r\n    %0 = \"firrtl.wire\"() {annotations = [{class = \"firrtl.transforms.DontTouchAnnotation\"}], name = \"test_en\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<1>\r\n    %1 = \"firrtl.invalidvalue\"() : () -> !firrtl.uint<1>\r\n    \"firrtl.strictconnect\"(%0, %1) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n    %2 = \"firrtl.instance\"() {annotations = [], moduleName = @Foo, name = \"foo\", nameKind = #firrtl<name_kind droppable_name>, portAnnotations = [[]], portDirections = false, portNames = [\"test_en\"]} : () -> !firrtl.uint<1>\r\n    \"firrtl.connect\"(%2, %0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n  }) {annotations = [{class = \"sifive.enterprise.firrtl.MarkDUTAnnotation\"}], portAnnotations = [], portDirections = 0 : i0, portNames = [], portSyms = [], portTypes = [], sym_name = \"Top\"} : () -> ()\r\n}) {annotations = [], name = \"Top\"} : () -> ()\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-14",
+  "closed_at": "2022-12-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

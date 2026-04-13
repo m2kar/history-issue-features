@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7983,
+  "issue_url": "https://github.com/llvm/circt/pull/7983",
+  "title": "[FIRRTL] Use PRINTF_FD macro instead of 0x80000002 as printf fd",
+  "body": "updates the FIRRTLToHW conversion to use the `PRINTF_FD` macro for specifying the file descriptor, allowing the fd to be obtained externally. This change enhances flexibility by enabling the file descriptor to be defined outside the conversion logic.\r\n\r\nnow we can define a log package like this:\r\n```\r\npackage log_pkg;\r\n  bit log_cond;\r\n  int log_fd;\r\n\r\n  function automatic void log_open(string log_path);\r\n    log_fd = $fopen(log_path, \"w\");\r\n    if (log_fd == 0) $fatal(1, \"failed to open file for write\");\r\n    log_cond = 1'b1;\r\n  endfunction\r\n\r\n  function automatic void log_close();\r\n    if (log_cond) begin\r\n      $fclose(log_fd);\r\n      log_cond = 1'b0;\r\n      log_fd = 0;\r\n    end\r\n  endfunction\r\nendpackage\r\n\r\ninitial begin\r\n  log_pkg::log_open(\"xxx\");\r\nend\r\n\r\nfinal begin\r\n  log_pkg::log_close();\r\nend\r\n```\r\n\r\nand add compile option to import log_fd\r\n```\r\n+define+PRINTF_FD=log_pkg::log_fd\r\n+define+PRINTF_COND=log_pkg::log_cond\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-12-13",
+  "closed_at": "2025-01-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

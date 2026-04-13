@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4384,
+  "issue_url": "https://github.com/verilator/verilator/issues/4384",
+  "title": "non-blocking assignment in always block acts as blocking?",
+  "body": "\r\n![2023-07-23-152227_1010x657_scrot](https://github.com/verilator/verilator/assets/20530052/77f6711d-10b8-4b65-a5d4-ab432678c6e3)\r\nUnfortunately I don't have any of the proprietary simulators handy to verify it, but IIRC there the `addr_wtf` would be delayed by one clock cycle w.r.t. `addr`. While in fact in Verilator it acts as continuous assignment (combinatorial).\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n   localparam int unsigned STEP = 10;\r\n   localparam int unsigned ADDR_WIDTH = 3;\r\n\r\n   logic aclock = 0, areset_n = 0;\r\n   logic [ADDR_WIDTH - 1 : 0] addr;\r\n   logic [ADDR_WIDTH - 1 : 0] addr_wtf;\r\n\r\n   always #(STEP / 2) aclock = ~aclock;\r\n\r\n   initial\r\n     begin\r\n        $dumpfile (\"dump.vcd\");\r\n        $dumpvars;\r\n\r\n        $write (\"Resetting... \");\r\n        #(STEP * 10) areset_n = 1;\r\n        $display (\"done\");\r\n        #(STEP * 10);\r\n\r\n        for (int a = 0; a != 1 << ADDR_WIDTH; a++)\r\n          begin\r\n             addr = a[ADDR_WIDTH - 1 : 0];\r\n             @(posedge aclock);\r\n          end\r\n\r\n        #(STEP * 1000) $finish;\r\n     end\r\n\r\n   always_ff @(posedge aclock)\r\n     addr_wtf <= addr;\r\n\r\nendmodule : top\r\n\r\n// verilatoR --binary --cc --timing --trace --top top assignment.sv\r\n// obj_dir/Vtop\r\n// gtkwave dump.vcd\r\n```\r\nI'm not sure what I'm doing wrong here^, but it seems like the behavior is incorrect.\r\n```shell\r\n$ verilator --version  # NixOS\r\nVerilator 5.012 2023-06-13 rev UNKNOWN.REV\r\n```",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-23",
+  "closed_at": "2023-07-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

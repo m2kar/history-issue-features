@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8968,
+  "issue_url": "https://github.com/llvm/circt/pull/8968",
+  "title": "[Moore] Add builtin for $urandom",
+  "body": "First time I try to add a new Op, so let me know if I went wrong somewhere! \r\n\r\nThis PR adds a new builtin in moore for the $urandom system call.\r\nPer the newest version of the spec, $urandom may be called with or with a integer seed argument, and always returns an integer produced by a pseudo-random number generator.\r\n\r\nAs such I added an importer conversion and tests for both cases; the allowed expressions are \r\n```\r\nmoore.builtin.urandom\r\nmoore.builtin.urandom %arg : !moore.i32\r\n```\r\n\r\nI struggled a bit with constraining the output type of `moore.builtin.urandom`, since it is constant. I added\r\n```\r\ndef MooreI32 :\r\n  Type<CPred<\r\n    \"(::llvm::isa<::circt::moore::IntType>($_self) && \"\r\n    \"::llvm::cast<::circt::moore::IntType>($_self).getWidth() == 32 && \"\r\n    \"::llvm::cast<::circt::moore::IntType>($_self).getDomain() == \"\r\n    \"::circt::moore::Domain::TwoValued)\"\r\n  >, \"!moore.i32\"> {\r\n  let builderCall =\r\n    \"::circt::moore::IntType::getInt($_builder.getContext(), 32)\";\r\n}\r\n```\r\nin place to constrain an IntType to be exactly a moore.i32 for this purpose, but please let me know if there is a smarter way; this seems a bit cumbersome.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-15",
+  "closed_at": "2025-09-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

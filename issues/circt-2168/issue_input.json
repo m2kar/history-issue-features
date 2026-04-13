@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2168,
+  "issue_url": "https://github.com/llvm/circt/issues/2168",
+  "title": "[ExportVerilog] Un-needed brackets with `EB_ForceResultSigned`",
+  "body": "We have a flag `EB_ForceResultSigned ` for when an expression should be always wrapped in `$signed(expr)` to cast the value to signed.  Right now, this flag is only used when emitting the `>>>` operation. The following IR:\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"top_mod\"   {\r\n    firrtl.module @top_mod(in %a: !firrtl.sint<18>, in %b: !firrtl.sint<18>, in %c: !firrtl.uint<1>, out %o: !firrtl.sint<18>) {\r\n      %0 = firrtl.dshr %b, %c : (!firrtl.sint<18>, !firrtl.uint<1>) -> !firrtl.sint<18>\r\n      %1 = firrtl.add %a, %0 : (!firrtl.sint<18>, !firrtl.sint<18>) -> !firrtl.sint<19>\r\n      %2 = firrtl.bits %1 17 to 0 : (!firrtl.sint<19>) -> !firrtl.uint<18>\r\n      %3 = firrtl.asSInt %2 : (!firrtl.uint<18>) -> !firrtl.sint<18>\r\n      firrtl.connect %o, %3 : !firrtl.sint<18>, !firrtl.sint<18>\r\n    }\r\n  }\r\n}\r\n```\r\nIs emitting as:\r\n```verilog\r\nmodule top_mod( // ./test-thing2.fir:2:10\r\n  input  [17:0] a, b,\r\n  input         c,\r\n  output [17:0] o);\r\n\r\n  assign o = a + ($signed($signed(b) >>> c));   // ./test-thing2.fir:2:10, :7:{10,17}\r\nendmodule\r\n```\r\nIt is emitted this way because `>>>` has lower precedence than the `+` operator.  The expression ` a + ($signed($signed(b) >>> c))` can probably be simplified to ` a + $signed($signed(b) >>> c)`.",
+  "labels": [
+    "good first issue",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-12",
+  "closed_at": "2021-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

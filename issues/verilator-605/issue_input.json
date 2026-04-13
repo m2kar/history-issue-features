@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 605,
+  "issue_url": "https://github.com/verilator/verilator/issues/605",
+  "title": "bit-select with :+ and :- fails with packed structures",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 605 from https://www.veripool.org\nOriginal Date: 2013-01-17\nOriginal Assignee: Jeremy Bennett (@jeremybennett)\n\n---\n\nThe following code fails to compile:\r\n\r\n```\r\n    typedef struct packed {\r\n        logic [15:0] channel;\r\n        logic [15:0] others;\r\n    } buss_t;\r\n\r\n    buss_t     b;\r\n\r\n    reg [7:0]  a;\r\n    reg [7:0]  c;\r\n    reg [7:0]  d;\r\n\r\n    initial begin\r\n       b = {16'h8765,16'h4321};\r\n       a = b[19:12];\t\t\t// This works\r\n       c = b[8+:8];\t\t\t// This fails\r\n       d = b[11-:8];\t\t\t// This fails\r\n\n```\r\n\r\nThe problem is that @replaceSelPlusMinus()@ in @V3WidthSel.cpp@ only works for basic data types. The solution is to also allow packed struct and array datatypes.\r\n\r\nFor now, please pull a patch with the test case from branch *packed-access* at git@github.com:jeremybennett/verilator.git. I'm working on a fix, which I hope to post shortly.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2013-01-17",
+  "closed_at": "2013-01-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

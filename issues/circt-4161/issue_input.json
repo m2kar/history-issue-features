@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4161,
+  "issue_url": "https://github.com/llvm/circt/issues/4161",
+  "title": "[HWMemSimImpl] Single-entry Combinational Memories Emit Mux",
+  "body": "For some FIRRTL designs which include single-entry combinational memories, we emit some code which may be sub-optimal for ASIC flows.\r\n\r\nConsider:\r\n```\r\ncircuit Qux:\r\n  module Qux:\r\n    input clock: Clock\r\n    input addr: UInt<1>\r\n    input r: {en: UInt<1>, flip data: UInt<32>, addr: UInt<1>}\r\n    input w: {en: UInt<1>, data: UInt<32>, addr: UInt<1>, mask: UInt<1>}\r\n\r\n    mem m :\r\n      data-type => UInt<32>\r\n      depth => 1\r\n      reader => r\r\n      writer => w\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n\r\n    m.r.clk <= clock\r\n    m.r.en <= r.en\r\n    m.r.addr <= r.addr\r\n    r.data <= m.r.data\r\n\r\n    m.w.clk <= clock\r\n    m.w.en <= w.en\r\n    m.w.addr <= w.addr\r\n    m.w.data <= w.data\r\n    m.w.mask <= w.mask\r\n```\r\n\r\nThis currently emits a combinational memory that is, for Cadence/Synopsys, forcing a mux to exist through the use of `infer_mux_override`/`map_to_mux`:\r\n\r\n```verilog\r\nmodule m_combMem(\r\n  input         R0_addr,\r\n                R0_en,\r\n                R0_clk,\r\n                W0_addr,\r\n                W0_en,\r\n                W0_clk,\r\n  input  [31:0] W0_data,\r\n  output [31:0] R0_data);\r\n\r\n  reg  [31:0] Memory[0:0];\r\n  wire [31:0] _GEN;\r\n  /* synopsys infer_mux_override */\r\n  assign _GEN = Memory[R0_addr] /* cadence map_to_mux */;\r\n  always @(posedge W0_clk) begin\r\n    if (W0_en)\r\n      Memory[W0_addr] <= W0_data;\r\n  end // always @(posedge)\r\n  assign R0_data = R0_en ? _GEN : 32'bx;\r\nendmodule\r\n```\r\n\r\nHowever, this is really a single-entry memory and we can trivially elide the mux. Change this to not emit a mux if the memory is size-1.\r\n\r\nThis type of code is coming from Chisel's `Queue` which always emits a FIRRTL memory and never opts to use a register, even for extremely small queues.",
+  "labels": [
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2022-10-22",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

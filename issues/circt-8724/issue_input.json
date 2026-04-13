@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8724,
+  "issue_url": "https://github.com/llvm/circt/pull/8724",
+  "title": "[FIRRTL] Enums: Add user-defined constructor encodings",
+  "body": "This adds the ability to specify the constants used to encode enumeration variants in the tag. For example,\r\n``` firrtl\r\nwire a : {| A = 10, B = 5 |}\r\n```\r\n\r\nThe values can be unspecified, in which case it defaults to one higher than the previous value, or zero if it is the first value. For example, these two enumerations are the same:\r\n``` firrtl\r\n{| A = 0, B = 1 |} == {| A, B |}\r\n```\r\n\r\nIn FIRRTL, Two enumeration types are considered equal if they have the same variants with the same values and data, without regard to variant order.  Internally in FIRRTL dialect IR, enumerations types must have the variants sorted from low to high. For example the following two enumeration types are equivalent:\r\n``` firrtl\r\n{| B = 1, A = 0 |} == {| A, B |}\r\n```\r\n\r\nThe mlir syntax has been updated to ellide the the tag values and data types if they are implicit.  For example, the first type would be roundtripped to the second type:\r\n``` mlir\r\n!firrtl.enum<a = 0 : uint<0>> => !firrtl.enum<a>\r\n```\r\n\r\nEnumerations are no longer lowered to SystemVerilog enumerations, but to regular integer types.  This is for a variety of reasons, but mainly because enumerations in SV are nominal and it was not a good fit for our structural enumerations.\r\n\r\nIn LowerToHW, the `firrtl.istag` operation lowers to a comparison to a constant value created with  a localparam, which can show up in the output depending on how the module is optimized. The  FIRRTL code below,\r\n\r\n``` firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Enums:\r\n  public module Enums:\r\n    input in : {|A = 8 : UInt<8>, B = 16 |}\r\n    output out : UInt<8>\r\n    match in:\r\n      A(data):\r\n        connect out, data\r\n      B:\r\n        connect out, UInt<8>(16)\r\n```\r\nproduces:\r\n``` verilog\r\nmodule Enums(\r\n  input  struct packed {logic [4:0] tag; union packed {logic [7:0] A;/*B: Zero Width;*/ } body; } in,\r\n  output [7:0]                                                                                    out\r\n);\r\n\r\n  localparam [4:0] A = 8;\r\n  assign out = in.tag == A ? in.body.A : 8'h10;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-17",
+  "closed_at": "2025-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

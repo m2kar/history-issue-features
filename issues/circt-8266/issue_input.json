@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8266,
+  "issue_url": "https://github.com/llvm/circt/issues/8266",
+  "title": "[FIRRTL] Integer Property folders assert in getAPSInt",
+  "body": "@seldridge did some digging:\n\nThe issue appears to be that we have an i8 attribute and it is being converted to an APSInt:\n\n```\n[firtool]   Running \"firrtl-imconstprop\"\nAssertion failed: (!getType().isSignlessInteger() && \"Signless integers don't carry a sign for APSInt\"), function getAPSInt, file BuiltinAttributes.cpp, line 376.\nProcess 26737 stopped\n* thread #1, queue = 'com.apple.main-thread', stop reason = hit program assert\n    frame #4: 0x0000000100c0eeb8 firtool`mlir::IntegerAttr::getAPSInt() const (.cold.1) at BuiltinAttributes.cpp:375:3 [opt]\n   372 \t/// Return the value as an APSInt which carries the signed from the type of\n   373 \t/// the attribute.  This traps on signless integers types!\n   374 \tAPSInt IntegerAttr::getAPSInt() const {\n-> 375 \t  assert(!getType().isSignlessInteger() &&\n   376 \t         \"Signless integers don't carry a sign for APSInt\");\n   377 \t  return APSInt(getValue(), getType().isUnsignedInteger());\n   378 \t}\nTarget 0: (firtool) stopped.\nwarning: firtool was compiled with optimization - stepping may behave oddly; variables may not be available.\n(lldb) frame select 6\nframe #6: 0x000000010062b1b4 firtool`circt::firrtl::IntegerAddOp::fold(circt::firrtl::IntegerAddOpGenericAdaptor<llvm::ArrayRef<mlir::Attribute>>) at FIRRTLFolds.cpp:176:17 [opt]\n   173 \t  if (auto attr = dyn_cast<BoolAttr>(operand))\n   174 \t    return APSInt(APInt(1, attr.getValue()));\n   175 \t  if (auto attr = dyn_cast<IntegerAttr>(operand))\n-> 176 \t    return attr.getAPSInt();\n   177 \t  return {};\n   178 \t}\n   179 \t\n(lldb) print attr\n(mlir::IntegerAttr) {\n  mlir::Attribute::AttrBase<IntegerAttr, ::mlir::Attribute, detail::IntegerAttrStorage, mlir::TypedAttr::Trait> = {\n    mlir::Attribute = {\n      impl = 0x000000011c714548\n    }\n  }\n}\n(lldb) print attr->dump()\n2 : i8\n  Evaluated this expression after applying Fix-It(s):\n    attr.dump()\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2025-02-23",
+  "closed_at": null,
+  "code_blocks": [
+    "[firtool]   Running \"firrtl-imconstprop\"\nAssertion failed: (!getType().isSignlessInteger() && \"Signless integers don't carry a sign for APSInt\"), function getAPSInt, file BuiltinAttributes.cpp, line 376.\nProcess 26737 stopped\n* thread #1, queue = 'com.apple.main-thread', stop reason = hit program assert\n    frame #4: 0x0000000100c0eeb8 firtool`mlir::IntegerAttr::getAPSInt() const (.cold.1) at BuiltinAttributes.cpp:375:3 [opt]\n   372 \t/// Return the value as an APSInt which carries the signed from the type of\n   373 \t/// the attribute.  This traps on signless integers types!\n   374 \tAPSInt IntegerAttr::getAPSInt() const {\n-> 375 \t  assert(!getType().isSignlessInteger() &&\n   376 \t         \"Signless integers don't carry a sign for APSInt\");\n   377 \t  return APSInt(getValue(), getType().isUnsignedInteger());\n   378 \t}\nTarget 0: (firtool) stopped.\nwarning: firtool was compiled with optimization - stepping may behave oddly; variables may not be available.\n(lldb) frame select 6\nframe #6: 0x000000010062b1b4 firtool`circt::firrtl::IntegerAddOp::fold(circt::firrtl::IntegerAddOpGenericAdaptor<llvm::ArrayRef<mlir::Attribute>>) at FIRRTLFolds.cpp:176:17 [opt]\n   173 \t  if (auto attr = dyn_cast<BoolAttr>(operand))\n   174 \t    return APSInt(APInt(1, attr.getValue()));\n   175 \t  if (auto attr = dyn_cast<IntegerAttr>(operand))\n-> 176 \t    return attr.getAPSInt();\n   177 \t  return {};\n   178 \t}\n   179 \t\n(lldb) print attr\n(mlir::IntegerAttr) {\n  mlir::Attribute::AttrBase<IntegerAttr, ::mlir::Attribute, detail::IntegerAttrStorage, mlir::TypedAttr::Trait> = {\n    mlir::Attribute = {\n      impl = 0x000000011c714548\n    }\n  }\n}\n(lldb) print attr->dump()\n2 : i8\n  Evaluated this expression after applying Fix-It(s):\n    attr.dump()\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

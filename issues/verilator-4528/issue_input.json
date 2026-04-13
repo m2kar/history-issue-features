@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4528,
+  "issue_url": "https://github.com/verilator/verilator/issues/4528",
+  "title": "Crash with conversion of integers in $display '%e'",
+  "body": "I'm using the following command line:\r\n\r\n```\r\nverilator -sv  --debug --cc --timing --binary --trace-fst -Wno-INITIALDLY --trace-depth 0 --top add_tb --timescale 1ns/100ps add_tb.sv\r\nStarting Verilator 5.017 devel rev v5.014-145-g44e7d2ebe\r\n```\r\n\r\nI get the following error:\r\n\r\n```\r\n%Error: ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg -sv --debug --cc --timing --binary --trace-fst -Wno-INITIALDLY --trace-depth 0 --top add_tb --timescale 1ns/100ps add_tb.sv\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg -sv --debug --cc --timing --binary --trace-fst -Wno-INITIALDLY --trace-depth 0 --top add_tb --timescale 1ns/100ps add_tb.sv\r\nmake: *** [Makefile:9: add] Error 255\r\n```\r\n\r\nAlso the line which says // this should also work breaks compile, not sure why. \r\nCould you please let me know what I'm doing wrong?\r\n\r\nHere is my code:\r\n\r\n```\r\n// adder trial testbench\r\nmodule FA(input  logic a, b, ci,\r\n          output logic s, co);\r\n    logic [1:0] sum = a + b + ci;\r\n    assign s = sum[0];\r\n    assign co = sum[1];\r\nendmodule\r\n\r\nmodule rca #(parameter W = 4) \r\n            (input [W-1:0] a, [W-1:0] b,\r\n             output logic [W:0] s);\r\n\r\n    logic [W:0] c;\r\n    assign c[0] = 0;\r\n    genvar i;\r\n    generate\r\n            for (i=0; i < W-1; i = i+1) begin\r\n                FA uadd(.a(a[i]), .b(b[i]), .s(s[i]), .ci(c[i]), .co(c[i+1]));\r\n            end\r\n    endgenerate\r\n    assign s[W] = c[W];\r\nendmodule\r\n\r\nprogram test_add #(W=4) (\r\n    input clk,\r\n    output logic arst_n,\r\n    output [W-1:0]          a,\r\n    output [W-1:0]          b,\r\n    input  [W:0]            s\r\n    );\r\n    clocking cb_add @(posedge clk);\r\n        default input #100ps output #100ps;\r\n        // input act_rdy, wgt_rdy, out_vld, out_dat;\r\n        //output act_dat, act_vld, wgt_vld, wgt_adr, wgt_dat, out_rdy;\r\n    endclocking\r\n\r\n    logic [W-1:0] ai, bi;\r\n    logic [W:0] sum;\r\n    int err = 0;\r\n    logic [W:0] errb;\r\n    initial begin\r\n        arst_n = 0;\r\n        for (ai = 0; ai < 7; ai = ai +1) begin\r\n            for (bi = 0; bi < 7; bi = bi + 1) begin\r\n                sum = ai + bi;\r\n                // err = int'(s - sum);\r\n                errb = s - sum;\r\n                $display(\"error is %e\", err);            \r\n            end\r\n        end\r\n        \r\n        #1000 $finish();\r\n    end\r\nendprogram\r\n\r\nmodule add_tb;\r\n\r\nparameter W = 4;\r\n\r\ninitial $dumpfile(\"add.fst\");\r\ninitial $dumpvars(0, add_tb);\r\n\r\nlogic arst_n;\r\nlogic clk;\r\n\r\n    always begin\r\n        #0.5 clk = 1;\r\n        #0.5 clk = 0;\r\n    end\r\n\r\nlogic [W-1:0] a, b;\r\nlogic [W:0] s;\r\n\r\n// the following should also work?\r\n// rca #(W=4) urca(.a, .b, .s);\r\nrca urca(.a, .b, .s);\r\n\r\ntest_add test(\r\n    .clk,\r\n    .arst_n,\r\n    .a,\r\n    .b,\r\n    .s\r\n);\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-01",
+  "closed_at": "2023-10-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

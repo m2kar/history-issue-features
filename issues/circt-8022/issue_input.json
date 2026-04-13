@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8022,
+  "issue_url": "https://github.com/llvm/circt/issues/8022",
+  "title": "[Comb] Infinite loop in OrOp folder",
+  "body": "The following IR ends up in an infinite loop in the `comb.or` folder. It's a degenerate case, but the compiler should still not end up in an infinite loop. I think we can just leave the IR as is or fold it to some kind of poison value.\n```mlir\nhw.module @infiniteFolding(out out : i1) {\n  %true = hw.constant true\n  %0 = comb.mux %0, %true, %0 : i1\n  hw.output %0 : i1\n}\n```\n\nWith `--debug-only=greedy-rewriter`:\n```\n//===-------------------------------------------===//\nProcessing operation : 'comb.or'(0x561b88d1c530) {\n  %1 = \"comb.or\"(%1, %1) : (i1, i1) -> i1\n\n} -> success : operation was folded\n//===-------------------------------------------===//\n```\n",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-31",
+  "closed_at": "2026-03-21",
+  "code_blocks": [
+    "hw.module @infiniteFolding(out out : i1) {\n  %true = hw.constant true\n  %0 = comb.mux %0, %true, %0 : i1\n  hw.output %0 : i1\n}\n",
+    "//===-------------------------------------------===//\nProcessing operation : 'comb.or'(0x561b88d1c530) {\n  %1 = \"comb.or\"(%1, %1) : (i1, i1) -> i1\n\n} -> success : operation was folded\n//===-------------------------------------------===//\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2942,
+  "issue_url": "https://github.com/verilator/verilator/pull/2942",
+  "title": "Split procedures to better respect --output-split-cfuncs.",
+  "body": "CFuncs only used to be split at procedure (always/initial/final block),\r\nwhich on occasion can still yield huge output files if you have large\r\nprocedures. This patch make CFuncs split at statement boundaries within\r\nprocedures. This has the potential to help a lot, but still does not\r\nhelp if you have huge statements within procedures.\r\n\r\n====\r\n\r\nThis helps quite a lot with some of my builds by eliminating some long poles. AstNodeProcedure is inlined in V3Clock, which is 2 passes after V3Order, and the intervening V3GenClock, shouldn't care, so it's safe to inline AstNodeProcedure in V3Order immediately, which enables splitting at statement boundaries.  Ext tests are passing. Are you conceptually happy with this?\r\n\r\nI have one knonw issue, which is if there is a `$c()` statement in the procedure, then it's generally unsafe to split the procedure. An example where this causes problems is:\r\nhttps://github.com/verilator/verilator/blob/45fbd98ff1d404f5f71d74326fce54a651204328/test_regress/t/t_merge_cond.v#L198-L204\r\nNotably the issue with splitting this is that the declaration of `_cnt` ends up in one function, while the uses in others. Do we care about this? We could of course just keep the procedure whole if there is a `$c()` statement or expression in it. What do you prefer? \r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-10",
+  "closed_at": "2021-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

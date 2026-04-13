@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6897,
+  "issue_url": "https://github.com/llvm/circt/pull/6897",
+  "title": "[FIRRTL] Generic intrinsic parsing/emitter support",
+  "body": "Add parsing and emitter support for FIRRTL intrinsic.\r\n\r\nRefactor parameter parsing on (ext/int)modules as these use same syntax.\r\n\r\nSnippet from parse-basic.fir without FileCheck directives:\r\n\r\n```firrtl\r\ncircuit GenericIntrinsics:\r\n  public module GenericIntrinsics:\r\n    input clock : Clock\r\n    input data : UInt<32>\r\n    input c : UInt<1>\r\n\r\n    ; Statements\r\n    intrinsic(circt_verif_assert, c)\r\n    intrinsic(circt_fpga_probe, data, clock)\r\n\r\n    ; Expressions\r\n    node n = intrinsic(circt_plusargs_value<FORMAT = \"foo\"> : { found : UInt<1>, result : UInt<5> })\r\n    node n2 = intrinsic(circt_plusargs_test<FORMAT = \"bar\"> : UInt<3>)\r\n\r\n    ; Statement with unused return value.\r\n    intrinsic(circt_clock_gate : Clock, clock, c)\r\n\r\n    ; Nesting, statement and expression forms.\r\n    intrinsic(circt_verif_assert, intrinsic(circt_isX: UInt<1>, data))\r\n```\r\n\r\nAnd somewhat similarly from the emit-basic test:\r\n```\r\n  public module GenericIntrinsic :\r\n    input clk : Clock\r\n    input c : UInt<1>\r\n    output s : UInt<32>\r\n    output io1 : UInt<1>\r\n    output io2 : UInt<1>\r\n    output io3 : UInt<1>\r\n    output io4 : UInt<5>\r\n\r\n    connect s, intrinsic(circt_sizeof : UInt<32>, clk)\r\n    connect io1, intrinsic(circt_isX : UInt<1>, clk)\r\n    connect io2, intrinsic(circt_plusargs_test<FORMAT = \"foo\"> : UInt<1>)\r\n    intrinsic(circt_clock_gate : Clock, clk, c)\r\n    node _gen_int\r\n      = intrinsic(circt_plusargs_value<FORMAT = \"foo\">\r\n                    : { found : UInt<1>, result : UInt<5> })\r\n    connect io3, _gen_int.found\r\n    connect io4, _gen_int.result\r\n    intrinsic(circt_verif_assert, intrinsic(circt_isX : UInt<1>, c))\r\n    node _gen_int_0 = intrinsic(circt_isX : UInt<1>, c)\r\n    intrinsic(circt_verif_assert, intrinsic(circt_isX : UInt<1>, _gen_int_0))\r\n ```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-04-04",
+  "closed_at": "2024-04-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

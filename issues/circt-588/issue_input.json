@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 588,
+  "issue_url": "https://github.com/llvm/circt/issues/588",
+  "title": "[HandshakeToFIRRTL] Buffers do not break cycles in the ready network.",
+  "body": "While debugging #543, I found Verilator reported combinational cycles in the circuit. I've reviewed the BufferOp lowering, and it does indeed seem to only buffer the valid and ready signals. I have a couple thoughts about this:\r\n\r\nThis is another place we are generating pipeline register like #587. If there was a  solid lowering from staticlogic.pipeline to RTL/SV, we could lower to that here instead of FIRRTL.\r\n\r\nWe could borrow the [implementation](https://github.com/llvm/circt/blob/main/include/circt/Dialect/ESI/ESIPrimitives.sv) from ESI for inspiration, and eventually replace the primitive SV module there with a generated one.\r\n\r\nFor more inspiration, section 4.1 here discusses different approaches for data versus control buffers: http://www.cs.columbia.edu/~sedwards/papers/edwards2019compositional.pdf. The BufferOp in Handshake already has an attribute to indicate if it is a control buffer or not. We could update the BufferOp lowering to generate different circuits depending on the control attribute. Then in the `-handshake-insert-buffers` pass, I think it would be possible to insert a data and control buffer back-to-back like the paper describes.\r\n\r\nI think for now the simplest thing would be to add to the current BufferOp lowering to also insert the appropriate FIRRTL to also buffer the ready network, similar to the paper and ESI. This can then be cleaned up as part of #587. Specializing the lowering based on the control attribute can be done afterwards if it is beneficial.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-02-12",
+  "closed_at": "2021-03-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2444,
+  "issue_url": "https://github.com/llvm/circt/pull/2444",
+  "title": "[StandardToHandshake] Add loop handling networks",
+  "body": "While testing handshake accelerators, it has been a general issue that kernels were not able to be function pipelined. That is, having multiple activations of a kernel live, concurrently.\r\nThe reason for this is due to the previous use of control-merge operations at backedges in the CFG (loops). By doing so, multiple kernel invocations are able to enter the loop control network, which itself is already loop pipelining. In most scenarios, this then leads to a deadlock due to insufficient buffering inside the loop, due to having to accomodate multiple invocations + loop pipelining, all at once.\r\n\r\nThe solution to this is a new structure for loop entry control. Instead of a single control merge to allow for control entry to the loop, we now have a combination of a mux + a loop \"priming\" register. The priming register drives the mux, and the mux selects from either external control or internal, loop control. By doing so, we essentially guard loop control to be exclusively allowed for that inside of the loop, or an external loop activation. A similar mux structure is used for the inputs to the loop header; block data input muxes are split in two, containing inputs from external loop predecessors and internal loop predecessors, and a mux - driven by the loop priming register - selects between either of these, based on where control originated from.\r\n\r\n![image](https://user-images.githubusercontent.com/16338943/149095568-f8aa5609-07e3-4609-925b-07e5ae047be5.png)\r\n\r\n\r\nThe loop priming register is driven by the loop exit condition. Thus, when the loop exits, the priming mux is \"re-primed\" allowing for control to again enter from an external activation.\r\n\r\n![image](https://user-images.githubusercontent.com/16338943/149095627-b968036f-088a-43bc-823d-1d8a58238635.png)\r\n\r\n\r\nRelated changes:\r\n- Merge op \"dataflow conversion check\" has been relaxed to now not require that all merge-like ops have an operand from all predecessor blocks. This will not be the case for the externalCtrlMerge/loopCtrlMerge.\r\n- Allow single-input muxes, but canonicalize them away. This simplifies lowering (removes a special case), and is more easily taken care of by a canonicalization pattern.\r\n\r\nMarked as draft since:\r\n- There are still some unsettled issues wrt. the legality of the in-loop pipelining being done through a control-merge. However, this PR changes nothing with regards to the existing method of loop pipelining - it only protects loops from function pipelining.\r\n- i'll postpone reworking all of the tests until the PR has settled.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-12",
+  "closed_at": "2022-02-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1769,
+  "issue_url": "https://github.com/llvm/circt/issues/1769",
+  "title": "[Calyx] Inlining `%wire` incorrectly assigns guard statements to ports",
+  "body": "The following MLIR code:\r\n```mlir\r\nmodule  {\r\n  calyx.program  {\r\n    calyx.component @main(%in0: i32, %in1: i32, %in2: i32, %clk: i1, %reset: i1, %go: i1) -> (%out0: i32, %done: i1) {\r\n      %true = hw.constant true\r\n      %c0_i32 = hw.constant 0 : i32\r\n      %while_0_arg2_reg.in, %while_0_arg2_reg.write_en, %while_0_arg2_reg.clk, %while_0_arg2_reg.reset, %while_0_arg2_reg.out, %while_0_arg2_reg.done = calyx.register \"while_0_arg2_reg\" : i32, i1, i1, i1, i32, i1\r\n      %while_0_arg1_reg.in, %while_0_arg1_reg.write_en, %while_0_arg1_reg.clk, %while_0_arg1_reg.reset, %while_0_arg1_reg.out, %while_0_arg1_reg.done = calyx.register \"while_0_arg1_reg\" : i32, i1, i1, i1, i32, i1\r\n      %while_0_arg0_reg.in, %while_0_arg0_reg.write_en, %while_0_arg0_reg.clk, %while_0_arg0_reg.reset, %while_0_arg0_reg.out, %while_0_arg0_reg.done = calyx.register \"while_0_arg0_reg\" : i32, i1, i1, i1, i32, i1\r\n      %bb2_arg1_reg.in, %bb2_arg1_reg.write_en, %bb2_arg1_reg.clk, %bb2_arg1_reg.reset, %bb2_arg1_reg.out, %bb2_arg1_reg.done = calyx.register \"bb2_arg1_reg\" : i32, i1, i1, i1, i32, i1\r\n      %bb2_arg0_reg.in, %bb2_arg0_reg.write_en, %bb2_arg0_reg.clk, %bb2_arg0_reg.reset, %bb2_arg0_reg.out, %bb2_arg0_reg.done = calyx.register \"bb2_arg0_reg\" : i32, i1, i1, i1, i32, i1\r\n      calyx.wires  {\r\n        calyx.group @assign_while_0_init  {\r\n          calyx.assign %while_0_arg0_reg.in = %in0 : i32\r\n          calyx.assign %while_0_arg0_reg.write_en = %true : i1\r\n          calyx.assign %while_0_arg1_reg.in = %c0_i32 : i32\r\n          calyx.assign %while_0_arg1_reg.write_en = %true : i1\r\n          calyx.assign %while_0_arg2_reg.in = %c0_i32 : i32\r\n          calyx.assign %while_0_arg2_reg.write_en = %true : i1\r\n          %0 = comb.and %while_0_arg0_reg.done, %while_0_arg1_reg.done : i1\r\n          %1 = comb.and %0, %while_0_arg2_reg.done : i1\r\n          calyx.group_done %1 : i1\r\n        }\r\n      }\r\n      calyx.control  {\r\n        calyx.enable @assign_while_0_init\r\n      }\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nGenerates the following assignment in the Calyx code using `circt-translate --export-calyx`:\r\n```\r\n      assign_while_0_init[done] = ((while_0_arg0_reg.done & while_0_arg1_reg.done) & while_0_arg2_reg.done);\r\n```\r\nThis is incorrect. Calyx does not allow for complex guard statements to be assigned to ports. It should instead be:\r\n```\r\n assign_while_0_init[done] = ((while_0_arg0_reg.done & while_0_arg1_reg.done) & while_0_arg2_reg.done) ? 1'd1;\r\n```\r\n\r\nThe problem is that that guard inliner for the emitter incorrectly transforms `calyx.group_done %1 : i1` into the above by recursively inlining `%1`.\r\n\r\nTwo possible solutions are:\r\n1. Always using `calyx.group_done %true, %1 ?` or something so that there is an explicit port\r\n2. Making the emitter less smart and just structurally instantiate the wires into the relevant subcomponent like `std_add` etc.",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-10",
+  "closed_at": "2021-09-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

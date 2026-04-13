@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4462,
+  "issue_url": "https://github.com/verilator/verilator/issues/4462",
+  "title": "Add in trace API even if tracing disabled.",
+  "body": "Would like to have the trace API be added (and do nothing) when verilated code is generated without `--trace` or `--trace-fst`\r\n\r\nThe reason for this change is to allow the same testbench infrastructure for both tracing and no tracing.  I use a C++ template [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern) that injects the dut or testbench (verilated top level code) into the the template.  it does a bunch of common functionality such as creating and opening  filenames for the coverage and trace files, and a few other things related to creating a test framework.\r\n\r\nWhen I disable trace verilating the verilog - the resulting toplevel class method `trace()` no longer exists and then causes the templated framework to not compile.\r\n\r\nWould it be possible to ensure under all scenarios of verilate commands that the entire API gets defined for each of the modules, but when a feature is disabled, - eg trace - those specific commands do nothing?\r\n\r\nThere is already a check for context->traceEverOn() inside the VerilatedContext - which seems to be this runtime/programmatic method of doing this.\r\n\r\nRight now my workaround is to always enable `--trace` in the command line and set `m_context->traceEverOn(false)` in the m_context.\r\n\r\nIt is good practice to define one and only one APi which is consistent regardless of verilated command options, and instead of removing the members or methods based on verilate command arguments - make the members or methods empty (do nothing).\r\n\r\nLooking at the resulting code, the only benefit of removing the member function is a missing entry in a vtable, and a little bit less code.\r\n\r\nMuch appreciated.",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-non-IEEE",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-07",
+  "closed_at": "2023-09-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

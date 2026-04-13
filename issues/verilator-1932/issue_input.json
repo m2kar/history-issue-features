@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1932,
+  "issue_url": "https://github.com/verilator/verilator/issues/1932",
+  "title": "Question: genvar variable is not declared in h file",
+  "body": "---\n\n\nAuthor Name: **Cheng Fei Phung**\nOriginal Redmine Message: 2238 from https://www.veripool.org\n\n\n\n---\n\nI am having some error with \"genvar i\"\n\nVcordic_pipelined.cpp:337:44: error: ‘class Vcordic_pipelined’ has no member named ‘cordic_pipelined__DOT__i’; did you mean ‘cordic_pipelined__DOT__d’?\n      vlTOPp->xn = ((0xaU >= (0xfU & vlTOPp->cordic_pipelined__DOT__i))\n\n\nThe following is my verilog source files and my Makefile.\n\n```<code class=\"text\">\n`timescale 1ns/100ps\n\nmodule cordic_pipelined(clk, z0, xn, yn);\n  \n  input clk;\n  input [10:0] z0;\n  output reg [16:0] xn, yn;\n\n  parameter N = 10; // number of iterations\n  \n  reg [(N-1):0] d;\n  wire [16:0] x [N:0];\n  wire [16:0] y [N:0];\n  wire [10:0] z [N:0];\n\n  assign x[0] = 'b0_10011_0110_1110_1001;  // 0.60725 in binary\n  assign y[0] = 0;\n  assign z[0] = z0;\n  \n  wire [10:0] arctan [(N-1):0];\n     \n  assign arctan[0] = 'b010_1101_0000; // 45.0;\n  assign arctan[1] = 'b001_1010_1001; // 26.6;\n  assign arctan[2] = 'b000_1110_0000; // 14.0;\n  assign arctan[3] = 'b000_0111_0001; // 7.1;\n  assign arctan[4] = 'b000_0011_1001; // 3.6;\n  assign arctan[5] = 'b000_0001_1100; // 1.8;\n  assign arctan[6] = 'b000_0000_1110; // 0.9;\n  assign arctan[7] = 'b000_0000_0110; // 0.4;\n  assign arctan[8] = 'b000_0000_0011; // 0.2;\n  assign arctan[9] = 'b000_0000_0001; // 0.1;\n\n  genvar i;\n  generate\n     for(i=0; i<N; i=i+1)\n       begin: stage_generate\n         cordic_stage #(.i(i)) stage_i\n         (\n           .clk(clk), \n           .x_i(x[i]), .x_o(x[i+1]), \n           .y_i(y[i]), .y_o(y[i+1]), \n           .z_i(z[i]), .z_o(z[i+1]),\n           .arctan(arctan[i])\n         );\n       end\n  endgenerate\n\n  genvar j;\n  generate\n     for(j=0; j<N; j=j+1)\n       begin\n         always @(*)\n           begin\n             xn = x[stage_generate[j].i]; // xn = cos(z0)\n      \t\tyn = y[stage_generate[j].i]; // yn = sin(z0)\n           end\n       end\n  endgenerate\n  \nendmodule\n</code>\n```\n\n```<code class=\"text\">\n`timescale 1ns/100ps\n\nmodule cordic_stage(clk, x_i, y_i, z_i, x_o, y_o, z_o, arctan);\n  \n  input [10:0] arctan;\n  parameter i=0;\n  \n  input clk;\n  input [16:0] x_i, y_i;\n  input [10:0] z_i;\n  output [16:0] x_o, y_o;\n  output [10:0] z_o;\n  \n  reg d;\n  reg [16:0] x_o, x_next;\n  reg [16:0] y_o, y_next;\n  reg [10:0] z_o, z_next;\n  \n  always @ (posedge clk)\n     begin\n       x_o <= x_next;\n       y_o <= y_next;\n       z_o <= z_next; \n     end\n\n  always @(*)\n     begin    \n\n       d = (z_i[10] == 0) ? 0 : 1;\n\n       if(d == 0) begin\n         x_next = x_i - (y_i >> i);\n         y_next = y_i + (x_i >> i);\n         z_next = z_i - arctan;\n       end\n\n       else begin\n         x_next = x_i + (y_i >> i);\n         y_next = y_i - (x_i >> i);\n         z_next = z_i + arctan;\n       end\n       \n  end\n\nendmodule\n</code>\n```\n\n\n```<code class=\"text\">\nTARGET=cordic_pipelined\n.PHONY: $(TARGET)\nRTLSRC=../rtl\nall: $(TARGET)\n\nLDFLAGS=\nCFLAGS=-g -O3\n\n$(TARGET):\n\tverilator -Wno-fatal -I$(RTLSRC) --cc $(@).v cordic_stage.v --trace --exe ../$(@).cpp  -Mdir $(@) -CFLAGS \"$(CFLAGS)\"\n\tmake -C $(@) -f V$(@).mk\nclean:: \n\trm -rf *.o $(TARGET)\ndistclean:: clean\n\trm -rf *~ *.txt *.vcd *.mif *.orig\n</code>\n```\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2017-05-22",
+  "closed_at": "2017-05-22",
+  "code_blocks": [
+    "\n",
+    "\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

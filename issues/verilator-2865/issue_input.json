@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2865,
+  "issue_url": "https://github.com/verilator/verilator/issues/2865",
+  "title": "Inconsistent use of enums when checking bit extraction widths",
+  "body": "Consider this example code. Verilator allows the definition of `has_foo2` (presumably because the 32-bit integer literal with value 2 fits in 2 bits) but doesn't allow `has_foo1`, despite the fact that `Foo1` equals 1.\r\n\r\n```systemverilog\r\nmodule enum_idx (input logic [3:0] enable,\r\n                 output logic      has_foo1,\r\n                 output logic      has_foo2);\r\n\r\n  typedef enum bit [2:0] {\r\n    Foo0 = 3'd0,\r\n    Foo1 = 3'd1,\r\n    Foo2 = 3'd2,\r\n    Foo3 = 3'd3,\r\n    Bar  = 3'd4\r\n  } opn_t;\r\n\r\n  localparam FooOps = Foo3;\r\n\r\n  bit [FooOps:0] enabled_foos;\r\n  assign enabled_foos = enable;\r\n  \r\n  assign has_foo1 = enabled_foos[Foo1];\r\n  assign has_foo2 = enabled_foos[2];\r\n\r\nendmodule\r\n```\r\n\r\nThis is a little painful if you want to define some general \"operation type\" enum but then re-use the literal indices in some module that only supports some operations. Here, the example is supposed to be that the module only supports \"Foo\" operations.\r\n\r\nIs the way Verilator checks widths for enum indices an intentional design decision (I can sort of see an argument for it), or should we allow literal values that fit?\r\n\r\nAt the moment, we give the following warning:\r\n```\r\n$ /opt/verilator-test/bin/verilator --lint-only enum_idx.sv\r\n%Warning-WIDTH: enum_idx.sv:18:33: Bit extraction of var[3:0] requires 2 bit index, not 3 bits.\r\n                                 : ... In instance enum_idx\r\n   18 |   assign has_foo1 = enabled_foos[Foo1];\r\n      |                                 ^\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n$ /opt/verilator-test/bin/verilator --version\r\nVerilator 4.201 devel rev v4.200-60-g6d3ec160\r\n```\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-29",
+  "closed_at": "2021-03-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

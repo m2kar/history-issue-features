@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5971,
+  "issue_url": "https://github.com/verilator/verilator/issues/5971",
+  "title": "$finish doesn't stop the simulation immediately when called inside `always` block",
+  "body": "`verilator --version`: Verilator 5.036 2025-04-27 rev v5.036\nOS: ArchLinux\n\nI have the following code:\n```sv\nmodule tb2 ();\n    parameter CLK_PERIOD = 2;\n\n    reg clk = 1'b0;\n\n    always #(CLK_PERIOD / 2) clk = ~clk;\n\n    always begin\n        int counter = 0;\n        while (counter < 3) begin\n            counter += 1;\n            $display(\"running loop %d\", counter);\n            @(posedge clk);\n        end\n\n        $finish;\n    end\nendmodule\n```\n\nI would expect the following output:\n```\nrunning loop           1\nrunning loop           2\nrunning loop           3\n- tb2.sv:16: Verilog $finish\n```\n\nBut the actual output is this:\n```\nrunning loop           1\nrunning loop           2\nrunning loop           3\n- tb2.sv:16: Verilog $finish\nrunning loop           1\n```\n\nWe tested the exact same testbench on Xsim and it works as expected.",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-01",
+  "closed_at": "2025-05-02",
+  "code_blocks": [
+    "module tb2 ();\n    parameter CLK_PERIOD = 2;\n\n    reg clk = 1'b0;\n\n    always #(CLK_PERIOD / 2) clk = ~clk;\n\n    always begin\n        int counter = 0;\n        while (counter < 3) begin\n            counter += 1;\n            $display(\"running loop %d\", counter);\n            @(posedge clk);\n        end\n\n        $finish;\n    end\nendmodule\n",
+    "running loop           1\nrunning loop           2\nrunning loop           3\n- tb2.sv:16: Verilog $finish\n",
+    "running loop           1\nrunning loop           2\nrunning loop           3\n- tb2.sv:16: Verilog $finish\nrunning loop           1\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

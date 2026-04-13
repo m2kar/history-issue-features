@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6131,
+  "issue_url": "https://github.com/llvm/circt/pull/6131",
+  "title": "[ExportVerilog] Support CallSiteLoc and NameLoc emission",
+  "body": "Adds suppport for CallSiteLoc and NameLoc locations in export verilog. I tried to do this without refactoring the whole location printing infra too much, although some refactoring was due. Location printing has been modified such that:\r\n1. There is a top-level dispatch function which dispatches `Location` printing to location type-specific print functions\r\n2. No more passing around of `std::string`s. Instead, location emitter functions take a `llvm::raw_string_ostream`.\r\n3. `FileLineColLoc` locations are still uniqued and printed in a sorted manner, as before. However, any other non `FileLineColLoc`-typed location will be printed without any custom uniquing (apart from set uniquing).\r\n\r\nLocation printing is still inline, i.e. without newlines. I can easily imagine that this can become a bit unwieldy for complex stack traces. However, deciding how to split locations to multiple lines seems like a separate issue.\r\n\r\n\r\nStack traces like:\r\n```mlir\r\nhw.module @Callstack(%a: i1 loc(\"\")) -> () {\r\n  hw.output\r\n} loc(callsite(\r\n    \"foo\"(\"fooSource.x\":10:8)\r\n    at callsite(\"bar\"(\"barSource.x\":20:8) \r\n    at \"baz\"(\"bazSource.x\":30:8))))\r\n```\r\nwill be printed as:\r\n```sv\r\nmodule Callstack(       // {'foo'(fooSource.x:10:8) <- {'bar'(barSource.x:20:8) <- 'baz'(bazSource.x:30:8)}}\r\n  input a\r\n);\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-15",
+  "closed_at": "2023-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

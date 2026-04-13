@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9102,
+  "issue_url": "https://github.com/llvm/circt/issues/9102",
+  "title": "[FIRRTL] Dedup reports error on wrong op",
+  "body": "Consider this input:\n```mlir\nfirrtl.circuit \"Foo\" attributes {annotations = [{\n  class = \"firrtl.transforms.MustDeduplicateAnnotation\",\n  modules = [\"~Foo|Foo\", \"~Foo|Bar\"]\n}]} {\n  firrtl.module @Foo() {\n    %wire = firrtl.wire : !firrtl.rwprobe<uint<32>>\n    %wire1 = firrtl.wire sym @sym : !firrtl.uint<32>\n    %0 = firrtl.ref.rwprobe <@Foo::@sym> : !firrtl.rwprobe<uint<32>>\n    %1 = firrtl.ref.cast %0 : (!firrtl.rwprobe<uint<32>>) -> !firrtl.rwprobe<uint<32>>\n    firrtl.ref.define %wire, %1 : !firrtl.rwprobe<uint<32>>\n  }\n  firrtl.module private @Bar() {\n    %wire = firrtl.wire : !firrtl.rwprobe<uint<32>>\n    %wire1 = firrtl.wire sym @sym : !firrtl.uint<32>\n    %0 = firrtl.ref.rwprobe <@Bar::@sym> : !firrtl.rwprobe<uint<32>>\n    %1 = firrtl.ref.cast %0 : (!firrtl.rwprobe<uint<32>>) -> !firrtl.rwprobe<uint<32>>\n    firrtl.ref.define %wire, %1 : !firrtl.rwprobe<uint<32>>\n    %wire2 = firrtl.wire : !firrtl.uint<1>\n  }\n}\n```\nRunning this through `circt-opt --firrtl-dedup` reports an error with the `@Foo::@sym` not being dedupable with `@Bar::@sym`. However, if I remove the `%wire2` which is only present in one module, dedup succeeds. This smells like dedup is failing because of the `%wire2`, but the pass then compares the two modules and erroneously thinks the symbol mismatch is the cause of the dedup failure.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-16",
+  "closed_at": "2025-10-17",
+  "code_blocks": [
+    "firrtl.circuit \"Foo\" attributes {annotations = [{\n  class = \"firrtl.transforms.MustDeduplicateAnnotation\",\n  modules = [\"~Foo|Foo\", \"~Foo|Bar\"]\n}]} {\n  firrtl.module @Foo() {\n    %wire = firrtl.wire : !firrtl.rwprobe<uint<32>>\n    %wire1 = firrtl.wire sym @sym : !firrtl.uint<32>\n    %0 = firrtl.ref.rwprobe <@Foo::@sym> : !firrtl.rwprobe<uint<32>>\n    %1 = firrtl.ref.cast %0 : (!firrtl.rwprobe<uint<32>>) -> !firrtl.rwprobe<uint<32>>\n    firrtl.ref.define %wire, %1 : !firrtl.rwprobe<uint<32>>\n  }\n  firrtl.module private @Bar() {\n    %wire = firrtl.wire : !firrtl.rwprobe<uint<32>>\n    %wire1 = firrtl.wire sym @sym : !firrtl.uint<32>\n    %0 = firrtl.ref.rwprobe <@Bar::@sym> : !firrtl.rwprobe<uint<32>>\n    %1 = firrtl.ref.cast %0 : (!firrtl.rwprobe<uint<32>>) -> !firrtl.rwprobe<uint<32>>\n    firrtl.ref.define %wire, %1 : !firrtl.rwprobe<uint<32>>\n    %wire2 = firrtl.wire : !firrtl.uint<1>\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

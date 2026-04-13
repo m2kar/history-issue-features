@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4148,
+  "issue_url": "https://github.com/verilator/verilator/issues/4148",
+  "title": "SIGSEGV after calling SystemVerilog task from C function",
+  "body": "Hi,\r\nThanks for maintaining Verilator, it helps us a lot!\r\n\r\nToday I got `SIGSEGV` when calling SystemVerilog task from C function through DPI-C, using Verilator v5.008(tag) that is built from source using g++ on Ubuntu 20.04.\r\nThe minimal code that reproduces the problem is as follows.\r\n\r\n`top.sv`:\r\n```systemverilog\r\n`default_nettype none\r\n`timescale 1ns/1ps\r\n\r\nmodule TOP;\r\n\r\n    localparam cycle = 1000.0 / 100.0;\r\n    localparam halfcycle = 0.5 * cycle;\r\n\r\n    logic clk = '0;\r\n\r\n    import \"DPI-C\" context task tb_c_wait();\r\n\r\n    export \"DPI-C\" task tb_sv_wait;\r\n    task automatic tb_sv_wait(input int n);\r\n        $display(\"tb_sv_wait(\", n, \")\");\r\n        repeat(n) @(negedge clk); // if we comment this line out, it works.\r\n    endtask\r\n\r\n    initial begin\r\n        forever begin\r\n            #halfcycle clk = ~clk;\r\n        end\r\n    end\r\n\r\n    initial begin\r\n        $display(\"calling tb_c_wait...\");\r\n        repeat(10) @(posedge clk);\r\n        tb_c_wait();\r\n        repeat(10) @(posedge clk);\r\n        $finish();\r\n    end\r\n\r\nendmodule\r\n`default_nettype wire\r\n```\r\n\r\n`dpi.c`:\r\n```c\r\n#include \"VTOP__Dpi.h\"\r\n#include <stdio.h>\r\n\r\nint tb_c_wait()\r\n{\r\n    printf(\"calling tb_sv_wait...\\n\");\r\n    fflush(stdout);\r\n    tb_sv_wait(10);\r\n    printf(\"done!\\n\");\r\n    fflush(stdout);\r\n    return 0;\r\n}\r\n```\r\n\r\nAnd I compiled the code with the following `Makefile`:\r\n\r\n```make\r\n.DEFAULT_GOAL := all\r\n\r\nVERILATOR_MAKE_FLAGS = --compiler gcc -MAKEFLAGS \"CXX=g++-11 LINK=g++-11 VERILATOR_ROOT=/path/to/verilator5 -j4\"\r\nall: dpi.c top.sv Makefile\r\n        @verilator --version\r\n        verilator --binary -sv -Wno-BLKANDNBLK $(VERILATOR_MAKE_FLAGS) --top-module TOP top.sv dpi.c\r\n```\r\n\r\nIt appears that the problem occurs when the internally-defined `VTOP___024root____Vdpiexp_TOP__DOT__tb_sv_wait_TOP` is called.\r\nSince the task does `@(negedge clock)`, the function uses `co_await` and therefore returns `VlCoroutine`. But the alias type `VTOP__Vcb_tb_sv_wait_t` defined in `VTOP__Syms.h` returns `void`.\r\n\r\nI have written a simple patch to fix this problem and am now writing a PullReq.\r\nCould you take a look at it when you have a moment?\r\n\r\nThanks in advance.",
+  "labels": [
+    "resolution: fixed",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-27",
+  "closed_at": "2023-04-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

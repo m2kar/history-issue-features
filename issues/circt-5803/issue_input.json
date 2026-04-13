@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5803,
+  "issue_url": "https://github.com/llvm/circt/issues/5803",
+  "title": "[FIRRTL][Dedup] Support deduplicating local inner symbol uses",
+  "body": "Consider:\r\n```firrtl\r\nFIRRTL version 3.0.0\r\n\r\ncircuit RWProbePortDedup: %[[\r\n{\r\n  \"class\": \"firrtl.transforms.MustDeduplicateAnnotation\",\r\n  \"modules\": [\"~RWProbePortDedup|A\",\"~RWProbePortDedup|B\"]\r\n}\r\n]]\r\n\r\n  module A:\r\n    input x : UInt<5>\r\n    output p : RWProbe<UInt<5>>\r\n\r\n    define p = rwprobe(x)\r\n\r\n  module B:\r\n    input x : UInt<5>\r\n    output p : RWProbe<UInt<5>>\r\n\r\n    define p = rwprobe(x)\r\n\r\n  module RWProbePortDedup:\r\n    input x : UInt<5>\r\n    output p_a : RWProbe<UInt<5>>\r\n    output p_b : RWProbe<UInt<5>>\r\n\r\n    inst a of A\r\n    connect a.x, x\r\n    define p_a = a.p\r\n\r\n    inst b of B\r\n    connect b.x, x\r\n    define p_b = b.p\r\n```\r\n\r\nRun with `firtool -dedup`, Dedup will be unable to deduplicate `A` and `B` because of the `RWProbeOp` operations differ in their target:\r\n\r\n```\r\nrwprobe_port_dedup.fir:3:1: error: module \"B\" not deduplicated with \"A\"\r\ncircuit RWProbePortDedup: %[[\r\n^\r\nrwprobe_port_dedup.fir:14:16: note: first operation has attribute 'target' with value #hw.innerNameRef<@A::@sym>\r\n    define p = rwprobe(x)\r\n               ^\r\nrwprobe_port_dedup.fir:20:16: note: second operation has value #hw.innerNameRef<@B::@sym>\r\n    define p = rwprobe(x)\r\n               ^\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-08",
+  "closed_at": "2023-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

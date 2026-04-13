@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5832,
+  "issue_url": "https://github.com/verilator/verilator/issues/5832",
+  "title": "Support getting range from unpacked array handles",
+  "body": "Support was added for finding unpacked arrays via the VPI, however this did not include support for getting the ranges of the arrays. This lack of functionality is causing cocotb runs to fail.\n\nPer IEEE 1800-2017 37.11:\n\n> vpi_iterate(vpiRange, instance_array_handle) shall return the set of instance array ranges beginning with the\nleftmost range of the array declaration and iterating through the rightmost range. Using the vpiLeftRange/\nvpiRightRange properties returns the bounds of the leftmost dimension of a multidimensional array.\n\nFor example, to get the range of the outermost dimension of an unpacked array the following code would be correct.\n```c\nvpiHandle iter = vpi_iterate(vpiRange, hdl);\nassert(iter != NULL);\nvpiHandle rangeHdl = vpi_scan(iter);\nassert(rangeHdl != NULL);\nint leftBound = vpi_get(vpiLeftRange, rangeHdl);\nint rightBound = vpi_get(vpiRightRange, rangeHdl);\nvpi_release_handle(rangeHdl);  // optional, but shouldn't error\nvpi_release_handle(iter);  // ends iterator early, *required*\n```",
+  "labels": [
+    "resolution: no fix needed",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-06",
+  "closed_at": "2025-03-15",
+  "code_blocks": [
+    "vpiHandle iter = vpi_iterate(vpiRange, hdl);\nassert(iter != NULL);\nvpiHandle rangeHdl = vpi_scan(iter);\nassert(rangeHdl != NULL);\nint leftBound = vpi_get(vpiLeftRange, rangeHdl);\nint rightBound = vpi_get(vpiRightRange, rangeHdl);\nvpi_release_handle(rangeHdl);  // optional, but shouldn't error\nvpi_release_handle(iter);  // ends iterator early, *required*\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

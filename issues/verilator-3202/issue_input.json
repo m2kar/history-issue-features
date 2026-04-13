@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3202,
+  "issue_url": "https://github.com/verilator/verilator/issues/3202",
+  "title": "Verilator thinks code contains delayed assignment for large arrays",
+  "body": "I'm running Verilator as a linter.\r\n\r\nIn my code I have a state array with 256 bytes declared as:\r\n  reg [7 : 0]  state_iaddr;\r\n\r\nThe state array is reset using a for loop:\r\n\r\n  always @ (posedge clk)\r\n    begin: reg_update\r\n      integer i;\r\n\r\n      if (!reset_n) begin\r\n        for (i = 0 ; i < 256 ; i = i + 1) begin\r\n          state[i] <= 8'h0;\r\n        end\r\n...\r\n...\r\n\r\nBut when linting I get the following error message:\r\n\r\nverilator +1364-2001ext+ --lint-only -Wall -Wno-fatal -Wno-DECLFILENAME ../src/rtl/rc4_core.v\r\n%Error-BLKLOOPINIT: ../src/rtl/rc4_core.v:123:20: Unsupported: Delayed assignment to array inside for loops (non-delayed is ok - see docs)\r\n  123 |           state[i] <= 8'h0;\r\n      |                    ^~\r\n\r\nBy varying the loop exit condition (i < X), I can see that when the X is 64 or smaller, Verilator does not respond with the error. But if the loop exit condition is 65 and larger (up to the array size), I get the error message above. I believe that this is an incorrect response from Verilator.\r\n\r\nI'm using 'verilator --version': \"Verilator 4.200 2021-03-12 rev v4.110-43-g5022e81af (mod)\"\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-16",
+  "closed_at": "2021-11-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

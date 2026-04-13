@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3205,
+  "issue_url": "https://github.com/verilator/verilator/issues/3205",
+  "title": "Error when readmem file does not end at the final address (regardless of whether the file has address specifications)",
+  "body": "I have this statement in a Verilog module:\r\n```\r\n$readmemh(\"arr.hex\", arr, 0, 7);\r\n```\r\nAnd I have a file `arr.hex` that contains address specifications:\r\n```\r\n// 8 x 8-bit memory contents\r\n00\r\n11\r\n22\r\n\r\n// skip entry 3\r\n@4\r\n44\r\n55\r\n66\r\n77\r\n\r\n// return to entry 3\r\n@3\r\n33\r\n```\r\nWhen the system task executes, Verilator aborts with this error:\r\n```\r\n%Error: foo.hex:16: $readmem file ended before specified final address (IEEE 2017 21.4)\r\n```\r\n\r\nIn Section 21.4 of the SV 2017 spec, I see this:\r\n> A warning shall be issued if the number of data words in the file differs from the number of words in the range implied by the start through finish addresses and no address specifications appear within the data file. In this case, the data words that are contained in the file shall be loaded into the memory beginning at the start address, and memory addresses for which the file does not contain data words are not modified by the operation.\r\n\r\nThis is about files where \"no address specifications appear within the data file\", so it does not apply to my file.  But I am unable to find any other part of Section 21.4 that deals with the final address.  Is there another paragraph that I'm missing?\r\n\r\nIf this is the cited paragraph: Is it intentional that Verilator treats this as a fatal error, instead of a warning?  And is it intentional that Verilator applies this also to files that contain address specifications?\r\n\r\nThe error is reported at line 1913 of `include/verilated.cpp` (added in commit 918df2e6):\r\n```\r\nif (VL_UNLIKELY(m_end != ~0ULL && m_addr <= m_end)) {\r\n        VL_FATAL_MT(m_filename.c_str(), m_linenum, \"\",\r\n                    \"$readmem file ended before specified final address (IEEE 2017 21.4)\");\r\n    }\r\n```\r\n\r\nI can work around the issue by adding an address specification to the end of my file:\r\n```\r\n...\r\n// return to entry 3\r\n@3\r\n33\r\n\r\n// put the address back to the end\r\n@8\r\n```\r\nBut this uses an address specification that is outside the specified range.  Verilator accepts this file without even a warning; but the spec seems to say that Verilator should report an error:\r\n> When addressing information is specified both in the system task and in the data file, the addresses in the data file shall be within the address range specified by the system task arguments; otherwise, an error message is issued, and the load operation is terminated.\r\n\r\nAnother workaround is to use an address and a value, at the end of the file:\r\n```\r\n...\r\n// return to entry 3\r\n@3\r\n33\r\n\r\n// put the address back to the end\r\n@7\r\n77\r\n```\r\nIn my example, though, I've already specified the contents of that final location, so this is a duplicate write.  (I don't see anything in the spec about warning or erroring if the same location is written multiple times, possibly with different values.  Verilator doesn't report anything.)",
+  "labels": [
+    "area: lint",
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-17",
+  "closed_at": "2021-12-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

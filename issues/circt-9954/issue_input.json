@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9954,
+  "issue_url": "https://github.com/llvm/circt/pull/9954",
+  "title": "[FIRRTL][LowerXMR] Add inner symbols on ports",
+  "body": "When a `RefSendOp` references a port (block argument), add an inner symbol\ndirectly in the `LowerXMR` pass instead of creating an intermediate node.\nThis produces cleaner output and avoids unnecessary intermediate wires.\nThis is additionally done to work around problems with certain formal\ntools which treat output ports that are assigned the value of a probe node\nas \"uncovered\".\n\nBefore:\n\n    firrtl.module @Foo(in %a: !firrtl.uint<8>) {\n      %a_probe = firrtl.node sym @sym interesting_name %a\n    }\n    // Verilog: wire [7:0] a_probe = a;\n    // XMR: `define ref_Foo_a_probe a_probe\n\nAfter:\n\n    firrtl.module @Foo(in %a: !firrtl.uint<8> sym @sym) {\n    }\n    // Verilog: (no intermediate wire)\n    // XMR: `define ref_Foo_a a\n\nAI-assisted-by: Augment (Claude Sonnet 4.5)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-16",
+  "closed_at": "2026-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2529,
+  "issue_url": "https://github.com/llvm/circt/issues/2529",
+  "title": "[SV] Verification failures for inout operations with type alias",
+  "body": "```mlir\r\n  hw.type_scope @_Foo  {\r\n    hw.typedecl @_Foo_type0 : !hw.struct<io: i1>\r\n  }\r\n  hw.module @Foo() -> () {\r\n    %.b.output = sv.wire  : !hw.inout<typealias<@_Foo_type0, !hw.struct<io: i1>>>\r\n    %0 = sv.struct_field_inout %.b.output[\"io\"] : !hw.inout<typealias<@_Foo_type0, !hw.struct<io: i1>>>\r\n    hw.output\r\n  }\r\n```\r\n\r\nCurrently this raises a verification failure. \r\n```\r\nbar.mlir:7:10: error: 'sv.struct_field_inout' op operand #0 must be an inout type with struct field, but got '!hw.inout<typealias<@_Foo_type0, !hw.struct<io: i1>>>'\r\n    %0 = sv.struct_field_inout %.b.output[\"io\"] : !hw.inout<typealias<@_Foo_type0, !hw.struct<io: i1>>>\r\n```\r\nThis is caused by the ods definition of `InOutStructType`. It is necessary to look at an inner types or a canonical type of type alias. \r\n\r\nThis problem is also applicable to other inout operations like array_index_inout, part_select_inout.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-27",
+  "closed_at": "2022-01-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

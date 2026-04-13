@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2486,
+  "issue_url": "https://github.com/verilator/verilator/issues/2486",
+  "title": "Optimize simple data movement",
+  "body": "Some design might have long paths that only move data without any combinational logic or control flow.\r\nUsing circular queue may results in some speedup as unnecessary copy can be skipped, or even more speedup if it happens to increase cache hit rate.\r\nThis does not optimize every design, but I think it's reasonable optimization to have (at least optionally), possibly with threshold argument from user.\r\nFollowing is POC design & verilator result\r\n\r\n```\r\nmodule SimpleShift(\r\n  input         clock,\r\n  input         reset,\r\n  input  [31:0] io_in,\r\n  output [31:0] io_out\r\n);\r\n  reg [31:0] regs_0;\r\n  reg [31:0] regs_1;\r\n  ...\r\n  reg [31:0] regs_8;\r\n  reg [31:0] regs_9;\r\n  assign io_out = regs_0; // @[main.scala 16:64]\r\n  always @(posedge clock) begin\r\n    regs_0 <= regs_1;\r\n    regs_1 <= regs_2;\r\n    regs_2 <= regs_3;\r\n    regs_3 <= regs_4;\r\n    regs_4 <= regs_5;\r\n    regs_5 <= regs_6;\r\n    regs_6 <= regs_7;\r\n    regs_7 <= regs_8;\r\n    regs_8 <= regs_9;\r\n    regs_9 <= io_in;\r\n  end\r\nendmodule\r\n```\r\n\r\n```sh\r\nverilator --cc SimpleShift.v\r\n```\r\n\r\nCurrent result\r\n```cpp\r\nVL_INLINE_OPT void VSimpleShift::_sequent__TOP__1(VSimpleShift__Syms* __restrict vlSymsp) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    VSimpleShift::_sequent__TOP__1\\n\"); );\r\n    VSimpleShift* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n    // Body\r\n    vlTOPp->SimpleShift__DOT__regs_0 = vlTOPp->SimpleShift__DOT__regs_1;\r\n    vlTOPp->io_out = vlTOPp->SimpleShift__DOT__regs_0;\r\n    vlTOPp->SimpleShift__DOT__regs_1 = vlTOPp->SimpleShift__DOT__regs_2;\r\n    vlTOPp->SimpleShift__DOT__regs_2 = vlTOPp->SimpleShift__DOT__regs_3;\r\n    vlTOPp->SimpleShift__DOT__regs_3 = vlTOPp->SimpleShift__DOT__regs_4;\r\n    vlTOPp->SimpleShift__DOT__regs_4 = vlTOPp->SimpleShift__DOT__regs_5;\r\n    vlTOPp->SimpleShift__DOT__regs_5 = vlTOPp->SimpleShift__DOT__regs_6;\r\n    vlTOPp->SimpleShift__DOT__regs_6 = vlTOPp->SimpleShift__DOT__regs_7;\r\n    vlTOPp->SimpleShift__DOT__regs_7 = vlTOPp->SimpleShift__DOT__regs_8;\r\n    vlTOPp->SimpleShift__DOT__regs_8 = vlTOPp->SimpleShift__DOT__regs_9;\r\n    vlTOPp->SimpleShift__DOT__regs_9 = vlTOPp->io_in;\r\n}\r\n```\r\n\r\nExpected result\r\n```cpp\r\nVL_INLINE_OPT void VSimpleShift::_sequent__TOP__1(VSimpleShift__Syms* __restrict vlSymsp) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    VSimpleShift::_sequent__TOP__1\\n\"); );\r\n    VSimpleShift* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n    // Body\r\n    vlTOPp->__OptQueue0->arr[vlTOPp->__OptQueue0->head] = vlTOPp->io_in;\r\n    vlTOPp->__OptQueue0->head = (vlTOPp->__OptQueue0->head + 1) % vlTOPp->__OptQueue0->size;\r\n    vlTOPp->io_out = vlTOPp->__OptQueue0->arr[vlTOPp->__OptQueue0->head];\r\n}\r\n```\r\n\r\nHow do you think about it? Any concerns/pitfalls in this optimization?",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-27",
+  "closed_at": "2025-10-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

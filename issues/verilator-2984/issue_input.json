@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2984,
+  "issue_url": "https://github.com/verilator/verilator/issues/2984",
+  "title": "The out-of-bounds part-select write behavior is inconsistent with IEEE",
+  "body": "Hi,\r\nI‘m using the release version of verilator-4.202 and here is my example:\r\n\r\n\r\n```verilog\r\nmodule top(clk);\r\n\tinput clk;\r\n\tlogic [15:0] index;\r\n\tlogic [15:0] data;\r\n\tlogic [15:0] mem[7:0];\r\n\r\n\talways @(posedge clk)\r\n\t\tbegin\r\n\t\t\tdata  <= data + 1'b1;\r\n\t\t\tindex <= index + 1'b1;\r\n\t\t\tmem[index] <= data;  // index will be out of range\r\n\t\tend\r\nendmodule\r\n````\r\n\r\nI notice that the verilator output cpp is as follows:\r\n```c++    \r\nVL_INLINE_OPT void Vtop::_sequent__TOP__3(Vtop__Syms* __restrict vlSymsp) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtop::_sequent__TOP__3\\n\"); );\r\n    Vtop* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n    // Variables\r\n    // Begin mtask footprint all: \r\n    CData/*2:0*/ __Vdlyvdim0__top__DOT__mem__v0;\r\n    SData/*15:0*/ __Vdly__top__DOT__data;\r\n    SData/*15:0*/ __Vdly__top__DOT__index;\r\n    SData/*15:0*/ __Vdlyvval__top__DOT__mem__v0;\r\n    // Body\r\n    __Vdly__top__DOT__index = vlTOPp->top__DOT__index;\r\n    __Vdly__top__DOT__data = vlTOPp->top__DOT__data;\r\n    __Vdly__top__DOT__data = (0xffffU & ((IData)(1U) \r\n                                         + (IData)(vlTOPp->top__DOT__data)));\r\n    __Vdly__top__DOT__index = (0xffffU & ((IData)(1U) \r\n                                          + (IData)(vlTOPp->top__DOT__index)));\r\n    __Vdlyvval__top__DOT__mem__v0 = vlTOPp->top__DOT__data;\r\n    __Vdlyvdim0__top__DOT__mem__v0 = (7U & (IData)(vlTOPp->top__DOT__index));\r\n    vlTOPp->top__DOT__data = __Vdly__top__DOT__data;\r\n    vlTOPp->top__DOT__index = __Vdly__top__DOT__index;\r\n    vlTOPp->top__DOT__mem[__Vdlyvdim0__top__DOT__mem__v0] \r\n        = __Vdlyvval__top__DOT__mem__v0;\r\n}\r\n```\r\n\r\nthis code `__Vdlyvdim0__top__DOT__mem__v0 = (7U & (IData)(vlTOPp->top__DOT__index));` shows that only the lower 3-bit used as the index.\r\nIf the index exceeds the depth of the array, will incorrectly assigned to the array.\r\nIn VCS simulation, indexes that exceed the array depth are ignored and no value is assigned.\r\n\r\nCan you solve this problem by keeping the simulation behavior of the verilator consistent with that of the VCS?\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2021-05-27",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2280,
+  "issue_url": "https://github.com/verilator/verilator/issues/2280",
+  "title": "--build with CMake might not make sense",
+  "body": "I am under the impression that the new `--build` with CMake does not make sense as the intention with CMake is to use the `verilate` function we provide here:\r\nhttps://github.com/verilator/verilator/blob/6ed10b7fde1f2194c22345055f63294420b142d0/verilator-config.cmake.in#L116\r\nfrom the user's CMake script, which adds rules to run verilator and include the objects in a target, e.g. like this:\r\nhttps://github.com/verilator/verilator/blob/6ed10b7fde1f2194c22345055f63294420b142d0/examples/cmake_hello_c/CMakeLists.txt#L32-L38\r\n\r\nWhen the user executes the CMake build, CMake will run Verilator with the `--make cmake`, slurp the emitted .cmake files which then tell the running build what files to pick up and add to the executable target, which is the ultimate goal of the CMake build..\r\n\r\nI am struggling to make sense of how what we are doing right now could be useful with CMale:\r\nhttps://github.com/verilator/verilator/blob/6ed10b7fde1f2194c22345055f63294420b142d0/src/Verilator.cpp#L590-L602\r\nWe just try to pick up the CMakeList.txt from the directory Verilator was invoked from? But surely if we have that CMakeList.txt, we would just use the `verilate` cmake function in that CMakeList.txt, otherwise.\r\n\r\nThe effect of this behaviour on the t_flag_build_cmake test is that it invokes Verilator with `--make cmake --build`, from the test_regress directory, which contains a CMakeLists.txt which itself calls Verilator again underneath (luckily without `--build` so it's not infinitely recursive). The recursive call re-verilated everything with different options, and CMake ends up building that output.. Strangely the test passes when run from a clean checkout (`rm -rf test_regress/obj_vlt/`). It also passes on a first re-run, but fails on a 2nd rerun...",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-23",
+  "closed_at": "2020-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

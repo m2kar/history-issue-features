@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4411,
+  "issue_url": "https://github.com/verilator/verilator/pull/4411",
+  "title": "Fix jumping over object initialization",
+  "body": "V3LinkJump generates `goto`s which can cause jumps over initalizations of objects that are within the same scope we are jumping into. This will result in a compilation error, or worse, in case the compiler dosn't recognize this issue, it would cause the destructor to be called on an unintialized object.\r\n\r\nEg. (from the included regression test):\r\n\r\n```cxx\r\nVt_jumps_uninit_destructor_call___024unit__03a__03aFoo__Vclpkg__DepSet_hd4244f18__0.cpp:24:9: error: jump to label ‘__Vlabel1’\r\n   24 |         __Vlabel1: ;\r\n      |         ^~~~~~~~~\r\nVt_jumps_uninit_destructor_call___024unit__03a__03aFoo__Vclpkg__DepSet_hd4244f18__0.cpp:17:18: note:   from here\r\n   17 |             goto __Vlabel1;\r\n      |                  ^~~~~~~~~\r\nVt_jumps_uninit_destructor_call___024unit__03a__03aFoo__Vclpkg__DepSet_hd4244f18__0.cpp:19:20: note:   crosses initialization of ‘VlForkSync __Vfork_1__sync’\r\n   19 |         VlForkSync __Vfork_1__sync;\r\n      |\r\n```\r\n\r\nOne way to avoid this issue, is to wrap the part of code that instantiates the object and uses it into a separate scope. Jumping over that scope is going to be safe, because the entire lifetime of that object would be contained wtihin it. To achieve this, I added a new node called `AstCLocalScope`. It doesn't have any functional use besides informing verilator that the code generated from statements underneath it needs to be contained in a dedicated, unnamed C/C++ scope in the final generated code. Whenever we are inside of an `AstJumpBlock` we can use it to solve this issue.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-09",
+  "closed_at": "2023-08-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

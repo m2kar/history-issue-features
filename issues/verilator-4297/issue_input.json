@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4297,
+  "issue_url": "https://github.com/verilator/verilator/issues/4297",
+  "title": "Suspendable procedures never split into multiple files",
+  "body": "I have a testbench that calls a lot of tasks with timing controls in a initial block. Verilator generates a 9MB+ cpp file. It takes forever to compile. Here is a testcase that also generate a large cpp file (2.7MB).\r\n[t_coroutine_split.tar.gz](https://github.com/verilator/verilator/files/11760393/t_coroutine_split.tar.gz)\r\n\r\nIn V3Sched [`orderSequentially`](https://github.com/verilator/verilator/blob/d1ff81a41c75ae4568bcb6d4f8f0cbc5688e76a1/src/V3Sched.cpp#L214), a suspendable procedure will be convert to a separate function and be replaced with a function call statement. But [`splitCheck`](https://github.com/verilator/verilator/blob/d1ff81a41c75ae4568bcb6d4f8f0cbc5688e76a1/src/V3Sched.cpp#L122) is never used to check that new function.\r\n\r\nI've tried simply adding `splitCheck` in orderSequentially:\r\n```diff\r\n@@ -254,8 +254,11 @@ void orderSequentially(AstCFunc* funcp, const LogicByScope& lbs) {\r\n                             bodyp\r\n                                 = new AstWhile{flp, new AstConst{flp, AstConst::BitTrue{}}, bodyp};\r\n                         }\r\n+                        subFuncp->addStmtsp(bodyp);\r\n+                        splitCheck(subFuncp);\r\n+                    } else {\r\n+                      subFuncp->addStmtsp(bodyp);\r\n                     }\r\n-                    subFuncp->addStmtsp(bodyp);\r\n                 }\r\n             } else {\r\n                 logicp->unlinkFrBack();\r\n```\r\n\r\nVerilated code splits into smaller files, but there are errors during compilation.\r\n\r\n``` log\r\nVt_coroutine_split___024root__DepSet_h18267415__0.cpp: In function ‘VlCoroutine Vt_coroutine_split___024root___eval_initial__TOP__0(Vt_coroutine_split___024root*)’:\r\nVt_coroutine_split___024root__DepSet_h18267415__0.cpp:41:1: warning: no return statement in function returning non-void [-Wreturn-type]\r\n   41 | }\r\n      | ^\r\nVt_coroutine_split___024root__DepSet_h18267415__0.cpp: In function ‘void Vt_coroutine_split___024root___eval_initial__TOP__0__0(Vt_coroutine_split___024root*)’:\r\nVt_coroutine_split___024root__DepSet_h18267415__0.cpp:48:5: error: unable to find the promise type for this coroutine\r\n   48 |     co_await vlSelf->__VtrigSched_h7a97c1b5__0.trigger(0U,\r\n      |     ^~~~~~~~\r\n```\r\nAny ideas?",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-15",
+  "closed_at": "2023-06-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

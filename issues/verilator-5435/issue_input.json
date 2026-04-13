@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5435,
+  "issue_url": "https://github.com/verilator/verilator/issues/5435",
+  "title": "Fix associative array next/prev mis-propagating constant",
+  "body": "```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.029 devel rev v5.028-49-g1c38744fd\r\n```\r\n\r\nHello. The associative array .next and .prev methods propagate constants which causes g++ compilation errors.\r\n\r\n## Working Example\r\n\r\n```systemverilog\r\nmodule t;\r\n\r\n    typedef bit [7:0] data_t;\r\n    data_t dict [data_t];\r\n\r\n    initial begin\r\n        data_t a;\r\n\r\n        dict.first(a);\r\n        dict.next(a);\r\n\r\n        $finish;\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\n## Argument with initial value causes g++ error\r\n\r\n```systemverilog\r\nmodule t;\r\n\r\n    typedef bit [7:0] data_t;\r\n    data_t dict [data_t];\r\n\r\n    initial begin\r\n        data_t a;\r\n\r\n        a = 4; // set to number instead of .first\r\n        dict.next(a);\r\n\r\n        $finish;\r\n    end\r\n\r\nendmodule\r\n```\r\n```\r\ng++ -Os  -I.  -MMD -Iverilator/include -Iverilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-shadow -Wno-sign-compare -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable    -DVL_TIME_CONTEXT   -c -o Vnext_casting__ALL.o Vnext_casting__ALL.cpp\r\nIn file included from Vnext_casting__ALL.cpp:8:\r\nVnext_casting___024root__DepSet_hd9543883__0__Slow.cpp: In function ‘void Vnext_casting___024root___eval_initial__TOP(Vnext_casting___024root*)’:\r\nVnext_casting___024root__DepSet_hd9543883__0__Slow.cpp:35:70: error: cannot bind non-const lvalue reference of type ‘unsigned char&’ to a value of type ‘unsigned int’\r\n   35 |     t__DOT__unnamedblk1__DOT__a_exists = vlSelfRef.t__DOT__dict.next(4U);\r\n      |                                                                      ^~\r\nIn file included from verilator/include/verilated.h:1018,\r\n                 from Vnext_casting__pch.h:21,\r\n                 from Vnext_casting.cpp:4,\r\n                 from Vnext_casting__ALL.cpp:3:\r\nverilator/include/verilated_types.h:978:21: note:   initializing argument 1 of ‘int VlAssocArray<T_Key, T_Value>::next(T_Key&) const [with T_Key = unsigned char; T_Value = unsigned char]’\r\n  978 |     int next(T_Key& indexr) const {\r\n      |              ~~~~~~~^~~~~~\r\n```\r\n## Example 2\r\n\r\nExample 2 moved to #5439",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-06",
+  "closed_at": "2024-09-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

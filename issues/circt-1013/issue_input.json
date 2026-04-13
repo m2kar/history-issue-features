@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1013,
+  "issue_url": "https://github.com/llvm/circt/issues/1013",
+  "title": "Annotation Verification",
+  "body": "FIRRTL Annotations that are parsed into FIRRTL Dialect should be verified in two ways:\r\n\r\n1. Any annotations which do not apply to the circuit should be a disable-able error.\r\n2. Annotations which are applied and include subfield/subindex sub-targets should be validated that they point to legal things.\r\n\r\n(1) is important because it helps us to know that we're pulling in the right annotation file, that the annotation file isn't malformed, and that our annotation parsing works. By default, weird-looking annotations are promoted to circuit target annotations. This should start erroring so that we know what custom annotations we need to worry about.\r\n\r\n(2) Matters for things like lowering. FIRRTL allows for field names to be numeric. This can result in annotations incorrectly aliasing to the wrong thing if they aren't verified first. Consider the following where `a[0]` doesn't exist and the lowering step will incorrectly apply this to a new wire `a_0`:\r\n\r\n```scala\r\ncircuit Baz: %[[{\"a\":null,\"target\":\"~Baz|Baz>a[0]\"}]]\r\n  module Baz:\r\n    wire a: {0: UInt<1>}\r\n```\r\n\r\nThere are more pedestrian cases of just incorrect annotations pointing to things that don't exist:\r\n\r\n```scala\r\ncircuit Baz: %[[{\"a\":null,\"target\":\"~Baz|Baz>a.b\"}]]\r\n  module Baz:\r\n    wire a: UInt<1>\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-06",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

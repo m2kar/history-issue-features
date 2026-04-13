@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2526,
+  "issue_url": "https://github.com/verilator/verilator/pull/2526",
+  "title": "Fix double-free on shared protect-lib",
+  "body": "During recent debugging, I found that double-free error sometimes happens if a protect-lib is a shared library. (Nothing bad happens on a static library.)\r\n\r\nI added tests in 291c647da386dbe60113a51f1dc77196b665fbf8 .\r\nDouble-free happens like [this](https://travis-ci.com/github/yTakatsukasa/verilator/jobs/379210448#L1900).\r\n\r\nThe double-free happens because\r\n1. verilated.o is used both in protect-lib and the main module.\r\n2. but dynamic linker identifies the two veirlated.o in both in shared lib and the main executable are same\r\n3. dtor of each global variable is called twice (from the shared object and main executable)-> double free\r\n\r\nI added a guard to call ctor/dtor just once in 0954f5e33b1c657fbc9f01a00bf2f4a56665452a  by enclosing VerilatedImpData in a union. (members of union are not initialized automatically)\r\nIt would be much simpler if I took the either way below.\r\n- allocalte VerilatedImp dynamically or\r\n- enclose VerilatedImp::s_s in a function local static variable\r\n\r\nBut VerilatedImpl seems performance critical, so I put it in union. This approach just adds a check before and after main().\r\nNo performance impact during main().\r\nThe diff looks long, but most of them are just replacing `s_s` to `s_s.m`.\r\n\r\nThe other commits  (fd0e05251b841f1082f5311f57a95ded8017f9b7 and d0a96a7ef798ec84d6a19b4a1aa884e05c8c2e5b) are workarounds for specific platform (older ld and mac).\r\n\r\nI confirmed that tests pass on all platforms as https://travis-ci.com/github/yTakatsukasa/verilator/builds/181951727 .\r\n\r\nBTW I also tried -fvisibility=hidden trick so that shared libraries and the main executable do not share the same instance, but the trick cause a side effect of not $finish failure. (Verilated::gotFinish() does not propagate from shared lib to the main executable).\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-08-30",
+  "closed_at": "2020-08-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

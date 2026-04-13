@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5573,
+  "issue_url": "https://github.com/llvm/circt/pull/5573",
+  "title": "[SCF-To-Calyx] Fixes Bugs ",
+  "body": "(Same changes as #5557, just using my own fork instead of Andrew's ... sorry for confusing way of doing this). \r\n\r\nTwo small changes in `SCFToCalyx` (they're unrelated but both pretty small so I thought both could go in a single PR) \r\n\r\n1)  When we see a  memref w/o dimensions (e.g., `memref<i32>`), we should lower it in Calyx to a 1 dimensional memory of size 1, since Calyx memories must have explicitly defined dimensions. Before it was erroring out when trying to export to Calyx, complaining that Calyx doesn't support \"0-dimensional\" memories. \r\n\r\n2) This is a bit nuanced, but I also changed the way we compile binOps (e.g., multiply, divide, etc.) to be more correct. \r\nPreviously, binOps were compiled into groups as follows:\r\n```\r\ngroup perform_binOp {\r\n  binOp.go = 1'd1; \r\n  // assign to binOp.left and binOp.right \r\n  reg.write_en = binOp.done; \r\n  reg.in = binOp.out; \r\n  perform_binOp[done] = reg.done; \r\n}\r\n```\r\nHowever, this is technically triggering `binOp.go` for the entire group, which means that it's being triggered even for the cycle that we spend writing into the register. The binOp being triggered for an extra cycle normally doesn't matter, but it does sometimes affect the `binOp.out` value when we try to read from it later on. Specifically, I was running into tricky bugs when the `binOp` was a signed division, but this fixed it: \r\n```\r\ngroup perform_binOp {\r\n  binOp.go = !binOp.done ? 1'd1; \r\n  // everything else is the same \r\n}\r\n```\r\nJust as an FYI, this way of compiling groups (with the ` binOp.go = !binOp.done ? 1'd1;`) is the standard way to perform a \"binOp then write to register\" in Calyx. For example, the Dahlia->Calyx compiler [does this same behavior](https://github.com/cucapra/calyx/blob/d95f53ef7a7694cb422e8baf8a412211eb1d3b81/tests/frontend/dahlia/dot-func.expect#L44)",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-12",
+  "closed_at": "2023-07-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

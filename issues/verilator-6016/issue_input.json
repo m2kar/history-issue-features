@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6016,
+  "issue_url": "https://github.com/verilator/verilator/issues/6016",
+  "title": "Incorrect simulation result due to some optimizations",
+  "body": "The following is the problematic code `test.v`. I’ve tried my best to minimize it, but it seems the error only occurs during optimization of relatively complex expressions, so it still appears a bit long.\n\n```verilog\n`timescale 1ns/1ps\n`define stop $stop\n`define checkd(gotv, expv) \\\ndo if ((gotv) !== (expv)) begin \\\n  $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n  `stop; \\\nend while(0);\nmodule top (out20);\n\nreg in0;\nreg signed [7:0] in4;\nwire [1:0] wire_0;\noutput wire out20;\n\nassign wire_0 = in4[0:0] ? ({{7{in4[3:1]}}, 12'd201} & 2'h2) : (!(in0) >> 9'b1111);\nassign out20 = wire_0[0:0];\n\ninitial begin\n  #10;\n  in4 = 16'b1111_1110;\n  in0 = 7'b0;\n  #10;\n  `checkd(out20, '0);\n  $write(\"*-* All Finished *-*\\n\");\n  $finish;\nend\n\nendmodule\n```\n\nYou can reproduce the issue with the following commands:\n\n```\nverilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n```\n\nVerilator output:\n\n```\n%Error: test.v:22:  got=1 exp=0\n%Error: test.v:22: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nHowever, Icarus Verilog completes successfully with `*-* All Finished *-*`. \nThe value of `out20` is `0`, because `in4 = 16'b1111_1110`, so `in4[0:0] = 0`, which causes `wire_0 = (!(in0) >> 9'b1111)`, resulting in `wire_0 = 0`, hence `out20 = 0`.\n\nDuring local debugging, I found that enabling the following options makes Verilator produce the correct output:\n\n```\n-fno-dfg-peephole\n-fno-dfg\n-fno-dfg-post-inline\n-fno-const-bit-op-tree\n-fno-dfg-pre-inline \n-fno-gate\n```\n\nIt seems to be related to optimization, but I'm not familiar with Verilator's optimization mechanisms, so it's difficult for me to debug further.\n\n### System details:\n\n* Verilator version: Verilator 5.037 devel rev v5.036-64-g2f6ecd185\n* OS: Ubuntu 22.04.5 LTS (Jammy), Kernel/Release: 22.04\n",
+  "labels": [
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-17",
+  "closed_at": "2025-05-18",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define stop $stop\n`define checkd(gotv, expv) \\\ndo if ((gotv) !== (expv)) begin \\\n  $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n  `stop; \\\nend while(0);\nmodule top (out20);\n\nreg in0;\nreg signed [7:0] in4;\nwire [1:0] wire_0;\noutput wire out20;\n\nassign wire_0 = in4[0:0] ? ({{7{in4[3:1]}}, 12'd201} & 2'h2) : (!(in0) >> 9'b1111);\nassign out20 = wire_0[0:0];\n\ninitial begin\n  #10;\n  in4 = 16'b1111_1110;\n  in0 = 7'b0;\n  #10;\n  `checkd(out20, '0);\n  $write(\"*-* All Finished *-*\\n\");\n  $finish;\nend\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n",
+    "%Error: test.v:22:  got=1 exp=0\n%Error: test.v:22: Verilog $stop\nAborting...\nAborted (core dumped)\n",
+    "-fno-dfg-peephole\n-fno-dfg\n-fno-dfg-post-inline\n-fno-const-bit-op-tree\n-fno-dfg-pre-inline \n-fno-gate\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

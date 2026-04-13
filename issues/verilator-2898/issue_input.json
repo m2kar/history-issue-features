@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2898,
+  "issue_url": "https://github.com/verilator/verilator/issues/2898",
+  "title": "V3Premit goes into infinite loop on always read-and-write",
+  "body": "verilator version：master   2021.4.16\r\n\r\nerror message：\r\nNo error information is displayed.   No cpp file is generated.\r\n\r\ncmd is:\r\nverilator_bin --sc --top-module twocounter  twocounter.v\r\n\r\nCode twocounter.v:\r\n\r\n```\r\ntypedef struct packed {\r\n    logic [3-1:0]  car_en;\r\n} car_liquid_rpv_s;\r\ntypedef struct packed {\r\n    car_liquid_rpv_s   liquid_rpv;\r\n}car_rpv_s;\r\ntypedef struct packed {\r\n    logic  car_enable;\r\n    car_rpv_s   car_rpv;\r\n    logic [2-1:0] car_sn;\r\n} car_pv_s;\r\ntypedef struct packed{\r\n    car_pv_s   car_pv;\r\n}car_sch_ctxt_s;\r\nmodule twocounter (car_sch_rsp_pv_ctxt, car_action_pv_ctxt);\r\n    input car_sch_rsp_pv_ctxt;\r\n    output car_action_pv_ctxt;\r\n    car_sch_ctxt_s  car_sch_rsp_pv_ctxt;\r\n    car_sch_ctxt_s  car_action_pv_ctxt;\r\n    always @(*) begin\r\n        car_action_pv_ctxt = car_sch_rsp_pv_ctxt;\r\n        if (car_sch_rsp_pv_ctxt.car_pv.car_enable == 1'b1) begin\r\n            car_action_pv_ctxt.car_pv.car_rpv.liquid_rpv.car_en[ car_action_pv_ctxt.car_pv.car_sn] = 1'b0;    // causing problem\r\n        end\r\n    end\r\nendmodule\r\n```\r\n\r\nThe statement causing the problem is “car_action_pv_ctxt.car_pv.car_rpv.liquid_rpv.car_en[ **car_action_pv_ctxt**.car_pv.car_sn] = 1'b0;”\r\n\r\nIf you change the code to “car_action_pv_ctxt.car_pv.car_rpv.liquid_rpv.car_en[ **car_sch_rsp_pv_ctxt**.car_pv.car_sn] = 1'b0;”, the problem is solved. But I think the original code is still a issue.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-20",
+  "closed_at": "2021-04-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

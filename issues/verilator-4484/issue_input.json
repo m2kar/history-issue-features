@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4484,
+  "issue_url": "https://github.com/verilator/verilator/issues/4484",
+  "title": "How to correctly export SystemVerilog function/task via DPI to C?",
+  "body": "I have these functions in `file_1.sv`\r\n\r\n```sv\r\n  bit [7 :0] y_mem  [0:1000-1];\r\n  int addr_8;\r\n  logic signed [3:0][7:0] data_8;\r\n\r\n  export \"DPI-C\" function write_y;\r\n  export \"DPI-C\" function read_y;\r\n\r\n  function void write_y (input longint addr, input int data);\r\n    data_8 = data;\r\n    for (int i=0; i<4; i++) \r\n      y_mem[addr + i] = data_8[i];\r\n  endfunction\r\n\r\n  function int read_y (input longint addr);\r\n    for (int i=0; i<4; i++) \r\n      data_8[i] = y_mem[addr + i];\r\n    read_y = data_8;\r\n  endfunction\r\n```\r\n\r\nIn `file2.c`, I import them as:\r\n```c\r\nextern \"C\" void write_y (int * addr, int data);\r\nextern \"C\" int  read_y  (int * addr);\r\n```\r\n\r\nAnd I get the error:\r\n```\r\n%Error: unknown:0: Testbench C called 'write_y' but scope wasn't set, perhaps due to dpi import call without 'context', or missing svSetScope. See IEEE 1800-2017 35.5.3.\r\n```\r\n\r\n\r\nI tried setting the scope:\r\n```\r\nsvSetScope (svGetScopeFromName (\"file_1.sv\"));\r\n```\r\n\r\nand I get the error:\r\n```\r\n../../c/file2.c:15:13: error: expected constructor, destructor, or type conversion before ‘(’ token\r\n   15 |   svSetScope(svGetScopeFromName(\"file_1.sv\"));\r\n      |             ^\r\n```\r\n\r\nI tried changing the function to task, same error. \r\n\r\nHow do I correctly export an SV function/task?",
+  "labels": [
+    "resolution: answered",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-11",
+  "closed_at": "2023-09-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

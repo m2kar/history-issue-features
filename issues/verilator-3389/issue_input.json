@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3389,
+  "issue_url": "https://github.com/verilator/verilator/issues/3389",
+  "title": "What is the purpose of cleaning up the model? (`delete top`)",
+  "body": "I am new to the Verilator and trying to create a minimal C++ model driver for me and my students. While browsing the examples I noticed the following clean up routines:\r\n\r\nhttps://github.com/verilator/verilator/blob/7bfc1a00a723cd91d8d52c146b5e7b45844a2ed6/examples/make_hello_c/sim_main.cpp#L34-L41\r\n\r\nhttps://github.com/verilator/verilator/blob/7bfc1a00a723cd91d8d52c146b5e7b45844a2ed6/examples/make_tracing_c/sim_main.cpp#L112-L124\r\n\r\nFrom https://github.com/verilator/verilator/blob/master/docs/guide/example_cc.rst:\r\n\r\n```\r\n....\r\ndelete top;\r\ndelete contextp;\r\nreturn 0;\r\n```\r\n\r\nI was pondering\r\n- `delete top`\r\n- `delete contextp`\r\n- `return 0`.\r\n\r\nIn my experiments I saw that `delete top` was required to successfully write the FST trace file (otherwise Gtkwave could not open it). `delete contextp` did not have any effect. Regarding `return 0` I found [this reference](https://stackoverflow.com/a/204483) from which I understand that `return 0` can be omitted.\r\n\r\n- What is the purpose of these statements?\r\n- If they should not be omitted, why?\r\n\r\n<details><summary>If needed here is my testbench driver</summary>\r\n<pre><code>\r\n#include \"Vmajority_of_five_tb.h\"\r\n#include \"verilated.h\"\r\nint main(int argc, char** argv, char** env) {\r\n        VerilatedContext* contextp = new VerilatedContext;\r\n        \r\n        contextp->traceEverOn(true);\r\n        // Compute traced signals\r\n        \r\n        contextp->commandArgs(argc, argv);\r\n        Vmajority_of_five_tb* top = new Vmajority_of_five_tb{contextp};\r\n        top->clk = 0;\r\n        while (!contextp->gotFinish()) {\r\n\t        contextp->timeInc(1);\r\n\t        top->clk = !top->clk;\r\n\t        top->eval();\r\n        }\r\n        top->final();\r\n        delete top;\r\n        // Must be deleted manually. Otherwise the signal trace is not written properly.\r\n}\r\n</code></pre>\r\n</details>",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-17",
+  "closed_at": "2022-04-18",
+  "code_blocks": [
+    "....\r\ndelete top;\r\ndelete contextp;\r\nreturn 0;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

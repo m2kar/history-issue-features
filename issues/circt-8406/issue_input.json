@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8406,
+  "issue_url": "https://github.com/llvm/circt/issues/8406",
+  "title": "[hlstool] `noAlwaysComb` lowering option does not seem to work with `hlstool`",
+  "body": "While exploring the toolset and fiddling around with Calyx/CF code, I found this:\n\n```test02.mlir\nfunc.func @main(%arg0 : i32, %arg1 : i32) -> i32 {\n  %0 = arith.cmpi slt, %arg0, %arg1 : i32\n  cf.cond_br %0, ^bb1, ^bb2\n^bb1:\n  cf.br ^bb3(%arg0 : i32)\n^bb2:\n  cf.br ^bb3(%arg1 : i32)\n^bb3(%1 : i32):\n  return %1 : i32\n}\n```\n\n```\n$ ./bin/hlstool --calyx-hw --verilog test02.mlir --lowering-options=noAlwaysComb | grep always_comb\n  always_comb begin     // test02.mlir:1:1\n  end // always_comb\n```\n\nThe above was done with a download of `firtool-1.112.0` from the releases page.\n\nThis is problematic because unfortunately [yosys is very anal about this issue](https://github.com/YosysHQ/yosys/blob/33c57937cd6417dd91d34d67d6158ff550544834/passes/proc/proc_dlatch.cc#L436-L441) and absolutely refuses to synthesize if this is the case:\n\n```\n3.4.8. Executing PROC_DLATCH pass (convert process syncs to latches).\nERROR: Latch inferred for signal `\\control_main.\\state_next' from always_comb process `\\control_main.$proc$control_main.sv:0$2'.\n```\n\nThough it's unclear to me if it's actually a yosys bug (other synthesis tools apparently accept it?) I also might be holding `hlstool` wrong too.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-04-10",
+  "closed_at": null,
+  "code_blocks": [
+    "\n",
+    "\nThe above was done with a download of `firtool-1.112.0` from the releases page.\n\nThis is problematic because unfortunately [yosys is very anal about this issue](https://github.com/YosysHQ/yosys/blob/33c57937cd6417dd91d34d67d6158ff550544834/passes/proc/proc_dlatch.cc#L436-L441) and absolutely refuses to synthesize if this is the case:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

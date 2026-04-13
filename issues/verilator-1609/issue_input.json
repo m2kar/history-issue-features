@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1609,
+  "issue_url": "https://github.com/verilator/verilator/issues/1609",
+  "title": "Detect and warn appropriately on intentional latches",
+  "body": "---\n\n\nAuthor Name: **Julien Margetts**\nOriginal Redmine Issue: 1609 from https://www.veripool.org\n\nOriginal Assignee: Julien Margetts \n\n---\n\nAccording to Cummings:\r\n\"Guideline #2: When modeling latches, use nonblocking assignments.\"\r\n\r\nHowever, as I'm sure you are aware, Verilating the following code results in Warning-COMBDLY\r\n\r\n```\r\nmodule RTLPRIM_LATCH\r\n(\r\n     input  wire D,\r\n     input  wire EN,\r\n     output reg  Q\r\n);\r\n     always @(D or EN)\r\n         if (!EN)\r\n             Q <= D;\r\nendmodule\r\n\n```\r\n\r\n/* verilator lint_off COMBDLY */ does work (as does using always_latch) but we are not permitted to modify this source\r\n\r\n-Wno-COMBDLY also works but I don't want to turn this warning off globally\r\n\r\nThe following config file also works:\r\n\r\n```\r\n`verilator_config\r\nlint_off -msg COMBDLY -file \"*/rtlprim_latch.v\"\r\n\n```\r\n\r\nI'm happy to use the config file as it allows me to re-enable to warning, but is this the recommended aproach?\r\n\r\nThe reason I ask is that in the warning text:\r\n     \"%Warning-COMBDLY: test.v:9: Delayed assignments (<=) in non-clocked (non flop or latch) block: ... Suggest blocking assignments (=)\"\r\n\r\n\"non flop or latch\" Implies verilator did not recognise this was an intentional latch.\r\n\r\n\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "effort: days",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-19",
+  "closed_at": "2021-06-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

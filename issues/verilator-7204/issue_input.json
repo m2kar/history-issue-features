@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7204,
+  "issue_url": "https://github.com/verilator/verilator/issues/7204",
+  "title": "Fix static function not found from parameterized extends class",
+  "body": "From UVM tests/11tlm/20tlm2/10gp/20extfunc and tests/11tlm/20tlm2/10gp/30ext a static function is not found when referenced from an extended class.  Below \"ext2' resolves on but 'ext1' does not and gives:\n\n```\n%Error: t/t_0.v:31:17: Can't find definition of task/function: 'ID'\n```\n\n@em2machine any interest in debugging as you are knowledgeable there?  If so thanks in advance.\n\nExample\n\n```\npackage uvm_pkg;\n\n  class uvm_tlm_extension #(\n    type T = int\n  );\n    static function int ID();\n      return 42;\n    endfunction\n  endclass\nendpackage\n\nimport uvm_pkg::*;\n\nmodule t;\n  class ext1 extends uvm_tlm_extension #(ext1);\n  endclass\n  class ext2 extends uvm_tlm_extension;\n  endclass\n\n  class test;\n    task run_phase();\n      int i, j;\n      i = ext2::ID();\n      if (i != 42) $stop;\n      j = ext1::ID();  // Issue #FIXME\n      if (j != 42) $stop;\n    endtask\n  endclass\n\n  initial begin\n    test t;\n    t = new;\n    t.run_phase;\n  end\nendmodule\n\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-06",
+  "closed_at": "2026-03-06",
+  "code_blocks": [
+    "%Error: t/t_0.v:31:17: Can't find definition of task/function: 'ID'\n",
+    "package uvm_pkg;\n\n  class uvm_tlm_extension #(\n    type T = int\n  );\n    static function int ID();\n      return 42;\n    endfunction\n  endclass\nendpackage\n\nimport uvm_pkg::*;\n\nmodule t;\n  class ext1 extends uvm_tlm_extension #(ext1);\n  endclass\n  class ext2 extends uvm_tlm_extension;\n  endclass\n\n  class test;\n    task run_phase();\n      int i, j;\n      i = ext2::ID();\n      if (i != 42) $stop;\n      j = ext1::ID();  // Issue #FIXME\n      if (j != 42) $stop;\n    endtask\n  endclass\n\n  initial begin\n    test t;\n    t = new;\n    t.run_phase;\n  end\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

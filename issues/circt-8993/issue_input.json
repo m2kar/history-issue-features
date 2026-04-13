@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8993,
+  "issue_url": "https://github.com/llvm/circt/pull/8993",
+  "title": "[Moore][ImportVerilog] Add `moore.fmt.string`, support for `$sformatf`",
+  "body": "This PR adds support for `$sformatf` by adding the `moore.fmt.string` operator, which converts a `StringType` to a `FormatStringType`.\r\n\r\n`moore.fmt.literal` cannot be used to convert LValue Strings to `FormatStringType` instances. This is required to apply any formatting, i.e. using moore.fmt.concat or resolving the `%s` format specifier with non-constant values.\r\n\r\nTo bridge this gap, I added `moore.string_to_fstring`, which is virtually identical to `moore.fmt.literal` but allows `StringType` arguments. ~I think it is not too useful to keep both `moore.fmt.string` and `moore.fmt.literal` since analyzing whether the argument is constant seems very straightforward, but maybe I am missing something.~\r\n\r\nNext issue is that `$sformat` must return a `StringType` according to 1800-2023 Section 21.3.3. In Moore, the output of a formatting operation is modelled as a `FormatString`, so I also added an Op for converting from `FormatString` to `StringType`, `moore.fstring_to_string`. To further follow the semantics of `$sformat`, which writes the formatted string to a string passed as an argument, I used a `BlockingAssignOp`.\r\n\r\nThis PR also integrates support for lowering `$sformatf`/`$sformat`. Since there is already a framework in place for string formatting, I lowered directly into that rather than adding a new builtin for `$sformatf`.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-19",
+  "closed_at": "2025-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

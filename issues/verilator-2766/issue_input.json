@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2766,
+  "issue_url": "https://github.com/verilator/verilator/issues/2766",
+  "title": "Modules with string ports cannot have coverage collection enabled",
+  "body": "This is very similar to issue #2741.\r\n\r\nI was looking at verilated.h and saw that the top-level ports will be of the basic types C-WData, string, float, double.\r\n\r\nIn #2745, the presence of a real (double) would break compilation, with coverage collection enabled. I wondered if float or string would also cause a problem.\r\n\r\nI added a shortreal and string to t_cover_toggle.v, I see that shortreal gets promoted to real so it was fixed in #2745.\r\n\r\nThe presence of a string will break the compilation:\r\n\r\n```\r\nVt_cover_toggle_t.cpp:20:31: error: no match for ‘operator^’ (operand types are ‘std::__cxx11::string {aka std::__cxx11::basic_string<char>}’ and ‘std::__cxx11::string {aka std::__cxx11::basic_string<char>}’)\r\n     if ((vlTOPp->check_string ^ vlSymsp->TOP__t.__Vtogcov__check_string)) {\r\n          ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nIn file included from /usr/include/c++/7/ios:42:0,\r\n                 from /usr/include/c++/7/ostream:38,\r\n                 from /usr/include/c++/7/iostream:39,\r\n                 from /home/pwright/verilator/verilator/test_regress/../include/verilated_cov.h:24,\r\n                 from Vt_cover_toggle.h:12,\r\n                 from Vt_cover_toggle.cpp:5,\r\n                 from Vt_cover_toggle__ALL.cpp:3:\r\n\r\n```\r\n\r\nAdding \"!isString()\" in \"src/V3AstNodes.h\" seems to fix the issue.\r\n\r\n```\r\n    bool isToggleCoverable() const {\r\n        return ((isIO() || isSignal())\r\n                && (isIO() || isBitLogic())\r\n                // Wrapper would otherwise duplicate wrapped module's coverage\r\n                && !isSc() && !isPrimaryIO() && !isConst() && !isDouble() && !isString());\r\n    }\r\n\r\n```\r\n\r\nI'll submit a pull request.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: coverage"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-25",
+  "closed_at": "2021-01-25",
+  "code_blocks": [
+    "Vt_cover_toggle_t.cpp:20:31: error: no match for ‘operator^’ (operand types are ‘std::__cxx11::string {aka std::__cxx11::basic_string<char>}’ and ‘std::__cxx11::string {aka std::__cxx11::basic_string<char>}’)\r\n     if ((vlTOPp->check_string ^ vlSymsp->TOP__t.__Vtogcov__check_string)) {\r\n          ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\nIn file included from /usr/include/c++/7/ios:42:0,\r\n                 from /usr/include/c++/7/ostream:38,\r\n                 from /usr/include/c++/7/iostream:39,\r\n                 from /home/pwright/verilator/verilator/test_regress/../include/verilated_cov.h:24,\r\n                 from Vt_cover_toggle.h:12,\r\n                 from Vt_cover_toggle.cpp:5,\r\n                 from Vt_cover_toggle__ALL.cpp:3:",
+    "bool isToggleCoverable() const {\r\n        return ((isIO() || isSignal())\r\n                && (isIO() || isBitLogic())\r\n                // Wrapper would otherwise duplicate wrapped module's coverage\r\n                && !isSc() && !isPrimaryIO() && !isConst() && !isDouble() && !isString());\r\n    }"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

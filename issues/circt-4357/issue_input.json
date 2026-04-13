@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4357,
+  "issue_url": "https://github.com/llvm/circt/issues/4357",
+  "title": "[FIRRTL][LowerToHW] ForceNameAnnotation Not Working on Extmodule Instances",
+  "body": "A `ForceNameAnnotation` on a module instance works, but an extmodule doesn't. Consider:\r\n\r\n```mlir\r\nfirrtl.circuit \"ForceNameTop\" {\r\n  firrtl.hierpath private @nla_1 [@ForceNameTop::@sym_foo, @ForceNameSubmodule]\r\n  firrtl.hierpath private @nla_3 [@ForceNameTop::@sym_baz, @ForceNameExtmodule]\r\n  firrtl.module private @ForceNameSubmodule() attributes {annotations = [\r\n    {circt.nonlocal = @nla_1,\r\n     class = \"chisel3.util.experimental.ForceNameAnnotation\", name = \"Foo\"}\r\n  ]} {}\r\n  firrtl.extmodule private @ForceNameExtmodule() attributes {annotations = [\r\n    {circt.nonlocal = @nla_3,\r\n     class = \"chisel3.util.experimental.ForceNameAnnotation\", name = \"Bar\"}\r\n  ]}\r\n  firrtl.module @ForceNameTop() {\r\n    firrtl.instance foo sym @sym_foo @ForceNameSubmodule()\r\n    firrtl.instance baz sym @sym_baz @ForceNameExtmodule()\r\n  }\r\n}\r\n```\r\n\r\nAfter lower-to-hw:\r\n\r\n```mlir\r\nmodule {\r\n  hw.module private @ForceNameSubmodule() {\r\n    hw.output\r\n  }\r\n  hw.module.extern private @ForceNameExtmodule()\r\n  hw.module @ForceNameTop() {\r\n    hw.instance \"foo\" sym @sym_foo @ForceNameSubmodule() -> () {hw.verilogName = \"Foo\"}\r\n    hw.instance \"baz\" sym @sym_baz @ForceNameExtmodule() -> ()\r\n    hw.output\r\n  }\r\n}\r\n```\r\n\r\nThis should add a `hw.verilogName = \"Bar\"` attribute to the \"baz\" instance.",
+  "labels": [
+    "bug",
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-23",
+  "closed_at": "2022-12-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

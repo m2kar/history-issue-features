@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8226,
+  "issue_url": "https://github.com/llvm/circt/issues/8226",
+  "title": "[ImportVerilog] Problem with conditional + register",
+  "body": "\nHi, I think I might have encountered a bug in the Verilog frontend of CIRCT. Below is the Verilog code in `bug.v`:\n\n```verilog\nmodule Bug (O, A, B, C);\n\ninput A, B, C;\noutput O;\n\nreg O;\n\nalways @(posedge B)\n  if (C)\n    O = A;\n  else\n    O = 1'b1;\n\nendmodule\n```\n\nWhen I run the following command:\n\n```sh\ncirct-verilog -o bug.mlir bug.v\n```\n\nI get the following output in `bug.mlir`:\n\n```mlir\nmodule {\n  hw.module @Bug(in %A : i1, in %B : i1, in %C : i1, out O : i1) {\n    %0 = seq.to_clock %B\n    %1 = seq.compreg %A, %0 : i1  \n    hw.output %1 : i1\n  }\n}\n```\n\nIt appears that `bug.v` and `bug.mlir` are not semantically equivalent. \n\nPS : I am a beginner with CIRCT, so it might just be a misuse from myself ^^\n\nBest,\n\nFélix\n",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "open",
+  "created_at": "2025-02-12",
+  "closed_at": null,
+  "code_blocks": [
+    "module Bug (O, A, B, C);\n\ninput A, B, C;\noutput O;\n\nreg O;\n\nalways @(posedge B)\n  if (C)\n    O = A;\n  else\n    O = 1'b1;\n\nendmodule\n",
+    "circt-verilog -o bug.mlir bug.v\n",
+    "module {\n  hw.module @Bug(in %A : i1, in %B : i1, in %C : i1, out O : i1) {\n    %0 = seq.to_clock %B\n    %1 = seq.compreg %A, %0 : i1  \n    hw.output %1 : i1\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3594,
+  "issue_url": "https://github.com/verilator/verilator/pull/3594",
+  "title": "Fix fork inline",
+  "body": "If a forked process contains no awaits, it can be inlined. However, currently it's happening in the wrong place – while traversing the AST in `V3Timing`. The problem with this approach is that awaits can be created after we visit a fork. For example:\r\n```systemverilog\r\nclass Cls;\r\n   task dly;\r\n       #1;\r\n   endtask\r\nendclass\r\n…\r\nCls obj = new;\r\nfork\r\n   obj.dly;  // This process could get inlined\r\njoin_none\r\n```\r\nIf the fork is visited before the `dly` task, the `obj.dly;` part would get inlined, as it would have no await at this point. Only later, after `dly` is visited, the `obj.dly;` call would be wrapped in a `co_await`, resulting in the delay being part of the main process.\r\n\r\nThis PR moves the inlining to a later stage when all awaits are already in place.\r\n\r\nPreferably, this should be merged after #3593. Pre-PR to #3595.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-05",
+  "closed_at": "2022-09-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

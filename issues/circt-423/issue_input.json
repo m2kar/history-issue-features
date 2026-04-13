@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 423,
+  "issue_url": "https://github.com/llvm/circt/issues/423",
+  "title": "[FIRRTL] Relax or Promote Connect to Partial Connect Semantics",
+  "body": "Chisel currently emits connects between a wider source and a narrower sink. The Scala FIRRTL Compiler accepts these and truncates the source (which is incorrect connect semantics, but correct partial connect semantics). This results in circuits that come out of Chisel which CIRCT won't accept.\r\n\r\nEither:\r\n\r\n1. We relax the connection verification checks \r\n2. We promote connects to partial connects if we see this during parsing\r\n\r\nExample circuit:\r\n\r\n```\r\ncircuit Foo :\r\n  module Foo :\r\n    input a: UInt<2>\r\n    output b: UInt<1>\r\n\r\n    b <= a\r\n```\r\n\r\nThe SFC produces:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [1:0] a,\r\n  output       b\r\n);\r\n  assign b = a[0];\r\nendmodule\r\n```\r\n\r\nCIRCT gives us:\r\n\r\n```bash\r\nfirtool Foo.fir\r\n# Foo.fir:6:7: error: destination width 1 is not greater than or equal to source width 2\r\n#    b <= a\r\n#      ^\r\n# Foo.fir:6:7: note: see current operation: \"firrtl.connect\"(%b, %a) : (!firrtl.flip<uint<1>>, !firrtl.uint<2>) -> ()\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-09",
+  "closed_at": "2021-01-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

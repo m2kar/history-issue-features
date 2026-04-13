@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3403,
+  "issue_url": "https://github.com/llvm/circt/issues/3403",
+  "title": "Circular logic not detected",
+  "body": "The following code:\r\n```\r\nmodule {\r\n  hw.module @foo() -> (o: i1) {\r\n    %0 = comb.parity %0 : i1\r\n    hw.output %0 : i1\r\n  }\r\n}\r\n```\r\n\r\nis considered correct and produces the following Verilog output (using `circt-opt circular.mlir --export-verilog`):\r\n```\r\nmodule foo(\t// circular.mlir:2:3\r\n  output o);\r\n\r\n  wire _GEN = ^_GEN;\t// circular.mlir:3:10\r\n  assign o = _GEN;\t// circular.mlir:4:5\r\nendmodule\r\n```\r\n\r\nanalyzing this with Verilator gives the following error:\r\n```\r\n$ verilator circular.v --lint-only \r\n%Error: circular.v:5:13: Wire inputs its own output, creating circular logic (wire x=x)\r\n    5 |   wire _GEN = ^_GEN;  \r\n      |             ^\r\n%Warning-UNOPTFLAT: circular.v:5:8: Signal unoptimizable: Feedback to clock or circular logic: 'foo._GEN'\r\n    5 |   wire _GEN = ^_GEN;  \r\n      |        ^~~~\r\n                    ... For warning description see https://verilator.org/warn/UNOPTFLAT?v=4.222\r\n                    ... Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n                    circular.v:5:8:      Example path: foo._GEN\r\n                    circular.v:5:13:      Example path: ASSIGNW\r\n                    circular.v:5:8:      Example path: foo._GEN\r\n%Error: Exiting due to 1 error(s), 1 warning(s)\r\n```\r\n\r\nin other words, this simple circular logic is not detected by the tools.\r\n\r\nOn a side note: `firtool` seems to hang up on this simple example and other circular examples",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-06-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

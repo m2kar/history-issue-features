@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7384,
+  "issue_url": "https://github.com/verilator/verilator/issues/7384",
+  "title": "Fix queue streaming operator compilation error",
+  "body": "Version: Verilator 5.045 \nThe following SystemVerilog code causes an in the compilation step.\n```\nmodule verilator_error();\n    logic clk = 0;\n    bit q [$];\n    logic [127:0] vec1;\n    logic [127:0] vec2;\n    always #5 clk = ~clk;\n    always_ff @(posedge clk) begin\n        q = {>>{vec1}};\n        vec2 = {>>{q}};\n    end\nendmodule\n```\n\nThe error when trying to compile\n```\nverilator_error___024root__0.cpp: In function ‘void verilator_error___024root___nba_sequent__TOP__0(verilator_error___024root*)’:\nverilator_error___024root__0.cpp:80:41: error: no match for ‘operator=’ (operand types are ‘VlQueue<unsignedchar>’ and ‘VlWide<4>’)\n   80 |     verilator_error__DOT__q = vlSelfRef.verilator_error__DOT__vec1;\n      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~\n```\nFrom my research is that the streaming is not working correctly here. replacing the streaming operator with a for loop works but it is cumbersome on arbitrary and large streaming operations.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-04-07",
+  "closed_at": null,
+  "code_blocks": [
+    "module verilator_error();\n    logic clk = 0;\n    bit q [$];\n    logic [127:0] vec1;\n    logic [127:0] vec2;\n    always #5 clk = ~clk;\n    always_ff @(posedge clk) begin\n        q = {>>{vec1}};\n        vec2 = {>>{q}};\n    end\nendmodule\n",
+    "verilator_error___024root__0.cpp: In function ‘void verilator_error___024root___nba_sequent__TOP__0(verilator_error___024root*)’:\nverilator_error___024root__0.cpp:80:41: error: no match for ‘operator=’ (operand types are ‘VlQueue<unsignedchar>’ and ‘VlWide<4>’)\n   80 |     verilator_error__DOT__q = vlSelfRef.verilator_error__DOT__vec1;\n      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

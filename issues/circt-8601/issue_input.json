@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8601,
+  "issue_url": "https://github.com/llvm/circt/issues/8601",
+  "title": "[FIRRTL] stop allowing duplicate field names in bundles",
+  "body": "In the [FIRRTL spec,](https://github.com/chipsalliance/firrtl-spec/blob/main/spec.md#namespaces) it says:\n> Within a bundle type declaration, all field names must be unique.\n\nWe don't have proper diagnosis of this error.  For example, with \n``` firrtl\nFIRRTL version 4.0.0\ncircuit Foo:\n  public module Foo:\n    input bundle : {a: UInt<8>, a: UInt<8>}\n    output o : UInt<8>\n    connect o, bundle.a\n```\nrunning `firtool --preserve-aggregate=none. ./bundle.fir` produces:\n``` verilog\nmodule Foo(\n  input  [7:0] bundle_a,\n               bundle_a_0,\n  output [7:0] o\n);\n\n  assign o = bundle_a;\nendmodule\n```\nand running `firtool --preserve-aggregate=all. ./bundle.fir` crashes with:\n```\n<unknown>:0: error: duplicate field name 'a' in hw.struct type\nfirtool: /scratch/aryoung/circt/llvm/llvm/../mlir/include/mlir/IR/StorageUniquerSupport.h:180: static ConcreteT mlir::detail::StorageUserBase<circt::hw::StructType, mlir::Type, circt::hw::detail::StructTypeStorage, mlir::detail::TypeUniquer, Trait, Trait>::get(mlir::MLIRContext *, Args &&...) [ConcreteT = circt::hw::StructType, BaseT = mlir::Type, StorageT = circt::hw::detail::StructTypeStorage, UniquerT = mlir::detail::TypeUniquer, Traits = <Trait, Trait>, Args = <llvm::ArrayRef<circt::hw::detail::FieldInfo>>]: Assertion `succeeded( ConcreteT::verifyInvariants(getDefaultDiagnosticEmitFn(ctx), args...))' failed.\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\nStack dump:\n0.      Program arguments: ./bin/firtool --preserve-aggregate=all ./bundle.fir\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-25",
+  "closed_at": "2025-07-17",
+  "code_blocks": [
+    "running `firtool --preserve-aggregate=none. ./bundle.fir` produces:\n",
+    "and running `firtool --preserve-aggregate=all. ./bundle.fir` crashes with:\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

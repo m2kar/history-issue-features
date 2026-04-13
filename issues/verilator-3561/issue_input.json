@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3561,
+  "issue_url": "https://github.com/verilator/verilator/issues/3561",
+  "title": "Event controls in class methods",
+  "body": "After #3363 it's possible to use delays in methods. However, using event controls like:\r\n```systemverilog\r\n    class EventClass;\r\n        event e;\r\n\r\n        task sleep; @e; endtask\r\n        task wake; ->e; endtask\r\n    endclass\r\n```\r\ncurrently results in a C++ compile error (if we remove the `E_UNSUPPORTED` check):\r\n```\r\nVt_timing_class___024root__DepSet_h748003df__0.cpp: In function ‘void Vt_timing_class___024root___eval_triggers__act(Vt_timing_class___024root*)’:\r\nVt_timing_class___024root__DepSet_h748003df__0.cpp:23:77: error: invalid use of non-static data member ‘Vt_timing_class_t__03a__03aEventClass::__PVT__e’\r\n   23 |     vlSelf->__VactTriggered.at(2U) = Vt_timing_class_t__03a__03aEventClass::__PVT__e.isFired();\r\n      |                                                                             ^~~~~~~~\r\nIn file included from Vt_timing_class__Syms.h:19,\r\n                 from Vt_timing_class.cpp:5,\r\n                 from Vt_timing_class__ALL.cpp:3:\r\nVt_timing_class_t__03a__03aEventClass__Vclpkg.h:35:13: note: declared here\r\n   35 |     VlEvent __PVT__e;\r\n      |             ^~~~~~~~\r\nVt_timing_class___024root__DepSet_h748003df__0.cpp:30:48: error: invalid use of non-static data member ‘Vt_timing_class_t__03a__03aEventClass::__PVT__e’\r\n   30 |     if (Vt_timing_class_t__03a__03aEventClass::__PVT__e.isFired()) {\r\n      |                                                ^~~~~~~~\r\nVt_timing_class_t__03a__03aEventClass__Vclpkg.h:35:13: note: declared here\r\n   35 |     VlEvent __PVT__e;\r\n      |             ^~~~~~~~\r\nVt_timing_class___024root__DepSet_h748003df__0.cpp:31:48: error: invalid use of non-static data member ‘Vt_timing_class_t__03a__03aEventClass::__PVT__e’\r\n   31 |         Vt_timing_class_t__03a__03aEventClass::__PVT__e.clearFired();\r\n      |                                                ^~~~~~~~\r\nVt_timing_class_t__03a__03aEventClass__Vclpkg.h:35:13: note: declared here\r\n   35 |     VlEvent __PVT__e;\r\n      |             ^~~~~~~~\r\nVt_timing_class___024root__DepSet_h748003df__0.cpp:32:90: error: invalid use of non-static data member ‘Vt_timing_class_t__03a__03aEventClass::__PVT__e’\r\n   32 |         vlSymsp->enqueueTriggeredEventForClearing(Vt_timing_class_t__03a__03aEventClass::__PVT__e);\r\n      |                                                                                          ^~~~~~~~\r\nVt_timing_class_t__03a__03aEventClass__Vclpkg.h:35:13: note: declared here\r\n   35 |     VlEvent __PVT__e;\r\n      |             ^~~~~~~~\r\n```\r\nThis is because Verilator is trying to eval it in the trigger eval function, which obviously doesn't make sense.\r\nI'm already [working on it](https://github.com/antmicro/verilator-1/pull/8), it'll be the next PR after #3363.",
+  "labels": [
+    "area: scheduling",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-19",
+  "closed_at": "2024-08-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

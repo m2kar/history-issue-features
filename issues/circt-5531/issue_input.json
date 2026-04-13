@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5531,
+  "issue_url": "https://github.com/llvm/circt/issues/5531",
+  "title": "[Comb] canonicalize with narrowOperationWidth looses attributes",
+  "body": "Running circt-opt <file.mlir> -canonicalize with file.mlir having the following content:\r\n```mlir\r\nmodule {\r\n  hw.module @attrsGone(%arg0: i64, %arg1: i64) -> (out: i32) {\r\n    %2 = comb.mul %arg0, %arg1 {sv.namehint = \"test\"} : i64\r\n    %3 = comb.extract %2 from 0 : (i64) -> i32\r\n    hw.output %3 : i32\r\n  }\r\n}\r\n```\r\nwill loose the `sv.namehint`attribute (and any other custom annotations):\r\n```mlir\r\nmodule {\r\n  hw.module @attrsGone(%arg0: i64, %arg1: i64) -> (out: i32) {\r\n    %0 = comb.extract %arg0 from 0 : (i64) -> i32\r\n    %1 = comb.extract %arg1 from 0 : (i64) -> i32\r\n    %2 = comb.mul %0, %1 : i32\r\n    hw.output %2 : i32\r\n  }\r\n}\r\n``` \r\n\r\nThe issue here is, that `narrowOperationWidth` copies the name to `comb.concat` operation that is created as an immediate step:\r\n ```mlir\r\nmodule {\r\n  hw.module @attrsGone(%arg0: i64, %arg1: i64) -> (out: i32) {\r\n    %c0_i32 = hw.constant 0 : i32\r\n    %0 = comb.extract %arg0 from 0 : (i64) -> i32\r\n    %1 = comb.extract %arg1 from 0 : (i64) -> i32\r\n    %2 = comb.mul %0, %1 : i32\r\n    %imm = comb.concat %c0_i32, %2 {sv.namehint = \"test\"} : i32, i32\r\n    %3 = comb.extract %imm from 0 : (i64) -> i32\r\n    hw.output %2 : i32\r\n  }\r\n} \r\n ```\r\n The sequence of `comb.concat` and `comb.extract` is then optimized away, leaving the narrowed `comb.mul` without any annotations, as shown in the second code snippet.\r\n \r\nI will submit a PR with a fix for this :)",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-03",
+  "closed_at": "2023-07-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7896,
+  "issue_url": "https://github.com/llvm/circt/issues/7896",
+  "title": "[FIRRTL] LowerLayers RefSend could be Canonicalized Away",
+  "body": "The `LowerLayers` pass can create some trivial canonicalization opportunities. These can be removed with the canonicalizer. However, it may be better to handle these specially in the pass. \n\nI specifically noticed that when you have a `ref.resolve` user of a captured value in a `layerblock`, this will create an input port and a `ref.send`. The `ref.resolve(ref.send(block-arg))` can be trivially converted to `block-arg`. However, it doesn't fit a nice `createOrFold` pattern and would require special tracking. As I've been moving `LowerLayers` later and later, this has started to show up in small end-to-end `firtool` changes.\n\nConsider:\n\n``` mlir\nfirrtl.circuit \"TestHarness\" {\n  firrtl.layer @Verification bind {\n  }\n  firrtl.module private @DUT(in %clock: !firrtl.clock, in %a: !firrtl.uint<32>, out %b: !firrtl.uint<32>, out %trace: !firrtl.probe<uint<32>, @Verification>) {\n    %pc = firrtl.reg %clock : !firrtl.clock, !firrtl.uint<32>\n    firrtl.matchingconnect %pc, %a : !firrtl.uint<32>\n    firrtl.matchingconnect %b, %pc : !firrtl.uint<32>\n    firrtl.layerblock @Verification {\n      %x = firrtl.wire : !firrtl.probe<uint<32>, @Verification>\n      %pc_d = firrtl.reg %clock : !firrtl.clock, !firrtl.uint<32>\n      firrtl.matchingconnect %pc_d, %a : !firrtl.uint<32>\n      %0 = firrtl.ref.send %pc_d : !firrtl.uint<32>\n      %1 = firrtl.ref.cast %0 : (!firrtl.probe<uint<32>>) -> !firrtl.probe<uint<32>, @Verification>\n      firrtl.ref.define %x, %1 : !firrtl.probe<uint<32>, @Verification>\n      firrtl.ref.define %trace, %x : !firrtl.probe<uint<32>, @Verification>\n    }\n  }\n  firrtl.module @TestHarness(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>, in %a: !firrtl.uint<32>, out %b: !firrtl.uint<32>) attributes {convention = #firrtl<convention scalarized>} {\n    %dut_clock, %dut_a, %dut_b, %dut_trace = firrtl.instance dut @DUT(in clock: !firrtl.clock, in a: !firrtl.uint<32>, out b: !firrtl.uint<32>, out trace: !firrtl.probe<uint<32>, @Verification>)\n    firrtl.matchingconnect %dut_clock, %clock : !firrtl.clock\n    firrtl.matchingconnect %dut_a, %a : !firrtl.uint<32>\n    firrtl.matchingconnect %b, %dut_b : !firrtl.uint<32>\n    firrtl.layerblock @Verification {\n      %0 = firrtl.ref.resolve %dut_trace : !firrtl.probe<uint<32>, @Verification>\n      firrtl.printf %clock, %reset, \"The last PC was: %x\" (%0) : !firrtl.clock, !firrtl.uint<1>, !firrtl.uint<32>\n    }\n  }\n}\n```\n\nThis will be compiled to:\n\n``` mlir\n    firrtl.module private @TestHarness_Verification(in %dut_trace: !firrtl.uint<32>, in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>) {\n      %0 = firrtl.ref.send %dut_trace : !firrtl.uint<32>\n      %1 = firrtl.ref.resolve %0 : !firrtl.probe<uint<32>>\n      firrtl.printf %clock, %reset, \"The last PC was: %x\" (%1) : !firrtl.clock, !firrtl.uint<1>, !firrtl.uint<32>\n    }\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-26",
+  "closed_at": "2025-06-09",
+  "code_blocks": [
+    "\nThis will be compiled to:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

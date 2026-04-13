@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3820,
+  "issue_url": "https://github.com/llvm/circt/issues/3820",
+  "title": "[FIRRTL][IMCP] Incorrect results with aggregate ports",
+  "body": "IMCP currently miscompiles aggregate ports, for example:\r\n```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module private @Bar(in %a: !firrtl.vector<uint<1>, 1>, in %clock: !firrtl.clock, out %b: !firrtl.uint<1>) {\r\n    %0 = firrtl.subindex %a[0] : !firrtl.vector<uint<1>, 1>\r\n    %r = firrtl.reg  %clock  {firrtl.random_init_start = 0 : ui64} : !firrtl.uint<1>\r\n    firrtl.strictconnect %r, %0 : !firrtl.uint<1>\r\n    firrtl.strictconnect %b, %r : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Foo(in %in: !firrtl.uint<1>, in %clock: !firrtl.clock, out %out: !firrtl.uint<1>) {\r\n    %bar_a, %bar_clock, %bar_b = firrtl.instance bar  @Bar(in a: !firrtl.vector<uint<1>, 1>, in clock: !firrtl.clock, out b: !firrtl.uint<1>)\r\n    %0 = firrtl.subindex %bar_a[0] : !firrtl.vector<uint<1>, 1>\r\n    firrtl.strictconnect %0, %in : !firrtl.uint<1>\r\n    firrtl.strictconnect %bar_clock, %clock : !firrtl.clock\r\n    firrtl.strictconnect %out, %bar_b : !firrtl.uint<1>\r\n  }\r\n}\r\n\r\n// -----// IR Dump After IMConstProp (firrtl-imconstprop) //----- //\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module private @Bar(in %a: !firrtl.vector<uint<1>, 1>, in %clock: !firrtl.clock, out %b: !firrtl.uint<1>) {\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.strictconnect %b, %invalid_ui1 : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Foo(in %in: !firrtl.uint<1>, in %clock: !firrtl.clock, out %out: !firrtl.uint<1>) {\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    %bar_a, %bar_clock, %bar_b = firrtl.instance bar  @Bar(in a: !firrtl.vector<uint<1>, 1>, in clock: !firrtl.clock, out b: !firrtl.uint<1>)\r\n    %0 = firrtl.subindex %bar_a[0] : !firrtl.vector<uint<1>, 1>\r\n    firrtl.strictconnect %0, %in : !firrtl.uint<1>\r\n    firrtl.strictconnect %bar_clock, %clock : !firrtl.clock\r\n    firrtl.strictconnect %out, %invalid_ui1 : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nA register `Bar.r` is mistakenly replaced with invalid. \r\nNote: We will also have to stop creating invalid values. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-05",
+  "closed_at": "2022-09-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

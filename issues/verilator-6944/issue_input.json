@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6944,
+  "issue_url": "https://github.com/verilator/verilator/issues/6944",
+  "title": "Support procedural concurrent assertions",
+  "body": "Support procedural concurrent assertions, or at least the limited case below, which is rewritten from UVM tests/20sequences/90Mantis/3633_bad_sequence_macros, tests/35objections/03basic/06xbus, tests/80examples/10ubus.\n\nSupporting this requires a ugly queue, per IEEE 16.14.6.  Given the UVM usage doesn't need this (and perhaps is even a test bug that it uses `assert property` instead of `assert`), we may want to only support this limited form and evaluate immediately.\n\nExample below currently gives:\n\n```\n%Error-UNSUPPORTED: t/t_0.v:16:5: Unsupported: Procedural concurrent assertion with clocking event inside always (IEEE 1800-2023 16.14.6)\n   16 |     assert property (disable iff (!rst_l) ($onehot(grant) |-> !$isunknown(addr)))\n      |     ^~~~~~\n```\n\n```\nmodule t (\n    input clk,\n    input rst_l,\n    input [2:0] grant,\n    input [7:0] addr\n);\n\n  always @(negedge clk) begin\n    assertUnknown :\n    assert property (disable iff (!rst_l) ($onehot(grant) |-> !$isunknown(addr)))\n    else $error(\"X or Z\");\n  end\n\n  initial begin\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\n\nendmodule\n```\n",
+  "labels": [
+    "area: assertions",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-19",
+  "closed_at": "2026-03-06",
+  "code_blocks": [
+    "%Error-UNSUPPORTED: t/t_0.v:16:5: Unsupported: Procedural concurrent assertion with clocking event inside always (IEEE 1800-2023 16.14.6)\n   16 |     assert property (disable iff (!rst_l) ($onehot(grant) |-> !$isunknown(addr)))\n      |     ^~~~~~\n",
+    "module t (\n    input clk,\n    input rst_l,\n    input [2:0] grant,\n    input [7:0] addr\n);\n\n  always @(negedge clk) begin\n    assertUnknown :\n    assert property (disable iff (!rst_l) ($onehot(grant) |-> !$isunknown(addr)))\n    else $error(\"X or Z\");\n  end\n\n  initial begin\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2473,
+  "issue_url": "https://github.com/verilator/verilator/issues/2473",
+  "title": "VL_CONSTHI_W_?X in verilated.h will bring a memory access violation.",
+  "body": "> version\r\n\r\nverilator-4.038\r\n\r\n> testcase\r\n\r\n```verilog\r\n// t_consthi.v\r\nmodule t(reg_i, reg_o);\r\n\r\ninput           reg_i;\r\noutput          reg_o;\r\n\r\nwire [1:0]      reg_i;\r\nreg  [1049:0]   reg_o;\r\n\r\nalways @ (*) begin\r\n    if (reg_i[1] == 1'b1)\r\n        reg_o = {986'd0, 64'hffff0000ffff0000};\r\n    else if (reg_i[0] == 1'b1)\r\n        reg_o = {64'hffff0000ffff0000, 986'd0};\r\n    else\r\n        reg_o = 1050'd0;\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nAfter translated by verilator, we can get the following code:\r\n```cpp\r\n// Vt_consthi__Slow.cpp\r\nWData/*1049:0*/ Vt_consthi::__Vtable1___Vcellout__t__reg_o[4][33];\r\n\r\nvoid Vt_consthi::_ctor_var_reset() {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt_consthi::_ctor_var_reset\\n\"); );\r\n    // Body\r\n    VL_RAND_RESET_W(1050, __Vcellout__t__reg_o);\r\n    __Vcellinp__t__reg_i = VL_RAND_RESET_I(2);\r\n    __Vtableidx1 = 0;\r\n    VL_CONST_W_1X(1050,__Vtable1___Vcellout__t__reg_o[0],0x00000000);\r\n//-\r\n    VL_CONSTHI_W_1X(1050,1024,__Vtable1___Vcellout__t__reg_o[1],0x03fffc00); // Note: Array size is 33.\r\n//-\r\n    VL_CONSTLO_W_8X(768,__Vtable1___Vcellout__t__reg_o[1],0x03fffc00,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000);\r\n    VL_CONSTLO_W_8X(512,__Vtable1___Vcellout__t__reg_o[1],0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000);\r\n    VL_CONSTLO_W_8X(256,__Vtable1___Vcellout__t__reg_o[1],0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000);\r\n    VL_CONSTLO_W_8X(0,__Vtable1___Vcellout__t__reg_o[1],0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000);\r\n    VL_CONST_W_2X(1050,__Vtable1___Vcellout__t__reg_o[2],0xffff0000,0xffff0000);\r\n    VL_CONST_W_2X(1050,__Vtable1___Vcellout__t__reg_o[3],0xffff0000,0xffff0000);\r\n}\r\n\r\n```\r\n\r\nverilated.h holds the definition of `VL_CONSTHI_W_1X` \r\n```cpp\r\n// verilated.h\r\ntypedef vluint32_t* WDataOutP;\r\n#define VL_EDATASIZE 32\r\n#define VL_WORDS_I(nbits) (((nbits) + (VL_EDATASIZE - 1)) / VL_EDATASIZE)\r\n\r\n#define _END(obits, wordsSet) \\\r\n    for (int i = (wordsSet); i < VL_WORDS_I(obits); ++i) o[i] = 0; \\\r\n    return o\r\n\r\nstatic inline WDataOutP VL_CONSTHI_W_1X(int obits, int lsb, WDataOutP obase,\r\n                                        EData d0) VL_MT_SAFE {\r\n    WDataOutP o = obase + VL_WORDS_I(lsb);\r\n    o[0] = d0;\r\n    _END(obits,1); // Note: In this case, o[0] = obase + 32, and _END() iterates another 32 times;\r\n                           // I think it should be _END(obits - lsb, 1);\r\n                           // Same as other VL_CONSTHI_W_?X functions.\r\n}\r\n\r\n```\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-18",
+  "closed_at": "2020-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

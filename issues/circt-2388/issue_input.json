@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2388,
+  "issue_url": "https://github.com/llvm/circt/pull/2388",
+  "title": "[FIRRTL] Make foldWhenEncodedVerifOp handle PrintOp even when they are not at a block begin",
+  "body": "This commit first moves `foldWhenEncodedVerifOp` logic into post parse\r\nprocessing to restructure operations without fear. Next, foldWhenEncodedVerifOp\r\nis modified to handle printf op not at block's begin. For example,\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo :\r\n    input cond: UInt<1>\r\n    input enable: UInt<1>\r\n    input io : {clock:Clock}\r\n    when cond :\r\n        printf(io.clock, enable, \"assert: bar\")\r\n```\r\n\r\n`circt-translate --import-firrtl` now generates expected IR.\r\n\r\n```mlir\r\nfirrtl.module @Foo(in %cond: !firrtl.uint<1>, in %enable: !firrtl.uint<1>, in %io: !firrtl.bundle<clock: clock>) {\r\n  %0 = firrtl.subfield %io(0) : (!firrtl.bundle<clock: clock>) -> !firrtl.clock\r\n  %1 = firrtl.not %cond : (!firrtl.uint<1>) -> !firrtl.uint<1>\r\n  firrtl.assert %0, %1, %enable, \" bar\"  {eventControl = 0 : i32, isConcurrent = true}\r\n}\r\n``` \r\n\r\nwill close https://github.com/llvm/circt/issues/2384",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-24",
+  "closed_at": "2021-12-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

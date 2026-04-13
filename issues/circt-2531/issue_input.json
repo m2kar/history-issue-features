@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2531,
+  "issue_url": "https://github.com/llvm/circt/issues/2531",
+  "title": "[FIRRTL] DontTouchAnnotation as Symbol and Deduplication",
+  "body": "The modeling of `DontTouchAnnotation` as a symbol destroys some information that may be necessary for an SFC-exact implementation of deduplication.\r\n\r\nConsider the following circuit. Modules `A` and `A_` are structurally equivalent and should deduplicate. `A` has a `DontTouchAnnotation` on a wire inside it. This is not supposed to block deduplication.\r\n\r\n```scala\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"Top.A.b\"\r\n  }\r\n]]\r\n  module Top :\r\n    inst a1 of A\r\n    inst a2 of A_\r\n  module A :\r\n    output x: UInt<1>\r\n    wire b: UInt<1>\r\n    b is invalid\r\n    x <= b\r\n  module A_ :\r\n    output x: UInt<1>\r\n    wire b: UInt<1>\r\n    b is invalid\r\n    x <= b\r\n```\r\n\r\nWhen we parse this in, this specific annotations becomes a symbol `@b`:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Top\"   {\r\n    firrtl.module @Top() {\r\n      %a1_x = firrtl.instance a1  @A(out x: !firrtl.uint<1>)\r\n      %a2_x = firrtl.instance a2  @A_(out x: !firrtl.uint<1>)\r\n    }\r\n    firrtl.module @A(out %x: !firrtl.uint<1>) {\r\n      %b = firrtl.wire sym @b  : !firrtl.uint<1>\r\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n      firrtl.connect %b, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %x, %b : !firrtl.uint<1>, !firrtl.uint<1>\r\n    }\r\n    firrtl.module @A_(out %x: !firrtl.uint<1>) {\r\n      %b = firrtl.wire  : !firrtl.uint<1>\r\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n      firrtl.connect %b, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %x, %b : !firrtl.uint<1>, !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAfter deduplication, the circuit looks like with `@b` applied to the deduplicated wire. The effect of the annotation now applies to both wires:\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Top\"   {\r\n    firrtl.module @Top() {\r\n      %a1_x = firrtl.instance a1  @A(out x: !firrtl.uint<1>)\r\n      %a2_x = firrtl.instance a2  @A(out x: !firrtl.uint<1>)\r\n    }\r\n    firrtl.module @A(out %x: !firrtl.uint<1>) {\r\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n      %b = firrtl.wire sym @b  : !firrtl.uint<1>\r\n      firrtl.connect %b, %invalid_ui1 {annotations = []} : !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.connect %x, %b {annotations = []} : !firrtl.uint<1>, !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nIn contrast, the SFC produces a non-local annotation targeting the original instance's wire:\r\n```scala\r\ncircuit Top :\r\n  module A :\r\n    output x : UInt<1>\r\n\r\n    wire b : UInt<1> @[dont-touch.scala 33:15]\r\n    b is invalid @[dont-touch.scala 34:5]\r\n    x <= b @[dont-touch.scala 36:5]\r\n\r\n  module Top :\r\n\r\n    inst a1 of A @[dont-touch.scala 47:18]\r\n    inst a2 of A @[dont-touch.scala 48:18]\r\n```\r\n```json\r\n[\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"~Top|Top/a1:A>b\"\r\n  }\r\n]\r\n```\r\n\r\nI don't have an opinion or evidence that this is problematic, yet. This is just reporting an SFC deviation.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-01-27",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

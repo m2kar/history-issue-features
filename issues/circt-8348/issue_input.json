@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8348,
+  "issue_url": "https://github.com/llvm/circt/issues/8348",
+  "title": "[FIRRTL] Regreset canonicalizer replaces register with value of different type",
+  "body": "If a regreset has a constantly-high reset, then we can replace the register with its reset value. However, if the reset value's type does\nnot match the type of the register, then we end up replacing the register with a value of a different type. When the register is driven by a matching connect, this is invalid IR.\n\nHere is an example:\n    \n```mlir\nfirrtl.circuit \"Scratch\" {\n  firrtl.module @Scratch(out %out : !firrtl.uint<2>) {\n\n    // The reset value is 1-bit, but the register is 2-bits.\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    %c0_ui2 = firrtl.constant 0 : !firrtl.uint<2>\n    %c0_clock = firrtl.specialconstant 0 : !firrtl.clock\n    %c1_asyncreset = firrtl.specialconstant 1 : !firrtl.asyncreset\n    %reg = firrtl.regreset %c0_clock, %c1_asyncreset, %c0_ui1 : !firrtl.clock, !firrtl.asyncreset, !firrtl.uint<1>, !firrtl.uint<2>\n\n    // The canonicalizer ends up driving the 1-bit reset to the 2-bit output port using a matching connect.\n    firrtl.matchingconnect %out, %reg : !firrtl.uint<2>\n    firrtl.matchingconnect %reg, %c0_ui2 : !firrtl.uint<2>\n  }\n}\n```\n\nAfter canonicalization:\n```mlir\n// -----// IR Dump After Canonicalizer Failed (canonicalize) //----- //\n\"firrtl.module\"() <{annotations = [], convention = #firrtl<convention internal>, layers = [], portAnnotations = [], portDirections = array<i1: true>, portLocations = [loc(\"./scratch2.mlir\":2:30)], portNames = [\"out\"], portSymbols = [], portTypes = [!firrtl.uint<2>], sym_name = \"Scratch\"}> ({\n^bb0(%arg0: !firrtl.uint<2>):\n  %0 = \"firrtl.constant\"() <{value = 0 : ui1}> : () -> !firrtl.uint<1>\n  \"firrtl.matchingconnect\"(%arg0, %0) : (!firrtl.uint<2>, !firrtl.uint<1>) -> ()\n}) : () -> ()\n```\n\nRun using:\n```\ncirct-opt --pass-pipeline=\"builtin.module(firrtl.circuit(firrtl.module(canonicalize{max-iterations=10 max-num-rewrites=-1 region-simplify=disabled test-convergence=false top-down=true})))\" ./scratch2.mlir --mlir-print-ir-after-failure\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-26",
+  "closed_at": "2025-03-28",
+  "code_blocks": [
+    "firrtl.circuit \"Scratch\" {\n  firrtl.module @Scratch(out %out : !firrtl.uint<2>) {\n\n    // The reset value is 1-bit, but the register is 2-bits.\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    %c0_ui2 = firrtl.constant 0 : !firrtl.uint<2>\n    %c0_clock = firrtl.specialconstant 0 : !firrtl.clock\n    %c1_asyncreset = firrtl.specialconstant 1 : !firrtl.asyncreset\n    %reg = firrtl.regreset %c0_clock, %c1_asyncreset, %c0_ui1 : !firrtl.clock, !firrtl.asyncreset, !firrtl.uint<1>, !firrtl.uint<2>\n\n    // The canonicalizer ends up driving the 1-bit reset to the 2-bit output port using a matching connect.\n    firrtl.matchingconnect %out, %reg : !firrtl.uint<2>\n    firrtl.matchingconnect %reg, %c0_ui2 : !firrtl.uint<2>\n  }\n}\n",
+    "// -----// IR Dump After Canonicalizer Failed (canonicalize) //----- //\n\"firrtl.module\"() <{annotations = [], convention = #firrtl<convention internal>, layers = [], portAnnotations = [], portDirections = array<i1: true>, portLocations = [loc(\"./scratch2.mlir\":2:30)], portNames = [\"out\"], portSymbols = [], portTypes = [!firrtl.uint<2>], sym_name = \"Scratch\"}> ({\n^bb0(%arg0: !firrtl.uint<2>):\n  %0 = \"firrtl.constant\"() <{value = 0 : ui1}> : () -> !firrtl.uint<1>\n  \"firrtl.matchingconnect\"(%arg0, %0) : (!firrtl.uint<2>, !firrtl.uint<1>) -> ()\n}) : () -> ()\n",
+    "circt-opt --pass-pipeline=\"builtin.module(firrtl.circuit(firrtl.module(canonicalize{max-iterations=10 max-num-rewrites=-1 region-simplify=disabled test-convergence=false top-down=true})))\" ./scratch2.mlir --mlir-print-ir-after-failure\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

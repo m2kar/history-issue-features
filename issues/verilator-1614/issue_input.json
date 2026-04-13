@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1614,
+  "issue_url": "https://github.com/verilator/verilator/issues/1614",
+  "title": "Multiple label redefinition/parsing issue for constant functions used in computational loops",
+  "body": "---\n\n\nAuthor Name: **Mitch Hayenga**\nOriginal Redmine Issue: 1614 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nMinimal case below\r\n\r\n```\r\n  1 function automatic integer min(input integer a, input integer b);\r\n  2    return (a < b) ? a : b;\r\n  3 endfunction\r\n  4 \r\n  5 \r\n  6 module fail #(parameter A=16, parameter B=8)\r\n  7   (input [A-1:0] a,\r\n  8    input [B-1:0] b,\r\n  9    output logic [min(A,B)-1:0] c);\r\n 10 \r\n 11   always_comb\r\n 12     for (int i = 0; i < min(A,B); i++)\r\n 13       assign c[i] = a[i] | b[i];\r\n 14 \r\n 15 endmodule\r\n\r\n[mhayenga@euphoria verilator_test]$ verilator -sv  fail.sv  --cc  -Wall \r\n[mhayenga@euphoria verilator_test]$ cd obj_dir/\r\n[mhayenga@euphoria obj_dir]$ make -f Vfail.mk \r\n/usr/bin/perl /usr/local/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include Vfail.cpp Vfail___024unit.cpp > Vfail__ALLcls.cpp\r\ng++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVL_PRINTF=printf -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow       -c -o Vfail__ALLcls.o Vfail__ALLcls.cpp\r\nIn file included from Vfail__ALLcls.cpp:3:\r\nVfail.cpp: In static member function ‘static void Vfail::_combo__TOP__1(Vfail__Syms*)’:\r\nVfail.cpp:133:9: error: duplicate label ‘__Vlabel1’\r\n  133 |         __Vlabel1: ;\r\n       |         ^~~~~~~~~\r\nVfail.cpp: In static member function ‘static void Vfail::_settle__TOP__2(Vfail__Syms*)’:\r\nVfail.cpp:174:9: error: duplicate label ‘__Vlabel2’\r\n  174 |         __Vlabel2: ;\r\n       |         ^~~~~~~~~\r\nmake: *** [/usr/local/share/verilator/include/verilated.mk:183: Vfail__ALLcls.o] Error 1\r\n\n```\r\n\r\n\r\n\r\n\r\nThe issue goes away if the code is changed to the following\r\n\r\n\r\n```\r\n  1 function automatic integer min(input integer a, input integer b);\r\n  2    return (a < b) ? a : b;\r\n  3 endfunction\r\n  4 \r\n  5 \r\n  6 module fail #(parameter A=16, parameter B=8)\r\n  7   (input [A-1:0] a,\r\n  8    input [B-1:0] b,\r\n  9    output logic [min(A,B)-1:0] c);\r\n 10 \r\n 11   localparam EFF_LEN = min(A,B);\r\n 12   always_comb\r\n 13     for (int i = 0; i < EFF_LEN; i++)\r\n 14       assign c[i] = a[i] | b[i];\r\n 15 \r\n 16 endmodule\r\n\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-25",
+  "closed_at": "2019-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

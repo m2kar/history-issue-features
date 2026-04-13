@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5147,
+  "issue_url": "https://github.com/verilator/verilator/issues/5147",
+  "title": "Add error when writing parameter with `$value$plusargs`",
+  "body": "```sv\r\nmodule m #(\r\n    string S = \"\"\r\n);\r\n  initial begin\r\n    $value$plusargs(\"S=%s\", S);\r\n    #1;  // No error without this line\r\n  end\r\nendmodule\r\n```\r\n\r\n```\r\nverilator --binary -MAKEFLAGS '--silent' --quiet -j 0 m.sv\r\n```\r\nv5.024-62-g d4b358330 on Archlinux\r\n\r\nOutput:\r\n```\r\nIn file included from Vm__ALL.cpp:5:\r\nVm___024root__DepSet_hbd80a7bb__0.cpp: In function ‘VlCoroutine Vm___024root___eval_initial__TOP__Vtiming__0(Vm___024root*)’:\r\nVm___024root__DepSet_hbd80a7bb__0.cpp:23:31: error: binding reference of type ‘std::string&’ {aka ‘std::__cxx11::basic_string<char>&’} to ‘const std::string’ {aka ‘const std::__cxx11::basic_string<char>’} discards qualifiers\r\n   23 |     (void)VL_VALUEPLUSARGS_INN(64, std::string{\"S=%s\"},\r\n      |           ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~\r\n   24 |                                vlSelf->m__DOT__S);\r\n      |                                ~~~~~~~~~~~~~~~~~~\r\nIn file included from /usr/local/share/verilator/include/verilated.h:989,\r\n                 from Vm__pch.h:21,\r\n                 from Vm.cpp:4,\r\n                 from Vm__ALL.cpp:3:\r\n/usr/local/share/verilator/include/verilated_funcs.h:2478:76: note:   initializing argument 3 of ‘IData VL_VALUEPLUSARGS_INN(int, const std::string&, std::string&)’\r\n 2478 | extern IData VL_VALUEPLUSARGS_INN(int, const std::string& ld, std::string& rdr) VL_MT_SAFE;\r\n      |                                                               ~~~~~~~~~~~~~^~~\r\n```\r\n\r\nPresumably the problem arises from writing to a parameter. Writing into a parameter may seem strange, however some tools accept this:\r\n\r\n1. Vivado : yes\r\n2. VCS: yes\r\n3. Questa: no (sees a parameter as a non-modifiable variable)\r\n4. Xcelium: no (refers to LRM 3.10, however I could not find any relevant sentence in LRM 2023. Maybe it refers to an older LRM).\r\n\r\nIMHO: A parameter is like a port, so it should be set *at*(default value) or *outside* a module. So I find it ok to forbid this.",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-28",
+  "closed_at": "2024-11-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4651,
+  "issue_url": "https://github.com/llvm/circt/issues/4651",
+  "title": "[FIRRTL] LowerAnnotations rejects Reset/UInt<1> Wiring Problem source/sink pairs",
+  "body": "I stumbled across the following use of `SourceAnnotation`/`SinkAnnotation` in the wild which tries to wire an abstract `Reset` signal to a concrete `UInt<1>`:\r\n```\r\ncircuit Foo : %[[\r\n  {\r\n    \"class\":\"firrtl.passes.wiring.SourceAnnotation\",\r\n    \"target\":\"~Foo|Bar>y\",\r\n    \"pin\":\"xyz\"\r\n  },\r\n  {\r\n    \"class\":\"firrtl.passes.wiring.SinkAnnotation\",\r\n    \"target\":\"~Foo|Foo>x\",\r\n    \"pin\":\"xyz\"\r\n  }\r\n]]\r\n  module Bar :\r\n    wire y : Reset\r\n    y is invalid\r\n\r\n  module Foo :\r\n    inst bar of Bar\r\n    wire x : UInt<1>\r\n    x is invalid\r\n```\r\nRunning this through `firtool --parse-only` produces the following error:\r\n```\r\ninput.fir:14:5: error: Wiring Problem source type '!firrtl.reset' does not match sink type '!firrtl.uint<1>'\r\n    wire y : Reset\r\n    ^\r\ninput.fir:19:5: note: The sink is here.\r\n    wire x : UInt<1>\r\n    ^\r\n```\r\nRelated to #4496 which added support for lowering some of these legacy wiring annotations as `WiringProblem`s.\r\n\r\nThe issue is that the `LowerAnnotations` pass already checks for the types of the source/sink to line up. But the abstract `Reset` type only gets eliminated in `InferResets`, which runs after this pass. So we either have to make the anno lowering more lenient (accepting compatible types), or move the type checking to a later point when we actually deal with materializing XMRs or the wires themselves.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-13",
+  "closed_at": "2023-02-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

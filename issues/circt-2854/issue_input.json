@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2854,
+  "issue_url": "https://github.com/llvm/circt/issues/2854",
+  "title": "[firtool] `verbose-pass-execution` not printing the final two passes",
+  "body": "`-verbose-pass-executions` is not printing the final two passes.  The last line printed is:\r\n\r\n```\r\n[firtool] Running \"hw.module(cse, canonicalize{  max-iterations=10 region-simplify=true top-down=true}, hw-cleanup)\"\r\n[firtool] -- Done in 4.138 sec\r\n```\r\nThis is missing `ExportSplitVerilog` and `HWExportModuleHierarchy`:\r\n```\r\n    2.6278 (  1.5%)    0.1379 (  0.1%)  'hw.module' Pipeline\r\n    0.3368 (  0.2%)    0.0171 (  0.0%)    HWLegalizeModules\r\n    2.1072 (  1.2%)    0.1306 (  0.1%)    PrettifyVerilog\r\n    7.4712 (  4.4%)    7.4712 (  7.7%)  ExportSplitVerilog\r\n    0.7133 (  0.4%)    0.7133 (  0.7%)  HWExportModuleHierarchy\r\n    0.0418 (  0.0%)    0.0418 (  0.0%)  Rest\r\n  170.6345 (100.0%)   97.5451 (100.0%)  Total\r\n```\r\n\r\nLooks like we just need to register the instrumentation for the new pass manager\r\n\r\nhttps://github.com/llvm/circt/blob/main/tools/firtool/firtool.cpp#L563\r\n\r\n```c++\r\n  if (verbosePassExecutions)\r\n    pm.addInstrumentation(std::make_unique<FirtoolPassInstrumentation>());\r\n ```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-06",
+  "closed_at": "2022-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 738,
+  "issue_url": "https://github.com/verilator/verilator/issues/738",
+  "title": "AstReplicate constructor consistency",
+  "body": "---\n\n\nAuthor Name: **Glen Gibb**\nOriginal Redmine Issue: 738 from https://www.veripool.org\nOriginal Date: 2014-04-10\nOriginal Assignee: Glen Gibb \n\n---\n\nI have noticed inconsistency between the two AstReplicate constructors:\r\n```\r\nstruct AstReplicate : public AstNodeBiop {\r\n     // Verilog {rhs{lhs}} - Note rhsp() is the replicate value, not the lhsp()\r\n     AstReplicate(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeBiop(fl, lhsp, rhsp) {\r\n         if (AstConst* constp=rhsp->castConst()) {\r\n             dtypeSetLogicSized(lhsp->width()*constp->toUInt(), lhsp->width()*constp->toUInt(), AstNumeric::UNSIGNED);\r\n         }\r\n     }\r\n     AstReplicate(FileLine* fl, AstNode* lhsp, uint32_t repCount)\r\n\t: AstNodeBiop(fl, lhsp, new AstConst(fl, repCount)) {}\r\n\n```\r\n\r\nThe first constructor sets the data type width (lhsp's width * rhsp's replication count), while the second constructor does not set the width. While this is probably taken care of by the V3Width visitor, I'd suggest adding the following call to dtypeSetLogicSized in the second constructor:\r\n```\r\ndtypeSetLogicSized(lhsp->width()*repCount, lhsp->width()*repCount, AstNumeric::UNSIGNED);\r\n\n```\r\n\r\nAlternatively, this common code could be shifted to an init() method, or delegating constructors could be used if you want to use C++11 language features.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: configure/compiling"
+  ],
+  "state": "closed",
+  "created_at": "2014-04-10",
+  "closed_at": "2014-04-10",
+  "code_blocks": [
+    "struct AstReplicate : public AstNodeBiop {\r\n     // Verilog {rhs{lhs}} - Note rhsp() is the replicate value, not the lhsp()\r\n     AstReplicate(FileLine* fl, AstNode* lhsp, AstNode* rhsp) : AstNodeBiop(fl, lhsp, rhsp) {\r\n         if (AstConst* constp=rhsp->castConst()) {\r\n             dtypeSetLogicSized(lhsp->width()*constp->toUInt(), lhsp->width()*constp->toUInt(), AstNumeric::UNSIGNED);\r\n         }\r\n     }\r\n     AstReplicate(FileLine* fl, AstNode* lhsp, uint32_t repCount)\r\n\t: AstNodeBiop(fl, lhsp, new AstConst(fl, repCount)) {}",
+    "dtypeSetLogicSized(lhsp->width()*repCount, lhsp->width()*repCount, AstNumeric::UNSIGNED);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

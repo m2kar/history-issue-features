@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4087,
+  "issue_url": "https://github.com/llvm/circt/issues/4087",
+  "title": "[firrtl] Improve Initialization Error Messages",
+  "body": "Currently, the errors generated when something is undriven are not awesome. If there is an associated FIRRTL-provided source locator, then the message is terse to the point of not being useful. If there is no source locator (or the source locator is ignored), the input FIRRTL text is then shown, but without enough context (e.g., what module it is) to fix it.\r\n\r\nConsider:\r\n\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n\r\n    wire w: UInt<1> @[herpderp 42:42]\r\n```\r\n\r\nRunning this with `firtool`, this produces:\r\n\r\n```\r\nherpderp:42:42: error: sink \"w\" not fully initialized\r\nherpderp:42:42: note: see current operation: %0 = \"firrtl.wire\"() {annotations = [], name = \"w\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<1>\r\n```\r\n\r\nRunning with `firtool -ignore-fir-locators`:\r\n\r\n```\r\n﻿Foo.fir:4:5: error: sink \"w\" not fully initialized\r\n    wire w: UInt<1> @[herpderp 42:42]\r\n    ^\r\nFoo.fir:4:5: note: see current operation: %0 = \"firrtl.wire\"() {annotations = [], name = \"w\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<1>\r\n```\r\n\r\nIn a perfect world, we would show the line of Chisel that caused the issue, but we don't have that. Just printing a diagnostic that tells you what module it is in would likely be sufficient.\r\n\r\nIdeas welcome on what would be better approach to showing this information.\r\n\r\nh/t @azidar",
+  "labels": [
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-10-12",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

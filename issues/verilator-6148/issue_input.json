@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6148,
+  "issue_url": "https://github.com/verilator/verilator/pull/6148",
+  "title": "Support member-level triggers for virtual interfaces (#5116)",
+  "body": "This patch addresses [issue #5116](https://github.com/verilator/verilator/issues/5116) by introducing fine-grained virtual interface scheduling.\r\nSpecifically, it adds per-member triggers to virtual interfaces, so that only the relevant combinational logic is scheduled when a specific member (e.g., vif.data) is written.\r\n\r\nThis fixes a known problem where coarse-grained interface triggers either cause redundant scheduling or fail to trigger updates when a member is indirectly driven.\r\n\r\nTo validate the change, I added a new test (t_virtual_interface_member_trigger.v).\r\n\r\n**CI Results:**\r\nAfter applying this patch, the following 5 existing tests failed in CI:\r\n\r\n```\r\nt_interface_virtual_sched_act.v\r\nt_interface_virtual_timing.v\r\nt_interface_virtual_controlflow.v\r\nt_interface_virtual_sched_ico.v\r\nt_interface_virtual_sched_nba.v\r\n```\r\n\r\nUpon investigation, I think these failures are due to problematic assumptions in the tests:\r\n\r\n1. Illegal continuous assignments to virtual interface members, e.g.:\r\n`assign vif.a = b;  // Not allowed by IEEE standard, and Questasim also reports an error.`\r\n2. Incorrect usage of always_comb with virtual interface members:\r\n    Signals like vif.a are handles, not static signals. Sensitivity lists in always_comb are expected to be compile-time known signals or variables. Since virtual interfaces are bound at runtime, this construct is not standard-compliant.\r\n\r\nI have confirmed these issues using Questasim. and I tried to fix t_interface_virtual_timing.v to reflect legal usage patterns.\r\n\r\n**Questions:**\r\nFor the remaining 4 tests, I'd like to understand their original intent before modifying them.\r\n\r\nAre these tests meant to verify that changes to an interface member (e.g., intf.a) are observed correctly through vif.a?\r\n\r\nOr are they testing trigger propagation logic across combinational vs. sequential domains?\r\n\r\nDepending on that, I can adjust the tests accordingly to ensure both standard-compliance and functional correctness.\r\n\r\nPlease advise whether I may proceed to update the remaining 4 tests or maybe I am wrong about some parts of tests.\r\n\r\nThanks!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-02",
+  "closed_at": "2025-07-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

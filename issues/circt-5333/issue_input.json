@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5333,
+  "issue_url": "https://github.com/llvm/circt/issues/5333",
+  "title": "[FIRRTL] infer resets doesn't work with const-cast of aggregates",
+  "body": "Input:\r\n\r\n```\r\nmodule {\r\n  firrtl.circuit \"ConstReset\" {\r\n    firrtl.module @ConstReset(in %in: !firrtl.const.bundle<a: reset, b: uint<1>>, out %out: !firrtl.bundle<a: asyncreset>, out %out2: !firrtl.bundle<a: reset, b: uint<1>>) {\r\n      %out_a = firrtl.subfield %out[a] : !firrtl.bundle<a: asyncreset>\r\n      %in_a = firrtl.subfield %in[a] : !firrtl.const.bundle<a: reset, b: uint<1>>\r\n      %in_a_asyncreset = firrtl.resetCast %in_a : (!firrtl.const.reset) -> !firrtl.const.asyncreset\r\n      %in_a_asyncreset_noconst = firrtl.constCast %in_a_asyncreset : (!firrtl.const.asyncreset) -> !firrtl.asyncreset\r\n      firrtl.strictconnect %out_a, %in_a_asyncreset_noconst : !firrtl.asyncreset\r\n\r\n      %in_noconst = firrtl.constCast %in : (!firrtl.const.bundle<a: reset, b: uint<1>>) -> !firrtl.bundle<a: reset, b : uint<1>>\r\n      firrtl.strictconnect %out2, %in_noconst : !firrtl.bundle<a: reset, b: uint<1>>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nLooks like InferResets only updates the constcast types if they're ground reset types?\r\n\r\nError after InferResets:\r\n\r\n```\r\n$ ./build/bin/firtool const-reset.mlir --mlir-print-ir-before=firrtl-infer-resets\r\n// -----// IR Dump Before InferResets (firrtl-infer-resets) //----- //\r\nfirrtl.circuit \"ConstReset\" {\r\n  firrtl.module @ConstReset(in %in: !firrtl.const.bundle<a: reset, b: uint<1>>, out %out: !firrtl.bundle<a: asyncreset>, out %out2: !firrtl.bundle<a: reset, b: uint<1>>) {\r\n    %0 = firrtl.subfield %out[a] : !firrtl.bundle<a: asyncreset>\r\n    %1 = firrtl.subfield %in[a] : !firrtl.const.bundle<a: reset, b: uint<1>>\r\n    %2 = firrtl.resetCast %1 : (!firrtl.const.reset) -> !firrtl.const.asyncreset\r\n    %3 = firrtl.constCast %2 : (!firrtl.const.asyncreset) -> !firrtl.asyncreset\r\n    firrtl.strictconnect %0, %3 : !firrtl.asyncreset\r\n    %4 = firrtl.constCast %in : (!firrtl.const.bundle<a: reset, b: uint<1>>) -> !firrtl.bundle<a: reset, b: uint<1>>\r\n    firrtl.strictconnect %out2, %4 : !firrtl.bundle<a: reset, b: uint<1>>\r\n  }\r\n}\r\n\r\nconst-reset.mlir:10:21: error: 'firrtl.constCast' op '!firrtl.const.bundle<a: asyncreset, b: uint<1>>' is not 'const'-castable to '!firrtl.bundle<a: reset, b: uint<1>>'\r\n      %in_noconst = firrtl.constCast %in : (!firrtl.const.bundle<a: reset, b: uint<1>>) -> !firrtl.bundle<a: reset, b : uint<1>>\r\n                    ^\r\nconst-reset.mlir:10:21: note: see current operation: %3 = \"firrtl.constCast\"(%arg0) : (!firrtl.const.bundle<a: asyncreset, b: uint<1>>) -> !firrtl.bundle<a: reset, b: uint<1>>\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-07",
+  "closed_at": "2023-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

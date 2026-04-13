@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5726,
+  "issue_url": "https://github.com/verilator/verilator/issues/5726",
+  "title": "Support $dumpvars(1, some.hier.path)",
+  "body": "I can get variable-specific dumps from the Vtestbench_main.cpp file just fine via\r\n\r\n```\r\ncontextp->traceEverOn(true);\r\ntopp->trace(trace_object, 1);\r\ntrace_object->dumpvars(1, \"TOP.testbench.dut.core.ifu.PCF\");\r\ntrace_object->open(\"/tmp/sim.vcd\");\r\n...\r\n       topp->eval();\r\n        VL_PRINTF(\"time: %dns\\n\", contextp->time());\r\n        trace_object->dump(contextp->time());\r\n\r\n```\r\nand the sim.vcd correctly contains just a dereference for the one wire, (128-bit) PCF.\r\n\r\nYes, I am compiling with --trace for verilator.\r\n\r\nIf I remove those lines and leave the verilator generated .cpp main file alone, and instead put\r\nin the testbench.sv file init section:\r\n\r\n```\r\n  $display(\"[%0t] Tracing to /tmp/sim.vcd: ...\\n\", $time);\r\n  $dumpfile(\"/tmp/sim.vcd\");\r\n  $dumpvars(1, dut.core.ifu.PCF);\r\n\r\n```\r\nthen \"nothing\" happens, for various forms of \"nothing\". \r\n\r\nThat is, depending on the hierarchy expansion value, I either get every single variable in the whole of existence tracked (\"0\") or none (anything else), modulated by whatever I write instead of dut.core.ifu.PCF.\r\n\r\nIf instead of dut.core.ifu.PCF I name something there that does not exist I don't get a compile error, I get behavior like that for \"0\" just described, no matter what hierarchy value.\r\n\r\nTo me it seems those references are translated as strings before linting, and those are the wrong strings, somehow, or else the translation is to something that just takes no notice anyway. Certainly there is a dumpvars in c++ to translate to, as the version where it works from the main() routine shows, but it's not in the generated .cpp files. Perhaps the translation, if any, is to something further along the line in terms of expansion, and that's not quite right?\r\n\r\nIs there some touch of magic I am missing?\r\n\r\nRegards\r\n\r\nPTB\r\n\r\n(whatever verilator is in debian ...  Verilator 5.027 devel rev v5.026-130-g1b15509a9)\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+  "labels": [
+    "status: ready",
+    "type: feature-IEEE",
+    "area: tracing"
+  ],
+  "state": "open",
+  "created_at": "2025-01-10",
+  "closed_at": null,
+  "code_blocks": [
+    "contextp->traceEverOn(true);\r\ntopp->trace(trace_object, 1);\r\ntrace_object->dumpvars(1, \"TOP.testbench.dut.core.ifu.PCF\");\r\ntrace_object->open(\"/tmp/sim.vcd\");\r\n...\r\n       topp->eval();\r\n        VL_PRINTF(\"time: %dns\\n\", contextp->time());\r\n        trace_object->dump(contextp->time());",
+    "$display(\"[%0t] Tracing to /tmp/sim.vcd: ...\\n\", $time);\r\n  $dumpfile(\"/tmp/sim.vcd\");\r\n  $dumpvars(1, dut.core.ifu.PCF);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

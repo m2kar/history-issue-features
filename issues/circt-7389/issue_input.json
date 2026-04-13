@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7389,
+  "issue_url": "https://github.com/llvm/circt/issues/7389",
+  "title": "[FIRRTL][enumcreate] textual IR prints attributes but can't read back",
+  "body": "Consider this input:\r\n```\r\nfirrtl.circuit \"MatchTest\" {\r\n  firrtl.module @MatchTest(in %i: !firrtl.enum<Some: uint<8>, None: uint<0>>) attributes {convention = #firrtl<convention scalarized>} {\r\n    %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n    %0 = firrtl.enumcreate Some(%c0_ui8) : (!firrtl.const.uint<8>) -> !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n    %some = firrtl.node interesting_name %0 : !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n    %c0_ui0 = firrtl.constant 0 : !firrtl.const.uint<0>\r\n    %1 = firrtl.enumcreate None(%c0_ui0) : (!firrtl.const.uint<0>) -> !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n    %none = firrtl.node interesting_name %1 : !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n  }\r\n}\r\n```\r\n\r\nFed through this pipeline:\r\n```\r\ncirct-opt --no-implicit-module -p 'firrtl.circuit(firrtl.module(firrtl-lower-matches,firrtl-expand-whens,firrtl-drop-names,canonicalize))' match-test-name.mlir\r\n```\r\n\r\nProduces:\r\n```\r\nfirrtl.circuit \"MatchTest\" {\r\n  firrtl.module @MatchTest(in %i: !firrtl.enum<Some: uint<8>, None: uint<0>>) attributes {convention = #firrtl<convention scalarized>} {\r\n    %c0_ui0 = firrtl.constant 0 : !firrtl.const.uint<0>\r\n    %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n    %0 = firrtl.enumcreate Some(%c0_ui8) attributes {name = \"some\"} : (!firrtl.const.uint<8>) -> !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n    %1 = firrtl.enumcreate None(%c0_ui0) attributes {name = \"none\"} : (!firrtl.const.uint<0>) -> !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n  }\r\n}\r\n```\r\n\r\n(names from nodes to go their inputs, cc #7064, I think so that we give nicer names should these becomes name-able things, but regardless)\r\n\r\nThis IR can't be parsed, failure at `attributes`:\r\n\r\n```\r\n<stdin>:5:41: error: expected ':'\r\n    %0 = firrtl.enumcreate Some(%c0_ui8) attributes {name = \"some\"} : (!firrtl.const.uint<8>) -> !firrtl.enum<Some: uint<8>, None: uint<0>>\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

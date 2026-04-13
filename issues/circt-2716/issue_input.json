@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2716,
+  "issue_url": "https://github.com/llvm/circt/pull/2716",
+  "title": "[LowerToHW] Guard out-of-bounds multi-bit mux",
+  "body": "Change FIRRTL to HW lowering behavior for subaccess (which is\r\nrepresented as a multi-bit mux) to return the zeroth element on an\r\nout-of-bounds read.  Previously, this would return an X (the Verilog\r\nout-of-bounds read behavior).  This change is made to align CIRCT with\r\nSFC behavior around out-of-bounds subaccess lowering.\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>\r\n\r\nThis is done to fix situations like the following:\r\n\r\n```scala\r\ncircuit Bar:\r\n  module Bar:\r\n    input index: UInt<4>\r\n    input vec: UInt<8>[10]\r\n    output out: UInt<8>\r\n\r\n    out <= vec[index]\r\n```\r\n\r\nWithout this patch, CIRCT produced:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input  [3:0] index,\r\n  input  [7:0] vec_0, vec_1, vec_2, vec_3, vec_4, vec_5, vec_6, vec_7, vec_8, vec_9,\r\n  output [7:0] out);\r\n\r\n  wire [9:0][7:0] _GEN = {{vec_9}, {vec_8}, {vec_7}, {vec_6}, {vec_5}, {vec_4}, {vec_3}, {vec_2}, {vec_1}, {vec_0}};\r\n  assign out = _GEN[index];\r\nendmodule\r\n```\r\n\r\nWith this patch, CIRCT produces:\r\n```verilog\r\nmodule Bar(\r\n  input  [3:0] index,\r\n  input  [7:0] vec_0, vec_1, vec_2, vec_3, vec_4, vec_5, vec_6, vec_7, vec_8, vec_9,\r\n  output [7:0] out);\r\n\r\n  wire [9:0][7:0] _GEN = {{vec_9}, {vec_8}, {vec_7}, {vec_6}, {vec_5}, {vec_4}, {vec_3}, {vec_2}, {vec_1}, {vec_0}};\r\n  assign out = index > 4'h9 ? vec_0 : _GEN[index];\r\nendmodule\r\n```\r\n\r\nThe SFC produces:\r\n```verilog\r\nmodule Bar(\r\n  input  [3:0] index,\r\n  input  [7:0] vec_0,\r\n  input  [7:0] vec_1,\r\n  input  [7:0] vec_2,\r\n  input  [7:0] vec_3,\r\n  input  [7:0] vec_4,\r\n  input  [7:0] vec_5,\r\n  input  [7:0] vec_6,\r\n  input  [7:0] vec_7,\r\n  input  [7:0] vec_8,\r\n  input  [7:0] vec_9,\r\n  output [7:0] out\r\n);\r\n  wire [7:0] _GEN_1 = 4'h1 == index ? vec_1 : vec_0; \r\n  wire [7:0] _GEN_2 = 4'h2 == index ? vec_2 : _GEN_1; \r\n  wire [7:0] _GEN_3 = 4'h3 == index ? vec_3 : _GEN_2; \r\n  wire [7:0] _GEN_4 = 4'h4 == index ? vec_4 : _GEN_3; \r\n  wire [7:0] _GEN_5 = 4'h5 == index ? vec_5 : _GEN_4; \r\n  wire [7:0] _GEN_6 = 4'h6 == index ? vec_6 : _GEN_5; \r\n  wire [7:0] _GEN_7 = 4'h7 == index ? vec_7 : _GEN_6; \r\n  wire [7:0] _GEN_8 = 4'h8 == index ? vec_8 : _GEN_7; \r\n  assign out = 4'h9 == index ? vec_9 : _GEN_8; \r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-02",
+  "closed_at": "2022-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

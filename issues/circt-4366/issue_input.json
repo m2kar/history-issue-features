@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4366,
+  "issue_url": "https://github.com/llvm/circt/pull/4366",
+  "title": "[PrepareForEmission] Remove unnecessary tempoary introduced by bitcast op",
+  "body": "This avoids creating unnecessary temporary wires because of term size limit. \r\n\r\n```mlir\r\nmodule attributes {circt.loweringOptions = \"maximumNumberOfTermsPerExpression=2\"} {\r\n  hw.module @Foo(%in_0: i4, %in_1: i4, %in_2: i4, %in_3: i4) -> (out: !hw.array<4xi4>) {\r\n    %0 = comb.concat %in_0, %in_1, %in_2, %in_3 : i4, i4, i4, i4\r\n    %1 = hw.bitcast %0 : (i16) -> !hw.array<4xi4>\r\n    hw.output %1 : !hw.array<4xi4>\r\n  }\r\n}\r\n```\r\n\r\nFor the example above, `%0` is spilled because the term size is 4 but however `%0` is only used by an assignment through bitcast op. \r\nBefore:\r\n```verilog\r\n  wire [15:0] _GEN = {in_0, in_1, in_2, in_3};\t// foo.mlir:2:10\r\n  assign out = /*cast(bit[3:0][3:0])*/_GEN;\t// foo.mlir:2:10, :3:10, :4:5\r\n```\r\nAfter:\r\n```verilog\r\n  assign out = /*cast(bit[3:0][3:0])*/{in_0, in_1, in_2, in_3};\t// foo.mlir:5:10, :6:10, :7:5\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-28",
+  "closed_at": "2022-11-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

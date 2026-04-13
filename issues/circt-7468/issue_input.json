@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7468,
+  "issue_url": "https://github.com/llvm/circt/issues/7468",
+  "title": "[FIRRTL][LowerSignatures] Const is dropped, breaking IR",
+  "body": "Input:\r\n\r\n```firrtl\r\nFIRRTL version 4.0.0\r\n\r\ncircuit ConstFlip :\r\n  extmodule Sink :\r\n    input x : const UInt<1>\r\n  public module ConstFlip :\r\n    output out : { x : const { flip y : UInt<1> } }\r\n\r\n    inst s of Sink\r\n    connect s.x, out.x.y\r\n```\r\n\r\n`firtool --mlir-print-ir-after-failure` produces:\r\n\r\n```\r\nconst-flip.fir:6:10: error: type mismatch between destination '!firrtl.const.uint<1>' and source '!firrtl.uint<1>'\r\n  public module ConstFlip :\r\n         ^\r\nconst-flip.fir:6:10: note: see current operation: \"firrtl.connect\"(%2, %arg0) : (!firrtl.const.uint<1>, !firrtl.uint<1>) -> ()\r\n// -----// IR Dump After LowerSignatures Failed (firrtl-lower-signatures) //----- //\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.extmodule\"() ({\r\n  }) {annotations = [], convention = #firrtl<convention scalarized>, layers = [], parameters = [], portAnnotations = [[]], portDirections = array<i1: false>, portLocations = [loc(\"const-flip.fir\":5:11)], portNames = [\"x\"], portSyms = [], portTypes = [!firrtl.const.uint<1>], sym_name = \"Sink\", sym_visibility = \"private\"} : () -> ()\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg0: !firrtl.uint<1>):\r\n    %0 = \"firrtl.wire\"() {annotations = [], name = \"out\", nameKind = #firrtl<name_kind interesting_name>} : () -> !firrtl.bundle<x: const.bundle<y flip: uint<1>>>\r\n    %1 = \"firrtl.subfield\"(%0) {fieldIndex = 0 : i32} : (!firrtl.bundle<x: const.bundle<y flip: uint<1>>>) -> !firrtl.const.bundle<y flip: uint<1>>\r\n    %2 = \"firrtl.subfield\"(%1) {fieldIndex = 0 : i32} : (!firrtl.const.bundle<y flip: uint<1>>) -> !firrtl.const.uint<1>\r\n    \"firrtl.connect\"(%2, %arg0) : (!firrtl.const.uint<1>, !firrtl.uint<1>) -> ()\r\n    %3 = \"firrtl.subfield\"(%0) {fieldIndex = 0 : i32} : (!firrtl.bundle<x: const.bundle<y flip: uint<1>>>) -> !firrtl.const.bundle<y flip: uint<1>>\r\n    %4 = \"firrtl.subfield\"(%3) {fieldIndex = 0 : i32} : (!firrtl.const.bundle<y flip: uint<1>>) -> !firrtl.const.uint<1>\r\n    %5 = \"firrtl.instance\"() {annotations = [], layers = [], moduleName = @Sink, name = \"s\", nameKind = #firrtl<name_kind interesting_name>, portAnnotations = [[]], portDirections = array<i1: false>, portNames = [\"x\"]} : () -> !firrtl.const.uint<1>\r\n    \"firrtl.matchingconnect\"(%5, %4) : (!firrtl.const.uint<1>, !firrtl.const.uint<1>) -> ()\r\n  }) {annotations = [], convention = #firrtl<convention scalarized>, layers = [], portAnnotations = [[]], portDirections = array<i1: false>, portLocations = [loc(\"const-flip.fir\":7:12)], portNames = [\"out_x_y\"], portSyms = [], portTypes = [!firrtl.uint<1>], sym_name = \"ConstFlip\"} : () -> ()\r\n}) {annotations = [], name = \"ConstFlip\"} : () -> ()\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-08-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

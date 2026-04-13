@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5296,
+  "issue_url": "https://github.com/llvm/circt/issues/5296",
+  "title": "How can I lower calyx dialect to a unified, low-level dialect, I may have some question.",
+  "body": "I am learning the calyx dialect.I know calyx can be lowered to fsm dialect by the picture of lower's route inside the official documentation.\r\n```\r\n// Here is my code.\r\nmodule attributes {calyx.entrypoint = \"main\"} { \r\ncalyx.component @identity(%in: i32, %go: i1 {go}, %clk: i1 {clk}, %reset: i1 {reset}) -> (%out: i32, %done: i1 {done}) {\r\n  %r.in, %r.write_en, %r.clk, %r.reset, %r.out, %r.done = calyx.register @r : i32, i1, i1, i1, i32, i1\r\n  %c1_1 = hw.constant 1 : i1\r\n  %true = hw.constant true\r\n  calyx.wires {\r\n    calyx.group @save {\r\n      calyx.assign %r.in = %in : i32 \r\n      calyx.assign %r.write_en = %c1_1 : i1 \r\n      calyx.group_done %r.done : i1\r\n   } \r\n    calyx.assign %out = %r.out :i32\r\n  }\r\n\r\n  calyx.control {\r\n    calyx.seq {\r\n      calyx.enable @save\r\n    }\r\n }\r\n}\r\n\r\ncalyx.component @main(%go: i1 {go}, %clk: i1 {clk}, %reset: i1 {reset}) -> (%done: i1 {done}) {\r\n  %id.in, %id.go, %id.clk, %id.reset, %id.out, %id.done = calyx.instance @id of @identity : i32, i1, i1, i1, i32, i1\r\n  %r.in, %r.write_en, %r.clk, %r.reset, %r.out, %r.done = calyx.register @r : i32, i1, i1, i1, i32, i1 \r\n  %c1_1 = hw.constant 1 : i1\r\n  %c1_10 = hw.constant 10 : i32\r\n\r\n  calyx.wires {\r\n    calyx.group @run_id {\r\n      calyx.assign %id.in = %c1_10 : i32\r\n      calyx.assign %id.go = %c1_1 : i1\r\n      calyx.group_done %id.done : i1\r\n    }\r\n\r\n    calyx.group @use_id {\r\n      calyx.assign %r.in = %id.out : i32\r\n      calyx.assign %r.write_en = %c1_1: i1\r\n      calyx.group_done %r.done: i1\r\n    }\r\n  }\r\n\r\n  calyx.control {\r\n    calyx.seq {\r\n      calyx.enable @use_id\r\n      calyx.enable @run_id\r\n    }\r\n  }\r\n}\r\n}\r\n```\r\nI found a problem that I just can lower the calyx dialect to the fsm, which prevented me from lowering it further.\r\n```\r\ncirct-opt calyx.mlir -lower-calyx-to-fsm -materialize-calyx-to-fsm -calyx-remove-groups-fsm  -lower-calyx-to-hw\r\ncalyx.mlir:42:3: error: mismatch in number of types compared (2 != 3)\r\n  calyx.control {\r\n  ^\r\ncalyx.mlir:42:3: error: 'fsm.hw_instance' op operand types must match the machine input types\r\n  calyx.control {\r\n  ^\r\ncalyx.mlir:42:3: note: see current operation: %1:3 = \"fsm.hw_instance\"(%2#1, %0#1, %arg0, %arg1, %arg2) {machine = @control, sym_name = \"controller\"} : (i1, i1, i1, i1, i1) -> (i1, i1, i1)\r\ncalyx.mlir:15:3: note: original machine declared here\r\n  calyx.control {\r\n  ^\r\n```\r\nI now find that this is a multi-component issue and I think I may need to run other passes, but I'm not sure, so if anyone can help me, I would appreciate it.You can see that I have no problem with the individual components below.",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-31",
+  "closed_at": "2023-06-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

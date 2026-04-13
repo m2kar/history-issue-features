@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2832,
+  "issue_url": "https://github.com/verilator/verilator/issues/2832",
+  "title": "enable  waveform dump in protect-lib mode",
+  "body": "I used protect-lib mode for cosim. \r\nTB is too complex, so vcs/xcelium could be used to handle that, while DUT is handled by verilator.\r\n\r\nUnfortuantely, by default waveform dump is not enabled.\r\n\r\nWith little change, It actually can.\r\n\r\nI write one time.cpp file to define sc_time_stamp() and enable traceEverOn.\r\n\r\n```c\r\n#include \"svdpi.h\"\r\n#include \"vpi_user.h\"\r\n\r\ntypedef unsigned long long ullong;\r\n\r\nextern \"C\" {\r\nvoid traceon() {\r\n     Verilated::traceEverOn(true);\r\n}\r\n\r\nullong edahub_time() {\r\n    static s_vpi_time t = {vpiSimTime, 0, 0, 0.0};\r\n    uint64_t simtime;\r\n    vpi_get_time(0, &t); \r\n    simtime = (((uint64_t)t.high <<32)|t.low);\r\n    printf(\"time = %llu\\n\", simtime);\r\n    return simtime;\r\n}\r\n\r\nint edahub_time_precision(){\r\n  return vpi_get(vpiTimePrecision, 0); \r\n}\r\n\r\n\r\n}\r\n\r\n// Called by $time in Verilog\r\ndouble sc_time_stamp() {\r\n    return static_cast<double>(edahub_time());\r\n}\r\n```\r\n\r\nin original DUT file, I add\r\n\r\n```verilog\r\ninitial begin\r\n  $display(\"[%0t] Tracing to logs/vlt_dump.vcd...\\n\", $time);\r\n  $dumpfile(\"logs/vlt_dump.vcd\");\r\n  $dumpvars();\r\n  $display(\"[%0t] Model running...\\n\", $time);\r\nend\r\n```\r\n\r\nThis solution will cause one re-dump issue.\r\n```\r\n%Warning: previous dump at t=131149, requesting t=131149, dump call ignored\r\n```\r\n\r\nThe issue is caused by the evals in wrapper file for comb and sequential logic.\r\n\r\nDon't know if there is solution to avoid this.\r\n\r\nin C code, actually I want to get VerilatedVcd object, then use its member function set_time_resolution to set the time precision (as you see, I already use vip to get time precision (in edahub_time_precision).\r\n\r\nI also tried to compile the DUT in non-protect-lib mode. Then I write one wrapper by myself to call eval(). With this method, I could create VerilatedVcd object and do anything I want.\r\n\r\n\r\n\r\n",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-11",
+  "closed_at": "2021-12-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

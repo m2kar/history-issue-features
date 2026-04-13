@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8833,
+  "issue_url": "https://github.com/llvm/circt/issues/8833",
+  "title": "[Seq] Register symbol with special characters does not round-trip",
+  "body": "It looks like a `sym @...` on a `seq.compreg` (and likely any other op that can have an inner symbol) gets printed without `\"...\"` even if it contains special characters:\n```\n// foo.mlir\nhw.module @Foo(in %a: i42, in %clk: !seq.clock) {\n  %0 = seq.compreg sym @\"foo/bar\" %a, %clk : i42\n  hw.output\n}\n\n// after circt-opt foo.mlir\nhw.module @Foo(in %a : i42, in %clk : !seq.clock) {\n  %0 = seq.compreg sym @foo/bar %a, %clk : i42\n  hw.output\n}\n\n// after circt-opt foo.mlir | circt-opt\n<stdin>:3:30: error: expected SSA operand\n    %0 = seq.compreg sym @foo/bar %a, %clk : i42\n                             ^\n```\nThis also gets cought by running `circt-opt --verify-roundtrip`. Adding that to the basic dialect tests alongside an op with a symbol like the above should trigger the issue.",
+  "labels": [
+    "bug",
+    "good first issue",
+    "Seq"
+  ],
+  "state": "open",
+  "created_at": "2025-08-08",
+  "closed_at": null,
+  "code_blocks": [
+    "// foo.mlir\nhw.module @Foo(in %a: i42, in %clk: !seq.clock) {\n  %0 = seq.compreg sym @\"foo/bar\" %a, %clk : i42\n  hw.output\n}\n\n// after circt-opt foo.mlir\nhw.module @Foo(in %a : i42, in %clk : !seq.clock) {\n  %0 = seq.compreg sym @foo/bar %a, %clk : i42\n  hw.output\n}\n\n// after circt-opt foo.mlir | circt-opt\n<stdin>:3:30: error: expected SSA operand\n    %0 = seq.compreg sym @foo/bar %a, %clk : i42\n                             ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

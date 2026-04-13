@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3548,
+  "issue_url": "https://github.com/verilator/verilator/issues/3548",
+  "title": "Dynamic array initialized with one element get converted to unsigned",
+  "body": "On verilator master branch\r\n\r\nThe following code:\r\n```systemverilog\r\nmodule tjo();\r\n\r\ninitial begin\r\n    int some_ints[] = {12};\r\n    $display(\"%d\", some_ints[0]);\r\nend\r\n\r\nendmodule\r\n```\r\nGet converted to: \r\n```cpp\r\nVL_ATTR_COLD void Vtjo___024root___initial__TOP__0(Vtjo___024root* vlSelf) {\r\n    if (false && vlSelf) {}  // Prevent unused\r\n    Vtjo__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtjo___024root___initial__TOP__0\\n\"); );\r\n    // Body\r\n    VL_WRITEF(\"%11d\\n\",32,0xcU.at(0U));\r\n}\r\n```\r\nNote the `0xcU.at(0U)` part.\r\n\r\nThis error does not happen for this code:\r\n```systemverilog\r\nmodule tjo();\r\n\r\ninitial begin\r\n    int some_ints[] = '{12};\r\n    $display(\"%d\", some_ints[0]);\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nOr this code:\r\n```systemverilog\r\nmodule tjo();\r\n\r\ninitial begin\r\n    int some_ints[] = {12, 13};\r\n    $display(\"%d\", some_ints[0]);\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nThe working cases are converted to this or similiar:\r\n```cpp\r\nVL_ATTR_COLD void Vtjo___024root___initial__TOP__0(Vtjo___024root* vlSelf) {\r\n    if (false && vlSelf) {}  // Prevent unused\r\n    Vtjo__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtjo___024root___initial__TOP__0\\n\"); );\r\n    // Init\r\n    VlQueue<IData/*31:0*/> tjo__DOT__unnamedblk1__DOT__some_ints;\r\n    // Body\r\n    tjo__DOT__unnamedblk1__DOT__some_ints = VlQueue<IData/*31:0*/>::cons(0xdU, \r\n                                                                         0xcU);\r\n    VL_WRITEF(\"%11d\\n\",32,tjo__DOT__unnamedblk1__DOT__some_ints.at(0U));\r\n}\r\n```\r\n\r\nI have tried with arrays of `int` and `string` and they both have this problem.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-16",
+  "closed_at": "2023-02-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

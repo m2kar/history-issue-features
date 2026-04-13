@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4814,
+  "issue_url": "https://github.com/verilator/verilator/issues/4814",
+  "title": "inconsistent results on signed operations",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```verilog\r\nmodule test();\r\n  reg clock;\r\n  initial begin\r\n    clock = 0;\r\n  end\r\n  always #1 clock = ~clock;\r\n\r\n  wire [63:0] in1 = 64'hfffffffbffffffff;\r\n  wire [63:0] in2 = 64'hffffffffffffffdf;\r\n\r\n  wire [63:0] div_data = $signed(in1) / $signed(in2);\r\n  wire [63:0] result1 =\r\n    in2 == 64'h0 ? 64'hFFFFFFFFFFFFFFFF :\r\n      div_data;\r\n\r\n  wire [63:0] result2 =\r\n    in2 == 64'h0 ? 64'hFFFFFFFFFFFFFFFF :\r\n      $signed(in1) / $signed(in2);\r\n\r\n  always @(posedge clock) begin\r\n    if (result1 != result2) begin\r\n      $display(\"div_data: %x, $signed(in1) / $signed(in2): %x\",\r\n        div_data, $signed(in1) / $signed(in2));\r\n      $display(\"result1: %x, result2: %x\", result1, result2);\r\n      $error();\r\n    end\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\n`result1` and `result2` are expected to be the same, is it? However, it says\r\n```\r\ndiv_data: 000000001f07c1f0, $signed(in1) / $signed(in2): 000000001f07c1f0\r\nresult1: 000000001f07c1f0, result2: 0000000000000000\r\n[1] %Error: test.v:27: Assertion failed in TOP.test\r\n%Error: test.v:27: Verilog $stop\r\nAborting...\r\n```\r\n\r\nWhat 'verilator' command line do we use to run your example?\r\n`verilator --cc --exe --main --timing test.v`\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n`Verilator 5.021 devel rev v5.020-22-g19cb366e5`. It's the latest master branch.\r\n\r\nWhat OS and distribution are you using?\r\nUbuntu 20.04\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nI'm not sure whether this is a bug or feature. I tried O0-O3 but all version produces the same result. I'm not having VCS installed now but I could have a try in the next days if needed.",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-09",
+  "closed_at": "2024-01-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

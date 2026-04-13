@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7167,
+  "issue_url": "https://github.com/verilator/verilator/issues/7167",
+  "title": "Fix std::randomize() in static function with static class members",
+  "body": "## Summary\n\n`std::randomize()` called from a static class function, with a `with` clause referencing static class members, generates invalid C++ that fails to compile. Related to IEEE 1800-2017 18.11 (scope randomize).\n\n## Current Behavior\n\nThe following pattern produces three C++ compilation errors:\n\n```\n  class instr_base;\n    static instr_name_t allowed_instrs[$];\n    static function instr_name_t get_rand_instr();\n      instr_name_t name;\n      std::randomize(name) with { name inside {allowed_instrs}; };\n      return name;\n    endfunction\n  endclass\n```\n\n- has no member named '__VnoInFunc___VStdrand_*' — helper function placed on wrong class\n- VlClassRef<class>{this} type mismatch — this pointer is package type, not class type\n- has no member named '__PVT__allowed_instrs' — static member accessed via wrong class\n\n## Expected Behavior\n\n- std::randomize() in static function context with static member references compiles and runs correctly\n- Randomized variable is constrained to the values in the static member collection\n\n## Source\nplanvtech/PlanV_Verilator_Feature_Tests#67\n\n\nPR is coming.",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-01",
+  "closed_at": "2026-03-02",
+  "code_blocks": [
+    "class instr_base;\n    static instr_name_t allowed_instrs[$];\n    static function instr_name_t get_rand_instr();\n      instr_name_t name;\n      std::randomize(name) with { name inside {allowed_instrs}; };\n      return name;\n    endfunction\n  endclass"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

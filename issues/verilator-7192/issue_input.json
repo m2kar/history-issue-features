@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7192,
+  "issue_url": "https://github.com/verilator/verilator/issues/7192",
+  "title": "Support Z non-blocking assignment",
+  "body": "Support simple non-blocking assignment of `Z` state. Needed for uvm_test tests/20sequences/90Mantis/3633_bad_sequence_macros after commenting out asserts that soon will get support.\n\n@nbstrike, any interest?  Should be straight forward, if not no worries I'll get to it, thanks.\n\n<details>\n <summary>Example</summary>\n```\n// verilog_format: off\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n// verilog_format: on\n\nmodule t (\n    input clk\n);\n\n  int cyc;\n\n  // verilator lint_off MULTIDRIVEN\n  logic tribus;\n  // verilator lint_off MULTIDRIVEN\n\n  wire driver1_en = cyc[0];\n  wire driver1_dat = cyc[1];\n  always @(negedge clk) begin\n    tribus <= driver1_en ? driver1_dat : 1'bz;\n  end\n\n  wire driver2_en = cyc[2];\n  wire driver2_dat = cyc[3];\n  always @(negedge clk) begin\n    tribus <= driver2_en ? driver2_dat : 1'bz;\n  end\n\n  // Test loop\n  always @(posedge clk) begin\n`ifdef TEST_VERBOSE\n    $write(\"[%0t] cyc==%0d tb=%x (%x,%x) (%x,%x)\\n\", $time, cyc, tribus, driver1_en, driver1_dat,\n           driver2_en, driver2_dat);\n`endif\n    cyc <= cyc + 1;\n    if (cyc == 0) begin\n      // Setup\n    end\n    else if (cyc < 50) begin\n      if (!driver1_en && !driver2_en) begin\n        `checkh(tribus, 1'bz);\n      end\n      else if (driver1_en && !driver2_en) begin\n        `checkh(tribus, driver1_dat);\n      end\n      else if (!driver1_en && driver2_en) begin\n        `checkh(tribus, driver2_dat);\n      end\n      else;  // Ignore conflict cases\n    end\n    else if (cyc == 99) begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n  end\n\nendmodule\n```\n</details>\n",
+  "labels": [
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-04",
+  "closed_at": "2026-03-05",
+  "code_blocks": [
+    "// verilog_format: off\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n// verilog_format: on\n\nmodule t (\n    input clk\n);\n\n  int cyc;\n\n  // verilator lint_off MULTIDRIVEN\n  logic tribus;\n  // verilator lint_off MULTIDRIVEN\n\n  wire driver1_en = cyc[0];\n  wire driver1_dat = cyc[1];\n  always @(negedge clk) begin\n    tribus <= driver1_en ? driver1_dat : 1'bz;\n  end\n\n  wire driver2_en = cyc[2];\n  wire driver2_dat = cyc[3];\n  always @(negedge clk) begin\n    tribus <= driver2_en ? driver2_dat : 1'bz;\n  end\n\n  // Test loop\n  always @(posedge clk) begin\n`ifdef TEST_VERBOSE\n    $write(\"[%0t] cyc==%0d tb=%x (%x,%x) (%x,%x)\\n\", $time, cyc, tribus, driver1_en, driver1_dat,\n           driver2_en, driver2_dat);\n`endif\n    cyc <= cyc + 1;\n    if (cyc == 0) begin\n      // Setup\n    end\n    else if (cyc < 50) begin\n      if (!driver1_en && !driver2_en) begin\n        `checkh(tribus, 1'bz);\n      end\n      else if (driver1_en && !driver2_en) begin\n        `checkh(tribus, driver1_dat);\n      end\n      else if (!driver1_en && driver2_en) begin\n        `checkh(tribus, driver2_dat);\n      end\n      else;  // Ignore conflict cases\n    end\n    else if (cyc == 99) begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

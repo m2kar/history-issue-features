@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6754,
+  "issue_url": "https://github.com/verilator/verilator/issues/6754",
+  "title": "Fix parameterized class module parameters",
+  "body": "Hello,\n\nI would like to be able to parameterise structs, and pass them to a generic module as a type parameter.\n\nFrom my understanding packages cannot be parameterised, so I need to put the typedef either in a class or in an interface.\n\nHowever, from what I gather verilator does not allow to access typedefs within an interface. But classes should work.\n\nSo what's up with the following?\n\nWhat would be the intended way to achieve this?\n\n```\nclass pipeline_class #(\n    parameter int XLEN = 32,\n    localparam type XWORD = logic [XLEN-1:0],\n    localparam type RADDR = logic [$clog2(XLEN)-1:0]\n);\n  // IF -> ID\n  typedef struct packed {XWORD pc;} if_id_t;\n\n  /* ... */\n\nendclass\n\nmodule pipe_reg #(\n    parameter type T = logic,\n    parameter T CLR_VAL = 1'b0\n) (\n    input logic clk,\n    input logic en,\n    input logic clr,\n    input T din,\n    output T dout\n);\n\n  /* ... */\n\nendmodule\n\nmodule fred #(\n    localparam int XLEN = 32,\n    localparam int ILEN = 32,\n    localparam type XWORD = logic [XLEN-1:0]\n) (\n    input  logic clk,\n    input  logic rst,\n    output XWORD a0\n);\n\n  /* ... */\n\n  // IF -> ID\n  typedef struct packed {XWORD pc;} if_id_t;\n\n  pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      /* ... */\n  );\n\n  /* ... */\n\nendmodule\n```\n\nGives error:\n\n```\n%Error: rtl/fred.sv:34:34: Expecting expression to be constant, but can't convert a DOT to constant.\n                         : ... note: In instance 'fred'\n   34 |   pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      |                                  ^~~~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.040 for more assistance.\n%Error: rtl/fred.sv:34:34: Parameter type pin value isn't a type: Param '__paramNumber1' of 'if_id_reg'\n                         : ... note: In instance 'fred'\n   34 |   pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      |                                  \n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --binary --top-module fred rtl/yadayadayada\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\n```\nVerilator 5.040 2025-08-30 rev v5.040\n```",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-04",
+  "closed_at": "2025-12-20",
+  "code_blocks": [
+    "class pipeline_class #(\n    parameter int XLEN = 32,\n    localparam type XWORD = logic [XLEN-1:0],\n    localparam type RADDR = logic [$clog2(XLEN)-1:0]\n);\n  // IF -> ID\n  typedef struct packed {XWORD pc;} if_id_t;\n\n  /* ... */\n\nendclass\n\nmodule pipe_reg #(\n    parameter type T = logic,\n    parameter T CLR_VAL = 1'b0\n) (\n    input logic clk,\n    input logic en,\n    input logic clr,\n    input T din,\n    output T dout\n);\n\n  /* ... */\n\nendmodule\n\nmodule fred #(\n    localparam int XLEN = 32,\n    localparam int ILEN = 32,\n    localparam type XWORD = logic [XLEN-1:0]\n) (\n    input  logic clk,\n    input  logic rst,\n    output XWORD a0\n);\n\n  /* ... */\n\n  // IF -> ID\n  typedef struct packed {XWORD pc;} if_id_t;\n\n  pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      /* ... */\n  );\n\n  /* ... */\n\nendmodule\n",
+    "%Error: rtl/fred.sv:34:34: Expecting expression to be constant, but can't convert a DOT to constant.\n                         : ... note: In instance 'fred'\n   34 |   pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      |                                  ^~~~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.040 for more assistance.\n%Error: rtl/fred.sv:34:34: Parameter type pin value isn't a type: Param '__paramNumber1' of 'if_id_reg'\n                         : ... note: In instance 'fred'\n   34 |   pipe_reg #(pipeline_class #()::if_id_t) if_id_reg (\n      |                                  \n",
+    "verilator --binary --top-module fred rtl/yadayadayada\n",
+    "Verilator 5.040 2025-08-30 rev v5.040\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

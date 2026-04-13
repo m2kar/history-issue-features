@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3655,
+  "issue_url": "https://github.com/verilator/verilator/issues/3655",
+  "title": "Support for interfaces as top level ports",
+  "body": "Restarting https://github.com/verilator/verilator/issues/1185 discussion here now that interface ports for top level module is supported in linting. I wanted to extend that feature to support interface ports on top level module even for verilation. In order to accomplish this, I think two things need to be supported\r\n1. Control over the parameters of the interface ports - that can be supported via the -G command line feature where the parameters can be uniquely named using the pattern `<TOP_MODULE_NAME>_<INTERFACE_PORT_NAME>_<PARAMETER_NAME>`\r\n2. Exposing the interface signals as C++ member variables. For this I was thinking the verilated C++ code could generate something akin to the below structure \r\n```verilog\r\n    interface some_i ();\r\n        logic some_signal1;\r\n        logic some_signal2;\r\n        modport mast_mp (\r\n            input some_signal2\r\n        );\r\n    endinterface\r\n\r\n    module some_top (\r\n        input wire some_input,\r\n        some_iface.master_mp some_i\r\n    );\r\n    endmodule\r\n```\r\nconverted to\r\n```cpp\r\n    class Vsome_top VL_NOT_FINAL {\r\n    public:\r\n        VL_IN8(&some_input, 0, 0);\r\n        Vsome_i some_i;\r\n       // ...\r\n    };\r\n    \r\n    class Vsome_i VL_NOT_FINAL {\r\n    public:\r\n        VL_INOUT8(&some_signal1, 0, 0);\r\n        VL_IN8(&some_signal2, 0, 0);\r\n    };\r\n```\r\n\r\nEssentially the interface can be thought of as another top and instantiated under the top module.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2022-10-04",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

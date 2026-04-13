@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 394,
+  "issue_url": "https://github.com/llvm/circt/issues/394",
+  "title": "[FIRRTL] (add / mux) missmatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_3: SInt<16>\r\n    input inp_6: UInt<13>\r\n    output tmp13: SInt<14>\r\n    wire tmp11: UInt<14>\r\n    tmp11 <= add(inp_6, UInt<12>(1))\r\n    tmp13 <= mux(tail(asUInt(inp_3), 15), asSInt(tmp11), SInt<13>(1))\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [15:0] inp_3,\r\n  input  [12:0] inp_6,\r\n  output [13:0] tmp13);\r\n\r\n  wire [13:0] tmp11;\t// a_top_mod.fir:6:5\r\n\r\n  assign tmp11 = {{1'd0}, inp_6} + 14'h1;\t// a_top_mod.fir:7:{11,14}\r\n  assign tmp13 = inp_3[0] ? tmp11 : 14'h1;\t// a_top_mod.fir:2:3, :8:{14,18,43}\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.4.0` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [15:0] inp_3,\r\n  input  [12:0] inp_6,\r\n  output [13:0] tmp13\r\n);\r\n  wire [15:0] _GEN_0 = inp_3;\r\n  assign tmp13 = _GEN_0[0] ? $signed(inp_6 + 13'h1) : $signed(14'sh1);\r\nendmodule\r\n```\r\n\r\nYosys (Yosys 0.9+3755 (git sha1 442d19f6, clang 11.0.0 -fPIC -Os)) reports formal mismatch:\r\n\r\n```\r\nERROR: Found 1 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-04",
+  "closed_at": "2021-01-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

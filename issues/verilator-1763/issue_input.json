@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1763,
+  "issue_url": "https://github.com/verilator/verilator/issues/1763",
+  "title": "Question: Reason for error message: Unsupported: Non-constant inside []'s in the cell part of a dotted reference",
+  "body": "---\n\n\nAuthor Name: **Julius Baxter** (@juliusbaxter)\nOriginal Redmine Message: 923 from https://www.veripool.org\n\n\n\n---\n\nI'd like to get a clarification for the reason for the following error:\n\n Unsupported: Non-constant inside []'s in the cell part of a dotted reference\n\nUpon googling the error it links to issue #517, http://www.veripool.org/issues/517-Verilator-Constant-expression-in-generated-block-index-not-recognized\n\n\n#517 looks like it's an issue with addressing multiple instances, however I'm seeing the error being caused when attempting to select a struct from an array of them, and then one of the struct's members. The following is a testcase:\n```\npackage TEST_TYPES;\n    typedef struct packed {\n       logic   stuff;     \n    } a_struct;\nendpackage // TEST_TYPES\n\nmodule testmodule(a_out);\n    parameter n = 4;\n    output TEST_TYPES::a_struct [n-1:0] a_out;\n    always_comb\n      begin\n\tfor (int i=0;i<n;i++)\n\t  a_out[i].stuff = '0;\n      end\nendmodule // testmodule\n\n```\n\nI compile with:\n\n verilator -sv --lint-only testcase.sv\n\nand get:\n\n %Error: testcase.sv:13: Unsupported: Non-constant inside []'s in the cell part of a dotted reference\n %Error: Exiting due to 1 error(s)\n\nIs this the expected behaviour for this code?\n\nIf so..... any idea when support for such a thing will be added, and how hard it would be?\n\nThanks\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2012-10-08",
+  "closed_at": "2012-10-09",
+  "code_blocks": [
+    "package TEST_TYPES;\n    typedef struct packed {\n       logic   stuff;     \n    } a_struct;\nendpackage // TEST_TYPES\n\nmodule testmodule(a_out);\n    parameter n = 4;\n    output TEST_TYPES::a_struct [n-1:0] a_out;\n    always_comb\n      begin\n\tfor (int i=0;i<n;i++)\n\t  a_out[i].stuff = '0;\n      end\nendmodule // testmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

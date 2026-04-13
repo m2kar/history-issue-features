@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4099,
+  "issue_url": "https://github.com/verilator/verilator/issues/4099",
+  "title": "Verilator produces bits of output that shouldn't exist",
+  "body": "This Verilog module:\r\n```\r\nmodule our(in1, in2, out);\r\n        input wire[1:0] in1;\r\n        input wire[1:0] in2;\r\n        output wire[1:0] out;\r\n\r\n        assign out = in1 & in2; \r\n\r\n        initial begin $display(\"Hello World\"); $finish; end\r\nendmodule\r\n```\r\ncan only produce 2 bits.\r\n\r\nHowerer, this C++ program:\r\n```\r\n#include \"Vour.h\"\r\n#include \"verilated.h\"\r\n        \r\nint main(int argc, char** argv) {\r\n    VerilatedContext* contextp = new VerilatedContext;\r\n    contextp->commandArgs(argc, argv);\r\n\r\n    Vour* top = new Vour{contextp};\r\n    top->in1 = 4+1;\r\n    top->in2 = 4+3;\r\n    top->out = 0;\r\n\r\n    printf(\"> out=0x%x\\n\", top->out);\r\n    while (!contextp->gotFinish()) {\r\n        top->eval();\r\n    }\r\n    printf(\"< out=0x%x\\n\", top->out);\r\n\r\n    delete top;\r\n    delete contextp;\r\n\r\n    return 0;\r\n}\r\n```\r\nprints\r\n```\r\n> out=0x0\r\nHello World\r\n- our.v:8: Verilog $finish\r\n< out=0x5\r\n```\r\nwhich has the third bit set in the output which wasn't set before the call.\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-10",
+  "closed_at": "2023-04-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

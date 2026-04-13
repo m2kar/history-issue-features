@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8693,
+  "issue_url": "https://github.com/llvm/circt/issues/8693",
+  "title": "[Mem2Reg] Local signal does not dominate final drive",
+  "body": "For input (derived from SV import minized and then MLIR minized)\n\n```mlir\nmodule {\n  hw.module @a() {\n    %false = hw.constant false\n    %b = llhd.sig %false : i1\n    llhd.combinational {\n      cf.br ^bb2\n    ^bb1:  // no predecessors\n      %0 = llhd.prb %b : !hw.inout<i1>\n      %1 = llhd.constant_time <0ns, 0d, 1e>\n      %g = llhd.sig %false : i1\n      llhd.drv %g, %0 after %1 : !hw.inout<i1>\n      cf.br ^bb2\n    ^bb2:  // 2 preds: ^bb0, ^bb1\n      llhd.yield\n    }\n    hw.output\n  }\n}\n```\n\nresults post llhd-mem2reg in\n\n```\nerror: operand #0 does not dominate this use\nnote: see current operation: \"llhd.drv\"(%6, %7, %9, %8) : (!hw.inout<i1>, i1, !llhd.time, i1) -> ()\n/tmp/t2.mlir:10:12: note: operand defined here (op in the same region)\n      %g = llhd.sig %false : i1\n           ^\n```\n\nprint IR after:\n\n```mlir\n\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<>, parameters = [], sym_name = \"a\"}> ({\n    %0 = \"hw.constant\"() <{value = false}> : () -> i1\n    %1 = \"llhd.sig\"(%0) <{name = \"b\"}> : (i1) -> !hw.inout<i1>\n    %2 = \"llhd.prb\"(%1) : (!hw.inout<i1>) -> i1\n    \"llhd.combinational\"() ({\n      %3 = \"hw.constant\"() <{value = false}> : () -> i1\n      %4 = \"hw.constant\"() <{value = false}> : () -> i1\n      \"cf.br\"(%3, %4)[^bb2] : (i1, i1) -> ()\n    ^bb1:  // no predecessors\n      %5 = \"hw.constant\"() <{value = true}> : () -> i1\n      %6 = \"llhd.sig\"(%0) <{name = \"g\"}> : (i1) -> !hw.inout<i1>\n      \"cf.br\"(%2, %5)[^bb2] : (i1, i1) -> ()\n    ^bb2(%7: i1, %8: i1):  // 2 preds: ^bb0, ^bb1\n      %9 = \"llhd.constant_time\"() <{value = #llhd.time<0ns, 0d, 1e>}> : () -> !llhd.time\n      \"llhd.drv\"(%6, %7, %9, %8) : (!hw.inout<i1>, i1, !llhd.time, i1) -> ()\n      // ^\n      \"llhd.yield\"() : () -> ()\n    }) : () -> ()\n    \"hw.output\"() : () -> ()\n  }) : () -> ()\n}) : () -> ()\n```",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "open",
+  "created_at": "2025-07-11",
+  "closed_at": null,
+  "code_blocks": [
+    "module {\n  hw.module @a() {\n    %false = hw.constant false\n    %b = llhd.sig %false : i1\n    llhd.combinational {\n      cf.br ^bb2\n    ^bb1:  // no predecessors\n      %0 = llhd.prb %b : !hw.inout<i1>\n      %1 = llhd.constant_time <0ns, 0d, 1e>\n      %g = llhd.sig %false : i1\n      llhd.drv %g, %0 after %1 : !hw.inout<i1>\n      cf.br ^bb2\n    ^bb2:  // 2 preds: ^bb0, ^bb1\n      llhd.yield\n    }\n    hw.output\n  }\n}\n",
+    "error: operand #0 does not dominate this use\nnote: see current operation: \"llhd.drv\"(%6, %7, %9, %8) : (!hw.inout<i1>, i1, !llhd.time, i1) -> ()\n/tmp/t2.mlir:10:12: note: operand defined here (op in the same region)\n      %g = llhd.sig %false : i1\n           ^\n",
+    "\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<>, parameters = [], sym_name = \"a\"}> ({\n    %0 = \"hw.constant\"() <{value = false}> : () -> i1\n    %1 = \"llhd.sig\"(%0) <{name = \"b\"}> : (i1) -> !hw.inout<i1>\n    %2 = \"llhd.prb\"(%1) : (!hw.inout<i1>) -> i1\n    \"llhd.combinational\"() ({\n      %3 = \"hw.constant\"() <{value = false}> : () -> i1\n      %4 = \"hw.constant\"() <{value = false}> : () -> i1\n      \"cf.br\"(%3, %4)[^bb2] : (i1, i1) -> ()\n    ^bb1:  // no predecessors\n      %5 = \"hw.constant\"() <{value = true}> : () -> i1\n      %6 = \"llhd.sig\"(%0) <{name = \"g\"}> : (i1) -> !hw.inout<i1>\n      \"cf.br\"(%2, %5)[^bb2] : (i1, i1) -> ()\n    ^bb2(%7: i1, %8: i1):  // 2 preds: ^bb0, ^bb1\n      %9 = \"llhd.constant_time\"() <{value = #llhd.time<0ns, 0d, 1e>}> : () -> !llhd.time\n      \"llhd.drv\"(%6, %7, %9, %8) : (!hw.inout<i1>, i1, !llhd.time, i1) -> ()\n      // ^\n      \"llhd.yield\"() : () -> ()\n    }) : () -> ()\n    \"hw.output\"() : () -> ()\n  }) : () -> ()\n}) : () -> ()\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

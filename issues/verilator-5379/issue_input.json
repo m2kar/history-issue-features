@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5379,
+  "issue_url": "https://github.com/verilator/verilator/issues/5379",
+  "title": "Improve trace performance on huge designs",
+  "body": "Thanks for taking the time to report this.\r\n\r\nWhat would you like added/supported?\r\nImprove FST tracing performance\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n5.027\r\n\r\nCan you attach an example that runs on other simulators?  (Must be openly licensed, ideally in test_regress format.)\r\nproject is too huge for upload . refernece this repo  [git@github.com:jcteng/rtls.git\r\n](https://github.com/jcteng/rtls.git)\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nTargetHDL：\r\nRTL generated from the 2Cores configuration of the Xiangshan project \r\n-----------------------------\r\n\r\nVerilator achieves parallelization in the NBA scheduling of Verilog, resulting in significant simulation performance improvements compared to other current commercial products. With proper RTL design, it can achieve simulation speeds over 10x faster than single-threaded simulations.\r\n\r\nHowever, with fst trace enabled, especially in the case of large footprint executable files, the simulation performance quickly drops below single-threaded performance, with a 10x difference in shock resistance compared to when fst tracing is disabled. To investigate the cause of this phenomenon, the RTL generated from the 2Cores Config of the Xiangshan project was used as a sample for analysis.\r\n\r\n\r\nIn the XiangShan2Cores project, TraceDump utilized over 70-90% of the CPU time in the main thread (the figure below shows one scenario at 70%), excessively occupying the main thread, which led to a 3x reduction in the evaluation efficiency of the main thread.\r\n![image](https://github.com/user-attachments/assets/1540d92a-daa3-4faa-95a7-09a9bbaf5726)\r\n\r\nThe main reason for taking too long is icache miss. There are a huge number of functions that collect signals, and the execution of each function has different degrees of frontend bound. Some of them have icache missing up to 100%, and the average level is above 50%. This undoubtedly limits the performance of the CPU. It is very frustrating to have such high icache missing in a single task such as signal acquisition. It is recommended to refactor this part of the code. The generation of C++ code in Emitter can consider better expression forms and centralized processing of signals. This can avoid low icache performance caused by traces being scattered in different locations.\r\n![image](https://github.com/user-attachments/assets/c32560af-5978-46b3-bead-962b33daeab4)\r\n\r\n\r\n\r\n",
+  "labels": [
+    "status: discussion",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-16",
+  "closed_at": "2025-09-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

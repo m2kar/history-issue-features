@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6935,
+  "issue_url": "https://github.com/verilator/verilator/issues/6935",
+  "title": "Support `$` (unbounded) in `inside` open_value_range",
+  "body": "- Example\n```\n// t_inside_unbound.v\nmodule t;\n    initial begin\n        int value;\n\n        // Test [$:5] - should match minimum to 5\n        value = 3;\n        if (!(value inside {[$:5]})) $stop;\n\n        // Test [5:$] - should match 5 to maximum\n        value = 10;\n        if (!(value inside {[5:$]})) $stop;\n\n        // Negative test\n        value = 3;\n        if (value inside {[5:$]}) $stop;\n\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n```\n\n- Current output (incorrect)\n```\n%Error-UNSUPPORTED: t_inside_unbounded.v:7:30: Unsupported/illegal unbounded ('$') in this context.\n                                             : ... note: In instance 't'\n    7 |         if (!(value inside {[$:5]})) $stop;\n      |                              ^\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.043\n%Error-UNSUPPORTED: t_inside_unbounded.v:11:32: Unsupported/illegal unbounded ('$') in this context.\n                                              : ... note: In instance 't'\n   11 |         if (!(value inside {[5:$]})) $stop;\n      |                                ^\n%Error-UNSUPPORTED: t_inside_unbounded.v:15:30: Unsupported/illegal unbounded ('$') in this context.\n                                              : ... note: In instance 't'\n   15 |         if (value inside {[5:$]}) $stop;\n```\n\n- Expected output\nShould compile successfully and pass the test (print *-* All Finished *-*.)\n\n- Reference\nIEEE 1800-2023 11.4.13 Set membership operator\n\nCommand: `verilator --binary -Wall t_inside_unbounded.v -o test && ./obj_dir/test`\nVerialtor version (git master ver): `Verilator 5.043 devel rev v5.042-214-g32dafdcc6`\nOS: `macOS (Darwin 24.0.0)`\nAssistance: yes, please",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-16",
+  "closed_at": "2026-01-17",
+  "code_blocks": [
+    "// t_inside_unbound.v\nmodule t;\n    initial begin\n        int value;\n\n        // Test [$:5] - should match minimum to 5\n        value = 3;\n        if (!(value inside {[$:5]})) $stop;\n\n        // Test [5:$] - should match 5 to maximum\n        value = 10;\n        if (!(value inside {[5:$]})) $stop;\n\n        // Negative test\n        value = 3;\n        if (value inside {[5:$]}) $stop;\n\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\nendmodule\n",
+    "%Error-UNSUPPORTED: t_inside_unbounded.v:7:30: Unsupported/illegal unbounded ('$') in this context.\n                                             : ... note: In instance 't'\n    7 |         if (!(value inside {[$:5]})) $stop;\n      |                              ^\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.043\n%Error-UNSUPPORTED: t_inside_unbounded.v:11:32: Unsupported/illegal unbounded ('$') in this context.\n                                              : ... note: In instance 't'\n   11 |         if (!(value inside {[5:$]})) $stop;\n      |                                ^\n%Error-UNSUPPORTED: t_inside_unbounded.v:15:30: Unsupported/illegal unbounded ('$') in this context.\n                                              : ... note: In instance 't'\n   15 |         if (value inside {[5:$]}) $stop;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

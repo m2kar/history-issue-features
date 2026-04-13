@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6610,
+  "issue_url": "https://github.com/verilator/verilator/issues/6610",
+  "title": "suppression via waiver.vlt does not work",
+  "body": "Thank you for providing such a useful tool. I noticed some strange behavior while using Verilator, so I wanted to let you know.\n\n## Summary\nThe `-Wno-EOFNEWLINE` command-line option in Verilator successfully suppresses the warning, but suppression via waiver.vlt does not work.\n\n## Reproduction Steps\n1. Create a file `aaa.sv` with the following content (no newline at end):\n   ```\n   module aaa; endmodule\n   ```\n\n2. Create a waiver.vlt file with the following content:\n   ```\n   `verilator_config\n\n   lint_off -rule EOFNEWLINE -file \"*aaa.sv\" -match \"Missing newline at end of file (POSIX 3.206).*\"\n   ```\n\n3. Run the following command:\n   ```\n   verilator --lint-only -Wall waiver.vlt aaa.sv\n   ```\n\n## Expected Behavior\nThe EOFNEWLINE warning should be suppressed by the `lint_off` setting in waiver.vlt.\n\n## Actual Behavior\nThe warning is not suppressed and results in the following error output:\n```\nverilator --lint-only -Wall  waiver.vlt aaa.sv\n%Warning-EOFNEWLINE: aaa.sv:1:22: Missing newline at end of file (POSIX 3.206).\n                                : ... Suggest add newline.\n    1 | module aaa; endmodule\n      |                      ^\n                     ... For warning description see https://verilator.org/warn/EOFNEWLINE?v=5.040\n                     ... Use \"/* verilator lint_off EOFNEWLINE */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n```\n\n## Additional Notes\n- The `-Wno-EOFNEWLINE` command-line option correctly suppresses the warning.\n- `hexdump -C aaa.sv` confirms that the file does not end with a newline character.\n- The waiver.vlt file was written based on the suggestions recorded in out.vlt. ( --waiver-output out.vlt )\n- verilator --version\nVerilator 5.040 2025-08-30 rev v5.040-50-g0a9d9db5a",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-29",
+  "closed_at": "2025-10-30",
+  "code_blocks": [
+    "   module aaa; endmodule\n   ",
+    "   `verilator_config\n\n   lint_off -rule EOFNEWLINE -file \"*aaa.sv\" -match \"Missing newline at end of file (POSIX 3.206).*\"\n   ",
+    "   verilator --lint-only -Wall waiver.vlt aaa.sv\n   ",
+    "verilator --lint-only -Wall  waiver.vlt aaa.sv\n%Warning-EOFNEWLINE: aaa.sv:1:22: Missing newline at end of file (POSIX 3.206).\n                                : ... Suggest add newline.\n    1 | module aaa; endmodule\n      |                      ^\n                     ... For warning description see https://verilator.org/warn/EOFNEWLINE?v=5.040\n                     ... Use \"/* verilator lint_off EOFNEWLINE */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1657,
+  "issue_url": "https://github.com/verilator/verilator/issues/1657",
+  "title": "Question: Simulating Xilinx Projects",
+  "body": "---\n\n\nAuthor Name: **Rodney Sinclair**\nOriginal Redmine Message: 9 from https://www.veripool.org\n\n\n\n---\n\nThis is a summary of what I've learned to do to simulate Xilinx projects using Verilator.  Using the techniques described here I've been able to shorten simulation times from hours to minutes, although it can take a while (sometimes a few hours) to get the Xilinx unisims models into a form usable with Verilator.\n\nFirst, the attached archive has everything required to exercise the MULT18X18S model including incorporating the GSR signal in glbl.\n\n1. Extract the files from this archive\n1. Copy the MULT18X18S.v file from the verilog/src/unisims directory in your distribution of ISE and then make the following modifications:\n(a)  Add \"// verilator tracing_off\" as the line immediately following the \"module\" statement (this reduced the amount of garbage you'll get in your waveform files from Xilinx' models);\n(b)  Delete the \"tri0 GSR\" line;\n(c)  Change to two occurances of \"GSR\" to \"glbl.GSR\";\n(d)  Change the \"p_out = 36'b0;\" statement to \"p_out <= 36'b0;\"; and\n(e)  Get rid of the \"#100\" delay in the subsequent assignment to \"p_out\".\n     Note:  If you don't make changes (b) through (e) you'll get warnings and/or errors from verilator.  Try it and you'll see what happens when you try incorporating more of the Xilinx models required by real projects.\n1. Type \"make -f tb.mk\"\n     \nAdditional comments:\n1. The test bench in tb.v isn't a real project.  It just requires one of Xilinx' unisims models so that glbl is required and the model has to be converted to a form usable by verilator.  It also demonstrates a technique to generate stimuli to the model without requiring problematic \"@ (posedge clk)\" or \"#xxx\" delay statements inside an \"initial\" statement.\n1. I haven't been able to successfully convert the Block RAM models provided with ISE.  I gave up and put behavioral models in the code.  In general, I avoid building Xilinx projects with behavioral models for large memories because I've seen 2 hour build times for projects that had taken 5 minutes total time because ISE required that much additional time to synthesize the large memory into discrete Block RAMs.  I've also encountered cases where ISE did not infer a DSP48 primitive when one could be used, and have had to explicitely instantiate the DSP48 so as to get a faster clock.\n1. I've been able to simulate the PicoBlaze processor using the provided Verilog source, although it took a couple of hours to resolve all the warnings and errors issued by Verilator about the original source code.\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2008-09-10",
+  "closed_at": "2008-09-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

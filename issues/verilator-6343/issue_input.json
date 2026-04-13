@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6343,
+  "issue_url": "https://github.com/verilator/verilator/issues/6343",
+  "title": "While loop hang on delayed assign",
+  "body": "The following example, based on sv-tests's sv-tests/third_party/tools/icarus/ivtest/ivltests/pr1883052b.v , hangs.\n\nI'd be ok if it was due to Verilator's having all combo-sensitivities always activating, and adding a `$finish` solving it, but that doesn't help.  It's hanging in `V3Sched.cpp`'s injection of a while() loop.\n\nMaybe @kbieganski you can advise?\n\n```\n// verilog_format: off\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got='h%x exp='h%x\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n// verilog_format: on\n\nmodule t;\n  reg [3:0] ia = 4'd1;\n  wire signed [3:0] iconstm, isfunc, iufunc;\n\n  // verilator lint_off WIDTH\n  assign #1 iconstm = -2;  // -2\n\n  assign #1 isfunc = $rtoi(2.0);  // 2\n\n  assign #1 iufunc = int_func(ia);  // 2\n  // verilator lint_on WIDTH\n\n  initial begin\n    #1;\n    `checkh(iconstm, 4'bx);\n    `checkh(isfunc, 4'bx);\n    `checkh(iufunc, 4'bx);\n\n    #1;\n    `checkh(iconstm, -2);\n    `checkh(isfunc, 2);\n    `checkh(iufunc, 2);\n\n    $finish;  // FIXME not in original test\n  end\n\n  function [31:0] int_func;\n    input [31:0] in;\n    int_func = in * 2;\n  endfunction\n\nendmodule\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-29",
+  "closed_at": "2025-09-01",
+  "code_blocks": [
+    "// verilog_format: off\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got='h%x exp='h%x\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n// verilog_format: on\n\nmodule t;\n  reg [3:0] ia = 4'd1;\n  wire signed [3:0] iconstm, isfunc, iufunc;\n\n  // verilator lint_off WIDTH\n  assign #1 iconstm = -2;  // -2\n\n  assign #1 isfunc = $rtoi(2.0);  // 2\n\n  assign #1 iufunc = int_func(ia);  // 2\n  // verilator lint_on WIDTH\n\n  initial begin\n    #1;\n    `checkh(iconstm, 4'bx);\n    `checkh(isfunc, 4'bx);\n    `checkh(iufunc, 4'bx);\n\n    #1;\n    `checkh(iconstm, -2);\n    `checkh(isfunc, 2);\n    `checkh(iufunc, 2);\n\n    $finish;  // FIXME not in original test\n  end\n\n  function [31:0] int_func;\n    input [31:0] in;\n    int_func = in * 2;\n  endfunction\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

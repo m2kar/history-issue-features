@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2687,
+  "issue_url": "https://github.com/llvm/circt/issues/2687",
+  "title": "[FIRRTL] Dedup Creating Empty Symbols?",
+  "body": "I think FIRRTL's dedup can inadvertently create empty symbols (which then crash during printing).  Consider the following circuit where `%0` in `@A` and `@A_` are going to be deduped.  This results in an NLA that gets generated with, I think, the symbol `@\"\"` which will be empty:\r\n\r\n```mlir\r\nfirrtl.circuit \"Top\"  {\r\n  firrtl.module @Top() {\r\n    %a1_x = firrtl.instance a1  @A(out x: !firrtl.uint<1>)\r\n    %a2_x = firrtl.instance a2  @A_(out x: !firrtl.uint<1>)\r\n  }\r\n  firrtl.module @A(out %x: !firrtl.uint<1>) {\r\n    %0 = firrtl.wire  {annotations = [{class = \"hello\"}]} : !firrtl.uint<1>\r\n    %b = firrtl.node sym @b %0  : !firrtl.uint<1>\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %0, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %x, %0 : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n  firrtl.module @A_(out %x: !firrtl.uint<1>) {\r\n    %0 = firrtl.wire  : !firrtl.uint<1>\r\n    %b = firrtl.node sym @b %0  : !firrtl.uint<1>\r\n    %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %0, %invalid_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %x, %0 : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThe crash I'm seeing is:\r\n```\r\n# firtool dedup.mlir -ir-fir -dedup=1\r\nmodule {\r\n  firrtl.circuit \"Top\"  {\r\n    firrtl.nla @nla [#hw.innerNameRef<@Top::@a1>, Assertion failed: (!symbolRef.empty() && \"expected valid symbol reference\"), function printSymbolReference, file AsmPrinter.cpp, line 1626.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-25",
+  "closed_at": "2022-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

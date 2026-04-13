@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3357,
+  "issue_url": "https://github.com/llvm/circt/pull/3357",
+  "title": "[ExportVerilog] Emit extra parentheses around reduction ops",
+  "body": "This closes https://github.com/llvm/circt/issues/3001. This PR is a follow-up onto https://github.com/llvm/circt/pull/3015 which didn't consider cases where unary reduction operators appear in the head of subexpression such as `a & b & &a & a`. This PR fixes the issue by setting precedence of reduction ops to lowest. \r\n\r\nExample:\r\n```mlir\r\nhw.module @Foo(%a: i4, %b: i1) -> (o1:i1) {\r\n  %one4 = hw.constant -1 : i4\r\n\r\n  %and1 = comb.icmp eq %a, %one4 : i4\r\n  %and2 = comb.icmp eq %a, %one4 : i4\r\n  %and3 = comb.icmp eq %a, %one4 : i4\r\n  %and = comb.and %and1, %b, %and2, %and3  : i1\r\n  hw.output %and : i1\r\n}\r\n```\r\n\r\n`circt-opt -export-verilog` produces:\r\n\r\n```verilog\r\nmodule Foo(     // bar.mlir:1:1\r\n  input  [3:0] a,\r\n  input        b,\r\n  output       o1);\r\n\r\n  assign o1 = (&a) & b & (&a) & (&a);     // bar.mlir:4:11, :5:11, :6:11, :7:10, :8:3\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-15",
+  "closed_at": "2022-09-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

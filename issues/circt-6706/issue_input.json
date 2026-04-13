@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6706,
+  "issue_url": "https://github.com/llvm/circt/issues/6706",
+  "title": "[HW] Module port accessors and modifiers bugs",
+  "body": "A long time ago, HW module op would store its inputs and outputs using a function type.  This lacked the ability to intermix input and output ports the way verilog allows, and so we overhauled the system.  We added a `ModuleType` which holds an array of all ports, storing the name, type, and direction of each.  It seems that different parts of our code have not been updated properly with the new system.\r\n\r\n---\r\nIn the HWModuleOpInterface, the `setInputNames` makes an assumption that the port names of inputs are stored before all outputs.  When you update the input port names, it will replace replace all the existing input port names, but then effectively partially sort by port direction before commiting the names.\r\n\r\nhttps://github.com/llvm/circt/blob/a3e993cb387a08e686b0df1d7f5b599bca0b3751/include/circt/Dialect/HW/HWOpInterfaces.td#L135-L140\r\n\r\nThis issue can be found in `setInputNames`, `setOutputNames`, `setAllInputAttrs`, `setAllOutputAttrs`, `setInputLocs`, `setOutputLocs`.\r\n\r\n---\r\n\r\n`modifyModuleArgs` is used to insert and delete ports from modules.  Due to historical reasons, it treats input and output ports differently.  I believe that this function will successfully modify the input and output ports as requested, but then follow up by sorting them by direction.  I don't think this is on purpose, and would argue it would make sense to retain the original port order. I.e. the input and output indices should be changed in to a global port index.  An ever better API here would be to change this function so that it used a single list of port modifications for both inputs and outputs.\r\n\r\nhttps://github.com/llvm/circt/blob/a3e993cb387a08e686b0df1d7f5b599bca0b3751/lib/Dialect/HW/HWOps.cpp#L582\r\n\r\n---\r\nHWInstanceOp `getPortIdForInputId` and `getPortIdForOutputId` are wrong, and ~should just forward the question to the ModuleType~ the InstanceOp does not have enough information to properly implement these methods as is.\r\n\r\nhttps://github.com/llvm/circt/blob/a3e993cb387a08e686b0df1d7f5b599bca0b3751/include/circt/Dialect/HW/HWStructure.td#L458-L462\r\n\r\n\r\nhttps://github.com/llvm/circt/blob/a3e993cb387a08e686b0df1d7f5b599bca0b3751/lib/Dialect/HW/HWTypes.cpp#L825\r\n\r\n---\r\nThis is not a bug, but this code could be faster.  Using `getPortIdForInputId` and `getPortIdForOutputId` involves a serial walk through all ports.  It would be faster to just walk all ports, filtering out the unneeded directions. Same issue in `getInputLocs`, `getInputLocsAttr`, `getOutputLocs`, `getOutputLocsAttr`.\r\n\r\nhttps://github.com/llvm/circt/blob/a3e993cb387a08e686b0df1d7f5b599bca0b3751/include/circt/Dialect/HW/HWOpInterfaces.td#L178-L200\r\n\r\n---\r\n\r\nAudit the use of `HWMutableModuleLike`.  Is it still needed, and can the functionality be collapsed in to the regular `HWModuleLike`?\r\n\r\n`appendOutputs` should probably be implemented the way other methods are in this file, i.e. by lightly wrapping `modifyPorts`.  It does not look like its implemented properly for all module types as is: \r\n```\r\nvoid HWModuleExternOp::appendOutputs(\r\n    ArrayRef<std::pair<StringAttr, Value>> outputs) {}\r\n\r\nvoid HWModuleGeneratedOp::appendOutputs(\r\n    ArrayRef<std::pair<StringAttr, Value>> outputs) {}\r\n```",
+  "labels": [
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2024-02-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

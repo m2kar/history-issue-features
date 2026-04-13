@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4158,
+  "issue_url": "https://github.com/llvm/circt/issues/4158",
+  "title": "[FIRRTL][GrandCentral] ReferenceDataTapKey causes errors on unknown widths when it should not",
+  "body": "Bug is present on both head of main and CIRCT sifive/1/20/0.\r\n\r\nConsider:\r\n```\r\ncircuit Top : %[[\r\n  {\r\n    \"class\": \"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"keys\": [\r\n      {\r\n        \"class\":\"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\":\"~Top|Foo>sum\",\r\n        \"sink\": \"~Top|Top>tap\"\r\n      }\r\n    ]\r\n  }\r\n]]\r\n  module Foo :\r\n    input in : UInt<8>\r\n    output out : UInt<8>\r\n\r\n    ; UInt(1) should not need a width\r\n    node sum = tail(add(in, UInt(1)), 1)\r\n\r\n    out <= sum\r\n\r\n  module Top:\r\n    input in : UInt<8>\r\n    output out : UInt<8>\r\n\r\n    inst foo of Foo\r\n    foo.in <= in\r\n\r\n    wire tap : UInt<8>\r\n\r\n    out <= tail(add(foo.out, tap), 1)\r\n```\r\n\r\nRunning firtool on this gives the error:\r\n```\r\ndatatap-width-bug.fir:25:10: error: 'firrtl.asUInt' op inferred type(s) '!firrtl.uint' are incompatible with return type(s) of operation '!firrtl.uint<8>'\r\n  module Top:\r\n         ^\r\n```\r\n\r\nIt's complaining about `UInt(1)`. If you add a width to that `UInt`, or if you get rid of the `DataTapsAnnotation`, the error goes away.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-21",
+  "closed_at": "2022-10-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

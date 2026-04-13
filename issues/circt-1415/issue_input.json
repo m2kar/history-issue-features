@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1415,
+  "issue_url": "https://github.com/llvm/circt/issues/1415",
+  "title": "[ExportVerilog] Wrong bitwidth being printed on module parameters",
+  "body": "Given the following IR:\r\n\r\n```\r\nhw.module.extern @Cosim_Endpoint(%clk: i1, %rstn: i1, %DataOutReady: i1, %DataInValid: i1, %DataIn: none) -> (%DataOutValid: i1, %DataOut: none, %DataInReady: i1)\r\nhw.module @ints(%clk: i1, %rstn: i1) {\r\n  %DataOutValid, %DataOut, %DataInReady = hw.instance \"TestEP\" @Cosim_Endpoint(%clk, %rstn, %DataInReady, %DataOutValid, %DataOut) {parameters = {ENDPOINT_ID = 1 : i32, RECV_TYPE_ID = 0578209918096690139 : ui64, RECV_TYPE_SIZE_BITS = 128 : i32, SEND_TYPE_ID = 3057809918096690139 : ui64, SEND_TYPE_SIZE_BITS = 128 : i32}} : (i1, i1, i1, i1, !hw.array<128xi1>) -> (i1, !hw.array<128xi1>, i1)\r\n}\r\n```\r\n\r\nExportVerilog currently produces:\r\n```\r\n// external module Cosim_Endpoint\r\n\r\nmodule ints(\r\n  input clk, rstn);\r\n\r\n  wire         TestEP_DataOutValid;     // basic.mlir:3:43\r\n  wire [127:0] TestEP_DataOut;  // basic.mlir:3:43\r\n  wire         TestEP_DataInReady;      // basic.mlir:3:43\r\n\r\n  Cosim_Endpoint #(\r\n    .ENDPOINT_ID(1),\r\n    .RECV_TYPE_ID(60'd578209918096690139),\r\n    .RECV_TYPE_SIZE_BITS(128),\r\n    .SEND_TYPE_ID(62'd3057809918096690139),\r\n    .SEND_TYPE_SIZE_BITS(128)\r\n  ) TestEP (    // basic.mlir:3:43\r\n    .clk          (clk),\r\n    .rstn         (rstn),\r\n    .DataOutReady (TestEP_DataInReady), // basic.mlir:3:43\r\n    .DataInValid  (TestEP_DataOutValid),        // basic.mlir:3:43\r\n    .DataIn       (TestEP_DataOut),     // basic.mlir:3:43\r\n    .DataOutValid (TestEP_DataOutValid),\r\n    .DataOut      (TestEP_DataOut),\r\n    .DataInReady  (TestEP_DataInReady)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe problematic lines being:\r\n```\r\n    .RECV_TYPE_ID(60'd578209918096690139),\r\n    .SEND_TYPE_ID(62'd3057809918096690139),\r\n```\r\n\r\nSince the module being [instantiated explicitly requires a 64 bit value](https://github.com/llvm/circt/blob/8277a62325658b4a17b14f83cb2caa09a78b9ee2/include/circt/Dialect/ESI/cosim/Cosim_Endpoint.sv#L20), Verilator (and presumably other simulators) error out since the widths don't match.\r\n\r\nExportVerilog used to and needs to produce:\r\n```\r\n    .RECV_TYPE_ID(64'd578209918096690139),\r\n    .SEND_TYPE_ID(64'd3057809918096690139),\r\n```\r\n\r\nI can boil this down further. This:\r\n```\r\nhw.module.extern @ModuleWithStronglyTypedParameters() -> ()\r\nhw.module @test() {\r\n  hw.instance \"TestEP\" @ModuleWithStronglyTypedParameters() {parameters = { RECV_TYPE_ID = 00578209918096690139 : ui64}} : () -> ()\r\n}\r\n```\r\nincorrectly produces:\r\n```\r\n// external module ModuleWithStronglyTypedParameters\r\n\r\nmodule test();\r\n  ModuleWithStronglyTypedParameters #(\r\n    .RECV_TYPE_ID(60'd578209918096690139)\r\n  ) TestEP ();  // basic.mlir:3:3\r\nendmodule\r\n```\r\n\r\n\r\nWe should go back to using the type information in the IntegerAttribute (width and signedness) since sometimes Verilog requires that it match rather than relying on implicit metadata from APInt. See https://github.com/llvm/circt/commit/cfd641a71ee721e78234518db2a6f29c3648654b.\r\n\r\n@lattner Is there a specific reason that we stopped doing this? I understand the part about not printing the width for values under 32 bits to better accommodate external modules with unknown/unmodeled parameter types.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-13",
+  "closed_at": "2021-07-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2347,
+  "issue_url": "https://github.com/verilator/verilator/pull/2347",
+  "title": "Add VPI error reset to vpi_get_time()",
+  "body": "From the Systemverilog IEEE 1800-2017 standard:\r\n\"The vpi_chk_ error() routine shall return a nonzero value if an error occurred in the previously called VPI routine.\"\r\n\r\nIt looks like the VPI error is not reset at all in ```vpi_get_time()``` routine. \r\nThis is causing a RecursionError in the logging mechanism of cocotb as reported in #2105 . \r\n\r\nCocotb always calls ```vpi_chk_error()``` after any VPI function call. If any VPI error is detected, the logging mechanism in cocotb uses ```vpi_get_time()``` to retrieve the current sim time to add to the original error in the log message. Cocotb then calls ```vpi_chk_error()``` after ```vpi_get_time()``` which will then still indicate the original error and this is causing a RecursionError down the track. More details: https://github.com/cocotb/cocotb/issues/1313#issuecomment-632478985\r\n\r\nThe proposed fix in this PR will make the ```vpi_get_time()``` routine compliant with the Systemverilog IEEE 1800-2017 standard.\r\n\r\n\r\n   \r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-22",
+  "closed_at": "2020-05-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

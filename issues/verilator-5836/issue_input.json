@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5836,
+  "issue_url": "https://github.com/verilator/verilator/issues/5836",
+  "title": "Variable splitting fails silently",
+  "body": "Verilating this will not split up `v`, and there is no SPLITVAR warning to tell the user either:\n\n```systemverilog\nmodule bit_reverse(input wire clk);\n\n  logic [2:0] v /* verilator split_var */ = 3'd0;\n\n  always @(posedge clk) begin\n     v <= v + 3'd1;\n     $display(\"%1b%1b%1b\", v[0], v[1], v[2]);\n  end\n\nendmodule\n```\n\nWith `--debugi-V3SplitVar 9` I can see:\n\n```\nV3SplitVar.cpp:1165:In module bit_reverse var 'v' which has 2 lhs refs and 6 rhs refs will be split.\n```\n\nThis suggests it should be split up, but then `splitPlan` returns a single full width result variable, so we hit the 2nd continue and end up not splitting it:\n\nhttps://github.com/verilator/verilator/blob/96bffd49aa5640a527a24a026119160dff828308/src/V3SplitVar.cpp#L1165-L1169\n\n\nWhat is the intention here? Is this a bug in `splitPlan`? If so, what is `splitPlan` supposed to return for this case?\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-07",
+  "closed_at": "2025-03-09",
+  "code_blocks": [
+    "module bit_reverse(input wire clk);\n\n  logic [2:0] v /* verilator split_var */ = 3'd0;\n\n  always @(posedge clk) begin\n     v <= v + 3'd1;\n     $display(\"%1b%1b%1b\", v[0], v[1], v[2]);\n  end\n\nendmodule\n",
+    "V3SplitVar.cpp:1165:In module bit_reverse var 'v' which has 2 lhs refs and 6 rhs refs will be split.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

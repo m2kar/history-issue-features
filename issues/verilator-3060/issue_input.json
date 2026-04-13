@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3060,
+  "issue_url": "https://github.com/verilator/verilator/issues/3060",
+  "title": "Overriding untyped parameter with -G produces incorrect result",
+  "body": "\r\n\r\nI've been testing a floating point format converter which is a part of the hardfloat library. I've tried simulating the the module using both iverilog and verilator and the verilator testbench is consistently giving me the wrong results for certain testcases, all of which work fine in iverilog. I've attached the testbench and an offending testcase below (for converting double precision to single precision) : \r\n\r\n    #include <verilated.h>\r\n    #include <verilated_vcd_c.h>\r\n    #include <VrecFNToRecFN.h>\r\n    #include <iostream>\r\n    \r\n    vluint64_t sim_time = 0; \r\n    \r\n    double sc_time_stamp () {  return sim_time;  }\r\n    \r\n    int main(int argc, char** argv, char** env){\r\n        if (0 && argc && argv && env) {}\r\n        Verilated::commandArgs (argc, argv);\r\n    \r\n        VrecFNToRecFN *dut = new VrecFNToRecFN;\r\n    \r\n        Verilated::traceEverOn(true);\r\n        VerilatedVcdC *m_trace = new VerilatedVcdC;\r\n        dut->trace(m_trace, 5);\r\n        m_trace->open(\"waveform.vcd\");\r\n    \r\n        while (sim_time < 20)\r\n        {\r\n            dut->control = 1;\r\n            dut->in[0] = 0xD93441A8;\r\n            dut->in[1] = 0x5897D9AA;\r\n            dut->in[2] = 0x0;\r\n            dut->roundingMode = 0;\r\n            dut->eval();\r\n            m_trace->dump(sim_time);\r\n            sim_time++;\r\n        }\r\n        std::cout << dut->out;\r\n        m_trace->close();\r\n        delete dut;\r\n        exit(0);\r\n    }\r\nAnd here are the waveform dumps for \r\niverilog:\r\n![verilog_tb_output](https://user-images.githubusercontent.com/28539727/124778683-ac797f80-df30-11eb-984a-7b28fb6b050c.png)\r\n\r\nverilator:\r\n![verilator_tb_output](https://user-images.githubusercontent.com/28539727/124778856-d337b600-df30-11eb-86fc-8a6de0ce5eaf.png)\r\n\r\nThe signals of significance are the 33 bit output and the 5 bit output exception flags. The module in question is completely combinational. The compiler directives I used are -Wall -Wno-fatal and --trace. \r\n\r\nI've attached all the relevant source files and testbenches and their outputs in my repo : https://github.com/Anikin1610/DPtoSP_debug\r\n\r\nI've been told that the author of this library had also used verilator while testing it so I'm inclined to believe that this isn't an issue with the IP per se. I'm using Verilator 4.204 2021-06-12 rev v4.204-18-gfa3c072d built from the github source.\r\n\r\nAny thoughts on why I'm facing this issue is much appreciated. Thanks in advance!\r\n\r\n \r\n\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: data-types",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-07",
+  "closed_at": "2021-07-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

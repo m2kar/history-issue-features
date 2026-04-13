@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3414,
+  "issue_url": "https://github.com/llvm/circt/issues/3414",
+  "title": "[FIRRTL] GCT Tap Upwards XMR Bug",
+  "body": "The following produces an invalid XMR after the new GCT Taps \"minimal XMR\" patch:\r\n\r\n```scala\r\ncircuit Top :\r\n  extmodule DataTap_1 :\r\n    output _0 : UInt<1>\r\n    defname = DataTap_1\r\n\r\n  module Submodule :\r\n\r\n    inst DataTap_1 of DataTap_1\r\n\r\n  module DUT :\r\n\r\n    wire _foo : UInt<1>\r\n    _foo <= UInt<1>(0)\r\n\r\n    inst submodule of Submodule\r\n\r\n  module Top :\r\n\r\n    inst dut of DUT\r\n```\r\n\r\n```json\r\n[\r\n  {\r\n    \"class\":\"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"blackBox\":\"~Top|DataTap_1\",\r\n    \"keys\":[\r\n      {\r\n        \"class\":\"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\":\"~Top|Top/dut:DUT>_foo\",\r\n        \"portName\":\"~Top|DataTap_1>_0\"\r\n      }\r\n    ]\r\n  }\r\n]\r\n```\r\n\r\nThis produces (`firtool Top.fir -annotation-file Top.anno.json -firrtl-grand-central`) a data tap with contents:\r\n\r\n```verilog\r\nmodule DataTap_1_impl_0(\r\n  output _0);\r\n\r\n  assign _0 = Top._foo;\r\nendmodule\r\n```\r\n\r\nThe XMR should be `DUT._foo`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-24",
+  "closed_at": "2022-06-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

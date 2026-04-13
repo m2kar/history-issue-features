@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4771,
+  "issue_url": "https://github.com/llvm/circt/issues/4771",
+  "title": "[FIRRTL] attach of analog under when (+ subaccess)?",
+  "body": "Generally, this may be more of a FIRRTL-spec consideration, but the following is accepted and only is rejected late in the pipeline:\r\n\r\n```firrtl\r\ncircuit Foo :\r\n  module Foo :\r\n    output d : { a: UInt<2>, b: Analog<1>}\r\n    input c : UInt<1>\r\n    d is invalid\r\n    when c :\r\n      inst b of Bar\r\n      attach(d.b, b.b.b[c])\r\n    else :\r\n      inst b2 of Bar\r\n      attach(d.b, b2.b.b[c])\r\n\r\n  extmodule Bar :\r\n    output b : { a : UInt<2>, b : Analog<1>[2]}\r\n ```\r\n \r\n Output:\r\n \r\n ```\r\nanalog.fir:11:11: error: operand isn't an inout type\r\n      d.b <- b2.b.b[c]\r\n          ^\r\nanalog.fir:11:11: note: see current operation: \"firrtl.attach\"(%1, %19, %11) : (!firrtl.analog<1>, !firrtl.analog<1>, !firrtl.analog<1>) -> ()\r\nanalog.fir:11:11: error: 'firrtl.attach' op LowerToHW couldn't handle this operation\r\n      d.b <- b2.b.b[c]\r\n          ^\r\nanalog.fir:11:11: note: see current operation: \"firrtl.attach\"(%1, %19, %11) : (!firrtl.analog<1>, !firrtl.analog<1>, !firrtl.analog<1>) -> () \r\n ```\r\n \r\n*Does conditional attach make sense?* (is it unconditional even under `when`?)\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-03-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

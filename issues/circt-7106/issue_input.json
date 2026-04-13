@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7106,
+  "issue_url": "https://github.com/llvm/circt/issues/7106",
+  "title": "[FIRRTL] firrtl-lower-signatures fails for enum types",
+  "body": "using firtool-1.75.0 from github releases\r\n\r\nI expect firtool to be able to lower enum types [as specified in the ABI](https://github.com/chipsalliance/firrtl-spec/blob/e53da0ca1b55d002e3c2c640b8a170b95b291970/abi.md?plain=1#L329-L334), however it just plain fails.\r\n\r\nusing the following FIRRTL:\r\n```firrtl\r\nFIRRTL version 3.2.0\r\ncircuit check_enum_literals:\r\n    type Ty0 = {|None, Some: UInt<8>|}\r\n    module check_enum_literals:\r\n        input i: UInt<8>\r\n        output o: Ty0\r\n        connect o, {|None, Some: UInt<8>|}(Some, i)\r\n```\r\nI tried running:\r\n```bash\r\nfirtool check_enum_literals.fir -o - --mlir-print-ir-after-all\r\n```\r\n\r\nwhich output:\r\n```\r\n<snip>\r\n// -----// IR Dump After LowerIntrinsics (firrtl-lower-intrinsics) //----- //\r\nfirrtl.module @check_enum_literals(in %i: !firrtl.uint<8>, out %o: !firrtl.alias<Ty0, enum<None: uint<0>, Some: uint<8>>>) attributes {convention = #firrtl<convention scalarized>} {\r\n  %0 = firrtl.enumcreate Some(%i) : (!firrtl.uint<8>) -> !firrtl.enum<None: uint<0>, Some: uint<8>>\r\n  firrtl.connect %o, %0 : !firrtl.alias<Ty0, enum<None: uint<0>, Some: uint<8>>>, !firrtl.enum<None: uint<0>, Some: uint<8>>\r\n}\r\n\r\n// -----// IR Dump After LowerSignatures Failed (firrtl-lower-signatures) //----- //\r\nfirrtl.circuit \"check_enum_literals\" {\r\n  firrtl.module @check_enum_literals(in %i: !firrtl.uint<8>, out %o: !firrtl.alias<Ty0, enum<None: uint<0>, Some: uint<8>>>) attributes {convention = #firrtl<convention scalarized>} {\r\n    %0 = firrtl.enumcreate Some(%i) : (!firrtl.uint<8>) -> !firrtl.enum<None: uint<0>, Some: uint<8>>\r\n    firrtl.connect %o, %0 : !firrtl.alias<Ty0, enum<None: uint<0>, Some: uint<8>>>, !firrtl.enum<None: uint<0>, Some: uint<8>>\r\n  }\r\n}\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-30",
+  "closed_at": "2025-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 341,
+  "issue_url": "https://github.com/verilator/verilator/issues/341",
+  "title": "Verilator signal value evaluation problem?",
+  "body": "---\n\n\nAuthor Name: **Amin Firoozshahian**\nOriginal Redmine Issue: 341 from https://www.veripool.org\nOriginal Date: 2011-04-22\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nIn the following code, depending on whether you enable/disable either the display statement or dummy assignment, output waveform changes. I was wondering if there is an issue regarding how/when value of 'temp' is evaluated. Attached are module file, test file, sim_main.cpp and basic run script.\r\n\r\n\r\n\n```\r\n\r\n\r\nmodule m(\r\n          output logic       test_ff,\r\n          output logic [3:0] id,\r\n          input  logic [3:0] external_id,\r\n          input  logic       external_en,\r\n          input  logic       clk,\r\n          input  logic       rst         \r\n          );\r\n\r\n    logic                    data;\r\n    logic [7:0]              counter;\r\n    logic                    temp;\r\n    logic                    temp2;\r\n\r\n    always_ff @(posedge clk) begin\r\n       if (rst)\r\n         counter <= 0;\r\n       else\r\n         counter <= counter + 1;\r\n    end\r\n\r\n    assign data = (counter == 10);\r\n    assign temp = (test_ff == 0) || (external_en && (external_id==id));\r\n\r\n    always_ff @(posedge clk) begin\r\n       if (rst)\r\n         test_ff <= 0;\r\n       else begin\r\n\r\n// Un-comment either of the following lines to change the output seen in the waveform\r\n\r\n//         temp2 <= temp;\r\n\r\n//         $display(\"temp=%b\\n\", temp);\r\n\r\n         if (temp)\r\n            test_ff <= data;\r\n       end\r\n    end\r\n\r\n    always_ff @(posedge clk) begin\r\n       if ((test_ff == 0) || (external_en && (external_id==id)))\r\n         id <= counter[3:0];\r\n    end\r\n\r\nendmodule\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2011-04-22",
+  "closed_at": "2011-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

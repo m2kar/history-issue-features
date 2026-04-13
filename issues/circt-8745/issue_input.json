@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8745,
+  "issue_url": "https://github.com/llvm/circt/issues/8745",
+  "title": "[AIG] Paths are missing due to duplication",
+  "body": "```mlir\nhw.module private @foo(in %a : i1, in %b: i1, out x : i1) {\n  %0 = aig.and_inv %a, %a, %b : i1\n  hw.output %0 : i1\n}\n```\n\n```\n$ circt-opt foo.mlir  --pass-pipeline='builtin.module(aig-print-longest-path-analysis{show-top-k-percent=100})\n# Longest Path Analysis result for \"foo\"\nFound 1 paths\nFound 1 unique fanout points\nMaximum path delay: 2\n## Showing Levels\nLevel = 2         . Count = 1         . 100.00    %\n## Top 1 (out of 1) fan-out points\n\n==============================================\n#1: Distance=2\nFanOut=Object($root.x[0])\nFanIn=Object($root.a[0])\n== History Start (closer to fanout) ==\n<--- (logic delay 2) ---\nObject($root.a[0], delay=0, comment=\"input port\")\n== History End (closer to fanin) ==\n```\n\nA path between `x` and `b` is missed due to a bug in path duplication. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-20",
+  "closed_at": "2025-07-20",
+  "code_blocks": [
+    "hw.module private @foo(in %a : i1, in %b: i1, out x : i1) {\n  %0 = aig.and_inv %a, %a, %b : i1\n  hw.output %0 : i1\n}\n",
+    "$ circt-opt foo.mlir  --pass-pipeline='builtin.module(aig-print-longest-path-analysis{show-top-k-percent=100})\n# Longest Path Analysis result for \"foo\"\nFound 1 paths\nFound 1 unique fanout points\nMaximum path delay: 2\n## Showing Levels\nLevel = 2         . Count = 1         . 100.00    %\n## Top 1 (out of 1) fan-out points\n\n==============================================\n#1: Distance=2\nFanOut=Object($root.x[0])\nFanIn=Object($root.a[0])\n== History Start (closer to fanout) ==\n<--- (logic delay 2) ---\nObject($root.a[0], delay=0, comment=\"input port\")\n== History End (closer to fanin) ==\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

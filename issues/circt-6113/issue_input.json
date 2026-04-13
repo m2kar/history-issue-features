@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6113,
+  "issue_url": "https://github.com/llvm/circt/pull/6113",
+  "title": "[FIRRTLFolds] Ignore reset signals for constant registers in foldHidd…",
+  "body": "…enReset\r\n\r\nfoldHiddenReset is a canonicalization that replaces registers driven by only constants and registers themselves. Previously there was a condition that the reset signal must be a port for dominace reason, but it's only reasonable for non-constant registers. \r\n\r\nExample:\r\n```scala\r\ncircuit Example :\r\n  module Example :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    input en: UInt<1>[2]\r\n    output out : UInt<1>\r\n    reg r : UInt<1>, clock\r\n    when and(en[0], en[1]) :\r\n      r <= UInt<1>(0)\r\n    out <= r\r\n```\r\nAfter:\r\n```verilog\r\nmodule Example(\r\n  input  clock,\r\n         reset,\r\n         en_0,\r\n         en_1,\r\n  output out\r\n);\r\n\r\n  assign out = 1'h0;\r\nendmodule\r\n```\r\n\r\nBefore:\r\n```verilog\r\nmodule Example(\r\n  input  clock,\r\n         reset,\r\n         en_0,\r\n         en_1,\r\n  output out\r\n);\r\n\r\n  reg r;\r\n  always @(posedge clock)\r\n    r <= ~(en_0 & en_1) & r;\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-12",
+  "closed_at": "2023-09-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

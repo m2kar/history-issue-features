@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1013,
+  "issue_url": "https://github.com/verilator/verilator/issues/1013",
+  "title": "VerilatedRestore::fill() - overrun possible due to incorrect looping",
+  "body": "---\n\n\nAuthor Name: **Jason McMullan** (@ezrec)\nOriginal Redmine Issue: 1013 from https://www.veripool.org\nOriginal Date: 2015-12-14\nOriginal Assignee: Jason McMullan (@ezrec)\n\n---\n\nI've had (on larger models) VerilatedRestore::fill() crash, as *sp was pointing outside of the allocated memory. Easily reproducible with valgrind.\r\n\r\nThe following patch appears to resolve the overrun issue for me:\r\n\r\n```\r\ndiff --git a/include/verilated_save.cpp b/include/verilated_save.cpp\r\nindex 0807600..fcba60f 100644\r\n--- a/include/verilated_save.cpp\r\n+++ b/include/verilated_save.cpp\r\n@@ -201,7 +201,7 @@ void VerilatedRestore::fill() {\r\n      if (VL_UNLIKELY(!isOpen())) return;\r\n      // Move remaining characters down to start of buffer.  (No memcpy, overlaps\r\n      vluint8_t* rp = m_bufp;\r\n-    for (vluint8_t* sp=m_cp; rp < m_endp;) *rp++ = *sp++;  // Overlaps\r\n+    for (vluint8_t* sp=m_cp; sp < m_endp;) *rp++ = *sp++;  // Overlaps\r\n      m_endp = m_bufp + (m_endp - m_cp);\r\n      m_cp = m_bufp; // Reset buffer\r\n      // Read into buffer starting at m_endp\r\n\n``` \n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2015-12-14",
+  "closed_at": "2015-12-19",
+  "code_blocks": [
+    "diff --git a/include/verilated_save.cpp b/include/verilated_save.cpp\r\nindex 0807600..fcba60f 100644\r\n--- a/include/verilated_save.cpp\r\n+++ b/include/verilated_save.cpp\r\n@@ -201,7 +201,7 @@ void VerilatedRestore::fill() {\r\n      if (VL_UNLIKELY(!isOpen())) return;\r\n      // Move remaining characters down to start of buffer.  (No memcpy, overlaps\r\n      vluint8_t* rp = m_bufp;\r\n-    for (vluint8_t* sp=m_cp; rp < m_endp;) *rp++ = *sp++;  // Overlaps\r\n+    for (vluint8_t* sp=m_cp; sp < m_endp;) *rp++ = *sp++;  // Overlaps\r\n      m_endp = m_bufp + (m_endp - m_cp);\r\n      m_cp = m_bufp; // Reset buffer\r\n      // Read into buffer starting at m_endp"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

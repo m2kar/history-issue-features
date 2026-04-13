@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3897,
+  "issue_url": "https://github.com/verilator/verilator/issues/3897",
+  "title": "Null pointer check in a wrong place in array locator method",
+  "body": "Consider the following code (written in the fashion of `t_with.v`)\r\n```systemverilog\r\n`define stop $stop\r\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got='h%x exp='h%x\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\r\nclass Cls;\r\n   int i;\r\n   function int get_i();\r\n      return i;\r\n   endfunction\r\nendclass\r\n\r\nmodule t (/*AUTOARG*/);\r\n   initial begin\r\n      Cls aliases[$];\r\n      Cls found[$];\r\n      int tofind;\r\n      for (int j = 1; j <= 8; j++) begin\r\n         Cls obj = new;\r\n         obj.i = j;\r\n         aliases.push_back(obj);\r\n      end\r\n      tofind = 4;\r\n      found = aliases.find() with (item.i == tofind);\r\n      `checkh(found.size, 1);\r\n      found = aliases.find() with (item.get_i() == tofind);\r\n      `checkh(found.size, 1);\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nCompilation fails with\r\n```\r\n./Vt_with___024root__DepSet_ha94cac4d__0__Slow.cpp:67:19: error: use of undeclared identifier 'item'\r\n    VL_NULL_CHECK(item, \"t/t_with.v\", 34)->__VnoInFunc_get_i(vlSymsp, __Vtask_get_i__1__Vfuncout);\r\n```\r\n\r\nThis is because the null check is hanging in the air:\r\n```c++\r\n    VL_NULL_CHECK(item, \"t/t_with.v\", 34)->__VnoInFunc_get_i(vlSymsp, __Vtask_get_i__1__Vfuncout);\r\n    t__DOT__unnamedblk1__DOT__found = vlSelf->t__DOT__unnamedblk1__DOT__aliases.find(\r\n                                                                                [=](\r\n                                                                                IData/*31:0*/ item__DOT__index,\r\n                                                                                VlClassRef<Vt_with___024unit__03a__03aCls> item) { return \r\n                                                                                (4U \r\n                                                                                == __Vtask_get_i__1__Vfuncout); }\r\n    );\r\n```\r\n\r\nNote, that only `find() with (item.get_i()...` fails. The null check is placed inside the lambda when we access the object's property.\r\n```c++\r\n    t__DOT__unnamedblk1__DOT__found = vlSelf->t__DOT__unnamedblk1__DOT__aliases.find(\r\n                                                                                [=](\r\n                                                                                IData/*31:0*/ item__DOT__index,\r\n                                                                                VlClassRef<Vt_with___024unit__03a__03aCls> item) { return \r\n                                                                                (4U \r\n                                                                                == VL_NULL_CHECK(\r\n                                                                                item, \"t/t_with.v\", 32)\r\n                                                                                ->__PVT__i); }\r\n    );\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-22",
+  "closed_at": "2025-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

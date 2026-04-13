@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7813,
+  "issue_url": "https://github.com/llvm/circt/pull/7813",
+  "title": "[FIRRTL] Accept list of parameters for `formal` construct",
+  "body": "Adjust the syntax for the FIRRTL `formal` construct such that it no longer expects a single `bound = <N>` parameter, but accepts a list of user-defined integer, string, array, or dictionary parameters. The syntax now looks like\r\n\r\n```\r\nformal someTest of SomeModule:\r\n  a_int = 42\r\n  b_string = \"hello\"\r\n  c_array = [42, \"hello\", [9001], {foo = 1337}]\r\n  d_map = {a = 42, b = \"hello\", c = [9001], d = {foo = 1337}}\r\n```\r\n\r\ninstead of the previous\r\n\r\n```\r\nformal someTest of SomeModule, bound = 42\r\n```\r\n\r\nThe previous syntax is still supported until the corresponding change to the FIRRTL spec lands. Since it is not yet entirely clear what the list of necessary or well-understood parameters for formal tests is, the presence of `bounds` is no longer enforced. The rationale here being that this might turn out to be just a default setting in the formal test runner, which the user may not want to explicitly state. Once we have a clearer picture of which parameters are necessary, we can extend the parser to enforce parameters to be of specific types, and for specific parameters to be always defined.\r\n\r\nThis is the first time we allow for arrays and dictionaries to be specified as parameters. To avoid code duplication, this commit extends the `parseParameter` function with an `allowAggregates` option that enables parsing of `[...]` arrays and `{...}` dictionaries. The function now returns an untyped attribute, and places which want to turn this into a `ParamDeclAttr` now cast the result to a `TypedAttr` themselves. Parsing of the values is split out into a separate `parseParameterValue` function, which allows for the parsing of nested arrays and dictionaries. A similar adjustment exists in the emitter.\r\n\r\nThis commit is the first step towards lowering `formal` constructs in FIRRTL inputs to `verif.formal` core dialect ops, and running them with `circt-test`. The ability to specify parameters will help us build out the testing infrastructure without requiring spec changes for every single parameter adjustment.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-14",
+  "closed_at": "2024-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

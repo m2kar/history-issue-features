@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7226,
+  "issue_url": "https://github.com/verilator/verilator/issues/7226",
+  "title": "Array reduction in constraints regression",
+  "body": "https://github.com/verilator/verilator/pull/7108 caused some reductions to not compile. \n\nMinimal reproduction case:\n\n~~~ systemverilog\nclass uvm_object;\nendclass\n\nclass riscv_instr_gen_config extends uvm_object;\n  rand int sub_program_instr_cnt[];\n  constraint debug_mode_c {\n    sub_program_instr_cnt.sum() == 200;\n  }\nendclass\n\nmodule top;\n  riscv_instr_gen_config gen_config;\n  initial begin\n    gen_config = new;\n    void'(gen_config.randomize());\n  end\nendmodule\n~~~\n\nBefore it verilated with `CONSTRAINTIGN` warning and now it fails with following error:\n\n~~~\n%Error: Internal Error: bugpoint.sv:7:30: ../V3Scope.cpp:88: Can't locate varref scope\n                                        : ... note: In instance '$unit.riscv_instr_gen_config'\n    7 |        sub_program_instr_cnt.sum() == 200;\n      |                              ^~~\n~~~\n\n\n\nThe problem doesn't occur when `riscv_instr_gen_config` doesn't extend a class. ",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-10",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

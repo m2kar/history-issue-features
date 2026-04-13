@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 520,
+  "issue_url": "https://github.com/llvm/circt/issues/520",
+  "title": "[FIRRTL] lower-types does not support external modules",
+  "body": "The lower types pass flattens bundles returned from `firrtl.instance` operations.  When there is an instance of an `firrtl.extmodule`, the instance is flattened while the module declaration is not. The pass should be extended to flatten bundles in external module declarations\r\n\r\nTest Case:\r\n``` mlir\r\n// circt-opt -pass-pipeline='firrtl.circuit(firrtl.module(firrtl-lower-types))' ./external-module-lower-bundles.mlir\r\nmodule  {\r\n  firrtl.circuit \"Test\" {\r\n    firrtl.extmodule @ExternalModule(!firrtl.bundle<valid: uint<1>, ready: flip<uint<1>>, data: uint<64>> {firrtl.name = \"source\"})\r\n    firrtl.module @Test() {\r\n      %inst_source = firrtl.instance @ExternalModule {name = \"\", portNames = [\"source\"]} : !firrtl.bundle<valid: flip<uint<1>>, ready: uint<1>, data: flip<uint<64>>>\r\n    }\r\n  }\r\n}\r\n```\r\n```\r\n./external-module-lower-bundles.mlir:6:16: error: 'firrtl.instance' op has a wrong number of results; expected 1 but got 3\r\n    %sourceV = firrtl.instance @ExternalModule {name = \"\", portNames = [\"source\"]} : !firrtl.bundle<valid: flip<uint<1>>, ready: uint<1>, data: flip<uint<64>>>\r\n               ^\r\n./external-module-lower-bundles.mlir:6:16: note: see current operation: %inst_source_valid, %inst_source_ready, %inst_source_data = \"firrtl.instance\"() {moduleName = @ExternalModule, name = \"\", portNames = [\"source_valid\", \"source_ready\", \"source_data\"]} : () -> (!firrtl.flip<uint<1>>, !firrtl.uint<1>, !firrtl.flip<uint<64>>)\r\n./external-module-lower-bundles.mlir:3:3: note: original module declared here\r\n  firrtl.extmodule @ExternalModule(%source: !firrtl.bundle<valid: uint<1>, ready: flip<uint<1>>, data: uint<64>>)\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-27",
+  "closed_at": "2021-03-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

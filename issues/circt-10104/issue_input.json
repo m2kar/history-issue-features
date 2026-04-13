@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10104,
+  "issue_url": "https://github.com/llvm/circt/issues/10104",
+  "title": "[FIRRTL] ExpandWhens dominance error with multiple layerblocks and implication intrinsics",
+  "body": "This one feels extremely specific and peculiar:\n```mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.layer @Bar bind attributes {sym_visibility = \"private\"} {\n  }\n  firrtl.module @Foo() {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    firrtl.when %c0_ui1 : !firrtl.uint<1> {\n      firrtl.layerblock @Bar {\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n      }\n      firrtl.layerblock @Bar {\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n      }\n    }\n  }\n}\n```\n\nRunning this through `firtool` or `circt-opt --pass-pipeline=\"builtin.module(firrtl.circuit(firrtl.module(firrtl-expand-whens)))\"` will produce a dominance error:\n```\nreduced-3.mlir:13:9: error: operand #0 does not dominate this use\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n        ^\nreduced-3.mlir:13:9: note: see current operation: \"firrtl.int.verif.assert\"(%4, %0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\nreduced-3.mlir:8:14: note: operand defined here (op is neither in a parent nor in a child region)\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n             ^\n```\nThis only happens if there are two separate `firrtl.laterblock`s containing that implication intrinsic. No idea what's going on there.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2026-04-02",
+  "closed_at": null,
+  "code_blocks": [
+    "firrtl.circuit \"Foo\" {\n  firrtl.layer @Bar bind attributes {sym_visibility = \"private\"} {\n  }\n  firrtl.module @Foo() {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    firrtl.when %c0_ui1 : !firrtl.uint<1> {\n      firrtl.layerblock @Bar {\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n      }\n      firrtl.layerblock @Bar {\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n      }\n    }\n  }\n}\n",
+    "reduced-3.mlir:13:9: error: operand #0 does not dominate this use\n        firrtl.int.verif.assert %0, %c0_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n        ^\nreduced-3.mlir:13:9: note: see current operation: \"firrtl.int.verif.assert\"(%4, %0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\nreduced-3.mlir:8:14: note: operand defined here (op is neither in a parent nor in a child region)\n        %0 = firrtl.int.ltl.implication %c0_ui1, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n             ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

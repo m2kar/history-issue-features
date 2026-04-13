@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6225,
+  "issue_url": "https://github.com/llvm/circt/pull/6225",
+  "title": "[HW] Disallow duplicate field names in HW aggregate types",
+  "body": "`hw.struct_extract`, `hw.struct_inject` and `hw.union_extract` refer to their respective field by name. However, field names of structs and union types are currently not enforced to be unique. This can cause ambiguities, e.g.:\r\n\r\n```\r\nhw.module @extract(in %a: i8, in %b: i8, out o: i8) {\r\n    %0 = hw.struct_create (%a, %b) : !hw.struct<foo: i8, foo: i8>\r\n    %1 = hw.struct_extract %0[\"foo\"] :  !hw.struct<foo: i8, foo: i8>\r\n    hw.output %1 : i8\r\n}\r\n\r\n> circt-opt ... --canonicalize\r\n\r\nhw.module @extract(in %a : i8, in %b : i8, out o : i8) {\r\n    hw.output %a : i8\r\n}\r\n``` \r\n\r\nThis PR prevents the creation of HW aggregate types with duplicate field names.\r\n\r\nAs @seldridge pointed out to me, the FIRRTL dialect refers to subfields by index rather than by name. I've prepared a follow-up commit adopting this for StructExtract and StructInject ops. Allowing ambiguous names in structs is probably not a good idea either way. But it should be marginally more efficient, as it avoids iterating over the field names to find the matching one.  ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-29",
+  "closed_at": "2023-09-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

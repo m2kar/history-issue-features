@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 413,
+  "issue_url": "https://github.com/verilator/verilator/issues/413",
+  "title": "generate-conditional with short-circuited local expression",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 413 from https://www.veripool.org\nOriginal Date: 2011-11-04\nOriginal Assignee: Jeremy Bennett (@jeremybennett)\n\n---\n\nIn C, conditional expressions are \"short-circuited\". For example @((i < MAX) && (a[i] == 0))@ will not evaluate @a[i]@ if @i@ is not less than @MAX@.\r\n\r\nThe same is not true of Verilog, which leaves it to the implementation to decide whether to carry out such short-circuiting. SystemVerilog removes the ambiguity to follow the same rule as C.\r\n\r\nThis means that in SystemVerilog at least the following should not cause a problem:\r\n\r\n```\r\n  #( parameter\r\n      MAXSIZE = 8,\r\n      ACTSIZE = 4,\r\n      MASK = 4'b1\r\n      )\r\n\r\n    generate\r\n       genvar  g;\r\n       for (g = 0; g < MAXSIZE; g = g + 1)\r\n         begin: gfg\r\n            if (g < ACTSIZE && MASK[g])\r\n            ...\r\n\n```\r\n\r\nEven though @ACTSIZE@ is less than @MAXSIZE@, @MASK[g]@ will only be evaluated when @g@ is less than ACTSIZE. However Verilator gets this wrong, and throws an error trying to access @MASK[4]@ through @MASK[7]@. Other tools accept this (with Verilog of SystemVerilog).\r\n\r\nA variant is where the boolean AND (@&&@) is replaced by a bitwise AND (@&@). This would seem to be wrong by any standard, but other tools all accept it. The problem was only found in the source when Verilator threw an error.\r\n\r\nThe attached test exercises the first case in module @foobar@, and the second in module @barfoo@.\r\n\r\nThe following web page provides some helpful discussion of the language standard issue: http://stackoverflow.com/questions/3224553/does-verilog-support-short-circuit-evaluation.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2011-11-04",
+  "closed_at": "2012-07-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5456,
+  "issue_url": "https://github.com/verilator/verilator/issues/5456",
+  "title": "Using repeat in fork-join_any causes a compile error.",
+  "body": "A compile error occurs when a repeat statement is inside a fork-join_any. By the way, if it's a for statement, it passes. Also, if any is not used, the repeat statement passes as well.\r\n\r\nRev:  Verilator 5.029 devel rev v5.028-91-g7081ea0ed\r\n\r\n-----------------Compilation result----------------------\r\n```\r\n%Error-LIFETIME: test.sv:19:9: Invalid reference: Process might outlive variable `__Vrepeat0`.\r\n                             : ... note: In instance 'top'\r\n                             : ... Suggest use it as read-only to initialize a local copy at the beginning of the process, or declare it as static. It is also possible to refer by reference to objects and their members.\r\n   19 |         repeat(10)                     \r\n      |         ^~~~~~\r\n                 ... For error description see https://verilator.org/warn/LIFETIME?v=5.029\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n-------------- test bench ---------------\r\n```\r\n`timescale 1ns/100ps\r\n\r\nmodule top();\r\n\r\n  bit CLK;\r\n  // Gen Clock\r\n  always #10\r\n    CLK = ~CLK;\r\n\r\n  initial\r\n  begin\r\n    fork\r\n      begin\r\n        forever\r\n          @(posedge CLK);\r\n      end\r\n      begin\r\n        //for(int i=0; i < 10; ++i)\r\n        repeat(10)\r\n          @(posedge CLK);\r\n      end\r\n    //join\r\n    join_any\r\n\r\n    $finish;\r\n  end\r\n\r\nendmodule\r\n\r\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-18",
+  "closed_at": "2024-09-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

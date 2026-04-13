@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3607,
+  "issue_url": "https://github.com/llvm/circt/issues/3607",
+  "title": "[ExportVerilog] `hw.verilogName` collision on declaration ops",
+  "body": "```mlir\r\nhw.module @CollectNamesOrder(%in: i1) -> (out:i1) {\r\n  %0 = sv.wire : !hw.inout<i1>\r\n  %foo = sv.wire {hw.verilogName = \"_GEN\"} : !hw.inout<i1>\r\n  %1 = sv.read_inout %foo: !hw.inout<i1>\r\n  hw.output %1: i1\r\n}\r\n```\r\nThe current output is:\r\n```verilog\r\nmodule CollectNamesOrder(       // bar.mlir:2:1\r\n  input  in,\r\n  output out);\r\n\r\n  wire _GEN;    // bar.mlir:3:8\r\n  wire _GEN_0;  // bar.mlir:4:10\r\n\r\n  assign out = _GEN_0;  // bar.mlir:5:8, :6:3\r\nendmodule\r\n\r\nmodule {\r\n  hw.module @CollectNamesOrder(%in: i1) -> (out: i1) {\r\n    %0 = sv.wire  {hw.verilogName = \"_GEN\"} : !hw.inout<i1>\r\n    %foo = sv.wire  {hw.verilogName = \"_GEN\"} : !hw.inout<i1>\r\n    %1 = sv.read_inout %foo : !hw.inout<i1>\r\n    hw.output %1 : i1\r\n  }\r\n}\r\n```\r\n`hw.verilogName` on `%foo` is ignored because the name `_GEN` is given to `%0`. \r\nWe fixed the issue for the cases when temporary wires are introduced at ExportVerilog (https://github.com/llvm/circt/pull/3342) but it seems it is necessary to consider cases like above.",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-26",
+  "closed_at": "2022-08-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

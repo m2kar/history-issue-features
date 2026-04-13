@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3606,
+  "issue_url": "https://github.com/llvm/circt/issues/3606",
+  "title": "[PrepareForEmission] `reuseExistingInOut` should check ifdef",
+  "body": "```mlir\r\nhw.module @ReuseExistingInOut(%clock: i1, %a: i1) -> (out1: i1) {\r\n    %0 = comb.or %a, %a : i1\r\n    %mywire = sv.wire  : !hw.inout<i1>\r\n    sv.ifdef  \"FOO\" {\r\n      sv.assign %mywire, %0 : i1\r\n    }\r\n    hw.output %0 : i1\r\n  }\r\n```\r\n\r\nThe current output of `circt-opt -export-verilog` is:\r\n```verilog\r\nmodule ReuseExistingInOut(      // bar.mlir:4:1\r\n  input  clock,\r\n         a,\r\n  output out1);\r\n\r\n  wire mywire;  // bar.mlir:6:13\r\n\r\n  `ifdef FOO    // bar.mlir:8:3\r\n    assign mywire = a | a;      // bar.mlir:5:12, :9:5\r\n  `endif\r\n  assign out1 = mywire; // bar.mlir:6:13, :18:3\r\nendmodule\r\n```\r\nIt is incorrect to replace `%0` with `mywire` because assign to `mywire` is gated by ifdef. ",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-26",
+  "closed_at": "2022-07-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

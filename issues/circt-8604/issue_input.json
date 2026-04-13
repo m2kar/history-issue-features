@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8604,
+  "issue_url": "https://github.com/llvm/circt/pull/8604",
+  "title": "[FIRRTL][CreateSiFiveMetadata] Add memory read-under-write behavior to emitted metadata",
+  "body": "This PR adds information on the read under write behavior of  memories, as specified by the FIRRTL/CHIRRTL IR, to the emitted memory metadata records. This includes the textual `repl-seq-mem-file`, the `seq_mem.json`, and the object model IR. It should allow external tools to generate memories with the appropriate behavior. \r\n\r\n- In the JSON file, there is a new string attribute `ruw_behavior` that can take one of the following values : `Undefined`, `New`, `Old`.\r\n- In the textual file, `Undefined` behavior is elided to keep the format unchanged for the common case. Otherwise `ruw New` or `ruw Old` is appended to the memory's line.\r\n- In the object model it is added to the `MemorySchema` as a string-typed subfield called `ruwBehavior`. I've never dealt with the object model before and I don't really know how enums should be handled here. So, please tell me if I should change my approach.\r\n\r\nTo make this information available at the point of metadata emission, I had to add the `ruw` attribute to `FMemModuleOp`. Previously, this attribute was just an `I32EnumAttr`. When adding it to the `FMemModuleOp`'s attribute dictionary this would become a generic `i32` typed attribute, which did not seem desirable to me. So I replaced the `RUWAttr` with a `RUWBehaviorAttr` dialect attribute to give it an enum specific serialization (`ruw = #firrtl<ruwbehavior Undefined>`). Unfortunately, this creates a fair amount of change noise. I can break it out as a separate PR if desired.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-26",
+  "closed_at": "2025-08-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

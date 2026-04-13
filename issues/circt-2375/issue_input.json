@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2375,
+  "issue_url": "https://github.com/llvm/circt/issues/2375",
+  "title": "[Tracker] Lowering high-level Calyx programs",
+  "body": "Lowering Calyx without having to rely on the native compiler seems to be one of the [top requirements](https://github.com/cucapra/calyx/discussions/804) for folks wanting to use Calyx within CIRCT. This tracks the main compiler passes that need to be implemented to accomplish it.\r\n\r\nCalyx has two abstractions that need to be encoded structurally: groups and control operators. The main compilation passes first remove control operators by generating new groups and then removes groups by inlining uses of their `go` and `done` signals.\r\n\r\n\r\n- [ ] [CompileControl](https://docs.calyxir.org/source/calyx/passes/struct.TopDownCompileControl.html): Removes control operators by encoding them into new groups which implement structural FSMs.\r\n  - [Current implementation](https://github.com/llvm/circt/blob/main/lib/Dialect/Calyx/Transforms/CompileControl.cpp) uses the old, recursive compile control pass presented in the Calyx paper. It should be changed to use the new TopDownCompileControl algorithm which instantiates the entire control FSM in one go. The implementation also only supports lowering `seq` statements.\r\n- [ ] [GoInsertion](https://docs.calyxir.org/source/calyx/passes/struct.GoInsertion.html): Guards assignments within a group with a `go` signal that ensures assignments only execute when the group is activated using the FSM.\r\n  - The [current implementation](https://github.com/llvm/circt/blob/main/lib/Dialect/Calyx/Transforms/GoInsertion.cpp) looks correct. We can mark this off once someone tests it.\r\n- [ ] [Inliner](https://docs.calyxir.org/source/calyx/passes/struct.Inliner.html): This pass can be implemented using a simpler, wire-based inliner. Before implementing, ping @rachitnigam to see if this simpler pass has been implemented in the native compiler.\r\n  - The [`RemoveGroups` pass](https://github.com/llvm/circt/blob/main/lib/Dialect/Calyx/Transforms/RemoveGroups.cpp) seems to implement a subset of the required transformation. However, it doesn't seem to handle inlining the reads from groups' `go` and `done` signals.\r\n\r\nAt the end of these passes, the Calyx program is *purely-structural*, i.e. it can be easily translated into `hw` programs.",
+  "labels": [
+    "Tracking Issue",
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-21",
+  "closed_at": "2023-01-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

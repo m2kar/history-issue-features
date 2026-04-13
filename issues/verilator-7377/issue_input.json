@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7377,
+  "issue_url": "https://github.com/verilator/verilator/pull/7377",
+  "title": "Support ##[*], ##[+], ##[M:$] unbounded cycle delays in SVA properties",
+  "body": "## Summary\r\n\r\nThis patch adds support for unbounded cycle delay forms `##[*]`, `##[+]`, and\r\n`##[M:$]` in SVA concurrent assertions, as specified in IEEE 1800-2023 §16.7.\r\nPreviously all three forms were rejected at compile time with an UNSUPPORTED or\r\nconstant-folding error. Note: each assertion uses a single-evaluation model --\r\noverlapping triggers are not tracked, and `##[M:$]` waits indefinitely if the\r\nconsequent never becomes true.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t(input clk);\r\n  wire a, b;\r\n  assert property (@(posedge clk) a |-> ##[+] b);    // ##[1:$]\r\n  assert property (@(posedge clk) a |-> ##[*] b);    // ##[0:$]\r\n  assert property (@(posedge clk) a |-> ##[2:$] b);\r\nendmodule\r\n```\r\nOn master:\r\n\r\n\r\n```\r\n%Error-UNSUPPORTED: t.sv:3: Unsupported: ## [+] cycle delay range expression\r\n%Error-UNSUPPORTED: t.sv:2: Unsupported: ## [*] cycle delay range expression\r\n%Error: t.sv:4: Range delay bounds must be elaboration-time constants (IEEE 1800-2023 16.7)\r\n```\r\n## Changes\r\n\r\n- verilog.y: add parser rules for ##[*] and ##[+]; both were previously unsupported\r\n- V3AstNodeStmt.h: add AstDelay::isUnbounded() predicate\r\n- V3AssertProp.cpp SeqStep: add isUnbounded field\r\n- V3AssertProp.cpp extractDelayBounds: handle unbounded rhs -- skip constify on $, set maxVal = -1\r\n- V3AssertProp.cpp preAssignStates: skip WAIT_MIN state for unbounded delays with rangeMin <= 1\r\n- V3AssertProp.cpp makeRangeCheckBody: unbounded path samples consequent each cycle with no timeout\r\n- V3AssertProp.cpp buildFsmBody IDLE: ##[*] checks consequent immediately at cycle 0; enters CHECK only on no-match\r\n\r\n## Test\r\n\r\n- Extended test_regress/t/t_property_sexpr_range_delay.{v,py} with unbounded assertions (##[+], ##[*], ##[M:$], unary forms, multi-step)\r\n- Extended test_regress/t/t_property_sexpr_range_delay_bad.{v,out} with non-constant unbounded minimum error\r\n- Updated test_regress/t/t_sequence_sexpr_unsup.out -- removed 4 UNSUPPORTED lines for ##[*] and ##[+]\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-05",
+  "closed_at": "2026-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

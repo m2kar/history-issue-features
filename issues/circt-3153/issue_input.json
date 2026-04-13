@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3153,
+  "issue_url": "https://github.com/llvm/circt/pull/3153",
+  "title": "[FIRRTL] basic support for subcircuit signal driving flows",
+  "body": "This is handled with a two-step flow:\r\n\r\n* main.fir + subCircuit.json --(firtool)--> (normal output) + sigdrive.json (new)\r\n* subcircuit.fir + sigdrive.json --(firtool)--> (normal output)\r\n\r\nThe new test in 'subcircuit-flow' demonstrates this in action.\r\n\r\nThere are many limitations, this is meant to just be enough to\r\nsupport some specific existing use cases only.\r\n\r\n----\r\n\r\nNotes:\r\n\r\n* Forced input ports now have an additional wire added to distance\r\n  the driven value from its uses (at instantiation points).\r\n  The goal is to ensure an 'assign' is created between the wire\r\n  used elsewhere and the wire bound to the driven port.\r\n  The single wire previously created was apparently insufficient.\r\n  These wires are now given names and symbols, which may be unneeded.\r\n\r\n* Mappings are generated using `module.name` XMR's, which may not be\r\n  supported everywhere.  SFC emits hierarchical paths from the DUT,\r\n  which is more complicated to support and not yet found to be needed.\r\n\r\n* SignalDriver annotations are only acted on in GCSM if the CircuitOp\r\n  has the modified annotation which must contain a \"isSubCircuit\" field.\r\n  This annotation was already created during parsing, but used an\r\n  optional 'emitJSON' field to indicate if this is the subcircuit.\r\n  This is now required for simplicity.\r\n  * For users of firtool, the change is handled already in\r\n    FIRAnnotations, but some test cases relied on the previous behavior.\r\n  * `emitJSON` is deprecated, in practice this was interpreted and set\r\n    as indicator of processing a subcircuit.\r\n  * The pass will always emit something if the annotations are found.\r\n\r\n* Sources/Sinks that target aggregates like vectors or bundles are not\r\n  supported and may misbehave (existing bug).\r\n\r\n* Sources/Sinks targeting ports of extmodules are not yet supported,\r\n  but these seem to be ignored in SFC as well.\r\n\r\n* Remote targets must be local, if they walk an instantiation path\r\n  (and generate NLA's), these are not currently supported.\r\n\r\n* Remote targets must have unique instance path.\r\n  This is true in practice, and allows the simple `module.name` XMR's.\r\n\r\n* Flow assumes only two circuits: remote (main) and local (subcircuit)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-19",
+  "closed_at": "2022-05-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

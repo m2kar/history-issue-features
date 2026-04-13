@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3478,
+  "issue_url": "https://github.com/llvm/circt/pull/3478",
+  "title": "[SV] Add support for `sv.case` with `hw.enum`",
+  "body": "This commit adds support in `sv.case` for switching on enum values. In doing so, a fair bit of refactoring is done to `CasePattern`s to more cleanly handle the different cases of bit, enum, and default patterns.\n\nSince `hw.enum` doesn't yet include any notion of value encoding, the `sv.case` operation exclusively works on either an enum or bit pattern.\nFurthermore, only a single case value can be compared in a case statement (as opposed to `case A, B : ...`). I think this is a good starting point - if support is needed in the future, it will not be complicated to add.\n\n```mlir\nhw.module @AnFSM(%clock : i1) {\n  %reg = sv.reg : !hw.inout<!hw.enum<A, B, C>>\n  %reg_read = sv.read_inout %reg : !hw.inout<!hw.enum<A, B, C>>\n\n  %A = hw.enum.constant A : !hw.enum<A, B, C>\n  %B = hw.enum.constant B : !hw.enum<A, B, C>\n  %C = hw.enum.constant C : !hw.enum<A, B, C>\n\n  sv.always posedge %clock {\n    sv.case case %reg_read : !hw.enum<A, B, C>\n      case A : { sv.passign %reg, %B : !hw.enum<A, B, C> }\n      case B : { sv.passign %reg, %C : !hw.enum<A, B, C> }\n      default : { sv.passign %reg, %A : !hw.enum<A, B, C> }\n  }\n}\n```\n\nemits\n```systemverilog\nmodule AnFSM\n    enum {A, B, C} reg_0;\n    always @(posedge clock) begin\n    case (reg_0)\n        A:\n        reg_0 <= B;\n        B:\n        reg_0 <= C;\n        default:\n        reg_0 <= A;\n    endcase\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-06",
+  "closed_at": "2022-07-07",
+  "code_blocks": [
+    "hw.module @AnFSM(%clock : i1) {\n  %reg = sv.reg : !hw.inout<!hw.enum<A, B, C>>\n  %reg_read = sv.read_inout %reg : !hw.inout<!hw.enum<A, B, C>>\n\n  %A = hw.enum.constant A : !hw.enum<A, B, C>\n  %B = hw.enum.constant B : !hw.enum<A, B, C>\n  %C = hw.enum.constant C : !hw.enum<A, B, C>\n\n  sv.always posedge %clock {\n    sv.case case %reg_read : !hw.enum<A, B, C>\n      case A : { sv.passign %reg, %B : !hw.enum<A, B, C> }\n      case B : { sv.passign %reg, %C : !hw.enum<A, B, C> }\n      default : { sv.passign %reg, %A : !hw.enum<A, B, C> }\n  }\n}\n",
+    "module AnFSM\n    enum {A, B, C} reg_0;\n    always @(posedge clock) begin\n    case (reg_0)\n        A:\n        reg_0 <= B;\n        B:\n        reg_0 <= C;\n        default:\n        reg_0 <= A;\n    endcase\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

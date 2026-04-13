@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8628,
+  "issue_url": "https://github.com/llvm/circt/pull/8628",
+  "title": "[ImportVerilog] Detect and fixup two-state-exhaustive case statements",
+  "body": "Case statements often occur in the following form in real-world Verilog:\r\n\r\n```\r\nmodule Foo(input logic [1:0] a, output logic [3:0] z);\r\n  always_comb begin\r\n    case (a)\r\n      2'd0: z = 4'b0001;\r\n      2'd1: z = 4'b0010;\r\n      2'd2: z = 4'b0100;\r\n      2'd3: z = 4'b1000;\r\n    endcase\r\n  end\r\nendmodule\r\n```\r\n\r\nThe intention being that the case statement exhaustively covers all possible `a` input values, and assigns a corresponding `z` output value. This case statement _is_ exhaustive assuming two-state logic. However, the Verilog `logic` type is four-state, where the bits in `a` can also have the value X and Z. If `a` contains X or Z, none of the case statements would execute and `z` would not be assigned, essentially creating a latch.\r\n\r\nIn practice, logic synthesizers fold X and Z values to 0 or 1 however they see fit, often in an attempt to minimize logic. For this case statement the obvious assumption is that the input is two-state and the match is exhaustive. This does not work in simulation, though.\r\n\r\nThis commit makes ImportVerilog detect if a case statement is exhaustive assuming two-state logic. If it is, the last case item is treated as the default, being executed regardless of its case value. As a result, the above example generates a CFG where all possible paths through the case statement assign the output `z`. This then ensures that the case statement can be lowered to properly in circt-verilog, without generating conditional drives or latches.\r\n\r\nThe core dialects of CIRCT currently don't represent X and Z well, and most of ImportVerilog and the circt-verilog pipeline assumes all values are two-state. Once we add X and Z handling to the core dialects, we will have to revisit this behavior and make it opt-out.\r\n\r\nFixes #8626.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-01",
+  "closed_at": "2025-07-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

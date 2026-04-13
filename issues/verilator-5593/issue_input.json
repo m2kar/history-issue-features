@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5593,
+  "issue_url": "https://github.com/verilator/verilator/issues/5593",
+  "title": "Support parameter names in pattern initialization ",
+  "body": "I'm trying to have verilator compile an SoC project, the AHB/AXI buses make use of the following pattern to assign interfaces to crossbars/arbiters, etc.\r\n\r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```verilog\r\nmodule test;\r\n  localparam int unsigned SPI_AHB_INDEX = 0;\r\n  localparam int unsigned I2C_AHB_INDEX = 1;\r\n\r\n  localparam bit AHB_USE_IO_BASE[2] = '{\r\n    SPI_AHB_INDEX: 1'b0,\r\n    I2C_AHB_INDEX: 1'b0};\r\n\r\n  localparam logic [31:0] AHB_ADDR[2] = '{\r\n    SPI_AHB_INDEX: 32'h8001000,\r\n    I2C_AHB_INDEX: 32'h8002000};\r\n\r\nendmodule\r\n```\r\n\r\n> What 'verilator' command line do we use to run your example?\r\n\r\n```\r\n$ verilator --lint-only test.sv\r\n%Error: test.sv:6:5: Assignment pattern key not supported/understood: TEXT\r\n                   : ... note: In instance 'test'\r\n    6 |     SPI_AHB_INDEX: 1'b0,\r\n      |     ^~~~~~~~~~~~~\r\n%Error: test.sv:7:5: Assignment pattern key not supported/understood: TEXT\r\n                   : ... note: In instance 'test'\r\n    7 |     I2C_AHB_INDEX: 1'b0};\r\n      |     ^~~~~~~~~~~~~\r\n%Error: test.sv:10:5: Assignment pattern key not supported/understood: TEXT\r\n                    : ... note: In instance 'test'\r\n   10 |     SPI_AHB_INDEX: 32'h8001000,\r\n      |     ^~~~~~~~~~~~~\r\n%Error: test.sv:11:5: Assignment pattern key not supported/understood: TEXT\r\n                    : ... note: In instance 'test'\r\n   11 |     I2C_AHB_INDEX: 32'h8002000};\r\n      |     ^~~~~~~~~~~~~\r\n%Error: Exiting due to 4 error(s)\r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n```\r\n$ verilator --version\r\nVerilator 5.031 devel rev v5.030-23-g2e1128b41\r\n```\r\n\r\n> What OS and distribution are you using?\r\n\r\nUbuntu 24.04 (via wsl)\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nYes, I see the error is being generated in V3Width:patVectorMap\r\nAt this stage the localparams appear as a Text object, And this function is only handling Const objects. \r\nI haven't dug much deeper into the code yet.\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: parser",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-08",
+  "closed_at": "2024-11-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

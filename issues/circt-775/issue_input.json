@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 775,
+  "issue_url": "https://github.com/llvm/circt/issues/775",
+  "title": "[FIRRTL] mem (core dump)",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input r0en: UInt<1>\r\n    mem tmp41:\r\n      data-type => UInt<8>\r\n      depth => 10\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n      reader => r0\r\n      writer => w0\r\n    tmp41.r0.clk <= clock\r\n    tmp41.r0.en <= r0en\r\n    tmp41.r0.addr <= asUInt(SInt<25>(0))\r\n    tmp41.w0.clk <= clock\r\n    tmp41.w0.en <= r0en\r\n    tmp41.w0.addr <= asUInt(SInt<25>(0))\r\n    tmp41.w0.mask <= asUInt(SInt<25>(0))\r\n    tmp41.w0.data <= asUInt(SInt<25>(0))\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl --enable-lower-types --verilog` gives an error:\r\n\r\n```mlir\r\nfirtool\r\nmalloc(): unsorted double linked list corrupted\r\nPLEASE submit a bug report to https://bugs.llvm.org/ and include the crash backtrace.\r\nStack dump:\r\n0.      Program arguments: ../../llvm/circt/build/bin/firtool a_top_mod.fir --lower-to-rtl --enable-lower-types --verilog -o=a_top_mod_new.sv\r\nmalloc(): unsorted double linked list corrupted\r\n./process1.sh: line 25: 29968 Aborted                 (core dumped) ../../llvm/circt/build/bin/firtool a_top_mod.fir --lower-to-rtl --enable-lower-types --verilog -o=$VFILE2\r\n```\r\n\r\nfirrtl-1.5.0-SNAPSHOT produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input   clock,\r\n  input   reset,\r\n  input   r0en\r\n);\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-17",
+  "closed_at": "2021-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

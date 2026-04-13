@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5507,
+  "issue_url": "https://github.com/llvm/circt/pull/5507",
+  "title": "[Transforms] Make CSE extensible and implement CSE that ignores namehints",
+  "body": "This commit modifies upstream CSE so that downstream users can use their own OperationInfo and OperationEquivalence, and implement `NamehintsInsensitiveCSE` which is a CSE pass that ignores namehints. Since the current upstream CSE is hard to customize, I duplicated the relevant code to lib/Transforms/CSE.cpp and will work on upstreaming patches afterward.\r\n\r\nChanges that need to be upstreamed:\r\n\r\n* CSE \r\nCurrently CSE is not implemented as a library, so this commit separates CSE pass into `struct CSEImpl<OperationInfo>` where `OperationInfo` is `DenseMapInfo` used for hashing and equivalence checking in CSE. Otherwise, there is no functional difference to the original implementation.\r\n\r\n* OperationEquivalence \r\n`OperationEquivalence::computeHash` and `OperationEquivalence::isEquivalentTo` are modified to take an additional callback to provide a way to customize CSE (in our use case, functions that ignore `sv.namehint` are passed).\r\n\r\nAs CSE.cpp is fairly big, here is diff against for llvm: https://github.com/llvm/llvm-project/compare/main...uenoku:llvm-project:dev/hidetou/cse-extensible?expand=1 ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-28",
+  "closed_at": "2023-06-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

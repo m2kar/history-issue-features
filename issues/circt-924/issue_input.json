@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 924,
+  "issue_url": "https://github.com/llvm/circt/pull/924",
+  "title": "[Handshake] Add canonicalization to remove sunk constants.",
+  "body": "The previous change, which this PR reverts, intended to allow removing constants that ended up in sinks, but it ultimately led to sinks being removed in situations where we really don't want that. Specifically, a sunk output of a ConditionalBranchOp would be removed. In hardware, this would ultimately result in dangling ready wires, which Verilator finds:\r\n\r\n```\r\n%Warning-UNDRIVEN: build/tools/circt/integration_test/Dialect/Handshake/%matmul-export.sv:4924:15: Signal is not driven: '_arg3_ready_wire'\r\n%Warning-UNDRIVEN: build/tools/circt/integration_test/Dialect/Handshake/%matmul-export.sv:4931:15: Signal is not driven: '_arg3_ready_wire_40'\r\n%Warning-UNDRIVEN: build/tools/circt/integration_test/Dialect/Handshake/%matmul-export.sv:4972:15: Signal is not driven: '_arg3_ready_wire_48'\r\n...\r\n```\r\n\r\nThat's definitely not what we want! Besides reverting the previous change, the new addition in this PR addresses the sunk constant situation by adding a canonicalization for this specific case.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-04-16",
+  "closed_at": "2021-04-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5004,
+  "issue_url": "https://github.com/verilator/verilator/issues/5004",
+  "title": "\"Error-LIFETIME\" when using a clocking block inside a submodule",
+  "body": "Example Code:\r\n\r\n```sv\r\nmodule abc(input clk, input x, output y);\r\n\r\n    clocking cb @(posedge clk);\r\n        default input #1ns output #1ns;\r\n        input  x;\r\n        output y;\r\n    endclocking\r\n\r\n    task task1;\r\n      @(cb);\r\n      cb.y <= x;\r\n    endtask\r\n    \r\nendmodule\r\n\r\nmodule tb();\r\n    logic clk = 0;\r\n    logic x;\r\n    logic y;\r\n\r\n    always #10ns clk = ~clk;\r\n\r\n    abc abc(.*);\r\n\r\n    initial begin\r\n        repeat(10) abc.task1;\r\n        $finish();\r\n    end\r\nendmodule\r\n```\r\n\r\nCommand:\r\n```\r\nverilator --binary module_tb.sv\r\n```\r\n\r\nError:\r\n```\r\n%Error-LIFETIME: module_tb.sv:6:16: Invalid reference: Process might outlive variable `y`.                                  : ... note: In instance 'tb.abc'\r\n                                  : ... Suggest use it as read-only to initialize a local copy at the beginning of the process, or declare it as static. It is also possible to refer by reference to objects and their members.\r\n    6 |         output y;\r\n      |                ^\r\n                 ... For error description see https://verilator.org/warn/LIFETIME?v=5.022%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n\r\nWhy I'm doing this:\r\nI have two verification modules [here](https://github.com/abarajithan11/deepsocflow/blob/master/deepsocflow/test/sv/dma.sv) that act as AXI Stream Slave and Master. [Here](https://github.com/abarajithan11/deepsocflow/blob/master/deepsocflow/test/sv/dnn_engine_tb.sv) is how I use them.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-19",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

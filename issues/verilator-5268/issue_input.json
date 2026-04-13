@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5268,
+  "issue_url": "https://github.com/verilator/verilator/pull/5268",
+  "title": "Fix randomization when used with inheritance",
+  "body": "Randomization, both constrained and unconstrained, is currently broken when used with inheritance.\r\n\r\nUnconstrained doesn't work in some specific circumstances due to how the base class's `randomize()` function is discovered. The base class's `randomize()` has to exist in order to be called from a derived class's `randomize()`. If it doesn't, e.g. it hasn't been called directly elsewhere (and thus not created), it doesn't get called by derived classes, resulting in the base class members not being randomized.\r\n\r\nConstrained randomization doesn't work at all. Aside from the previous issue, each `randomize()` clears existing constraints and generates a solution. So subsequent `randomize()` functions in a class hierarchy clear the constraints added by their predecessors, and generate a partial solution. There are also other issues, e.g. adding a new random generator with each derived class.\r\n\r\nThis patch changes the way constraints and `rand` fields are handled. For each class, we iterate over fields and constraints starting from the root superclass. `randomize()` no longer calls its equivalent from the base class – all relevant constraints and fields are handled inline.\r\n\r\nFor each class, all the constraint setup functions are called from a single virtual function. This is to enable support for constraint inheritance when using `randomize() with`. Currently, when `randomize() with` is encountered, all class constraints are handled statically and copied. However, this doesn't work if it's called on a base class reference. In that case, we don't have access to all constraints, as that is runtime-dependent. This patch changes this behavior to simply call the aforementioned virtual setup function which should be overridden for each derived class.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-16",
+  "closed_at": "2024-07-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

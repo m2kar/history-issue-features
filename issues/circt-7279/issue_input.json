@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7279,
+  "issue_url": "https://github.com/llvm/circt/pull/7279",
+  "title": "[FIRRTL][ModuleInliner] Add a prefix to memory instances",
+  "body": "This PR basically reverts https://github.com/llvm/circt/commit/4cf7bc9a300f9e05ddfc264e99526b4b88d5f93f to add a prefix to MemOp instances. Previously we changed to remove prefix since it broke prefixes created in PrefixModules. However https://github.com/llvm/circt/pull/4952 added `prefix` attribute to MemOp so we don't need the workaround anymore. This makes output verilog a lot more LEC friendly. I checked the PR doesn't break prefixes added by PrefixModules on internal designs.\r\n\r\n```scala\r\n//> using repository \"sonatype-s01:snapshots\"\r\n//> using scala \"2.13.12\"\r\n//> using dep \"org.chipsalliance::chisel:7.0.0-M1+76-03ef61f3-SNAPSHOT\"\r\n//> using plugin \"org.chipsalliance:::chisel-plugin:7.0.0-M1+76-03ef61f3-SNAPSHOT\"\r\n//> using options \"-unchecked\", \"-deprecation\", \"-language:reflectiveCalls\", \"-feature\", \"-Xcheckinit\", \"-Ywarn-dead-code\", \"-Ywarn-unused\", \"-Ymacro-annotations\"\r\n\r\nimport chisel3._\r\nimport chisel3.stage.ChiselGeneratorAnnotation\r\nimport chisel3.testers.BasicTester\r\nimport circt.stage.ChiselStage\r\nimport chisel3.util.circt._\r\nimport chisel3.util._\r\n\r\n\r\n\r\nimport scala.io.Source\r\n\r\ntrait InlineInstance { self: chisel3.experimental.BaseModule =>\r\n  chisel3.experimental.annotate(new chisel3.experimental.ChiselAnnotation {\r\n    def toFirrtl: firrtl.annotations.Annotation = firrtl.passes.InlineAnnotation(self.toNamed)\r\n  })\r\n}\r\n\r\nclass TestModule extends Module {\r\n  val gen = UInt(4.W)\r\n  val valid = IO(Input(Bool()))\r\n  val ready = IO(Input(Bool())) \r\n  val bits = IO(Input(gen)) \r\n  val out = IO(Output(gen))\r\n\r\n\r\n  val q0 = Module(new Queue(gen, 1) with InlineInstance)\r\n  q0.io.enq.valid := valid\r\n  q0.io.enq.bits := bits\r\n  q0.io.deq.ready := ready\r\n  val q1 = Module(new Queue(gen, 1) with InlineInstance)\r\n  q1.io.enq.valid := valid\r\n  q1.io.enq.bits := bits\r\n  q1.io.deq.ready := ready\r\n\r\n  out := q0.io.deq.bits + q1.io.deq.bits\r\n}\r\n\r\n\r\nobject Main extends App {\r\n  println(\r\n      ChiselStage.emitCHIRRTL(\r\n       new TestModule\r\n    )\r\n  )\r\n}\r\n```\r\n\r\nbefore:\r\n```verilog\r\nreg [3:0] ram;        // src/main/scala/chisel3/util/Decoupled.scala:256:91\r\nreg [3:0] ram_0;      // src/main/scala/chisel3/util/Decoupled.scala:256:91\r\n```\r\nafter:\r\n```verilog\r\nreg [3:0] q1_ram;     // src/main/scala/chisel3/util/Decoupled.scala:256:91\r\nreg [3:0] q0_ram;     // src/main/scala/chisel3/util/Decoupled.scala:256:91\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-04",
+  "closed_at": "2024-07-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

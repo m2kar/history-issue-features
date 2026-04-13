@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3379,
+  "issue_url": "https://github.com/verilator/verilator/issues/3379",
+  "title": "$readmemh: Unsupported: Blocked and non-blocking assignments to same variable",
+  "body": "`$readmemh` and blocking assignment to an associative array produces an error:\r\n\r\n```\r\n%Error-BLKANDNBLK: dv/testmem.sv:15:27: Unsupported: Blocked and non-blocking assignments to same variable: 'top.bench.testmem.mem'\r\n   15 |    logic [DATA_WIDTH-1:0] mem [logic [ADDR_WIDTH-1:0]];\r\n      |                           ^~~\r\n                   top.v:55:46: ... Location of blocking assignment\r\n   55 |        $readmemh(file, bench.testmem.mem);\r\n      |                                              ^~~\r\n                   dv/testmem.sv:28:6: ... Location of nonblocking assignment\r\n   28 |      mem[w_addr][i*8+7:i*8] <= w_data[i*8+7:i*8];\r\n      |      ^~~\r\n                   ... For error description see https://verilator.org/warn/BLKANDNBLK?v=4.221\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\nEven though `test_regress/t/t_altera_lpm.v` has similar code for simple array:\r\n\r\n```\r\n        if (lpm_file != \"UNUSED\")\r\n        begin\r\n            mem.convert_to_ver_file(lpm_file, lpm_width, ram_initf);\r\n            $readmemh(ram_initf, mem_data);\r\n        end\r\n\r\n        tmp_q = ZEROS;\r\n    end\r\n\r\n// ALWAYS CONSTRUCT BLOCK                                                                                                                                                 \r\n    always @(posedge i_inclock)\r\n    begin\r\n        if (lpm_address_control == \"REGISTERED\")\r\n        begin\r\n            if ((we) && (use_eab != \"ON\") &&\r\n                (lpm_hint != \"USE_EAB=ON\"))\r\n            begin\r\n                if (lpm_indata == \"REGISTERED\")\r\n                    mem_data[address] <= data;\r\n                else\r\n                    mem_data[address] <= pdata;\r\n            end\r\n```\r\n\r\n\r\nThanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n**Yes, an example can be done**\r\n\r\nWhat 'verilator --version' are you using?\r\n\r\n**Verilator 4.221 devel rev v4.220-21-g5f333be9**\r\n\r\nDid you try it with the git master version?\r\n\r\n**Yes**\r\n\r\nWhat OS and distribution are you using?\r\n\r\n**Linux 4.18.0-373.el8.x86_64 #1 SMP Tue Mar 22 15:11:47 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux**\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-12",
+  "closed_at": "2022-06-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

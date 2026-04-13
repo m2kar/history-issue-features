@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9085,
+  "issue_url": "https://github.com/llvm/circt/pull/9085",
+  "title": "[ImportVerilog] Add delayed assignment support",
+  "body": "Add the `moore.delayed_assign` and `moore.delayed_nonblocking_assign` ops to represent `assign #1ns a = b` and `a <= #1ns b` in SystemVerilog, respectively.\r\n\r\nLower the new delay ops to `llhd.drv` with the appropriate delay value.\r\n\r\nAdd support for blocking assignments with intra-assignment timing control to the ImportVerilog conversion. These are pretty trivial, since the blocking effects of the timing control are simply inserted in between computing the right-hand side and assigning to the left-hand side.\r\n\r\nAlso add support for non-blocking assignments with intra-assignment delays. These require the new `moore.delayed_nonblocking_assign`, since the operation cannot suspend execution of the surrounding process. Instead, the assignment has to be added to the event queue and executed at a later point in time. Theoretically, the user could type wild things here, like `a <= repeat(5) @(posedge b or negedge c) d`, which would require us to spawn a separate \"thread\" to determine when all the events have occurred and the assignment can take place. We don't support any of that for now, because this is just utterly deranged.\r\n\r\nAlso add support for delayed continuous assignments. This is pretty trivial since SystemVerilog only allows for simple delay values, such as `assign #1ns a = b`. This requires the new `moore.delayed_assign` op.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-12",
+  "closed_at": "2025-10-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

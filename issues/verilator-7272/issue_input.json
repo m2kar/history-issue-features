@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7272,
+  "issue_url": "https://github.com/verilator/verilator/pull/7272",
+  "title": "Fix rand_mode(0) on sub-object members not preventing solver write-back",
+  "body": "## Summary\r\n\r\nThis patch fixes `rand_mode(0)` on nested sub-object members having no effect.\r\nWhen a class has `rand InnerClass nested;` and `nested.val1.rand_mode(0)` is called,\r\nthe solver still overwrites `val1` after `randomize()`. The root cause is that\r\n`write_var` for globalConstrained sub-object members was always registered\r\nunconditionally, and the solver write-back had no way to check the sub-object's\r\n`__Vrandmode` state.\r\n\r\nDiscovered while running core-v-verif UVM testbench on Verilator\r\n(https://github.com/openhwgroup/core-v-verif/pull/2724).\r\n\r\nAdditionally includes a defensive fix in `V3LinkDot.cpp` to prevent `findSymPrefixed`\r\nfrom overwriting a correctly linked class `randomize()` with `std::randomize`.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nclass Inner;\r\n  rand bit [7:0] val;\r\n  constraint c { val inside {[8'd10:8'd50]}; }\r\n  function new(); val = 0; endfunction\r\nendclass\r\n\r\nclass Outer;\r\n  rand Inner nested;\r\n  rand bit [7:0] top_val;\r\n  constraint c { top_val inside {[8'd1:8'd20]}; }\r\n  function new(); nested = new(); top_val = 0; endfunction\r\nendclass\r\n\r\nmodule t;\r\n  initial begin\r\n    Outer obj = new;\r\n    void'(obj.nested.val.rand_mode(0));\r\n    obj.nested.val = 42;\r\n    if (!obj.randomize()) $stop;\r\n    if (obj.nested.val != 42) $stop;  // FAILS on master: val overwritten\r\n    $write(\"*-* All Finished *-*\\n\");\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master, `val` is overwritten by the solver (e.g. `val=31`) despite `rand_mode(0)`:\r\n\r\n```\r\n%Error: t_randomize_randmode_subobj.v:65:  got=31 exp=42\r\n```\r\n\r\n## Changes\r\n\r\n- `src/V3Randomize.cpp` (ConstraintExprVisitor): For globalConstrained sub-object\r\n  members with `usesMode`, wrap the `write_var` call in an `AstIf` that checks\r\n  the sub-object's `__Vrandmode.at(index)`. When rand_mode is off, call\r\n  `unregister_var` to remove the variable from the solver so it is not written back.\r\n- `src/V3Randomize.cpp` (createRandomizeClassVars): Extend parent `__Vrandmode`\r\n  array to account for rand_mode indices from globalConstrained sub-objects.\r\n- `src/V3AstAttr.h`: Add `RANDOMIZER_UNREGISTER_VAR` enum entry.\r\n- `include/verilated_random.h`: Add `unregister_var()` method to remove a\r\n  previously registered variable from the solver.\r\n- `src/V3LinkDot.cpp`: Add `return` after linking class `randomize()` to prevent\r\n  `findSymPrefixed` from falling through and overwriting `classOrPackagep` with\r\n  `std::randomize`.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_randomize_randmode_subobj.{v,py}` -- Tests rand_mode(0)\r\n  on individual nested sub-object members: disable, verify value held, disable\r\n  second member, re-enable both and verify randomization resumes.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-17",
+  "closed_at": "2026-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 513,
+  "issue_url": "https://github.com/verilator/verilator/issues/513",
+  "title": "Loop causes internal error",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 513 from https://www.veripool.org\nOriginal Date: 2012-05-10\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe following code has a loop dependency between the first two always blocks. It should execute to completion on the first positive clock edge.\r\n\r\n```\r\nmodule t (clk);\r\n    input clk;\r\n    reg \t ready;\r\n\r\n    initial begin\r\n       ready = 1'b0;\r\n    end\r\n    \r\n    always @(posedge ready) begin\r\n       if ((ready === 1'b1)) begin\r\n\t $write(\"*-* All Finished *-*\\n\");\r\n\t $finish;\r\n       end\r\n    end\r\n\r\n    always @(posedge ready) begin\r\n       if ((ready === 1'b0)) begin\r\n          ready = 1'b1 ;\r\n       end\r\n    end\r\n\r\n    always @(posedge clk) begin\r\n       ready = 1'b1;\r\n    end\r\nendmodule\r\n\n```\r\n\r\nThis works fine on Icarus Verilog, but on Verilator fails to compile, with the error:\r\n```\r\n%Error: Internal Error: ../V3GraphAcyc.cpp:343: Non-cutable edge forms a loop   VERTEX=0x8bd71c0\\n ALWAYS\r\n\n```\r\n\r\n(The example is meaningless, but was obtained by cutting down a 1100 line proprietary code where the error occurred).\r\n\r\nPlease pull the testcase from https://github.com/jeremybennett/verilator/tree/loop-crash.\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-05-10",
+  "closed_at": "2012-07-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7370,
+  "issue_url": "https://github.com/verilator/verilator/pull/7370",
+  "title": "Fix virtual interface select from sub-interface instance (#7203)",
+  "body": "## Summary\r\n\r\nFixes #7203.\r\n\r\nThis patch fixes an internal error when selecting a sub-interface instance\r\nthrough a virtual interface handle, e.g. `vif.sub_if` or chained access\r\nlike `vif.sub_if.member`.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\ninterface sub_if (output reg Tx);\r\nendinterface\r\n\r\ninterface top_if (output reg Tx);\r\n  sub_if tx (Tx);\r\nendinterface\r\n\r\npackage pkg;\r\n  typedef virtual top_if vif_t;\r\n  class driver_c;\r\n    vif_t vif;\r\n    function void f();\r\n      vif.tx.Tx = 1'b1;\r\n    endfunction\r\n  endclass\r\nendpackage\r\n\r\nmodule t;\r\nendmodule\r\n```\r\n\r\nOn master:\r\n\r\n```\r\n%Error: Internal Error: V3Width.cpp: MemberSel of non-variable\r\n```\r\n\r\n## Changes\r\n\r\n- `V3Width.cpp`: Add `AstCell` handler in `IfaceRefDType` MemberSel processing\r\n  to resolve sub-interface cells via their `__Viftop` companion variable.\r\n- `V3Width.cpp`: Use `ifaceViaCellp()` instead of `ifacep()` in\r\n  `memberSelIface()` to support chained sub-interface access.\r\n- `V3Width.cpp`: Include `AstCell` in `memberSelIface()` spellcheck\r\n  candidates.\r\n- `V3EmitCFunc.h`: Emit cell name (not `__Viftop` var name) for\r\n  `IFACEREF` MemberSel to match the C++ class member.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_interface_virtual_sub_iface.{v,py}` -- sub-interface\r\n  select, chained member access, read/write through sub-interface.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-03",
+  "closed_at": "2026-04-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

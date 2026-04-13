@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5485,
+  "issue_url": "https://github.com/verilator/verilator/issues/5485",
+  "title": "Fix non-blocking assignments at end of always block",
+  "body": "```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.029 devel rev v5.028-137-g811eab8fa\r\n```\r\n\r\nHello. I found a bug where non-blocking assignments don't work as intended at the end of an always block.\r\n\r\n```systemverilog\r\n// tb.sv\r\nmodule tb;\r\n\r\nint delay = 0; always #1 delay = int'($time) / 4;\r\ntask automatic do_delay;\r\n    if (delay > 0) #(delay);\r\nendtask\r\n\r\n// `a` should match `b`\r\nlogic a = 0;\r\nalways begin\r\n    a <= 1;\r\n    do_delay();\r\n    a <= 0;\r\n\r\n    #1;\r\nend\r\n\r\nlogic b = 0;\r\nalways begin\r\n    b <= 1;\r\n    do_delay();\r\n    b <= 0;\r\n\r\n    #1;\r\n    b <= 1; // this line should do nothing\r\nend\r\n\r\nalways #1 assert (a == b);\r\n\r\ninitial begin\r\n    $dumpfile(\"dump.vcd\");\r\n    $dumpvars;\r\n    #20;\r\n    $finish;\r\nend\r\n\r\nendmodule\r\n```\r\n```\r\n// verilator.f\r\ntb.sv\r\n--binary\r\n--trace\r\n--assert\r\n```\r\n\r\nIn simulation, `a` does not match `b` when the `do_delay()` task does not create a delay:\r\n\r\n![gtkwave](https://github.com/user-attachments/assets/75e89a80-7534-4922-8874-274f32cd1749)\r\n\r\nI won't have time to look into this for awhile.",
+  "labels": [
+    "area: scheduling",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-09-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

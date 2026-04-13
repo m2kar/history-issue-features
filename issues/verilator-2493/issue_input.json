@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2493,
+  "issue_url": "https://github.com/verilator/verilator/issues/2493",
+  "title": "Cast expression needs to alter sub-expression's size",
+  "body": "> Verilator version\r\n```\r\nVerilator 4.038 2020-07-11 rev v4.036-114-g0cd4a57ad\r\n```\r\nTestcase\r\n```systemverilog\r\n// t_type_conversion_err.v\r\n/* verilator lint_off DECLFILENAME */\r\nmodule t(\r\n  in1,\r\n  in2,\r\n  out\r\n  );\r\n/* verilator lint_on DECLFILENAME */\r\n  input logic in1;\r\n  input logic [1:0] in2;\r\n  output logic [31:0] out;\r\n  \r\n  typedef logic[7:0] data;\r\n  \r\n  /* verilator lint_off WIDTH */\r\n  assign out = data'(in1 << in2);\r\n  /* verilator lint_on WIDTH */\r\n  \r\nendmodule\r\n```\r\n> After translated by verilator with the command:  _**verilator -Wall --sc --top-module t t_type_conversion_err.v**_, we can get the following code:\r\n```c++\r\n// Vt.cpp\r\nVL_INLINE_OPT void Vt::_combo__TOP__1(Vt__Syms* __restrict vlSymsp) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt::_combo__TOP__1\\n\"); );\r\n    Vt* const __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n    // Body\r\n    VL_ASSIGN_ISI(2,vlTOPp->__Vcellinp__t__in2, vlTOPp->in2);\r\n    VL_ASSIGN_ISI(1,vlTOPp->__Vcellinp__t__in1, vlTOPp->in1);\r\n    VL_ASSIGN_SII(32,vlTOPp->out, (1U & ((IData)(vlTOPp->__Vcellinp__t__in1) \r\n                                         << (IData)(vlTOPp->__Vcellinp__t__in2))));\r\n}\r\n```\r\n> I think that the following statement is wrong, what's your opinion?\r\n```c++\r\nVL_ASSIGN_SII(32,vlTOPp->out, (1U & ((IData)(vlTOPp->__Vcellinp__t__in1) \r\n                                         << (IData)(vlTOPp->__Vcellinp__t__in2))));\r\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-30",
+  "closed_at": "2020-08-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

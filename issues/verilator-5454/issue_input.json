@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5454,
+  "issue_url": "https://github.com/verilator/verilator/issues/5454",
+  "title": "Error when specializing a class by the same class",
+  "body": "Hello!\r\n\r\nAttempting to specialize a class with the same class that is also specialized results in an error.\r\n\r\nThe expected behavior is no errors.\r\n\r\nRelated (maybe) issue: https://github.com/verilator/verilator/issues/4924 (see `Test 3` output)\r\n\r\n**Example:**\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class my_class#(type t = bit);\r\n  endclass\r\n\r\n  my_class#(my_class#(bit)) mc;\r\n\r\nendmodule\r\n```\r\n\r\n**Output:**\r\n\r\n```text\r\n%Error: top.sv:6:13: Duplicate parameter connection: '__paramNumber1'\r\n    6 |   my_class#(my_class#(bit)) mc;\r\n      |             ^~~~~~~~\r\n        top.sv:6:23: ... Location of original parameter connection\r\n    6 |   my_class#(my_class#(bit)) mc;\r\n      |                       ^~~\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n**Command:**\r\n\r\n```bash\r\nverilator --binary top.sv\r\n```\r\n\r\n---\r\n\r\n**Bypass:**\r\n\r\nThe problem can be solved by splitting the type declaration into parts using `typedef`:\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class my_class#(type t = bit);\r\n  endclass\r\n\r\n  typedef my_class#(bit) mc_type_part;\r\n\r\n  my_class#(mc_type_part) mc;\r\n\r\nendmodule\r\n```\r\n\r\n---\r\n\r\nVerilator version (git master): `Verilator 5.029 devel rev v5.028-88-g195a66529`\r\n\r\nOS (verilator devcontainer): Ubuntu 22.04.4 LTS",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration",
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-17",
+  "closed_at": "2024-09-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

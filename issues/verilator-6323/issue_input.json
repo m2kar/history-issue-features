@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6323,
+  "issue_url": "https://github.com/verilator/verilator/issues/6323",
+  "title": "Support `z` mismatched-width connections",
+  "body": "Compiling the following SystemVerilog code produces multiple errors:\n```SystemVerilog\nmodule a(output logic [1:2] a1);\n  assign a1 = 'bz;\nendmodule: a\n\nmodule b (output logic b1);\n  a a_inst(.a1(b1));\nendmodule: b\n```\n\nCommand:\n```\nverilator --cc --exe ./testbench.cpp --timing -Wno-fatal --no-std +1800-2023ext+sv test.sv\n```\nUsed [testbench](https://github.com/DepTyCheck/verilog-model/blob/master/.github/workflows/conf/verilator/testbench.cpp)\n\nOutput:\n```\n%Error-UNSUPPORTED: test.sv:7:13: Unsupported tristate port expression: VARREF '__Vcellinpt__a_inst__a1'\n                               : ... note: In instance 'b'\n    7 |   a a_inst(.a1(b1));\n      |             ^~\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.039\n%Error: Internal Error: test.sv:7:13: ../V3DfgSynthesize.cpp:442: Mismatched width reached DFG\n    7 |   a a_inst(.a1(b1));\n      |             ^~\n                        ... This fatal error may be caused by the earlier error(s); resolve those first.\n```\n\nExpected behavior:\nThis module should be compiled. The first error incorrectly says there is a tristate port, but only variable ports are declared. The second error mentions a width mismatch, but it seems a single element port and a packed array of length one should be compatible.\n\nThis issue occurs in `Verilator 5.039 devel rev v5.038-214-gf506aa878` on ubuntu.\n\nFound by a [verilog model](https://github.com/DepTyCheck/verilog-model) using [deptycheck](https://github.com/buzden/deptycheck)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-08-22",
+  "closed_at": null,
+  "code_blocks": [
+    "module a(output logic [1:2] a1);\n  assign a1 = 'bz;\nendmodule: a\n\nmodule b (output logic b1);\n  a a_inst(.a1(b1));\nendmodule: b\n",
+    "verilator --cc --exe ./testbench.cpp --timing -Wno-fatal --no-std +1800-2023ext+sv test.sv\n",
+    "%Error-UNSUPPORTED: test.sv:7:13: Unsupported tristate port expression: VARREF '__Vcellinpt__a_inst__a1'\n                               : ... note: In instance 'b'\n    7 |   a a_inst(.a1(b1));\n      |             ^~\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=5.039\n%Error: Internal Error: test.sv:7:13: ../V3DfgSynthesize.cpp:442: Mismatched width reached DFG\n    7 |   a a_inst(.a1(b1));\n      |             ^~\n                        ... This fatal error may be caused by the earlier error(s); resolve those first.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

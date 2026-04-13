@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6216,
+  "issue_url": "https://github.com/verilator/verilator/issues/6216",
+  "title": "Simplify control flow statements",
+  "body": "I'm working on more UNOPTFLAT fixes, but those require building a control flow graph for always blocks. AstWhile and AstJumpBlock are a bit of a pain. Can we simplify them along the following lines?\n\nAstWhile: Remove `precondp`. This contains statements that need to be emitted both before the While itself, and after the 'incp' statements, at the end of the loop body. This is used in so few places, we could just clone the statements in `precondp` and insert them before the while, and append to 'incp'. Should yield the same C++ with some trivial Ast size increase, while enabling more straight forward flow analysis as a statement does not magically execute in multiple basic blocks.\n\nAstJumpBlock: This is part of the AstJumpBlock/AstJumpGo/AstJumpLabel triplet. JumpGo and JumpLabel are both below the JumpBlock, and JumpGo references JumpLabel. However, JumpLabel is always at the very end of the JumpBlock. There are hits in the comments in  the definition of these nodes that \"currently only forward jumping is allowed\". However, this seems to have been enough for many years now. Can we therefor delete JumpLabel, and define that JumpGo branches to after the referenced (and enclosing, but not necessarily the nearest enclosing) JumpBlock? that makes it clearer how Jumps can be arranged when converting to a control flow graph.",
+  "labels": [
+    "resolution: fixed",
+    "type: maintenance"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-22",
+  "closed_at": "2025-07-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

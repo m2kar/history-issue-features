@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 782,
+  "issue_url": "https://github.com/llvm/circt/issues/782",
+  "title": "[FIRRTL] Memories can be called \"mem\"",
+  "body": "We currently incorrectly parse memories called `mem`. This is another variant of context-sensitive parsing issues, e.g., https://github.com/llvm/circt/issues/559.\r\n\r\nThe following should parse:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input rAddr: UInt<4>\r\n    input rEn: UInt<1>\r\n    output rData: UInt<8>\r\n\r\n    mem mem:\r\n      data-type => UInt<8>\r\n      depth => 16\r\n      reader => r\r\n      read-latency => 2\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n\r\n    mem.r.clk <= clock\r\n    mem.r.en <= rEn\r\n    mem.r.addr <= rAddr\r\n    rData <= mem.r.data\r\n```\r\n\r\nCurrently this fails where the parser gets confused with the `mem.r.clk <= clock` statement:\r\n\r\n```bash\r\nfirtool Foo.fir                \r\n# Foo.fir:17:10: error: expected '<=', '<-', or 'is' in statement\r\n#     mem.r.clk <= clock\r\n#          ^\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-18",
+  "closed_at": "2021-03-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

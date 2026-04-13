@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3881,
+  "issue_url": "https://github.com/llvm/circt/issues/3881",
+  "title": "[Handshake] Add a synchronization operation for arbitrary types",
+  "body": "While trying to generalize https://github.com/llvm/circt/pull/3855 for functions without a control input I stumbled across the following limitation:\r\nCurrently, `handshake` has the `join` operation to force synchronization for `none` types, but there exists no equivalent primitive for other types. In other words, `join` allows us to construct circuits that stall the emission of a `none` type signal until some other computation has finished. \r\n\r\n```mlir\r\nhandshake.func(%in: i32, %ctrl: none) {\r\n  %res = // long latency computation with %in\r\n  %outCtrl = join %ctrl, %res : none, i32\r\n  return %in, %outCtrl : i32, none\r\n}\r\n```\r\n\r\nHaving an operation that would allow us to do the same for other types can be very helpful in supporting dataflow abstractions that hold multiple threads, e.g., task pipelining or locking. \r\nI tried to come up with a construction that gives us the same functionality by using existing `handshake` operation. Unfortunately, I could only construct circuits that will break once additional buffers get inserted. \r\n\r\nTherefore, I propose to add an operation that looks as follows:\r\n\r\n```mlir\r\n%res = sync %data, %ctrl : (i32, none) -> i32\r\n```\r\n\r\nThis operation only emits `%res` once both `%data` and `%ctrl` are valid.",
+  "labels": [
+    "enhancement",
+    "Handshake"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-13",
+  "closed_at": "2022-09-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

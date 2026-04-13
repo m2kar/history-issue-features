@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6673,
+  "issue_url": "https://github.com/verilator/verilator/pull/6673",
+  "title": "Fix invalid use of non-static data member (#6659)",
+  "body": "\r\nI still have to create proper tests (with checking) and investigate regression fallout.  However both the test from #6659 and the one below now successfully build.\r\n\r\n```\r\nvirtual class funcA_c #(parameter p_width=4);\r\n   static function logic[p_width-1:0] funcA(\r\n      input logic[p_width-1:0] inb\r\n   );\r\n      funcA = 'h5;\r\n   endfunction\r\nendclass\r\n\r\nvirtual class funcB_c #(parameter p_width=4);\r\n   static function logic[p_width-1:0] funcB(\r\n      input logic[p_width-1:0] inb\r\n   );\r\n      funcB = funcA_c#(.p_width(p_width))::funcA(inb);\r\n   endfunction\r\nendclass\r\n\r\nmodule modA #(parameter int unsigned p_width = 7)(\r\n   input logic [p_width-1:0] inb_i\r\n);\r\n   logic [p_width-1:0] sig_b;\r\n   assign sig_b = funcB_c#(.p_width(p_width))::funcB(inb_i);\r\nendmodule\r\n\r\nmodule the_top();\r\n   localparam int Size = 3;\r\n\r\n   logic [Size-1:0] sig_a;\r\n\r\n   modA #(.p_width(Size)) modA(\r\n      .inb_i(sig_a)\r\n   );\r\n\r\n   initial begin\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-10",
+  "closed_at": "2025-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

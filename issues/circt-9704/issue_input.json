@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9704,
+  "issue_url": "https://github.com/llvm/circt/pull/9704",
+  "title": "[HW] Add HWVectorization Pass - Part 1: Linear and Reverse",
+  "body": "**Context:** This PR is the first part of a series of incremental patches for the HWVectorization pass, previously proposed in PR #9222. Following reviewer feedback, I am splitting the original large PR into smaller, more focused increments to facilitate review and ensure a solid foundation.\r\n\r\nThis Part 1 focuses on the core infrastructure and the simplest bit-level transformations. Subsequent parts will introduce mixed permutations, structural vectorization for logical ops, and partial vectorization.\r\n\r\nThe pass scans each hw.module and identifies groups of bit-level operations that can be merged into vector-level constructs. \r\n\r\nSupported transformations include:\r\n\r\n### **1. Linear concatenations (identity):**\r\n\r\n- **Pattern**: Bits are extracted in ascending order (identity permutation) and concatenated.\r\n\r\n- **Transformation**: The entire `comb.concat` chain is replaced with the original input vector.\r\n\r\n```MLIR\r\n// Before\r\n%0 = comb.extract %in from 0 : (i4) -> i1\r\n%1 = comb.extract %in from 1 : (i4) -> i1\r\n%2 = comb.extract %in from 2 : (i4) -> i1\r\n%3 = comb.extract %in from 3 : (i4) -> i1\r\n%concat = comb.concat %3, %2, %1, %0 : i1, i1, i1, i1\r\nhw.output %concat : i4\r\n\r\n// After\r\nhw.output %in : i4\r\n```\r\n\r\n### **2. Bit reversal:**\r\n\r\n- **Pattern**: Bits are extracted in descending (reverse) order and concatenated.\r\n\r\n- **Transformation**: The chain is replaced with a single `comb.reverse`.\r\n\r\n```MLIR\r\n// Before\r\n%0 = comb.extract %in from 0 : (i4) -> i1\r\n%1 = comb.extract %in from 1 : (i4) -> i1\r\n%2 = comb.extract %in from 2 : (i4) -> i1\r\n%3 = comb.extract %in from 3 : (i4) -> i1\r\n%rev = comb.concat %0, %1, %2, %3 : i1, i1, i1, i1\r\nhw.output %rev : i4\r\n\r\n// After\r\n%0 = comb.reverse %in : i4\r\nhw.output %0 : i4\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-19",
+  "closed_at": "2026-02-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

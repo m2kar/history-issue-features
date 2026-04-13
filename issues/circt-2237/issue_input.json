@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2237,
+  "issue_url": "https://github.com/llvm/circt/issues/2237",
+  "title": "[FIRRTL/IMConstantProp] Reach pessimistic fixpoint if one of operands is an invalid value",
+  "body": "Currently, if the lattice value of one of operands is an invalid value and folding fails, we mark the current operation as overdefined immediately. \r\nIt causes to reach some pessimistic fixpoint even though there is a room for constant propagation. For example,\r\n``` mlir\r\n// circt-opt -pass-pipeline='firrtl.circuit(firrtl-imconstprop)'\r\nfirrtl.circuit \"PessimisticFixpoint\"   {\r\n  firrtl.module @PessimisticFixpoint(in %clock: !firrtl.clock, in %a: !firrtl.uint<1>, out %b: !firrtl.uint<2>) {\r\n    %r1 = firrtl.reg %clock  : !firrtl.uint<1>\r\n    %r2 = firrtl.reg %clock  : !firrtl.uint<1>\r\n    %r3 = firrtl.reg %clock  : !firrtl.uint<1>\r\n    %r4 = firrtl.reg %clock  : !firrtl.uint<1>\r\n\r\n\r\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    firrtl.connect %r1, %c1_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %r3, %c1_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %r2, %r1 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    firrtl.connect %r4, %r3 : !firrtl.uint<1>, !firrtl.uint<1>\r\n    %0 = firrtl.add %r2, %r4 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<2>\r\n    firrtl.connect %b, %0 : !firrtl.uint<2>, !firrtl.uint<2>\r\n  }\r\n}\r\n```\r\ncurrently becomes\r\n``` mlir\r\nfirrtl.circuit \"PessimisticFixpoint\"   {\r\n  firrtl.module @PessimisticFixpoint(in %clock: !firrtl.clock, in %a: !firrtl.uint<1>, out %b: !firrtl.uint<2>) {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %c1_ui1_0 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %0 = firrtl.add %c1_ui1, %c1_ui1_0 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<2>\r\n      firrtl.connect %b, %0 : !firrtl.uint<2>, !firrtl.uint<2>\r\n  }\r\n}\r\n``` \r\nIn this example, we visit `%0 = firrtl.add %r2, %r4` when the lattice of `%4` is invalid value, and therefore `%0` is marked as overdefined. ",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-25",
+  "closed_at": "2021-12-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

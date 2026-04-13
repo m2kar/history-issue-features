@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2495,
+  "issue_url": "https://github.com/verilator/verilator/issues/2495",
+  "title": "Casting to real truncates to 32 bits, not casting causes internal fault",
+  "body": "Verlator version is Verilator 4.038 2020-07-11 rev v4.038-8-gdd03d0f3\r\nI want to convert a reg [47:0] to real, sample code as follows:\r\n```\r\ninitial begin\r\n    reg [47:0] test = 48'hFF0000000000;\r\n    real foo = real'(test);\r\n    $display(\"test: 0x%h = %d\",test,test);\r\n    $display(\"As real: %f\",foo);\r\nend\r\n```\r\nresults in\r\n`%Warning-WIDTH: file.sv:x:y: Operator ITORD expects 32 bits on the LHS, but LHS's VARREF 'test' generates 48 bits.`\r\nWhen I suppress the warning with `/* verilator lint_off WIDTH */` the printout reads\r\n```\r\ntest: 0xff0000000000 = 280375465082880\r\nAs real: 0.000000\r\n```\r\nEXPECTED: Xcelium, Questa and VCS all print\r\n```\r\ntest: 0xff0000000000 = 280375465082880\r\nAs real: 280375465082880.000000\r\n```\r\nI'm not sure in what way this is an actual bug. The standard says that \"Real numbers shall be converted to integers by rounding the real number to the nearest integer, rather than by truncating it. Implicit conversion shall take place when a real number is assigned to an integer [...] Implicit conversion shall also take place when an expression is assigned to a real.\" (1800-2017, 6.12.2). I don't know if \"nearest integer\" in this case means \"32-bit integer\". but it would surely be useful if this cast would work for longer bitwidths.\r\n\r\n**In addition, Verilator fails with an internal fault** when the assignment is not casted, as in `real foo = test;`",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2020-08-03",
+  "closed_at": "2020-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

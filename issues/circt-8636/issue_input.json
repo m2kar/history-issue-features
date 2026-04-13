@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8636,
+  "issue_url": "https://github.com/llvm/circt/pull/8636",
+  "title": "[LLHD] Use initial signal value to fill gaps in CombineDrives",
+  "body": "If the CombineDrives pass can see and reason about all uses of a signal, use the signal's initial value to fill in any undriven parts of the signal. This works around a somewhat common pattern in input Verilog where an array signal has some of its elements completely unused -- neither read nor written:\r\n\r\n```systemverilog\r\nlogic [1:0][31:0] a;\r\nassign a[0] = ...;\r\nassign ... = a[0];\r\n// a[1] is completely unused\r\n```\r\n\r\nDriving previously undriven parts of the signal with their initial value is valid if we can guarantee that there are truly no drivers to those parts. In that case, adding a driver does not cause any drive conflicts, and the driven value is the same as the value already on the signal, namely the initial value.\r\n\r\nOne caveat is that this transform is only valid if the initial value of the signal is a constant. This is not always guaranteed, with the initial value potentially being provided by a constant passed in through a port. The Deseq pass faces a similar issue where real-world Verilog usage makes use of somewhat unclear semantics in initialization order. We should revisit the `llhd.sig` op at a later stage and consider using @uenoku's `seq.initial` mechanism to ensure that the value is static during runtime, or make the signal initial value an attribute.",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-01",
+  "closed_at": "2025-07-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

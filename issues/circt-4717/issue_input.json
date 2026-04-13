@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4717,
+  "issue_url": "https://github.com/llvm/circt/issues/4717",
+  "title": "[FIRRTL] [InferRW] Inadequate read-write port inference",
+  "body": "These two pieces of code seem like they should produce identical results.  In the first case, a RW port is successfully inferred\r\n```\r\ncircuit Test:\r\n  module Test:\r\n    input en: UInt<1>\r\n    input addr: UInt<4>\r\n    input clock: Clock\r\n    input wmode : UInt<1>\r\n    input wdata: UInt<8>\r\n    output rdata: UInt<8>\r\n\r\n    smem testmem : UInt<8>[16]\r\n\r\n    wire t0 : UInt<4>\r\n    t0 is invalid\r\n    wire t1 : UInt<4>\r\n    t1 is invalid\r\n    rdata is invalid\r\n    when en:\r\n      when wmode:\r\n        t1 <= addr\r\n        write mport writeport = testmem[t1], clock\r\n        writeport <= wdata\r\n      ; substitute the next line for the line after:\r\n      ; else:\r\n      when not(wmode):\r\n        t0 <= addr\r\n        read mport readport = testmem[t0], clock\r\n        rdata <= readport\r\n```\r\nRunning `firtool ./test.fir` gives:\r\n```verilog\r\n  testmem_combMem testmem_ext (\r\n    .RW0_addr  (addr),\r\n    .RW0_en    (readEnable | writeEnable),\r\n    .RW0_clk   (clock),\r\n    .RW0_wmode (wmode),\r\n    .RW0_wdata (wdata),\r\n    .RW0_rdata (rdata)\r\n  );\r\n```\r\nbut replacing the `when not(wmode)` with `else` gives:\r\n```verilog\r\n  testmem_combMem testmem_ext (\r\n    .R0_addr (addr),\r\n    .R0_en   (en & ~wmode),\r\n    .R0_clk  (clock),\r\n    .W0_addr (addr),\r\n    .W0_en   (en & wmode),\r\n    .W0_clk  (clock),\r\n    .W0_data (wdata),\r\n    .R0_data (rdata)\r\n  );\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-24",
+  "closed_at": "2023-02-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

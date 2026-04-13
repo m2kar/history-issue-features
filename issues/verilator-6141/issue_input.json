@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6141,
+  "issue_url": "https://github.com/verilator/verilator/pull/6141",
+  "title": "Apply DFG before V3Gate.",
+  "body": "This patch enables DFG to run after V3Scope (but before V3ActiveTop), and applies it just before V3Gate.\r\n\r\nThis is beneficial because a lot of lowering and optimization has been performed at that point (V3Task, V3Unroll, V3SplitAs), which enables more code to convert to DFG form.\r\n\r\nWhile this yields +/- a few % on most RTLMeter designs, one case gains 17% simulation speed.\r\n\r\nMore importantly I'm working on some patches to split up combinational cycles, and the most problematic ones happen through module boundaries, so this enables handling those.\r\n\r\nThere is a slight risk of reducing the efficiency of V3Combine, as where some logic must be inserted when converting back to Ast is not entirely clear in scoped mode. In this patch, we put the logic into the scope that contains the AstVarScope that it drives.\r\n\r\nThe binToOneHot pass cannot yet handle a scoped DfgGraph, so is not applied in the post scope run.\r\n\r\n---\r\n\r\nThis patch passes everything in RTLMeter, but I expect it might cause some fallout so if you are planning a release in the near future, we can punt this until after.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-30",
+  "closed_at": "2025-07-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6000,
+  "issue_url": "https://github.com/verilator/verilator/issues/6000",
+  "title": "Incorrect evaluation of signed comparisons involving ternary expressions and negation",
+  "body": "Here is the minimized code `test.v` that triggers the issue:\n\n```verilog\n`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top ();\n\n    reg  in4;\n    wire signed wire_2;\n    wire out88;\n\n    assign wire_2 = in4 ? 2'b10 : 0;\n    assign out88 = (-(wire_2) <= wire_2 ? 1 : 0);\n\n    initial begin\n        in4 = 1'b0;\n        #5;\n        `checkd(out88, '1);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\n\nendmodule\n```\n\nI ran the following commands:\n\n```\nverilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n```\n\nVerilator produced the output `0`:\n\n```\n%Error: test.v:21:  got=0 exp=1\n%Error: test.v:21: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nHowever, after manual analysis (`in4 = 0` leads to `wire_2 = 0`, so `out88 = 1`) and comparing with Icarus Verilog, the expected result should be `1`.\n\nDuring further local debugging, I found that the issue disappears when using either `-fno-dfg-peephole` or `-fno-dfg`, suggesting that the problem may lie in this area.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-10",
+  "closed_at": "2025-05-14",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define stop   $stop\n`define checkd(gotv, expv) \\\n  do if ((gotv) !== (expv)) begin \\\n       $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__, `__LINE__, (gotv), (expv)); \\\n       `stop; \\\n     end while(0);\n\nmodule top ();\n\n    reg  in4;\n    wire signed wire_2;\n    wire out88;\n\n    assign wire_2 = in4 ? 2'b10 : 0;\n    assign out88 = (-(wire_2) <= wire_2 ? 1 : 0);\n\n    initial begin\n        in4 = 1'b0;\n        #5;\n        `checkd(out88, '1);\n        $write(\"*-* All Finished *-*\\n\");\n        $finish;\n    end\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n",
+    "%Error: test.v:21:  got=0 exp=1\n%Error: test.v:21: Verilog $stop\nAborting...\nAborted (core dumped)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

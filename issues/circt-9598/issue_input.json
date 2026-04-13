@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9598,
+  "issue_url": "https://github.com/llvm/circt/pull/9598",
+  "title": "[Comb] Fix assertion failure in extractConcatToConcatExtract pattern (Fixes #9573)",
+  "body": "## Summary\n\nFixes #9573.\n\n`comb.extract` canonicalization could hit invalid self-referential rewrites in `extractConcatToConcatExtract`, which originally manifested as an assertion failure (`replaceOp`/`eraseOp` expecting no uses). During investigation, an intermediate workaround removed the crash but could still lead to non-terminating canonicalization on cyclic IR.\n\n## Fix approach\n\n- File: `lib/Dialect/Comb/CombFolds.cpp`\n- Function: `extractConcatToConcatExtract`\n\nImplemented a defensive rewrite guard:\n\n1. Build candidate replacement values as before.\n2. **If the replacement would contain `op.getResult()` itself, return `failure()`** and do not rewrite.\n3. Otherwise, preserve the normal behavior:\n   - single-element result -> `replaceOpAndCopyNamehint(...)`\n   - multi-element result -> `replaceOpWithNewOpAndCopyNamehint<ConcatOp>(...)`\n\nThis keeps valid canonicalizations while preventing self-referential rewrite targets that can cause crashes or rewrite loops.\n\n## Test cases\n\nUpdated `test/Dialect/Comb/canonicalization.mlir` with issue-specific regressions:\n\n- `@issue9573`: minimal `extract/concat` self-reference pattern.\n- `@issue9573_loop`: loop-shaped pattern (`and` + `extract` + `concat`) close to the reported failing IR shape.\n\nAlso resolved post-rebase check conflicts in the same file so the suite remains stable.\n\n## Validation / successful runs\n\nExecuted successfully on this branch:\n\n- `ninja -C build bin/circt-opt bin/circt-verilog`\n- `build/bin/llvm-lit test/Dialect/Comb/canonicalization.mlir -v` (PASS)\n- `timeout 20s build/bin/circt-opt /tmp/loop9573.mlir -canonicalize='top-down=true region-simplify=disabled'` (exit 0)\n- `timeout 20s build/bin/circt-verilog --ir-hw /tmp/bug9573.sv` (exit 0)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

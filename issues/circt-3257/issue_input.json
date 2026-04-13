@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3257,
+  "issue_url": "https://github.com/llvm/circt/issues/3257",
+  "title": "[StandardToHandshake] External memory lowering produces code with multiple uses. ",
+  "body": "Lowering the following IR with `--lowert-std-to-handshake` produces invalid code.\r\n\r\n```mlir\r\nfunc.func @sub(%mem : memref<1xi32>) {\r\n  %i = arith.constant 0 : index\r\n  %val = memref.load %mem[%i] : memref<1xi32>\r\n  return\r\n}\r\n```\r\n\r\nOutput:\r\n\r\n```mlir\r\n  handshake.func @foo(%arg0: memref<1xi32>, %arg1: none, ...) -> none attributes {argNames = [\"in0\", \"inCtrl\"], resNames = [\"outCtrl\"]} {\r\n    %0:2 = extmemory[ld = 1, st = 0] (%arg0 : memref<1xi32>) (%addressResults) {id = 0 : i32} : (index) -> (i32, none)\r\n    sink %arg0 : memref<1xi32>\r\n    %1:2 = fork [2] %arg1 : none\r\n    %2:2 = fork [2] %1#1 : none\r\n    %3 = join %2#1, %0#1 : none\r\n    %4 = constant %2#0 {value = 0 : index} : index\r\n    %dataResult, %addressResults = load [%4] %0#0, %1#0 : index, i32\r\n    sink %dataResult : i32\r\n    return %3 : none\r\n  }\r\n```\r\n\r\nAs you can see, the memref argument `%arg0` has multiple uses which is not allowed in handshake. \r\n\r\nFurthermore, the documentation mentions that an interface for all loads and stores should be added, which is not the case:\r\n\r\n> An ExternalMemoryOp represents a wrapper around a memref input to a handshake function. The semantics of the load/store operands are identical to what is decribed for MemoryOp. The only difference is that the first operand to this operand is a memref value. Upon lowering to FIRRTL, a handshake interface will be created in the top-level component for each load- and store which connected to this memory.\r\n\r\nWas this just no implemented fully? \r\n\r\nPartially related to #3256 ",
+  "labels": [
+    "bug",
+    "Handshake"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-02",
+  "closed_at": "2022-06-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

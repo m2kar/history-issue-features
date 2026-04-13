@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5360,
+  "issue_url": "https://github.com/verilator/verilator/issues/5360",
+  "title": "`LexerInput` and `LexerOutput` out-of-line definition when building on Mac OS",
+  "body": "I reproduced this issue on the current commit (as of August 9, 2024) and v5.026 on Mac OSX (Sonoma 14.5).\r\nWhen building either the `autoconf` and CMake build, the compilation of \"V3ParseLex.cpp.o\" results in the following error.\r\n\r\n```\r\n[  4%] Building CXX object src/CMakeFiles/verilator.dir/V3ParseLex.cpp.o\r\nIn file included from <path>/verilator/src/V3ParseLex.cpp:30:\r\n<path>/verilator/build/src/V3Lexer_pregen.yy.cpp:8722:18: error: out-of-line definition of 'LexerInput' does not match any declaration in 'V3LexerBase'\r\nint yyFlexLexer::LexerInput( char* buf, int /* max_size */ )\r\n                 ^~~~~~~~~~\r\n<path>/verilator/build/src/V3Lexer_pregen.yy.cpp:8751:19: error: out-of-line definition of 'LexerOutput' does not match any declaration in 'V3LexerBase'\r\nvoid yyFlexLexer::LexerOutput( const char* buf, int size )\r\n                  ^~~~~~~~~~~\r\n2 errors generated.\r\n```\r\n\r\nI resolved this compilation error by modifying the generated code in \"V3Lexer_pregen.yy.cpp\" to use `size_t` instead of `int` on the lines indicated by the error messages:\r\n\r\n```\r\nsize_t yyFlexLexer::LexerInput( char* buf, size_t /* max_size */ )\r\n...\r\nvoid yyFlexLexer::LexerOutput( const char* buf, size_t size )\r\n\r\n```\r\n\r\nI have not verified the functionality of `verilator` using these fixes, but I don't think it should affect correctness. I am not a user of `bison` or `flex` myself, so I don't know the process by which these type mismatches manifest, but, regardless, this should be fixed. Ideally, the fix would involve something to do with `bison` or `flex`, but the generated cpp source could be patched with `sed` just as well.",
+  "labels": [
+    "area: portability",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-10",
+  "closed_at": "2024-09-11",
+  "code_blocks": [
+    "[  4%] Building CXX object src/CMakeFiles/verilator.dir/V3ParseLex.cpp.o\r\nIn file included from <path>/verilator/src/V3ParseLex.cpp:30:\r\n<path>/verilator/build/src/V3Lexer_pregen.yy.cpp:8722:18: error: out-of-line definition of 'LexerInput' does not match any declaration in 'V3LexerBase'\r\nint yyFlexLexer::LexerInput( char* buf, int /* max_size */ )\r\n                 ^~~~~~~~~~\r\n<path>/verilator/build/src/V3Lexer_pregen.yy.cpp:8751:19: error: out-of-line definition of 'LexerOutput' does not match any declaration in 'V3LexerBase'\r\nvoid yyFlexLexer::LexerOutput( const char* buf, int size )\r\n                  ^~~~~~~~~~~\r\n2 errors generated.",
+    "size_t yyFlexLexer::LexerInput( char* buf, size_t /* max_size */ )\r\n...\r\nvoid yyFlexLexer::LexerOutput( const char* buf, size_t size )"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

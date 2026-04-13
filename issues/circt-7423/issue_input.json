@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7423,
+  "issue_url": "https://github.com/llvm/circt/issues/7423",
+  "title": "firtool misses `regreset` when generating .mlir from .fir with --preserve-aggregate=vec and array registers",
+  "body": "command:\r\n\r\n```bash\r\nfirtool -format=fir -ir-fir --preserve-aggregate=vec foo.fir\r\n\r\n```\r\n\r\nfoo.fir:\r\n\r\n```fir\r\nFIRRTL version 4.0.0\r\ncircuit Top :%[[\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"~Top|Top>x[0][0]\"\r\n  }\r\n]]\r\n\r\n\r\n  public module Top :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n\r\n\r\n    wire foo : UInt<1>[1]\r\n    connect foo[0], UInt<1>(0h1)\r\n    wire bar : UInt<1>[1][1]\r\n    connect bar[0], foo\r\n    regreset x : UInt<1>[1][1], clock, reset, bar\r\n```\r\n\r\nresult:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Top\" {\r\n    firrtl.module @Top(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\r\n      %0 = firrtl.aggregateconstant [1 : ui1] : !firrtl.vector<uint<1>, 1>\r\n      %foo = firrtl.wire : !firrtl.vector<uint<1>, 1>\r\n      %x = firrtl.reg %clock {annotations = [{circt.fieldID = 2 : i32, class = \"firrtl.transforms.DontTouchAnnotation\"}], firrtl.random_init_start = 0 : ui64} : !firrtl.clock, !firrtl.vector<vector<uint<1>, 1>, 1>\r\n      firrtl.matchingconnect %x, %x : !firrtl.vector<vector<uint<1>, 1>, 1>\r\n      firrtl.matchingconnect %foo, %0 : !firrtl.vector<uint<1>, 1>\r\n      %1 = firrtl.vectorcreate %foo : (!firrtl.vector<uint<1>, 1>) -> !firrtl.vector<vector<uint<1>, 1>, 1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nwithout `--preserve-aggregate=vec`:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Top\" {\r\n    firrtl.module @Top(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1> {name = \"foo_0\"}\r\n      %x_0_0 = firrtl.regreset %clock, %reset, %c1_ui1 {annotations = [{class = \"firrtl.transforms.DontTouchAnnotation\"}], firrtl.random_init_start = 0 : ui64} : !firrtl.clock, !firrtl.uint<1>, !firrtl.uint<1>, !firrtl.uint<1>\r\n      firrtl.matchingconnect %x_0_0, %x_0_0 : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\ntested on circt 1.58.0 and 1.76.0",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-02",
+  "closed_at": "2024-09-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

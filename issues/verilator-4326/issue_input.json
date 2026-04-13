@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4326,
+  "issue_url": "https://github.com/verilator/verilator/pull/4326",
+  "title": "Fix selects of static members",
+  "body": "Currently, member select results in a compilation error if the member is static. The problem occurs only if the select is performed on a class object.\r\nDuring verilation, static members are moved from AstClass to AstClassPackage, but member selects still point to the members of AstClass nodes. It passes through the rest of verilation, but c++ compiler throws an error.\r\n\r\nAccess to static members of form `<class name>::<static member>` is represented without `AstMemberSelect` or `AstMethodCall`. Instead, `AstVarRef` / `AstFuncRef` are used with the field `classOrPackagep` set.\r\n\r\nThis PR fixes it by converting AstMemberSelect to AstVarRef if the field is static. Static method calls are already handled in he same way on master.\r\nI needed to mark AstMemberSelect nodes as READ or WRITE to pass it to AstVarRef. In simple cases I can probably get it from the node returned by the `fromp()` method, but it is harder if the member select is performed on other member select or on a function call.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-29",
+  "closed_at": "2023-06-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

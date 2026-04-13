@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4572,
+  "issue_url": "https://github.com/verilator/verilator/pull/4572",
+  "title": "Support NBAs in non-inlined functions/tasks (#4496)",
+  "body": "Closes #4496\r\n\r\nBefore this patch, non-blocking assignments in non-inlined functions/tasks\r\nresulted in an error like:\r\n\r\n```\r\n%Error-UNSUPPORTED: ...: Unsupported: Delayed assignment inside public function/task\r\n```\r\n\r\nThat's because `V3Delayed` requires access to the process that contains the\r\nassignment. That's not really possible if it's in a non-inlined function,\r\nespecially a virtual one.\r\n\r\nA subtler problem is the lifetime of variables on the LHS of the assignment. In\r\nan inlined function, these variables are static, so there is no issue. However,\r\nif we're dealing with a non-static local variable, we have to make sure that it\r\nstill exists during the NBA region (or that the assignment is cancelled).\r\n\r\nThis patch adds support for NBAs in non-inlined functions/tasks as long as\r\n`--timing` is used. This is an unfortunate limitation, but there are arguments\r\nfor this solution:\r\n* Existing mechanisms for intra-assignment delays are reused, which requires a\r\n  lot less effort than rolling a completely new solution,\r\n* The lifetime issue is automatically solved thanks to using coroutines,\r\n* The main motivation behind this is UVM and verification code that uses\r\nUVM, which requires `--timing` anyway.\r\n\r\nIt must be said that this solution is not fully valid. It's easy to find\r\ncounterexamples that are scheduled incorrectly:\r\n\r\n```systemverilog\r\nmodule t;\r\n    logic[15:0] nba;\r\n    event e;\r\n\r\n    task foo(logic recurse);\r\n        if (recurse) foo(0);\r\n        nba <= 'hDEAD;\r\n    endtask\r\n\r\n    always @e begin\r\n        foo(0);\r\n        nba <= 'hBEEF;\r\n    end\r\n\r\n    initial begin\r\n        ->e;\r\n        #1 $display(\"nba = %x\", nba); // Should be 'beef',\r\n                                      // prints 'dead'\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nIn fact, I think it's impossible to have fully correct scheduling in Verilator\r\nas long as there are basically two separate event queues (a static one and a\r\ndynamic one).\r\n\r\nHowever, I believe it is a good first pass, and probably enough for most use\r\ncases.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-16",
+  "closed_at": "2023-10-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

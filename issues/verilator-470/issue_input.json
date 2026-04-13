@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 470,
+  "issue_url": "https://github.com/verilator/verilator/issues/470",
+  "title": "Support modules which are never used with their default parameter values",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 470 from https://www.veripool.org\nOriginal Date: 2012-03-24\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nCode:\r\n\r\n```\r\nmodule test_inst (\r\n         clk,\r\n         reset_n,\r\n         dout\r\n);\r\n\r\n         parameter MEM_DQ_WIDTH                          = \"\";\r\n         parameter MEM_READ_DQS_WIDTH                    = \"\";\r\n\r\n         localparam NUMBER_OF_READ_DQ_PER_DQS = MEM_DQ_WIDTH / MEM_READ_DQS_WIDTH;\r\n         \r\n         input clk;\r\n         input reset_n;\r\n         output  dout;\r\n\r\n         wire [NUMBER_OF_READ_DQ_PER_DQS - 1:0] error_word;\r\n\r\n         wire [NUMBER_OF_READ_DQ_PER_DQS - 1:0] processed_error_word;\r\n         \r\n         genvar rank;\r\n         generate\r\n                 for(rank = 0; rank < NUMBER_OF_READ_DQ_PER_DQS; rank = rank + 1)\r\n                 begin: error_word_gen\r\n                         assign processed_error_word[rank] = (error_word[rank] !== 1'b0);\r\n                 end\r\n         endgenerate\r\n\r\nendmodule\r\n\r\n\r\nmodule test (\r\n                 input  wire         clk,\r\n                 input  wire         reset\r\n         );\r\n\r\n         test_inst #(\r\n                 .MEM_DQ_WIDTH                         (72),\r\n                 .MEM_READ_DQS_WIDTH                   (9)\r\n                ) u_test_inst (\r\n                 .clk           (clk),\r\n                 .reset_n       (~reset),\r\n                 .dout          ()\r\n         );\r\n\r\nendmodule\r\n\n```\r\n\r\nerror:\r\n\r\n```\r\nverilator -sp -Wno-fatal --top-module test test.v\r\n%Warning-WIDTH: test.v:22: Operator LT expects 32 bits on the RHS, but RHS's VARREF 'NUMBER_OF_READ_DQ_PER_DQS' generates 1 bits.\r\n%Warning-WIDTH: Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Error: test.v:22: Unsupported: Can't unroll generate for; init/final/increment too large or four state\r\n%Error: test.v:22: For loop doesn't have genvar index, or is malformed\r\n%Error: test.v:22: Unsupported: Can't unroll generate for; init/final/increment too large or four state\r\n%Error: test.v:22: For loop doesn't have genvar index, or is malformed\r\n%Error: Exiting due to 4 error(s)\r\n%Error: Command Failed /tools/verilator/verilator-3.832/bin/verilator_bin -sp -Wno-fatal --top-module test test.v\r\n\n```\r\n\r\nVCS compiles this code without complaints.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2012-03-24",
+  "closed_at": "2012-04-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

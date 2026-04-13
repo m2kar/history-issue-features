@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6818,
+  "issue_url": "https://github.com/verilator/verilator/issues/6818",
+  "title": "Nested struct in parameter port list definition fails to compile",
+  "body": "The following code fails to compile:\n```\n// test.sv\n\nmodule dut #(\n    parameter int unsigned Width = 32,\n    localparam type T =\n        struct packed {                                \n            struct packed {\n              logic [Width-1:0] field_a;\n              logic             field_b;\n            }     q;\n            logic q_valid;\n            logic p_ready;\n        }\n) (\n    input T req_i,\n    output T req_o\n);\n\n    assign req_o = req_i;\n\nendmodule\n```\nwith the following error:\n```\n%Error: Internal Error: test.sv:10:19: ../V3Width.cpp:8413: iterateEditMoveDTypep didn't get width resolution of DEFIMPLICITDTYPE '__typeimpsu1'\n                                      : ... note: In instance 'dut'\n   10 |             }     q;\n      |                   ^\n```\nNote, non-nested structs in type parameter definitions seem to work fine.\n\nI tested this with:\n```\nverilator --binary test.sv\n```\nwithin the latest Docker container (Verilator 5.042 2025-11-02).\n\nQuestaSim can successfully elaborate this code. I checked the formal syntax section of the SystemVerilog LRM and it seems to be indeed legal syntax.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-15",
+  "closed_at": "2025-12-16",
+  "code_blocks": [
+    "// test.sv\n\nmodule dut #(\n    parameter int unsigned Width = 32,\n    localparam type T =\n        struct packed {                                \n            struct packed {\n              logic [Width-1:0] field_a;\n              logic             field_b;\n            }     q;\n            logic q_valid;\n            logic p_ready;\n        }\n) (\n    input T req_i,\n    output T req_o\n);\n\n    assign req_o = req_i;\n\nendmodule\n",
+    "%Error: Internal Error: test.sv:10:19: ../V3Width.cpp:8413: iterateEditMoveDTypep didn't get width resolution of DEFIMPLICITDTYPE '__typeimpsu1'\n                                      : ... note: In instance 'dut'\n   10 |             }     q;\n      |                   ^\n",
+    "verilator --binary test.sv\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

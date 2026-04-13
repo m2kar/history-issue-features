@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1236,
+  "issue_url": "https://github.com/llvm/circt/issues/1236",
+  "title": "[FIRRTL][IMCP] IMCostProp leaving invalid modules around",
+  "body": "IMConstProp is stripping out the bodies of modules which are never instantiated:\r\n\r\n```scala\r\ncircuit Top :\r\n  module Test2 :\r\n    output out : UInt<16>\r\n    out <= UInt<16>(\"h222\")\r\n  module Top :\r\n```\r\n\r\n```mlir\r\n// firtool --imconstprop=false ./test.fir\r\nmodule  {\r\n  firrtl.circuit \"Top\"  {\r\n    firrtl.module @Test2(out %out: !firrtl.uint<16>) {\r\n      %c546_ui16 = firrtl.constant 546 : !firrtl.uint<16>\r\n      firrtl.connect %out, %c546_ui16 : !firrtl.uint<16>, !firrtl.uint<16>\r\n    }\r\n    firrtl.module @Top() {\r\n    }\r\n  }\r\n}\r\n\r\n// firtool --imconstprop=true ./test.fir\r\nmodule  {\r\n  firrtl.circuit \"Top\"  {\r\n    firrtl.module @Test2(out %out: !firrtl.uint<16>) {\r\n    }\r\n    firrtl.module @Top() {\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThe questions are:\r\n\r\n1. Is it illegal to have modules with nothing driving the output?\r\n    It would not pass ExpandWhens initialization checking so I am thinking yes.\r\n2. Should IMCP delete the entire module instead of leaving it around?\r\n    Probably.\r\n3. If a Node inside a module is marked DoNotTouch, can we delete the entire module? (even if it is never instantiated)\r\n    Will check with the Scala FIRRTL group",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-10",
+  "closed_at": "2021-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

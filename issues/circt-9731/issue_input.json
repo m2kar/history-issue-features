@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9731,
+  "issue_url": "https://github.com/llvm/circt/issues/9731",
+  "title": "[Comb] Xor canonicalizer can result in a crash",
+  "body": "Consider the following:\n\n``` mlir\nhw.module private @Foo(in %a : i6, in %b : i2, in %c : i27) {\n  %c-1_i35 = hw.constant -1 : i35\n  %0 = comb.concat %a, %c, %b : i6, i27, i2\n  %wire = hw.wire %0  : i35\n  %1 = comb.xor bin %wire, %c-1_i35 : i35\n  %2 = comb.extract %1 from 34 : (i35) -> i1\n  %3 = comb.extract %1 from 26 : (i35) -> i1\n  hw.output\n}\n```\n\nWhen canonicalized, this will produce the following crash:\n\n```\n# ../../../build-debug/bin/circt-opt -canonicalize reduced.final.mlir \nAssertion failed: (detail::isPresent(Val) && \"dyn_cast on a non-existent value\"), function dyn_cast, file Casting.h, line 656.\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\nStack dump:\n0.\tProgram arguments: ../../../build-debug/bin/circt-opt -canonicalize reduced.final.mlir\n #0 0x0000000102e99100 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x100301100)\n #1 0x0000000102e996f8 PrintStackTraceSignalHandler(void*) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x1003016f8)\n #2 0x0000000102e96d20 llvm::sys::RunSignalHandlers() (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x1002fed20)\n #3 0x0000000102e9b77c SignalHandler(int, __siginfo*, void*) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x10030377c)\n #4 0x000000019fb5d6a4 (/usr/lib/system/libsystem_platform.dylib+0x1804ad6a4)\n #5 0x000000019fb23848 (/usr/lib/system/libsystem_pthread.dylib+0x180473848)\n #6 0x000000019fa2c9e4 (/usr/lib/system/libsystem_c.dylib+0x18037c9e4)\n #7 0x000000019fa2bc18 (/usr/lib/system/libsystem_c.dylib+0x18037bc18)\n #8 0x00000001033bb0f8 decltype(auto) llvm::dyn_cast<circt::comb::ReplicateOp, mlir::Operation>(mlir::Operation*) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x1008230f8)\n #9 0x00000001033baec8 circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>::match(mlir::Operation*) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x100822ec8)\n#10 0x00000001033bada8 std::__1::enable_if<llvm::is_detected<mlir::detail::has_compatible_matcher_t, circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>, mlir::Operation*>::value, bool>::type mlir::detail::matchOperandOrValueAtIndex<circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>>(mlir::Operation*, unsigned int, circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>&) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x100822da8)\n#11 0x00000001033bad3c (anonymous namespace)::ComplementMatcher<circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>>::match(mlir::Operation*) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x100822d3c)\n#12 0x0000000103397388 bool mlir::matchPattern<(anonymous namespace)::ComplementMatcher<circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>>>(mlir::Value, (anonymous namespace)::ComplementMatcher<circt::comb::SextMatcher<mlir::detail::AnyCapturedValueMatcher>> const&) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x1007ff388)\n#13 0x0000000103396c84 circt::comb::XorOp::canonicalize(circt::comb::XorOp, mlir::PatternRewriter&) (/Users/schuylereldridge/repos/github.com/llvm/circt/build-debug/bin/circt-opt+0x1007fec84)\n```\n\nThere's a problem in the `SextMatcher` that is doing a `signBits.getDefiningOp()` when there might not be a defining op, assumedly the port in the example above.",
+  "labels": [
+    "bug",
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-23",
+  "closed_at": "2026-02-23",
+  "code_blocks": [
+    "\nWhen canonicalized, this will produce the following crash:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

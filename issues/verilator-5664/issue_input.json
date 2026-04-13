@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5664,
+  "issue_url": "https://github.com/verilator/verilator/issues/5664",
+  "title": "Add binary expression type checking for arrays",
+  "body": "I'd received internal errors in V3DfgPeephole regarding mismatched width of operands.\r\nVerilated using master as of https://github.com/verilator/verilator/commit/9656311521a7fe33054a4921986fa0cf8f6c0f5f.\r\n\r\n## RHS mismatch internal error\r\nError message:\r\n```cpp\r\n%Error: Internal Error: t/t_dfg_peephole_bug.v:12:19: ../V3DfgPeephole.cpp:956: Mismatched RHS width\r\n   12 |    assign o = arr | 1;\r\n      |                   ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nFailing test:\r\n```sv\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2024 by Antmicro.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\nmodule t(\r\n   output [1:0] o\r\n   );\r\n\r\n   wire [1:0] arr [1:0];\r\n   assign o = arr | 1;\r\nendmodule\r\n```\r\n\r\n```py\r\n#!/usr/bin/env python3\r\n# DESCRIPTION: Verilator: Verilog Test driver/expect definition\r\n#\r\n# Copyright 2024 by Wilson Snyder. This program is free software; you\r\n# can redistribute it and/or modify it under the terms of either the GNU\r\n# Lesser General Public License Version 3 or the Perl Artistic License\r\n# Version 2.0.\r\n# SPDX-License-Identifier: LGPL-3.0-only OR Artistic-2.0\r\n\r\nimport vltest_bootstrap\r\n\r\ntest.scenarios('vlt')\r\n\r\ntest.lint()\r\n\r\ntest.passes()\r\n```\r\n## LHS mismatch internal error\r\n\r\nError message:\r\n```cpp\r\n%Error: Internal Error: t/t_dfg_peephole_bug.v:13:19: ../V3DfgPeephole.cpp:955: Mismatched LHS width\r\n   13 |    assign o = arr | i + 1;\r\n      |                   ^\r\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nFailing test:\r\n```sv\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2024 by Antmicro.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\nmodule t(\r\n   input [1:0] i,\r\n   output [1:0] o\r\n   );\r\n\r\n   wire [1:0] arr [1:0];\r\n   assign o = arr | i + 1;\r\nendmodule\r\n```\r\n\r\nTest runner code the same as above.",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-12-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

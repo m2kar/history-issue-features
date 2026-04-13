@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5447,
+  "issue_url": "https://github.com/verilator/verilator/pull/5447",
+  "title": "Improve parser error recovery",
+  "body": "There are three commits, each doing a separate improvement, and they can be submitted separately if desired.\r\n\r\nFirst, covergroup identifiers were parsed as classes, so their names were later parsed as type identifiers rather than identifiers, causing many parse errors later on if the covergroups are used anywhere. Changing it to AstConstraint makes a bit more sense, as they are accessed as something similar to class fields.\r\n\r\nSecond, more `error` tokens are added to the parser, so that it can recover from invalid syntax used as part of cover points or constraints. Since they are normally both part of class syntax, the subsequent items would otherwise fall back to the `error ';'` rule in class item, which is not likely to be the correct intention of the programmer, and result in more errors.\r\n\r\nThe last commit modifies the grammar a bit more, in order to add error recovery right before endclass token. It allows to have a syntax error inside a class that is not followed by a semicolon, which will terminate the class symbol in more cases. It would otherwise, again, seek for the next semicolon in the rest of file, still believing that the next statement is part of the class, until a stray endclass is found after a correct class item (which never happens).\r\n\r\nThis involved changing the grammar a bit to avoid shift-reduce conflicts, as the error token needs to (in all 'conflicting' places) appear after the same item already present on the bottom-up parsing stack, and the `somethingListE` parsing pattern seems incompatible with it. That's because a partial somethingList would need to be reduced to somethingListE first, despite still having the potential to include another item (from the parser's perspective). If there is some way to avoid that manual grammar expansion, I would be happy to learn it.\r\n\r\nI investigated the last part for functions/tasks/modules/blocks, but their syntax is a bit more complicated, and such token popping would involve making the grammar larger and probably less understandable/maintainable, and I doubt whether it is worth the effort if grammar expansion cannot be avoided.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-09-11",
+  "closed_at": "2024-09-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

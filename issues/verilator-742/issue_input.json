@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 742,
+  "issue_url": "https://github.com/verilator/verilator/issues/742",
+  "title": "trace of struct array not working correctly",
+  "body": "---\n\n\nAuthor Name: **Jie Xu** (@jiexu)\nOriginal Redmine Issue: 742 from https://www.veripool.org\nOriginal Date: 2014-04-15\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nFor the following code, the generated VCD dump file will only have tt[31:0]. \r\n```\r\n\r\n\r\n\r\nmodule test (clk, result);\r\n\r\ninput  wire       clk;\r\noutput wire [31:0] result;\r\n\r\ntypedef struct packed {\r\n     logic [31:0] data;\r\n} tt_t;\r\n\r\ntt_t [1:0] tt;\r\n\r\ninitial begin\r\ntt[0] = 'hff;\r\ntt[1] = 'h0;\r\nend\r\n\r\nassign result = tt[0] | tt[1];\r\n\r\nalways_ff @ (posedge clk)\r\nbegin\r\n     tt[0] <= tt[0] - 1;\r\n     tt[1] <= tt[1] + 1;\r\nend\r\nendmodule\r\n\n```\r\n\r\nI did some investigation in the Verilator source. The cause of this problem is when @tt@ signal is declared for tracing, Verilator use @bitRange@ infomation which is actually the the structure @tt_t@ information. And when @AstTraceDecl@ is created in @V3TraceDecl.cpp@, @arrayRange@ is not used. So the final VCD dump will only show the  value of the first struct inside the array.\r\n\r\nNote the tracing works with \"--trace-structs\" option. \n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-04-15",
+  "closed_at": "2014-05-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

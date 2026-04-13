@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2483,
+  "issue_url": "https://github.com/llvm/circt/issues/2483",
+  "title": "[ExportVerilog] Unnecessary temporary wires with disallowLocalVariables option",
+  "body": "```mlir\r\nmodule attributes {circt.loweringOptions = \"disallowLocalVariables,verifLabels,emittedLineLength=240\"}  {\r\nhw.module @Foo(%clock: i1,  %a: i1, %b: i1, %d:i1) -> (res: i1) {\r\n  %reg = sv.reg sym @bar  : !hw.inout<i1>\r\n  %0 = sv.read_inout %reg : !hw.inout<i1>\r\n  %13 = comb.and %a, %b : i1\r\n  sv.always posedge %clock  {\r\n    sv.if %13  {\r\n      sv.passign %reg, %d : i1\r\n    }\r\n  }\r\n  hw.output %0 : i1\r\n}\r\n}\r\n```\r\nemits\r\n```sv\r\nmodule Foo(     // foo.mlir:2:1\r\n  input  clock, a, b, d,\r\n  output res);\r\n\r\n  reg reg_0;    // foo.mlir:3:10\r\n\r\n  wire _T = a & b;      // foo.mlir:5:9\r\n  always @(posedge clock) begin // foo.mlir:6:3\r\n    if (_T)     // foo.mlir:7:5\r\n      reg_0 <= d;       // foo.mlir:8:7\r\n  end // always @(posedge)\r\n  assign res = reg_0;   // foo.mlir:4:8, :11:3\r\nendmodule\r\n```\r\n`_T` should not be spilled.  This `_T` is spilled because while the emission of `%13`, `%13` is not defined in the block of AlwayOp. \r\n```mlir\r\n===== After Prettify Verilog ======\r\nsv.always .. {\r\n  %1 = comb.and %a, %b : i1\r\n  sv.if %1  {\r\n    ....\r\n  }\r\n}\r\n\r\n=====After prepareForEmission ====\r\n%1 = comb.and\r\nsv.always .. {\r\n   sv.if %1 { // %1 is not defined in the same block --> spill!\r\n     ... \r\n   }\r\n}\r\n```\r\nActually PrettifyVerilog sinks `%1` in the block of always op but PrepareForEmission hoists `%1` again to prohibit temporary in the procedural region. ",
+  "labels": [
+    "ExportVerilog",
+    "Verilog Quality"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-20",
+  "closed_at": "2022-01-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

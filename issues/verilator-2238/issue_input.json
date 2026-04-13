@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2238,
+  "issue_url": "https://github.com/verilator/verilator/issues/2238",
+  "title": "Unsupported SystemVerilog when inferring BRAM on FPGA",
+  "body": "I've written a bit of Verilog to infer BRAMs in an FPGA, but I'm having problems simulating this in Verilator.\r\n\r\nIt appears that this is not supported at this time, but I want to make sure that I'm not making some silly mistake:\r\n\r\n\r\n```\r\n**DualPortMaskedWrite.v:34: Unsupported: Delayed assignment to array inside for loops (non-delayed is ok - see docs)\r\n                                                                                                                                                                                        \r\n       ram[waddr][i] <= wdata[i * 8 +: 8];\r\n                 ^\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual and https://verilator.org for more assistance.\r\n```\r\n\r\n\r\n```\r\n/**\r\n * From the Quartus Prime Standard Edition Handbook Volume 1\r\n * \r\n * Based on \"Example 75. SystemVerilog Simple Dual-Port Synchronous RAM with Byte Enable\"\r\n */\r\n\r\nmodule DualPortMaskedWrite(\r\n\twe, clk,\r\n\twaddr, raddr,\r\n\tbe,\r\n\twdata,\r\n\tq\r\n);\r\n\tinteger i = 0;\r\n\r\n\tparameter WIDTH = 512;\r\n \tparameter ADDR = 16;\r\n\r\n\tinput we;\r\n\tinput clk;\r\n\tinput [ADDR - 1 : 0] waddr;\r\n\tinput [ADDR - 1 : 0] raddr;\r\n\tinput [WIDTH/8 - 1 : 0] be;\r\n\tinput [WIDTH - 1 : 0] wdata;\r\n\toutput reg [WIDTH - 1 : 0] q;\r\n\r\n \r\n\t(* ramstyle = \"no_rw_check\" *) logic [(WIDTH/8 - 1):0][7:0] ram[0 : (1 << ADDR) - 1] /* verilator public */; \r\n\talways @ (posedge clk) begin\r\n\t\tif(we) begin\r\n\t\t\tfor (i=0; i < (WIDTH/8); i = i+1)\r\n\t\t\tbegin\r\n\t\t\t\tif(be[i]) begin\r\n\t\t\t\t   ram[waddr][i] <= wdata[i * 8 +: 8];\r\n\t\t\t    end\r\n\t\t\tend\r\n\t\tend\r\n\t\tq <= ram[raddr];\r\n\tend\r\nendmodule\r\n``` \r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-06",
+  "closed_at": "2020-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

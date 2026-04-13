@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5296,
+  "issue_url": "https://github.com/verilator/verilator/pull/5296",
+  "title": "Handle static variable with assignment declaration in automatic context",
+  "body": "When running the following example:\r\n```verilog\r\nmodule t;\r\n   function static func;\r\n     input in;\r\n     logic tmp = in;\r\n   endfunction\r\n\r\n   initial begin\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nVerilator crashes with an error `../V3Scope.cpp:74: Can't locate varref scope`.\r\nThe `tmp` variable in the function above is implicitly static, thus the assignment is wrapped with `AstInitialStatic` and moved out of the function block in `V3Begin`. This mechanism is effective when two `static` variables are assigned, however it is not when lifetimes does not match. For instance when `automatic` variable (in this case `in`) is assigned to `static` one. This assignment breaks `V3Scope` phase where scopes cannot be established as the `AstInitialStatic` references automatic variables defined in that function.\r\n\r\nThe PR moves such assignments out of the `AstInitialStatic` block to prevent moving it by `V3Begin` phase thus preventing `V3Scope` errors. It should be noted that this changes semantics of the assignment; it is executed as automatic rather than static.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-22",
+  "closed_at": "2024-08-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

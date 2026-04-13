@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2459,
+  "issue_url": "https://github.com/llvm/circt/pull/2459",
+  "title": "[FIRRTL] Implement MergeConnectionsPass",
+  "body": "This commit implements MergeConnectionPass to merge expanded connections into one connection.\r\nLowerTypes fully expands aggregate connections even when semantically\r\nwe don't have to expand because it is necessary for ExpandWhen.\r\n\r\nMore specifically this pass folds the following patterns:\r\n```\r\n%dest(0) <= subfield %a(0)\r\n%dest(1) <= subfield %a(1)\r\n...\r\n%dest(n) <= subfield %a(n)\r\n```\r\ninto\r\n```\r\n%dest <= %a\r\n```\r\nThis pass also merge connections if their source values are known to be\r\nconstant.\r\n\r\nWith this pass, this fir:\r\n```scala\r\ncircuit Bar :\r\n  module Bar :\r\n    input source : {b: UInt<1>, c:UInt<1>}[2][2]\r\n    output sink1 : {b: UInt<1>, c:UInt<1>}[2][2]\r\n    output sink2 : {b: UInt<1>, c:UInt<1>}\r\n    sink1 <= source\r\n    sink2.b <= UInt<1>(1)\r\n    sink2.c <= UInt<1>(1)\r\n```\r\nbecomes\r\n```sv\r\nmodule Bar(     // foo.fir:2:10\r\n  input  struct packed {logic b; logic c; }[1:0][1:0] source,\r\n  output struct packed {logic b; logic c; }[1:0][1:0] sink1,\r\n  output struct packed {logic b; logic c; }           sink2);\r\n\r\n  assign sink1 = source;        // foo.fir:2:10\r\n  assign sink2 = /*cast(bit)*/2'h3;     // foo.fir:2:10\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-14",
+  "closed_at": "2022-02-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

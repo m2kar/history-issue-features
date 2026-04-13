@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3547,
+  "issue_url": "https://github.com/llvm/circt/issues/3547",
+  "title": "[PrepareForEmission] `shouldSpillWire` creates wires in procedural regions",
+  "body": "```mlir\r\nmodule attributes {circt.loweringOptions = \"maximumNumberOfTermsPerExpression=4\"} {\r\n  hw.module @Foo(%z: i10) -> () {\r\n    %0 = sv.reg : !hw.inout<i1>\r\n    %re = sv.reg : !hw.inout<i10>\r\n    sv.initial {\r\n      %x = sv.read_inout %re: !hw.inout<i10>\r\n      sv.ifdef.procedural \"bar\" {\r\n        %2 = comb.add %x, %x, %x, %x, %x : i10\r\n        %3 = comb.icmp eq %2, %z: i10\r\n        sv.passign %0, %3: i1\r\n      }\r\n    }\r\n  \r\n    hw.output\r\n  }\r\n}\r\n```\r\nWith `circt-opt -export-verilog` we get the following error.\r\n```\r\nfoo.mlir:9:12: error: sv.wire should be in a non-procedural region\r\n      %2 = comb.add %x, %x, %x, %x, %x : i10\r\n```\r\n\r\n`%2` is spilled to a temporary wire because it violates `maximumNumberOfTermsPerExpression` but it is spilled to a procedural region in the initial block. \r\n \r\n",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-17",
+  "closed_at": "2022-08-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

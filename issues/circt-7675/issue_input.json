@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7675,
+  "issue_url": "https://github.com/llvm/circt/issues/7675",
+  "title": "[FIRRTL] InferResets FullReset (formerly FART) does not add resets to not reset fields of partially reset registers",
+  "body": "The original iteration of this bug was fixed in https://github.com/llvm/circt/pull/6912, but it appears that fix only works for registers in modules contain the wire or port marked with a `circt.FullResetAnnotation`, but does not work for children of the module with the annotated port or wire.\r\n\r\nConsider the following FIRRTL:\r\n```firrtl\r\nFIRRTL version 3.3.0\r\n; CHECK-LABEL: module test(\r\ncircuit top :%[[{\r\n    \"class\":\"circt.FullResetAnnotation\",\r\n    \"target\":\"~top|top>reset\",\r\n    \"resetType\":\"async\"\r\n  }]]\r\n  module test :\r\n    input clock : Clock\r\n    input reset : AsyncReset\r\n    input in : { foo : UInt<8>, bar : UInt<8>}\r\n    output out : { foo : UInt<8>, bar : UInt<8>}\r\n\r\n    wire reg1_w : { foo : UInt<8>, bar : UInt<8>}\r\n    invalidate reg1_w\r\n    ; CHECK: reg1_foo <= 8'hC;\r\n    ; CHECK: reg1_bar <= 8'h0;\r\n    connect reg1_w.foo, UInt<8>(0hc)\r\n    invalidate reg1_w.bar\r\n    ; CHECK: reg1_foo = 8'hC;\r\n    ; CHECK: reg1_bar = 8'h0;\r\n    regreset reg1 : { foo : UInt<8>, bar : UInt<8>}, clock, reset, reg1_w\r\n    wire reg2 : { foo : UInt<8>, bar : UInt<8>}\r\n    connect reg1, in\r\n    connect reg2, reg1\r\n    connect out, reg2\r\n\r\n  module top :\r\n    input clock : Clock\r\n    input reset : AsyncReset\r\n    input in : { foo : UInt<8>, bar : UInt<8>}\r\n    output out : { foo : UInt<8>, bar : UInt<8>}\r\n\r\n    inst child of test\r\n    connect child.clock, clock\r\n    connect child.reset, reset\r\n    connect child.in, in\r\n    connect out, child.out\r\n```\r\n\r\nNote that this is exactly the same as the first test in https://github.com/llvm/circt/blob/f75bbd7986d4d5ab254ce428492f0e2366c16055/test/firtool/async-reset.fir#L5, except that there is a new top module wrapping the module with registers, and the annotated port is in the top module.\r\n\r\nCurrently, `reg1.bar` does not properly get the expected async reset to `0`, but it should. If you change the annotation to target `~top|test>reset`, you will see the correct output.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-10-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

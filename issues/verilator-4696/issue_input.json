@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4696,
+  "issue_url": "https://github.com/verilator/verilator/pull/4696",
+  "title": "Fix dynamic NBAs with automatic vars",
+  "body": "This patch addresses two issues with NBAs in non-inlined functions/tasks:\r\n- If the NBA writes to a local automatic var, the var could cease to exist before the NBA executes. This is normally addressed by fork dynscopes (#4356), but NBA-to-fork transformation happens way after `V3Fork` (in `V3Timing`). To solve this, we put NBAs that write to locals under forks in `V3Fork` already. This way, such locals will be put in dynscopes, and will still exist after the task containing the NBA exits.\r\n- The above change means that any writes in forks other than `fork..join` should be handled by `V3Fork`. Thus, in `V3SchedTiming`, we only have to worry about read references, so we can simply copy all remaining locals. Because we copy, lifetimes are not an issue. This fixes a bug that allowed assignment intravals to be overwritten if they go out of scope in the containing function.\r\n\r\nThese changes fix infinite looping in UVM testbenches as well as the minimized cases added to `t_assigndly_dynamic` when compiling the simulation with Clang >= 16.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-15",
+  "closed_at": "2023-11-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

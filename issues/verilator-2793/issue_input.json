@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2793,
+  "issue_url": "https://github.com/verilator/verilator/issues/2793",
+  "title": "Support per-instance user coverage count",
+  "body": "My simple example circuit looks like this:\r\n```v\r\nmodule test(\r\n  input        clock,\r\n  input  [7:0] a,\r\n  input  [7:0] b\r\n);\r\n  wire  c1_clock;\r\n  wire [7:0] c1_a;\r\n  wire  x2_clock;\r\n  wire [7:0] x2_a;\r\n  wire [8:0] _GEN_0 = a + b;\r\n  child c1 (\r\n    .clock(c1_clock),\r\n    .a(c1_a)\r\n  );\r\n  child x2 (\r\n    .clock(x2_clock),\r\n    .a(x2_a)\r\n  );\r\n  assign c1_clock = clock;\r\n  assign c1_a = a;\r\n  assign x2_clock = clock;\r\n  assign x2_a = b;\r\nendmodule\r\nmodule child(\r\n  input        clock,\r\n  input  [7:0] a\r\n);\r\n  TestPropery: cover property (@(posedge clock) a == 8'h0);\r\nendmodule\r\n```\r\n\r\nI call verilator like this: `verilator -Wno-fatal --cc test.sv --coverage-user --trace --trace-coverage --exe top.cpp`\r\n\r\nAfter running my test I get the following output in `coverage.dat`:\r\n```\r\n# SystemC::Coverage-3\r\nC 'ftest.svl28n0pagev_user/childoTestProperyhTOP.test.*.TestPropery' 25\r\n```\r\n\r\nIt seems like verilator combined the coverage points in `test.c1` and `test.c2`. I was wondering if instead it would be possible to get separate counts for `test.c1.TestProperty` and `test.c2.TestProperty`.",
+  "labels": [
+    "resolution: fixed",
+    "area: coverage",
+    "type: feature-non-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-17",
+  "closed_at": "2021-03-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

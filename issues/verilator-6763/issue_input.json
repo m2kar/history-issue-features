@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6763,
+  "issue_url": "https://github.com/verilator/verilator/pull/6763",
+  "title": "Parallelize V3FuncOpt using V3ThreadScope",
+  "body": "## Summary\n\nApply the same per-function parallel processing pattern used in V3VariableOrder and V3EmitCImp to V3FuncOpt. Each AstCFunc is now processed independently in parallel using V3ThreadScope, improving compilation speed on multi-module designs.\n\n### Changes\n- Add V3ThreadScope to funcOptAll() to parallelize function processing\n- Convert FuncOptStats to use std::atomic<uint64_t> for thread-safe updates\n- Add VL_MT_SAFE annotation to FuncOptVisitor::apply()\n\n### Thread Safety Analysis\n\n| Component | Thread-Safe? | Notes |\n|-----------|--------------|-------|\n| AST traversal per-function | Yes | Each function's subtree is disjoint |\n| user1() usage | Yes | Only marks nodes within the function being processed |\n| FuncOptStats | Yes | Uses atomic counters |\n| VNUser1InUse | Yes | Claimed before parallel section starts |\n\n## Test plan\n- Existing regression tests pass\n- CI build completes successfully\n- Verify identical output with --threads 1 vs --threads N\n\nGenerated with Claude Code",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-06",
+  "closed_at": "2025-12-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

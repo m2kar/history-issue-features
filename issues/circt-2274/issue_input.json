@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2274,
+  "issue_url": "https://github.com/llvm/circt/issues/2274",
+  "title": "sv.bind inside of sv.ifdef doesn't produce expected verilog",
+  "body": "IR like this\r\n```mlir\r\nhw.module @my_asserts() -> () {\r\n}\r\nhw.module @bind_inside_ifdef_example(%I: i1) -> (O: i1) {\r\n    hw.instance \"my_asserts_inst\" sym @bind_inside_ifdef_example.my_asserts @my_asserts() -> () {doNotPrint = 1}\r\n    hw.output %I : i1\r\n}\r\nsv.ifdef \"COND\" {\r\n    sv.bind #hw.innerNameRef<@bind_inside_ifdef_example::@bind_inside_ifdef_example.my_asserts>\r\n}\r\n```\r\n\r\nproduces the following Verilog\r\n\r\n```verilog\r\nmodule my_asserts();\t// bind-inside-ifdef.mlir:1:1\r\nendmodule\r\n\r\nmodule bind_inside_ifdef_example(\t// bind-inside-ifdef.mlir:3:1\r\n  input  I,\r\n  output O);\r\n\r\n  /* This instance is elsewhere emitted as a bind statement.\r\n    my_asserts my_asserts_inst ();\t// bind-inside-ifdef.mlir:4:5\r\n  */\r\n  assign O = I;\t// bind-inside-ifdef.mlir:5:5\r\nendmodule\r\n\r\n  bind bind_inside_ifdef_example my_asserts my_asserts_inst ();\r\n`ifdef COND\t// bind-inside-ifdef.mlir:7:1\r\n`endif\r\n```\r\n\r\nNot sure if this is the intended behavior of ExportVerilog but we definitely require generating bind statements inside of ifdefs. (Happy to help implement this behavior if it is more than a bugfix.)\r\n\r\nRepro info:\r\n* circt commit: `83152e911ed28e9de79b8468c916f3483d3cf0d9`\r\n* command: `circt-opt --export-verilog`\r\n\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-12-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

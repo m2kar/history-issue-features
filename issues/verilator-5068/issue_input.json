@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5068,
+  "issue_url": "https://github.com/verilator/verilator/issues/5068",
+  "title": "Verilator finds a latch where there is no one",
+  "body": "getting LATCH waring on following code:\r\n\r\n```\r\n     13 module DW02_mult (A, B, TC, PRODUCT);\r\n     14 parameter A_width = 8;\r\n     15 parameter B_width = 8;\r\n     16 // translate_off\r\n     17 initial begin\r\n     18   if (A_width<1) $display (\"ERROR - DW02_mult.  Bad parameter, A_width=%d, which is <1.\", A_width);\r\n     19   if (B_width<1) $display (\"ERROR - DW02_mult.  Bad parameter, B_width=%d, which is <1.\", B_width);\r\n     20   if (A_width<1) $finish;\r\n     21   if (B_width<1) $finish;\r\n     22 end\r\n     23 // translate_on\r\n     24 input [A_width-1:0] A;\r\n     25 input [B_width-1:0] B;\r\n     26 input TC;\r\n     27 output [A_width+B_width-1:0] PRODUCT;\r\n     28 reg [A_width+B_width-1:0] PRODUCT, PRODUCT2;\r\n     29 reg [A_width-1:0] A2;\r\n     30 reg [B_width-1:0] B2;\r\n     31 always @(A or B or TC) begin\r\n     32   if (TC == 1'b0)\r\n     33     PRODUCT = A * B;\r\n     34   else begin\r\n     35     A2 = A[A_width-1] ? -A : A;\r\n     36     B2 = B[B_width-1] ? -B : B;\r\n     37     PRODUCT2 = A2 * B2;\r\n     38     PRODUCT = (A[A_width-1]^B[B_width-1]) ? -PRODUCT2 : PRODUCT2;\r\n     39   end\r\n     40 end\r\n     41 endmodule\r\n```\r\nDW02_mult.v:31:1: Latch inferred for signal 'A2' (not all control paths of combinational always assign a value)\r\n                                                                                                                          : ... note: In instance 'tb_top.rvtop.swerv.exu.mul_e1.i_DW02_multp.U1'\r\n                                                                                                                          : ... Suggest use of always_latch for intentional latches\r\n   31 | always @(A or B or TC) begin\r\n      | ^~~~~~\r\n\r\nA2 is a function of A, which is in the sensitivity list.\r\n\r\nStrangely, this warning pops up only with -O0 verilator option ...\r\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-25",
+  "closed_at": "2024-04-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

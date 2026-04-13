@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5650,
+  "issue_url": "https://github.com/llvm/circt/issues/5650",
+  "title": "[FIRRTL] Canonicalizer creates invalid StrictConnect",
+  "body": "Input:\r\n```\r\nfirrtl.circuit \"Child\" {\r\nfirrtl.module @Child(in %io_y: !firrtl.uint<1>, out %io_x: !firrtl.uint<1>) {\r\n  %io = firrtl.wire : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n  %2 = firrtl.subfield %io[y] : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n  firrtl.strictconnect %2, %io_y : !firrtl.uint<1>\r\n  %3 = firrtl.subfield %io[x] : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n  firrtl.strictconnect %io_x, %3 : !firrtl.uint<1>\r\n  firrtl.strictconnect %3, %2 : !firrtl.uint<1>\r\n}\r\n}\r\n```\r\n\r\n```\r\n$ circt-opt -canonicalize canonicalize_flips_strictconnect.mlir -mlir-print-ir-after-failure -mlir-print-assume-verified\r\ncanonicalize_flips_strictconnect.mlir:3:9: error: 'firrtl.strictconnect' op operand #0 must be a sized passive base type (contains no uninferred widths, or flips) or foreign type, but got '!firrtl.bundle<y flip: uint<1>, x: uint<1>>'\r\n  %io = firrtl.wire : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n        ^\r\ncanonicalize_flips_strictconnect.mlir:3:9: note: see current operation: \"firrtl.strictconnect\"(%0, %3) : (!firrtl.bundle<y flip: uint<1>, x: uint<1>>, !firrtl.bundle<y flip: uint<1>, x: uint<1>>) -> ()\r\n// -----// IR Dump After Canonicalizer Failed (canonicalize) //----- //\r\nmodule {\r\n  firrtl.circuit \"Child\" {\r\n    firrtl.module @Child(in %io_y: !firrtl.uint<1>, out %io_x: !firrtl.uint<1>) {\r\n      %io = firrtl.wire : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n      %0 = firrtl.subfield %io[y] : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n      %1 = firrtl.subfield %io[x] : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n      firrtl.strictconnect %io_x, %1 : !firrtl.uint<1>\r\n      %2 = firrtl.bundlecreate %io_y, %0 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n      firrtl.strictconnect %io, %2 : !firrtl.bundle<y flip: uint<1>, x: uint<1>>\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-21",
+  "closed_at": "2023-07-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

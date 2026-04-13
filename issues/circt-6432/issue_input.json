@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6432,
+  "issue_url": "https://github.com/llvm/circt/issues/6432",
+  "title": "[FIRRTL] Verifier Should Reject External Modules with Input Probes",
+  "body": "Currently, the FIRRTL Parser will reject trivial input probes on external modules. However, this is not enshrined in the verifier. E.g., the following circuit has an illegal FIRRTL external module, yet it is only caught during `firrtl-probe-dce`:\r\n\r\n```\r\nFIRRTL version 3.3.0\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    input a: {a: Probe<UInt<1>>}\r\n    output b: {flip a: Probe<UInt<1>>}\r\n    input c: Probe<UInt<1>>[1]\r\n  module Foo:\r\n    input a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    define bar.a.a = probe(a)\r\n    define bar.b.a = probe(a)\r\n    define bar.c[0] = probe(a)\r\n```\r\n\r\n```\r\n[firtool] Running fir parser\r\n[firtool] -- Done in 0.000 sec\r\n[firtool] Running \"firrtl.circuit(firrtl-lower-open-aggs,firrtl-resolve-paths,firrtl-lower-annotations{disable-annotation-classless=false disable-annotation-unknown=false no-ref-type-ports=false},firrtl-lower-intrinsics,firrtl-inject-dut-hier,firrtl.module(firrtl-drop-names{preserve-values=none},cse,firrtl-lower-chirrtl,firrtl-lower-matches),firrtl-infer-widths,firrtl-mem-to-reg-of-vec{ignore-read-enable-mem=false repl-seq-mem=false},firrtl-infer-resets,firrtl-drop-const,firrtl-hoist-passthrough{hoist-hw=false},firrtl-probe-dce,firrtl-dedup,firrtl-dft,firrtl.module(firrtl-flatten-memory),firrtl-lower-types{flatten-mem=false preserve-aggregate=none preserve-memories=none},any(firrtl-expand-whens),firrtl.module(firrtl-sfc-compat,firrtl-group-merge,firrtl-group-sink),firrtl-lower-groups,firrtl-inliner,firrtl.module(firrtl-randomize-register-init),firrtl-check-comb-loops,firrtl.module(canonicalize{  max-iterations=10 max-num-rewrites=-1 region-simplify=false test-convergence=false top-down=true},firrtl-infer-rw),firrtl-prefix-modules,firrtl-imconstprop,firrtl-hoist-passthrough{hoist-hw=false})\"\r\n[firtool]   Running \"firrtl-lower-open-aggs\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-resolve-paths\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-lower-annotations{disable-annotation-classless=false disable-annotation-unknown=false no-ref-type-ports=false}\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-lower-intrinsics\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-inject-dut-hier\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl.module(firrtl-drop-names{preserve-values=none},cse,firrtl-lower-chirrtl,firrtl-lower-matches)\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-infer-widths\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-mem-to-reg-of-vec{ignore-read-enable-mem=false repl-seq-mem=false}\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-infer-resets\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-drop-const\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-hoist-passthrough{hoist-hw=false}\"\r\n[firtool]   -- Done in 0.000 sec\r\n[firtool]   Running \"firrtl-probe-dce\"\r\nfirrtl-snippets/InputProbesExtmodule.fir:4:11: error: input probe not allowed on this module kind\r\n    input a: {a: Probe<UInt<1>>}\r\n```\r\n\r\nImprove the verifier to categorically rejects this.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-20",
+  "closed_at": "2023-11-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

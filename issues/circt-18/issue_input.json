@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 18,
+  "issue_url": "https://github.com/llvm/circt/issues/18",
+  "title": "Add support for lowering vectors of wires from FIRRTL to RTL",
+  "body": "To finish lowering wire from the FIRRTL dialect to the RTL dialect, the RTL dialect must support vectors of wires. \r\n\r\nWhile FIRRTL seems to have only vectors of wires, Verilog allows n-dimensional wires, which can be either packed or unpacked. The packed vs unpacked distinction has a huge impact on simulator performance. From my discussions with Verilog folks, here are some examples of wires:\r\n\r\n```\r\nwire a; // single wire, e.g. firrtl.wire : !firrtl.uint<1>\r\nwire [7:0] b; // bitvector, e.g. firrtl.wire : !firrtl.uint<8> (I think) \r\nwire [0:0] c; // bitvector length one, not equivalent to a. \r\nwire [0:0] d [0:7] // unpacked, technically 2D\r\nwire [0:0] [0:7] d // packed, technically 2D\r\nwire [2:0] [0:7] e // packed, 2D\r\nwire [2:0] [0:7] e [3:0] // unpacked?, 3D\r\n\r\nq = b[5]; // slice one bit of bitvctor b\r\nr = b[5:5] // vector slice of bitvector b\r\n\r\n// more examples from http://www.verilogpro.com/verilog-arrays-plain-simple/\r\nreg [31:0] x      [127:0];        // 128-element array of 32-bit wide reg\r\nwire[15:0] y[7:0], z[7:0];        // 2 arrays of 16-bit wide wires indexed from 7 to 0\r\nreg [ 7:0] mema   [255:0];        // 256-entry memory mema of 8-bit registers\r\nreg        arrayb [  7:0][255:0]; // two-dimensional array of one bit registers\r\n```\r\n\r\nI'm not sure how fine grained these distinctions should be in the RTL dialect, but it might make sense to start with vectors and eventually support tensors of wires.\r\n\r\nAdditionally, bitvectors can be of length 0, and can also be of length unknown.",
+  "labels": [
+    "enhancement",
+    "FIRRTL",
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-28",
+  "closed_at": "2021-01-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

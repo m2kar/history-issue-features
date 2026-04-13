@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3016,
+  "issue_url": "https://github.com/verilator/verilator/issues/3016",
+  "title": "Can we remove scoped dpi export declarations?",
+  "body": "The standard specifies that DPI exported entry poitns are global functions, but we implement them as static functions on the top level:\r\n\r\n```\r\nint Vt_dpi_export::dpix_f_int(int i) {\r\n    <implementation>\r\n}\r\n```\r\n\r\nWe then emit a global function that simply calls the static.\r\n\r\n```\r\n#ifndef VL_DPIDECL_dpix_f_int_\r\n#define VL_DPIDECL_dpix_f_int_\r\nint dpix_f_int(int i) {\r\n    // DPI export at t/t_dpi_export.v:43:25\r\n    return Vt_dpi_export::dpix_f_int(i);\r\n}\r\n#endif\r\n```\r\n\r\nWhile I dislike the global namespace, and the statics are strictly in the \"internals\" section in the generated module header, I wonder if we can drop the statics and emit the global directly, so the top module header does not need to change when adding/removing DPI exports?\r\n\r\nI.e.: Just emit this instead of the 2 functions above:\r\n\r\n```\r\nextern \"C\" int dpix_f_int(int i) {\r\n    <implementation>\r\n}\r\n```\r\n\r\nI'm raising the question because that is an interface change that might be noticeable, so if the intention was to indeed provide the static methods to be called by the user, then we might not want to do this.",
+  "labels": [
+    "area: usability",
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-12",
+  "closed_at": "2021-06-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

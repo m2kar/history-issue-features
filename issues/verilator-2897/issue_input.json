@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2897,
+  "issue_url": "https://github.com/verilator/verilator/issues/2897",
+  "title": "perl/verilator_includer not run. No \"__ALL.o\" object file",
+  "body": "Good day,\r\n\r\nI discovered a problem recently where running make (see commands below) on verilated SV doesn't create the \"__ALL.o\" object file. For example, the attached SV aims to create a 16 bit, 64 word RAM based on the NAND2TETRIS project and the problem was discovered with the following commands:\r\n```\r\nverilator -GDATA_WIDTH=16 -Wall -Wpedantic -cc -top RAM64 RAM64.sv\r\nmake -C obj_dir/ -f VRAM64.mk\r\n```\r\nI was expecting there to be the object file obj_dir/VRAM64__ALL.o to link with when compiling a test bench. It does create VRAM64__ALL.a but static linking with this fails.\r\n\r\nAfter poking around a bit, I found that up to RAM32 can be verilated without issue. And looking through the make log, I picked out and ran manually this command:\r\n```\r\n/usr/bin/perl $PATH_TO/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include VRAM64.cpp  VRAM64_Register__D10.cpp  VRAM64_Register__D10__1__Slow.cpp  VRAM64_Register__D10__Slow.cpp  VRAM64__Slow.cpp  VRAM64__Syms.cpp > VRAM64__ALL.cpp\r\n```\r\nFollowed by\r\n```\r\nccache g++  -I.  -MMD -I/home/fried/.local/share/verilator/include -I/home/fried/.local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o VRAM64__ALL.o VRAM64__ALL.cpp\r\n```\r\nand\r\n```\r\nar -rcs VRAM64__ALL.a VRAM64__ALL.o\r\n```\r\nNow I have the object to link with when compiling the testbench C++.\r\n\r\nVerilator 4.201 devel rev v4.200-81-g0d6099b2\r\n[RAM64.sv.txt](https://github.com/verilator/verilator/files/6331165/RAM64.sv.txt)\r\n\r\nBest regards,\r\nemohohen\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-18",
+  "closed_at": "2021-04-22",
+  "code_blocks": [
+    "/usr/bin/perl $PATH_TO/share/verilator/bin/verilator_includer -DVL_INCLUDE_OPT=include VRAM64.cpp  VRAM64_Register__D10.cpp  VRAM64_Register__D10__1__Slow.cpp  VRAM64_Register__D10__Slow.cpp  VRAM64__Slow.cpp  VRAM64__Syms.cpp > VRAM64__ALL.cpp",
+    "ccache g++  -I.  -MMD -I/home/fried/.local/share/verilator/include -I/home/fried/.local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o VRAM64__ALL.o VRAM64__ALL.cpp"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

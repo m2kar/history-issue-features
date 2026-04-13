@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3024,
+  "issue_url": "https://github.com/llvm/circt/pull/3024",
+  "title": "[HWCleanup] Convert table lookup into case statement",
+  "body": "This commit adds a transformation from table lookup implemented as mux chains into case statement, such as:\r\n```\r\nmux(key==1 a_0, mux(key==10, a_1, mux(key==25, ...., mux(key==100, a_20, default)...)\r\n```\r\ninto:\r\n```\r\nreg GEN; \r\ncase (key)\r\n  1:  GEN <= a_0;\r\n  10:  GEN <= a_1;\r\n  25:  GEN <= a_2\r\n  ...\r\n```\r\n\r\nI intentionally didn't implement this transformation in comb canonicalizer since\r\nit create a case operation in SV dialect. Changed LOC is a bit large but it is mostly refactoring \r\nrelated to `getLinearMuxChainsComparison`.\r\n\r\nExample:\r\n```scala\r\ncircuit TableLookup: \r\n  module TableLookup:\r\n    input t : UInt<5>[6]\r\n    input default : UInt<5>\r\n    input key : UInt<5>\r\n    output v : UInt<5>\r\n    node v1 =  mux(eq(key, UInt<5>(\"h3\")), t[0], default);\r\n    node v2 =  mux(eq(key, UInt<5>(\"h10\")), t[1], v1);\r\n    node v3 =  mux(eq(key, UInt<5>(\"h12\")), t[2], v2);\r\n    node v4 =  mux(eq(key, UInt<5>(\"h13\")), t[3], v3);\r\n    node v5 =  mux(eq(key, UInt<5>(\"h17\")), t[4], v4);\r\n    node v6 =  mux(eq(key, UInt<5>(\"h18\")), t[5], v5);\r\n    v <= v6\r\n```\r\n`firtool -disable-name-preservation` will generate\r\n```verilog\r\n  reg [4:0] _GEN;\r\n  always_comb begin\r\n    priority case (key)\r\n      5'b11000:\r\n        _GEN = t_5;\r\n      5'b10111:\r\n        _GEN = t_4;\r\n      5'b10011:\r\n        _GEN = t_3;\r\n      5'b10010:\r\n        _GEN = t_2;\r\n      5'b10000:\r\n        _GEN = t_1;\r\n      5'b00011:\r\n        _GEN = t_0;\r\n      default:\r\n        _GEN = default_0;\r\n    endcase\r\n  end // always_comb\r\n  assign v = _GEN;\r\n```\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-03",
+  "closed_at": "2022-07-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

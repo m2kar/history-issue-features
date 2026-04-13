@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5002,
+  "issue_url": "https://github.com/llvm/circt/issues/5002",
+  "title": "[InferWidths] Constrain ref.define operands to same width",
+  "body": "Width-inference is supported through references, in the direction the reference itself flows.  Nothing done at the other end of the reference, including using in a `force` or similar, should influence the generated hardware the reference targets (assuming no cycles involving references).\r\n\r\nHowever, the inferred widths need to be consistent along the path (if not possible, error), compared to the \"max of all drivers\" (minimum width that makes all connections legal, anyway) approach for other operations, like connect.\r\nThis is not handled presently, and causes invalid IR.\r\nIdeally this would be modeled / checked as part of InferWidths, generating the same nice diagnostics as other width inference issues.\r\n\r\nAn equality constraint may be needed (like attach), although the direction the constraints \"flow\" may matter (unlike for `attach`).  Offhand I'm not sure whether the same approach used for `attach` will handle this correctly.\r\n\r\nExample not handled currently, not exhaustive:\r\n```firrtl\r\n// -----\r\nfirrtl.circuit \"RefDefineEqual\" {\r\n  firrtl.module private @InRef(in %ref : !firrtl.rwprobe<uint>) { }\r\n  firrtl.module @RefDefineEqual(in %x : !firrtl.uint<1>, in %y : !firrtl.uint<2>) {\r\n    %w1, %w1_ref = firrtl.wire forceable : !firrtl.uint, !firrtl.rwprobe<uint>\r\n    %w2, %w2_ref = firrtl.wire forceable : !firrtl.uint, !firrtl.rwprobe<uint>\r\n    firrtl.connect %w1, %x : !firrtl.uint, !firrtl.uint<1>\r\n    firrtl.connect %w2, %y : !firrtl.uint, !firrtl.uint<2>\r\n\r\n    %inst1_ref = firrtl.instance inst1 @InRef(in ref: !firrtl.rwprobe<uint>)\r\n    %inst2_ref = firrtl.instance inst2 @InRef(in ref: !firrtl.rwprobe<uint>)\r\n    firrtl.ref.define %inst1_ref, %w1_ref : !firrtl.rwprobe<uint>\r\n    firrtl.ref.define %inst2_ref, %w2_ref : !firrtl.rwprobe<uint>\r\n  }\r\n}\r\n```\r\n\r\nThis infers the input reference to the `uint<2>` which causes problems for the `rwprobe<uint<1>>` (via `%w2_ref`, via `%y`) being connected to it.\r\n\r\nThis should be reported as unsatisfiable.",
+  "labels": [
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-11",
+  "closed_at": "2023-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

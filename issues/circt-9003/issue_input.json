@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9003,
+  "issue_url": "https://github.com/llvm/circt/pull/9003",
+  "title": "[circt-verilog-lsp] Add support for `-C` command files for Slang, project-wide defintion lookup",
+  "body": "This PR extends the CIRCT Verilog LSP server with support for project command files (`-C` / `--command-file`) and improves robustness around source locations and diagnostics.\r\n\r\n- **Command file support**\r\n  - Added `commandFiles` option to `VerilogServerOptions`.\r\n  - Extended the CLI with `-C`/`--command-file` flags to pass one or more command files.\r\n  - Each buffer’s `Driver` now processes command files, filtering out the current main buffer to avoid duplication.\r\n\r\n- **Source location handling**\r\n  - Improved absolute/real path resolution when constructing LSP URIs.\r\n  - Fallbacks added for when `slang::SourceManager` has no full path info.\r\n\r\n- **Compilation setup**\r\n  - Ensure all definitions in the main buffer scope are treated as top modules.\r\n\r\n- **Indexing improvements**\r\n  - Skip top instances not defined in the current file.\r\n  - Added guards against invalid or empty ranges (especially macro expansions).\r\n\r\n~~Currently the main thing I am unhappy with is that two compilations are created, where the first one is only to determine all module names - this is necessary, since we index only instantiated modules, and only top modules are instantiated. I tried looking, but didn't find a flag to treat all module definitions as top modules. Maybe someone else has a deeper understanding of the Slang driver and knows a way around this?~~\r\n\r\n~~The other thing that is a bit hacky is the mangling of the command file; this is necessary because we do definition lookups based on raw pointers, so if the main document is also in the command file the pointers do not match. To prevent this I currently scan the command file and remove the main file (if present). I think we could prevent this if instead of matching raw pointers we matched against a file id / filename + offset. However, this might be slower than the current solution since it adds another layer of indirection. Let me know if you have opinions!~~\r\n\r\nRefactored top module determination to only process the main buffer file; this is sufficient, no need to compile twice. \r\nAlso refactored command file mangling to instead not import the main buffer into slang compilation if it is present in any command file, and then after compilation bind it to the llvm source manager's buffer id.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-23",
+  "closed_at": "2025-09-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

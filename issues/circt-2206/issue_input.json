@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2206,
+  "issue_url": "https://github.com/llvm/circt/pull/2206",
+  "title": "[Handshake] Major overhaul of the Handshake IR",
+  "body": "This (fairly monolithic) commit introduces a major overhaul of the Handshake IR syntax. The goal is to reduce verbosity by implementing custom parsers/printers and by folding various attributes into being parts of the op syntax. This commits includes changes prior proposed by @stephenneuendorffer. Some work is still needed reducing the verbosity of `handshake.memory` operations, but I've decided to keep this commit as-is. While a large diff, this is a mostly syntactical change, and underlying tests remain (largely) unmodified from a functional point of view.\r\n\r\nChanges:\r\n- the `handshake` dialect is now the default dialect within `handshake.func` operations, removing the need to prefix every single operation with `handshake.`\r\n- Factors out \"isControl\" logic to an interface implemented by all handshake operations.\r\n- Most ops now have \"size, dataType\" and \"control\" attributes as part of their arguments. This, alongside a shared operation syntax, is leveraged in the parsers. You'll notice that a SOST abbreviation is present in `HandshakeOps.cpp`. SOST being Sized Operation with Single Type.\r\n- The `control` attribute is inferred from the \"dataType\" of the operation. This means that we no longer have \"control = true\" littered al over the IR. `control` is assumed whenever `dataType.isa<NoneType>()`.\r\n- Examples added for all handshake ops in the TableGen file.\r\n\r\nNew syntax:\r\n```mlir\r\n%1:2 = fork [2] %0 : i32\r\n%1:2 = buffer [2] %0 : i32\r\n%0 = merge %a, %b, %c : i32\r\n%0 = mux %select [%data0, %data1, %data2] : index, i32\r\n%0, %idx = control_merge %a, %b, %c : i32\r\n%1 = br %0 : i32\r\n%true, %false = cond_br %cond, %data : i32\r\nsink %data : i32\r\n%0 = constant %ctrl {value = 42 : i32} : i32\r\n%dataToSucc, %addr1ToMem, %addr2ToMem = load [%addr1, %addr2] %dataFromMem, %ctrl : i8, i16, index\r\n%dataToMem, %addr1ToMem, %addr2ToMem = store [%addr1, %addr2] %dataFromPred , %ctrl : i8, i16, index\r\n%0 = join %a, %b, %c : i32\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-18",
+  "closed_at": "2021-11-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

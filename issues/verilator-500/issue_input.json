@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 500,
+  "issue_url": "https://github.com/verilator/verilator/issues/500",
+  "title": "Confusing error message with $fscanf() vs $display()",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 500 from https://www.veripool.org\nOriginal Date: 2012-04-28\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nSource code:\r\n\r\n```\r\n     function [RFF_BITS:1] read_from_file( \r\n         input integer fd, \r\n         input integer index \r\n     );\r\n         integer code;\r\n         integer offset;\r\n         reg [1024:1] msg;\r\n         reg [RFF_BITS:1] read_value;\r\n     \r\n         begin\r\n             offset = index * RFF_CHUNK;\r\n            code = 0; //$fseek( fd, offset, 0 ); // verilator does not understand $fseek()?\r\n             // $fseek returns 0 on success, -1 on failure\r\n             if (code != 0)\r\n             begin\r\n                 $display(\"%m: at time %t ERROR: fseek to %d failed\", $time, offset);\r\n                 $finish;\r\n             end\r\n         \r\n             code = $fscanf(fd, \"%z\", read_value);\r\n\n```\r\n\r\nverilator errors on the last line:\r\n\r\n```\r\n%Error: ddr3.v:613: Unknown $display format code: %z\r\n%Error: ddr3.v:613: Extra arguments for $display format\r\n\n```\r\n\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-04-28",
+  "closed_at": "2012-05-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

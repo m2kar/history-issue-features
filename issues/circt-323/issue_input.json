@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 323,
+  "issue_url": "https://github.com/llvm/circt/issues/323",
+  "title": "[FIRRTL] firrtl.connect not catching bit truncation",
+  "body": "I think that this is malformed firrtl, because the connect is truncating from 4 to 6 bits, but it looks like the verifier doesn't reject it:\r\n\r\n```\r\n module Precedence :\r\n    input a: UInt<4>\r\n    input b: UInt<4>\r\n    input c: UInt<4>\r\n    output out1: UInt<1>\r\n    output out: UInt<4>\r\n    out <= add(a, add(b, c))\r\n```\r\n\r\n```\r\n   firrtl.module @Precedence(%a: !firrtl.uint<4>, %b: !firrtl.uint<4>, %c: !firrtl.uint<4>, %out1: !firrtl.flip<uint<1>>, %out: !firrtl.flip<uint<4>>) {\r\n      %0 = firrtl.add %b, %c : (!firrtl.uint<4>, !firrtl.uint<4>) -> !firrtl.uint<5>\r\n      %1 = firrtl.add %a, %0 : (!firrtl.uint<4>, !firrtl.uint<5>) -> !firrtl.uint<6>\r\n      firrtl.connect %out, %1 : !firrtl.flip<uint<4>>, !firrtl.uint<6>\r\n }\r\n```\r\n\r\nThe LowerToRTL pass is rejecting it, but it seems like the FIRRTL verifier should also catch this.  This would allow the firrtl parser to correct reject the input.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-13",
+  "closed_at": "2020-12-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6526,
+  "issue_url": "https://github.com/verilator/verilator/pull/6526",
+  "title": "Internals: Improve coverage flow",
+  "body": "Please see the added internals doc section on usage, but the high-level usage is:\r\n\r\n```\r\n./configure --enable-coverage\r\n.. run whatever you want ..\r\nmake coverage-open\r\n```\r\n\r\n`make test` takes about 70 minutes on my system (~3x normal clean cache `make test`).\r\n`make coverage-combine` (running fastcov) is ~90 seconds\r\n`make coverage-report` (running genhtml) is ~30 seconds\r\n\r\nYou can see a codecov.io report here:\r\n- https://app.codecov.io/gh/gezalore/verilator/tree/cover\r\n\r\nHighlights:\r\n- We no longer replace the opt build with the dbg build, we just build both with -O0 instead, compile time is not a big issue here, and end-to-end this is marginally faster than using the debug build all the time\r\n- We disable optimization of the runtime lib as well, which we didn't before, coverage now looks much better\r\n- Unused inline functions in headers now show as holes (most of the time)\r\n- We now filter exclusions using fastcov, rather than the previous dance with a cloned source tree. This works well.\r\n- We now upload the exclusion filtered report to codedcov.io (as opposed to the unfiltered one which we did before)\r\n- Uploading to codecov.io no longer runs gcov agan on everything (--plugin noop), but just uses the lcov info file from fastcov (as was expected)\r\n- Full dependency tracking of everything involved in coverage. If you run more test, just run `make coverage*` for the lastest\r\n- CI now uses the reusable workflows for build and test\r\n- Overall CI CPU time is ~20% less, latency is a few minutes shorter.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-02",
+  "closed_at": "2025-10-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

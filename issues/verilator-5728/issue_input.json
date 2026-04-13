@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5728,
+  "issue_url": "https://github.com/verilator/verilator/issues/5728",
+  "title": "Support `resetall",
+  "body": "Hello!\r\n\r\nI ran into timescale issues with simulating Alex Forencich's IPs. and realized the issue is that `` `resetall `` seems to not be fully supported.\r\n\r\nalexforencich/verilog-axi rtl/axi_dma.v: <https://github.com/alexforencich/verilog-axi/blob/38915fb5330cb8270b454afc0140a94489dc56db/rtl/axi_dma.v#L27-L29>\r\n\r\nI believe the Verilator implementation only resets `` `default_nettype ``:\r\nhttps://github.com/verilator/verilator/blob/bb871728c92553c3813f556782807b5879135ea1/src/verilog.l#L1065-L1066\r\n\r\nHowever, these are the requirements from the LRM:\r\n\r\n> ### 22.3 `` `resetall ``\r\n> When the `` `resetall `` compiler directive is encountered during compilation, all compiler directives are set to the default values. This is useful for ensuring that only directives that are desired in compiling a particular source file are active.\r\n\r\nThe affected directives seem to be the following:\r\n\r\n* `` `default_nettype `` [22.8]: `` `resetall `` resets to `wire`\r\n* `` `celldefine `` [22.10]: `` `resetall `` acts as `` `endcelldefine ``\r\n* `` `pragma `` [22.11.1]: `` `resetall `` reverts all pragmas to defaults\r\n* `` `timescale ``[22.7]: `` `resetall `` reverts timescale back to tool default\r\n* `` `unconnected_drive `` [22.9]: `` `resetall `` acts as `` `nounconnected_drive ``\r\n\r\nHere is the Icarus implementation: <https://github.com/steveicarus/iverilog/blob/30123f89451939fc946a2395c91e39911fcd354a/lexor.lex#L1616-L1622>\r\n\r\nI can add a fix this weekend. Would this be best fixed by adding more to verilog.l? Or is there a good .cpp file to put a resetall function?\r\n\r\nThanks!",
+  "labels": [
+    "resolution: fixed",
+    "area: parser",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-11",
+  "closed_at": "2025-01-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2806,
+  "issue_url": "https://github.com/llvm/circt/issues/2806",
+  "title": "[FIRRTL] Mux Result Type Inference Asserting Out",
+  "body": "Consider the following circuit:\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input a: UInt<1>[1]\r\n    input b: UInt<32>[1]\r\n    input sel: UInt<1>\r\n    output c: UInt[1]\r\n\r\n    c <= mux(sel, a, b)\r\n```\r\n\r\nThis will currently cause MFC to error out with (`firtool Foo.fir`):\r\n```\r\n# firtool Foo.fir --verbose-pass-executions\r\nFoo.fir:8:10: error: unknown types to mux\r\n    c <= mux(sel, a, b)\r\n         ^\r\n```\r\n\r\nThe SFC will, however, compile this to:\r\n```verilog\r\nmodule Foo(\r\n  input         a_0,\r\n  input  [31:0] b_0,\r\n  input         sel,\r\n  output [31:0] c_0\r\n);\r\n  assign c_0 = sel ? {{31'd0}, a_0} : b_0;\r\nendmodule\r\n```\r\n\r\nI'm currently seeing a failure for an internal design where this error is produced after `InferResets` when using a specific annotation file.  However, I expect that a solution to the circuit above will fix the problem for the internal design.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-25",
+  "closed_at": "2022-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

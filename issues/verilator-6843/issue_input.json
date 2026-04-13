@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6843,
+  "issue_url": "https://github.com/verilator/verilator/issues/6843",
+  "title": "Use of randcase inside fork join_none result in lifetime error",
+  "body": "Here is a small self-contained example:\n\n```sv\nmodule randcase_tb;\n\tinitial begin\n      for (int i = 0; i < 10; i++)\n\t  fork\n      \trandcase\n        \t1 \t: \t$display (\"1\");\n      \t\t5 \t: \t$display (\"5\");\n      \t\t3 \t: \t$display (\"3\");\n      \tendcase\n\t  join_none\n    end\nendmodule\n```\nDummy RTL module:\n```sv\nmodule dut;\n\nendmodule\n```\n\nVerilator compile output:\n`%Error: Internal Error: randcase_tb.sv:5:8: ../V3Fork.cpp:667: Variable's lifetime is unknown\n                                          : ... note: In instance 'randcase_tb'\n    5 |        randcase\n      |        ^~~~~~~~\n                        ... See the manual at https://verilator.org/verilator_doc.html?v=5.043 for more assistance.\n`\n\n\n**What 'verilator' command line do we use to run your example?**\n`verilator  --binary  randcase_tb.sv dut.sv --top randcase_tb   -Wno-lint  -CFLAGS -std=c++20`\n\n\n**What 'verilator --version' are you using?  Did you try it with the git master version?**  \n5.043 (master branch)\n\n**Did you try it with other simulators?**\nYes.\n\nVCS output:\n```\nVCD+ Writer V-2023.12_Full64 Copyright (c) 1991-2023 by Synopsys Inc.\n5\n3\n5\n3\n1\n5\n3\n3\n3\n5\n           V C S   S i m u l a t i o n   R e p o r t \nTime: 00 ps\nCPU Time:      0.300 seconds;       Data structure size:   0.0Mb\nFri Dec 19 16:03:20 2025\n```\n**What OS and distribution are you using?**\nRocky Linux 8.10\n\n**May we assist you in trying to fix this in Verilator yourself?**\nCan a developer look into this?\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-19",
+  "closed_at": "2025-12-21",
+  "code_blocks": [
+    "module randcase_tb;\n\tinitial begin\n      for (int i = 0; i < 10; i++)\n\t  fork\n      \trandcase\n        \t1 \t: \t$display (\"1\");\n      \t\t5 \t: \t$display (\"5\");\n      \t\t3 \t: \t$display (\"3\");\n      \tendcase\n\t  join_none\n    end\nendmodule\n",
+    "module dut;\n\nendmodule\n",
+    "VCD+ Writer V-2023.12_Full64 Copyright (c) 1991-2023 by Synopsys Inc.\n5\n3\n5\n3\n1\n5\n3\n3\n3\n5\n           V C S   S i m u l a t i o n   R e p o r t \nTime: 00 ps\nCPU Time:      0.300 seconds;       Data structure size:   0.0Mb\nFri Dec 19 16:03:20 2025\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

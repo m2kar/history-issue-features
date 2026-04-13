@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5633,
+  "issue_url": "https://github.com/verilator/verilator/issues/5633",
+  "title": "Fix interface array assignment",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```\r\n`timescale 1ns / 1ps\r\n\r\ninterface generic_interface(\r\n                            input clk,\r\n                            input rst\r\n                           );\r\n    logic        valid;\r\n    logic        ready;\r\n    logic [31:0] data;\r\n\r\nendinterface\r\n\r\nclass genericClass #(\r\n                     int NUM_INTF = 5\r\n                    );\r\n\r\n    virtual generic_interface vif [NUM_INTF];\r\n\r\nendclass\r\n\r\nmodule tb_top();\r\n\r\n    localparam int NUM_INTF = 6;\r\n\r\n    genericClass #(NUM_INTF) genCls;\r\n\r\n    logic tb_clk, tb_rst;\r\n\r\n    generic_interface gen_if[NUM_INTF] (tb_clk, tb_rst);\r\n\r\n    initial begin\r\n        tb_clk = '0;\r\n        tb_rst = '0;\r\n\r\n        genCls = new();\r\n\r\n        genCls.vif = gen_if;\r\n\r\n        $finish();\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\n```\r\nThe internal error shows the following: \r\n\r\n%Error: Internal Error: tb_top.sv:37:22: ../V3Broken.cpp:168: Broken link in node (or something without maybePointedTo): 'm_varp && !m_varp->brokeExists()' @ ./V3Ast__gen_impl.h:4694\r\n                                       : ... note: In instance 'tb_top'\r\n-node: VARREF 0x192ae00 <e1694> {d37aw} @dt=0x194d9d0@(w0)uc[0:5]  gen_if__Viftop [RV] <- VAR 0x19565d0 <e1833#> {d29ax} @dt=0x194d9d0@(w0)uc[0:5]  gen_if__Viftop [VSTATIC]  IFACEREF\r\n   37 |         genCls.vif = gen_if;\r\n      |                      ^~~~~~\r\n- V3Ast.cpp:1323:     Dumping obj_dir/Vtb_top_990_final.tree\r\n- V3StatsReport.cpp:231:statsReport:\r\n```\r\n\r\nPlease note that when working with a single interface rather than an array of interfaces the code compiles.\r\n\r\nWhat 'verilator' command line do we use to run your example?\r\n\r\n`verilator --top-module tb_top --debug --binary --assert -Wall -Wno-fatal --timescale 1ns/1ps --trace --trace-structs  ./tb_top.sv`\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n`Verilator 5.030 2024-10-27 rev v5.030-45-g2cb1a8de7`\r\n\r\nHave not tried at latest master head.\r\n\r\nWhat OS and distribution are you using?\r\n\r\nFedora\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nYes.\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-26",
+  "closed_at": "2025-03-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

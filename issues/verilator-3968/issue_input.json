@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3968,
+  "issue_url": "https://github.com/verilator/verilator/issues/3968",
+  "title": "Support fork process disable",
+  "body": "Using Verilator 5.006 on Ubuntu 20.04, and trying to verilate the following code\r\n```\r\nalways begin    \r\nfork\r\n    begin: u_check_1\r\n        #delay_1;\r\n        #1 disable u_check_2;\r\n        fork\r\n            begin: l_check_1\r\n                #delay_2;\r\n                #1 disable l_check_2;\r\n            end\r\n            begin: l_check_2\r\n                @(posedge clk);\r\n                #1 disable l_check_1;\r\n            end\r\n        join \r\n    end\r\n    \r\n    begin: u_check_2\r\n        @(posedge clk);\r\n        #1 disable u_check_1;\r\n    end\r\njoin\r\nend \r\n```\r\nI get the following error messages. \r\n```\r\n%Error: ../../ver/th/test.v:119:12: disable isn't underneath a begin with name: 'u_check_2'\r\n  119 |         #1 disable u_check_2;\r\n      |            ^~~~~~~\r\n%Error: ../../ver/th/test.v:123:20: disable isn't underneath a begin with name: 'l_check_2'\r\n  123 |                 #1 disable l_check_2;\r\n      |                    ^~~~~~~\r\n%Error: ../../ver/th/test.v:127:20: disable isn't underneath a begin with name: 'l_check_1'\r\n  127 |                 #1 disable l_check_1;\r\n      |                    ^~~~~~~\r\n%Error: ../../ver/th/test.v:134:12: disable isn't underneath a begin with name: 'u_check_1'\r\n  134 |         #1 disable u_check_1;\r\n\r\n```\r\nWhich seems to point out that Verilator only accept `disable` statements when the target named block is the current named block. I think that this is  incorrect. I looked at the LRM but I could not find anything suggesting that it should be restricted this way. \r\n",
+  "labels": [
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-21",
+  "closed_at": "2023-02-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

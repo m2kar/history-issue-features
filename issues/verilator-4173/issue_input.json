@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4173,
+  "issue_url": "https://github.com/verilator/verilator/issues/4173",
+  "title": "Nested array of unpacked struct causing segfault",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n```\r\nmodule test2;\r\n    typedef struct {\r\n        struct {\r\n            struct {\r\n                logic [31:0] next;\r\n            } val;\r\n        } el[1];\r\n    } field_combo_t;\r\n    field_combo_t field_combo;\r\nendmodule\r\n```\r\n\r\n`/tools/work/verilator_compile/5.10/bin/verilator_bin --build --cc ../test2.sv`\r\n```\r\nSegmentation fault (core dumped)\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n`Verilator 5.011 devel rev v5.010-25-g76f5de6e5`\r\nBut I tried also 5.006 tag\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nYes I can give it a try if I get some directions.\r\n\r\nRunning this with --structs-packed solves the segmentation fault, but then I have different error in different part of design.\r\n```\r\ntypedef struct {\r\n    logic [31:0] value;\r\n} base_struct;\r\n\r\ntypedef struct {\r\n    base_struct el[1];\r\n} top_struct;\r\n\r\nmodule test ;\r\n    top_struct fails;\r\n    assign fails.el[0].value = 32'd1;\r\nendmodule\r\n```\r\n```\r\n%Error: Internal Error: ../test.sv:10:16: ../V3Dfg.h:537: DfgVertex is not of expected type, but instead has type 'VARPACKED'\r\n   10 |     top_struct fails;\r\n```\r\n\r\nWhich is I guess ok, as this doesnt also work on other simulators if these two are packed",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-06",
+  "closed_at": "2023-05-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

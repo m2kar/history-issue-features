@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6866,
+  "issue_url": "https://github.com/verilator/verilator/issues/6866",
+  "title": "%z format does not work properly",
+  "body": "Thanks for taking the time to report this.\n\nCan you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n```verilog\nmodule t;\n  reg [31:0] r = 32'hdeaxzeef;\n  initial begin\n    $write(\"%z\", r);\n  end\nendmodule\n```\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\nOutput (hexdump) is `0eef dea0`, expected is `0eef deaf f000 000f` (on a little-endian machine).\nIEEE1800-2023 21.2.1.1: \"The data shall be written to the file in the native endian format of the underlying system [i.e., in the same\nendian order as if the PLI was used, the data were in a s_vpi_vecval structure\", `s_vpi_vecval` is defined as\n```c\ntypedef struct t_vpi_vecval\n{\n/* following fields are repeated enough times to contain vector */\nPLI_UINT32 aval, bval; /* bit encoding: ab: 00=0, 10=1, 11=X, 01=Z */\n} s_vpi_vecval, *p_vpi_vecval;\n```\nWhat 'verilator' command line do we use to run your example?\n`verilator --binary test.v && obj_dir/Vtest +verilator+quiet | hexdump`\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n`Verilator 5.043 devel rev v5.042-236-gc35dde7c9`\nWhat OS and distribution are you using?\n`Linux 6.18.2-arch2-1`\nMay we assist you in trying to fix this in Verilator yourself?\nI don't have the capacity to fix this, I am focused on something else.\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-28",
+  "closed_at": "2025-12-28",
+  "code_blocks": [
+    "module t;\n  reg [31:0] r = 32'hdeaxzeef;\n  initial begin\n    $write(\"%z\", r);\n  end\nendmodule\n",
+    "typedef struct t_vpi_vecval\n{\n/* following fields are repeated enough times to contain vector */\nPLI_UINT32 aval, bval; /* bit encoding: ab: 00=0, 10=1, 11=X, 01=Z */\n} s_vpi_vecval, *p_vpi_vecval;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

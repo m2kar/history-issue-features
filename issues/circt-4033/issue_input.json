@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4033,
+  "issue_url": "https://github.com/llvm/circt/pull/4033",
+  "title": "[Handshake+ESI] Generate ESI memory service wrapper duing extmem lowering",
+  "body": "This turned out to be a bit more complicated than I had expected (assumptions placed on the hardware interface of the module, this pass still need high-level memory info, index types are used for memory in Handshake, ESI strictly requires clog2(memory size) for address signals). I'm sure there's a more principled way of doing this, but that was not what flowed out of the fingers.\r\n\r\nA wrapper is created which instantiates an `esi.mem.ram` service for each `memref` argument of the original handshake function. This wrapper also instantiates an external module which is a stand-in for the module that will be created during `HandshakeToHW`. The load- and store ports of the to-be-lowered instance are plumbed up with esi service requests.\r\n\r\nGiven a handshake function as follows, with 1 load and 1 store port:\r\n```mlir\r\nhandshake.func @main(%arg0: index, %arg1: index, %v: i32, %mem : memref<10xi32>, %argCtrl: none) -> none\r\n```\r\n\r\nthe following IR is generated (with `_main_hw` being a stand-in for the module that will be generated during `HandshakeToHW`).\r\n```mlir\r\n  hw.module.extern @_main_hw(%arg0: !esi.channel<i64>, %arg1: !esi.channel<i64>, %v: !esi.channel<i32>, %mem_ld0.data: !esi.channel<i32>, %mem_st0.done: !esi.channel<i0>, %argCtrl: !esi.channel<i0>, %clock: i1, %reset: i1) -> (out0: !esi.channel<i0>, mem_ld0.addr: !esi.channel<i4>, mem_st0: !esi.channel<!hw.struct<address: i4, data: i32>>)\r\n  esi.mem.ram @mem i32 x 10\r\n  hw.module @main_esi_wrapper(%arg0: !esi.channel<i64>, %arg1: !esi.channel<i64>, %v: !esi.channel<i32>, %argCtrl: !esi.channel<i0>, %clock: i1, %reset: i1) -> (out0: !esi.channel<i0>) {\r\n    %0 = esi.service.req.inout %main.mem_ld0.addr -> <@mem::@read>([]) : !esi.channel<i4> -> !esi.channel<i32>\r\n    %1 = esi.service.req.inout %main.mem_st0 -> <@mem::@write>([]) : !esi.channel<!hw.struct<address: i4, data: i32>> -> !esi.channel<i0>\r\n    %main.out0, %main.mem_ld0.addr, %main.mem_st0 = hw.instance \"main\" @_main_hw(arg0: %arg0: !esi.channel<i64>, arg1: %arg1: !esi.channel<i64>, v: %v: !esi.channel<i32>, mem_ld0.data: %0: !esi.channel<i32>, mem_st0.done: %1: !esi.channel<i0>, argCtrl: %argCtrl: !esi.channel<i0>, clock: %clock: i1, reset: %reset: i1) -> (out0: !esi.channel<i0>, mem_ld0.addr: !esi.channel<i4>, mem_st0: !esi.channel<!hw.struct<address: i4, data: i32>>)\r\n    hw.output %main.out0 : !esi.channel<i0>\r\n  }\r\n  handshake.func @main(%arg0: index, %arg1: index, %arg2: i32, %arg3: i32, %arg4: none, %arg5: none, ...) -> (none, i4, !hw.struct<address: i4, data: i32>) attributes {argNames = [\"arg0\", \"arg1\", \"v\", \"mem_ld0.data\", \"mem_st0.done\", \"argCtrl\"], resNames = [\"out0\", \"mem_ld0.addr\", \"mem_st0\"]}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-30",
+  "closed_at": "2022-10-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

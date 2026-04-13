@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9389,
+  "issue_url": "https://github.com/llvm/circt/issues/9389",
+  "title": "[HW] `hw-flatten-modules` can't find an module that exists",
+  "body": "It seems that the `hw-flatten-modules` pass behaves weirdly when it's in a file that contains `verif.formal` and `hw.module` operations. \n\ne.g., I modified `integration_test/circt-test/contracts.mlir` to make all modules other than `@BoothMul` private;  if I then run `circt-opt --lower-contracts --hw-flatten-modules integration_test/circt-test/contracts.mlir`, I get the following error:\n\n```\ncontracts.mlir:205:16: error: Cannot find module definition 'HalfAdder'\n  %s_1, %c_2 = hw.instance \"h2\" @HalfAdder(a: %p2_1: i1, b: %p3_0: i1) -> (s: i1, co: i1)\n               ^\ncontracts.mlir:205:16: note: see current operation: %21:2 = \"hw.instance\"(%12, %13) <{argNames = [\"a\", \"b\"], instanceName = \"h2\", moduleName = @HalfAdder, parameters = [], resultNames = [\"s\", \"co\"]}> : (i1, i1) -> (i1, i1)\n\n```\n\neven though `@HalfAdder` is defined in the same file (in the output of `circt-opt`) as: \n```\n[...]\nhw.module private @HalfAdder(in %a: i1, in %b: i1, out s: i1, out co: i1) {\n  %0 = comb.xor %a, %b : i1\n  %1 = comb.and %a, %b : i1\n  hw.output %0, %1 : i1, i1\n}\n[...]\n```\n\nAny ideas what might be causing this? (I'm assuming @fabianschuiki might be able to figure it out, as I think `hw-flatten-modules` is originally his code?)\n\nThanks!",
+  "labels": [
+    "bug",
+    "HW",
+    "verif"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-26",
+  "closed_at": "2026-03-19",
+  "code_blocks": [
+    "contracts.mlir:205:16: error: Cannot find module definition 'HalfAdder'\n  %s_1, %c_2 = hw.instance \"h2\" @HalfAdder(a: %p2_1: i1, b: %p3_0: i1) -> (s: i1, co: i1)\n               ^\ncontracts.mlir:205:16: note: see current operation: %21:2 = \"hw.instance\"(%12, %13) <{argNames = [\"a\", \"b\"], instanceName = \"h2\", moduleName = @HalfAdder, parameters = [], resultNames = [\"s\", \"co\"]}> : (i1, i1) -> (i1, i1)\n\n",
+    "[...]\nhw.module private @HalfAdder(in %a: i1, in %b: i1, out s: i1, out co: i1) {\n  %0 = comb.xor %a, %b : i1\n  %1 = comb.and %a, %b : i1\n  hw.output %0, %1 : i1, i1\n}\n[...]\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

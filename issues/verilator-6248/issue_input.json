@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6248,
+  "issue_url": "https://github.com/verilator/verilator/issues/6248",
+  "title": "`$fwrite` doesn't write `'\\0'` chars",
+  "body": "When writing a const `8'h00` into a `%c` format specifier in `$fwrite`, the `'\\0'` is not included in the generated string.\n\nFrom the reproduction below, we can see that the zeros are not included in the generated C++ code:\n\n## Reproduction steps\n\nWith this `repro.sv`:\n\n```systemverilog\nmodule test;\ninteger f;\n\ninitial begin\n\tf=$fopen(\"zeros\", \"wb\");\n\t$fwrite(f, \"hello1%c2%c%c3%c%c%c4\", 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00);\n\t$fclose(f);\nend\n\nendmodule\n```\n\nRun:\n\n```sh\nverilator repro.sv --cc && grep WRITEF -r obj_dir/\n```\n\n### Observed behavior\n\n```sh\n$ verilator repro.sv --cc && grep WRITEF -r obj_dir/\n- V e r i l a t i o n   R e p o r t: Verilator 5.036 2025-04-27 rev v5.036\n- Verilator: Built from 0.000 MB sources in 0 modules, into 0.000 MB in 0 C++ files needing 0.000 MB\n- Verilator: Walltime 0.000 s (elab=0.000, cvt=0.000, bld=0.000); cpu 0.000 s on 1 threads; alloced 7.961 MB\nobj_dir/Vrepro___024root__DepSet_hb41e4d0c__0__Slow.cpp:    VL_FWRITEF_NX(test__DOT__f,\"hello1234\",0);\n```\n\n### Expected behavior\n\nWith the problem fixed the output should be:\n\n```sh\n$ ../verilator/bin/verilator repro.sv --cc && grep WRITEF -r obj_dir/\n- V e r i l a t i o n   R e p o r t: Verilator 5.039 devel rev v5.038-106-g9d38e6326 (mod)\n- Verilator: Built from 0.023 MB sources in 2 modules, into 0.018 MB in 6 C++ files needing 0.000 MB\n- Verilator: Walltime 0.019 s (elab=0.002, cvt=0.009, bld=0.000); cpu 0.010 s on 1 threads; alloced 20.141 MB\nobj_dir/Vrepro___024root__DepSet_hb41e4d0c__0__Slow.cpp:    VL_FWRITEF_NX(test__DOT__f,\"hello1\\0002\\000\\0003\\000\\000\\0004\"s,0);\n```\n\n## Related Issues\n\nThe issue is similar to #4862, but with `%c` instead of `%u`.",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-31",
+  "closed_at": "2025-08-01",
+  "code_blocks": [
+    "module test;\ninteger f;\n\ninitial begin\n\tf=$fopen(\"zeros\", \"wb\");\n\t$fwrite(f, \"hello1%c2%c%c3%c%c%c4\", 8'h00, 8'h00, 8'h00, 8'h00, 8'h00, 8'h00);\n\t$fclose(f);\nend\n\nendmodule\n",
+    "verilator repro.sv --cc && grep WRITEF -r obj_dir/\n",
+    "$ verilator repro.sv --cc && grep WRITEF -r obj_dir/\n- V e r i l a t i o n   R e p o r t: Verilator 5.036 2025-04-27 rev v5.036\n- Verilator: Built from 0.000 MB sources in 0 modules, into 0.000 MB in 0 C++ files needing 0.000 MB\n- Verilator: Walltime 0.000 s (elab=0.000, cvt=0.000, bld=0.000); cpu 0.000 s on 1 threads; alloced 7.961 MB\nobj_dir/Vrepro___024root__DepSet_hb41e4d0c__0__Slow.cpp:    VL_FWRITEF_NX(test__DOT__f,\"hello1234\",0);\n",
+    "$ ../verilator/bin/verilator repro.sv --cc && grep WRITEF -r obj_dir/\n- V e r i l a t i o n   R e p o r t: Verilator 5.039 devel rev v5.038-106-g9d38e6326 (mod)\n- Verilator: Built from 0.023 MB sources in 2 modules, into 0.018 MB in 6 C++ files needing 0.000 MB\n- Verilator: Walltime 0.019 s (elab=0.002, cvt=0.009, bld=0.000); cpu 0.010 s on 1 threads; alloced 20.141 MB\nobj_dir/Vrepro___024root__DepSet_hb41e4d0c__0__Slow.cpp:    VL_FWRITEF_NX(test__DOT__f,\"hello1\\0002\\000\\0003\\000\\000\\0004\"s,0);\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

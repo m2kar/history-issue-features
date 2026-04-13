@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4719,
+  "issue_url": "https://github.com/verilator/verilator/issues/4719",
+  "title": "Error when Verilator tries to convert some signals to 32-bit integers",
+  "body": "Hi there!\r\n\r\nI think I found an issue in Verilator. When trying to verilate the source below against a simple C++ testbench, I get this error:\r\n\r\n```\r\n%Error: /path/to/top.sv:14:125: Value too wide for 32-bits expected in this context 98'h3ffffffffffffffffffffffff\r\n   14 |   assign { _03_[97:88], out_data[63:32], _03_[55:0] } = { _01_, in_data, _05_[0] } >> { _04_[97:94], _02_, _04_[92:76], _01_, _04_[74:0] };\r\n      |                                                                                                                             ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\ntop.sv:\r\n```\r\nmodule top(in_data, out_data);\r\n  wire _00_;\r\n  wire _01_;\r\n  wire _02_;\r\n  wire [97:0] _03_;\r\n  wire [97:0] _04_;\r\n  wire [97:0] _05_;\r\n  wire [218:0] _06_;\r\n  input [95:0] in_data;\r\n  wire [95:0] in_data;\r\n  output [95:0] out_data;\r\n  wire [95:0] out_data;\r\n  assign _00_ = _02_ | ~(_01_);\r\n  assign { _03_[97:88], out_data[63:32], _03_[55:0] } = { _01_, in_data, _05_[0] } >> { _04_[97:94], _02_, _04_[92:76], _01_, _04_[74:0] };\r\n  assign { _06_[218:136], _04_[97:94], _02_, _04_[92:76], _01_, _04_[74:0], _06_[37:0] } = { in_data[46:20], in_data, in_data } ~^ { in_data[90:64], in_data, in_data };\r\n  assign out_data[0] = ~((in_data[52] & _05_[0]) | _00_);\r\n  assign _05_[0] = ~((in_data[24] & in_data[16]) | (in_data[16] & in_data[42]));\r\n  assign _03_[87:56] = out_data[63:32];\r\n  assign { _04_[93], _04_[75] } = { _02_, _01_ };\r\n  assign _05_[97:1] = { _01_, in_data };\r\n  assign _06_[135:38] = { _04_[97:94], _02_, _04_[92:76], _01_, _04_[74:0] };\r\nendmodule\r\n```\r\n\r\nInterestingly,\r\n- Changing `>> { _04_[97:94], _02_, _04_[92:76], _01_, _04_[74:0] }` with `_04_` moves the error to the next line.\r\n- Changing it with `_05_` removes the error.\r\n\r\nI'm using `Verilator 5.018 2023-10-30 rev v5.004-74-g41e5f6b7d` on Ubuntu 20.04.\r\n\r\nThanks!\r\n\r\nEDIT: Another design exhibiting the same problem is:\r\n\r\n```\r\nmodule top(in_data, out_data);\r\n  wire [106:0] _0_;\r\n  wire [106:0] _1_;\r\n  wire [248:0] _2_;\r\n  input [95:0] in_data;\r\n  wire [95:0] in_data;\r\n  output [95:0] out_data;\r\n  wire [95:0] out_data;\r\n  assign { _0_[106:83], out_data[31:0], _0_[50:0] } = { in_data[41:31], in_data } >> _1_;\r\n  assign { _2_[248:129], out_data[32], _2_[127:107], _1_ } = { in_data[73:17], in_data, in_data } ~^ { in_data[93:37], in_data, in_data };\r\n  assign _0_[82:51] = out_data[31:0];\r\n  assign { _2_[128], _2_[106:0] } = { out_data[32], _1_ };\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-25",
+  "closed_at": "2023-11-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

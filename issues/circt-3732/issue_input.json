@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3732,
+  "issue_url": "https://github.com/llvm/circt/issues/3732",
+  "title": "[FIRRTL] Improve else-if Verilog Quality",
+  "body": "Consider the following FIRRTL text. This is a sketch of what a designer would write using `when`/`elsewhen`/else` Chisel constructs. (This is derived from a classic Chisel example, https://github.com/chipsalliance/chisel3/issues/1198):\r\n\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    input in : UInt<2>\r\n    output outWhen : UInt<2>\r\n\r\n    reg outWhen_tmp : UInt<2>, clock with :\r\n      reset => (reset, UInt<2>(\"h0\"))\r\n    node _outWhen_T = eq(in, UInt<1>(\"h0\"))\r\n    when _outWhen_T :\r\n      outWhen_tmp <= UInt<1>(\"h0\")\r\n    else :\r\n      node _outWhen_T_1 = eq(in, UInt<1>(\"h1\"))\r\n      when _outWhen_T_1 :\r\n        outWhen_tmp <= UInt<1>(\"h1\")\r\n      else :\r\n        node _outWhen_T_2 = eq(in, UInt<2>(\"h2\"))\r\n        when _outWhen_T_2 :\r\n          outWhen_tmp <= UInt<2>(\"h2\")\r\n        else :\r\n          outWhen_tmp <= UInt<2>(\"h3\")\r\n    outWhen <= outWhen_tmp\r\n```\r\n\r\nThe Chisel input for this is (run-able Scastie: https://scastie.scala-lang.org/4BcVTPJCRsaM6nm1wbnyAQ): \r\n\r\n```scala\r\nclass Foo extends Module {\r\n  val in = IO(Input(UInt(2.W)))\r\n  val outWhen = IO(Output(UInt(2.W)))\r\n\r\n  outWhen := {\r\n    val tmp = RegInit(0.U(2.W))\r\n    when(in === 0.U)        { tmp := 0.U }\r\n      .elsewhen(in === 1.U) { tmp := 1.U }\r\n      .elsewhen(in === 2.U) { tmp := 2.U }\r\n      .otherwise            { tmp := 3.U  }\r\n    tmp\r\n  }\r\n}\r\n```\r\n\r\nCurrently, MFC will generate (using either `-O=debug` or `-O=release`):\r\n\r\n```verilog\r\nmodule Foo(\r\n  input        clock,\r\n               reset,\r\n  input  [1:0] in,\r\n  output [1:0] outWhen);\r\n\r\n  reg [1:0] outWhen_tmp;\r\n  always @(posedge clock) begin\r\n    if (reset)\r\n      outWhen_tmp <= 2'h0;\r\n    else\r\n      outWhen_tmp <= in == 2'h0 ? 2'h0 : in == 2'h1 ? 2'h1 : {1'h1, in != 2'h2};\r\n  end // always @(posedge)\r\n  assign outWhen = outWhen_tmp;\r\nendmodule\r\n```\r\n\r\nThis is nice and terse, but will confuse the hell out of designers or verification engineers that are looking at the output Verilog.\r\n\r\nThe SFC, conversely, will generate:\r\n```verilog\r\nmodule Foo(\r\n  input        clock,\r\n  input        reset,\r\n  input  [1:0] in,\r\n  output [1:0] outWhen\r\n);\r\n  reg [1:0] outWhen_tmp;\r\n  assign outWhen = outWhen_tmp;\r\n  always @(posedge clock) begin\r\n    if (reset) begin\r\n      outWhen_tmp <= 2'h0;\r\n    end else if (in == 2'h0) begin\r\n      outWhen_tmp <= 2'h0;\r\n    end else if (in == 2'h1) begin\r\n      outWhen_tmp <= 2'h1;\r\n    end else if (in == 2'h2) begin\r\n      outWhen_tmp <= 2'h2;\r\n    end else begin\r\n      outWhen_tmp <= 2'h3;\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\nThis is far, far less optimized, but a designer or verifier can handle this. Note: I don't think that the SFC output is the end goal. We can do better here, likely via case statements. This issue serves to track improvements to the above and also to solicit ideas on what would be good output.\r\n\r\nThe SFC algorithm here is extremely naive. It collapses all muxes looking backwards through wires and registers into a single large mux tree. It then poops this out as `if`/`else` trying to use `else if` when possible.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-16",
+  "closed_at": "2023-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

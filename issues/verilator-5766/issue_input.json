@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5766,
+  "issue_url": "https://github.com/verilator/verilator/issues/5766",
+  "title": "Fix Unexpected Waveform when using always_comb and always_ff",
+  "body": "Hi, \n\nI encountered an unexpected waveform difference when running the same testbench in Verilator and QuestaSim. The design includes both combinational logic (always_comb) and sequential logic (always_ff).\n\n```\nalways_comb begin\n  data_n = data_q;  // Latch previous value\n  out_valid = 0;\n  if (in_valid) begin\n    data_n = in_data; // Update immediately when valid\n    out_valid = 1;\n  end\nend\n\nalways_ff @(posedge clk or negedge rst_n) begin\n  if (~rst_n) begin\n    data_q <= '0;\n  end else begin\n    data_q <= data_n; // Sequential update\n  end\nend\n\nassign out_data = data_q;\nassign out_data_prev = data_n; // Expected to reflect previous data_q\n```\n\nit seems that Verilator and QuestaSim handle this differently.\n\nVerilator Output (GTKWave): \n\n<img width=\"1067\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/cbf5b822-30be-4fa4-ad34-c9424ac7c7e5\" />\n\nQuestaSim Output(Vsim GUI):\n\n<img width=\"1192\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/a7e6b1c5-daae-4499-91a9-464d7bc8016b\" />\n\nExpected Behavior:\nout_data_prev should hold the previous out_data value and not update immediately. The behavior in QuestaSim is expected, while Verilator’s behavior appears incorrect.\n\nPossible Issue with Combinational + Sequential Logic\n\n- The signal out_data_prev is assigned from data_n, which is updated inside always_comb.\n- In QuestaSim, data_n correctly holds the previous data_q value until in_valid is asserted.\n- In Verilator, data_n seems to update in a way that does not match traditional event-driven simulation, likely due to different scheduling in combinational logic.\n\n\nI'd like to try to help with this, but I don't know where to start. \n\nSo any insights/help would be appreciated!",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-05",
+  "closed_at": "2025-02-07",
+  "code_blocks": [
+    "always_comb begin\n  data_n = data_q;  // Latch previous value\n  out_valid = 0;\n  if (in_valid) begin\n    data_n = in_data; // Update immediately when valid\n    out_valid = 1;\n  end\nend\n\nalways_ff @(posedge clk or negedge rst_n) begin\n  if (~rst_n) begin\n    data_q <= '0;\n  end else begin\n    data_q <= data_n; // Sequential update\n  end\nend\n\nassign out_data = data_q;\nassign out_data_prev = data_n; // Expected to reflect previous data_q\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

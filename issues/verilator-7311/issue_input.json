@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7311,
+  "issue_url": "https://github.com/verilator/verilator/pull/7311",
+  "title": "Support consecutive repetition [*N] in SVA properties",
+  "body": "## Summary\r\n\r\nAdd support for the SVA consecutive repetition operator `[*N]`\r\n(IEEE 1800-2023 Section 16.9.2) in property expressions. The operator is\r\nlowered in V3AssertPre to an equivalent conjunction of `$past()` checks:\r\n`a[*3]` becomes `a && $past(a,1) && $past(a,2)`.\r\n\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  logic clk, a, b;\r\n  assert property (@(posedge clk) a[*3] |-> b);\r\nendmodule\r\n```\r\n\r\nOn master:\r\n\r\n```\r\n%Error-UNSUPPORTED: ...: Unsupported: [*] boolean abbrev expression\r\n```\r\n\r\n## Changes\r\n\r\n- **`src/V3AstNodeExpr.h`**: New `AstConsRep` node representing `expr[*N]`\r\n  with two children: the expression and a constant count.\r\n- **`src/verilog.y`**: Grammar rule for `expr [*N]` creates `AstConsRep`\r\n  instead of parser-level expansion. Removed `[*N]` exact-count case from\r\n  `boolean_abbrev` to avoid grammar conflict.\r\n- **`src/V3Width.cpp`**: Width visitor for `AstConsRep` -- validates count\r\n  is constant and positive, sets bit dtype.\r\n- **`src/V3AssertPre.cpp`**: Lowering pass expands `AstConsRep(expr, N)` to\r\n  `expr && $past(expr,1) && ... && $past(expr,N-1)` with proper clocking.\r\n\r\nRange `[*M:N]`, unbounded `[*]`/`[+]`, and other repetition types remain\r\nunsupported.\r\n\r\n## Test\r\n\r\n- `test_regress/t/t_assert_prop_consec_rep.{v,py}` -- functional tests for\r\n  `[*1]`, `[*2]`, `[*3]` with overlapped `|->` and non-overlapped `|=>`\r\n  implications. Uses CRC random stimulus.\r\n- `test_regress/t/t_assert_prop_consec_rep_bad.{v,py,out}` -- error coverage\r\n  for non-constant count and `[*0]` unsupported cases.\r\n- `test_regress/t/t_sequence_sexpr_unsup.out` -- updated golden to remove\r\n  error expectations for `[*N]` exact count.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-22",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

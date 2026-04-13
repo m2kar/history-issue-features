@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4589,
+  "issue_url": "https://github.com/verilator/verilator/issues/4589",
+  "title": "default keyword does not apply recursively to subarrays in an array assignment expression",
+  "body": "In array assignment patterns, verilator does not apply the default keyword recursively to subarrays.\r\n\r\nFor example, in this case:\r\n```verilog\r\nmodule dut;\r\n   int a[4][4] = '{default: 0};\r\nendmodule\r\n```\r\nverilating gives this error:\r\n```\r\n%Error: dut.sv:2:30: CONST '32'sh0' is not an unpacked array, but is in an unpacked array context\r\n    2 |     int a[4][4] = '{default: 0};\r\n      |                              ^\r\n```\r\n\r\nThe IEEE 1800-2017 SystemVerilog standard says this in section _10.9.1 Array assignment patterns_ (emphasis mine),\r\n>The default:value applies to elements or subarrays that are not matched by either index or type\r\nkey. If the type of the element or subarray is a simple bit vector type, matches the self-determined\r\ntype of the value, or is not an array or structure type, then the value is evaluated in the context of\r\neach assignment to an element or subarray by the default and shall be castable to the type of the\r\nelement or subarray; otherwise, an error is generated. **For unmatched subarrays, the type and default\r\nspecifiers are applied recursively according to the rules in this subclause to each of its elements or\r\nsubarrays.** For unmatched structure elements, the type and default keys are applied to the element\r\naccording to the rules for structures.\r\n\r\nI am using `Verilator 5.015 devel rev v5.014-82-g567644313`, which is fairly recent. I don't see any release notes indicating that this has subsequently been fixed.\r\n\r\nI note also that several commercial simulators support this.\r\n\r\nI am interested in contributing to the Verilator project, but it will likely be some time before I can contribute productively. If I can be pointed in the right direction I may try to look at fixing this issue.\r\n\r\nPs. for those looking for a temporary workaround you can nest your default statements and Verilator will not throw an error (although I have not functionally tested this):\r\n```verilog\r\nmodule dut;\r\n   int a[4][4] = '{default: '{default: 0}};\r\nendmodule\r\n```",
+  "labels": [
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-20",
+  "closed_at": "2026-03-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

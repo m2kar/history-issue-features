@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6363,
+  "issue_url": "https://github.com/llvm/circt/issues/6363",
+  "title": "[ExportVerilog] Unpacked array assignment to wire",
+  "body": "```mlir\r\nhw.module @top() {\r\n  %10 = hw.aggregate_constant [120 : i8, -38 : i8] : !hw.uarray<2xi8>\r\n  hw.instance \"e\" @Ext(a: %10: !hw.uarray<2xi8>) -> ()\r\n  hw.output\r\n}\r\nhw.module.extern @Ext(in %a: !hw.uarray<2xi8>)\r\n```\r\n\r\nRun through `--export-verilog` produces:\r\n\r\n```sv\r\nmodule top();\t// test.mlir:1:1\r\n  wire [7:0] _GEN[0:1] = '{8'h78, 8'hDA};\t// test.mlir:2:9\r\n  Ext e (\t// test.mlir:3:3\r\n    .a (_GEN)\t// test.mlir:2:9\r\n  );\r\nendmodule\r\n```\r\n\r\nWhich Verilator (4.110 and 5.018) chokes on:\r\n```\r\n%Error: test.sv:3:24: syntax error, unexpected '=', expecting ',' or ';'\r\n    3 |   wire [7:0] _GEN[0:1] = '{8'h78, 8'hDA};\r\n```\r\n\r\nChanging `wire` to `logic` or `reg` eliminates that error message.\r\n\r\nThis may just be Verilator. Questa likes it, but Questa is very permissive.  Icarus (iverilog) doesn't like assigning unpacked arrays at all so I have to break out all of the individual assignments to get it to not complain. I don't know what the spec says (but it doesn't matter). Do other simulators accept this? ",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-01",
+  "closed_at": "2024-08-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

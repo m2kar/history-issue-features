@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4412,
+  "issue_url": "https://github.com/verilator/verilator/issues/4412",
+  "title": "Extra top module gets added to VCD if verilog top has arguments",
+  "body": "Based on #4249 I was under the impression that by setting the top name argument of my verilated file to \"\", I would get a VCD file where my verilog top module is the top of the verilog file. However, it seems like this only works if the verilog module has no arguments\r\n\r\nWith\r\n```verilog\r\nmodule main(input x);\r\n    reg val = 0;\r\n\r\n    initial begin\r\n       $dumpfile(\"out.vcd\");\r\n       $dumpvars(0, main);\r\n\r\n       $finish();\r\n    end\r\nendmodule\r\n```\r\nA main.cpp with\r\n```cpp\r\n// Verilated -*- C++ -*-\r\n// DESCRIPTION: main() calling loop, created with Verilator --main\r\n\r\n#include \"verilated.h\"\r\n#include \"Vmain.h\"\r\n\r\n//======================\r\n\r\nint main(int argc, char** argv, char**) {\r\n    // Setup context, defaults, and parse command line\r\n    Verilated::debug(0);\r\n    const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};\r\n    contextp->traceEverOn(true);\r\n    contextp->commandArgs(argc, argv);\r\n\r\n    // Construct the Verilated model, from Vtop.h generated from Verilating\r\n    const std::unique_ptr<Vmain> topp{new Vmain{contextp.get(), \"\"}}; // *NOTE* Setting top to \"\" here\r\n\r\n    // Simulate until $finish\r\n    for(int i = 0; i < 10; i++) {\r\n        // Evaluate model\r\n        topp->eval();\r\n        // Advance time\r\n        contextp->timeInc(1);\r\n    }\r\n\r\n    if (!contextp->gotFinish()) {\r\n        VL_DEBUG_IF(VL_PRINTF(\"+ Exiting without $finish; no events left\\n\"););\r\n    }\r\n\r\n    // Final model cleanup\r\n    topp->final();\r\n    return 0;\r\n}\r\n```\r\nwhen compiled with\r\n```bash\r\nverilator\" \"--cc\" \"--exe\" \"--build\" --top-module main \"-Wno-fatal\" \"--trace\" main.v main.cpp\r\n```\r\n\r\nThe vcd file ends up with a scope called `top` in which my actual top `main` is located\r\n![image](https://github.com/verilator/verilator/assets/5312813/179f8aac-bb14-42fd-8540-2e3f958b2535)\r\n\r\n\r\nRemoving the input `input x`, thus making the verilog\r\n```verilog\r\nmodule main(input x);\r\n    reg val = 0;\r\n\r\n    initial begin\r\n       $dumpfile(\"out.vcd\");\r\n       $dumpvars(0, main);\r\n\r\n       $finish();\r\n    end\r\nendmodule\r\n```\r\n\r\nGives the expected result\r\n\r\nI need this for similar reasons as #4249. I want the vcd files coming out of verilator to have a similar structure to my test benches in cocotb in which my top verilog module is the top module.\r\n\r\nEdit: This is on `Verilator 5.012 2023-06-13 rev UNKNOWN.REV`",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-09",
+  "closed_at": "2023-08-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

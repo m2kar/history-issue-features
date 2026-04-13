@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4620,
+  "issue_url": "https://github.com/llvm/circt/issues/4620",
+  "title": "[FIRRTL] \"exprInEventControl\" not working for big designs",
+  "body": "Hi, while we was trying to compile CY designs using CIRCT & push it through tools (Genus), we found bugs in CIRCT that prevents us from doing this : async resets are being emitted in a way that synthesis tools like Genus do not like.\r\nSpecifically, we get something of the form:\r\n```\r\n wire reset = ~_some_reset;\r\n always @(posedge clock or posedge reset)\r\n \tif (~_some_reset)\r\n \t\t...\r\n```\r\neven though we are using the `exprInEventControl` flag (related to ucb-bar/chipyard#1324)\r\n\r\nDo you have any ideas on how we can fix this issue?\r\n\r\nHere are the input files & commands to reproduce the issue.\r\n- Link to FIRRTL file\r\n(https://drive.google.com/file/d/1PVcPzgWd6xWPN7_rEkfovpgSWH6E6LBS/view?usp=share_link).\r\n\r\n- Compile command\r\n```\r\nfirtool \\\r\n   --lowering-options=emittedLineLength=2048,noAlwaysComb,exprInEventControl,disallowPackedArrays,disallowLocalVariables,explicitBitcast,verifLabels,locationInfoStyle=wrapInAtSquareBracket \\\r\n  chipyard.TestHarness.TinyRocketConfig.sfc.fir\r\n```\r\n\r\n- Problematic code is (120th line below the ChipTop module)\r\n```\r\n  wire        debug_reset_syncd = ~_debug_reset_syncd_debug_reset_sync_io_q;\t// @[Periphery.scala:288:40, ShiftReg.scala:45:23]\r\n  always @(posedge _system_auto_subsystem_cbus_fixedClockNode_out_clock or posedge debug_reset_syncd) begin\t// @[ChipTop.scala:28:35, Periphery.scala:288:40]\r\n    if (~_debug_reset_syncd_debug_reset_sync_io_q)\t// @[ChipTop.scala:28:35, Periphery.scala:288:40, ShiftReg.scala:45:23]\r\n      clock_en <= 1'h1;\t// @[Periphery.scala:296:29]\r\n    else\t// @[ChipTop.scala:28:35]\r\n      clock_en <= _dmactiveAck_dmactiveAck_io_q;\t// @[Periphery.scala:296:29, ShiftReg.scala:45:23]\r\n  end // always @(posedge, posedge)\r\n```",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-03",
+  "closed_at": "2023-02-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

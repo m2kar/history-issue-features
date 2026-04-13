@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6694,
+  "issue_url": "https://github.com/verilator/verilator/issues/6694",
+  "title": "Interface scope and array dereference issues",
+  "body": "I have run in to a couple of odd cases related to parameters on interfaces where verilator should probably be reporting errors or linter warnings.  There may be more edge cases along these lines that I have not yet stumbled across.  First, it seems like there is a scoping problem where interfaces defined in one module can be accessed from a different module without any complaints from verilator, and this seems to apply to both signals and parameters.  The second is that it seems that parameters can be accessed from a parameter array.  Attempting to access a signal results in the error \"Can't find definition of 'pa' in dotted signal:pa.sig\" (well, sort of, I wonder if it should refer to \"sig\" instead of \"pa\").  \n\n    interface test_if #(\n        parameter PARAM = 0\n    )\n    ();\n        logic sig;\n\n        modport p (\n            output sig\n        );\n\n    endinterface\n\n    module test_mod(\n        test_if.p p,\n        test_if.p pa[2]\n    );\n\n    localparam t1p = p.PARAM; // OK\n    wire t1s = p.sig; // OK\n\n    localparam t1ap1 = pa.PARAM; // vivado doesn't like this\n    //wire t1sp1 = pa.sig; // Can't find definition of 'pa' in dotted signal: 'pa.sig'\n    localparam t1ap2 = pa[0].PARAM; // OK\n    wire t1sp2 = pa[0].sig; // OK\n\n    localparam t1ap3 = t1.PARAM; // what???\n    wire t1sp3 = t1.sig; // what???\n\n    localparam t1ap4 = t1a.PARAM; // what???\n    //wire t1as4 = t1a.sig; // Can't find definition of 't1a' in dotted signal: 't1a.sig'\n    localparam t1ap5 = t1a[0].PARAM; // what???\n    wire t1as5 = t1a[0].sig; // what???\n\n    endmodule\n\n    module top();\n\n    test_if t1();\n\n    localparam t1p = t1.PARAM; // OK\n    wire t1s = t1.sig; // OK\n\n    test_if t1a[2]();\n\n    localparam t1ap1 = t1a.PARAM; // vivado doesn't like this\n    //wire t1as1 = t1a.sig; // Can't find definition of 't1a' in dotted signal: 't1a.sig'\n    localparam t1ap2 = t1a[0].PARAM; // OK\n    wire t1as2 = t1a[0].sig; // OK\n\n    //localparam p = bogus.PARAM; // Can't find definition of scope/variable: 'bogus'\n    //wire s = bogus.sig; // Can't find definition of scope/variable: 'bogus'\n\n    test_mod\n    inst (\n        .p(t1),\n        .pa(t1a)\n    );\n\n    endmodule\n",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-15",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

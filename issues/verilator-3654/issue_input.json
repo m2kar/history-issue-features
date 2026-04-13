@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3654,
+  "issue_url": "https://github.com/verilator/verilator/pull/3654",
+  "title": "Virtual interfaces support",
+  "body": "This is more of a request for comments than a ready patchset for now, aiming to discuss the difficulties and design of virtual interfaces, with a proof-of-concept patchset to talk about.\r\n\r\nThe changes are split into several commits to facilitate reviewing in smaller chunks.\r\n\r\nA virtual interface (reusing IfaceRefDType) is emitted to C++ as a variable holding a pointer to an interface scope (initialized to a null pointer), which is the most straightforward thing I came up with.\r\n\r\nThe main concern is the duality of scopes and variables in Verilator.  In this patchset I decided that in the easiest case this can be worked out with minimal alteration, by simply using variables where variables are normally used (e.g. `viface = iface` assignments), and scopes where scopes are normally used (e.g. `iface.signal` or `viface.signal`), as opposed to MemberSel, to name one.\r\n\r\nThis comes with several drawbacks:\r\n- The scopes are tracked separately from their corresponding variables, and one of the two might get optimized away when still needed.  I addressed this by checking for this case in V3Dead, but this might still be a potential footgun in the codebase.\r\n- The scopes and variables have a different representation in the verilated code (`vlSymsp->TOP_unique_absolute_path_to_interface` vs `some_scope.some_var.path.to.viface_field`):\r\n   1. Plain interfaces, when used as scopes, are emitted as pointers to their scopes (as it was always the case).\r\n   2. Virtual interfaces, when used as variables, are emitted just as any other variables (I believe this is not controversial either).\r\n   3. Plain interfaces, when used as variables, are emitted as pointers to their inner scopes.  This is done by assigning them their inner scopes instead of parent scopes during V3Scope, and it is even quite correct.\r\n   4. Virtual interfaces, when used as scopes, are emitted as the variable names, with an extra null check added.  This does not work for every case, and is hacky (see `\"/*vlSymsp*/\"`).  This is the most important place in which I would appreciate some feedback and ideas.\r\n- Variables accessed in scopes of virtual interfaces can no longer be tracked with scope identity checks (this would actually apply here anyway, even with a different implementation).  This would ideally require keeping for each scope a set of scopes that it can be confused with, filled in during assignments parsing, but I solved it by setting every variable accessed through a virtual interface as public, which disables agressive optimizations on them (variable constification and assignment elimination), and works well for showcasing the proof-of-concept, as it does not impact optimizations of designs that do not use virtual interfaces.  This can always be implemented separately as an optimization.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-04",
+  "closed_at": "2022-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

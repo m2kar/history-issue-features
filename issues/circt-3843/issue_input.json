@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3843,
+  "issue_url": "https://github.com/llvm/circt/pull/3843",
+  "title": "[ExportVerliog] Add a `sv.hint.emit_as_mux` attribute",
+  "body": "In some cases we would like to emit `array_get` operations in SV with additional vendor pragmas, like `cadence map_to_mux` and `synopsys infer_mux_override`. This comes up in the FIRRTL dialect when lowering the `MultibitMuxOp`.\r\n\r\nThe current solution requires `LowerToHW` to not only generate the `array_get` operation, but also introduce an `sv.wire` and `sv.assign` with the corresponding SV attributes configured. What bothers me about this is that it _skips_ the HW dialect level and makes the FIRRTL dialect talk about SV things, which precludes us from reasoning about the design at an HW level without any knowledge of SV. Furthermore, it seems useful for other dialects to be able to say \"decorate this array_get such that it gets inferred as a mux by downstream tools\", instead of resorting to mixing HW with SV themselves.\r\n\r\nThis PR changes FIRRTL's LowerToHW to just lower `MultibitMuxOp` to the `array_get` op, but with an additional `sv.hint.emit_as_mux` unit attribute. This attribute is then picked up by `ExportVerilog`'s emission preparation, which inserts the appropriate SV IR nodes to get the temporary wire with the desired pragma decorations.\r\n\r\nAs a result, dialects above HW don't need to talk about the SV AST through the SV dialect just to achieve an optimization hint in the SV output, and the SV dialect becomes responsible for cooking up the necessary pragmas and decorations to honor the hint.",
+  "labels": [
+    "enhancement",
+    "FIRRTL",
+    "HW",
+    "Verilog/SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-09",
+  "closed_at": "2023-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

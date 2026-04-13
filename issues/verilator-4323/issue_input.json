@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4323,
+  "issue_url": "https://github.com/verilator/verilator/issues/4323",
+  "title": "Fix false INFINITELOOP on forever..mailbox.get()",
+  "body": "As mailbox.get() is blocking task call, there is no INFINITELOOP in the code below.\r\n\r\n\r\n```verilog\r\nclass bfm;\r\n mailbox #(int) in_box;\r\n int tr;\r\n   \r\n function new();\r\n  this.in_box = new (1);\r\n endfunction : new\r\n\r\n  task main();\r\n      // /* verilator lint_off INFINITELOOP */\r\n    forever begin : loop\r\n      in_box.get(tr);\r\n      $display(\"%0t BFM received XACTN via MAILBOX as: %0d\",\r\n        $time, tr);\r\n      //#1;\r\n    end : loop\r\n  endtask : main\r\nendclass : bfm\r\n\r\nmodule m;\r\n\r\n  bfm bfm_0;\r\n\r\n  initial begin\r\n    #10;\r\n    bfm_0 = new();\r\n    fork\r\n      bfm_0.main();\r\n    join_none\r\n\r\n    bfm_0.in_box.put(10);\r\n    #10;\r\n    bfm_0.in_box.put(20);\r\n    #10;\r\n    bfm_0.in_box.put(30);\r\n    #10;\r\n    $finish (2);\r\n  end\r\nendmodule : m\r\n\r\n```\r\nBut verilator does throw:\r\n```log\r\n%Warning-INFINITELOOP: mbx_get_lint.sv:11:5: Infinite loop (condition always true)\r\n                                           : ... In instance m\r\n   11 |     forever begin : loop\r\n      |     ^~~~~~~\r\n                       ... For warning description see https://verilator.org/warn/INFINITELOOP?v=5.013\r\n                       ... Use \"/* verilator lint_off INFINITELOOP */\" and lint_on around source to disable this message.\r\n```\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n> Verilator 5.013 devel rev v5.008-304-gdfbd711e1 (mod)\r\n\r\nWhat OS and distribution are you using?\r\n\r\n> Windows WSL\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n> Yes, please\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-27",
+  "closed_at": "2023-09-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

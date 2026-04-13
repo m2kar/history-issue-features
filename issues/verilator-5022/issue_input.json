@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5022,
+  "issue_url": "https://github.com/verilator/verilator/issues/5022",
+  "title": "Class specialization is ignored for associative array as a class type parameter",
+  "body": "Hello,\r\nIt seems that Verilator ignores `some_map_t` specialization of class `wrapper` and try to cast  `this.map` to a default type. This can be connected to #4997, as I become able to reach this point after that fix. The code below works in major simulators.\r\n\r\nThe code:\r\n\r\n```verilog\r\nmodule test;\r\n  typedef int some_map_t[string];\r\n\r\n  class wrapper#(type VAL_T=bit);\r\n    VAL_T value;\r\n\r\n    static function wrapper#(VAL_T) from (VAL_T value);\r\n      wrapper#(VAL_T) obj = new();\r\n      obj.value = value;\r\n      return obj;\r\n    endfunction\r\n  endclass\r\n\r\n  class foo;\r\n    some_map_t map;\r\n    function wrapper#(some_map_t) to_map();\r\n      return wrapper#(some_map_t)::from(this.map); // <--- error\r\n    endfunction\r\n  endclass\r\n\r\n  initial begin\r\n    #1 $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nThe error:\r\n\r\n```bash\r\n$ verilator --binary test.sv && ./obj_dir/Vtest\r\nVtest_test__03a__03afoo__Vclpkg__DepSet_hf3806fa6__0.cpp: In member function ‘void Vtest_test__03a__03afoo::__VnoInFunc_to_map(Vtest__Syms*, VlClassRef<Vtest_test__03a__03awrapper>&)’:\r\nVtest_test__03a__03afoo__Vclpkg__DepSet_hf3806fa6__0.cpp:14:81: error: cannot convert ‘VlAssocArray<std::__cxx11::basic_string<char>, unsigned int>’ to ‘CData’ {aka ‘unsigned char’}\r\n   14 |     vlSymsp->TOP__test__03a__03awrapper__Vclpkg.__VnoInFunc_from(vlSymsp, this->__PVT__map, __Vfunc_from__0__Vfuncout);\r\n      |                                                                           ~~~~~~^~~~~~~~~~\r\n      |                                                                                 |\r\n      |                                                                                 VlAssocArray<std::__cxx11::basic_string<char>, unsigned int>\r\nIn file included from Vtest__ALL.cpp:7:\r\nVtest_test__03a__03awrapper__Vclpkg__DepSet_h3427c6c0__0.cpp:9:106: note:   initializing argument 2 of ‘void Vtest_test__03a__03awrapper__Vclpkg::__VnoInFunc_from(Vtest__Syms*, CData, VlClassRef<Vtest_test__03a__03awrapper>&)’\r\n    9 | void Vtest_test__03a__03awrapper__Vclpkg::__VnoInFunc_from(Vtest__Syms* __restrict vlSymsp, CData/*0:0*/ value, VlClassRef<Vtest_test__03a__03awrapper> &from__Vfuncrtn) {\r\n      |                                                                                             ~~~~~~~~~~~~~^~~~~\r\n```\r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-202-g1c79df863\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-27",
+  "closed_at": "2025-02-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

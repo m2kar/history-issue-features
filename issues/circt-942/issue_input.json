@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 942,
+  "issue_url": "https://github.com/llvm/circt/issues/942",
+  "title": "[FIRRTL]`is invalid` not working for registers in the parser",
+  "body": "Setting registers to invalid is not working correctly in the parser.  \r\n```firrtl\r\n; ./bin/circt-translate --import-firrtl  ./test.fir\r\ncircuit F :\r\n  module F :\r\n    input clock : Clock\r\n    \r\n    ; output port works as expected\r\n    output out : UInt<1>\r\n    out is invalid\r\n    \r\n    ; register is never set to invalid\r\n    reg r : UInt<1>, clock\r\n    r is invalid\r\n```\r\n\r\n```mlir\r\nfirrtl.circuit \"F\"  {\r\n  firrtl.module @F(%clock: !firrtl.clock, %out: !firrtl.flip<uint<1>>) {\r\n    %0 = firrtl.invalidvalue : !firrtl.uint<1>\r\n    firrtl.connect %out, %0 : !firrtl.flip<uint<1>>, !firrtl.uint<1>\r\n    %r = firrtl.reg %clock  : (!firrtl.clock) -> !firrtl.uint<1>\r\n    %1 = firrtl.invalidvalue : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThis is because the register value has a passive type, and we do not emit connects to invalid when the LHS is passive.  Switching the parser to emit a connect when the LHS is passive makes the following test fail. This test is represented in the repo [here](https://github.com/llvm/circt/blob/main/test/Dialect/FIRRTL/parse-basic.fir#L112).\r\n\r\n```firrtl\r\ncircuit F:\r\n  module F:\r\n    input a : UInt<1>\r\n    a is invalid\r\n```\r\n```\r\n./test2.fir:4:7: error: 'firrtl.connect' op connection destination must be a non-passive type or a duplex value\r\n    a is invalid\r\n      ^\r\n./test2.fir:4:7: note: see current operation: \"firrtl.connect\"(%a, %0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n```\r\n\r\nCould this be fixed with the coming changes to flip canonicalization?",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-21",
+  "closed_at": "2021-04-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

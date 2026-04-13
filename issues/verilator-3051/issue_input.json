@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3051,
+  "issue_url": "https://github.com/verilator/verilator/issues/3051",
+  "title": "Change cell pointers in emitted modules to references.",
+  "body": "I would like to throw this up for quick discussion before the next release.\r\n\r\nThe suggestion is to change the CELL pointers pointing to sub-modules in each emitted module to be references (and the `rootp` pointer in the model class added in #3036 to a `root` reference). This would mean that hierarchical lookups into the verilated model would have to use `.` instead of `->`, to access internals/public signals deeper in the model:\r\n- `modelp->cell_a->subcell_b->signal` becomes `modelp->cell_a.subcell_b.signal`\r\n- `modelp->rootp->something->deep->in->the->model->guts` becomes `modelp->root.something.deep.in.the.model.guts`\r\n- `modelp->primary_IO` would remain `modelp->primary_IO`, as that is  already a reference in the model class with #3036.\r\n\r\nThe purpose of this at this point in time would be nothing but future proofing, but as we are already breaking the interface of the model for the next release, it might be advantageous to get this in so we don't have to break it again in the future. Performance-wise we should not loose anything with a reference over the current pointers (those pointers are semantically `const` anyway, though they are initialised in `__Vconfigure` so not actually declared `const`).\r\n\r\nIn the future, now that the `$root` module is no longer special due to #3036, we could actually place the submodules as instances within a module (rather than instantiating them in Syms and passing pointers to submodules via `__Vconfigure`). The nice thing about placing sub modules as instances within modules is that in this scheme, the cost of a relative reference via `vlSelf` into any lower level submodule is the same as the cost of an absolute reference via `vlSymsp`, as there would be no more additional pointer indirection for a relative reference. Observe how the following compiles into a single load instruction:\r\nhttps://godbolt.org/#z:OYLghAFBqd5QCxAYwPYBMCmBRdBLAF1QCcAaPECAM1QDsCBlZAQwBtMQBGAFlJvoCqAZ0wAFAB4gA5AAYppAFZdSrZrVDIApACYAQjt2kR7ZATx1KmWugDCqVgFcAtrRDbSV9ABk8tTADlnACNMYhAAZk5SAAdUIUJzWjtHFzcYuIS6Hz9ApxCwyKNMEzM6BgJmYgJk51d3Y0xTRPLKgmyA4NCIqKEKqprU%2Br623w68rsiASiNUB2JkDile4gdTAGoAQTXNAHZ9GS21o98CNfFNcP3Do6DUezWATwur3YARZ80Dz43l1dPdbZ7b5HI7oWZBdhrABeHwOILWrDowARSLWAHdntsvjt3pdvt9fusbICrvCtsxYdc1gCgpS3nSDoTTq8ScCQcTkDJKfCOZxuSCaVy8XCQeShS8cQyfgQVutsKyRUcWehxWyjmL%2BUq1ug%2BcKNvS9d8TmtgJgCBA0LRemtsDoAGxrTCTBVU4hmua0R0AOh1XuQnC9zC950NOKk01Y0gArPJXLJ5KhpDYDAY1kJZvNMNttJF5ARpHJJtMANYgKMyFTSbixgsJ6TyIQgCv5%2BPTOCwJBoJzRPDsMgUC2obu9rrIVTqTjaGQVqi9gihRsQIK10hBXyVB7STjyLtOKwEADytFYm/jpCwTjUwHYK/wbqaADdMI2z5hxI0HPOt/ITsUV6w8CCYgNzsLAVxlPAnG/aZ%2BEYFgbx4Pg6AIYQxEkM8lCiccNBTPQVEAxtIGmVBolKK1pAAWgPcIG2KRoyMsawBlcKJPHaXJ8mUWJ4jI5iuIyMj2M6MIejopoymGPjRJKZphiE8YRKMST7FqZRelaeTOM4aZ0zmBYuAjaMazPRMpHEAAOO0KLtbg1jHK81knL0ZGctYIFwQgSGzQo1jsYc%2B287TfNw3Q81rItSFLctKykatSDjORSFMhsm1IFtC0MqRtGMxLkrS8LpifYh4gsbggA\r\n\r\nThis should both speed things up and potentially allow for more V3Combining. While I'm not ready to commit to wanting to do this, it would be nice not to have to break the model interface in multiple releases close to each other, hence the proposal to future proof this change now.\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-29",
+  "closed_at": "2021-06-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

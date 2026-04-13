@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5626,
+  "issue_url": "https://github.com/llvm/circt/issues/5626",
+  "title": "[FIRRTL][LowerToHW] HW::ModuleNamespace does not work with FIRRTL operations",
+  "body": "```mlir\r\nfirrtl.circuit \"Test\" {\r\n  firrtl.module @Test() {\r\n    %w1 = firrtl.wire sym @__Test__w2 : !firrtl.uint<1>\r\n    %w2 = firrtl.wire {annotations = [{class = \"firrtl.transforms.DontTouchAnnotation\"}]} : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nRunning: `./bin/circt-opt -pass-pipeline=\"builtin.module(lower-firrtl-to-hw)\" ./test.mlir` gives:\r\n\r\n```mlir\r\nmodule {\r\n  hw.module @Test() {\r\n    %z_i1 = sv.constantZ : i1\r\n    %w1 = hw.wire %z_i1 sym @__Test__w2  : i1\r\n    %w2 = hw.wire %z_i1 sym @__Test__w2  : i1\r\n    hw.output\r\n  }\r\n}\r\n```\r\nThe problem is that both `w1` and `w2` now have the same `inner_sym` `@__Test__w2`.\r\n\r\nPart of the problem is that we are using the `hw::ModuleNamespace` to create symbols, but this namespace is not properly populated on FIRRTL ops.   This partly comes down to the fact that FIRRTL uses `InnerSymAttr` for `inner_sym`s, and HW uses `StringAttrs`.\r\n\r\nAlso, there are some places in `LowerToHW` where we fail to use the `moduleNamespace` at all when picking an inner symbol name.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-07-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

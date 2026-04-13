@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3301,
+  "issue_url": "https://github.com/verilator/verilator/issues/3301",
+  "title": "Missing LATCH from always_comb and case",
+  "body": "It seems the LATCH warning is not emitted for case statements. Only for ifs.\r\nThis is an example file:\r\n```\r\nmodule aw(input logic a, output logic b, output logic c );\r\n   always_comb begin\r\n       case (a)\r\n           1'b0: b=1;\r\n       endcase\r\n   end\r\n   always_comb begin\r\n       if (a==1'b0)\r\n           c=1;\r\n   end\r\nendmodule\r\n```\r\nAnd this is the result from `Verilator 4.218 2022-01-17 rev UNKNOWN.REV`\r\n\r\n```\r\n> verilator test_always_comb.sv --lint-only\r\n%Warning-CASEINCOMPLETE: test_always_comb.sv:4:8: Case values incompletely covered (example pattern 0x1)\r\n    4 |        case (a)\r\n      |        ^~~~\r\n                         ... For warning description see https://verilator.org/warn/CASEINCOMPLETE?v=4.218\r\n                         ... Use \"/* verilator lint_off CASEINCOMPLETE */\" and lint_on around source to disable this message.\r\n%Warning-LATCH: test_always_comb.sv:10:4: Latch inferred for signal 'c' (not all control paths of combinational always assign a value)\r\n                                        : ... Suggest use of always_latch for intentional latches\r\n   10 |    always_comb begin\r\n      |    ^~~~~~~~~~~\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\nI'm new to verilog and hardware design, but I've discovered this problem after Vivado's synthesis tools started to complain on similar code and verilator didn't.\r\nBTW, why is this even allowed to compile without an error? Isn't the idea/goal of always_comb to force combinational circuits and thus no latches.\r\n\r\nOS: Gentoo Linux\r\n\r\n\r\n> May we assist you in trying to fix this in Verilator yourself?\r\n\r\nNo, time at the moment sorry.",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-09",
+  "closed_at": "2025-09-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

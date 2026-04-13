@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2050,
+  "issue_url": "https://github.com/llvm/circt/pull/2050",
+  "title": "[LowerToHW] Lower NonLocalAnchor symbols to hw.innerNameRef in verbatim op",
+  "body": "The `NonLocalAnchor` can be used for specifying the symbol name in the `VerbatimOp`. \r\nThis PR lowers the `nla` symbol to the corresponding `hw.innerNameRef`. \r\nFor example, the `@nla1` should be lowered to the wire symbol name.\r\n```\r\n  hw.module @dutModule2() {\r\n    %a = sv.wire sym @__dutModule2__a  : !hw.inout<i3>\r\n }\r\n firrtl.nla @nla1 [@dutModule, @dutModule2] [\"m\", \"a\"]\r\n sv.verbatim \"[name : {{0}}]\" {symbols = [@nla1]}\r\n```\r\nShould be lowered to:\r\n```\r\nsv.verbatim \"[name : {{0}}]\"  symbols = [#hw.innerNameRef<@dutModule2::@__dutModule2__a>]}\r\n```\r\n\r\nThis requires building a map of `FIRRTL` operation name to the `hw.innerNameRef` for every module.\r\nAfter all the modules are lowered, the `nla` op is mapped to the corresponding lowered symbol names.\r\nFinally, the `nla` symbol is substituted with the `hw.innerNameRef` corresponding to the leaf of the instance path.\r\n\r\nAs a future extension, a hierarchical name can be substituted instead of just the leaf symbol name.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-28",
+  "closed_at": "2023-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

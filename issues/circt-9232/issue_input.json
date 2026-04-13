@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9232,
+  "issue_url": "https://github.com/llvm/circt/pull/9232",
+  "title": "[tools] Add domaintool",
+  "body": "Add a new command line program, domaintool, which is intended to be used\r\nto consume domain information in a final MLIR blob and produce constraint\r\nfiles, e.g., SDC files.  Currently, this is targeted at generating a\r\nSiFive-internal format (\"Clock Spec JSON\") which we then convert to SDC\r\nfiles.  This is an intermediate step while this is stood up and will\r\neventually be removed.\r\n\r\nThis includes a basic, in-tree registration mechanism to register new\r\nhandlers.  This is intended to allow for us to extend this to add actual\r\nSDC and Unified Power Format (UPF) handlers.\r\n\r\nBriefly, this tool works by providing domains and their parameters on the\r\ncommand line as well as assignments of the provided domains to specific\r\nports.  An example invocation is the following:\r\n\r\n``` shell\r\ndomaintool \\\r\n  --module Foo \\\r\n  --domain ClockDomain,ClockA,10 \\\r\n  --domain ClockDomain,ClockB,20 \\\r\n  --assign 0 \\\r\n  --assign 1 \\\r\n  Foo.final.mlir\r\n```\r\n\r\nThis instantiates two clock domains, with different names and periods.  It\r\nthen hooks up the first domain, ClockA, to the first domain port and the\r\nsecond domain, ClockB, to the second domain port.  When run, this then\r\ngenerates JSON output due to the ClockSpecJSON handler being registered:\r\n\r\n``` json\r\n{\r\n  \"clocks\": [\r\n    {\r\n      \"name_pattern\": \"ClockA\",\r\n      \"define_period\": 10,\r\n      \"clock_relationships\": []\r\n    },\r\n    {\r\n      \"name_pattern\": \"ClockB\",\r\n      \"define_period\": 20,\r\n      \"clock_relationships\": []\r\n    }\r\n  ],\r\n  \"static_ports\": [],\r\n  \"asynchronous_ports\": [],\r\n  \"synchronous_ports\": [\r\n    {\r\n      \"name_pattern\": \"ClockA\",\r\n      \"name_pattern\": [\r\n        \"a\"\r\n      ],\r\n      \"comment\": null\r\n    },\r\n    {\r\n      \"name_pattern\": \"ClockB\",\r\n      \"name_pattern\": [\r\n        \"b\"\r\n      ],\r\n      \"comment\": null\r\n    }\r\n  ]\r\n}\r\n```\r\n\r\n\r\n### TODO\r\n\r\n- [x] Fix the instability of output ordering.  This is an issue with the\r\n      stability of the `ObjectMap`. (Fixed in: https://github.com/llvm/circt/pull/9232/commits/13f0c0937b64310ed7d170674276f5999a06bbc3.)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-16",
+  "closed_at": "2025-11-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

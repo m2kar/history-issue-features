@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2197,
+  "issue_url": "https://github.com/llvm/circt/issues/2197",
+  "title": "[FIRRTL] Pad(Invalid, x) Probably Needs a Folder",
+  "body": "The treatment of invalid as a value inside FIRRTL Dialect can cause CIRCT to fail to remove registers which would be removed in the Scala FIRRTL Compiler (SFC).  This can arise for situations where an invalidated wire is padded and used to driver a register.\r\n\r\nConsider the following circuit where the invalidated 1-bit wire `x` is padded to 2-bits and used to drive register `b`:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    output a: UInt<2>\r\n\r\n    wire x: UInt<1>\r\n    x is invalid\r\n\r\n    reg b: UInt<2>, clock\r\n    b <= pad(x, 2)\r\n    a <= b\r\n```\r\n\r\nInside the SFC, invalid is aggressively converted to zero.  This results in the following SFC-generated Verilog:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input        clock,\r\n  output [1:0] a\r\n);\r\n  assign a = 2'h0;\r\nendmodule\r\n```\r\n\r\nHowever, the MFC will leave this around and produce a register:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input        clock,\r\n  output [1:0] a);\r\n\r\n  reg [1:0] b;\r\n\r\n  `ifndef SYNTHESIS\r\n    initial begin\t// Foo.fir:9:5\r\n      automatic logic [31:0] _T;\r\n\r\n      `INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _T = `RANDOM;\r\n        b = _T[1:0];\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  always @(posedge clock)\r\n    b <= 2'h0;\r\n  assign a = b;\r\nendmodule\r\n```\r\n\r\nThis is seemingly innocuous, but this will have subtly different behavior that will likely only show up in simulation.  In the SFC implementation, the output `a` is a constant zero.  In the MFC implementation the value is either `x` for one cycle or a random value for one cycle. If this zero-time behavior matters, then things can go wrong.\r\n\r\nI think this is as simple as adding a canonicalizer to pad to handle invalid.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-17",
+  "closed_at": "2021-11-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

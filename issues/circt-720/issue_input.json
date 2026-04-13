@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 720,
+  "issue_url": "https://github.com/llvm/circt/issues/720",
+  "title": "temporaries output in the middle of blocks",
+  "body": "Consider the test case below.  A temporary is made for 610, which is output after the first if block.  Verilog requires variable declarations to be at the beginning of blocks.\r\n\r\n```mlir\r\nmodule {\r\n  rtl.module @foobar(%clock: i1, %arg1: i1, %arg2: i1, %arg3: i1) {\r\n    sv.always posedge %clock  {\r\n        sv.if %arg1  {\r\n          sv.fatal\r\n        }\r\n        //this forces a common subexpression to be output out-of-line\r\n        %610 = comb.and %arg1, %arg2 : i1\r\n        %611 = comb.and %arg3, %610 : i1\r\n        sv.if %610  {\r\n          sv.fatal\r\n        }\r\n        sv.if %611  {\r\n          sv.fatal\r\n        }\r\n    }\r\n    rtl.output\r\n  }\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-04",
+  "closed_at": "2021-03-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2906,
+  "issue_url": "https://github.com/llvm/circt/pull/2906",
+  "title": "[SV] Fix HWMemSimImpl Bad Randomization Verilog",
+  "body": "Fix a bug in the verbatim Verilog created by HWMemSimImpl for\r\nrandomizing memories.  This previously relied on an invalid Verilog\r\nconstruct (bit select out of a concatenation).  This is changed to be\r\nlegal by using a temporary register.\r\n\r\nSigned-off-by: Schuyler Eldridge <schuyler.eldridge@sifive.com>\r\n\r\nE.g., memory randomization now looks like:\r\n\r\n```verilog\r\n  `ifndef SYNTHESIS\r\n    `ifdef RANDOMIZE_MEM_INIT\r\n      reg [63:0] _RANDOM_MEM;\r\n\r\n      integer initvar;\r\n    `endif\r\n    `ifdef RANDOMIZE_REG_INIT\r\n      reg [31:0] _RANDOM;\r\n\r\n    `endif\r\n    initial begin\r\n      `INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_MEM_INIT\r\n        for (initvar = 0; initvar < 16; initvar = initvar + 1) begin\r\n          _RANDOM_MEM = {{`RANDOM}, {`RANDOM}};\r\n          Memory[initvar] = _RANDOM_MEM[32:0];\r\n        end\r\n      `endif\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM = {`RANDOM};\r\n        _GEN = _RANDOM[0];\r\n        _GEN_0 = _RANDOM[4:1];\r\n      `endif\r\n    end // initial\r\n  `endif\r\n```\r\n\r\nThis creates a `_RANDOM_MEM` reg of size large enough to fit one word of the memory. It then bit extracts out of this what it needs. The above example is a memory with a 33-bit word size.\r\n\r\nCloses #2905 (as this is an alternative implementation).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-15",
+  "closed_at": "2022-04-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

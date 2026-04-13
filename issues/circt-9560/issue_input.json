@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9560,
+  "issue_url": "https://github.com/llvm/circt/issues/9560",
+  "title": "[FIRRTL] Canonicalize infinite loop",
+  "body": "The following will loop indefinitely if canonicalized. Run with `circt-opt -canonicalize Foo.mlir`:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.module private @Bar(\n    in %clk: !firrtl.clock,\n    in %rst: !firrtl.asyncreset\n  ) {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.const.uint<1>\n    %c0_ui4 = firrtl.constant 0 : !firrtl.const.uint<4>\n    %reg = firrtl.regreset %clk, %rst, %c0_ui4 : !firrtl.clock, !firrtl.asyncreset, !firrtl.const.uint<4>, !firrtl.uint<4>\n    %0 = firrtl.bits %reg 0 to 0 : (!firrtl.uint<4>) -> !firrtl.uint<1>\n    %1 = firrtl.eq %c0_ui1, %c0_ui1 : (!firrtl.const.uint<1>, !firrtl.const.uint<1>) -> !firrtl.const.uint<1>\n    %2 = firrtl.and %1, %0 : (!firrtl.const.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n    firrtl.when %2 : !firrtl.uint<1> {\n    }\n  }\n  firrtl.extmodule @Foo()\n}\n```\n\nFor background, I've been seeing issues with `circt-reduce` for some time where canonicalization will get stuck and I need to exclude it to make forward progress. Eventually, I will reenable it once the reduction has proceeded far enough.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-31",
+  "closed_at": "2026-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3415,
+  "issue_url": "https://github.com/verilator/verilator/issues/3415",
+  "title": "Many string operations cause compile time hang",
+  "body": "This may well fall under the, \"but it's not synthesisable\", banner but I wanted to check as I'd expect an error rather than a hang.  I'm Verilating a small Cortex-M MCU that consumes 0.9GB of RAM and takes 54 seconds to Verilate, so a tiddler.  As soon as I add in the Arm tarmac module the RAM usage balloons to 10+GB and the build seems to hang indefinitely.\r\n\r\nIf you have access to any of the Arm M class CPUs then you've probably seen the tarmac logger before.  It's a simple top level Verilog module that monitors some hierarchical nets within the CPU and then prints out an instruction stream.  Aside from calling `$fopen` and `$fwrite`, the only other functions in there are string processing ones that concatenate the final string to print.\r\n\r\nThe functions are all of the following type:\r\n\r\n```verilog\r\nfunction [`STR_LEN:0] disass_func_1;\r\n  input [`STR_LEN:0] in;\r\n  begin\r\n    o = in;\r\n\r\n    // do some decoding of something\r\n    o = { o, result_of_decode };\r\n\r\n    // perhaps call a secondary function\r\n    o = disass_func_2(o);\r\n\r\n    // assign output\r\n    disass_func_1 = o;\r\n\r\n  end\r\nendfunction\r\n```\r\n\r\nWhile typing this issue, I've left the compile running and the RAM usage remained stable at around 11GB but is now increasing to the limit of my machine which is 25GB.  The system killed it after 13m.\r\n\r\nFrom my limited understanding of how the internals of Verilator work, could it be sat there trying to optimise a long list of string concatenations and falling over?  Just wanted to get some input before I put into any effort converting the 493 string functions to C.  Ergh.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2022-05-14",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

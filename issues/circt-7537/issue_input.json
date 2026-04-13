@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7537,
+  "issue_url": "https://github.com/llvm/circt/pull/7537",
+  "title": "[OM] Rework ClassOp to use fields terminator",
+  "body": "This changes the OM dialect Class/ExternClass to use a terminator operation similar to hw.output.\r\n\r\nThe ClassFields and ClassExternFields operations use a custom printer/parser to provide a syntax similar to hw.module where fields use the format `@name %val : !type` for non-extern fields and `@name : !type` for extern fields.\r\n\r\nInternally, the fields operations use attributes to store required information. Both fields operations store a list of fields to preserve definition order.  Non-extern fields store a mapping from field name to operand index.  Extern fields store a mapping from field name to type.\r\n\r\nThe fields operations provide an API for getting the type of a field based on the name.  The extern fields looks this up in the attribute dictionary, while the non-extern fields operation looks up the operand index and retrieves the type from the appropriate operand.  This ensures that non-extern fields map to the latest type in cases where the operand type changes after construction.\r\n\r\nThe Class/ExternClass operations provide a convenience API that lifts the fields API to avoid having to frequently request the underlying fields operation.\r\n\r\nThe firrtl LowerClasses logic requires changes to use this API when constructing OM classes, as well as in the dialect conversion logic to handle the new operations.\r\n\r\nThe OM evaluator similarly is updated for the new fields API.\r\n\r\nThe OM linker is updated to skip constructing the field name to type map and instead using the getFieldType API provided by the classOp.\r\n\r\nThe OM object field verifier also no longer needs to construct the field name to type maps and instead can just use the new API.\r\n\r\nQuite a few tests required updating for the new field syntax.\r\n\r\nTwo TODOs left:\r\n* Is there a way to attach a note to a parser error? The old code used this when encountering duplicate fields (the note pointed to the previous definition).  Because this check is now done at parse time, we are emitting parser errors instead of an InFlightDiagnostic.\r\n* Right now the getFieldType API uses a `std::optional` style for handling cases when the type of a field doesn't exist (i.e. the provided name is not field).  Another option would be to expose a `hasField` API.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-20",
+  "closed_at": "2024-10-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

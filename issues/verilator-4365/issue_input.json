@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4365,
+  "issue_url": "https://github.com/verilator/verilator/issues/4365",
+  "title": "$time always return 1",
+  "body": "Hi, all.\r\nI use a Verilator to simulate my CPU core and get bug after migration to 5 version (5.008, from Gentoo repo's). Check with current version (clone Git repo and build it) - same result.\r\nVerilog code:\r\n`    function static real get_ts();\r\n        real ts = $time;\r\n        return ts / 1000.0;\r\n    endfunction\r\n\r\n    function static void print_head();\r\n        $fwrite(f, \"+----------+----------+----------+-------------------------------------------------------+\\n\");\r\n        $fwrite(f, \"| %8s | %8s | %8s | %-53s |\\n\", \"Time\", \"PC\", \"Opcode\", \"Instruction/Event\");\r\n        $fwrite(f, \"+----------+----------+----------+-------------------------------------------------------+\\n\");\r\n        $fwrite(f, \"|%8.3fns|%10s|%10s| %-53s |\\n\", get_ts(), \"\", \"\", \"Trace started.\");\r\n    endfunction\r\n\r\n    function static void print_event(input string str);\r\n        $fwrite(f, \"|%8.3fns|%10s|%10s| %-53s |\\n\", get_ts(), \"\",  \"\", str);\r\n    endfunction`\r\n\r\nC++ file have next function:\r\n`double sc_time_stamp() { return 0.0d; }`\r\n\r\nAnd on output file, I see always \"1\" values: https://pastebin.com/Xc7pMhGR\r\n\r\nOptions, passed to Verilator:\r\nVERILATOR_FLAGS += -cc --exe -j 6 --threads 10\r\nVERILATOR_FLAGS += -x-assign fast\r\nVERILATOR_FLAGS += -Wall\r\nVERILATOR_FLAGS += --trace-fst --trace-structs --trace-threads 1\r\nVERILATOR_FLAGS += --assert\r\nVERILATOR_FLAGS += --coverage\r\nVERILATOR_FLAGS += --build --hierarchical\r\nVERILATOR_FLAGS += -CFLAGS \"-I../../../vrf/ -I../../../sim_common/common/ -DTOP_NAME=$* -lpthread\" -DTO_SIM\r\nVERILATOR_FLAGS += -LDFLAGS \"-lpthread -ljsoncpp -lfmt\"\r\nVERILATOR_INPUT = +librescan +libext+.v+.sv+.vh+.svh ../../vrf/$*.sv -f ../input.vc ../../sim_common/common/tb.cpp ../../vrf/$*.cpp\r\n\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-16",
+  "closed_at": "2023-07-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

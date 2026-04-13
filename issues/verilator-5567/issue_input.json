@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5567,
+  "issue_url": "https://github.com/verilator/verilator/issues/5567",
+  "title": "Internal error with FST + multidriven conditional operators",
+  "body": "```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.029 devel rev v5.028-183-gb873c23cf\r\n```\r\nHello! One of my students discovered a weird internal fault. I converted it to a minimal test case:\r\n\r\n```systemverilog\r\n// top.sv\r\nmodule top (\r\n    input  logic a2_i, a1_i, a0_i\r\n);\r\n    m m(\r\n        .a_i({a2_i, a1_i, a0_i})\r\n    );\r\nendmodule\r\n\r\nmodule m (\r\n    input  logic [2:0] a_i,\r\n    input  logic b_i,\r\n    output logic c_o,\r\n    output logic d_o\r\n);\r\n    assign c_o = (a_i != 0) ? 1 : 0;\r\n\r\n    assign d_o =\r\n        (c_o = 1) ? 1 :\r\n        (c_o = 0) ? b_i : 0;\r\nendmodule\r\n```\r\n\r\n```verilog-filelist\r\n// verilator.f\r\n\r\ntop.sv\r\n--lint-only\r\n--trace-fst\r\n\r\n-Wno-PINMISSING // not needed to generate fault, but simplifies the output\r\n```\r\n```log\r\nverilator -f verilator.f\r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec verilator_bin -f verilator.f\r\n```\r\nI believe expected behavior would be to generate no error or warning.\r\n\r\nAlthough, maybe it would be nice to have a warning for `=` in common places of `==`? Similar to Visual C++: <https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-4-c4706?view=msvc-170>. I could make a separate issue if you think it's worth pursuing.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-26",
+  "closed_at": "2025-09-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2289,
+  "issue_url": "https://github.com/llvm/circt/issues/2289",
+  "title": "[FIRRTL] Sub Folder Can't Use AsUInt Before Pad",
+  "body": "There's a bug in the sub folder added in #2251.  This inserts an `asUInt` before `canonicalizePrimOp` adds a `pad`.  The end result is that we wind up with zero-extension instead of sign-extension.\r\n\r\nConsider:\r\n\r\n```scala\r\ncircuit Bar :\r\n  module Bar :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output out : UInt<5>\r\n\r\n    reg r: UInt<1>, clock\r\n    r <= r\r\n    out <= sub(UInt<4>(0), dshl(UInt<1>(1), r))\r\n```\r\n\r\nAfter canonicalization, this is:\r\n\r\n```mlir\r\nfirrtl.module @Bar(in %clock: !firrtl.clock, in %reset: !firrtl.uint<1>, out %out: !firrtl.uint<5>) {\r\n  %r = firrtl.reg %clock  : !firrtl.uint<2>\r\n  firrtl.connect %r, %r : !firrtl.uint<2>, !firrtl.uint<2>\r\n  %0 = firrtl.neg %r : (!firrtl.uint<2>) -> !firrtl.sint<3>\r\n  %1 = firrtl.asUInt %0 : (!firrtl.sint<3>) -> !firrtl.uint<3>\r\n  %2 = firrtl.pad %1, 5 : (!firrtl.uint<3>) -> !firrtl.uint<5>\r\n  firrtl.connect %out, %2 : !firrtl.uint<5>, !firrtl.uint<5>\r\n}\r\n```\r\n\r\nIMCP then collapses all this (as the register is invalid/zero) to produce the following Verilog:\r\n\r\n```verilog\r\nmodule Bar(output [4:0] out);\r\n  assign out = 5'h7;\r\nendmodule\r\n```\r\n\r\nThis should be `5'h1f`.\r\n\r\nThe output produced by the SFC is the following which I think is `5'h1f` after the context determined widths happen, but I'm not sure...:\r\n```verilog\r\nmodule Bar(\r\n  input        clock,\r\n  input        reset,\r\n  output [4:0] out\r\n);\r\n  assign out = 4'h0 - 4'h1;\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-05",
+  "closed_at": "2021-12-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

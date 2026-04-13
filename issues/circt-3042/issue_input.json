@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3042,
+  "issue_url": "https://github.com/llvm/circt/issues/3042",
+  "title": "[FIRRTL] Invalid Async Reset False Positive with DontTouch",
+  "body": "If a constant wire is marked don't touch and used as the reset initial value, then CIRCT will complain that this is a \"non-constant async reset value\" during `LowerToHW` because it relies on IMCP to prove reset value constant-ness and IMCP will correctly not propagate through don't touch.\r\n\r\nConsider the following circuit:\r\n\r\n```scala\r\ncircuit ConstantReset:\r\n  module ConstantReset:\r\n    input clock: Clock\r\n    input reset: AsyncReset\r\n    input d: UInt<1>\r\n    output q: UInt<1>\r\n    input x: UInt<1>\r\n\r\n    wire w: UInt<1>\r\n    w <= UInt<1>(0)\r\n\r\n    reg r: UInt<1>, clock with: (reset => (reset, w))\r\n\r\n    r <= d\r\n    q <= r\r\n```\r\n\r\nAnd the following annotation file:\r\n\r\n```json\r\n[\r\n  {\r\n  \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n  \"target\":\"~ConstantReset|ConstantReset>w\"\r\n  }\r\n]\r\n```\r\n\r\nWhen compiled with `firtool ConstantReset.fir` everything works. If compiled with `firtool ConstantReset.fir --annotation-file ConstantReset.anno.json`, then this will error out:\r\n\r\n```\r\nConstantReset.fir:12:5: error: register with async reset requires constant reset value\r\n    reg r: UInt<1>, clock with: (reset => (reset, w))\r\n    ^\r\nConstantReset.fir:12:5: note: see current operation: %12 = \"firrtl.regreset\"(%1, %2, %8) {annotations = [], name = \"r\"} : (!firrtl.clock, !firrtl.asyncreset, !firrtl.uint<1>) -> !firrtl.uint<1>\r\nConstantReset.fir:9:5: note: reset value defined here:\r\n    wire w: UInt<1>\r\n    ^\r\n```\r\n\r\nSFC will compile wither of these just fine.\r\n\r\nAs much as it pains me, this likely motivates moving the exact SFC `CheckResets` logic into `RemoveInvalid` and turning this into the omnibus SFCExactness pass.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-04",
+  "closed_at": "2022-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

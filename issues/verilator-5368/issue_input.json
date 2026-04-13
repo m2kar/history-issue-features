@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5368,
+  "issue_url": "https://github.com/verilator/verilator/issues/5368",
+  "title": "Control file effects are non-intuitive in the presence of conflicting directives",
+  "body": "Just recording this issue for reference, in case somebody runs into it. Not planing on working on it for now.\r\n\r\nThe effect of config file directives are applied in some arbitrary (but deterministic) order. Furthermore some directive have unalterable effects while others don't. This results in potentially unexpected results when the config file has conflicting instructions (especially through the use of wildcards). None of this seems to be described in the documentation.\r\n\r\nFor example, one might expect to be able to do this:\r\n```\r\ntracing_off -file \"foo_?.sv\"  # Don't trace any foo_?.sv - there are many\r\ntracing_on -file \"foo_2.sv\"  # But actually race foo_2.sv\r\n```\r\n\r\nThe patterns are checked in lexical order, and because `foo_2` sorts before `foo_?` this will actually still turn off tracing for all foo_? files. We are somewhat lucky that `*` sorts before most characters used in filenames, so the possibly more common use of `*` will do as expected with the current implementation:\r\n```\r\ntracing_off -file \"foo_*.sv\"\r\ntracing_on -file \"foo_2.sv\"\r\n```\r\n\r\nThere are other quirks as well, for example, this will inline everything, as opposed to what one might expect (the inline flag is sticky, see `V3ConfigModule::update`):\r\n```\r\ninline -module \"*\"\r\nno_inline -module \"foo\"\r\n```\r\n\r\nArgument can be made that the a later directives in the config file should supersede an earlier conflicting one, but anything would be better than undefined behaviour.",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-13",
+  "closed_at": "2025-12-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

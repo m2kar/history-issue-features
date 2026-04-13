@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 10161,
+  "issue_url": "https://github.com/llvm/circt/issues/10161",
+  "title": "[Synth][FunctionalReduction] Check inversion when creating equivalence class",
+  "body": "\n```mlir\nhw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    hw.output %0, %1 : i1, i1\n  }\nhw.module @bar(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %not = synth.aig.and_inv not %0 : i1\n    hw.output %not, %1 : i1, i1\n  }\n\n$ circt-opt -synth-functional-reduction='conflict-limit=-1' foo.mlir \n\n  hw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    hw.output %0, %1 : i1, i1\n  }\n  hw.module @bar(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %2 = synth.aig.and_inv not %0 : i1\n    %3 = synth.choice %1, %2 : i1\n    hw.output %3, %3 : i1, i1\n  }\n\n```\n\nCurrently FunctionalReduction only introduces choice in `bar`. Since in synthesis we generally consider inversion as zero cost, we should be able to prove the equivalence in that case as well, e.g:\n```\n  hw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %2 = synth.aig.and_inv not %0: i1\n    %choice = synth.choice %1, %2: i1\n    hw.output %choice, %choice : i1, i1\n  }\n```\n\nBasically change:\nhttps://github.com/llvm/circt/blob/7f79dac7853006a6d8f20f3c6742eaf09bd580a1/lib/Dialect/Synth/Transforms/FunctionalReduction.cpp#L530-L531\n\nto \n```\n for (auto value : allValues) {\n   auto signature = simSignatures.at(value);\n   auto flipedSignature = ~signature;\n   // Use smaller one as canonicalization\n   bool inverted = signature > flipedSignature;\n   \n   sigGroups[inverterd? flipedSignatuer: signature: ].push_back({value, inverted}); \n}\n```\n\nAnd update the rest. ",
+  "labels": [
+    "good first issue",
+    "Synth"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-09",
+  "closed_at": "2026-04-13",
+  "code_blocks": [
+    "hw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    hw.output %0, %1 : i1, i1\n  }\nhw.module @bar(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %not = synth.aig.and_inv not %0 : i1\n    hw.output %not, %1 : i1, i1\n  }\n\n$ circt-opt -synth-functional-reduction='conflict-limit=-1' foo.mlir \n\n  hw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    hw.output %0, %1 : i1, i1\n  }\n  hw.module @bar(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %2 = synth.aig.and_inv not %0 : i1\n    %3 = synth.choice %1, %2 : i1\n    hw.output %3, %3 : i1, i1\n  }\n\n",
+    "  hw.module @foo(in %a : i1, in %b : i1, out out0 : i1, out out1 : i1) {\n    %0 = synth.aig.and_inv not %a, not %b : i1\n    %1 = comb.or %a, %b : i1\n    %2 = synth.aig.and_inv not %0: i1\n    %choice = synth.choice %1, %2: i1\n    hw.output %choice, %choice : i1, i1\n  }\n",
+    " for (auto value : allValues) {\n   auto signature = simSignatures.at(value);\n   auto flipedSignature = ~signature;\n   // Use smaller one as canonicalization\n   bool inverted = signature > flipedSignature;\n   \n   sigGroups[inverterd? flipedSignatuer: signature: ].push_back({value, inverted}); \n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

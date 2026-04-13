@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6826,
+  "issue_url": "https://github.com/verilator/verilator/issues/6826",
+  "title": "Proposal to remove automatic assignment of processor affinity",
+  "body": "After PR #5911, we have a new feature that automatically assigns processor affinity to threads based on the number of available processors. However, when executing `VlThreadPool::numaAssign()`, the `m_workers.size()` will always be equal to the `number of available processors - 1`, since we initialized the `m_threads = VlOs::getProcessDefaultParallelism();`.\n\nThus, when we assign some `modelp->threads()` to the thread pool, the automatic assignment can even assign some threads to the SMT threads of the same core, which can lead to performance degradation instead of improvement. This behavior is not desired, as this feature is intended to avoid threads from being scheduled on the same core's SMT threads.\n\nWhat's worse, when using verilator on a CPU with multiple clusters without shared caches (e.g., CCX on AMD EPYC), the automatic assignment can lead to threads being assigned to different clusters, which can significantly degrade performance due to increased memory access latency when executing multi-threaded simulations.\n\nWhat's even worse, when using verilator on a CPU with cores that have different performance levels (e.g., P-core and E-core on Intel Alder Lake), the automatic assignment can lead to threads being assigned to different performance level cores, even all assigned to E-cores, which can significantly degrade performance. However, when this automatic assignment is disabled, the OS scheduler can schedule threads to P-cores, which improves performance.\n\n<img width=\"1081\" height=\"737\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/3dd607b5-424a-4e0f-92e3-1ec8f3e5495e\" />\n\nI think this assignment should not be done in the user space. I see a [Linux Kernel patch from Intel to introduce Cache aware scheduling](https://lore.kernel.org/lkml/cover.1764801860.git.tim.c.chen@linux.intel.com/). [I have tested it with AMD EPYC systems to run 8 threads Verilator simulation of XiangShan, and the performance is significantly improved when the patch is applied.](https://lore.kernel.org/lkml/tencent_6E51A3175F8AE0A7F684A319EE63CC56C806@qq.com/). The performance is nearly the same as manual `numactl` assignment, but it is done by the OS scheduler.\n\nI think the best way to handle this is to let the OS scheduler do its job. Just wait for the OS to support cache-aware scheduling, and let the OS schedule threads to cores based on its own policies. And remove the automatic assignment code from Verilator as it leads to performance degradation in many scenarios.",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-16",
+  "closed_at": "2025-12-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

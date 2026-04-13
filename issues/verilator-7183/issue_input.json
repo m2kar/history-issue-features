@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7183,
+  "issue_url": "https://github.com/verilator/verilator/pull/7183",
+  "title": "Support constraints on fixed-size array of class object members (#7170)",
+  "body": "## Summary\r\nSupport constraints on unpacked (fixed-size) array class object element members (e.g. `items[i].value` where `items` is `rand item_t items[4]`), covering both `foreach` iteration and constant-index access patterns per IEEE 1800-2017 §18.5.\r\n\r\n## Issue\r\nFixes verilator/verilator#7170\r\n\r\n## Changes\r\n- `src/V3Randomize.cpp` — `ConstraintExprVisitor::visit(AstVarRef*)`: Added `isUnpackedClassRefArray` flag to distinguish unpacked arrays from dynamic/queue arrays in write_var registration loop. Unpacked arrays use `AstArraySel` (C++ `operator[]`), compile-time `elementsConst()` for size, and `%x` hex format for SMT names; dynamic/queue arrays preserve existing `CMethodHard::ARRAY_AT`/`DYN_SIZE` with `%08x` format.\r\n- `src/V3Randomize.cpp` — `ConstraintExprVisitor::visit(AstMemberSel*)`: When MemberSel chain root is `ArraySel` on a class ref array, set `m_structSel=true` and build dot-separated SMT name (e.g. `items.0.value`). Guards against nested class ref cases with UNSUPPORTED warning.\r\n\r\n## Test\r\n- Added `test_regress/t/t_constraint_cls_arr_member.{v,py}` — 3 scenarios x 20 iterations: foreach+range, foreach+ordering, constant-index access\r\n- Updated `test_regress/t/t_constraint_global_arr_unsup.{v,out}` — refined UNSUPPORTED messages, added associative array case for warn_coverage\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-03",
+  "closed_at": "2026-03-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4891,
+  "issue_url": "https://github.com/llvm/circt/issues/4891",
+  "title": "[ExportVerilog] Assignment from singed expression to unsigned wires",
+  "body": "Currently we emit all wires without explicitly denoting signess (e.g. `wire [8:0] foo = `, not `wire singed [8:0] foo`) so the default behavior (I guess) is unsigned. This is causing assignments between signed and unsigned expressions:\r\n```mlir\r\n  hw.module @Top(%a: i8, %b: i8) -> (c: i1) {\r\n    %0 = comb.shrs bin %a, %b : i8\r\n    %1 = comb.extract %0 from 1 : (i8) -> i1\r\n    hw.output %1 : i1\r\n  }\r\n```\r\nCurrent output:\r\n```verilog\r\n  wire [7:0] _GEN = $signed($signed(a) >>> b);\t// bar.mlir:2:10\r\n  assign c = _GEN[1];\t// bar.mlir:2:10, :3:10, :4:5\r\n```\r\n\r\n\r\nMaybe we need to fix into the following form since we need correct widths too?\r\n```verilog\r\n  singed wire [7:0] _GEN = $signed($signed(a) >>> b);\t// bar.mlir:2:10\r\n  assign c = _GEN[1];\t// bar.mlir:2:10, :3:10, :4:5\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-27",
+  "closed_at": "2025-09-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

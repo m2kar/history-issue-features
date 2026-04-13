@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3483,
+  "issue_url": "https://github.com/llvm/circt/pull/3483",
+  "title": "[FSMToSV] Add FSM to SV conversion pass",
+  "body": "This commit introduces an FSM to SV lowering pass, as well as some small modifications to the FSM dialect to facilitate the conversion. This initial version of the pass does not support transition action regions and variables.\r\n\r\nThe lowering style is fairly straightforward; two processes are emitted, one `always_ff` for state register inference, and one `always_comb` for next-state calculation and output assignments.\r\n\r\ne.g.:\r\n```mlir\r\nfsm.machine @top(%a0: i1, %arg1: i1) -> (i8, i8) attributes {initialState = \"A\", argNames = [\"a0\", \"a1\"], resNames = [\"r0\", \"r1\"]} {\r\n  %c_42 = hw.constant 42 : i8\r\n  fsm.state @A output  {\r\n    %c_0 = hw.constant 0 : i8\r\n    fsm.output %c_0, %c_42 : i8, i8\r\n  } transitions {\r\n    fsm.transition @B\r\n  }\r\n\r\n  fsm.state @B output  {\r\n    %c_1 = hw.constant 1 : i8\r\n    fsm.output %c_1, %c_42 : i8, i8\r\n  } transitions {\r\n    fsm.transition @A guard {\r\n      %g = comb.and %a0, %arg1 : i1\r\n      fsm.return %g\r\n    }\r\n  }\r\n}\r\n```\r\nemits as\r\n```sv\r\ntypedef enum {A, B} top_state_t;\r\nmodule top(\r\n  input        a0,\r\n               a1,\r\n               clk,\r\n               rst,\r\n  output [7:0] r0,\r\n               r1);\r\n\r\n  reg  [7:0]       output_1;\r\n  reg  [7:0]       output_0;\r\n      top_state_t next_state;\r\n  wire top_state_t to_A;\r\n  wire top_state_t to_B;\r\n      top_state_t state_reg;\r\n\r\n  assign to_A = A;\r\n  assign to_B = B;\r\n  always_ff @(posedge clk) begin\r\n    if (rst)\r\n      state_reg <= to_A;\r\n    else\r\n      state_reg <= next_state;\r\n  end\r\n  always_comb begin\r\n    case (state_reg)\r\n      A: begin\r\n        next_state = to_B;\r\n        output_0 = 8'h0;\r\n        output_1 = 8'h2A;\r\n      end\r\n      B: begin\r\n        next_state = a0 & a1 ? to_A : to_B;\r\n        output_0 = 8'h1;\r\n        output_1 = 8'h2A;\r\n      end\r\n    endcase\r\n  end\r\n  assign r0 = output_0;\r\n  assign r1 = output_1;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-07",
+  "closed_at": "2022-07-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

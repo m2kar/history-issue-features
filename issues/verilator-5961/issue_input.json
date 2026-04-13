@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5961,
+  "issue_url": "https://github.com/verilator/verilator/issues/5961",
+  "title": "Result missmatched with vcs",
+  "body": "What 'verilator' command line do we use to run your example?\n``` verilator tb_zcounter.sv zcounter.sv  --binary --trace```\n\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n5.034 compiled with clang-18 \n\nWhat OS and distribution are you using?\nubuntu20.04\n\nMay we assist you in trying to fix this in Verilator yourself?\nSure , but we need clarify reason first. \n\n\n\nAfter executing the simple bench below, the waveform data obtained shows inconsistencies between the results calculated by Verilator and VCS. According to common understanding, both Verilator and VCS comply with the IEEE Verilog standard. However, in actual simulations, they produce different waveform outputs, which is quite puzzling. What is the reason for this discrepancy? Or, how can such differences be avoided?\n\n![Image](https://github.com/user-attachments/assets/06ba270d-ab92-4669-9ecc-6546b3770298)\n\n```verilog\nmodule zcounter(\ninput clk,\ninput rstn,\ninput [7:0] d\n);\n\nreg [7:0]cnt;\ninitial begin\n// #1 $display(\"reseted\");\nend\n\nalways @(posedge clk or rstn)\nbegin\n    if(!rstn)\n        cnt <= 0;\n    else\n        cnt <= cnt + 1;\nend\n\nlogic [7:0] left_idx_cnt;\nlogic [7:0] left_idx_cnt_d;\n\n\nalways @(posedge clk or rstn) begin\n    if(!rstn)\n        left_idx_cnt_d <= 'h40;\n    else\n        left_idx_cnt_d<= left_idx_cnt;\nend\nlogic [7:0] idx_mask_head;\nlogic [7:0] idx_mask_cnt;\n\nwire [7:0] start_to_boundary_cnt= cnt-idx_mask_head;\n\nalways @* begin\n    if(cnt<=6) begin\n        idx_mask_head =8;\n        left_idx_cnt=10;\n        idx_mask_cnt=6;\n    end else begin\n        idx_mask_head = 0;\n        left_idx_cnt = left_idx_cnt_d - idx_mask_cnt;\n        idx_mask_cnt =start_to_boundary_cnt-1;\n    end\nend\n\nendmodule\n```\n\n```verilog\n`timescale 1ps/1ps\n\nmodule tb_zcounter;\n\n  // Inputs to DUT\n  reg clk;\n  reg rstn;\n  reg [7:0] d;\n\n  // Instantiate the Device Under Test (DUT)\n  zcounter dut (\n      .clk(clk),\n      .rstn(rstn),\n      .d(d)\n  );\n\n  // Clock generation (e.g., 100MHz = 10ns = 10000ps period -> 5000ps half-period)\n  // Using 10ps half-period from the example image for consistency\n  initial begin\n    clk = 1;\n    forever #10 clk = ~clk; // 20ps clock period\n  end\n\n  // Stimulus generation\n  initial begin\n    // Initialize signals\n    rstn = 0; // Assert reset\n    d = 0;\n\n    // Deassert reset after some time\n    #30 rstn = 1;\n\n    // Apply input value after reset is deasserted\n    #60 d = 3; // Apply d=3 at time 30ps + 60ps = 90ps\n\n\n  end\n\n  // Simulation control\n  initial begin\n    #1000; // Run simulation for 1000ps\n    $finish;\n  end\n\n  // Waveform dumping\n  initial begin\n    $dumpfile(\"zcounter_wave.vcd\");\n    $dumpvars(0, tb_zcounter); // Dump all signals in this module and below\n  end\n\nendmodule\n```\n",
+  "labels": [
+    "resolution: unplanned"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-27",
+  "closed_at": "2025-04-27",
+  "code_blocks": [
+    "\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n5.034 compiled with clang-18 \n\nWhat OS and distribution are you using?\nubuntu20.04\n\nMay we assist you in trying to fix this in Verilator yourself?\nSure , but we need clarify reason first. \n\n\n\nAfter executing the simple bench below, the waveform data obtained shows inconsistencies between the results calculated by Verilator and VCS. According to common understanding, both Verilator and VCS comply with the IEEE Verilog standard. However, in actual simulations, they produce different waveform outputs, which is quite puzzling. What is the reason for this discrepancy? Or, how can such differences be avoided?\n\n![Image](https://github.com/user-attachments/assets/06ba270d-ab92-4669-9ecc-6546b3770298)\n\n",
+    "\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

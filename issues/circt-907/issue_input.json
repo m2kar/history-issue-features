@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 907,
+  "issue_url": "https://github.com/llvm/circt/issues/907",
+  "title": "Parsing Instance Connects Broken",
+  "body": "Connections involving instances fail to parse, but work in the Scala FIRRTL Compiler.\r\n\r\nThe following currently fails:\r\n```scala\r\ncircuit Instance:\r\n  module Sub:\r\n    output a: UInt<1>\r\n    a <= UInt<1>(0)\r\n\r\n  module Instance:\r\n    output a: {a: UInt<1>}\r\n\r\n    inst sub of Sub\r\n    a <= sub\r\n    a <- sub\r\n```\r\n\r\nThe error is: \r\n\r\n```\r\n# circt-translate --import-firrtl new/Instance.fir\r\nnew/Instance.fir:11:5: error: expected '.' in field reference\r\n    a <- sub\r\n    ^\r\n```\r\n\r\nGlancing at the parser, it looks like it expects `sub` to be in the value table, but it isn't. [There is special logic to handle `sub is invalid`](https://github.com/llvm/circt/blob/main/lib/Dialect/FIRRTL/Import/FIRParser.cpp#L1187), but that needs to be extended to handle connections to submodules. If this isn't a `sub is invalid` situation, then the parser expects to see a subfield.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2021-04-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

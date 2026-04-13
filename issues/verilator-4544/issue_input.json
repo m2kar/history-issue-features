@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4544,
+  "issue_url": "https://github.com/verilator/verilator/issues/4544",
+  "title": "Optimize empty expression statements",
+  "body": "Debug of #4543 showed we have expression statements like this\r\n\r\n```\r\n    1:2:3:1:1:2:1: EXPRSTMT 0x555556e67d90 <e2261#> {e14cg} @dt=0x555556eaaea0@(G/d)\r\n    1:2:3:1:1:2:1:1: COMMENT 0x555556e85340 <e1240> {e14cg}  Function: logWrapper\r\n    1:2:3:1:1:2:1:2: CONST 0x555556f43300 <e1437> {e10ao} @dt=0x555556eaaea0@(G/d)  2.3025850929940459\r\n```\r\n\r\nThe EXPRSTMT was inserted by inlining a function, but later V3Const should be taught to compress this down to just a constant (by removing outer exprstmt since it has only comment).\r\n\r\nI tried a fix for this, it fixes this case but t_interface_array.pl fails because the exprstatement was not pure, and is pure after removal, causing the new pure casting to correctly fail in V3Broken, since the caching really is no longer correct.  So blocked on fixing that caching somehow.  (Ideas @RRozak?)",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-07",
+  "closed_at": "2023-10-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

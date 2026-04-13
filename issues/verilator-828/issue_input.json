@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 828,
+  "issue_url": "https://github.com/verilator/verilator/issues/828",
+  "title": "Incorrect result of signed shift",
+  "body": "---\n\n\nAuthor Name: **Geoff Barrett**\nOriginal Redmine Issue: 828 from https://www.veripool.org\nOriginal Date: 2014-10-09\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe following code gets the wrong values.\r\n\r\n```\r\ninitial begin\r\n  $display(\"0x00000180==0x%h\", 32'(signed'({4'b0001,5'b10000}) << 3));\r\n  $display(\"0x00000380==0x%h\", 32'(signed'({4'b0011,5'b10000}) << 3));\r\n  $finish();\r\nend\r\n\n```\r\n\r\nVerilator output is as follows:\r\n\r\n```\r\n0x00000180==0xffffff80\r\n0x00000380==0xffffff80\r\n\n```\r\n\r\nOutput from a couple of other simulators is this:\r\n\r\n```\r\n0x00000180==0x00000180\r\n0x00000380==0x00000380\r\n\n```\r\n\r\nI would expect this code to create a logic[8:0], cast it to logic signed[8:0], shift it left into a logic signed[11:0] and then sign extend to a logic signed[31:0].  It looks like the result of the shift is the same width as its input, hence the sign bit is getting set and the 32-bit extension is incorrect.  I suspect any values in the top 3 bits will be lost as a result of the shift as well.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-10-09",
+  "closed_at": "2014-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

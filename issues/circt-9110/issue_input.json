@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9110,
+  "issue_url": "https://github.com/llvm/circt/pull/9110",
+  "title": "[ImportVerilog] [1/2] Improve function capture lifecycle",
+  "body": "This patch further improves robustness and determinism in how ImportVerilog lowers SystemVerilog subroutines. Functions are now *fully converted* — including capture discovery and finalization — **before any call to them is emitted**, even if their definitions appear textually *after* the call site in the source.\r\n\r\n- **Function conversion ordering**\r\n  - `visitCall` now explicitly invokes `context.convertFunction(*subroutine)` before materializing a `func.call`.\r\n  - This guarantees that the callee’s body, captures, and function signature are finalized regardless of declaration order — fixing cases where a function was defined *after* its first call in source.\r\n  - Recursive and mutually recursive calls are handled safely using the new reentrancy guards described below.\r\n\r\n- **Function capture lifecycle**\r\n  - Added two flags to `FunctionLowering`:\r\n    - `isConverting`: marks a function currently being converted to avoid re-entrant conversion.\r\n    - `capturesFinalized`: marks completion of capture finalization.\r\n  - `convertFunction` now:\r\n    - Skips re-entry when a function is already being converted.\r\n    - Sets `isConverting` during body conversion and resets it afterward.\r\n    - Marks `capturesFinalized` once `finalizeFunctionBodyCaptures` succeeds.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-18",
+  "closed_at": "2025-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

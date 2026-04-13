@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1274,
+  "issue_url": "https://github.com/verilator/verilator/issues/1274",
+  "title": "Pullup / Pulldown on arrays causes internal crash",
+  "body": "---\n\n\nAuthor Name: **Rob Stoddard**\nOriginal Redmine Issue: 1274 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI found this at first with a generate statement, so I thought it had to do with generate statements.   But after creating the example (below) I discovered it had to do with arrays.     Anyway, Verilator crashed with the following output:\r\n\r\n%Error: Verilator internal fault, sorry.  Consider trying --debug --gdbbt\r\n\r\nI am running  Verilator 3.907 devel rev verilator_3_906-11-g7b642bcbb\r\n\r\nI have attached a log file from running the example (below) while debugging in the gibbet.\r\n\r\n```<code class=\"c\">\r\n\r\n//`define USE_GEN\r\n\r\nmodule IOBUF ( input T, input I, output O, inout IO );\r\n         assign O = IO;\r\n         assign IO = T ? 1'bz : I;\r\nendmodule\r\n\r\nmodule top (\r\n         input [3:0] inlines,\r\n         output [3:0] outlines,\r\n         inout [3:0] iolines,\r\n\r\n         input inctrl\r\n);\r\n\r\n`ifdef USE_GEN\r\n\r\ngenvar i;\r\ngenerate for(i = 0; i < 8; i = i+1) begin: Gen_D\r\n\r\n         IOBUF d ( .T(inctrl), .I(inlines[i]), .O(outlines[i]), .IO(iolines[i]) );\r\n         pullup d_pup (iolines[i]);\r\n\r\n         end\r\nendgenerate\r\n\r\n`else\r\n         IOBUF d_0 ( .T(inctrl), .I(inlines[0]), .O(outlines[0]), .IO(iolines[0]) );\r\n         pullup d_0_pup (iolines[0]);\r\n\r\n         IOBUF d_1 ( .T(inctrl), .I(inlines[1]), .O(outlines[1]), .IO(iolines[1]) );\r\n         pullup d_1_pup (iolines[1]);\r\n\r\n         IOBUF d_2 ( .T(inctrl), .I(inlines[2]), .O(outlines[2]), .IO(iolines[2]) );\r\n         pullup d_2_pup (iolines[2]);\r\n\r\n         IOBUF d_3 ( .T(inctrl), .I(inlines[3]), .O(outlines[3]), .IO(iolines[3]) );\r\n         pullup d_3_pup (iolines[3]);\r\n`endif\r\n\r\nendmodule\r\n\r\n\r\n</code>\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2018-02-08",
+  "closed_at": "2018-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

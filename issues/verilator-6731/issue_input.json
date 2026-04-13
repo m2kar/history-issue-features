@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6731,
+  "issue_url": "https://github.com/verilator/verilator/issues/6731",
+  "title": "basic non-blocking transport delay issue",
+  "body": "Using:\n\n- V e r i l a t i o n   R e p o r t: Verilator 5.043 devel rev v5.042-102-g9e37a09\n\n```\nmodule tb;\n   // we choose these names so it is easy to grep through the output verilator C++ code\n   reg [7:0] sexy;\n   reg [7:0] toxic = 1;\n\n   logic     test_clk = 0;\n   \n   initial begin\n      $display(\"  t (ns)   sexy\");\n\n      $display(\"--------------\");\n\n      // show changes to out as they occur\n      $monitor(\"%7.2f  %0d\", $realtime, sexy);\n\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n   end // initial begin\n\n   always @(posedge test_clk)\n     begin\n        sexy <= #3.75 toxic;\n        toxic <= toxic + 1;\n     end\nendmodule\n\nOutput:\n\n  t (ns)   sexy\n--------------\n   0.00  0\n   4.75  2\n   6.75  3\n   8.75  4\n  10.75  5\n  12.75  6\n  14.75  7\n  16.75  8\n```\n\nIt lost the value 1. The values 2,3,4,5,6 are coming 2 ns too early.\n\n",
+  "labels": [
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-24",
+  "closed_at": "2026-03-30",
+  "code_blocks": [
+    "module tb;\n   // we choose these names so it is easy to grep through the output verilator C++ code\n   reg [7:0] sexy;\n   reg [7:0] toxic = 1;\n\n   logic     test_clk = 0;\n   \n   initial begin\n      $display(\"  t (ns)   sexy\");\n\n      $display(\"--------------\");\n\n      // show changes to out as they occur\n      $monitor(\"%7.2f  %0d\", $realtime, sexy);\n\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n      #1 test_clk=~test_clk; #1 test_clk=~test_clk;\n   end // initial begin\n\n   always @(posedge test_clk)\n     begin\n        sexy <= #3.75 toxic;\n        toxic <= toxic + 1;\n     end\nendmodule\n\nOutput:\n\n  t (ns)   sexy\n--------------\n   0.00  0\n   4.75  2\n   6.75  3\n   8.75  4\n  10.75  5\n  12.75  6\n  14.75  7\n  16.75  8\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

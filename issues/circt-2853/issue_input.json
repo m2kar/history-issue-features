@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2853,
+  "issue_url": "https://github.com/llvm/circt/issues/2853",
+  "title": "[FIRRTL][ExportVerilog] Mechanism to avoid bound instances from tripping unused wire lint warnings",
+  "body": "Currently, if a bound instance is removed, this _correctly_ leaves dangling references (possibly wires) in the original module. This then creates a situation where lint tools complain about unused wires (even though they will be used in a bound context).\r\n\r\nWe should have a mechanism to work around this, e.g., by generating lint waivers inline in the code or in a separate file. Alternatively, this indicates that FIRRTL's extract test code needs to be more aggressive to extract more.\r\n\r\nConsider:\r\n```scala\r\ncircuit Extract:\r\n  module Extract:\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input a: UInt<1>\r\n\r\n    node en = a\r\n\r\n    assert(clock, en, reset, \"hello world\")\r\n```\r\n\r\nWhen compiling this to Verilog using `firtool Extract.fir --extract-test-code --strip-debug-info`, this produces:\r\n```verilog\r\nmodule Extract_assert(\r\n  input a,\r\n        reset,\r\n        clock);\r\n\r\n  always @(posedge clock) begin\r\n    if (reset)\r\n      assert(a) else $error(\"hello world\");\r\n  end // always @(posedge)\r\nendmodule\r\n\r\nmodule Extract(\r\n  input clock,\r\n        reset,\r\n        a);\r\n\r\n  wire en;\r\n\r\n  assign en = a;\r\n  /* This instance is elsewhere emitted as a bind statement.\r\n    Extract_assert InvisibleBind_assert (\r\n      .a     (en),\r\n      .reset (reset),\r\n      .clock (clock)\r\n    );\r\n  */\r\nendmodule\r\n\r\n\r\n// ----- 8< ----- FILE \"bindfile\" ----- 8< -----\r\n\r\nbind Extract Extract_assert InvisibleBind_assert (\r\n  .a     (en),\r\n  .reset (reset),\r\n  .clock (clock)\r\n);\r\n```\r\n\r\nHere, `wire en` is dead. Lint tools which are not run with the bindfile (which is a reasonable option given the fact that you want your synthesizable code to be lint clean), will be upset that `wire en` is not used.\r\n\r\nThis one is potentially complicated to sort through, but it is causing a very large number of lint warnings for us.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-04-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

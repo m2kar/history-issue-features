@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6186,
+  "issue_url": "https://github.com/verilator/verilator/issues/6186",
+  "title": "Negating signal greater than 64bits wide in a struct produces uncompilable code",
+  "body": "Trying to negate a signed signal greater than 64bits that resides in a struct produces code that won't compile for Visual Studio 2022, and likely other compilers.\n\nReducing the signal to 64bits or less fixes the issue, or moving the signal outside the struct also fixes the issue.\n\nrunning: verilator_bin --cc vertest.sv\n\non sv code:\n```\nmodule vertest(input logic signed[64:0] i_x, output logic signed[64:0] o_y);\n    struct { logic signed[64:0] x; } s;\n    assign s.x = i_x;\n    assign o_y = -s.x;\nendmodule\n```\n\ngenerates cpp code:\n```\n    VL_NEGATE_I(__Vtemp_2, (IData)(vlSelfRef.vertest__DOT__s.__PVT__x));\n```\nProduces errors in Visual Studio 2022:\n\n> Vvertest___024root__DepSet_hf80af146__0.cpp(28,28): error C2440: 'type cast': cannot convert from 'VlWide<3>' to 'IData'\n> Vvertest___024root__DepSet_hf80af146__0.cpp(28,28):\n>    No user-defined-conversion operator available that can perform this conversion, or the operator cannot be called\n> Vvertest___024root__DepSet_hf80af146__0.cpp(28,5): error C3861: 'VL_NEGATE_I': identifier not found\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-16",
+  "closed_at": "2025-07-28",
+  "code_blocks": [
+    "module vertest(input logic signed[64:0] i_x, output logic signed[64:0] o_y);\n    struct { logic signed[64:0] x; } s;\n    assign s.x = i_x;\n    assign o_y = -s.x;\nendmodule\n",
+    "    VL_NEGATE_I(__Vtemp_2, (IData)(vlSelfRef.vertest__DOT__s.__PVT__x));\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

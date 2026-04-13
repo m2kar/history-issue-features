@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4067,
+  "issue_url": "https://github.com/llvm/circt/pull/4067",
+  "title": "[LowerToHW] Lower source subindex into array_get instead of read_inout and array_index",
+  "body": "This PR changes the way of lowering of subindex. Currently a subindex operation is lowered into an array index inout operation but this PR exchanges the order (e.g. `read_inout(array_index_inout a[i])` -> `array_get(read_inout a)[i]`).\r\n\r\nPreviously when we lower subindex operations used as source values, we dereference the inout operations with read_inout. Alternatively this PR lowers a source value subindex into an array_get operation. This modification invokes a lot of optimizations at SV/Comb/HW since usually dataflow analysis is blocked by inout operations. This PR solves https://github.com/llvm/circt/issues/4001 by not creating problematic IR in the first place.\r\n\r\nExample:\r\n```mlir\r\nfirrtl.module @LowerReadArrayInoutIntoArrayGet(in %a: !firrtl.uint<10>, out %b: !firrtl.uint<10>) {\r\n    %r = firrtl.wire   : !firrtl.vector<uint<10>, 1>\r\n    %0 = firrtl.subindex %r[0] : !firrtl.vector<uint<10>, 1>\r\n    firrtl.strictconnect %0, %a : !firrtl.uint<10>\r\n    firrtl.strictconnect %b, %0 : !firrtl.uint<10>\r\n  }\r\n```\r\nAfter:\r\n```mlir\r\n hw.module @LowerReadArrayInoutIntoArrayGet(%a: i10) -> (b: i10) {\r\n    %false = hw.constant false\r\n    %r = sv.wire  : !hw.inout<array<1xi10>>\r\n    %0 = sv.read_inout %r : !hw.inout<array<1xi10>>\r\n    %1 = sv.array_index_inout %r[%false] : !hw.inout<array<1xi10>>, i1\r\n    %2 = hw.array_get %0[%false] : !hw.array<1xi10>, i1\r\n    sv.assign %1, %a : i10\r\n    hw.output %2 : i10\r\n  }\r\n```\r\nBefore:\r\n```mlir\r\n  hw.module @LowerReadArrayInoutIntoArrayGet(%a: i10) -> (b: i10) {\r\n    %false = hw.constant false\r\n    %r = sv.wire  : !hw.inout<array<1xi10>>\r\n    %0 = sv.array_index_inout %r[%false] : !hw.inout<array<1xi10>>, i1\r\n    %1 = sv.read_inout %0 : !hw.inout<i10>\r\n    sv.assign %0, %a : i10\r\n    hw.output %1 : i10\r\n  }\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-07",
+  "closed_at": "2022-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

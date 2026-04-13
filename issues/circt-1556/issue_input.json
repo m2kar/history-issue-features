@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1556,
+  "issue_url": "https://github.com/llvm/circt/pull/1556",
+  "title": "[Calyx] Use explicit in- and output port lists in ComponentOp::build",
+  "body": "If the ArrayRef ports argument contains an unordered list of ports, the first numInPorts ports are registered as the input ports, and the remainder as outputs.\r\nI.e. the following list of ports:\r\n\r\n```c++\r\nSmallVector<calyx::ComponentPortInfo> ports;\r\nports.push_back({rewriter.getStringAttr(\"clk\"), rewriter.getI1Type(), calyx::PortDirection::INPUT});\r\nports.push_back({rewriter.getStringAttr(\"reset\"), rewriter.getI1Type(), calyx::PortDirection::INPUT});\r\nports.push_back({rewriter.getStringAttr(\"done\"), rewriter.getI1Type(), calyx::PortDirection::OUTPUT}); // <--\r\nports.push_back({rewriter.getStringAttr(\"go\"), rewriter.getI1Type(), calyx::PortDirection::INPUT});\r\n```\r\n\r\nwill currently (incorrectly) create a component with the following signature:\r\n\r\n```mlir\r\ncalyx.component @main(%clk: i1, %reset: i1, %done: i1) -> (%go: i1) {\r\n   ...\r\n}\r\n```\r\n\r\nThe commit introduces explicit input- and output port lists.\r\nThe `Direction` of the ports within the `calyx::ComponentPortInfo` structs passed to ComponentOp::build are ignored; this aligns with the remainder of the logic surrounding port direction inference in `CalyxOps.cpp`, wherein the first `nInputPorts` are regarded as inputs, and the remainder as outputs _regardlessly_ of what `Direction` was set for the port when building the component.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-13",
+  "closed_at": "2021-08-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

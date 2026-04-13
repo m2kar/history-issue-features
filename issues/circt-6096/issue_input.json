@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6096,
+  "issue_url": "https://github.com/llvm/circt/issues/6096",
+  "title": "[FIRRTL][IMCP] Wire vs Node handling of annotations",
+  "body": "Input:\r\n\r\n```mlir\r\nfirrtl.circuit \"ConstPropAnno\" {\r\n  firrtl.module @ConstPropAnno(out %val : !firrtl.uint<3>,\r\n                               out %val2 : !firrtl.uint<3>) {\r\n    %zero = firrtl.constant 0 : !firrtl.uint<3>\r\n    %w = firrtl.wire {annotations = [{class = \"circt.test\"}]} : !firrtl.uint<3>\r\n    %w2 = firrtl.wire : !firrtl.uint<3>\r\n    firrtl.strictconnect %w, %w2 : !firrtl.uint<3>\r\n    firrtl.strictconnect %w2, %zero : !firrtl.uint<3>\r\n    firrtl.strictconnect %val, %w : !firrtl.uint<3>\r\n\r\n    %n = firrtl.node %w2 {annotations = [{class = \"circt.test\"}]} : !firrtl.uint<3>\r\n    %w3 = firrtl.wire : !firrtl.uint<3>\r\n    firrtl.strictconnect %w3, %n : !firrtl.uint<3>\r\n    firrtl.strictconnect %val2, %w3 : !firrtl.uint<3>\r\n  }\r\n}\r\n```\r\n\r\n`circt-opt --firrtl-imconstprop`\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"ConstPropAnno\" {\r\n    firrtl.module @ConstPropAnno(out %val: !firrtl.uint<3>, out %val2: !firrtl.uint<3>) {\r\n      %c0_ui3 = firrtl.constant 0 : !firrtl.uint<3>\r\n      %w = firrtl.wire {annotations = [{class = \"circt.test\"}]} : !firrtl.uint<3>\r\n      firrtl.strictconnect %w, %c0_ui3 : !firrtl.uint<3>\r\n      firrtl.strictconnect %val, %c0_ui3 : !firrtl.uint<3>\r\n      %n = firrtl.node %c0_ui3 {annotations = [{class = \"circt.test\"}]} : !firrtl.uint<3>\r\n      %w3 = firrtl.wire : !firrtl.uint<3>\r\n      firrtl.strictconnect %w3, %n : !firrtl.uint<3>\r\n      firrtl.strictconnect %val2, %w3 : !firrtl.uint<3>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nNodes are marked overdefined if have annotations on them, but wires are const-prop'd through as long as the wire isn't `dontTouch`'d.\r\n\r\nProbably nodes should work that way, too.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-11",
+  "closed_at": "2023-09-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1396,
+  "issue_url": "https://github.com/verilator/verilator/issues/1396",
+  "title": "Verilator random number generated seeded with lrand48(), which isn't deterministic across platforms",
+  "body": "---\n\n\nAuthor Name: **Stan Sokorac**\nOriginal Redmine Issue: 1396 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator uses a deterministic random number generator, but does the initial seeding using lrand48(), which will produce a different random seed on different platforms, even when seeded the same. This means that simulations that originally ran on, say, Linux, can't be reproduced accurately on OSX, or even different versions of Linux.\r\n\r\nC++ offers mt19937_64 random number generator which is guaranteed to produce the same sequence on numbers on every system, given the same seed. For example, running this code below on different OSes will give you different numbers for lrand48, but always the same for mt19937.\r\n\r\n```<code class=\"cpp\">\r\n#include <cstdlib>\r\n#include <random>\r\n\r\nint main(int argc, char *argv[])\r\n{\r\n  srand(1);\r\n  for (int i=0; i < 3; i++)\r\n     printf(\"lrand48[%d]=%ld\\n\", i, lrand48());\r\n\r\n  std::mt19937_64 mt(1);\r\n  for (int i=0; i < 3; i++)\r\n     printf(\"mt19937[%d]=%llu\\n\", i, mt());\r\n}\r\n\r\n</code>\n```\r\n\r\nIt would be helpful if Verilator used it to provide better reproducibility across systems. We've worked around this by using our own DPI random() function instead of $random, however there's no way around this for other randomness, like -x-assign/-x-initial.\r\n\r\nAlternatively, some way to provide our own random seed/function to override the built-in ones would also do the trick.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: usability"
+  ],
+  "state": "closed",
+  "created_at": "2019-02-04",
+  "closed_at": "2019-03-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

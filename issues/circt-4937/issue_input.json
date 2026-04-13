@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4937,
+  "issue_url": "https://github.com/llvm/circt/issues/4937",
+  "title": "[ExportVerilog] Invalid part-select on a constant",
+  "body": "The following MLIR:\r\n```llvm\r\nhw.module @test(..., %val0: i512, ...)\r\n  %c0_i512 = hw.constant 0 : i512\r\n  %c0_i32 = hw.constant 0 : i32\r\n  %100 = comb.mux %13#6, %val0, %c0_i512 : i512\r\n  %101 = sv.indexed_part_select %100[%c0_i32 : 64] : i512, i32\r\n```\r\nGenerates the following SV:\r\n```sv\r\nwire [63:0]      _GEN_5 = _controller_out6 ? val0 : 512'h0[32'h0 +: 64];\r\n```\r\nWhich Vitis `v++` doesn't like:\r\n```\r\nERROR: [VPL 10-4982] syntax error near '[' [src/test_load_kernel_f1_s0_v0_v0.sv:316]\r\n```\r\nProbably the problem is with `512'h0[32'h0 +: 64];`.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-04-05",
+  "closed_at": "2023-04-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

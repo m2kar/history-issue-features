@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1267,
+  "issue_url": "https://github.com/llvm/circt/issues/1267",
+  "title": "[FIRRTL] Need an intermodule dead code elimination pass",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module mod_0 :\r\n    input inp_a: UInt<1>\r\n    output tmp18: UInt<1>\r\n    tmp18 <= inp_a\r\n  module top_mod :\r\n    input a: UInt<1>\r\n    inst U0 of mod_0\r\n    U0 is invalid\r\n    U0.inp_a <= a\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\nmodule mod_0(\r\n  input  inp_a,\r\n  output tmp18);\r\n\r\n  assign tmp18 = inp_a;\t// a_top_mod.fir:2:3\r\nendmodule\r\n\r\nmodule top_mod(\r\n  input a);\r\n\r\n  wire U0_tmp18;\t// a_top_mod.fir:8:5\r\n\r\n  mod_0 U0 (\t// a_top_mod.fir:8:5\r\n    .inp_a (a),\r\n    .tmp18 (U0_tmp18)\r\n  );\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input   a\r\n);\r\nendmodule\r\n```\r\n\r\nModule `mod0` and `U0` instantiation should be removed from the output because nothing depends it's outputs.\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-14",
+  "closed_at": "2023-04-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

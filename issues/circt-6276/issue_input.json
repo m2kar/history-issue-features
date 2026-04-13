@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6276,
+  "issue_url": "https://github.com/llvm/circt/pull/6276",
+  "title": "[HW] Ignore empty port names",
+  "body": "This PR attempts to bypass an issue with module port names. \r\nIf a `hw.module` port is not named, for example `%0`, then mlir renames it to `arg0` during serialization, https://github.com/llvm/llvm-project/blob/main/mlir/lib/IR/AsmPrinter.cpp#L1498.\r\nThis lit snippet shows the output of `circt-opt`, that demonstrates the block argument renaming.\r\n```\r\n// CHECK-LABEL: hw.module @Foo(in %arg0 : i1) {\r\nhw.module @Foo(in %0 \"\" : i1) {\r\n```\r\nThe `hw::ModuleType` gets the module port name from the SSA name, https://github.com/llvm/circt/blob/main/lib/Dialect/HW/ModuleImplementation.cpp#L358, during parsing. If the SSA has no name, then the port name is `\"\"` which is fine.\r\n\r\nThe problem is that after serialization the `ModuleType` port names will be inconsistent with the SSA name because of the above shown block argument renaming. `ModuleType` will still have `\"\"` as port name but the SSA name will be printed as `arg0`. As a result after serialization any `hw.instance` to the module will have incorrect argument names and will fail to parse and round trip.\r\n```\r\nhw.instance \"foo\" @Foo(\"\": %foo: i1) -> ()\r\n```\r\nAs a temporary fix, this PR just skips the verifier check if the name is empty.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-10",
+  "closed_at": "2023-10-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

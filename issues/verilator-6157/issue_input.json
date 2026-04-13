@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6157,
+  "issue_url": "https://github.com/verilator/verilator/issues/6157",
+  "title": "Can't set output of combinatorial logic",
+  "body": "Verilator command:\n`verilator --cc --exe --build -j 0 --public-flat-rw --vpi --Wno-fatal --trace --hierarchical sim_main.cpp top.sv`\n\nVersion:\nVerilator 5.036 2025-04-27 rev v5.036\n\nOS:\nAlmaLinux 8.10\n\nI'm trying to set the output of combinatorial logic. `counter_d` in this instance.\n\n```\nalways_comb begin\n    counter_d = counter_q;\n    if (clear_i) begin\n        counter_d = '0;\n    end else if (load_i) begin\n        counter_d = {1'b0, d_i};\n    end else if (en_i) begin\n        if (down_i) begin\n            counter_d = counter_q - delta_i;\n        end else begin\n            counter_d = counter_q + delta_i;\n        end\n    end\nend\n\nalways_ff @(posedge clk_i or negedge rst_ni) begin\n    if (!rst_ni) begin\n       counter_q <= '0;\n    end else begin\n       counter_q <= counter_d;\n    end\nend\n```\n\nIn C++\n```\ntop->rootp->top__DOT__dut__DOT__i_counter__DOT__counter_d = 1;\n```\n\nI would expect `counter_d` to become `1` until `top->eval()` is called and `counter_q` to become `1` after `top->eval()`. In reality, absolutely nothing changes when I add that C++ line.\n\nIf I force the signal then it works as expected.\n\nIs this intended behavior? ",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-07",
+  "closed_at": "2025-07-07",
+  "code_blocks": [
+    "always_comb begin\n    counter_d = counter_q;\n    if (clear_i) begin\n        counter_d = '0;\n    end else if (load_i) begin\n        counter_d = {1'b0, d_i};\n    end else if (en_i) begin\n        if (down_i) begin\n            counter_d = counter_q - delta_i;\n        end else begin\n            counter_d = counter_q + delta_i;\n        end\n    end\nend\n\nalways_ff @(posedge clk_i or negedge rst_ni) begin\n    if (!rst_ni) begin\n       counter_q <= '0;\n    end else begin\n       counter_q <= counter_d;\n    end\nend\n",
+    "top->rootp->top__DOT__dut__DOT__i_counter__DOT__counter_d = 1;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

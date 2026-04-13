@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2238,
+  "issue_url": "https://github.com/llvm/circt/pull/2238",
+  "title": "[ExportVerilog] Fix bind emission, split into parallel/sequential phase",
+  "body": "Emission of `sv.bind` requires to occur in a sequential piece of code. This is currently handled well in `emitOps` if parallelize is `true`, which is the case for single-file Verilog emission. But in split Verilog emission, `emitOps` itself is called in a parallel block, which breaks an implicit assumption in the code.\r\n\r\nThis change extends the split into parallel and sequential phases of emission, and makes them explicit at the unified/split Verilog emitter level by separating the `emitOps` function into an `emitOpsParallel` and a `emitOpsSequential`. These correspond to the first and second half of the original `emitOps`:\r\n\r\n- `emitOpsParallel` performs opportunistic emission of operations. It tries to emit operations in parallel, if possible directly to the   output stream, or into a string buffer otherwise. It may leave operations unemitted.\r\n- `emitOpsSequential` performs the final emission of operations. This includes emitting any string buffers produced by the parallel portion, and actually emitting any ops that were left over.\r\n\r\nThe split Verilog emitter now keeps a list of `SplitOutputFile`s in a vector, which is used to carry the necessary information from the parallel to the sequential emission phase. The emitter then performs emission in two phases: first calling the `emitParallel` function in a parallel block, and then calling the `emitSequential` function in a sequential block.\r\n\r\nThis fixes an assertion that triggers when trying to emit any design containing bind statements through the split Verilog emitter.",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-25",
+  "closed_at": "2021-11-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

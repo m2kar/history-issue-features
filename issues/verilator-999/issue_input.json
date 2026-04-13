@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 999,
+  "issue_url": "https://github.com/verilator/verilator/issues/999",
+  "title": "$signed ignored under generate block",
+  "body": "---\n\n\nAuthor Name: **Clifford Wolf** (@cliffordwolf)\nOriginal Redmine Issue: 999 from https://www.veripool.org\nOriginal Date: 2015-11-12\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nA PicoRV32 user reported problems with simulating the PicoRV32 CPU with Verilator. So I investigated and found the following bug in Verilator. Sorry for not positing a minimalist test case. I've tried to create one from scratch, but was unable to reproduce the problem this way.\r\n\r\nHere is the problem: http://i.imgur.com/evkRLNx.png\r\n\r\nalu_lts clearly should be high when reg_op1 is -1 and reg_op2 is 0. But it seems like Verilator incorrectly merges the alu_lts and alu_ltu signal.\r\n\r\nUsing current git head of verilator (4e4bc7b):\r\n\r\n```\r\n$ wget https://raw.githubusercontent.com/cliffordwolf/picorv32/master/picorv32.v\r\n\r\n$ verilator -Wno-fatal --trace --cc picorv32.v\r\n\r\n$ grep -r alu_lt obj_dir/Vpicorv32__Trace__Slow.cpp\r\n\tvcdp->declBit  (c+8,\"v picorv32_core alu_ltu\",-1);\r\n\tvcdp->declBit  (c+8,\"v picorv32_core alu_lts\",-1);\r\n\tvcdp->fullBit  (c+8,(vlTOPp->v__DOT__picorv32_core__DOT__alu_lts));\r\n\n```\r\n\r\nInterestingly, in the larger test bench that includes PicoRV32, the signals alu_lts and alu_ltu are _not_ merged, but are still assigned the same expressions. Looking at the generated c++ code:\r\n\r\n```\r\n     // ALWAYS at picorv32.v:570\r\n     vlTOPp->v__DOT__uut__DOT__alu_lts = (vlTOPp->v__DOT__uut__DOT__reg_op1\r\n                                          < vlTOPp->v__DOT__uut__DOT__reg_op2);\r\n     // ALWAYS at picorv32.v:571\r\n     vlTOPp->v__DOT__uut__DOT__alu_ltu = (vlTOPp->v__DOT__uut__DOT__reg_op1\r\n                                          < vlTOPp->v__DOT__uut__DOT__reg_op2);\r\n\n```\r\n\r\nIn this case, manually changing the assignment for alu_lts fixes the problem and the testbench runs successfully:\r\n\r\n```\r\n     vlTOPp->v__DOT__uut__DOT__alu_lts = VL_LTS_III(1, 32, 32, vlTOPp->v__DOT__uut__DOT__reg_op1, vlTOPp->v__DOT__uut__DOT__reg_op2);\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2015-11-12",
+  "closed_at": "2015-12-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

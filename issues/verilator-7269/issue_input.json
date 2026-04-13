@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7269,
+  "issue_url": "https://github.com/verilator/verilator/pull/7269",
+  "title": "Support assignment patterns as comparison operands",
+  "body": "## Summary\r\n\r\nThis patch adds support for assignment patterns (`'{...}`) as operands of\r\ncomparison operators (EQ, NEQ, etc.). Previously these were rejected with\r\n`UNSUPPORTED: Assignment pattern member not underneath a supported construct`.\r\nIEEE 1800-2023 sections 7.8, 10.9.1, and 7.11 allow assignment patterns in\r\nequality comparisons with arrays and structs.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  int arr[4];\r\n  initial begin\r\n    arr = '{10, 20, 30, 40};\r\n    if (arr == '{10, 20, 30, 40}) $display(\"match\");\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: t.v:5:17: Unsupported/Illegal: Assignment pattern member\r\n    not underneath a supported construct: EQ\r\n```\r\n\r\n## Changes\r\n\r\n- In `visit_cmp_eq_gt` (`V3Width.cpp`), detect when one operand is an\r\n  `AstPattern` and iterate the non-pattern operand first, then propagate\r\n  its resolved dtype to the pattern side via `WidthVP` -- analogous to\r\n  how assignments pass LHS dtype to RHS patterns\r\n- Updated `t_stream_unpack_lhs.out` golden file -- the pattern UNSUPPORTED\r\n  errors in that test are now resolved, unmasking a pre-existing V3Const\r\n  internal error on stream unpacking width\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_assign_pattern_cmp.{v,py}` -- 12 scenarios:\r\n  fixed-size array, queue slice, packed struct, nested struct array,\r\n  pattern on LHS/RHS, EQ/NEQ, different widths, negative match\r\n- Updated `test_regress/t/t_stream_unpack_lhs.out` -- golden file\r\n  reflects changed error output\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-17",
+  "closed_at": "2026-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

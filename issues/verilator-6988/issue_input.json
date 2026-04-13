@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6988,
+  "issue_url": "https://github.com/verilator/verilator/issues/6988",
+  "title": "assigning queue to unpacked array larger than 256 results in c++ error instead of verilation error",
+  "body": "This might be related to #5439 .  It took a little experimenting to narrow down, but here's the code example:\n\n```verilog\nmodule top;\n    localparam SIZE = 256;\n\n    initial begin\n        byte unsigned word[SIZE];\n        byte unsigned byte_queue[$];\n        for(int i = 0; i < SIZE; i++) begin\n            byte_queue.push_back(8'haa);\n        end\n\n        word = byte_queue;\n        $display(\"word[255]: 'h%h\", word[255]);\n    end\nendmodule\n```\nI didn't check every value of SIZE, but it seems that with a value of 256 or less you get a normal verilator error:\n```\n%Error: queue_assign_to_unpacked_array.sv:11:16: VARREF 'top.unnamedblk1.byte_queue' is not an unpacked array, but is in an unpacked array context\n   11 |         word = byte_queue;\n      |                ^~~~~~~~~~\n```\nand with a value of 257 or higher for SIZE, you get a C++ compile error:\n```\nIn file included from Vqueue_assign_to_unpacked_array__ALL.cpp:8:\nVqueue_assign_to_unpacked_array___024root__0__Slow.cpp: In function ‘void Vqueue_assign_to_unpacked_array___024root___eval_initial__TOP(Vqueue_assign_to_unpacked_array___024root*)’:\nVqueue_assign_to_unpacked_array___024root__0__Slow.cpp:41:50: error: no match for ‘operator=’ (operand types are ‘VlUnpacked<unsigned char, 257>’ and ‘VlQueue<unsigned char>’)\n   41 |     top__DOT__unnamedblk1__DOT__word = vlSelfRef.top__DOT__unnamedblk1__DOT__byte_queue;\n      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n```\nThe verilator error is much more helpful than the C++ error.\n\nWhat 'verilator' command line do we use to run your example?\n\nverilator -j \"$(nproc)\" --binary \n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\nLatest master: g996ae35a1\n\nWhat OS and distribution are you using?\n\nrocky linux 9\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nsure",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-02",
+  "closed_at": "2026-02-04",
+  "code_blocks": [
+    "module top;\n    localparam SIZE = 256;\n\n    initial begin\n        byte unsigned word[SIZE];\n        byte unsigned byte_queue[$];\n        for(int i = 0; i < SIZE; i++) begin\n            byte_queue.push_back(8'haa);\n        end\n\n        word = byte_queue;\n        $display(\"word[255]: 'h%h\", word[255]);\n    end\nendmodule\n",
+    "%Error: queue_assign_to_unpacked_array.sv:11:16: VARREF 'top.unnamedblk1.byte_queue' is not an unpacked array, but is in an unpacked array context\n   11 |         word = byte_queue;\n      |                ^~~~~~~~~~\n",
+    "In file included from Vqueue_assign_to_unpacked_array__ALL.cpp:8:\nVqueue_assign_to_unpacked_array___024root__0__Slow.cpp: In function ‘void Vqueue_assign_to_unpacked_array___024root___eval_initial__TOP(Vqueue_assign_to_unpacked_array___024root*)’:\nVqueue_assign_to_unpacked_array___024root__0__Slow.cpp:41:50: error: no match for ‘operator=’ (operand types are ‘VlUnpacked<unsigned char, 257>’ and ‘VlQueue<unsigned char>’)\n   41 |     top__DOT__unnamedblk1__DOT__word = vlSelfRef.top__DOT__unnamedblk1__DOT__byte_queue;\n      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

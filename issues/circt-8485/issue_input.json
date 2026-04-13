@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8485,
+  "issue_url": "https://github.com/llvm/circt/issues/8485",
+  "title": "`seq.FIFO` fails at `lower-seq-to-sv` in PyCDE",
+  "body": "Dear All,\n\nI am getting familiar with circt and I am trying to write something simple:\n\n````Python\nfrom pycde import Input, Output, Module, System, Clock, Reset\nfrom pycde.types import types\nfrom pycde import generator\nfrom pycde.seq import FIFO\n\nclass Top(Module):\n    clk = Clock()\n    rst = Reset()\n    a = Input(types.i32)\n    exposed_c = Output(types.i32)\n\n    @generator\n    def construct(self):\n        fifo = FIFO(type=types.i32, depth=4, clk=self.clk, rst=self.rst, rd_latency=1)\n        one = types.i1(1)\n        fifo.push(self.a, one)\n        fifo.pop(one)\n        self.exposed_c = fifo.output\n\n\nsystem = System([Top], name=\"ExampleSystem\", output_directory=\"exsys\")\n#system.run_passes(debug=True)\nsystem.compile()\n````\n\nIt gives me the error log below:\n````\nfailed to legalize operation 'seq.fifo' that was explicitly marked illegal\nsee current operation: %1:5 = \"seq.fifo\"(<<UNKNOWN SSA VALUE>>, %0, %0, <<UNKNOWN SSA VALUE>>, <<UNKNOWN SSA VALUE>>) <{depth = 4 : i64, rdLatency = 1 : i64, resultSegmentSizes = array<i32: 1, 1, 1, 1, 1>}> : (i32, i1, i1, !seq.clock, i1) -> (i32, i1, i1, i1, i1)\n````\n\nIt turns out that those `<<UNKNOWN SSA VALUE>>` are `self.a`, `self.clk`, and `self.rst`, which indicates a bad hierarchical synthesis.\n\nI tried to locate the issue, and it stops at phase 16, which lowers seq to sv.",
+  "labels": [
+    "PyCDE"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-16",
+  "closed_at": "2025-05-16",
+  "code_blocks": [
+    "from pycde import Input, Output, Module, System, Clock, Reset\nfrom pycde.types import types\nfrom pycde import generator\nfrom pycde.seq import FIFO\n\nclass Top(Module):\n    clk = Clock()\n    rst = Reset()\n    a = Input(types.i32)\n    exposed_c = Output(types.i32)\n\n    @generator\n    def construct(self):\n        fifo = FIFO(type=types.i32, depth=4, clk=self.clk, rst=self.rst, rd_latency=1)\n        one = types.i1(1)\n        fifo.push(self.a, one)\n        fifo.pop(one)\n        self.exposed_c = fifo.output\n\n\nsystem = System([Top], name=\"ExampleSystem\", output_directory=\"exsys\")\n#system.run_passes(debug=True)\nsystem.compile()\n",
+    "failed to legalize operation 'seq.fifo' that was explicitly marked illegal\nsee current operation: %1:5 = \"seq.fifo\"(<<UNKNOWN SSA VALUE>>, %0, %0, <<UNKNOWN SSA VALUE>>, <<UNKNOWN SSA VALUE>>) <{depth = 4 : i64, rdLatency = 1 : i64, resultSegmentSizes = array<i32: 1, 1, 1, 1, 1>}> : (i32, i1, i1, !seq.clock, i1) -> (i32, i1, i1, i1, i1)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7378,
+  "issue_url": "https://github.com/verilator/verilator/pull/7378",
+  "title": "Support sequence 'throughout' operator",
+  "body": "## Summary\r\n\r\nThis patch adds support for the `throughout` sequence operator (IEEE 1800-2023 Section 16.9.9), which requires a boolean expression to hold true at every clock tick during which a sequence is being evaluated. The operator was previously rejected with an `UNSUPPORTED` error.\r\n\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t(input clk);\r\n  logic cond, a, b;\r\n  assert property (@(posedge clk)\r\n      a |-> (cond throughout (1'b1 ##3 1'b1)));\r\nendmodule\r\n```\r\n\r\nOn master:\r\n\r\n\r\n`%Error-UNSUPPORTED: t.sv:4:16: Unsupported: throughout (in sequence expression)`\r\n\r\n## Changes\r\n\r\n- src/V3AstNodeExpr.h: add AstSExprThroughout AST node with condp (boolean LHS) and seqp (sequence RHS) operands\r\n- src/V3AstNodeStmt.h: add op4 throughoutp slot to AstDelay for per-tick condition storage\r\n- src/verilog.y: remove BBUNSUP; parse expr throughout seq into AstSExprThroughout\r\n- src/V3Width.cpp: add type-check visitor -- condp checked as boolean (outside sequence context), seqp checked as sequence\r\n- src/V3AssertProp.cpp (RangeDelayExpander): reject unsupported forms -- range-delay RHS, nested throughout, multi-cycle and/or RHS\r\n- src/V3AssertProp.cpp (AssertPropLowerVisitor): lower throughout by AND-ing condition into each leaf expression and attaching it to each AstDelay::throughoutp; zero-delay form degenerates to cond && seq\r\n- src/V3AssertPre.cpp: inject throughoutOk flag checked at tick 0 and each loop iteration; wrap remaining sequence in if (throughoutOk) ... else fail; disable iff wraps outside throughout\r\n- src/V3EmitV.cpp: add visitor to re-emit cond throughout seq\r\n\r\n## Test\r\n\r\n- Added test_regress/t/t_sequence_sexpr_throughout.{v,py} -- CRC-driven 100-cycle test covering 4-tick throughout, 2-tick throughout with end expression, and zero-delay degenerate form\r\n- Added test_regress/t/t_sequence_sexpr_throughout_unsup.{v,py,out} -- verifies that range-delay and temporal-and RHS forms produce UNSUPPORTED errors\r\n- Removed sequence s_throughout from test_regress/t/t_sequence_sexpr_unsup.{v,out} -- throughout is now supported\r\n\r\n**Note on simulation counts vs QuestaSim**: The zero-delay degenerate case matches QuestaSim exactly. Multi-tick counts differ slightly because Verilator evaluates assertions in the Active region rather than the Reactive region. This is a pre-existing limitation shared by all SVA operators in Verilator, not specific to throughout. A follow-up PR will address SVA Reactive-region scheduling.\r\n\r\n--- \r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.\r\n\r\n\r\n",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2026-04-05",
+  "closed_at": "2026-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

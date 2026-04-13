@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1137,
+  "issue_url": "https://github.com/llvm/circt/issues/1137",
+  "title": "[FIRRTL] infer width (not, tail, dshl ?)",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_j: UInt<56>\r\n    output tmp43: UInt\r\n    output tmp47: SInt\r\n    tmp43 <= not(inp_j)\r\n    tmp47 <= dshl(SInt(\"o10266562\"), tail(tmp43, 49))\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [55:0]  inp_j,\r\n  output [55:0]  tmp43,\r\n  output [149:0] tmp47);\r\n\r\n  wire [55:0] _tmp43_output;\t// a_top_mod.fir:2:3\r\n\r\n  assign _tmp43_output = ~inp_j;\t// a_top_mod.fir:6:{11,14}\r\n  wire [55:0] _T = _tmp43_output;\t// a_top_mod.fir:7:38\r\n  assign tmp43 = _T;\t// a_top_mod.fir:2:3\r\n  assign tmp47 = 150'h216D72 << {143'h0, _T[6:0]};\t// a_top_mod.fir:2:3, :7:{14,38}\r\nendmodule\r\n\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [55:0] inp_j,\r\n  output [55:0] tmp43,\r\n  output [21:0] tmp47\r\n);\r\n  wire [149:0] _GEN_1 = 150'sh216d72 << tmp43[6:0];\r\n  assign tmp43 = ~inp_j;\r\n  assign tmp47 = _GEN_1[21:0];\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "wontfix",
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-25",
+  "closed_at": "2021-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

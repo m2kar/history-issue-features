@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1223,
+  "issue_url": "https://github.com/verilator/verilator/issues/1223",
+  "title": "V3Inline can create unboundedly large modules",
+  "body": "---\n\n\nAuthor Name: **John Coiner** (@jcoiner)\nOriginal Redmine Issue: 1223 from https://www.veripool.org\n\nOriginal Assignee: John Coiner (@jcoiner)\n\n---\n\nScenario:\r\n\r\nModule TOP instances two of module B.\r\nModule B instances two of module C.\r\n  (and so on until...)\r\nModule I instances two of module J.\r\nModule J instances two of module K, which is finally a leaf node.\r\n\r\nThere are 1024 instances of K in this design, grand total.\r\n\r\nV3Inline may flatten this into one single giant module. For all mods B through K, we have only two \"refs\" in the accounting done by InlineMarkVisitor::visit(AstNodeModule* nodep), and \"m_stmtCnt\" doesn't take into account the growth in statements resulting from inlining. So we generate a single module with at least 1024*K statements. Generated .cpp files can run into the megabytes for a small but steeply-nested design like this.\r\n\r\nI understand that inlining is great for lots of reasons: it lets us elide assignments at module boundaries, it minimizes function call overhead due to functions becoming larger, and creates more opportunities for the C compiler to reorder operations (promoting LOADs, etc) also due to functions becoming larger. Probably other reasons.\r\n\r\nMy guess is that most of the benefits of inlining happen when smaller modules are inlined. Once we are inlining larger modules, my guess is that beyond a certain point, the costs begin to exceed the benefits. The instruction stream grows sharply from inlining very large modules, and in the extreme case above, we lose the ability to V3Combine anything. So I would predict a negative ICache impact. Also verilation time and compile time get bad when functions grow very large.\r\n\r\nHere's a proposal:\r\n * When deciding which modules to inline, visit modules in bottom-up order (in the instance hierarchy)\r\n * Let's assume we've decided to inline module K. Now when we make the inlining decision for module J, compute the number of statements in J taking into account both J's native statements and those it inherited from its two inlined copies of K.\r\n\r\nBy the time we get a few levels up from K, the size of the module we're considering inlining will grow above v3Global.opt.inlineMult() and we'll stop inlining at some medium size.\r\n\r\nWilson, does this make sense? If you agree I can work up a patch.\r\n\r\nI ran into this while working on multicore support (issue 1216). I was trying to derive the partitioning of the execution graph in part from the scope partitioning. It wasn't working well due to V3Inline flattening everything into only one scope.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2017-09-29",
+  "closed_at": "2017-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

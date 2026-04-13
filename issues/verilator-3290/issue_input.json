@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3290,
+  "issue_url": "https://github.com/verilator/verilator/issues/3290",
+  "title": "Missing warning for different bit lengths",
+  "body": "I just found a bug in my RTL because this line had a 12 instead of a 13:\r\n\r\n`\r\nfreq       = { 7'd0, fnum } + { {12{pm_offset[3]}}, pm_offset };\r\n`\r\n\r\nSurprisingly, Verilator linter is fine with a 12 and a 13. It will only issue warnings for numbers below 12 and above 13. The correct bit count occurs for 13. Is this behavior correct?\r\n\r\nHere is the full, if short, module:\r\n\r\n```\r\nmodule jtopl_pg_inc (\r\n    input        [ 2:0] block,\r\n    input        [ 9:0] fnum,\r\n    input signed [ 3:0] pm_offset,\r\n    output reg   [16:0] phinc_pure\r\n);\r\n\r\nreg [16:0] freq;\r\n/* verilator lint_on WIDTH */\r\n\r\nalways @(*) begin \r\n    freq       = { 7'd0, fnum } + { {12{pm_offset[3]}}, pm_offset };\r\n    // Add PM here\r\n    freq       = freq << block;\r\n    phinc_pure = freq >> 1;\r\nend\r\n\r\nendmodule // jtopl_pg_inc\r\n```",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-21",
+  "closed_at": "2022-01-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

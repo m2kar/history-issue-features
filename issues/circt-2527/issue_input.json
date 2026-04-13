@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2527,
+  "issue_url": "https://github.com/llvm/circt/issues/2527",
+  "title": "[FIRRTL] CHIRRTL lowering not updating NLAs",
+  "body": "related to: https://github.com/llvm/circt/issues/2526\r\nThere are two problems:\r\n1. Memory ports are not being assigned `inner_sym` for use in an NLA\r\n2. During LowerCHIRRTL, the NLA needs to be updated to target the memory. It still points to the non-existent port declaration afterwords.\r\n\r\nThe following test\r\n\r\n```\r\ncircuit Top: %[[ {\"class\":\"test\",\"target\":\"~Top|Top/test:Test>myport\"}]]\r\n  module Test:\r\n    input p: UInt<1>\r\n    input addr: UInt<4>\r\n    input clock: Clock\r\n    output out: UInt<8>\r\n\r\n    cmem mymem : UInt<8>[16]\r\n    node n = addr\r\n    when p:\r\n      read mport myport = mymem[n], clock\r\n    out <= myport\r\n\r\n  module Top:\r\n    inst test of Test\r\n```\r\n```mlir\r\n// ./bin/firtool --parse-only  ./test.fir\r\n  firrtl.circuit \"Top\"   {\r\n    firrtl.nla @nla_1 [#hw.innerNameRef<@Top::@test>, #hw.innerNameRef<@Test::@myport>]\r\n    firrtl.module @Test(in %p: !firrtl.uint<1>, in %addr: !firrtl.uint<4>, in %clock: !firrtl.clock, out %out: !firrtl.uint<8>) {\r\n      %mymem = chirrtl.combmem  : !chirrtl.cmemory<uint<8>, 16>\r\n      %myport_data, %myport_port = chirrtl.memoryport Read %mymem  {annotations = [{circt.nonlocal = @nla_1, class = \"test\"}], name = \"myport\"} : (!chirrtl.cmemory<uint<8>, 16>) -> (!firrtl.uint<8>, !chirrtl.cmemoryport)\r\n      %n = firrtl.node %addr  : !firrtl.uint<4>\r\n      firrtl.when %p  {\r\n        chirrtl.memoryport.access %myport_port[%n], %clock : !chirrtl.cmemoryport, !firrtl.uint<4>, !firrtl.clock\r\n      }\r\n      firrtl.connect %out, %myport_data : !firrtl.uint<8>, !firrtl.uint<8>\r\n    }\r\n    firrtl.module @Top() {\r\n      %test_p, %test_addr, %test_clock, %test_out = firrtl.instance test sym @test  {annotations = [{circt.nonlocal = @nla_1, class = \"circt.nonlocal\"}]} @Test(in p: !firrtl.uint<1>, in addr: !firrtl.uint<4>, in clock: !firrtl.clock, out out: !firrtl.uint<8>)\r\n    }\r\n  }\r\n```\r\n\r\nAfter lowering CHIRRTL, the NLA is still referencing the `@myport` which no longer exists. \r\n```mlir\r\nfirrtl.nla @nla_1 [#hw.innerNameRef<@Top::@test>, #hw.innerNameRef<@Test::@myport>]\r\nfirrtl.module @Test(in %p: !firrtl.uint<1>, in %addr: !firrtl.uint<4>, in %clock: !firrtl.clock, out %out: !firrtl.uint<8>) {\r\n  ...\r\n  %mymem_myport = firrtl.mem Undefined  {depth = 16 : i64, name = \"mymem\", portAnnotations = [[{circt.nonlocal = @nla_1, class = \"test\"}]], portNames = [\"myport\"], readLatency = 0 : i32, writeLatency = 1 : i32} : !firrtl.bundle<addr: uint<4>, en: uint<1>, clk: clock, data flip: uint<8>>\r\n  ...\r\n}\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-27",
+  "closed_at": "2023-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

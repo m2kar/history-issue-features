@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4153,
+  "issue_url": "https://github.com/verilator/verilator/issues/4153",
+  "title": "Operator SHIFTR generates wrong values under specifc circumstances",
+  "body": "### Example code\r\n\r\nVerilog file `top.v`:\r\n\r\n```Verilog\r\nmodule top (o, clk, wire3, wire7);\r\n  output [12:0] o;\r\n  input clk;\r\n  input signed [2:0] wire3;\r\n  input [6:0] wire7;\r\n\r\n  reg signed [5:0] reg6 = 0;\r\n  reg signed [6:0] reg7 = 0;\r\n  assign o = {reg6, reg7};\r\n\r\n  always @(posedge clk) begin\r\n     reg7 <= wire7;\r\n     reg6 <= wire3 >> reg7;\r\n   end\r\nendmodule\r\n```\r\n\r\nC++ file `main.cpp`:\r\n\r\n```cpp\r\n#include \"verilated.h\"\r\n#include \"Vtop.h\"\r\n\r\n#include <bitset>\r\n#include <iostream>\r\n\r\n//======================\r\n\r\nint main(int argc, char** argv, char**) {\r\n    // Setup context, defaults, and parse command line\r\n    Verilated::debug(0);\r\n    const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};\r\n    contextp->commandArgs(argc, argv);\r\n\r\n    // Construct the Verilated model, from Vtop.h generated from Verilating\r\n    const std::unique_ptr<Vtop> topp{new Vtop{contextp.get()}};\r\n\r\n    // Simulate\r\n    topp->clk = 0;\r\n    topp->eval();\r\n    topp->wire7 = 2;\r\n    topp->clk = 1;\r\n    topp->eval();\r\n    std::cout << \"o = \" << std::bitset<16>(topp->o) << std::endl;\r\n    // NOTE: now reg7 is expected to be 2\r\n\r\n    topp->clk = 0;\r\n    topp->eval();\r\n    topp->wire3 = 4;\r\n    topp->wire7 = 0;\r\n    topp->clk = 1;\r\n    topp->eval();\r\n\r\n    std::cout << \"---\" << std::endl;\r\n    std::cout << \"o = \" << std::bitset<16>(topp->o) << std::endl;\r\n\r\n    // Final model cleanup\r\n    topp->final();\r\n    return 0;\r\n}\r\n```\r\n\r\nVerilator cmdline:\r\n\r\n```\r\n$ ./bin/verilator -cc -exe -build -Wno-WIDTHEXPAND top.v main.cpp\r\n```\r\n\r\nOutputs of `Vtop`:\r\n\r\n```\r\n$ ./obj_dir/Vtop\r\no = 0000000000000010\r\n---\r\no = 0000011110000000\r\n```\r\n\r\nVerilator outputs `reg6 = 6'b001111` after we set `wire3 = 3'b100` and `reg7 = 7'b0000010`, which seems to be wrong.\r\n\r\nActually, I'm still not very sure whether `wire3` and `reg7` should be extended to 7-bit or truncated to 3-bit after reading the Verilog standard (IEEE Std 1364™-2005). Seems that Verilator extended `wire3` to 6-bit. I also tried Yosys and it extended both of them to 7-bit, then truncated to 6-bit to fit `reg6`. So I fired this issue here.\r\n\r\nSorry if this is not a real bug to you.\r\n\r\n### Verilator version\r\n\r\nThe latest git master (`ee5c0a29024dc6777491e78c913e9efc1bcdbe6f`).\r\n\r\n### OS version\r\n\r\n**WSL2** on Windows (`5.15.90.1-microsoft-standard-WSL2`)\r\nThe distribution I used was Debian 10.",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-28",
+  "closed_at": "2023-04-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

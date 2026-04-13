@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8692,
+  "issue_url": "https://github.com/llvm/circt/issues/8692",
+  "title": "[ExportVerilog] Support `math.ipowi` operation",
+  "body": "The following Verilog currently fails to round-trip through `circt-verilog | circt-opt --lower-seq-to-sv --export-verilog`:\n```systemverilog\nmodule binary_ops_00000105(a, y);\n  input [3:0] a;\n  output [4:0] y;\n  assign y = 4'd2 ** a;\nendmodule\n```\nError:\n```\nsyn_circt/binary_ops_00000105.mlir:6:10: error: dialect \"math\" not supported for direct Verilog emission\n    %1 = math.ipowi %c2_i6, %0 : i6\n         ^\nsyn_circt/binary_ops_00000105.mlir:6:10: note: see current operation: %3 = \"math.ipowi\"(%0, %2) : (i6, i6) -> i6\nsyn_circt/binary_ops_00000105.mlir:6:10: note: ExportVerilog cannot emit this operation; it needs to be lowered before running ExportVerilog\n```\nI don't think we have ever run into a need to have `**` emitted back to Verilog before. There is no op in the Comb dialect to represent `**`, which is why ImportVerilog uses `math.ipowi`. It might be worthwhile adding direct support for `math.ipowi` to ExportVerilog for the few cases where this comes up.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2025-07-11",
+  "closed_at": null,
+  "code_blocks": [
+    "module binary_ops_00000105(a, y);\n  input [3:0] a;\n  output [4:0] y;\n  assign y = 4'd2 ** a;\nendmodule\n",
+    "syn_circt/binary_ops_00000105.mlir:6:10: error: dialect \"math\" not supported for direct Verilog emission\n    %1 = math.ipowi %c2_i6, %0 : i6\n         ^\nsyn_circt/binary_ops_00000105.mlir:6:10: note: see current operation: %3 = \"math.ipowi\"(%0, %2) : (i6, i6) -> i6\nsyn_circt/binary_ops_00000105.mlir:6:10: note: ExportVerilog cannot emit this operation; it needs to be lowered before running ExportVerilog\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

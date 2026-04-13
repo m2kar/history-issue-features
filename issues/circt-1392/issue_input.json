@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1392,
+  "issue_url": "https://github.com/llvm/circt/pull/1392",
+  "title": "[Scheduling] Separate problems and algorithms.",
+  "body": "I believe it was a misconception to model problems and algorithms in the same class hierarchy. Analogy: Imagine LLVM's alias analyses would subclass `Function`.\r\n\r\nTo rectify this, this PR renames the `Scheduler` class to `Problem` (now living in `circt/Scheduling/Problems.h`), and removes the pure virtual `schedule()` method. Algorithms now declare their entry points in `circt/Scheduling/Algorithms.h`, and may hide their implementation classes, or no longer need to be class, see `scheduleASAP(Problem &prob)`.\r\n\r\nFurther benefits:\r\n- Clients can contain problem construction code without needing to link any concrete algorithm.\r\n- Algorithms can provide multiple entry points to schedule simpler problem variants. For example, an algorithm capable of sharing arbitrary operators can also solve a problem restricted to fully-pipelined operators (i.e. blocking time = 1), instead of requiring the client (who doesn't care about the general problem) to explicitly set a blocking time of 1 for each operator type.\r\n- Utilities (e.g. the cycle detector I'll need to build) won't be tied into the problem hierarchy, either.",
+  "labels": [
+    "Scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-08",
+  "closed_at": "2021-07-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

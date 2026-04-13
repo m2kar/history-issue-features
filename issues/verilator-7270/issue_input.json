@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7270,
+  "issue_url": "https://github.com/verilator/verilator/pull/7270",
+  "title": "Fix queue slice LHS assignment being silently discarded",
+  "body": "## Summary\r\n\r\nThis patch fixes queue slice assignment on LHS (`q[a:b] = rhs`) which was\r\nsilently discarded at runtime. The slice was lowered to `VlQueue::slice()`\r\nwhich returns a temporary copy, so the assignment wrote to the copy and the\r\noriginal queue was never modified.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  initial begin\r\n    int q[$] = '{10, 20, 30, 40, 50};\r\n    q[1:3] = '{99, 88, 77};\r\n    // Expected: q = '{10, 99, 88, 77, 50}\r\n    // Actual:   q = '{10, 20, 30, 40, 50} (unchanged)\r\n    if (q[1] != 99) $stop;\r\n    $write(\"*-* All Finished *-*\\n\");\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error: t.v:7: Verilog $stop\r\n```\r\n(Compiles without error but assignment is silently discarded -- `q[1]` remains `20`)\r\n\r\n## Changes\r\n\r\n- Added `VlQueue::sliceAssign(lsb, msb, src)` and back-index variants\r\n  to `include/verilated_types.h` -- assigns `src` elements to `q[lsb:msb]`\r\n  in place with bounds clamping\r\n- Added `DYN_SLICE_ASSIGN`, `DYN_SLICE_ASSIGN_FRONT_BACK`,\r\n  `DYN_SLICE_ASSIGN_BACK_BACK` enum values in `src/V3AstAttr.h`\r\n- In `visit(AstNodeAssign*)` (`src/V3Width.cpp`), detect LHS `CMethodHard`\r\n  slice calls and rewrite `Assign(q.slice(a,b), rhs)` to\r\n  `q.sliceAssign(a, b, rhs)`\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_queue_slice_assign.{v,py}` -- middle, start,\r\n  end, and single-element slice assignments with value and size checks\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-17",
+  "closed_at": "2026-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

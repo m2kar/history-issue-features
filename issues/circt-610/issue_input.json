@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 610,
+  "issue_url": "https://github.com/llvm/circt/issues/610",
+  "title": "[FIRRTL] Need a width inference pass",
+  "body": "The [regress/Ops.fir](https://github.com/chipsalliance/firrtl/blob/master/regress/Ops.fir) test is currently failing because we lack support for unknown width integers.  I figured I would report this so we make sure this test is working in the future.\r\n\r\n```\r\n./regress/Ops.fir:3:3: error: 'firrtl.pad' op result type should be '!firrtl.sint'\r\n  module Ops:\r\n  ^\r\n./regress/Ops.fir:3:3: note: see current operation: %4 = \"firrtl.pad\"(%c0_si) {amount = 14 : i32} : (!firrtl.sint) -> !firrtl.sint<14>\r\n```\r\n\r\nA more minimal example:\r\n```firrtl\r\ncircuit Ops:\r\n  module Ops:\r\n    output os: SInt<14>\r\n    os <= SInt(0)\r\n```\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Ops\" {\r\n    firrtl.module @Ops(%os: !firrtl.flip<sint<14>>) {\r\n      %c0_si = firrtl.constant(0 : si64) : !firrtl.sint\r\n      firrtl.connect %os, %c0_si : !firrtl.flip<sint<14>>, !firrtl.sint\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n\r\n```mlir\r\n// firtool -verify-each=false  --lower-to-rtl --print-ir-before-all --enable-lower-types test.fir\r\nrtl.module @Ops() -> (%os: i14) {\r\n  %c0_i64 = rtl.constant(0 : i64) : i64\r\n  %c0_si = firrtl.constant(0 : si64) : !firrtl.sint\r\n  %0 = firrtl.pad %c0_si, 14 : (!firrtl.sint) -> !firrtl.sint<14>\r\n  %1 = firrtl.stdIntCast %0 : (!firrtl.sint<14>) -> i14\r\n  rtl.output %1 : i14\r\n}\r\n```\r\n\r\n```\r\ntest.fir:2:3: error: 'firrtl.pad' op result type should be '!firrtl.sint'\r\n  module Ops:\r\n  ^\r\ntest.fir:2:3: note: see current operation: %0 = \"firrtl.pad\"(%c0_si) {amount = 14 : i32} : (!firrtl.sint) -> !firrtl.sint<14>\r\n```\r\n",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-17",
+  "closed_at": "2021-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

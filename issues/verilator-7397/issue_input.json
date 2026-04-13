@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7397,
+  "issue_url": "https://github.com/verilator/verilator/pull/7397",
+  "title": "Support nonconsecutive repetition [=N] in sequence expressions",
+  "body": "## Summary\r\n\r\nThis patch adds support for the nonconsecutive repetition operator `[=N]`\r\nin SVA concurrent assertions (IEEE 1800-2023 Section 16.9.2).\r\n\r\nAlso renames `AstConsRep` to `AstSConsRep` and consolidates repetition\r\nerror/unsupported tests into shared files for consistency.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t (input clk);\r\n  logic a, b;\r\n  assert property (@(posedge clk) a[=2] |-> b)\r\n    else $error(\"FAIL\");\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error-UNSUPPORTED: Unsupported: [= boolean abbrev expression\r\n```\r\n\r\n## Changes\r\n\r\n- Add `AstSNonConsRep` node in `V3AstNodeExpr.h` (parallel to `AstSGotoRep`).\r\n- Move `[=N]` from `boolean_abbrev` to the `sexpr` rule in `verilog.y`; range\r\n  form `[=M:N]` remains unsupported.\r\n- Add type-check visitor in `V3Width.cpp`.\r\n- Refactor `createGotoRepPExpr` to `createRepPExpr(isNonConsec)` in\r\n  `V3AssertPre.cpp`. When `isNonConsec`, adds trailing `##1` + `!b[*0:$]`\r\n  window loop per IEEE equivalence `b[=N] = b[->N] ##1 !b[*0:$]`.\r\n- Rename `validateGotoRepCount` to `validateRepCount` (shared by goto and\r\n  nonconsec). Add negative count check.\r\n- Add `SNonConsecRep` to `throughout` guard in `V3AssertProp.cpp`.\r\n- Rename `AstConsRep` to `AstSConsRep` for consistent `AstS*` naming across\r\n  all three repetition operators.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_assert_nonconsec_rep.{v,py}` -- CRC functional\r\n  test with `|->`, `|=>`, and standalone forms.\r\n- Added `test_regress/t/t_assert_rep_bad_count.{v,py,out}` -- merged error\r\n  paths for goto, nonconsec, and consec (non-constant, zero, negative counts).\r\n- Added `test_regress/t/t_assert_rep_unsup.{v,py,out}` -- merged unsupported\r\n  forms for consec and nonconsec (throughout, trailing range, non-`##1` delay).\r\n- Renamed `t_assert_prop_consec_rep` to `t_assert_consec_rep` for consistent\r\n  naming with `t_assert_goto_rep` / `t_assert_nonconsec_rep`.\r\n- Removed `t_assert_goto_rep_bad_count`, `t_assert_prop_consec_rep_bad`,\r\n  `t_assert_prop_consec_rep_unsup` (merged into shared files above).\r\n- Updated `t_sequence_sexpr_unsup` golden -- `[=N]` no longer unsupported;\r\n  added `[=M:$]` unbounded range case.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-09",
+  "closed_at": "2026-04-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

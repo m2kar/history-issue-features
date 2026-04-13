@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2958,
+  "issue_url": "https://github.com/verilator/verilator/issues/2958",
+  "title": "Can we make verilated code more ccache-friendly?",
+  "body": "In the OpenTitan project, we use Verilator to (among other things) build a chip-level simulation. This is now reasonably large: it takes a minute or two to verilate and then, if nothing is cached, something like 60-90mins CPU time to compile the resulting C++ code. Using ccache improves things, but a small change to the design tends to result in all the C++ code changing slightly (\"shuffling along\" past split boundaries).\r\n\r\nIt turns out that backup software has a similar problem. There, they chunk up big files into (say) ~1MiB blocks to upload. But they don't want to have to upload everything again if you insert a byte at the start of the file. For backup software, there seems to be a standard(ish) solution to the problem. Instead of you splitting every 1MiB, you define a windowed hash function that you compute as you read through the file. Every time the function evaluates to zero, you split. For roughly 1MiB blocks, you'd want a hash that's evenly distributed on `[0, 2^20]`. The trick is that now the split positions depend on the local content, rather than the absolute position in the file, and you solve the \"shuffling past boundaries\" problem. A much lower-tech example of the same idea is when people write documentation with a sentence to a line, rather than reflowing, to avoid big diffs when a sentence changes length. (Here, the analogue of a block with hash zero is \"the end of a sentence\").\r\n\r\nFor some more description about this scheme, see [this 2015 blog post](https://restic.net/blog/2015-09-12/restic-foundation1-cdc/) describing the algorithm used by [Restic](https://restic.net/).\r\n\r\nAnyway, I think we could do the same with verilator. When assigning statements to output (C++) functions, we'd use their hashes (which I believe are already defined), modulo some configurable value, to decide where to split. We'd also presumably have to either use one function per output file or do this again when assigning functions to files. We'd also need to change the output function naming scheme, to make sure everything is stable.\r\n\r\nThe idea is that now if I make a small tweak to the Verilog design, I might expect to perturb just 1 or 2 files, instead of half the design (everything to the \"right\" of where my tweak happens to fall).\r\n\r\nI've just chatted with @gezalore as a sanity check. I think he might be interested on working on this. @wsnyder: Does this sound like a sane idea to you?",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-14",
+  "closed_at": "2026-03-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

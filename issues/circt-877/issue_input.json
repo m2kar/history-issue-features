@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 877,
+  "issue_url": "https://github.com/llvm/circt/issues/877",
+  "title": "Subfield/Subindex Local Annotation Support",
+  "body": "Add the ability to read in and represent subfield/subindex _local_ annotations. These should be stored on the declaration they're associated with as opposed to on every subfield/subindex expression. These need to be properly split up during passes like `LowerTypes`.\r\n\r\nAs an example, the following FIRRTL snippet has an annotation on `bar[1].baz`:\r\n\r\n```scala\r\ncircuit Foo: %[[{\"a\":null,\"target\":\"~Foo|Foo>bar[1].baz\"}]]\r\n  module Foo:\r\n    wire bar: {baz: UInt<1>, qux: UInt<1>}[2]\r\n```\r\n\r\nThis should be represented as an attribute on the `%bar = firrtl.wire` declaration when parsed in. An example representation could be something like:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo() {\r\n    %bar = firrtl.wire {annotations = [{a, target = [\"[1]\", \".baz\"]}]} : !firrtl.vector<bundle<baz: uint<1>, qux: uint<1>>, 2>\r\n  }\r\n}\r\n```\r\n\r\nAfter running `LowerTypes`, this should be properly split up and only associated with one ground type:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo() {\r\n    %bar_0_baz = firrtl.wire  : !firrtl.uint<1>\r\n    %bar_0_qux = firrtl.wire  : !firrtl.uint<1>\r\n    %bar_1_baz = firrtl.wire {annotations = [{a}]}  : !firrtl.uint<1>\r\n    %bar_1_qux = firrtl.wire  : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\n### Background\r\n\r\nFIRRTL supports metadata attached to specific targets in the circuit. Roughly, _targets_ are strings used to identify specific things in a circuit of the form:\r\n\r\n```\r\n“~” (circuit) (“|” (module) (“/” (instance) “:” (module) )* (“>” (ref) )?)?\r\n```\r\n\r\nA local annotation has no hierarchical path to it's reference, i.e., no `\"/\" (instance) \":\" (module)` stuff.\r\n\r\nA ref can either be a single name string or it can include subfield/subindex modifiers after it like:\r\n\r\n```\r\n(name) (\"[\" (index) \"]\" | \".\" (field))*\r\n```\r\n\r\nExample:\r\n\r\n```scala\r\n// \"In circuit 'Foo'\", \"Module 'Bar'\", \"thing named 'baz'\", \"index zero\", \"field 'qux'\"\r\n~Foo|Bar>baz[0].qux\r\n```\r\n\r\n#### Prior Patches\r\n\r\n- #616 adds support for `CircuitTarget` and `ModuleTarget` annotations. \r\n- #823 adds support for local `ReferenceTarget` annotations that include no subfield/subindex modifiers. These annotations are read in and stored as attributes on the appropriate operand.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-02",
+  "closed_at": "2021-05-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

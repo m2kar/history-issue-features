@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3745,
+  "issue_url": "https://github.com/verilator/verilator/issues/3745",
+  "title": "CASEINCOMPLETE warning on unique case with enum",
+  "body": "Using the following code example (taken from https://www.edaplayground.com/x/GQ2E) \r\n```\r\nmodule fsm(input logic X, \r\n           input logic reset,\r\n           input logic clk,\r\n           output logic Z\r\n          );\r\n\r\n  enum logic [2:0] {S0,S1,S2,S3,S4,S5} State, Next;\r\n  \r\n  always @(posedge clk or posedge reset)\r\n    begin\r\n      if ( reset==1'b1 )\r\n        begin\r\n          State <= S0;\r\n        end\r\n      else \r\n        begin\r\n         State <= Next;\r\n        end\r\n    end\r\n\r\n  always_comb begin: set_next_state\r\n    \r\n    Next = State; //default value\r\n    unique case ( State )\r\n      S0: if (X==1'b1) \r\n           Next = S1;\r\n          else\r\n            Next = S0;\r\n      \r\n      S1: if (X==1'b0) \r\n              Next = S2;\r\n          else if (X==1'b1)\r\n              Next = S1;\r\n      \r\n      S2: if (X==1'b1) \r\n              Next = S3;\r\n           else if (X==1'b0)\r\n              Next = S0;\r\n      \r\n      S3: if (X==1'b1) \r\n              Next = S4;\r\n           else if (X==1'b0)\r\n              Next = S2;\r\n      \r\n      S4: if (X==1'b0) \r\n              Next = S5;\r\n          else if (X==1'b1)\r\n              Next = S1;\r\n      \r\n      S5: if (X==1'b0) \r\n              Next = S0;\r\n          else if (X==1'b1)\r\n              Next = S3;\r\n      \t  \r\n    endcase\r\n  \r\n  end: set_next_state\r\n  \r\n  always_comb begin: set_output\r\n    \r\n    unique case ( State ) \r\n      S0,S1,S2,S3,S4: Z = 0;\r\n      S5: \r\n        Z = 1;\r\n      default:\r\n        Z = 1'bX;\r\n    endcase\r\n  \r\n    \r\n  end: set_output\r\n  \r\nendmodule\r\n\r\n```\r\nand running \r\n\r\n`verilator --lint-only  fsm.sv  --top-module fsm`\r\nverilator issues the following warning message\r\n```\r\n%Warning-CASEINCOMPLETE: design.sv:26:12: Case values incompletely covered (example pattern 0x6)\r\n   26 |     unique case ( State )\r\n      |            ^~~~\r\n                         ... For warning description see https://verilator.org/warn/CASEINCOMPLETE?v=5.003\r\n                         ... Use \"/* verilator lint_off CASEINCOMPLETE */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n\r\n```\r\nwhich in my option is not correct given that the `unique case` statement is used in conjunction with an **enum** which limits the possible values of the variable `State`. As a matter of fact, the example pattern **0x6** reported in the warning message is not a legal pattern as dictated by the **enum**.\r\n\r\nWhat 'verilator --version' are you using?  \r\n\r\n`Verilator 5.003 devel rev v5.002-29-g0a045a7bf`\r\n\r\nDid you try it with the git master version? \r\nyes\r\n\r\nWhich Os are you using?\r\n\r\n`Centos7`\r\n\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nYes",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-12",
+  "closed_at": "2022-12-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

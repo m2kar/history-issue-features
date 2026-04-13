@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3372,
+  "issue_url": "https://github.com/llvm/circt/issues/3372",
+  "title": "[FIRRTL] Weird IMCP output w/ name preservation",
+  "body": "In the following, I would expect the wire `test` and module output `value` to have the same value.  Instead, `test` is set to a register which is set to a random value, while the module output `value` is set to `0`.\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    output value: UInt<1>\r\n\r\n    inst other of Other\r\n\r\n    reg shared : UInt<1>, clock with :\r\n      reset => (other.zero, UInt<1>(1)) @[Broadcast.scala 531:20]\r\n\r\n    wire test : UInt<1>\r\n    test <= shared\r\n\r\n    value <= test\r\n\r\n  module Other:\r\n    output zero: UInt<1>\r\n    zero <= UInt<1>(0)\r\n ```\r\n \r\n ```verilog\r\nmodule Foo(\r\n  input  clock,\r\n         reset,\r\n  output value);\r\n\r\n  reg  shared;\r\n  wire test;\r\n\r\n  `ifndef SYNTHESIS\r\n    `ifdef RANDOMIZE_REG_INIT\r\n      reg [31:0] _RANDOM;\r\n\r\n    `endif\r\n    `ifdef FIRRTL_BEFORE_INITIAL\r\n      `FIRRTL_BEFORE_INITIAL\r\n    `endif\r\n    initial begin\r\n      `INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM = {`RANDOM};\r\n        shared = _RANDOM[0];\r\n      `endif\r\n    end // initial\r\n    `ifdef FIRRTL_AFTER_INITIAL\r\n      `FIRRTL_AFTER_INITIAL\r\n    `endif\r\n  `endif\r\n  assign test = shared;\r\n  Other other ();\r\n  assign value = 1'h0;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-16",
+  "closed_at": "2022-06-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

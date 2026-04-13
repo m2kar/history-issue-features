@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3781,
+  "issue_url": "https://github.com/verilator/verilator/issues/3781",
+  "title": "Assignment to array does not work with intra-assignment delay",
+  "body": "[Makefile.gz](https://github.com/verilator/verilator/files/10094494/Makefile.gz)\r\n[test.sv.gz](https://github.com/verilator/verilator/files/10094495/test.sv.gz)\r\n\r\nExample:\r\n```sv\r\nmodule fifo(\r\n\tinput\tlogic\t\tclk,\r\n\tinput\tlogic\t\trstn,\r\n\r\n\tinput\tlogic\t\twr_en,\r\n\tinput\tlogic\t[7:0]\twdata,\r\n\tinput\tlogic\t\trd_en,\r\n\toutput\tlogic\t[7:0]\trdata,\r\n\r\n\toutput\tlogic\t\tempty,\r\n\toutput\tlogic\t\tfull\r\n);\r\n\r\n\tlogic\t[7:0]\tmem_arr\t[16];\r\n\tlogic\t[3:0]\trd_ptr;\r\n\tlogic\t[3:0]\twr_ptr;\r\n\tlogic\t[4:0]\tcount;\r\n\r\n\talways @(posedge clk) begin\r\n\t\tif (wr_en) begin\r\n\t\t\t$display(\"Write: %d @%d\", wdata, wr_ptr);\r\n\t\t\tmem_arr[wr_ptr]\t<= #0.2 wdata;\r\n\t\tend\r\n\tend\r\n\r\n\talways @(posedge clk or negedge rstn) begin\r\n\tif (~rstn) begin\r\n\t\trd_ptr\t<= 'd0;\r\n\t\twr_ptr\t<= 'd0;\r\n\t\tcount\t<= 'd0;\r\n\tend else begin\r\n\t\trd_ptr\t<= #0.2 rd_ptr + rd_en;\r\n\t\twr_ptr\t<= #0.2 wr_ptr + wr_en;\r\n\t\tcount\t<= #0.2 count + wr_en - rd_en;\r\n\tend\r\n\tend\r\n\r\n\talways_comb begin\r\n\t\trdata\t= mem_arr[rd_ptr];\r\n\t\tempty\t= (count == 0)? 1'b1: 1'b0;\r\n\t\tfull\t= (count == 16)? 1'b1: 1'b0;\r\n\tend\r\nendmodule\r\n```\r\nA pretty simple FIFO design. When I try to assign to the memory array element with `mem_arr[wr_ptr] <= #0.2 wdata` things don't work. Nothing get's written the the memory location. However if I remove  the `#0.2`  delay things work exactly  as expected. A full example is attached along with the makefile and my logs.\r\n[test.no_delay.log.gz](https://github.com/verilator/verilator/files/10094524/test.no_delay.log.gz)\r\n[test.with_delay.log.gz](https://github.com/verilator/verilator/files/10094525/test.with_delay.log.gz)\r\n\r\n\r\nVerilator Version: Verilator 5.002 2022-10-29 rev UNKNOWN.REV\r\nOS: ArchLinux\r\nMay we assist you in trying to fix this in Verilator yourself? Sure...\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-25",
+  "closed_at": "2022-12-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

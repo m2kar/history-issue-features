@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5426,
+  "issue_url": "https://github.com/llvm/circt/issues/5426",
+  "title": "[Pipeline] Representing register reset values",
+  "body": "We need a way to represent register reset (power on) values in the pipeline dialect.\r\nSay that we have the following pipeline:\r\n```mlir\r\n  %0:2 = pipeline.scheduled(%arg0, %arg1, %go) clock %clk reset %rst : (i32, i32, i1) -> (i32, i1) {\r\n  ^bb0(%arg0_0: i32, %arg1_1: i32, %arg2: i1):\r\n    %true = hw.constant true\r\n    %1 = comb.sub %arg0_0, %arg1_1 : i32\r\n    pipeline.stage ^bb1 regs(%1, %arg0_0, %arg2 : i32, i32, i1) enable %arg2\r\n  ^bb1(%2: i32, %3: i32, %4: i1):  // pred: ^bb0\r\n    %5 = comb.add %2, %3 : i32\r\n    pipeline.stage ^bb2 regs(%5, %2 : i32, i32) enable %4\r\n  ^bb2(%6: i32, %7: i32):  // pred: ^bb1\r\n    %8 = comb.mul %6, %7 : i32\r\n    pipeline.return %8, %true : i32, i1\r\n  }\r\n```\r\n\r\nFor our immediate usecase (and realistically, for most usecases) we only want to have a power-on value for the control (stage enable) values of a pipeline. However, given the current design of the pipeline, stage enable signals don't carry any special notion - they can be _any_ value defined within a given stage (i.e. an op result or a stage input).\r\n\r\nIs this a good design point? Thinking about it, it feels like this is some leftover gunk from when the pipeline was supposed to be able to represent latency insensitive pipelines. In other words, does it make sense that a pipeline stage has the ability to stall (e.g. not assert the enable signal for its following stage) but has no way to backpressure?\r\n\r\nAs such, would it make sense that a pipeline has a *single* top level control (\"go\") signal which is strung through each of the pipeline stages? Doing this, we would\r\n1. always know which value will be the corresponding control signal for a given stage (could be useful if we want to have memory operations within a stage)\r\n2. have full control over the registering of said control value, and thus easily assign it a reset value.\r\n3. Also have the option to add a \"done\" signal to the output of the pipeline.\r\n\r\nThe above code, wherein `%arg2` is used as the control signal, would become:\r\n```mlir\r\n%out, %done = pipeline.scheduled(%arg0, %arg1) clock %clk reset %rst go %go : (i32, i32) -> (i32) {\r\n  ^bb0(%arg0_0: i32, %arg1_1: i32, %s0_valid : i1):\r\n    %true = hw.constant true\r\n    %1 = comb.sub %arg0_0, %arg1_1 : i32\r\n    pipeline.stage ^bb1 regs(%1, %arg0_0 : i32, i32)\r\n\r\n  ^bb1(%2: i32, %3: i32, %s1_valid : i1):  // pred: ^bb0\r\n    %5 = comb.add %2, %3 : i32\r\n    pipeline.stage ^bb2 regs(%5, %2 : i32, i32)\r\n\r\n  ^bb2(%6: i32, %7: i32, %s2_valid : i1):  // pred: ^bb1\r\n    %8 = comb.mul %6, %7 : i32\r\n    pipeline.return %8 : i32\r\n  }\r\n```\r\nWherein each stage has an explicit valid signal (i.e. an `i1`-typed value as the last argument in the stage block argument list) that can be used for anything that requires knowledge of stage validity within the stage. Again, no need to explicitly tell that the valid signals are to be registered, since there is no way that the user can modify this - it is strictly defined by the top-level `go` input.\r\n\r\n\r\nWith this design, it is then up to the user to only assert the `go` signal every II cycles.",
+  "labels": [
+    "Pipeline"
+  ],
+  "state": "open",
+  "created_at": "2023-06-20",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

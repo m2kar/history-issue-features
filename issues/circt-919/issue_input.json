@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 919,
+  "issue_url": "https://github.com/llvm/circt/issues/919",
+  "title": "[FIRRTL] Type Canonicalization Considered Harmful",
+  "body": "FIRRTL Dialect type canonicalization is destroying information that is needed to preserve connection semantics.\r\n\r\nConsider the following circuit which has three different connections.\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n\r\n    wire a: {flip a: {flip a: UInt<1>}}\r\n    wire b: {flip a: {flip a: UInt<1>}}\r\n    \r\n    b <- a\r\n    b.a <- a.a\r\n    b.a.a <- a.a.a\r\n```\r\n\r\nIf you run each of these through the SFC, you will get:\r\n\r\n1. `b <- a` => `b.a.a <- a.a.a`\r\n2. `b.a <- a.a` => `a.a.a <- b.a.a` (_The connection is reversed._)\r\n3. `b.a.a <- a.a.a` => `b.a.a <- a.a.a`\r\n\r\nHowever, the above circuit will type canonicalize into:\r\n```scala\r\n    wire a: {a: {a: UInt<1>}}\r\n    wire b: {a: {a: UInt<1>}}\r\n```\r\n\r\nIn this situation, the behavior of connection (2) is _incorrectly_ changed into `b.a <- a.a`.\r\n\r\nI _think_ that wires are the only operation that have this behavior, but I'm not sure. The problem may show up anywhere that the SFC is relying on flip information that canonicalization is removing.\r\n\r\nI think we can get around this by adding information to wires (and anything else that needs it) that stores the original, un-canonicalized type, and uses this information as an aid to resolve connection semantics.\r\n\r\n### Explanation\r\n\r\nIn the SFC, connection semantics for _duplex flow_ are purely evaluated based on the type of the expression. This means that the expression `b.a` has type `!firrtl.bundle<a: flip<UInt<1>>`. A connection using this subfield will come out flipped because it has an odd number of flips going down to the leaf.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-14",
+  "closed_at": "2021-05-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

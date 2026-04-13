@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1758,
+  "issue_url": "https://github.com/verilator/verilator/issues/1758",
+  "title": "Question: \"may be used uninitialized\" depending on localparam expression",
+  "body": "---\n\n\nAuthor Name: **R. Diez**\nOriginal Redmine Message: 898 from https://www.veripool.org\n\n\n\n---\n\nI am playing with a JTAG TAP interface, and I have defined the TAP states like this:\n\n    localparam STATE_test_logic_reset = 4'd0;\n    localparam STATE_run_test_idle    = 4'd1;\n    ...\n    localparam STATE_update_ir        = 4'd15;\n\nLater on, I have some \"unique case\" statements that use those constant values.\n\nIf I change STATE_run_test_idle from \"4'd1\" to \"1\", which should mean the same, like this:\n\n    localparam STATE_run_test_idle    = 1;\n\nI get the following C++ compilation warning later on:\n\n  In file included from Vtest_bench__ALLcls.cpp:2:0:\n  Vtest_bench.cpp: In static member function â€˜static void Vtest_bench::_sequent__TOP__3(Vtest_bench__Syms*)â€™:\n  Vtest_bench.cpp:1851:10: warning: â€˜__Vfunc_v__DOT__tap_top_instance__DOT__get_next_state__534__Vfuncoutâ€™ may be used uninitialized in this function [-Wuninitialized]\n\nI guess the generated code could be improved to avoid that warning, but this difference of behaviour got me wondering anyhow.\n\nVerilator does not seem to realise that values like (0, 1, 2, 3, ...) without the \"4'd\" prefix are actually\nthe same as the ones with that prefix. But it must be validating those values correctly, otherwise it would issue\na \"Case values incompletely covered\" error on the \"unique case\" statements.\n\nI noticed that Verilog \"localparam\" declarations do not have an associated data type like \"reg\" does. How are they handled? Is \"localparam\" a type of macro,\nor does it get an associated \"32-bit integer\" data type in the example above?\n\nThanks again,\n  rdiez\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2012-08-07",
+  "closed_at": "2012-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

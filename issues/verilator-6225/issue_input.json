@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6225,
+  "issue_url": "https://github.com/verilator/verilator/issues/6225",
+  "title": "Fix DFG attempt to dereference a singular iterator",
+  "body": "@gezalore, running master branch, in verilator_ext_tests, running this (using debug binary is critical):\n\n    t/t_cores_veer_el2_cmark.py --debug\n\nResults in\n\n```\n- V3DfgOptimizer.cpp:296:optimize:\n/usr/include/c++/11/debug/safe_iterator.h:316:\nIn function:\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence, _Category>::pointer\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence,\n    _Category>::operator->() const [with _Iterator =\n    std::__detail::_Node_iterator<std::pair<const DfgVertex* const,\n    AstScope*>, false, false>; _Sequence = std::__debug::unordered_map<const\n    DfgVertex*, AstScope*>; _Category = std::forward_iterator_tag;\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence, _Category>::pointer =\n    std::pair<const DfgVertex* const, AstScope*>*]\n\nError: attempt to dereference a singular iterator.\n\nObjects involved in the operation:\n    iterator \"this\" @ 0x0x7fffffffb200 {\n      type = std::__detail::_Node_iterator<std::pair<DfgVertex const* const, AstScope*>, false, false> (mutable iterator);\n      state = singular;\n      references sequence with type 'std::__debug::unordered_map<DfgVertex const*, AstScope*, std::hash<DfgVertex const*>, std::equal_to<DfgVertex const*>, std::allo$\n    }\n```\n\nInstead of simplifying that, I ran the normal regressions with the verilator_dbg binary\n\n    cp bin/verilator_bin_dbg bin/verilator_bin\n    (cd test_regress ; make)\n\nAnd found it along with a different failure (or related?) that should be checked too:\n\n    vlt/t_enum_int: FAILED: Exec of verilator failed: Error: attempt to dereference a singular iterator.\n    vlt/t_dfg_break_cycles: FAILED: Exec of verilator failed: %Error: Internal Error: t/t_dfg_break_cycles.v:105:31: ../V3Dfg.h:801: DfgVertex user data is stale\n\nNote there was a false failure in vlt/t_covergroup_coverpoints_unsup due to different debug output, I just fixed it.\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-23",
+  "closed_at": "2025-07-24",
+  "code_blocks": [
+    "- V3DfgOptimizer.cpp:296:optimize:\n/usr/include/c++/11/debug/safe_iterator.h:316:\nIn function:\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence, _Category>::pointer\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence,\n    _Category>::operator->() const [with _Iterator =\n    std::__detail::_Node_iterator<std::pair<const DfgVertex* const,\n    AstScope*>, false, false>; _Sequence = std::__debug::unordered_map<const\n    DfgVertex*, AstScope*>; _Category = std::forward_iterator_tag;\n    __gnu_debug::_Safe_iterator<_Iterator, _Sequence, _Category>::pointer =\n    std::pair<const DfgVertex* const, AstScope*>*]\n\nError: attempt to dereference a singular iterator.\n\nObjects involved in the operation:\n    iterator \"this\" @ 0x0x7fffffffb200 {\n      type = std::__detail::_Node_iterator<std::pair<DfgVertex const* const, AstScope*>, false, false> (mutable iterator);\n      state = singular;\n      references sequence with type 'std::__debug::unordered_map<DfgVertex const*, AstScope*, std::hash<DfgVertex const*>, std::equal_to<DfgVertex const*>, std::allo$\n    }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

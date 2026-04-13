@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9066,
+  "issue_url": "https://github.com/llvm/circt/issues/9066",
+  "title": "[circt-synth] Comb Canonicalization Unexpectedly Increasing Logic Depth",
+  "body": "Running circt-synth on an 8-bit adder with and without the carry-out we see an unexpected improvement in longest path when computing the carry-out:\n\n```mlir\nhw.module @add_two_no_carry(in %a : i8, in %b : i8, out sum : i8) {\n    %0 = comb.add %a, %b : i8\n    hw.output %0 : i8\n}\n\nhw.module @add_two_with_carry(in %a : i8, in %b : i8, out sum : i9) {\n    %false = hw.constant false\n    %0 = comb.concat %false, %a : i1, i8\n    %1 = comb.concat %false, %b : i1, i8\n    %2 = comb.add %0, %1 : i9\n    hw.output %2 : i9\n}\n```\n add_two_no_carry - Maximum Path Delay = 16\n add_two_with_carry - Maximum Path Delay = 14\n\nIt's reasonable to expect add_two_no_carry to have better or equal delay, since we are computing a subset of the bits. However, inspecting the designs, we see that the comb canonicalizers are greedily folding Xor operators that have very different arrival times, leading to poor lowering choices. Removing the `tryFlatteningOperands` pattern in `XorOp::canonicalize` add_two_no_carry can be made to match the depth 14 delay path. \n\nI guess this is a challenge of mixing timing aware and timing unaware passes but any suggestions on how we might resolve this challenge in general? ",
+  "labels": [
+    "bug",
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-07",
+  "closed_at": "2025-10-14",
+  "code_blocks": [
+    "hw.module @add_two_no_carry(in %a : i8, in %b : i8, out sum : i8) {\n    %0 = comb.add %a, %b : i8\n    hw.output %0 : i8\n}\n\nhw.module @add_two_with_carry(in %a : i8, in %b : i8, out sum : i9) {\n    %false = hw.constant false\n    %0 = comb.concat %false, %a : i1, i8\n    %1 = comb.concat %false, %b : i1, i8\n    %2 = comb.add %0, %1 : i9\n    hw.output %2 : i9\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

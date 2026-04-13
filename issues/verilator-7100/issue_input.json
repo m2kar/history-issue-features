@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7100,
+  "issue_url": "https://github.com/verilator/verilator/pull/7100",
+  "title": "Support covergroup coverpoint bins with sample() and get_inst_coverage() (#7099)",
+  "body": "## Summary\r\n\r\nImplement initial `covergroup` functional coverage support (IEEE 1800-2017 §19.2–19.5, §19.8). Coverpoints with explicit value bins can now be defined, sampled at runtime, and queried for coverage percentage.\r\n\r\n## Issue\r\nFixes #7099 \r\n\r\n## Changes\r\n\r\n**New files (3):**\r\n- `src/V3Covergroup.cpp` / `.h` — AST transform pass: converts `AstCoverpoint`/`AstCoverBin` nodes into runtime initialization calls (AstCStmt for constructor builder chain, AstCMethodHard for sample/query)\r\n- `include/verilated_covergroup.h` — Runtime library: `VlCovergroup` → `VlCoverpoint` → `VlCovBinDef` → `VlCovBinRange`, with define→finalize→sample lifecycle and coverage caching\r\n\r\n**Parser (`src/verilog.y`):**\r\n- `cover_point` rules: create `AstCoverpoint` nodes instead of `BBCOVERIGN`\r\n- `bins_or_options`: create `AstCoverBin` nodes with range lists; `bins_keyword` tracks `m_coverBinKind` state\r\n- `bins_orBraE`: wire `[]`/`[N]` array syntax through (guarded with `E_UNSUPPORTED` in codegen)\r\n- Remove `BBCOVERIGN` from `covergroup_declaration`\r\n\r\n**AST nodes (`src/V3AstNodeOther.h`, `src/V3AstNodes.cpp`, `src/V3AstAttr.h`):**\r\n- Add `AstCoverpoint` (op1=expr, op2=iff (reserved), op3=bins) and `AstCoverBin` (name, kind, isArray, isDefault, op1=ranges)\r\n- Add `VCoverBinKind` enum class, `VBasicDTypeKwd::COVERGROUP_RUNTIME` opaque type\r\n- Add 4 `VCMethod` entries: `COVERGROUP_FINALIZE`, `COVERGROUP_SAMPLE_CP`, `COVERGROUP_GET_INST_COV`, `COVERGROUP_SET_INST_NAME`\r\n\r\n**Infrastructure:**\r\n- `src/V3Global.h`: `m_useCovergroup` flag for conditional `#include`\r\n- `src/V3EmitCHeaders.cpp`: emit `#include \"verilated_covergroup.h\"` when needed\r\n- `src/V3EmitCFunc.cpp`: skip reset for `VlCovergroup` (default-constructed)\r\n- `src/V3AstNodes.cpp`: `cTypeRecurse` recognizes `VlCovergroup`\r\n- `src/V3Width.cpp`: preserve `AstCgOptionAssign` for V3Covergroup pass\r\n- `src/Verilator.cpp`: call `V3Covergroup::covergroupAll()` in pipeline\r\n- `src/CMakeLists.txt`, `src/Makefile_obj.in`: compile V3Covergroup.cpp\r\n\r\n## Test\r\n- Added `test_regress/t/t_covergroup_basic.{v,py}` — 4-bin coverpoint, verifies 0%→25%→50%→75%→100% coverage progression via `checkr` macro\r\n\r\n---\r\nWritten by Claude Code and PlanV GmbH.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-19",
+  "closed_at": "2026-02-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

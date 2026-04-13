@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2164,
+  "issue_url": "https://github.com/llvm/circt/pull/2164",
+  "title": "[Handshake] Add support for `handshake.instance` in dot emission",
+  "body": "This commit improves on the dot graph generation by supporting nested modules. This is done by maintaining state about variable use/def chains across `handshake.instance` operations, and resolving these to generate graph edges.\r\nFurthermore, graph writing is cleaned up quite a bit.\r\n\r\n```mlir\r\nmodule  {\r\n  handshake.func @baz(%arg0: i32, %arg1: none, ...) -> (i32, none) attributes {argNames = [\"a\", \"ctrl\"], resNames = [\"out0\", \"outCtrl\"]} {\r\n    %0 = \"handshake.buffer\"(%arg0) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %1 = arith.addi %arg0, %0 : i32\r\n    %2 = \"handshake.buffer\"(%1) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %3 = \"handshake.buffer\"(%arg1) {control = true, sequential = true, slots = 2 : i32} : (none) -> none\r\n    handshake.return %2, %3 : i32, none\r\n  }\r\n  handshake.func @bar(%arg0: i32, %arg1: none, ...) -> (i32, none) attributes {argNames = [\"a\", \"ctrl\"], resNames = [\"out0\", \"outCtrl\"]} {\r\n    %0 = \"handshake.buffer\"(%arg0) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %1:2 = handshake.instance @baz(%0, %arg1) : (i32, none) -> (i32, none)\r\n    %2 = \"handshake.buffer\"(%1#1) {control = true, sequential = true, slots = 2 : i32} : (none) -> none\r\n    \"handshake.sink\"(%2) {control = true} : (none) -> ()\r\n    %3 = \"handshake.buffer\"(%1#0) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %4 = \"handshake.buffer\"(%arg1) {control = true, sequential = true, slots = 2 : i32} : (none) -> none\r\n    handshake.return %3, %4 : i32, none\r\n  }\r\n  handshake.func @instance(%arg0: i32, %arg1: none, ...) -> (i32, none) attributes {argNames = [\"a\", \"ctrl\"], resNames = [\"out0\", \"outCtrl\"]} {\r\n    %0 = \"handshake.buffer\"(%arg0) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %1:2 = handshake.instance @bar(%0, %arg1) : (i32, none) -> (i32, none)\r\n    %2 = \"handshake.buffer\"(%1#1) {control = true, sequential = true, slots = 2 : i32} : (none) -> none\r\n    \"handshake.sink\"(%2) {control = true} : (none) -> ()\r\n    %3 = \"handshake.buffer\"(%1#0) {control = false, sequential = true, slots = 2 : i32} : (i32) -> i32\r\n    %4 = \"handshake.buffer\"(%arg1) {control = true, sequential = true, slots = 2 : i32} : (none) -> none\r\n    handshake.return %3, %4 : i32, none\r\n  }\r\n}\r\n```\r\n\r\nplots as:\r\n\r\n![image](https://user-images.githubusercontent.com/16338943/141508805-00cf1868-7efd-4775-ac50-9fbedc25f100.png)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-12",
+  "closed_at": "2021-11-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

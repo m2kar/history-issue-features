@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1191,
+  "issue_url": "https://github.com/verilator/verilator/issues/1191",
+  "title": "DPI-C structures seem to come out backwards!",
+  "body": "---\n\n\nAuthor Name: **Rob Stoddard**\nOriginal Redmine Issue: 1191 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nIn my module I have:\r\n\r\n```<code class=\"c\">\r\n\r\n  // -----------------------------------------------------------------------------\r\n  typedef struct {\r\n         int  ip_nrst;\r\n         int  ei_fs_clk;\r\n         int  ei_dsp_clk;\r\n         int  m_drate;\r\n         int  m_dcoef;\r\n         int  i_voice;\r\n         int  i_voice_stb;\r\n         int  eo_dfs_clk;\r\n         int  o_band;\r\n         int  o_band_stb;\r\n     }  iostruct;\r\n\r\n  // -----------------------------------------------------------------------------\r\n\r\n  import \"DPI-C\" function integer c_IP_name (inout iostruct ios);\r\n\r\n     iostruct ios;\r\n         always @(negedge ip_nrst\r\n                 or negedge ei_fs_clk\r\n                 or posedge ei_fs_clk\r\n                 or negedge ei_dsp_clk\r\n                 or posedge ei_dsp_clk\r\n         ) begin\r\n       // assign inputs to C task structure inputs:\r\n       ios.ip_nrst     = 1;\r\n       ios.ei_fs_clk   = 2;\r\n       ios.ei_dsp_clk  = 3;\r\n       ios.m_drate     = 4;\r\n       ios.m_dcoef     = 5;\r\n       ios.i_voice     = 6;\r\n       ios.i_voice_stb = 7;\r\n       ios.eo_dfs_clk  = 8;\r\n       ios.o_band      = 9;\r\n       ios.o_band_stb  = 10;\r\n       // call the C task model:\r\n       c_IP_name (ios);\r\n\r\n</code>\n```\r\n\r\n\r\nAnd in my C code I have:\r\n\r\n```<code class=\"c\">\r\n\r\nint c_IP_name(iostruct* ios)\r\n{\r\n> printf(\"ip_nrst = %d\\n\", ios->ip_nrst);\r\n> printf(\"fs__clk = %d\\n\", ios->ei_fs_clk);\r\n> printf(\"dsp_clk = %d\\n\", ios->ei_dsp_clk);\r\n> printf(\"m_drate = %d\\n\", ios->m_drate);\r\n> printf(\"m_dcoef = %d\\n\", ios->m_dcoef);\r\n> printf(\"i_voice = %d\\n\", ios->i_voice);\r\n> printf(\"i_v_stb = %d\\n\", ios->i_voice_stb);\r\n> \r\n> printf(\"dfs_clk = %d\\n\", ios->eo_dfs_clk);\r\n> printf(\"o_band  = %d\\n\", ios->o_band);\r\n> printf(\"o_b_stb = %d\\n\", ios->o_band_stb);\r\n> return 0;\r\n}\r\n\r\n</code>\n```\r\n\r\n\r\n\r\nWhich is using the structure, in C:\r\n```<code class=\"c\">\r\n\r\ntypedef struct {\r\n     int ip_nrst;\r\n     int ei_fs_clk;\r\n     int ei_dsp_clk;\r\n     int m_drate;\r\n     int m_dcoef;\r\n     int i_voice;\r\n     int i_voice_stb;\r\n     int eo_dfs_clk;\r\n     int o_band;\r\n     int o_band_stb;\r\n}  iostruct;\r\n\r\n</code>\n```\r\n\r\nBasically identical.\r\n\r\nBut when run, I get this output:\r\n\r\n```\r\nip_nrst = 10\r\nfs__clk = 9\r\ndsp_clk = 8\r\nm_drate = 7\r\nm_dcoef = 6\r\ni_voice = 5\r\ni_v_stb = 4\r\ndfs_clk = 3\r\no_band  = 2\r\no_b_stb = 1\r\n\n```\r\n\r\nWhich is backwards from what I'd expect.\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2017-08-17",
+  "closed_at": "2017-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

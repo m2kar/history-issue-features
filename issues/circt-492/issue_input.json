@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 492,
+  "issue_url": "https://github.com/llvm/circt/issues/492",
+  "title": "[FIRRTL] Write Only Memory Causes Type Error",
+  "body": "If you try to create a memory that only has a writer, the type of the memory will be `FlipType` due to type canonicalization. However, this then fails the ODS requirement that a memory is a `BundleType`. I ran into this from a different direction when working on #479/#488 where this problem will always happen when returning a variadic `BundleType` (the write port will always be flipped).\r\n\r\nConsider:\r\n\r\n```\r\ncircuit Bar :\r\n  module Bar :\r\n    input clock: Clock\r\n    input wAddr: UInt<4>\r\n    input wEn: UInt<1>\r\n    input wMask: UInt<1>\r\n    input wData: UInt<8>\r\n\r\n    mem memory:\r\n      data-type => UInt<8>\r\n      depth => 16\r\n      writer => w\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n\r\n    memory.w.clk <= clock\r\n    memory.w.en <= wEn\r\n    memory.w.addr <= wAddr\r\n    memory.w.mask <= wMask\r\n    memory.w.data <= wData\r\n```\r\n\r\nThis will fail with:\r\n\r\n```bash\r\nfirtool Bar.fir\r\n# Bar.fir:9:5: error: 'firrtl.mem' op result #0 must be BundleType, but got '!firrtl.flip<bundle<w: bundle<addr: uint<4>, en: uint<1>, clk: clock, data: uint<8>, mask: uint<1>>>>'\r\n#     mem memory:\r\n#     ^\r\n# Bar.fir:9:5: note: see current operation: %memory = \"firrtl.mem\"() {depth = 16 : i64, name = \"memory\", readLatency = 0 : i32, ruw = 0 : i32, writeLatency = 1 : i32} : () -> !firrtl.flip<bundle<w: bundle<addr: uint<4>, en: uint<1>, clk: clock, data: uint<8>, mask: uint<1>>>>\r\n```\r\n\r\nThe SFC will return an empty module:\r\n\r\n```\r\nmodule Bar(\r\n  input        clock,\r\n  input  [3:0] wAddr,\r\n  input        wEn,\r\n  input        wMask,\r\n  input  [7:0] wData\r\n);\r\nendmodule\r\n```\r\n\r\nI admit that intentional description of a memory hole is a weird one...",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-21",
+  "closed_at": "2021-01-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

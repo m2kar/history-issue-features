@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3032,
+  "issue_url": "https://github.com/verilator/verilator/issues/3032",
+  "title": "Make top module part of Syms, emit new top wrapper in addition",
+  "body": "In the emitted code, currently the top level module is special. Every cell, apart from the top is part of Syms, while the Top instantiates sysms and has a bunch of additional gubbins like the eval loops, thread pools, trace configuration routines, etc. This complicates quite a lot of the internals and I think we could do better by doing the following:\r\n- Emit top level module as a regular module with name `topClassName() + \"__TOP\"` or similar\r\n- Make the top level instance part of Syms just like any other cell.\r\n- Emit a new wrapper with the current top module name `topClassName()` that instantiates Syms, and proxies the user accessible interface as needed.\r\n- Emit the 'additional gubbins' mentioned above as part of this wrapper.\r\n\r\nFor compatibility, we need to be careful not to change the user interface of the `topClassName()` module which is now this newly created wrapper. Luckily this is relatively simple:\r\n- Major methods like `eval` on the toplevel are part of the 'additional gubbins' anyway\r\n- Public signals/parameters we can proxy via references:\r\n```\r\nVL_MODULE(Vtop) {\r\nprivate:\r\n  Vtop__Syms vlSyms;\r\n\r\npublic:\r\n  VL_IN8(&clk,0,0);\r\n  VL_IN8(&rst,0,0);\r\n\r\n  Vtop();\r\n}\r\n\r\nVtop::Vtop()\r\n  : vlSyms(....)\r\n  , clk(vlSyms.wherever.the.real.clk.is)\r\n  , rst(vlSyms.wherever.the.real.rst.is)\r\n {}\r\n```\r\n- Any other public functions we can forward as appropriate.\r\n\r\nThis would have the following benefits:\r\n- V3EmitC could be split in half, separating generation of the 'additional gubbins' into a V3EmitCWrapper (or similar), which is not needed for the common modules.\r\n- There would be a fewer special cases for ->isTop() elsewhere.\r\n- Re #3016, scoped DPI export declarations could move into the wrapper, removing a header dependency\r\n- Further reduce header dependencies as model code should not care about the top wrapper gubbins.\r\n\r\nAll of the above would facility further work towards #2140/#2958\r\n\r\nThe only negative I can see is the extra reference indirection when accession top level IO from outside, that however really should not be critical for any model of non-trivial complexity.\r\n\r\nOne unknown is whether the refernce forwarding would work for SystemC IO (I don't know if SystemC cares at all). Worst case there is always the option of copy in and copy out before and after the eval loop...\r\n\r\nHow do you feel about doing this?",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-19",
+  "closed_at": "2021-06-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

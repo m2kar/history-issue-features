@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 872,
+  "issue_url": "https://github.com/verilator/verilator/issues/872",
+  "title": "Error when building multidimensional signal with OPTFLAT problem",
+  "body": "---\n\n\nAuthor Name: **Andrew Bardsley**\nOriginal Redmine Issue: 872 from https://www.veripool.org\nOriginal Date: 2015-01-21\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe enclosed example file's generated C++ will not build.\r\n\r\nThe file contains a signal with two unpacked dimensions and a series of assignments between those elements.  With the command:\r\n\r\n@> verilator -Wno-fatal --cc test.v@\r\n\r\nThis output is generated:\r\n\r\n> %Warning-UNOPTFLAT: test.v:6: Signal unoptimizable: Feedback to clock or circular logic: v.some_signal\r\n@> %Warning-UNOPTFLAT: Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n> %Warning-UNOPTFLAT:      Example path: test.v:6:  v.some_signal\r\n> %Warning-UNOPTFLAT:      Example path: test.v:9:  ASSIGNW\r\n> %Warning-UNOPTFLAT:      Example path: test.v:6:  v.some_signal\r\n@\r\nThe generated C++ for the signal has the two unpacked dimensions required but the generated  Vtest::_change_request\r\nfunction only descends one dimension into the signal.\r\n\r\nWith the compilation command:\r\n\r\n@> make -C obj_dir -f Vtest.mk@\r\n\r\nFails to compile with the error (one of a few of the same form):\r\n\r\n@> ...\r\n> Vtest.cpp:166:43: error: cast from ‘CData* {aka unsigned char*}’ to ‘IData {aka unsigned int}’ loses precision [-fpermissive]\r\n>   = (IData)(vlTOPp->v__DOT__some_signal)[1U];\r\n>                                            ^\r\n> Vtest.cpp:166:2: error: incompatible types in assignment of ‘IData {aka unsigned int}’ to ‘CData [2] {aka unsigned char [2]}’\r\n>   = (IData)(vlTOPp->v__DOT__some_signal)[1U];\r\n>   ^\r\n> ...@\r\n\r\nMy understanding is that such a function needs to descend through all the dimensions of the signal (or warn that it's not possible).\r\n\r\n@> verilator --version ; g++ -v@\r\n\r\nYields:\r\n\r\n@> Verilator 3.868 2014-12-20 rev verilator_3_866-36-g1a3378e\r\n> ...\r\n> gcc version 4.8.2 (Ubuntu 4.8.2-19ubuntu1)\r\n@\r\nI'm running on Ubuntu 14.04.\r\n\r\nThanks in advance\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2015-01-21",
+  "closed_at": "2015-02-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

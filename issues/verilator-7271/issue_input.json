@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7271,
+  "issue_url": "https://github.com/verilator/verilator/pull/7271",
+  "title": "Fix soft constraint relaxation dropping compatible constraints",
+  "body": "## Summary\r\n\r\nThis patch fixes the soft constraint relaxation algorithm in `VlRandomizer::next()`.\r\nThe previous linear front-to-back scan drops all soft constraints before the first\r\nconflicting one, even when some are compatible with the kept set. The new algorithm\r\nincrementally adds soft constraints from highest to lowest priority, keeping only\r\nthose that remain satisfiable, preserving the maximum compatible set.\r\n\r\nDiscovered while running core-v-verif UVM testbench on Verilator\r\n(https://github.com/openhwgroup/core-v-verif/pull/2724).\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nclass C;\r\n  rand bit [7:0] a, b;\r\n  constraint c_hard { a < 200; b < 200; }\r\n  constraint c_s0 { soft b > 100; }   // compatible with c_s2\r\n  constraint c_s1 { soft a == 30; }   // conflicts with c_s2\r\n  constraint c_s2 { soft a == 80; }   // highest priority\r\nendclass\r\n\r\nmodule t;\r\n  initial begin\r\n    C obj = new;\r\n    repeat (20) begin\r\n      if (!obj.randomize()) $stop;\r\n      if (obj.a != 80) $stop;       // c_s2 should win\r\n      if (obj.b <= 100) $stop;      // c_s0 should be preserved\r\n    end\r\n    $write(\"*-* All Finished *-*\\n\");\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master, `b` is unconstrained (values like 7, 34, 37) because the old algorithm\r\ndrops `c_s0` along with `c_s1`:\r\n\r\n```\r\n%Error: t_randomize_soft_relaxation.v:42:  got=37 exp=101-199\r\n```\r\n\r\n## Changes\r\n\r\n- `include/verilated_random.cpp` (`VlRandomizer::next`): Replace linear phase loop\r\n  with back-to-front incremental algorithm using SMT push/pop to test each soft\r\n  constraint individually\r\n- `include/verilated_random.cpp`: Add `VlRandomizer::checkSat()` helper that reads\r\n  sat/unsat without parsing variable values\r\n- `include/verilated_random.h`: Declare `checkSat()`\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_randomize_soft_relaxation.{v,py}` -- Verifies that\r\n  compatible lower-priority soft constraints are preserved when a mid-priority\r\n  constraint conflicts with the highest-priority one\r\n- Updated `test_regress/t/t_constraint_unsat.out` -- The new push/pop order\r\n  produces more precise unsat-core reports (fewer spurious constraints listed)\r\n- Updated `test_regress/t/t_constraint_unsat_protect_ids.out` -- Same reason\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-17",
+  "closed_at": "2026-03-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

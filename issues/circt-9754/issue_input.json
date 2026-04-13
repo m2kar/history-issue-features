@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9754,
+  "issue_url": "https://github.com/llvm/circt/pull/9754",
+  "title": "[FIRRTL] Allow full reset module instances outside of reset domain",
+  "body": "When a module is part of a full reset domain, we create an additional reset port on it to connect to reset-less registers. At the moment it is an error to instantiate a module which has such an added reset inside a context that has no full reset domain:\r\n\r\n```firrtl\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(\r\n    in %reset: !firrtl.asyncreset\r\n      [{class = \"circt.FullResetAnnotation\", resetType = \"async\"}]\r\n  ) {\r\n    firrtl.instance foo @Baz()  // instance within full reset domain\r\n  }\r\n  firrtl.module @Bar() {\r\n    firrtl.instance foo @Baz()  // instance outside any domain; error\r\n  }\r\n  firrtl.module private @Baz() {\r\n    // ...\r\n  }\r\n}\r\n```\r\n\r\nThis commit explicitly allows instances of such modules inside a context that has no full reset. The added reset port is tied-off to a constant zero value, which effectively turns the reset-less registers that were transformed to be fully reset, back into reset-less registers.\r\n\r\nFixes #9396.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-25",
+  "closed_at": "2026-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

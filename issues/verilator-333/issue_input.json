@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 333,
+  "issue_url": "https://github.com/verilator/verilator/issues/333",
+  "title": "Loops not unrolling due to width mismatches?",
+  "body": "---\n\n\nAuthor Name: **Joe Eiler**\nOriginal Redmine Issue: 333 from https://www.veripool.org\nOriginal Date: 2011-03-10\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThis might be intended behavior.  I would have expected width mismatch warnings but was confused by the BLKLOOPINIT warnings.  Below is a patch to the t_unroll_signed regression test that illustrates what I saw.\r\n\r\n```\r\n \r\n--- t_unroll_signed.v   2008-06-09 19:17:16.000000000 -0500\r\n+++ t_jce_unroll.v      2011-03-10 14:50:02.000000000 -0600\r\n@@ -118,6 +118,36 @@\r\n            if (total != -28) $stop;\r\n         end\r\n         //===\r\n+       10: begin\r\n+          // mostly cover a small index\r\n+          total = 0;\r\n+          for (i3=0; i3<3'd7; i3=i3+3'd1) begin\r\n+             total = total - {29'd0,i3} -1;\r\n+             dly_to_insure_was_unrolled[i3[0]] <= 0;\r\n+          end\r\n+          if (total != -28) $stop;\r\n+       end\r\n+       //===\r\n+       11: begin\r\n+          // mostly cover a small index\r\n+          total = 0;\r\n+          for (i3=3'd0; i3<7; i3=i3+3'd1) begin\r\n+             total = total - {29'd0,i3} -1;\r\n+             dly_to_insure_was_unrolled[i3[0]] <= 0;\r\n+          end\r\n+          if (total != -28) $stop;\r\n+       end\r\n+       //===\r\n+       12: begin\r\n+          // mostly cover a small index\r\n+          total = 0;\r\n+          for (i3=3'd0; i3<3'd7; i3=i3+1) begin\r\n+             total = total - {29'd0,i3} -1;\r\n+             dly_to_insure_was_unrolled[i3[0]] <= 0;\r\n+          end\r\n+          if (total != -28) $stop;\r\n+       end\r\n+       //===\r\n         19: begin\r\n            $write(\"*-* All Finished *-*\\n\");\r\n            $finish;\r\n\n``` \n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2011-03-10",
+  "closed_at": "2011-04-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

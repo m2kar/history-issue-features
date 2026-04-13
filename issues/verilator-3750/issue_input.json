@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3750,
+  "issue_url": "https://github.com/verilator/verilator/issues/3750",
+  "title": "Unexpected simulation behavior if `array.first()` method is included in code (not used though)",
+  "body": "Merely including `mem.first()` (not executed though) leads to wrong simulation results. If I include `mem.first()`, then the combinational path is evaluated twice, otherwise only once. Here is an excerpt from my debugging session where I display relevant values at the end of a combinational function call.\r\n\r\nIf I include `word i; mem.first(i);` in my testbench:\r\n```\r\ncycle           1:\r\ncycle           2:\r\ncycle           3:\r\nmi: ead08093, OP: (rf[ 1] = 00000000, rfn = fffffead) + 4294966957\r\nmi: ead08093, OP: (rf[ 1] = fffffead, rfn = fffffd5a) + 4294966957\r\ncycle           4:\r\ncycle           5:\r\nmi: f5610113, OP: (rf[ 2] = ff76e000, rfn = ff76df56) + 4294967126\r\nmi: f5610113, OP: (rf[ 2] = ff76df56, rfn = ff76deac) + 4294967126\r\n...\r\n```\r\n\r\n`mi` is read from the memory array `mem` and gets decoded. The circuit implements `rfn[x] = rf[x] + shown_integer` and  `rf[]` is updated using `rfn[]` in the next cycle, but the update happens in the same cycle before the values have settled (`ffff_fead` = `4294966957`). So the integer is added twice. (`4294966957 *2` = `ffff_fd5a`).\r\n\r\nIf I comment `mem.first(cycle);`:\r\n\r\n```\r\ncycle           1:\r\ncycle           2:\r\ncycle           3:\r\nmi: ead08093, OP: (rf[ 1] = feedc000, rfn = feedbead) + 4294966957\r\ncycle           4:\r\ncycle           5:\r\nmi: f5610113, OP: (rf[ 2] = ff76e000, rfn = ff76df56) + 4294967126\r\n...\r\n```\r\nthen the behavior is correct.\r\n\r\nI have the feeling that an additional evaluation step is introduced if `first()` method is used but the registers get updated too early. What do you think?\r\n\r\nI could not create a minimal design that shows this behavior in a manageable time. If needed, I can happily create one though.\r\n\r\n- master: 5.003 devel rev v5.002-42-ge6da59eec\r\n- Archlinux\r\n- Fix assistance welcome\r\n",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-15",
+  "closed_at": "2022-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

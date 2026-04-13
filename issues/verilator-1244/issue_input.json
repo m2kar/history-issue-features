@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1244,
+  "issue_url": "https://github.com/verilator/verilator/issues/1244",
+  "title": "V3Split not splitting",
+  "body": "---\n\n\nAuthor Name: **John Coiner** (@jcoiner)\nOriginal Redmine Issue: 1244 from https://www.veripool.org\n\nOriginal Assignee: John Coiner (@jcoiner)\n\n---\n\nWe have an input like this:\r\n\r\nalways @(posedge clk) begin\r\n     if ((rst_l == 0)) begin\r\n         reg1 <= 1'b0;\r\n         reg2 <= 1'b0;\r\n           // ... snip ...\r\n         reg10000 <= 1'b0;\r\n     end\r\n     else begin\r\n         reg1 <= new_reg1;\r\n         reg2 <= new_reg2;\r\n           // ... snip ...\r\n         reg10000 <= new_reg10000;\r\n     end\r\nend\r\n\r\nEssentially, it's thousands of resettable flops combined into a single always block.\r\n\r\nIt would be nice if V3Split were smart enough to split this up. There are a few bad consequences of not splitting this up:\r\n\r\n * It's bad for V3Gate runtime. We don't know why yet. Wilson saw V3Gate run orders of magnitude faster with the block split up.\r\n * It's bad for serial code scheduling. The code scheduler has no ability to reorder anything within this always block relative to anything else in the block. That's bad for dcaches, it limits verilator's ability to locate writes and reads of the same variable in close proximity.\r\n * (On the threads-jcoiner branch) It's bad for the thread partitioner's runtime, which degrades when some nodes in the graph have a huge number of dependency edges, as this one will.\r\n * (On the threads-jcoiner branch) It's bad for the output of the thread partitioner. We should have 10000 items that are trivially parallelizable, but instead we get a single atom that the partitioner cannot extract any parallelism from. This becomes a bottleneck on the final partitioned graph.\r\n\r\nWhat exactly V3Split should output for this case is TBD. We probably don't want to reference the reset signal inline with every assignment (that's more instructions to run, and also more instructions to store.) We might want to break this large always block into a several medium-size always blocks, each of which evaluates the condition once, so that total code size and cpu footprint won't grow much.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2017-11-16",
+  "closed_at": "2018-09-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

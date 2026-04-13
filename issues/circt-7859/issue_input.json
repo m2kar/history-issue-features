@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7859,
+  "issue_url": "https://github.com/llvm/circt/pull/7859",
+  "title": "[NFC] Output unused test results to `/dev/null`",
+  "body": "See #7852.\r\n\r\nThe CI failed on 2d416afa8326e3ceaab2e96606f50ed3084df0a3 :\r\n```\r\nRUN: at line 1: /__w/circt/circt/build/bin/circt-opt /__w/circt/circt/test/Conversion/HWToBTOR2/errors.mlir --convert-hw-to-btor2 --verify-diagnostics --split-input-file -o /__w/circt/circt/build/tools/circt/test/Conversion/HWToBTOR2/Output/errors.mlir.tmp\r\n+ /__w/circt/circt/build/bin/circt-opt /__w/circt/circt/test/Conversion/HWToBTOR2/errors.mlir --convert-hw-to-btor2 --verify-diagnostics --split-input-file -o /__w/circt/circt/build/tools/circt/test/Conversion/HWToBTOR2/Output/errors.mlir.tmp\r\ncirct-opt: /__w/circt/circt/llvm/llvm/lib/Support/raw_ostream.cpp:115: void llvm::raw_ostream::SetBufferAndMode(char *, size_t, BufferKind): Assertion `GetNumBytesInBuffer() == 0 && \"Current buffer is non-empty!\"' failed.\r\n```\r\n\r\nThere seems to be a race condition on the output file buffer. I blame `-split-input-file` for it (although I've wrongfully blamed it for another error in the past). In upstream, if `-split-input-file` and `-o` are used in conjunction, the output file seems to either be `/dev/null/` or stdout. So, let's follow that pattern and hope it fixes the problem.\r\n\r\nWhy hasn't this failed on the `hw-enums.mlir` test before? ... I do not know. But maybe the timing of the newly added HWToBTOR2 test is just particularly prone to run into this race condition.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-20",
+  "closed_at": "2024-11-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

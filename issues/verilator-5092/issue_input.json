@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5092,
+  "issue_url": "https://github.com/verilator/verilator/pull/5092",
+  "title": "Support NBAs to arrays inside loops",
+  "body": "--- Patch 3 of 3 towards supporting NBAs to arrays inside loops. ---\r\n\r\nDepends on #5091\r\n\r\nFor NBAs that might execute a dynamic number of times in a single\r\nevaluation (specifically: those that assign to array elements inside\r\nloops), we introduce a new run-time VlNBACommitQueue data-structure\r\n(currently a vector), which stores all pending updates and the necessary\r\ninfo to reconstruct the LHS reference of the AstAssignDly at run-time.\r\n\r\nAll variables needing a commit queue has their corresponding unique\r\ncommit queue.\r\n\r\nAll NBAs to a variable that requires a commit queue go through the\r\ncommit queue. This is necessary to preserve update order in sequential\r\ncode, e.g.:\r\n a[7] <= 10\r\n for (int i = 1 ; i < 10; ++i) a[i] <= i;\r\n a[2] <= 10\r\nneeds to end with array elements 1..9 being 1, 10, 3, 4, 5, 6, 7, 8, 9.\r\n\r\nThis enables supporting common forms of NBAs to arrays on the left hand\r\nside of <= in non-suspendable/non-fork code. (Suspendable/fork\r\nimplementation is unclear to me so I left it unchanged, see https://github.com/verilator/verilator/issues/5084).\r\n\r\nAny NBA that does not need a commit queue (i.e.: those that were\r\nsupported before), use the same scheme as before, and this patch should\r\nhave no effect on the generated code for those NBAs.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-01",
+  "closed_at": "2024-05-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

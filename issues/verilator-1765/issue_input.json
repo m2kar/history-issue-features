@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1765,
+  "issue_url": "https://github.com/verilator/verilator/issues/1765",
+  "title": "$display() prints rubbish due to a bug in _vl_vsformat()",
+  "body": "---\n\n\nAuthor Name: **R. Diez**\nOriginal Redmine Message: 927 from https://www.veripool.org\n\n\n\n---\n\nHallo Wilson:\n\nI have upgraded from Ubuntu 12.04 to 12.10, which now comes with GCC 4.7.2, and I'm getting nonsense values when outputting %h and %s arguments with $display() statements. This only happens when compiling the Verilator-generated .cpp files with optimisation level -O3.\n\nAfter some debugging, I found what the problem is. In file include/verilated.cpp , routine _vl_vsformat(), statement \"lwp = qlwp;\" is assigning to pointer lwp the address of qlwp[], which immediately goes out of scope, rendering the pointer invalid.\n\nBy the way, sometimes I need to run long simulations which generate large amounts of $display() data, and I found it surprising that the $display format string gets parsed every time at runtime. A possible optimisation would be to let Verilator parse the format string upfront and then generate appropriate C++ code like this:\n\n  $display( \"blah1 %h blah2 %h\", a, b );\n\n  output(\"blah1 \");\n  output_hex(a);\n  output(\" blah2 \");\n  output_hex(b);\n\nOne more thing: during the bug hunt, I realised that Verilator itself only gets built with -O, and not with -O2 or -O3.\nI tried to modify variables CFLAGS/CXXFLAGS in the top-level configure.ac to no avail, I guess those values are not passed down. In fact, it's proven very hard to pass compilation flags from outside. More worryingly, Verilator is built by default with just \"-Wno-unused\", and not with \"-Wall\". The bug I found above would have been a good candidate for a compiler warning (GCC 4.7 doesn't warn though), but no package manager or user would ever realise if the warnings are not turned on. The \"don't burden users\" comment I found in the sources is a poor excuse (my opinion), and the --enable-ccwarn option for the configure script is not really suitable because of the -Werror flag.\n\nRegards,\n  rdiez\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2012-10-28",
+  "closed_at": "2012-10-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

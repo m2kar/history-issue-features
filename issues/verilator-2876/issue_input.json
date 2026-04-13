@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2876,
+  "issue_url": "https://github.com/verilator/verilator/issues/2876",
+  "title": "Unsized expressions disallowed in concatenations, even with casts",
+  "body": "This code:\r\n```systemverilog\r\nmodule cast (input clk_i, output [63:0] out);\r\n  assign out = {32'(0), 32'd0};\r\nendmodule\r\n```\r\nproduces the following width warnings when passed to Verilator:\r\n```\r\n$ verilator --lint-only cast.sv\r\n%Warning-WIDTHCONCAT: cast.sv:2:21: Unsized numbers/parameters not allowed in concatenations.\r\n                                  : ... In instance cast\r\n    2 |   assign out = {32'(0), 32'd0};\r\n      |                     ^\r\n                      ... Use \"/* verilator lint_off WIDTHCONCAT */\" and lint_on around source to disable this message.\r\n%Warning-WIDTHCONCAT: cast.sv:2:23: Unsized numbers/parameters not allowed in replications.\r\n                                  : ... In instance cast\r\n    2 |   assign out = {32'(0), 32'd0};\r\n      |                       ^\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\nI think the \"no unsized values in a concatenation\" rule is probably too strict. In the IEEE 1800 spec, it appears in section 11.4.12, where they say:\r\n> Unsized constant numbers shall not be allowed in concatenations. This is because the size of each operand in the concatenation is needed to calculate the complete size of the concatenation.\r\n\r\nThat's perfectly reasonable, but I don't think it applies here: the expression `32'(0)` has width 32. (I looked at the \"Expression bit lengths\" section but, in keeping with its general vagueness, it doesn't say a static cast has a self-determined width. I think it probably should though!)\r\n\r\nNote that Verilator *does* (correctly) allow things like `assign out = 64'(0);`.",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-07",
+  "closed_at": "2021-04-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

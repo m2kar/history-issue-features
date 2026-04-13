@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 756,
+  "issue_url": "https://github.com/llvm/circt/pull/756",
+  "title": "[firtool] Add option to emit one file per Verilog module",
+  "body": "Add a `-split-verilog` option to `firtool` that will emit a separate file for each and every module in the IR. Requires the user to specify an output directory path via the existing `-o=<dir>` option.\r\n\r\nThe current single-file Verilog emitter supports `RTLModuleOp`, `RTLModuleExternOp`, `InterfaceOp`, `VerbatimOp`, and `IfDefProceduralOp`. The first three have compilation-unit scope in SV, so they are put into separate files. The main concern are the `sv.verbatim` and `sv.ifdef.procedural` operations where we can't really reason about whether they contain file-scope business (e.g., preprocessor macros) or compilation-unit scope (e.g., a module/interface as inline verilog). The current implementation assumes these to be preprocessor directives (or generally anything that follows a declare-before-use paradigm and must be re-emitted into each file). That should cover the current path from FIRRTL to Verilog, but can go horribly wrong in any kinds of ways if the RTL/SV IR comes from a different source (user input for example).\r\n\r\nLonger term I see a couple of options to deal with this:\r\n1. Move separation into individual files into the FIRRTL-to-RTL lowering, where the preprocessor directives (`RANDOM`, etc.) are also injected. That lowering could then emit the directives multiple times as needed.\r\n2. Add a `sv.file` operation that can be used to group modules into different files and add associated preprocessor directives and other verbatim SV business. This would give the IR the abilty to express which things go together into files. I remember doing SV code generation in Python, and the ability to be very explicit about what goes together into which files was pretty useful.\r\n3. Add a `sv.compilation_unit` or `sv.per_file` operation that can be used to indicate which operations are to be re-emitted into each file. (Seems kinda hacky to me though.)\r\n\r\n## Todo\r\n\r\n- [x] Add a couple of test cases for this",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-11",
+  "closed_at": "2021-03-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

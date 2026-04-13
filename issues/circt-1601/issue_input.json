@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1601,
+  "issue_url": "https://github.com/llvm/circt/issues/1601",
+  "title": "[LowerToHW] Implicit Always Block merging should merge down, not up",
+  "body": "We emit a bunch of extraneous wires because LowerToHW is emitting print/stop operations lexically before the condition expressions they use.  For example, in:\r\n\r\n```\r\ncircuit test :\r\n  module test :\r\n    input clock : Clock\r\n    input a: UInt<1>\r\n    input a2: UInt<1>\r\n    input a3: UInt<1>\r\n\r\n    printf(clock, a, \"thing\")\r\n    node _T_371 = or(a2, a3)\r\n    stop(clock, _T_371, 1)\r\n```\r\n\r\nWe generate an extraneous `_T` wire:\r\n\r\n```\r\nmodule test(\r\n  input clock, a, a2, a3);\r\n\r\n  wire _T;\t// x.fir:10:19\r\n\r\n  always @(posedge clock) begin\t// x.fir:8:5\r\n    `ifndef SYNTHESIS\t// x.fir:8:5\r\n      if (`PRINTF_COND_ & a)\t// x.fir:8:5\r\n        $fwrite(32'h80000002, \"thing\");\t// x.fir:8:5\r\n      if (`STOP_COND_ & _T)\t// x.fir:10:19, :12:5\r\n        $fatal;\t// x.fir:12:5\r\n    `endif\r\n  end // always @(posedge)\r\n  assign _T = a2 | a3;\t// x.fir:10:19\r\nendmodule\r\n```\r\n\r\nThis is more egregious in larger modules.\r\n\r\nI'll fix this tomorrow.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-18",
+  "closed_at": "2021-08-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

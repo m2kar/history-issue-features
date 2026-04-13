@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7689,
+  "issue_url": "https://github.com/llvm/circt/issues/7689",
+  "title": "[FIRRTL] InferWidths: error can point at operation not involved in constraint",
+  "body": "given\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo:\r\n  public module Foo:\r\n    input clock : Clock\r\n    reg r : UInt, clock\r\n    node n = add(r, UInt(1))\r\n    connect r, add(r, UInt(1))\r\n```\r\nwe get\r\n```\r\n./test.fir:5:5: error: 'firrtl.reg' op is constrained to be wider than itself\r\n    reg r : UInt, clock\r\n    ^\r\n./test.fir:5:5: note: see current operation: %0 = \"firrtl.reg\"(%arg0) {annotations = [], name = \"r\", nameKind = #firrtl<name_kind droppable_name>} : (!firrtl.clock) -> !firrtl.uint\r\n./test.fir:6:14: note: constrained width W >= W+1 here:\r\n    node n = add(r, UInt(1))\r\n             ^\r\n./test.fir:7:5: note: constrained width W >= W+1 here:\r\n    connect r, add(r, UInt(1))\r\n    ^\r\n```\r\nIt is pointing at the wrong instance of `add`, which I suspect is because CSE runs before width inference.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-10-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

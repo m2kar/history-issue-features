@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5953,
+  "issue_url": "https://github.com/verilator/verilator/issues/5953",
+  "title": "Verilator outputs unexpected multi-bit value for 1-bit wire in simulation",
+  "body": "Here is the problematic Verilog file `test.v`:\n```verilog\n`timescale 1ns/1ps\nmodule gymhnulbvj (in5, clock_10, clock_12, out18);\n\ninput wire [23:22] in5;\nwire [29:1] wire_4;\nreg reg_35;\noutput wire out18;\ninput wire clock_10;\ninput wire clock_12;\n\nassign wire_4 = ~(in5[22:22]);\nassign out18 = reg_35 ? 0 : !(!(~((wire_4[6:5] | 8'hc6))));\nalways @(posedge clock_10 or posedge clock_12) begin\n  if (clock_12) begin\n    reg_35 <= 0;\n  end else begin\n    reg_35 <= wire_4;\n  end\nend\nendmodule\n```\n\nAnd here is the testbench file `tb.v` that reveals the issue:\n```verilog\n`timescale 1ns/1ps\nmodule testbench;\n\n  reg [23:22] in5;\n  reg clock_10 = 0;\n  reg clock_12 = 0;\n  wire out18;\n\n  gymhnulbvj uut (\n    .in5(in5),\n    .clock_10(clock_10),\n    .clock_12(clock_12),\n    .out18(out18)\n  );\n\n  initial begin\n    $display(\"Time\\tin5\\tclock_10\\tclock_12\\tout18\");\n    $monitor(\"%0t\\t%d\\t%d\\t\\t%d\\t\\t%d\", $time, in5, clock_10, clock_12, out18);\n\n    in5 = 2'b00;\n    #5 clock_12 = 1;  \n    #5 clock_12 = 0;\n\n    #5 clock_10 = 1;\n    #5 clock_10 = 0;\n\n    #10 $finish;\n  end\n\nendmodule\n```\n\nIn the design `test.v`, the `out18` port is declared as a **1-bit wide wire**. However, the testbench prints a value for `out18` that exceeds the range of a 1-bit wire, specifically showing values like 255 and 254:\n```\nTime    in5     clock_10        clock_12        out18\n0       0       0               0               255\n5000    0       0               1               255\n10000   0       0               0               255\n15000   0       1               0               255\n15000   0       1               0               254\n20000   0       0               0               254\n- tb.v:27: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.035 devel\n- Verilator: $finish at 30ns; walltime 0.030 s; speed 543.366 ns/s\n- Verilator: cpu 0.055 s on 1 threads; alloced 14681163 MB\n```\n\nThe issue can be reproduced using the following command:\n```bash\nverilator --binary -Wno-lint --timing test_new.v tb.v\n./obj_dir/Vtest\n```\n\n### System Details:\n- **Verilator version**: Verilator 5.035 devel rev UNKNOWN.REV  \n- **OS**: Ubuntu 22.04.5 LTS (Jammy)  \n- **Release**: 22.04  \n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-22",
+  "closed_at": "2025-05-04",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule gymhnulbvj (in5, clock_10, clock_12, out18);\n\ninput wire [23:22] in5;\nwire [29:1] wire_4;\nreg reg_35;\noutput wire out18;\ninput wire clock_10;\ninput wire clock_12;\n\nassign wire_4 = ~(in5[22:22]);\nassign out18 = reg_35 ? 0 : !(!(~((wire_4[6:5] | 8'hc6))));\nalways @(posedge clock_10 or posedge clock_12) begin\n  if (clock_12) begin\n    reg_35 <= 0;\n  end else begin\n    reg_35 <= wire_4;\n  end\nend\nendmodule\n",
+    "`timescale 1ns/1ps\nmodule testbench;\n\n  reg [23:22] in5;\n  reg clock_10 = 0;\n  reg clock_12 = 0;\n  wire out18;\n\n  gymhnulbvj uut (\n    .in5(in5),\n    .clock_10(clock_10),\n    .clock_12(clock_12),\n    .out18(out18)\n  );\n\n  initial begin\n    $display(\"Time\\tin5\\tclock_10\\tclock_12\\tout18\");\n    $monitor(\"%0t\\t%d\\t%d\\t\\t%d\\t\\t%d\", $time, in5, clock_10, clock_12, out18);\n\n    in5 = 2'b00;\n    #5 clock_12 = 1;  \n    #5 clock_12 = 0;\n\n    #5 clock_10 = 1;\n    #5 clock_10 = 0;\n\n    #10 $finish;\n  end\n\nendmodule\n",
+    "Time    in5     clock_10        clock_12        out18\n0       0       0               0               255\n5000    0       0               1               255\n10000   0       0               0               255\n15000   0       1               0               255\n15000   0       1               0               254\n20000   0       0               0               254\n- tb.v:27: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.035 devel\n- Verilator: $finish at 30ns; walltime 0.030 s; speed 543.366 ns/s\n- Verilator: cpu 0.055 s on 1 threads; alloced 14681163 MB\n",
+    "verilator --binary -Wno-lint --timing test_new.v tb.v\n./obj_dir/Vtest\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

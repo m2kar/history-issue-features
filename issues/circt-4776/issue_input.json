@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4776,
+  "issue_url": "https://github.com/llvm/circt/issues/4776",
+  "title": "[FIRRTL] IMCP is sensitive about the order of operations",
+  "body": "A:\r\n```mlir\r\n  firrtl.circuit \"Top\" {\r\n    firrtl.module private @Bar(out %b: !firrtl.uint<1>) {\r\n      %0 = firrtl.wire : !firrtl.uint<1>\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %0, %c1_ui1 : !firrtl.uint<1>\r\n      %1 = firrtl.xor %0, %c1_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %1 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Top(out %b: !firrtl.uint<1>) {\r\n      %b_out = firrtl.instance bar @Bar(out b: !firrtl.uint<1>) \r\n      firrtl.strictconnect %b, %b_out : !firrtl.uint<1>\r\n    }\r\n  }\r\n```\r\n\r\nB: \r\n```mlir\r\n   firrtl.circuit \"Top\" {\r\n    firrtl.module private @Bar(out %b: !firrtl.uint<1>) {\r\n      %0 = firrtl.wire : !firrtl.uint<1>\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %1 = firrtl.xor %0, %c1_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n      firrtl.strictconnect %0, %c1_ui1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %1 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Top(out %b: !firrtl.uint<1>) {\r\n      %b_out = firrtl.instance bar @Bar(out b: !firrtl.uint<1>) \r\n      firrtl.strictconnect %b, %b_out : !firrtl.uint<1>\r\n    }\r\n  }\r\n```\r\n\r\nThe difference between A and B is the position of `%1`. Only B produces an optimal result:\r\n`$ circt-opt -firrtl-imconstprop`.\r\nA:\r\n```mlir\r\n  firrtl.circuit \"Top\" {\r\n    firrtl.module private @Bar(out %b: !firrtl.uint<1>) {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %c1_ui1_0 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %0 = firrtl.xor %c1_ui1, %c1_ui1_0 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %0 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Top(out %b: !firrtl.uint<1>) {\r\n      %bar_b = firrtl.instance bar @Bar(out b: !firrtl.uint<1>)\r\n      firrtl.strictconnect %b, %bar_b : !firrtl.uint<1>\r\n    }\r\n  }\r\n```\r\nB:\r\n```mlir\r\n  firrtl.circuit \"Top\" {\r\n    firrtl.module private @Bar(out %b: !firrtl.uint<1>) {\r\n      %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %c0_ui1 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Top(out %b: !firrtl.uint<1>) {\r\n      %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n      %bar_b = firrtl.instance bar @Bar(out b: !firrtl.uint<1>)\r\n      firrtl.strictconnect %b, %c0_ui1 : !firrtl.uint<1>\r\n    }\r\n  }\r\n```\r\n\r\nThis issue is caused by `unwritten` state.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-07",
+  "closed_at": "2023-04-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2248,
+  "issue_url": "https://github.com/verilator/verilator/issues/2248",
+  "title": "Code specialization for quasi static signals",
+  "body": "This is to discuss a strategy for potential model performance improvement. The idea is to use code specialization for quasi static signals. The obvious example is reset, which in the SweRV EH1 testbench is generated with:\r\n\r\n```\r\nassign rst_l = cycleCnt > 5;\r\nassign porst_l = cycleCnt >2;\r\n```\r\n\r\nThis means pretty much after the first few cycles, all resets will be effectively constant, but Verilator emits code like this all over the place:\r\n\r\n```\r\nvlTOPp->tb_top__DOT__rvtop__DOT__swerv__DOT__ifu__DOT__mem_ctl__DOT__tagv_mb_ff\r\n        = ((IData)(vlTOPp->tb_top__DOT__rvtop__DOT__core_rst_l)\r\n             ? (IData)(vlTOPp->tb_top__DOT__rvtop__DOT__swerv__DOT__ifu__DOT__mem_ctl__DOT__tagv_mb_in)\r\n             : 0U)\r\n```\r\n\r\nWe could just take the whole code, and emit 2 versions of it, with the reset signal inlined with the 2 possible constant values, and then check at the top of `eval` based on the actual value of the signal which version to call. This increases satic code size but the size of the frequently used hot code is actually reduced. Even if they are easy to predict branches, not having masses of them flowing through your processor frontend can be beneficial.\r\n\r\nReset is just one example where this can help. it is generally applicable to any signal that is expected to stay constatn for long periods of time but influences execution on a fine grained level in a lot of places.\r\n\r\nThere are quite a couple of challenges in the above, including:\r\n- How do we know what signals are quasi static? we can probably guess reset, using a heuristic but user annotation might be necessary for others.\r\n- Quasi static signals are often combined before their use (e.g.: the 2 resets in the testbench of EH1 are combined before used by the design), so we need to propagate the property through logic, i.e.: a signal is quasi static if all its inputs are quasi static.\r\n- Must avoid the previous point triggering a combinatorial explosion, so some heuristics are needed on how many specializations are beneficial, but how many are too many.\r\n- Can harm build time as you now have loads more static code to compile. This could be aleviated by recognising some of the paths (e.g.: reset asserted) as 'slow' code so they can be compiled without optimization.",
+  "labels": [
+    "area: performance",
+    "resolution: wontfix",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-10",
+  "closed_at": "2023-09-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

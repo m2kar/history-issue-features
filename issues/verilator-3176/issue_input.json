@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3176,
+  "issue_url": "https://github.com/verilator/verilator/issues/3176",
+  "title": "lint_off does not suppress all EOFNEWLINE warnings",
+  "body": "Using Verilator 4.214 2021-10-17 rev v4.214\r\n(no, I've not tried master, but that's the latest tag as of this morning)\r\n\r\nConsider the following test.sv:\r\n\r\n```\r\nmodule test (\r\n  input   wire      clk,\r\n\r\n  input   wire [4:0] a,\r\n  input   wire [3:0] b,\r\n\r\n  output reg  [3:0] y\r\n);\r\n\r\nalways @(posedge clk)\r\n  y <= #1 a + b;\r\n\r\nendmodule\r\n```\r\n\r\nwithout a newline at the end of the file.\r\n\r\n`verilator -Wall --lint-only test.sv` correctly identifies 3 issues:\r\n\r\n```\r\n%Warning-EOFNEWLINE: test.sv:13:11: Missing newline at end of file (POSIX 3.206).\r\n%Warning-ASSIGNDLY: test.sv:11:9: Unsupported: Ignoring delay on this assignment/primitive.\r\n%Warning-WIDTH: test.sv:11:5: Operator ASSIGNDLY expects 4 bits on the Assign RHS, but Assign RHS's ADD generates 5 bits.\r\n```\r\n\r\nI then create a waivers.vlt to excuse my sloppy coding:\r\n\r\n```\r\n`verilator_config\r\n\r\nlint_off -rule EOFNEWLINE -file \"*test.sv\"\r\nlint_off -rule ASSIGNDLY -file \"*test.sv\"\r\nlint_off -rule WIDTH -file \"*test.sv\"\r\n```\r\n\r\nand go again with `verilator -Wall --lint-only waivers.vlt test.sv`\r\n\r\n```\r\n%Warning-EOFNEWLINE: test.sv:13:11: Missing newline at end of file (POSIX 3.206).\r\n```\r\n\r\nbut I expected a clean result.\r\n\r\n~~In this case the ASSIGNDLY warning has gone, but in a larger codebase they get through (I've no idea if it's all of them).~~\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-18",
+  "closed_at": "2021-10-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

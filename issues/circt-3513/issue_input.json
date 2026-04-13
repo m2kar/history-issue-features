@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3513,
+  "issue_url": "https://github.com/llvm/circt/issues/3513",
+  "title": "Some statistics are zero, disabling threading seems to fix",
+  "body": "Noticed this while adding statistics, here's a small test case `names-cse.fir`:\r\n\r\n```firrtl\r\ncircuit Names:\r\n  module Names:\r\n    input i: UInt<1>\r\n    input j: UInt<1>\r\n    output o: UInt\r\n    wire w: UInt\r\n    wire w2: UInt\r\n    w <- and(i, j)\r\n    w2 <- and(i, j)\r\n    o <- add(w, w2)\r\n```\r\n\r\nThis can be observed with `--mlir-pass-statistics`, for example:\r\n\r\n```\r\n$ ./bin/firtool --mlir-pass-statistics ./names-cse.fir |& grep '(S)'\r\n    (S) 0 num-added-annos     - Number of additional annotations\r\n    (S) 0 num-annos           - Total number of annotations processed\r\n    (S) 0 num-unhandled-annos - Number of unhandled annotations\r\n    (S) 0 num-raw-annos       - Number of raw annotations on circuit\r\n      (S) 0 num-names-converted - Number of interesting names made droppable\r\n      (S) 0 num-dce'd - Number of operations DCE'd\r\n      (S) 0 num-cse'd - Number of operations CSE'd\r\n    (S) 0 num-erased-op - Number of operations erased\r\n    (S) 0 num-folded-op - Number of operations folded\r\n      (S) 0 num-names-converted - Number of interesting names made droppable\r\n    (S) 0 num-removed-ports - Number of ports erased\r\n    (S) 0 num-dce'd - Number of operations DCE'd\r\n    (S) 0 num-cse'd - Number of operations CSE'd\r\n    (S) 0 num-dce'd - Number of operations DCE'd\r\n    (S) 2 num-cse'd - Number of operations CSE'd\r\n```\r\n\r\nNote this reports no names were dropped/converted, all statistics are zero except the last CSE statistic (?).\r\n\r\nCompared to disabling threads:\r\n\r\n```\r\n$ ./bin/firtool --mlir-pass-statistics --mlir-disable-threading ./names-cse.fir |& grep '(S)'\r\n    (S) 0 num-added-annos     - Number of additional annotations\r\n    (S) 0 num-annos           - Total number of annotations processed\r\n    (S) 0 num-unhandled-annos - Number of unhandled annotations\r\n    (S) 0 num-raw-annos       - Number of raw annotations on circuit\r\n      (S) 2 num-names-converted - Number of interesting names made droppable\r\n      (S) 0 num-dce'd - Number of operations DCE'd\r\n      (S) 2 num-cse'd - Number of operations CSE'd\r\n    (S) 0 num-erased-op - Number of operations erased\r\n    (S) 0 num-folded-op - Number of operations folded\r\n      (S) 2 num-names-converted - Number of interesting names made droppable\r\n    (S) 0 num-removed-ports - Number of ports erased\r\n    (S) 0 num-dce'd - Number of operations DCE'd\r\n    (S) 0 num-cse'd - Number of operations CSE'd\r\n    (S) 0 num-dce'd - Number of operations DCE'd\r\n    (S) 2 num-cse'd - Number of operations CSE'd\r\n```\r\n\r\nWhere you can see 2 names are converted, and an earlier CSE run is non-zero also.\r\n\r\nPasses impacted are `firrtl.modue` passes, but I'm not sure if that's all that's needed.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-12",
+  "closed_at": "2022-12-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

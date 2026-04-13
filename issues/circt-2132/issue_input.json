@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2132,
+  "issue_url": "https://github.com/llvm/circt/issues/2132",
+  "title": "[FIRRTL] InferReset crash with Subaccess Index",
+  "body": "The following IR crashes with `circt-opt --pass-pipeline='firrtl.circuit(firrtl-infer-resets)'`\r\n\r\n```mlir\r\nfirrtl.circuit \"Top\" {\r\n  firrtl.module @Top(in %clock: !firrtl.clock, in %reset: !firrtl.asyncreset, in %init: !firrtl.uint<1>, in %in: !firrtl.uint<8>, in %extraReset: !firrtl.asyncreset ) attributes {\r\n    portAnnotations = [[],[],[],[],[{class = \"firrtl.transforms.DontTouchAnnotation\"}, {class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}]]} {\r\n    %c1_ui8 = firrtl.constant 1 : !firrtl.uint<2>\r\n    %arr = firrtl.wire : !firrtl.vector<uint<8>, 1>\r\n    %reg6 = firrtl.regreset %clock, %init, %c1_ui8 : !firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<2>\r\n    %2 = firrtl.subaccess %arr[%reg6] : !firrtl.vector<uint<8>, 1>, !firrtl.uint<2>\r\n    firrtl.connect %2, %in : !firrtl.uint<8>, !firrtl.uint<8>\r\n                                                                                                                                                                                                                                              }\r\n}\r\n```\r\n\r\n```\r\nt1.mlir:6:13: error: subaccess requires vector operand, not '!firrtl.uint<2>' \r\n%reg6 = firrtl.regreset %clock, %init, %c1_ui8 : !firrtl.uint<1>, !firrtl.uint<2>, !firrtl.uint<2>\r\n^  \r\nLLVM ERROR: Failed to infer result type(s).           \r\n```\r\nSeems like `insertResetMux()` in `InferResets` doesn't handle the case when `resetValue` is not the input but `index` into `SubaccessOp` . ",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-10",
+  "closed_at": "2021-11-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

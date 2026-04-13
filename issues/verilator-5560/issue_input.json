@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5560,
+  "issue_url": "https://github.com/verilator/verilator/issues/5560",
+  "title": "syntax error, unexpected IDENTIFIER when using interface in a class",
+  "body": "I have been learning SystemVerilog with verilator. Everything I've done so far has compiled. I only started having problems when using interface.  \r\n\r\nCODE:\r\n```\r\nimport alu_pkg::*;\r\n\r\ninterface alu_intf;  \r\n    operation op_code;\r\n    logic [15:0] a,b; \r\n    logic [15:0] result;\r\n    logic status;\r\n\r\n    modport DRV(    \r\n        output op_code, a, b, \r\n        input result \r\n                    );\r\n\r\n\r\nendinterface\r\n```\r\n```\r\nclass driver;  \r\n    alu_intf.DRV alu_if;  // No virtual interface allowed in verilator    \r\n    utils u;\r\n    mailbox #(transaction) drv_mbx;  \r\n    event done;\r\n    function new(mailbox #(transaction) mbx, event done_event);  \r\n        this.drv_mbx = mbx;\r\n        this.done=done_event; \r\n        u= new();\r\n    endfunction \r\n\r\n    task main();\r\n        transaction t;\r\n        forever begin\r\n            \r\n            if (drv_mbx.try_get(t)) begin\r\n                $display(\"[DRV] RCV: A=%d, B=%d, op code(%d)=%s\",t.a,t.b,t.op_code, u.opc(t.op_code));\r\n            end else begin\r\n                if(done.triggered) begin\r\n                    $display(\"Finished Simulation\");\r\n                    break;\r\n                end\r\n                $display(\"DRV <- GEN ERROR, mailbox=%d\\n\", drv_mbx.num());\r\n                #10ns;\r\n            end\r\n            #10ns;\r\n        end\r\n    endtask : main\r\n    \r\nendclass: driver\r\n```\r\nI get this error\r\n![Verilator_error](https://github.com/user-attachments/assets/e059d768-149d-457a-ad9f-ff4c51cad4d4)\r\n\r\nWhen I comment out the declaration in the driver class, and utilize the interface in the test bench module, it compiles. I only have problems when using it in the driver class. (I am aware that there is no support for virtual interface)",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-24",
+  "closed_at": "2024-10-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

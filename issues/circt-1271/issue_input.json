@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1271,
+  "issue_url": "https://github.com/llvm/circt/issues/1271",
+  "title": "[FIRRTL] Width Inference Problem with Cycle",
+  "body": "The following circuit causes an error during width inference of register `a`. However, the SFC infers a width of two.\r\n\r\n```scala\r\ncircuit Bar :\r\n  module Bar :\r\n    input clock : Clock\r\n    input cond : UInt<1>\r\n\r\n    reg a : UInt, clock\r\n\r\n    node _false = add(a, UInt<1>(0))\r\n    node false = tail(_false, 1)\r\n    a <= mux(cond, UInt<2>(0), false)\r\n```\r\n\r\nWith the MFC, I get:\r\n```\r\nBar.fir:6:5: error: 'firrtl.reg' op is constrained to be wider than itself\r\n    reg a : UInt, clock\r\n    ^\r\nBar.fir:6:5: note: see current operation: %a = \"firrtl.reg\"(%clock) {annotations = [], name = \"a\"} : (!firrtl.clock) -> !firrtl.uint\r\nBar.fir:8:19: note: constrained width W >= W+2 here:\r\n    node _false = add(a, UInt<1>(0))\r\n                  ^\r\nBar.fir:9:18: note: constrained width W >= W+1 here:\r\n    node false = tail(_false, 1)\r\n                 ^\r\nBar.fir:10:10: note: constrained width W >= W+1 here:\r\n    a <= mux(cond, UInt<2>(0), false)\r\n         ^\r\n```\r\n\r\nWith the SFC, I get:\r\n```scala\r\ncircuit Bar :\r\n  module Bar :\r\n    input clock : Clock\r\n    input cond : UInt<1>\r\n\r\n    reg a : UInt<2>, clock with :\r\n      reset => (UInt<1>(\"h0\"), a)\r\n    node _false = add(a, UInt<1>(\"h0\"))\r\n    node false = tail(_false, 1)\r\n    a <= mux(cond, UInt<2>(\"h0\"), false)\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL",
+    "infer width"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-14",
+  "closed_at": "2021-06-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

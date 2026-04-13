@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4741,
+  "issue_url": "https://github.com/llvm/circt/pull/4741",
+  "title": "[GrandCentral] Represent GrandCentral interfaces as a special FIRRTL Module",
+  "body": "This is a prototype implementation of representing GrandCentral interfaces with a special FIRRTL Module. \r\n\r\n\r\nProposed changes:\r\n1. The top level interface is represented using a module, that is instantiated in the companion.\r\n2. Every interface signal is represented using a wire inside the module.\r\n3. All nested interfaces are represented using `firrtl.bundle`.\r\n4. The module has one port for each leaf ground type interface signals.\r\n5. Dataflow is expressed through explicit assignments and connect.\r\n\r\nTo Represent the nested interfaces using `firrtl.bundle`, requires to store the interface name and field description.\r\nThis PR adds,\r\n1. A `StringAttr` to each `BundleType::BundleElement` for the field description.\r\n2. A `StringAttr` to each `BundleType` for the name of the `firrtl.bundle`.\r\nThe description and bundle name attributes are only internally exposed and are generated during `LowerAnnotations`.\r\n\r\nFor example, the `mlir` to generate the following system verilog interface is shown in the next code block.\r\n\r\n\r\n```verilog\r\nmodule Companion(\r\n  input MyView_signed__bore\r\n);\r\n\r\n  MyInterface MyView();\r\n  assign MyView.signed = MyView_signed__bore;\r\nendmodule\r\n\r\ninterface MyInterface;\r\n  logic signed_0;\r\nendinterface\r\n```\r\nMLIR , using a new op `firrtl.interface` and no explicit assignments.\r\n\r\n```mlir\r\nfirrtl.module private @Companion(in %MyView_signed__bore: !firrtl.uint<1>) {\r\n    %signed = firrtl.wire : !firrtl.uint<1>\r\n    %MyView__interFacePort_0 = firrtl.instance MyView @MyInterface(in _interFacePort_0: !firrtl.uint<1>)\r\n    firrtl.strictconnect %MyView__interFacePort_0, %signed : !firrtl.uint<1>\r\n    firrtl.connect %signed, %MyView_signed__bore : !firrtl.uint<1>, !firrtl.uint<1>\r\n  }\r\n  firrtl.interface @MyInterface(in %_interFacePort_0: !firrtl.uint<1>) {\r\n    %signed = firrtl.wire : !firrtl.uint<1>\r\n  }\r\n```\r\nTODO\r\n1. Fix the YAML generation\r\n2. Completely move all the logic from the GrandCentral pass to LowerAnnotations, and remove it from the pipeline.\r\n3. Add verifier to `firrtl.interface`\r\n4. Add lit tests for `LowerToHW`",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-02-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

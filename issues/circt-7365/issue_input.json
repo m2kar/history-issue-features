@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7365,
+  "issue_url": "https://github.com/llvm/circt/issues/7365",
+  "title": "[FIRRTL][LowerLayers] Cannot send rwprobe out of layer",
+  "body": "Consider this design, which exposes a RWProbe to a wire in a layer:\r\n\r\n```firrtl\r\nFIRRTL version 4.0.0\r\n\r\ncircuit L:\r\n  layer T, bind:\r\n\r\n  public module L:\r\n    output p : RWProbe<UInt<1>, T>\r\n\r\n    layerblock T:\r\n      wire w : UInt<1>\r\n      connect w, UInt<1>(0)\r\n      define p = rwprobe(w)\r\n```\r\n\r\nPresently this produces an error after LowerLayers:\r\n\r\n```\r\nlayers-rwprobe.fir:12:18: error: 'firrtl.ref.rwprobe' op has non-local target\r\n      define p = rwprobe(w)\r\n                 ^\r\nlayers-rwprobe.fir:12:18: note: see current operation: %2 = \"firrtl.ref.rwprobe\"() {target = #hw.innerNameRef<@L::@sym>} : () -> !firrtl.rwprobe<uint<1>>\r\n```\r\n\r\nIR failing the above verification:\r\n```\r\n// -----// IR Dump After LowerLayers Failed (firrtl-lower-layers) //----- //\r\n\"firrtl.circuit\"() ({\r\n  \"sv.verbatim\"() {format_string = \"`ifndef layers_L_T\\0A`define layers_L_T\", output_file = #hw.output_file<\"layers_L_T.sv\", excludeFromFileList>, symbols = []} : () -> ()\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg1: !firrtl.rwprobe<uint<1>>):\r\n    %1 = \"firrtl.constant\"() {value = 0 : ui1} : () -> !firrtl.uint<1>\r\n    %2 = \"firrtl.wire\"() {annotations = [], inner_sym = #hw<innerSym@sym>, name = \"w\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<1>\r\n    \"firrtl.matchingconnect\"(%2, %1) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n    %3 = \"firrtl.ref.rwprobe\"() {target = #hw.innerNameRef<@L::@sym>} : () -> !firrtl.rwprobe<uint<1>>\r\n    \"firrtl.ref.define\"(%arg1, %3) : (!firrtl.rwprobe<uint<1>>, !firrtl.rwprobe<uint<1>>) -> ()\r\n  }) {annotations = [], convention = #firrtl<convention internal>, layers = [], portAnnotations = [], portDirections = array<i1: true>, portLocations = [loc(unknown)], portNames = [\"p\"], portSyms = [], portTypes = [!firrtl.rwprobe<uint<1>>], sym_name = \"L_T\", sym_visibility = \"private\"} : () -> ()\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg0: !firrtl.rwprobe<uint<1>>):\r\n    %0 = \"firrtl.instance\"() {annotations = [], inner_sym = #hw<innerSym@t>, layers = [], lowerToBind, moduleName = @L_T, name = \"t\", nameKind = #firrtl<name_kind droppable_name>, output_file = #hw.output_file<\"layers_L_T.sv\", excludeFromFileList>, portAnnotations = [[]], portDirections = array<i1: true>, portNames = [\"p\"]} : () -> !firrtl.rwprobe<uint<1>>\r\n    \"firrtl.ref.define\"(%arg0, %0) : (!firrtl.rwprobe<uint<1>>, !firrtl.rwprobe<uint<1>>) -> ()\r\n  }) {annotations = [], convention = #firrtl<convention scalarized>, layers = [], portAnnotations = [[]], portDirections = array<i1: true>, portLocations = [loc(\"layers-rwprobe.fir\":7:12)], portNames = [\"p\"], portSyms = [], portTypes = [!firrtl.rwprobe<uint<1>>], sym_name = \"L\"} : () -> ()\r\n  \"sv.verbatim\"() {format_string = \"`endif // layers_L_T\", output_file = #hw.output_file<\"layers_L_T.sv\", excludeFromFileList>, symbols = []} : () -> ()\r\n}) {annotations = [], name = \"L\"} : () -> ()\r\n```\r\n\r\nLooks like LowerLayers needs to learn to rewrite the inner-refs used by operations it sinks.\r\n\r\ncc #7144",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-22",
+  "closed_at": "2024-08-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

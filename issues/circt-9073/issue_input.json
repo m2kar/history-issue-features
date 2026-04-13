@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9073,
+  "issue_url": "https://github.com/llvm/circt/pull/9073",
+  "title": "[MooreToCore] Support slicing of nested arrays",
+  "body": "Added a testcase that is the result of parsing the following sv code:\r\n\r\n```sv\r\nmodule bug (\r\n  input logic [1:0][1:0][1:0] in,\r\n  output logic [1:0] out\r\n);\r\nassign out = in[0][0][1:0];\r\n\r\nendmodule\r\n```\r\n\r\nThe current MooreToCore pass translates the sv ode incorrectly to\r\n```\r\nhw.module @bug(in %in : !hw.array<2xarray<2xi2>>, out out : i2) {\r\n  %false = hw.constant false\r\n  %0 = builtin.unrealized_conversion_cast %in : !hw.array<2xarray<2xi2>> to !hw.array<2xi2>\r\n  %1 = hw.array_get %0[%false] : !hw.array<2xi2>, i1\r\n  hw.output %1 : i2\r\n}\r\n```\r\n\r\nAdding a check if operand and result array have the same level of nesting in the ExtractOpConversion fixes the bug.",
+  "labels": [
+    "bug",
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-09",
+  "closed_at": "2025-10-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

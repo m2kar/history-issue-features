@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2612,
+  "issue_url": "https://github.com/llvm/circt/pull/2612",
+  "title": "[FIRRTL] Remove NLAs dropped by DontTouch",
+  "body": "The `LowerTypes` pass should remove NLAs used for nonlocal `DontTouch` on Bundle fields.\r\n1. `LowerTypes` will remove nonlocal `DontTouch` annotations and add symbol after lowering the bundle. For example, this annnotation would be dropped  , `#firrtl.subAnno<fieldID = 2, {circt.nonlocal = @nla_2, class =\"firrtl.transforms.DontTouchAnnotation\"}>` \r\n2. Dropping the `NLA` also handles the following case, when the fields of a bundle share the same `NLA`, since the symbol originally existed on the bundle, and all fields shared the symbol until `LowerTypes`.  \r\n`%b = firrtl.wire sym @symB { annotations = {annotations = [#firrtl.subAnno<fieldID = 2, {circt.nonlocal = @nla_2, class =\"firrtl.transforms.DontTouchAnnotation\"}>, #firrtl.subAnno<fieldID = 4, {circt.nonlocal = @nla_2, class =\"firrtl.transforms.DontTouchAnnotation\"}> \">]}: !firrtl.bundle<valid: uint<1>, ready: uint<1>, data: uint<64>>`\r\n3. `DontTouch` handling was already dropping the `NLA` annotation, but the original `NLA` was not being removed, and left dandling.\r\n4. This commit, iterates over all the `NLA`s, and `circt.nonlocal` annotations, to find `NLA`s that don't have any leaf op, and exist only as bread crumbs on the `InstanceOp`s. Then remove such NLAs. \r\n5. Also added a check if the `NLA` is being used in `verbatim`, but this case cannot occur, because `verbatim` should not use `NLA` to print `bundle` subfields. So, we can decide to drop the `VerbatimOp` check here.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-10",
+  "closed_at": "2022-02-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

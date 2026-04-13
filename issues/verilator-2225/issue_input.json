@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2225,
+  "issue_url": "https://github.com/verilator/verilator/issues/2225",
+  "title": "Function body with multiple statements should not pass linter in 1364-2001 language setting",
+  "body": "The following module passes linting as Verilog-2001 code despite having multiple statement in a function, which is a SystemVerilog (or Verilog-2005) feature. This error was detected by Icarus Verilog.\r\n\r\nLinter script:\r\n`verilator -Wall +1364-2001ext+v -y . --lint-only ${FILE}`\r\n\r\nModule (with begin/end fix commented out):\r\n```\r\nmodule Gray_to_Binary_Reflected\r\n#(\r\n    parameter WORD_WIDTH = 32\r\n)\r\n(\r\n    input  wire [WORD_WIDTH-1:0] gray_in,\r\n    output reg  [WORD_WIDTH-1:0] binary_out\r\n);\r\n\r\n    localparam ZERO = {WORD_WIDTH{1'b0}};\r\n\r\n    initial begin\r\n        binary_out = ZERO;\r\n    end\r\n\r\n    function [WORD_WIDTH-1:0] gray_to_binary\r\n    (\r\n        input [WORD_WIDTH-1:0] gray\r\n    );\r\n        integer i;\r\n        reg [WORD_WIDTH-1:0] binary;\r\n\r\n//        begin\r\n            binary[WORD_WIDTH-1] = gray[WORD_WIDTH-1];\r\n\r\n            for(i=WORD_WIDTH-2; i >= 0; i=i-1) begin\r\n                binary[i] = binary[i+1] ^ gray[i];\r\n            end\r\n\r\n            gray_to_binary = binary;\r\n//        end\r\n    endfunction\r\n\r\n    always@(*) begin\r\n        binary_out = gray_to_binary(gray_in);\r\n    end\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "area: lint",
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-04",
+  "closed_at": "2020-04-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

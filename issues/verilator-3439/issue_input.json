@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3439,
+  "issue_url": "https://github.com/verilator/verilator/issues/3439",
+  "title": "Non-ANSI interface port declarations causes crash",
+  "body": "The following test case yields an incorrect PINMISING then a subsequent crash in V3LinkDot, which I am not a great deal familiar with. I confirmed this is standards compliant and is expected to work..\r\n\r\n**t/t_non_ansi_interface_port**\r\n\r\n```perl\r\n#!/usr/bin/env perl\r\nif (!$::Driver) { use FindBin; exec(\"$FindBin::Bin/bootstrap.pl\", @ARGV, $0); die; }\r\n# DESCRIPTION: Verilator: Verilog Test driver/expect definition\r\n#\r\n# Copyright 2022 by Geza Lore. This program is free software; you can\r\n# redistribute it and/or modify it under the terms of either the GNU\r\n# Lesser General Public License Version 3 or the Perl Artistic License\r\n# Version 2.0.\r\n# SPDX-License-Identifier: LGPL-3.0-only OR Artistic-2.0\r\n\r\nscenarios(simulator => 1);\r\n\r\ncompile(\r\n    );\r\n\r\nexecute(\r\n    check_finished => 1,\r\n    );\r\n\r\nok(1);\r\n1;\r\n```\r\n\r\n```systemverilog\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2022 by Geza Lore.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\ninterface iface(input logic clk);\r\n    logic [31:0] d = 0;\r\n    logic [31:0] q = 0;\r\nendinterface\r\n\r\nmodule mod(a);\r\n    iface a; // This is not a CELL, it is a port declaration\r\n    always @(posedge a.clk) a.q <= a.d;\r\nendmodule\r\n\r\nmodule t(clk);\r\n    input clk;\r\n\r\n    iface iface_inst(clk);\r\n    mod   mod_inst(iface_inst);\r\n\r\n    int cyc = 0;\r\n\r\n    always @(posedge clk) begin\r\n        iface_inst.d <= cyc;\r\n        if (cyc > 1 && iface_inst.q != cyc - 2) $stop;\r\n    end\r\n\r\n    always @(posedge clk) begin\r\n        cyc <= cyc + 1;\r\n        if (cyc == 100) begin\r\n            $write(\"*-* All Finished *-*\\n\");\r\n            $finish;\r\n        end\r\n    end\r\nendmodule\r\n```",
+  "labels": [
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-20",
+  "closed_at": "2022-05-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

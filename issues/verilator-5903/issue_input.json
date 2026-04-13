@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5903,
+  "issue_url": "https://github.com/verilator/verilator/issues/5903",
+  "title": "Invalid streaming operator packing ordering",
+  "body": "> Can you attach an example that shows the issue?\n\nExample:\n\n```verilog\nmodule data_packing;\n\n    byte    data [];\n    longint word;\n\n    initial begin\n\n        data = new[8]('{8'hfa, 8'hde, 8'hca, 8'hfe,\n                        8'hde, 8'had, 8'hbe, 8'hef});\n\n        word = {>>{data}};\n        $display(\"word: %h\", word);\n        word = {<<8{data}};\n        $display(\"word: %h\", word);\n\n    end\n\nendmodule\n```\n\nExpected outptut:\n\n```\nword: fadecafedeadbeef\nword: efbeaddefecadefa\n```\n\nAccording to 1800-2023 LRM, section 11.4.14.2: _>> causes blocks of data to be streamed in left-to-right order, while << causes blocks of data to be streamed in right-to-left order._\n\nReal output:\n\n```\nword: efbeaddefecadefa\nword: fadecafedeadbeef\n```\n\n> What 'verilator' command line do we use to run your example?\n\n```bash\nverilator data_packing.sv --binary\n./obj_dir/Vdata_packing\n```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?\n\n`Verilator 5.035 devel rev v5.034-69-g780163b91`\n\n> What OS and distribution are you using?\n\nCentOS Linux release 7.9.2009.",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-30",
+  "closed_at": "2025-06-10",
+  "code_blocks": [
+    "module data_packing;\n\n    byte    data [];\n    longint word;\n\n    initial begin\n\n        data = new[8]('{8'hfa, 8'hde, 8'hca, 8'hfe,\n                        8'hde, 8'had, 8'hbe, 8'hef});\n\n        word = {>>{data}};\n        $display(\"word: %h\", word);\n        word = {<<8{data}};\n        $display(\"word: %h\", word);\n\n    end\n\nendmodule\n",
+    "word: fadecafedeadbeef\nword: efbeaddefecadefa\n",
+    "word: efbeaddefecadefa\nword: fadecafedeadbeef\n",
+    "verilator data_packing.sv --binary\n./obj_dir/Vdata_packing\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

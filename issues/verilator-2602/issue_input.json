@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2602,
+  "issue_url": "https://github.com/verilator/verilator/issues/2602",
+  "title": "chandle isn't compatible with null",
+  "body": "Looking at section 6.14 of IEEE 1800-2017, `chandle`s are supposed to interact with `null` as follows:\r\n```systemverilog\r\nmodule foo;\r\n  chandle x;\r\n  initial begin\r\n    x = null;\r\n    assert(x == null);\r\n    assert(x != null);\r\n    assert(x);\r\n  end\r\nendmodule\r\n```\r\n\r\nVerilator seems to treat `chandle` as an alias for a 64-bit integer (at least on my 64-bit machine). It seems to treat `null` as an alias for `1'b0`, so the code above gives the following errors (tested with a v4.040 development version, `v4.040-24-ga2f48ecb` and with `Verilator 4.038 2020-07-11 rev v4.036-114-g0cd4a57ad` from Debian):\r\n```\r\n%Warning-WIDTH: tmp.sv:4:7: Operator ASSIGN expects 64 bits on the Assign RHS, but Assign RHS's CONST '1'h0' generates 1 bits.\r\n                          : ... In instance foo\r\n    4 |     x = null;\r\n      |       ^\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: tmp.sv:5:14: Operator EQ expects 64 bits on the RHS, but RHS's CONST '1'h0' generates 1 bits.\r\n                           : ... In instance foo\r\n    5 |     assert(x == null);\r\n      |              ^~\r\n%Warning-WIDTH: tmp.sv:6:14: Operator NEQ expects 64 bits on the RHS, but RHS's CONST '1'h0' generates 1 bits.\r\n                           : ... In instance foo\r\n    6 |     assert(x != null);\r\n      |              ^~\r\n%Warning-WIDTH: tmp.sv:7:5: Logical Operator ASSERT expects 1 bit on the Property, but Property's VARREF 'x' generates 64 bits.\r\n                          : ... In instance foo\r\n    7 |     assert(x);\r\n      |     ^~~~~~\r\n%Error: Exiting due to 4 warning(s)\r\n```\r\n\r\nYou can make things work for verilator by replacing `null` with `0` and adding a unary OR to the last assertion, like this:\r\n```systemverilog\r\nmodule foo;\r\n  chandle x;\r\n  initial begin\r\n    x = 0;\r\n    assert(x == 0);\r\n    assert(x != 0);\r\n    assert(|x); // Or just use \"x != 0\"\r\n  end\r\nendmodule\r\n```\r\nbut those changes give code that's not allowed by the spec (which doesn't allow you to compare a `chandle` with a number, assign a number to a `chandle`, or do any bitwise operations on a `chandle`).\r\n\r\nLocally, I've worked around this with a \"chandle_null\" variable:\r\n```systemverilog\r\n`ifdef VERILATOR\r\n  chandle chandle_null = 0;\r\n`else\r\n  chandle chandle_null = null;\r\n`endif\r\n```\r\nbut it would be nice to get rid of the workaround.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-10-22",
+  "closed_at": "2020-10-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

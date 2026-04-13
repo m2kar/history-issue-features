@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1224,
+  "issue_url": "https://github.com/verilator/verilator/issues/1224",
+  "title": "V3Combine not working, and use of this->",
+  "body": "---\n\n\nAuthor Name: **John Coiner** (@jcoiner)\nOriginal Redmine Issue: 1224 from https://www.veripool.org\n\nOriginal Assignee: John Coiner (@jcoiner)\n\n---\n\nTo reproduce:\r\n * Start with the verilog-sim-benchmarks design (the m68 toy cpu and its testbench from http://git.veripool.org/git/verilog-sim-benchmarks)\r\n * Add the attached k68_cpu_multi.v module, which instantiates two k68_cpu's.\r\n * In k68_soc.v, replace the instance of k68_cpu with k68_cpu_multi.\r\n * Run verilator with '-inline-mult 2000'. This must go after -O3 on the command line, so that inlining is enabled, otherwise -O3 disables it. Also build with --debug.\r\n\r\nWhen I do this, Verilator elects not to inline the 'cpu' module. This is expected: it has more than 2000 statements and there's more than one instance of it. Literally every other non-top module gets inlined, both above and below 'cpu'. This is also expected: all of them have less than 2000 statements or only one instance.\r\n\r\nI also expected V3Combine to do something. We have two cpu scopes with identical logic inside, and with similar functions generated for each. There should be opportunity to combine.\r\n\r\nWhat's the state of V3Combine? Do you consider it stable?\r\n\r\nAre there any tests for V3Combine? I did 'grep -i combine *' in the tests dir and didn't get any hits so maybe not. It's worth a test. I'm assuming V3Combine is worth fixing and maintaining: the istream will blast away data in the L2 and L3 caches. I guess for some designs, we might be able to get the full I+D working set into L3, and that may depend on combining away a lot of the istream.\r\n\r\nI'm still digging, either to find root cause or to learn why inlining should not occur in this case.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2017-10-02",
+  "closed_at": "2017-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

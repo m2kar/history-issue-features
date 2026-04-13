@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6034,
+  "issue_url": "https://github.com/verilator/verilator/issues/6034",
+  "title": "Associative arrays with enum keys lead to \"Node has no type\" verilation error",
+  "body": "Enum types can't be used as associative array keys. \n\n**Steps to reproduce**\n\nCompile verilator from stable or current master branch and run `python t_assoc_enum.py`\n```systemverilog\n// DESCRIPTION: Verilator: Verilog Test module\n//\n// This file ONLY is placed under the Creative Commons Public Domain, for\n// any use, without warranty, 2025 by Wilson Snyder.\n// SPDX-License-Identifier: CC0-1.0\n\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\nclass X;\n   typedef enum int {\n        INITIAL, RUNNING, SUSPENDED, COMPLETING, DONE\n   } state_t;\n\n   static string state_names[state_t] = '{\n        INITIAL:    \"INITIAL\",\n        RUNNING:    \"RUNNING\",\n        SUSPENDED:  \"SUSPENDED\",\n        COMPLETING: \"COMPLETING\",\n        DONE:       \"DONE\"\n   };\n   protected state_t state;\n\n   function new();\n      this.state = INITIAL;\n      `checks(state_names[this.state], \"INITIAL\");\n      this.state = RUNNING;\n      `checks(state_names[this.state], \"RUNNING\");\n   endfunction\n\nendclass\n\nmodule t;/*AUTOARG*/\n\n\ninitial begin\n   X x = new;\n   $finish;\nend\n\n\n\nendmodule\n```\n\n```python\n\nimport vltest_bootstrap\n\ntest.scenarios('simulator')\n\ntest.compile()\n\ntest.execute()\n\ntest.passes()\n\n```\n\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-24",
+  "closed_at": "2025-05-24",
+  "code_blocks": [
+    "// DESCRIPTION: Verilator: Verilog Test module\n//\n// This file ONLY is placed under the Creative Commons Public Domain, for\n// any use, without warranty, 2025 by Wilson Snyder.\n// SPDX-License-Identifier: CC0-1.0\n\n`define stop $stop\n`define checkh(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0x exp=%0x (%s !== %s)\\n\", `__FILE__,`__LINE__, (gotv), (expv), `\"gotv`\", `\"expv`\"); `stop; end while(0);\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\nclass X;\n   typedef enum int {\n        INITIAL, RUNNING, SUSPENDED, COMPLETING, DONE\n   } state_t;\n\n   static string state_names[state_t] = '{\n        INITIAL:    \"INITIAL\",\n        RUNNING:    \"RUNNING\",\n        SUSPENDED:  \"SUSPENDED\",\n        COMPLETING: \"COMPLETING\",\n        DONE:       \"DONE\"\n   };\n   protected state_t state;\n\n   function new();\n      this.state = INITIAL;\n      `checks(state_names[this.state], \"INITIAL\");\n      this.state = RUNNING;\n      `checks(state_names[this.state], \"RUNNING\");\n   endfunction\n\nendclass\n\nmodule t;/*AUTOARG*/\n\n\ninitial begin\n   X x = new;\n   $finish;\nend\n\n\n\nendmodule\n",
+    "\nimport vltest_bootstrap\n\ntest.scenarios('simulator')\n\ntest.compile()\n\ntest.execute()\n\ntest.passes()\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

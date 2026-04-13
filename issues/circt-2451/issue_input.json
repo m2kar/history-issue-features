@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2451,
+  "issue_url": "https://github.com/llvm/circt/issues/2451",
+  "title": "[FIRRTL] Module Inliner Needs to Unique Colliding Symbols",
+  "body": "FIRRTL Dialect's `ModuleInliner` pass can result in inner sym collisions.  Consider the following:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Bar() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n    %b = firrtl.wire sym @hello : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Foo() {\r\n    firrtl.instance foo @Bar()\r\n    %a = firrtl.wire sym @hello : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nAfter running `circt-opt -pass-pipeline='firrtl.circuit(firrtl-inliner)' Bar.mlir`:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\"   {\r\n  firrtl.module @Foo() {\r\n    %foo_b = firrtl.wire sym @hello  : !firrtl.uint<1>\r\n    %a = firrtl.wire sym @hello  : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nThe `@hello` symbol should be renamed using a `firrtl::ModuleNamespace` (and any NLAs using it should be updated).\r\n\r\nNote: I'm working on fixing NLAs generally in the `ModuleInliner` and I'd like to land that before fixing this.\r\n\r\nNote: I'm in favor of keeping the symbol name unmodified if it doesn't collide as opposed to updating the symbol to reflect the inlining, e.g., `@foo_hello`.  (Doing this would _still_ require uniquing the symbol in the namespace even though it lowers the probability of a collision.)",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-13",
+  "closed_at": "2022-02-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

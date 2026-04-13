@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7348,
+  "issue_url": "https://github.com/verilator/verilator/issues/7348",
+  "title": "Fix variable initialization is treated as time-varying",
+  "body": "### Version\nVerilator 5.046 (2026-02-28)\n\n### Description\nA declaration-time initialized variable that depends on an input appears to change over time in Verilator.\n\nExample:\n    logic [7:0] snapshot = data_in;\n\nPer IEEE 1800 §6.5 and §10.5, declaration assignment is a one-time initialization, not a continuous assignment. However, in Verilator, `snapshot` appears to follow later `data_in` changes, which changes the behavior of:\n    `out <= reg_a ^ snapshot`;\n\n### Expected behavior\n`snapshot` should be initialized once only, and should not update when `data_in` changes later.\n\n### Observed behavior\nIn Verilator, `snapshot` changes with `data_in` over time.\n\n### Cross-check\n- ModelSim / Icarus: `snapshot` does not behave as time-varying\n- Verisim with `-initreg 0`: `snapshot` remains constant (used here to compare against Verilator under forced init semantics)\n- Verilator: `snapshot` changes over time\n\n### Reproducer\ndut\n```\nmodule var_init_bug (\n    input  logic       clk,\n    input  logic       rst_n,\n    input  logic [7:0] data_in,\n    output logic [7:0] out\n);\n    // IEEE 1800 §6.8: this is a ONE-TIME init, not continuous\n    logic [7:0] snapshot = data_in;\n\n    logic [7:0] reg_a;\n\n    always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            reg_a <= 0;\n            out   <= 0;\n        end else begin\n            reg_a <= data_in;\n            out   <= reg_a ^ snapshot;  // should be reg_a ^ 0, not reg_a ^ data_in\n        end\n    end\nendmodule\n```\ntestbench:\n```\n`timescale 1ns/1ps\nmodule tb;\n    reg clk = 0, rst_n = 0;\n    reg [7:0] data_in = 0;\n    wire [7:0] out;\n\n    var_init_bug dut(.*);\n    always #5 clk = ~clk;\n\n    initial begin\n        $dumpfile(\"dump.vcd\"); $dumpvars(0, tb);\n        #12 rst_n = 1;\n        #10 data_in = 8'h39;\n        #10 data_in = 8'h7D;\n        #10 data_in = 8'h34;\n        #20 $finish;\n    end\nendmodule\n```\n\nverilator commands\n```\nverilator -Wall --binary --timing -Wno-fatal var_init_bug.sv tb.sv\n./obj_dir/Vtb\n```\n\n### Attachment\nvcd files dumped by modelsim, iverilog, verisim and verilator\n\n[Archive.zip](https://github.com/user-attachments/files/26371655/Archive.zip)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-31",
+  "closed_at": null,
+  "code_blocks": [
+    "module var_init_bug (\n    input  logic       clk,\n    input  logic       rst_n,\n    input  logic [7:0] data_in,\n    output logic [7:0] out\n);\n    // IEEE 1800 §6.8: this is a ONE-TIME init, not continuous\n    logic [7:0] snapshot = data_in;\n\n    logic [7:0] reg_a;\n\n    always_ff @(posedge clk or negedge rst_n) begin\n        if (!rst_n) begin\n            reg_a <= 0;\n            out   <= 0;\n        end else begin\n            reg_a <= data_in;\n            out   <= reg_a ^ snapshot;  // should be reg_a ^ 0, not reg_a ^ data_in\n        end\n    end\nendmodule\n",
+    "`timescale 1ns/1ps\nmodule tb;\n    reg clk = 0, rst_n = 0;\n    reg [7:0] data_in = 0;\n    wire [7:0] out;\n\n    var_init_bug dut(.*);\n    always #5 clk = ~clk;\n\n    initial begin\n        $dumpfile(\"dump.vcd\"); $dumpvars(0, tb);\n        #12 rst_n = 1;\n        #10 data_in = 8'h39;\n        #10 data_in = 8'h7D;\n        #10 data_in = 8'h34;\n        #20 $finish;\n    end\nendmodule\n",
+    "verilator -Wall --binary --timing -Wno-fatal var_init_bug.sv tb.sv\n./obj_dir/Vtb\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

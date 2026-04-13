@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2679,
+  "issue_url": "https://github.com/verilator/verilator/issues/2679",
+  "title": "SV/Verilog loop unroll strategy question",
+  "body": "This relates to an [earlier query](https://github.com/verilator/verilator/issues/2678) where I made my test case too simple - although the answer was still very useful!\r\n\r\nI have an arithmetic shift right. I iterate to generate log2(N-1) levels of logic for an N bit input. There are log2(N) levels of wiring though. Each logic level is a N x 2:1 muxes. The loop variable simply wires those muxes together (you can make a barrel shifter really easily like this).\r\n\r\nThe coding style is intended to limit the synthesis tool's options. (Of course I know >>> exists :+1: )\r\n\r\nThe code on the left works but requires the lint waivers. The code on the right doesn't compile in verilator despite the unpacked array.\r\n\r\nSo does verilator not unroll loops in the way other tools elaborate the RTL?\r\n\r\nJust curious - any comment gratefully received!\r\n\r\n```\r\n  1 module asr(y, a, s);                                                    |  1 module asr(y, a, s);                                                     \r\n  2   parameter integer                                 BITS = 32;          |  2   parameter integer                                 BITS = 32;\r\n  3   localparam integer                              L2BITS = $clog2(BITS);|  3   localparam integer                              L2BITS = $clog2(BITS);\r\n  4                                                                         |  4 \r\n  5   output logic                                [BITS-1:0] y;             |  5   output logic                                [BITS-1:0] y;\r\n  6   input  wire                                 [BITS-1:0] a;             |  6   input  wire                                 [BITS-1:0] a;\r\n  7   input  wire                               [L2BITS-1:0] s;             |  7   input  wire                               [L2BITS-1:0] s;\r\n  8                                                                         |  8 \r\n  9   // verilator lint_off UNOPTFLAT                                       |  9   logic                                       [BITS-1:0] t [L2BITS:0];\r\n 10   wire                              [L2BITS:0][BITS-1:0] t;             | 10 \r\n 11   // verilator lint_on UNOPTFLAT                                        | 11   always_comb begin\r\n 12                                                                         | 12     t[0] = a;\r\n 13   assign t[0] = a;                                                      | 13 \r\n 14                                                                         | 14     for (int nn=0; nn < L2BITS; nn++)\r\n 15   for (genvar nn=0; nn < L2BITS; nn++)                                  | 15       t[nn+1] = s[nn] ? {{(2**nn){t[nn][BITS-1]}},\r\n 16     assign t[nn+1] = s[nn] ? {{(2**nn){t[nn][BITS-1]}},                 | 16                                   t[nn][BITS-1:2**nn]} : t[nn];\r\n 17                                        t[nn][BITS-1:2**nn]} : t[nn];    | 17     y = t[L2BITS];\r\n 18   assign y = t[L2BITS];                                                 | 18   end\r\n 19                                                                         | 19 \r\n 20 endmodule                                                               | 20 endmodule\r\n\r\n```",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-08",
+  "closed_at": "2020-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

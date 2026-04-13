@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5208,
+  "issue_url": "https://github.com/verilator/verilator/issues/5208",
+  "title": "Fix finding signals in interface above class",
+  "body": "```\r\n%Error: Internal Error: t/t_interface_class.v:29:9: ../V3Scope.cpp:73: Can't locate varref scope\r\n                                                  : ... note: In instance 'APB3_TB_top.apb3_intf.APB3_concrete_BFM'\r\n   29 |         PENABLE <= '0;\r\n      |         ^~~~~~~\r\n```\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nFrom **\"Abstract BFMs Outshine Virtual Interfaces for Advanced SystemVerilog Testbenches\"**\r\n\r\n```\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2024 by .\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\n\r\npackage APB3_pkg_Fig4;\r\n   virtual class APB3_BFM;\r\n      pure virtual task write (int unsigned addr, data);\r\n      pure virtual task read (int unsigned addr, output int unsigned data);\r\n   endclass\r\nendpackage\r\n\r\ninterface APB3_TB_intf(input bit PCLK);\r\n   import APB3_pkg_Fig4::*;\r\n\r\n   typedef logic [15:0] addr_t;\r\n   typedef logic [15:0] data_t;\r\n\r\n   logic PENABLE, PWRITE, PSEL, PREADY;\r\n   addr_t PADDR;\r\n   data_t PWDATA, PRDATA;\r\n\r\nclass APB3_concrete_BFM extends APB3_BFM;\r\n   task write(int unsigned addr, data);\r\n      @(posedge PCLK)\r\n\tPSEL <= '1;\r\n        PENABLE <= '0;\r\n        PWRITE <= '1;\r\n        PADDR <= addr_t'(addr);\r\n        PWDATA <= data_t'(data);\r\n      @(posedge PCLK)\r\n\tPENABLE <= 1'b1;\r\n      do @(posedge PCLK); while (!PREADY);\r\n      PSEL <= 1'b0;\r\n      PENABLE <= 1'b0 ;\r\n   endtask\r\n\r\n   task read (int unsigned addr, output int unsigned data);\r\n      @(posedge PCLK)\r\n\tPSEL <= '1;\r\n        PENABLE <= '0;\r\n        PWRITE <= '0;\r\n        PADDR <= addr_t'(addr);\r\n      @(posedge PCLK)\r\n\tPENABLE <= 1'b1;\r\n      do @(posedge PCLK); while (!PREADY);\r\n      PSEL <= '0;\r\n      PENABLE <= '0 ;\r\n      data = int'(PRDATA);\r\n   endtask\r\nendclass\r\n\r\n   APB3_concrete_BFM bfm = new;\r\nendinterface\r\n\r\nmodule APB3_TB_top;\r\n   import APB3_pkg_Fig4::*;\r\n\r\n   bit CLK;\r\n   always #5 CLK = ~CLK; // clock generator\r\n\r\n   APB3_TB_intf apb3_intf(CLK);\r\n/* -----\\/----- EXCLUDED -----\\/-----\r\n   APB3_device DUT(\r\n\t\t   .PCLK(CLK),\r\n\t\t   .PENABLE(apb3_intf.PENABLE),\r\n\t\t   ...);\r\n -----/\\----- EXCLUDED -----/\\----- */\r\n   initial begin : Test_Activity\r\n      APB3_BFM bfm; // abstract BFM reference\r\n      int read_data;\r\n      bfm = apb3_intf.bfm; // reference to BFM\r\n      bfm.write(100, 1234);\r\n      bfm.read(100, read_data);\r\n      if (read_data != 1234)\r\n\t$display(\"error: unexpected read data\");\r\n   end\r\nendmodule\r\n```\r\n\r\nWhat 'verilator' command line do we use to run your example?\r\n\r\n```\r\nverilator --prefix Vt_interface_class ../obj_vlt/t_interface_class/Vt_interface_class__main.cpp --exe --make gmake --x-assign unique -cc -Mdir obj_vlt/t_interface_class --fdedup --debug-check --comp-limit-members 10 --clk clk  -f input.vc +define+TEST_OBJ_DIR=obj_vlt/t_interface_class +define+TEST_DUMPFILE=obj_vlt/t_interface_class/simx.vcd --timing  t/t_interface_class.v\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n```\r\nv5.026-gd5cfe1a37\r\n```\r\nWhat OS and distribution are you using?\r\n```\r\nLinux 5.14.0-427.20.1.el9_4.x86_64\r\n```\r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-28",
+  "closed_at": "2025-09-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

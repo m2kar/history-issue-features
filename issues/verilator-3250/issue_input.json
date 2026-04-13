@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3250,
+  "issue_url": "https://github.com/verilator/verilator/pull/3250",
+  "title": "Reduce .rodata footprint of trace initialization",
+  "body": "Trace initialization (tracep->decl* functions) used to explicitly pass\r\nthe complete hierarchical names of signals as string constants. This\r\ncontains a lot of redundancy (path prefixes), does not scale well with\r\nlarge designs and resulted in .rodata sections (the string constants) in\r\nELF executables being extremely large.\r\n\r\nThis patch changes the API of trace initialization that allows pushing\r\nand popping name prefixes as we walk the hierarchy tree, which are\r\nprepended to declared signal names at run-time during trace\r\ninitialization. This in turns allows us to only emit repeat path/name\r\ncomponents only once, effectively removing all duplicate path prefixes.\r\nOn SweRV EH1 this reduces the .rodata section in a --trace build by 94%.\r\n\r\nAdditionally, trace declarations are now emitted in lexical order by\r\nhierarchical signal names, and the top level trace initialization\r\nfunction respects --output-split-ctrace.\r\n\r\n---\r\n\r\nNote: I confirmed traces in the tests are the same if omitting the lexical sort of signals, but vcddiff is not intelligent enough to handle re-ordering so I update the reference files.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-17",
+  "closed_at": "2021-12-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

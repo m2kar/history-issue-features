@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1467,
+  "issue_url": "https://github.com/verilator/verilator/issues/1467",
+  "title": "Constant function evaluator incorrect on return of function var",
+  "body": "---\n\n\nAuthor Name: **Roman Popov**\nOriginal Redmine Issue: 1467 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nTrying to debug the root cause of multiple errors. Here is a minimal example I've managed to extract:\r\n\r\n```<code class=\"delphi\">\r\nmodule dut #(\r\n     parameter DEPTH = 16,\r\n     parameter WIDTH = 32,\r\n     parameter RAM_SPLIT_WIDTH = 16\r\n)\r\n(\r\n     output logic [WIDTH-1:0] ram_dataout\r\n);\r\n\r\nlocalparam RAM_ADDR_WIDTH = $clog2(DEPTH);\r\nlocalparam NUM_RAM_BLOCKS = WIDTH/RAM_SPLIT_WIDTH + (WIDTH%RAM_SPLIT_WIDTH > 0);\r\ntypedef logic [NUM_RAM_BLOCKS:0][31:0] block_index_t;\r\n\r\nfunction automatic block_index_t index_calc(input int WIDTH, NUM_RAM_BLOCKS);\r\n     index_calc[0] = '0;\r\n     for(int i = 0; i < NUM_RAM_BLOCKS; i++) index_calc[i+1] = WIDTH/NUM_RAM_BLOCKS + (i < (WIDTH%NUM_RAM_BLOCKS));\r\n     for(int i = 0; i < NUM_RAM_BLOCKS; i++) index_calc[i+1] = index_calc[i+1] + index_calc[i];\r\n     return index_calc;\r\nendfunction\r\n\r\nlocalparam block_index_t RAM_BLOCK_INDEX = index_calc(WIDTH, NUM_RAM_BLOCKS);\r\n\r\ngenerate\r\n     begin : ram_dataout_gen\r\n         for (genvar i = 0; i < NUM_RAM_BLOCKS; i++) begin\r\n                 always_comb ram_dataout[RAM_BLOCK_INDEX[i+1]-1:RAM_BLOCK_INDEX[i]] = 0;\r\n         end\r\n     end\r\nendgenerate\r\n\r\nendmodule\r\n\r\nmodule top (\r\n     input clk,\r\n     output logic [31:0] ram_dataout    \r\n);\r\n\r\ndut dut0(.*);\r\n\r\nendmodule\r\n</code>\n```\r\n\r\n```\r\n%Warning-WIDTH: top.sv:11: Operator ADD expects 32 or 6 bits on the RHS, but RHS's GTS generates 1 bits.\r\n%Warning-WIDTH: Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: top.sv:16: Operator ADD expects 32 bits on the RHS, but RHS's LTS generates 1 bits.\r\n%Error: top.sv:26: [-1:0] Range extract has backward bit ordering, perhaps you wanted [0:-1]\r\n\n```\r\n\r\nSo Verilator incorrectly evaluates RAM_BLOCK_INDEX[1] to 0.  \r\nWorks fine in VCS/DC.\r\n\r\n\r\nverilator --lint-only -sv -top-module top top.sv\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-15",
+  "closed_at": "2019-06-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

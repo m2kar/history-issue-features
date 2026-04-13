@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2480,
+  "issue_url": "https://github.com/verilator/verilator/issues/2480",
+  "title": "Possible timing race with --protect-lib output, not fully understood",
+  "body": "I have a simulation which behaves differently with RTL than with the --protect-lib generated Verilated model and SV wrapper. \r\nThis could be an issue in my testbench, but may also be a real issue in how the --protect-lib wrapper works. I am not yet sure, but wanted to discuss here for additional insight.\r\n\r\nWhat I know is that if I replace all the blocking assignments in the generated wrapper's always block commented ...\r\n`\r\n// Select between combinatorial and sequential results\r\n`\r\n... with non-blocking assignments (so all outputs update in the same delta cycle) the issue is resolved. Clearly, this could easily be implemented as a patch as follows, but I am not sure whether or not this is the right thing to do in this case.\r\n\r\n```cpp\r\n--- a/src/V3ProtectLib.cpp\r\n+++ b/src/V3ProtectLib.cpp\r\n@@ -437,8 +437,8 @@ private:\r\n         m_tmpDeclsp->addText(fl, \" \" + varp->name() + \"_tmp__V;\\n\");\r\n \r\n         m_nbAssignsp->addText(fl, varp->name() + \"_seq__V <= \" + varp->name() + \"_tmp__V;\\n\");\r\n-        m_seqAssignsp->addText(fl, varp->name() + \" = \" + varp->name() + \"_seq__V;\\n\");\r\n-        m_comboAssignsp->addText(fl, varp->name() + \" = \" + varp->name() + \"_combo__V;\\n\");\r\n+        m_seqAssignsp->addText(fl, varp->name() + \" <= \" + varp->name() + \"_seq__V;\\n\");\r\n+        m_comboAssignsp->addText(fl, varp->name() + \" <= \" + varp->name() + \"_combo__V;\\n\");\r\n         m_cComboParamsp->addText(fl, varp->dpiArgType(true, false) + \"\\n\");\r\n         m_cComboOutsp->addText(fl,\r\n```\r\n\r\nLet's consider a design where all outputs are synchronously updated using a single clock.\r\n\r\nWhat happens if the TB is (rightly or wrongly) sensitive to an edge on one of these outputs, which triggers some action which has a dependency on all the other outputs?\r\n\r\nWith blocking assignments, I think the values that action will observe on these outputs will depend upon the order in which they appear in this generated sequence of blocking assignments (which I believe mirrors the declaration order on the original Verilated module)\r\n\r\nWith the RTL simulation however, all the outputs will be assigned in a single delta cycle (assuming they were assigned in a clocked always, using non-blocking assignments), and the observed state of any action triggered by one these outputs will be the previous value, for all other outputs.\r\n\r\nI can try to put a test case together to demonstrate this.\r\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-24",
+  "closed_at": "2020-11-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

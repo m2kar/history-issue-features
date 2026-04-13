@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2576,
+  "issue_url": "https://github.com/verilator/verilator/issues/2576",
+  "title": "Multiple assigns to same signal misordered",
+  "body": "Hi,\r\n\r\nI got a testcast whose behavior was not my expectation.\r\n\r\n```verilog\r\nmodule t (\r\n    input   logic     clk,\r\n    input   logic     mask,\r\n    output  logic     dout\r\n);\r\nlogic      d0;\r\nlogic      dpp[1:0];\r\nalways @ (posedge clk) begin\r\n    d0 <= ~d0;\r\nend\r\nalways @ (*) begin\r\n    dpp[0] = d0;\r\n    dout   = dpp[1];\r\nend\r\nalways @ (*) begin\r\n    dpp[1] = 0; // This is the key statement.\r\n    dpp[1] = dpp[0] & mask;\r\nend\r\nendmodule\r\n```\r\n```cpp\r\n// sim_main.cpp\r\n#include \"Vdemo.h\"\r\n#include \"verilated.h\"\r\nvluint64_t main_time = 0;\r\ndouble sc_time_stamp() { return main_time; }\r\nint main(int argc, char** argv, char** env) {\r\n    Verilated::commandArgs(argc, argv);\r\n    Vdemo* top = new Vdemo;\r\n    top->mask = 0x1;\r\n    printf(\"  clk  dpp[0]  dpp[1]\\n\");\r\n    while (!Verilated::gotFinish() && main_time < 20) {\r\n        top->eval();\r\n        printf(\"   %d     %d      %d\\n\",\r\n            top->clk,\r\n            top->t__DOT__dpp[0],\r\n            top->t__DOT__dpp[1]);\r\n        main_time++;\r\n        top->clk = !top->clk;\r\n    }\r\n    delete top;\r\n    exit(0);\r\n}\r\n```\r\n```txt\r\n// screen output\r\n  clk  dpp[0]  dpp[1]\r\n   0     0      0\r\n   1     1      0\r\n   0     1      1\r\n   1     0      1\r\n   0     0      0\r\n   1     1      0\r\n   0     1      1\r\n   1     0      1\r\n   0     0      0\r\n   1     1      0\r\n   0     1      1\r\n   1     0      1\r\n   0     0      0\r\n   1     1      0\r\n   0     1      1\r\n   1     0      1\r\n   0     0      0\r\n   1     1      0\r\n   0     1      1\r\n   1     0      1\r\n```\r\nThe result shows that `dpp[0]` toggles at posedge of `clk` and  `dpp[1]` toggles at negedge of `clk`, but they should change simultaneously.\r\n\r\nI tried to study the source code to find out the reason, and then, I found the the comments in the source code like this:\r\nhttps://github.com/verilator/verilator/blob/222ca4b009baec47f04e99d32373b3a1fd440d05/src/V3Order.cpp#L1043-L1055\r\n\r\nMay I ask why you make this assumption? It seems you are doing some optimization by reducing the scale of the graph, but It may cause some problem.\r\nIf this is your deliberate decision, I think you'd better give some warning here.\r\n\r\nThanks.\r\n\r\nBest regards.\r\n",
+  "labels": [
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2020-09-29",
+  "closed_at": "2025-07-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

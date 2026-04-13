@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7383,
+  "issue_url": "https://github.com/verilator/verilator/pull/7383",
+  "title": "Fix subclass with rand_mode(0) getting randomized (#7376)",
+  "body": "## Summary\r\n\r\nThis patch fixes `rand_mode(0)` on a member variable inside a\r\nglobally-constrained sub-object being ignored during the parent's\r\n`randomize()` call -- the variable was still randomized and written\r\nback by the solver. Fixes #7376.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nclass inner extends base_obj;\r\n  rand logic [31:0] value;\r\n  constraint c { value < 100; }\r\n  function void set_rand_mode(bit mode);\r\n    value.rand_mode(mode);\r\n    c.constraint_mode(mode);\r\n  endfunction\r\nendclass\r\n\r\nclass outer extends base_obj;\r\n  rand inner fld;\r\n  function void build();\r\n    fld = new;\r\n  endfunction\r\nendclass\r\n\r\ninitial begin\r\n  outer o = new;\r\n  o.build();\r\n  o.fld.set_rand_mode(0);       // disable fld.value\r\n  pre_val = o.fld.value;\r\n  void'(o.randomize());\r\n  assert(o.fld.value == pre_val); // FAILS on master\r\nend\r\n```\r\n\r\nOn master:\r\n```\r\n%Error: got='hafed exp='h0  (fld.value changed despite rand_mode(0))\r\n```\r\n\r\n## Changes\r\n\r\n- Added file-scope `getRandModeVarFromClass()` that walks the class\r\n  extends chain to locate the `__Vrandmode` variable via\r\n  `AstClass::user2p()`, which is only set on the root class where\r\n  the variable was created.\r\n- Replaced direct `varClassp->user2p()` lookups in\r\n  `ConstraintExprVisitor` (constraint expression formatting and\r\n  `write_var` disable/enable generation) with the new helper.\r\n- Removed `RandomizeVisitor::getRandModeVar()` -- unified into the\r\n  single file-scope function used by both visitors.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_constraint_global_randmode_subobj.{v,py}` --\r\n  UVM-like hierarchy where `rand_mode(0)` on a sub-object member must\r\n  prevent randomization during the parent's `randomize()`. Tests both\r\n  disable and re-enable paths.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-04-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

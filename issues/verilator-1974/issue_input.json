@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1974,
+  "issue_url": "https://github.com/verilator/verilator/issues/1974",
+  "title": "Question: A problem with shared Vlvbound variables ",
+  "body": "---\n\n\nAuthor Name: **James Hanlon**\nOriginal Redmine Message: 2619 from https://www.veripool.org\n\n\n\n---\n\nI've been working on a tool that uses Verilator to produce a netlist graph from the AST of a Verilog design. I've based the logic for construction of the graph on V3Gate.cpp.\n\nIt is all working well, but I've run into a problem with 'Vlvbound' variables. I have multiple calls to a particular function and they all share a single Vlvbound variable. The effect of this is that it introduces invalid paths into the netlist. I would have expected that where a Vlvbound variable is introduced in a function, each invocation of that function gets a uniquely named one. That would be consistent with variables that are used in functions.\n\nAre Vlvbound variables expected to manifest in this way? If not, then can I work around this issue in the way I am walking the AST? Or is there a way to fix this?\n\nThe issue can be reproduced with this module:\n```\nmodule vlvbound_test\n    (\n     input logic [31:0]  i_foo_current,\n     input logic [31:0]  i_foo_next,\n     output logic [7:0]  o_foo_inactive,\n     output logic [7:0]  o_next_foo_inactive\n     );\n\n  localparam CONTEXT_ID_NUM = 7;\n  typedef logic [CONTEXT_ID_NUM-1:0] foo_active_t;\n\n    function  automatic foo_active_t rd_sts_inactive\n     (\n      input logic [31: 0] foo\n      );\n        foo_active_t ret;\n        integer           i;\n        logic [1:0]       tmp;\n        for (i=0 ; i < 7; i++)\n         begin\n             tmp    = foo >> (i*2);\n             ret[i] = (tmp == 0) ;\n         end\n        return ret;\n    endfunction\n\n    assign o_foo_inactive       = rd_sts_inactive(i_foo_current);\n    assign o_next_foo_inactive  = rd_sts_inactive(i_foo_next);\n\nendmodule\n\n```\nRunning:\n```\nverilator --lint-only +1800-2012ext+.sv --debug\n\n```\nThen looking at the dot graph or tree dump at the gate stage.\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2018-09-07",
+  "closed_at": "2018-09-07",
+  "code_blocks": [
+    "module vlvbound_test\n    (\n     input logic [31:0]  i_foo_current,\n     input logic [31:0]  i_foo_next,\n     output logic [7:0]  o_foo_inactive,\n     output logic [7:0]  o_next_foo_inactive\n     );\n\n  localparam CONTEXT_ID_NUM = 7;\n  typedef logic [CONTEXT_ID_NUM-1:0] foo_active_t;\n\n    function  automatic foo_active_t rd_sts_inactive\n     (\n      input logic [31: 0] foo\n      );\n        foo_active_t ret;\n        integer           i;\n        logic [1:0]       tmp;\n        for (i=0 ; i < 7; i++)\n         begin\n             tmp    = foo >> (i*2);\n             ret[i] = (tmp == 0) ;\n         end\n        return ret;\n    endfunction\n\n    assign o_foo_inactive       = rd_sts_inactive(i_foo_current);\n    assign o_next_foo_inactive  = rd_sts_inactive(i_foo_next);\n\nendmodule\n\n",
+    "verilator --lint-only +1800-2012ext+.sv --debug\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

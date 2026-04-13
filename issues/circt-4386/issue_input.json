@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4386,
+  "issue_url": "https://github.com/llvm/circt/issues/4386",
+  "title": "[FIRRTLFolds] AggOneShot is too conservative ",
+  "body": "Currently AggOneShot is really conservative about the user of subindex/subfield and barely successes.\r\n\r\nFor example, `$ circt-opt -canonicalize` cannot optimize the IR below:\r\n```\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module @Foo(in %b: !firrtl.uint<1>, out %a: !firrtl.uint<2>) {\r\n    %foo = firrtl.wire   : !firrtl.vector<uint<1>, 2>\r\n    %0 = firrtl.subindex %foo[1] : !firrtl.vector<uint<1>, 2>\r\n    %1 = firrtl.subindex %foo[0] : !firrtl.vector<uint<1>, 2>\r\n    firrtl.strictconnect %1, %b : !firrtl.uint<1>\r\n    firrtl.strictconnect %0, %b : !firrtl.uint<1>\r\n    %2 = firrtl.add %1, %0 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<2>\r\n    firrtl.strictconnect %a, %2 : !firrtl.uint<2>\r\n  }\r\n}\r\n```\r\n\r\nI would expect connections `firrtl.strictconnect %1, %b` and `firrtl.strictconnect %0, %b` are canonicalized into `firrtl.strictconnect %foo, (vectorcreate %b, %b))` but it is not optimized because `AggOneShot::getCompleteWrites` is really conservative about users of subelements.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-12-01",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

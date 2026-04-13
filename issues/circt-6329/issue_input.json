@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6329,
+  "issue_url": "https://github.com/llvm/circt/pull/6329",
+  "title": "[ExportVerilog] Make ExprEmitter sensitive to assignment-like context",
+  "body": "Make the `ExprEmitter` track whether the current expressions is being emitted into an assignment-like context. Fix the emission of struct and array aggregates to only use `'{...}` assignment patterns when the expression is in such an assignment-like context. These patterns cannot be used otherwise.\r\n\r\nFor packed arrays and structs, pick `'{...}` assignment patterns or `{...}` concatenation based on whether they are printed in an assignment-like context or not.\r\n\r\nFor unpacked arrays (and later unpacked structs), properly emit an error if they are being printed outside an assignment-like context. Unpacked values cannot be created inline arbitrarily. Instead, the `PrepareForEmission` pass has to spill them into a separate variable to artificially construct an assignment-like context (the initializer of or assignment to the spill declaration).\r\n\r\nWe currently seem to do the right thing for unpacked arrays already, such that `PrepareForEmission` does not have to do any additional spilling. Basically, by virtue of spilling arrays and structs to declarations anyway such that they can be accessed into, we are already working around the assignment-like context problem. However, as we build out more support for unpacked data types, we need to update `PrepareForEmission` to make it check if an expression requires an assignment-like context, and if it does, spill the declaration for that reason.\r\n\r\nFixes #6275.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-20",
+  "closed_at": "2023-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8668,
+  "issue_url": "https://github.com/llvm/circt/pull/8668",
+  "title": "[FIRRTL] Lint XMRs in the \"design\"",
+  "body": "Add an option to FIRRTL's linter (and expose it up to `firtool`) that will\nlint (error) if any XMRs exist in the \"design\".  This is intended to catch\nproblems where downstream consumers of CIRCT-generated Verilog (e.g.,\nPhysical Design teams) get unexpected unsynthesizable XMRs in the design.\nThis is almost _never_ what you want.\n\nUnfortunately, this is highly error prone.  It's difficult to tell what\nis/is not the \"design\".  This relies on the InstanceInfo analysis and\nintentionally uses its notion of \"design\" and not \"effective design\".  In\nother words, this will only trigger this kind of linting if there is an\nexplicit `MarkDUTAnnotation`.  It will not assume that the main module has\nan implicit `MarkDUTAnnotation`.  This is intended to avoid false\npositives.\n\nIn order to make this work, there is a lot of prequisite work batched in\nthis PR.  A new pass, which only exists to run the `InstanceInfo` analysis\n(and thereby cache it) is created.  This allows for use of the\n`getCachedParentAnalysis` function and guaranteeing that it will succeed.\n(This is a pattern borrowed from IREE.)  Options are added for the\nsingular, existing lint check as well.\n\nThis PR is best reviewed as individual commits.  I am intending to land\nthis as individual commits as well.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-08",
+  "closed_at": "2025-07-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

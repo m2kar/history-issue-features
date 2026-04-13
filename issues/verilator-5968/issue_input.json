@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5968,
+  "issue_url": "https://github.com/verilator/verilator/issues/5968",
+  "title": "Unexpected case matching behavior for signed values compared against unsigned constants",
+  "body": "The following is the problematic Verilog code `test.v`:\n\n```verilog\n`timescale 1ns/1ps\nmodule a();\nreg signed [2:0] in0;\n\ninitial begin\n  in0 = 7; // signed 3'b111\n  #1;\n  $display(\"in0: %0d\", in0);\n  case (in0)\n    // compare signed 3'b111 and unsigned 4'b0111\n    // signed 3'b111 ----> unsigned 4'b0111\n    // so 4'b0111 == 4'b0111, match\n    4'b111: begin\n      $display(\"1\");\n    end\n    default: begin\n      $display(\"2\");\n    end\n  endcase\n\nend\n\nendmodule\n```\n\nYou can reproduce the issue by running the following commands:\n\n```\nverilator --binary -Wno-lint --timing -fno-expand test.v\n./obj_dir/Vtest\n```\n\nVerilator outputs:\n\n```\nin0: -1\n2\n```\n\nI consulted the Verilog standard **IEEE Std 1364™-2005** and found the following statement:\n\n> When one or both operands of a relational expression are unsigned, the expression shall be interpreted as a comparison between unsigned values. If the operands are of unequal bit lengths, the smaller operand shall be zero-extended to the size of the larger operand.\n\nTherefore, when the value `3'b111` of `in0` is compared with the unsigned constant `4'b111`, `in0` should be treated as an unsigned value. Since `in0` has fewer bits than 4, it should be **zero-extended** to `4'b0111`. As a result, it should match the `4'b111` branch, and `1` should be printed instead of `2`.\n\nSystem details\n\n* Verilator version: 5.035 devel rev UNKNOWN.REV\n* OS: Ubuntu 22.04.5 LTS (Jammy)\n* Kernel/Release: 22.04",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-29",
+  "closed_at": "2025-04-29",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule a();\nreg signed [2:0] in0;\n\ninitial begin\n  in0 = 7; // signed 3'b111\n  #1;\n  $display(\"in0: %0d\", in0);\n  case (in0)\n    // compare signed 3'b111 and unsigned 4'b0111\n    // signed 3'b111 ----> unsigned 4'b0111\n    // so 4'b0111 == 4'b0111, match\n    4'b111: begin\n      $display(\"1\");\n    end\n    default: begin\n      $display(\"2\");\n    end\n  endcase\n\nend\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing -fno-expand test.v\n./obj_dir/Vtest\n",
+    "in0: -1\n2\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

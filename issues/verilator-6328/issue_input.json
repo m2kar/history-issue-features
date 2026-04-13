@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6328,
+  "issue_url": "https://github.com/verilator/verilator/pull/6328",
+  "title": "Improve testing on FreeBSD",
+  "body": "Recently I wanted to work with Verilator on FreeBSD, but some of the tests fail here. I decided to provide some fixes that make `dist`, `vlt` and `vltmt` scenarios pass, so I can test Verilator locally.\r\n\r\nI found some actual bugs in the process, there're separate PRs for them:\r\n1. #6324,\r\n2. #6325,\r\n3. #6326,\r\n4. #6327.\r\n\r\nThis PR contains the following:\r\n1. **Skip profiling tests on non-glibc platforms**: the tests control profiler output path by setting `$GMON_OUT_PREFIX`, this seems to be an undocumented GNU glibc-specific mechanic, other platforms ignore the variable.\r\n2. **Enforce dumb terminal in tests**: tests like `t_flag_help` grep for program output, which sometimes contains control sequences, causing failure. When `driver.py` sets `TERM=dumb` this problem doesn't occur.\r\n3. **Include POSIX headers whenever __unix__ macro is defined**: some POSIX headers are included if `__linux` macro is set , checking for `__unix__` instead is a weaker and sufficient dependency.\r\n4. **Treat no procfs as normal condition**: `t_gantt_numa` fails when `procfs` is not mounted, even though this situation is handled by `verilator_gantt`. This test could be skipped in such case, but I think it's okay to let it pass provided that an expected warning is displayed by the tool.\r\n5. **Respect MAKE variable when running make**: the tests mostly run the make from `$MAKE` env. variable, but some exceptions run just `make` which on BSD systems doesn't support non-POSIX extensions of GNU Make.\r\n\r\nWith the other PRs, this changes the test results from (rev. 1c86ff0af2ce2106f862d002ef3a43e1709916db):\r\n```\r\n==TESTS DONE, FAILED: Passed 4637  Failed 77  Skipped 157  Time 45:12\r\n```\r\nto (rev. 7cc15648984354e07c6454378956beeba2a99086):\r\n```\r\n==TESTS DONE, PASSED w/SKIPS: Passed 4703  Failed 0  Skipped 168  Time 38:49\r\n```\r\n\r\nRun as:\r\n```\r\nMAKE=gmake ./driver.py --quiet --dist --vlt --vltmt\r\n```\r\nTested on FreeBSD 14.3-RELEASE with clang 19.1.7 (amd64)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-23",
+  "closed_at": "2025-08-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

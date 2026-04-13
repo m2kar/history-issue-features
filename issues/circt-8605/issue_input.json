@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8605,
+  "issue_url": "https://github.com/llvm/circt/pull/8605",
+  "title": "[FIRRTL] Lower registers under ifdefs",
+  "body": "In seq-to-sv, we transform seq FirRegOps to sv RegOps. This is done using a helper called FirRegLowering. This PR changes FirRegLowering to correctly lower registers under ifdef blocks.\r\n\r\nThe initialization of registers is placed in an initial block at the footer of the enclosing HWModuleOp. In order to initialize registers buried under ifdefs, we have to refer to these registers by a local XMR, because the buried registers will not dominate the initial block. We build these in a prepass over the MLIR module, returning a \"PathTable\" sending buried FirRegOps to their HierPathOps.\r\n\r\nThe main FirRegLowering procedure operates in parallel on each HWModuleOp. Each invocation is now handed a const reference to the path table, which allows us to produce an XMRRefOp as needed while emitting the register initialization code at the footer of the HWModule.\r\n\r\nThe initialization code for a register has to be guarded under the same ifdef conditions as the register itself. To do this, while lowering registers, we record the conditions under which the register is defined, and recreate them to guard the initialization code.\r\n\r\nWhen we lower a register, we attempt to transform any input mux tree into an SV if-else tree of connects. This PR modifies the if-else generation to co-locate the if-else with the register. So if a register is guarded under an ifdef, then the if-else structure driving it will also be under the same ifdef.\r\n\r\nFixes: #8461\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-26",
+  "closed_at": "2025-07-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

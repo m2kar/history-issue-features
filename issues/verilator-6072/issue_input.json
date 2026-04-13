@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6072,
+  "issue_url": "https://github.com/verilator/verilator/pull/6072",
+  "title": "Fix toggle coverage of unitialized 4-state signals",
+  "body": "Uninitialized 4-state signals have value `x`. Currently, if the first value assigned to such a signal is 0, the coverage counter is not increment. However, it is incremented if the change is from `x` to 1. I think the incrementation should be skipped in both cases.\r\n\r\nThis draft PR contains WIP implementation of the following approach:\r\nEach bit of a 4-state variable has 2-bit variable associated. It may have the values 0, 1, 2, which have the following meaning:\r\n* 0 - the original variable is uninitialized\r\n* 1 - the original variable is initialized, but don't increment the counter yet\r\n* 2 - the original variable is initialized and increment the counter\r\n\r\nWe change the value from 0 to 1 after the first assignment to the original variable. That assignment takes place before the coverage counter is incremented so that's why we need the value 2. If the value is 1 when the condition of incrementation of the counter is tested, we change the value to 2 instead, to make it incremented after the next change.\r\n\r\nThe current implementation is not completed yet. I created the PR to discuss the approach.\r\n\r\nTODO:\r\n* make it work for other types than 1-bit `logic`\r\n* skip variables initialized in the declaration\r\n* skip variables driven by top module input ports\r\n\r\nI also had a problem with optimizations. The assignments to `initp` variables were removed in V3Gate, because the reading of their values is added in V3Clock.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-09",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

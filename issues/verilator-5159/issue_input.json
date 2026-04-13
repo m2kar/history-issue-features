@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5159,
+  "issue_url": "https://github.com/verilator/verilator/issues/5159",
+  "title": "[DFG optimization pass] Internal error on out-of-range slice",
+  "body": "Hi, working on the project I stumbled upon an internal error.\r\nBoth module package and the module itself had a address width parameter & I forgot to ensure that both of them carry the same value.\r\nThe error, in my case, is cause by a bit-slice but only if the slice is excluding the least significant bits.\r\n\r\nVerilator version I'm using:\r\n```\r\n❯ verilator --version\r\nVerilator 5.024 2024-04-05 rev v5.024\r\n```\r\n\r\nI was able to reproduce it on a smaller example:\r\n\r\n```\r\n\\\\ top.sv file\r\npackage top_pkg;\r\n  parameter integer AW = 12;\r\n  typedef struct packed {logic [AW-1:0] addr;} ctx_t;\r\nendpackage\r\n\r\nmodule top\r\n  import top_pkg::*;\r\n#(\r\n    parameter integer AW2 = 32  // Address Width greater than one defined in mod_pkg\r\n);\r\n  logic [AW2-1:0] addr;\r\n  ctx_t ctx;\r\n  always_comb addr = ctx.addr[AW2-1:1];  // ctx.addr[AW2-1:0] won't cause an error\r\nendmodule\r\n```\r\n\r\nI ran Verilator with:\r\n\r\n```\r\n❯ verilator --binary -j 0 -Wall top.sv\r\n```\r\n\r\nThe log:\r\n```\r\n%Warning-DECLFILENAME: top.sv:1:9: Filename 'top' does not match PACKAGE name: 'top_pkg'\r\n    1 | package top_pkg;\r\n      |         ^~~~~~~\r\n                       ... For warning description see https://verilator.org/warn/DECLFILENAME?v=5.024\r\n                       ... Use \"/* verilator lint_off DECLFILENAME */\" and lint_on around source to disable this message.\r\n%Warning-SELRANGE: top.sv:13:30: Extracting 31 bits from only 12 bit number\r\n                               : ... note: In instance 'top'\r\n   13 |   always_comb addr = ctx.addr[AW2-1:1];\r\n      |                              ^\r\n%Warning-SELRANGE: top.sv:13:30: Selection index out of range: 31:1 outside 11:0\r\n                               : ... note: In instance 'top'\r\n   13 |   always_comb addr = ctx.addr[AW2-1:1];\r\n      |                              ^\r\n%Warning-WIDTHEXPAND: top.sv:13:20: Operator ASSIGN expects 32 bits on the Assign RHS, but Assign RHS's SEL generates 31 bits.\r\n                                  : ... note: In instance 'top'\r\n   13 |   always_comb addr = ctx.addr[AW2-1:1];\r\n      |                    ^\r\n%Warning-UNUSEDSIGNAL: top.sv:11:19: Signal is not used: 'addr'\r\n                                   : ... note: In instance 'top'\r\n   11 |   logic [AW2-1:0] addr;\r\n      |                   ^~~~\r\n%Warning-UNDRIVEN: top.sv:12:9: Signal is not driven: 'ctx'\r\n                              : ... note: In instance 'top'\r\n   12 |   ctx_t ctx;\r\n      |         ^~~\r\n%Error: Internal Error: top.sv:13:26: ../V3DfgPeephole.cpp:753: OOPS\r\n   13 |   always_comb addr = ctx.addr[AW2-1:1];\r\n      |                          ^~~~\r\n```\r\n\r\nNote:\r\nIf `-fno-dfg-peephole` flag is passed the `Internal Error` is not displayed.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-06",
+  "closed_at": "2024-06-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

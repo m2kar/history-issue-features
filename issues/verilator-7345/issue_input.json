@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7345,
+  "issue_url": "https://github.com/verilator/verilator/pull/7345",
+  "title": "Support for writing to inout in fork after timing",
+  "body": "This PR fixes lifetimes of static tasks arguments which allows to write to `inout` variables after a timing control. It is done by making the variable static when the tasks has any timing control node.\r\n\r\nIt also introduces a change in `V3Begin`, where aside from moving the static variable outside of a task, we add a port variable and `Assign`s to move the value from/to arguments based on the direction of the argument.\r\n\r\n### Example \r\n\r\n~~~systemverilog\r\n  task t1(output int x);\r\n    fork\r\n      x = #1 1;\r\n    join_none\r\n  endtask\r\n~~~\r\n\r\nBefore, `x` variable was automatic and this code would result in unsupported error. Now, during `V3LinkParse` `x` is marked as static and in `V3Begin` it is split into two - `__Vstatic_x` that is moved outside the function and `x` port variable to accept the argument. Because the argument has `output` direction a `Assign` from `__Vstatic_x` to `x` is added at the end of `t1` body. If the direction was `input`, an `Assign` from `x` to `__Vstatic_x` would be added at the beginning of the task, and if it was `inout` both would be added.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-30",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

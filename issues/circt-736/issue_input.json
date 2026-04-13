@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 736,
+  "issue_url": "https://github.com/llvm/circt/issues/736",
+  "title": "Conjunction of equality tests generates bad code",
+  "body": "Conjunction of equality tests generates bad code.\r\n```\r\n  rtl.module @LdQEntry(%clock: i1, %reset: i1, %a: i9,\r\n    %b :i1,\r\n    %c :i9\r\n){\r\n    %2 = comb.icmp eq %a, %c : i9\r\n    %4 = comb.icmp eq %b, %2 : i1\r\n    sv.always posedge %clock  {\r\n        sv.if %4  {\r\n          sv.fwrite \"Hi\"\r\n        }\r\n    }\r\n    rtl.output\r\n  }\r\n```\r\nProduces:\r\n```\r\nmodule LdQEntry(\r\n  input       clock, reset,\r\n  input [8:0] a,\r\n  input       b,\r\n  input [8:0] c);\r\n\r\n  wire _T = b == a == c;\t// tmp/bug.lo.rtl.mlir:5:10, :6:10\r\n  always @(posedge clock) begin\t// tmp/bug.lo.rtl.mlir:7:5\r\n    if (reset & _T)\t// tmp/bug.lo.rtl.mlir:8:14, :9:9\r\n      $fwrite(32'h80000002, \"Hi\");\t// tmp/bug.lo.rtl.mlir:10:11\r\n  end // always @(posedge)\r\nendmodule\r\n```\r\nVerilator rightly complains:\r\n```\r\n%Warning-WIDTH: tmp/bug.lo.mlir.sv:83:20: Operator EQ expects 9 bits on the LHS, but LHS's VARREF '_T_1' generates 1 bits.\r\n                                        : ... In instance LdQEntry\r\n   83 |   wire _T_2 = _T_1 == _T == _T_0;  \r\n      |                    ^~\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: tmp/bug.lo.mlir.sv:83:26: Operator EQ expects 9 bits on the LHS, but LHS's EQ generates 1 bits.\r\n                                        : ... In instance LdQEntry\r\n   83 |   wire _T_2 = _T_1 == _T == _T_0;  \r\n      |                          ^~\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-08",
+  "closed_at": "2021-03-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

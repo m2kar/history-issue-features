@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3630,
+  "issue_url": "https://github.com/llvm/circt/issues/3630",
+  "title": "[FIRRTL] ModuleInliner crashes while renaming HierPathOp",
+  "body": "In the following Inlining example, 4 instances of  @Baz are being added to @Foo1 after inlining. \r\nBut only 2 of the instances should have valid `HierPathOp` based on the inlining context.\r\nThe current `ModuleInliner` pass doesn't handle it correctly and crashes on this input.\r\n\r\n```mlir\r\nfirrtl.circuit \"CollidingSymbolsNLAFixup\"  {\r\n    firrtl.hierpath @nla1 [@Foo1::@bar1, @Foo2::@bar, @Foo3::@bar, @Bar::@w, @Baz::@w]\r\n    firrtl.hierpath @nla2 [@Foo1::@bar2, @Foo2::@bar1, @Foo3::@bar, @Bar::@w, @Baz::@w]\r\n    firrtl.module @Baz(out %io: !firrtl.uint<1>) {\r\n      %w = firrtl.wire sym @w   {annotations = [{circt.nonlocal = @nla1, class = \"test\"}, {circt.nonlocal = @nla2, class = \"test\"}]} : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Bar() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n      %baz0_io = firrtl.instance baz0 sym @w  @Baz(out io: !firrtl.uint<1>)\r\n    }\r\n    firrtl.module @Foo3() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n      firrtl.instance bar sym @bar  @Bar()\r\n      %w = firrtl.wire sym @w   : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Foo2() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n      firrtl.instance bar sym @bar  @Foo3()\r\n      firrtl.instance bar sym @bar1  @Foo3()\r\n      %w = firrtl.wire sym @w   : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Foo1() {\r\n      firrtl.instance bar sym @bar1  @Foo2()\r\n      firrtl.instance bar sym @bar2  @Foo2()\r\n      %w = firrtl.wire sym @bar   : !firrtl.uint<1>\r\n      %w1 = firrtl.wire sym @w   : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @CollidingSymbolsNLAFixup() {\r\n      firrtl.instance system sym @system  @Foo1()\r\n    }\r\n  }\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-29",
+  "closed_at": "2022-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

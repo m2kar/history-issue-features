@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7324,
+  "issue_url": "https://github.com/verilator/verilator/pull/7324",
+  "title": "Fix static initialization order for packages with class hierarchies",
+  "body": "## Summary\r\n\r\nThis patch fixes package static initialization ordering.  Level-based\r\nmodule sorting can place an importing package before the imported one in\r\n`_eval_static`, causing the imported package's state to be reset after\r\nthe importer has already triggered side effects in it.\r\n\r\nA gap found in CVV integration: https://github.com/openhwgroup/core-v-verif/pull/2724\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\npackage pkg_a;\r\n  int g_state = 0;\r\n  class svc_t;\r\n    local static svc_t inst;\r\n    static function svc_t get();\r\n      if (inst == null) begin inst = new(); g_state = 1; end\r\n      return inst;\r\n    endfunction\r\n  endclass\r\nendpackage\r\n\r\npackage pkg_b;\r\n  import pkg_a::*;\r\n  class comp_c;\r\n    function new(); svc_t s = pkg_a::svc_t::get(); endfunction\r\n  endclass\r\n  comp_c obj = new();  // triggers pkg_a::svc_t::get() during static init\r\nendpackage\r\n\r\nmodule t;\r\n  initial begin\r\n    pkg_a::svc_t s = pkg_a::svc_t::get();\r\n    if (pkg_a::g_state != 1) $stop;  // g_state was reset to 0\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master: `$stop` -- `pkg_b` eval_static runs before `pkg_a`, so\r\n`g_state` is set to 1 by `get()`, then reset to 0 by `pkg_a`'s\r\ninitializer.  At runtime `get()` sees `inst != null` and skips the\r\n`g_state = 1` assignment.\r\n\r\n## Changes\r\n\r\n- `src/V3Sched.cpp` (`createStatic`): Re-sort `m_static` entries so\r\n  `AstPackage` modules are ordered by source file position, restoring\r\n  compilation order (IEEE 1800-2023 26.3).\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_static_init_pkg_order.{v,py}`\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-25",
+  "closed_at": "2026-03-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

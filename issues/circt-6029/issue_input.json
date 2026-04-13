@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6029,
+  "issue_url": "https://github.com/llvm/circt/issues/6029",
+  "title": "[FIRRTL] LowerClasses Support ExtModules",
+  "body": "Currently, FIRRTL external modules with either input or output property ports error during `LowerClasses`.\r\n\r\nI haven't thought through exactly how this should work in terms of lowering. At a high level, this needs to work such that two OMIR dialect blobs are produced and then these are combined by the OMIR linker.\r\n\r\n### Input Ports\r\n\r\n```\r\nFIRRTL version 4.0.0\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    input a: Integer\r\n\r\n  module Foo:\r\n    inst bar of Bar\r\n    propassign bar.a, Integer(42)\r\n```\r\n\r\n```\r\n# firtool firrtl-snippets/ExtModuleInputProperty.fir\r\nAssertion failed: (Index < this->size() && \"Invalid index!\"), function operator[], file ArrayRef.h, line 443.\r\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\r\nStack dump:\r\n0.\tProgram arguments: firtool firrtl-snippets/ExtModuleInputProperty.fir\r\nStack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):\r\n0  firtool                  0x00000001031ee300 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 88\r\n1  firtool                  0x00000001031ee91c PrintStackTraceSignalHandler(void*) + 28\r\n2  firtool                  0x00000001031ec4b0 llvm::sys::RunSignalHandlers() + 152\r\n3  firtool                  0x00000001031efbf4 SignalHandler(int) + 276\r\n4  libsystem_platform.dylib 0x0000000190b42a24 _sigtramp + 56\r\n5  libsystem_pthread.dylib  0x0000000190b13c28 pthread_kill + 288\r\n6  libsystem_c.dylib        0x0000000190a21ae8 abort + 180\r\n7  libsystem_c.dylib        0x0000000190a20e44 err + 0\r\n8  firtool                  0x00000001038a6338 llvm::MutableArrayRef<mlir::BlockArgument>::operator[](unsigned long) const + 124\r\n9  firtool                  0x00000001038a619c mlir::Region::getArgument(unsigned int) + 56\r\n10 firtool                  0x0000000103530344 (anonymous namespace)::LowerClassesPass::lowerClass((anonymous namespace)::ClassLoweringState&) + 604\r\n```\r\n\r\n### Output Ports\r\n\r\n```\r\nFIRRTL version 4.0.0\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output a: Integer\r\n\r\n  module Foo:\r\n    output a: Integer\r\n    inst bar of Bar\r\n    propassign a, bar.a\r\n```\r\n\r\n```\r\n# firtool firrtl-snippets/ExtModuleOutputProperty.fir                         \r\nfirrtl-snippets/ExtModuleOutputProperty.fir:8:5: error: failed to legalize operation 'firrtl.instance' that was explicitly marked illegal\r\n    inst bar of Bar\r\n    ^\r\nfirrtl-snippets/ExtModuleOutputProperty.fir:8:5: note: see current operation: %0 = \"firrtl.instance\"() {annotations = [], moduleName = @Bar, name = \"bar\", nameKind = #firrtl<name_kind droppable_name>, portAnnotations = [[]], portDirections = true, portNames = [\"a\"]} : () -> !firrtl.integer\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-01",
+  "closed_at": "2023-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

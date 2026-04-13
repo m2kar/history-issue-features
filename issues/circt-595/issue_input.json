@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 595,
+  "issue_url": "https://github.com/llvm/circt/issues/595",
+  "title": "[ExportVerilog] Wire declared after use",
+  "body": "I've observed a wire declared after use:\r\n\r\n```\r\nmodule top(\r\n  input [127:0] arr);\r\n\r\n  assert(_T[6'h0+:32] == 32'h0);        // defuse3.mlir:2:13, :3:9, :4:3, :8:12, :9:9, :10:9\r\n  logic [63:0] _T = arr[7'h0+:64];      // defuse3.mlir:6:12, :7:9\r\nendmodule\r\n```\r\n\r\nResulting from:\r\n```\r\nrtl.module @top(%arr: !rtl.array<128 x i1>) {\r\n  %c0_i32 = rtl.constant(0 : i32) : i32\r\n  %92 = rtl.icmp eq %19, %c0_i32 : i32\r\n  sv.assert %92 : i1\r\n\r\n  %c0_i7 = rtl.constant(0 : i7) : i7\r\n  %17 = rtl.array_slice %arr at %c0_i7 : (!rtl.array<128xi1>) -> !rtl.array<64xi1>\r\n  %c0_i6 = rtl.constant(0 : i6) : i6\r\n  %18 = rtl.array_slice %17 at %c0_i6 : (!rtl.array<64xi1>) -> !rtl.array<32xi1>\r\n  %19 = rtl.bitcast %18 : (!rtl.array<32xi1>) -> i32\r\n}\r\n```\r\n\r\n",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-16",
+  "closed_at": "2021-02-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

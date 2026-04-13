@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4767,
+  "issue_url": "https://github.com/verilator/verilator/issues/4767",
+  "title": "Internal error with nested virtual interfaces/bind statements",
+  "body": "```\r\nmodule my_sub_module (\r\n    input myinput\r\n);\r\n    wire x, y, z;\r\nendmodule\r\n\r\ninterface Sub_if(\r\n    input a,\r\n    input b,\r\n    output c\r\n);\r\nendinterface\r\n\r\n\r\ninterface Top_if(\r\n    input topifinput\r\n);\r\n\r\n    bind my_sub_module Sub_if sub_if(\r\n        .a(x),\r\n        .b(y),\r\n        .c(z)\r\n    );\r\n    virtual Sub_if sub_if = sub_mod1.sub_if;\r\n\r\nendinterface\r\n\r\nmodule my_top_module(\r\n    input mywire\r\n);\r\n\r\n    my_sub_module sub_mod1(\r\n        .myinput(mywire)\r\n    );\r\n\r\nendmodule\r\n\r\nclass My_testcase;\r\n\r\n    virtual Sub_if sub_if;\r\n\r\n    task initialize(virtual Top_if vif);\r\n        this.sub_if = vif.sub_if;\r\n        $display(\"Test is over\");\r\n    endtask\r\n\r\nendclass\r\n\r\nmodule test();\r\n\r\n    My_testcase testcase = new();\r\n\r\n    logic foo;\r\n\r\n    bind my_top_module Top_if top_if(\r\n        .topifinput(mywire)\r\n    );\r\n\r\n    my_top_module dut(\r\n        .mywire(foo)\r\n    );\r\n\r\n    initial begin\r\n        testcase.initialize(dut.top_if);\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\nI am compiling this code with `verilator -sv  -cc --top-module test test.sv` and am getting the following:\r\n`\r\n%Error: Internal Error: test.sv:17:38: ../V3Scope.cpp:74: Can't locate varref scope\r\n                                     : ... note: In instance 'test.dut.top_if'\r\n   17 |     virtual Sub_if sub_if = sub_mod1.sub_i\r\n`\r\nI believe that it is likely either an issue with the nested interfaces, or that it is an issue with the scoping when using the bind statement. This code does compile and run when using VCS.\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nI am using the current stable branch of verilator, v5.018.\r\n\r\nWhat OS and distribution are you using?\r\n\r\nLinux Ubuntu 20.04\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\nIf the change is simple I could work on it with guidance, although I do not have a lot of compilers experience. I am mostly looking for a potential workaround in the meantime as this pattern appears many times in the testbench I am currently adapting to work with Verilator. Any help is appreciated, thank you in advance.\r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-12-15",
+  "closed_at": "2025-12-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

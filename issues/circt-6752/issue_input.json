@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6752,
+  "issue_url": "https://github.com/llvm/circt/issues/6752",
+  "title": "[FIRRTL] Generate filelist for each public module",
+  "body": "According to the FIRRTL ABI spec:\r\n\r\n> Each public module in a circuit shall produce a filelist that contains the filename of the file containing the public module and any necessary files that define all public or private module files instantiated under it.\r\n\r\nSource here: https://github.com/chipsalliance/firrtl-spec/blob/fcd97a59319eab2553afc301d13ccc9af965a2b8/abi.md?plain=1#L48\r\n\r\nHowever, if you have this FIRRTL:\r\n\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo :\r\n  public module Bar :\r\n\r\n  public module Foo :\r\n    inst bar of Bar\r\n```\r\n\r\nAnd run this command:\r\n\r\n```\r\n$ firtool --split-verilog Foo.fir -o out\r\n```\r\n\r\nThen in the `out` directory, you'll get `Foo.sv`, `Bar.sv`, and `filelist.f`. The filelist is for module `Foo`, and it contains:\r\n\r\n```\r\n$ cat out/filelist.f\r\nBar.sv\r\nFoo.sv\r\n```\r\n\r\nAccording to the ABI spec, we should get `out/filelist_Foo.f` and `out/filelist_Bar.f`, right?\r\n\r\nPossibly related to https://github.com/llvm/circt/issues/6716.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-02-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

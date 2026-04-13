@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7642,
+  "issue_url": "https://github.com/llvm/circt/pull/7642",
+  "title": "[ImportVerilog] Add $display/$write/$info/$warning/$error/$fatal",
+  "body": "Add support for the `$display`, `$write`, `$info`, `$warning`, `$error`, and `$fatal` system tasks.\r\n\r\nThese tasks are pretty complicated since they involve string formatting. Verilog has quite a few format specifiers and very strange rules for them. Luckily, Slang contains a handy utility that parses format strings and delegates handling of arguments and intermittent pieces of text to callbacks.\r\n\r\nI've decided to follow the same IR design as the printing op in the Sim dialect: each format specifier is turned into a dedicated op that captures all relevant format options, plus additional literals for the text in between interpolated values, and concatenate everything into a single `!moore.format_string`. (Shoutout to @fzi-hielscher for trailblazing the nice design for `sim.print`!) This is handled in a new `FormatStrings.cpp` file inside of ImportVerilog.\r\n\r\nThe actual system tasks are mapped to new `moore.builtin.display` and `moore.builtin.severity` ops. These handle only the printing of the message in question, plus potential error bookkeeping. The `$fatal` system task creates additional `moore.builtin.finish_message` and `moore.builtin.finish` ops to represent its implicit call to `$finish`.\r\n\r\nThe implementation also handles the strange `$displayb`, `$displayo`, `$displayh`, `$writeb`, `$writeo`, and `$writeh` flavors of the tasks, where the suffix indicates the default format to use for arguments that are not covered by a format string literal. SystemVerilog is weird.\r\n\r\nThanks @hailongSun2000 for your prior work on this!",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-27",
+  "closed_at": "2024-09-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

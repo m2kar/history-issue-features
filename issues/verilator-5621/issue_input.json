@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5621,
+  "issue_url": "https://github.com/verilator/verilator/issues/5621",
+  "title": "Values of a register named mem aren't generated in VCD during OpenC910 simulation with Verilator v5.026",
+  "body": "I am simulating the **openC910** core using **Verilator v5.026**. While running the \"hello_world.s\" test case, I noticed that in the generated **VCD** file, the values of a register named **mem** from the RTL file **fpga_ram.v** are not being displayed. The register is declared in the format: **reg [(DATAWIDTH-1):0] mem [(MEMDEPTH-1):0].** But other signal values from the same submodule in the RTL file are appearing in the VCD. I would appreciate any suggestions to resolve this issue.\r\n\r\nI'll attach the contents of RTL file **fpga_ram.v** and generated VCD screenshot below.\r\n\r\n```\r\nmodule fpga_ram(\r\n  PortAClk,\r\n  PortAAddr,\r\n  PortADataIn,\r\n  PortAWriteEnable,\r\n//  PortAChipEnable,\r\n  PortADataOut\r\n);\r\n\r\nparameter  DATAWIDTH = 2;\r\nparameter  ADDRWIDTH = 2;\r\n\r\ninput                     PortAClk;\r\ninput   [(ADDRWIDTH-1):0] PortAAddr;\r\ninput   [(DATAWIDTH-1):0] PortADataIn;\r\ninput                     PortAWriteEnable;\r\n//input                     PortAChipEnable;\r\noutput  [(DATAWIDTH-1):0] PortADataOut; \r\n\r\nparameter  MEMDEPTH = 2**(ADDRWIDTH);\r\n\r\nreg [(DATAWIDTH-1):0] mem [(MEMDEPTH-1):0] /* synthesis syn_ramstyle = \"no_rw_check\" */;\r\nreg [(DATAWIDTH-1):0] PortADataOut;\r\n\r\nalways @(posedge PortAClk)\r\nbegin\r\n  if(PortAWriteEnable)\r\n  begin\r\n    mem[PortAAddr]  <= PortADataIn;\r\n    PortADataOut    <= PortADataIn;\r\n  end\r\n  else\r\n  begin\r\n    PortADataOut    <= mem[PortAAddr];\r\n  end\r\nend\r\nendmodule\r\n```\r\n\r\n![image](https://github.com/user-attachments/assets/2f9364ee-5125-4f95-a65d-a1c083924598)\r\n\r\n\r\n\r\n\r\nHere are the commands i used to run the simulation,\r\n```\r\ncd C910_RTL_FACTORY\r\nsource setup/setup.csh\r\ncd ../smart_run\r\nsource setup/example_setup.csh\r\nmkdir work\r\nmake clean\r\n\r\nmake compile SIM=verilator DUMP=onmake -j1 buildVerilator\r\nmake buildcase CASE=hello_world\r\ncd ./work && obj_dir/Vtop\r\n\r\n```",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-20",
+  "closed_at": "2024-11-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

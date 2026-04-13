@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6340,
+  "issue_url": "https://github.com/verilator/verilator/issues/6340",
+  "title": "Optimize V3Const code when splitting assignments",
+  "body": "V3Const will split up assignments with a concatenation on the LHS:\n\n```systemverilog\n  {a, b} = x + y;\n```\n\ninto:\n\n```systemverilog\n  a = (x + y)[0];\n  b = (x + y)[1];\n```\n\nThis can be pretty harmful if the RHS is expensive to compute (wide) and there are many terms in the concatenation, you get one duplicate RHS evaluation for each term on the left. We probably meant to insert a temporary.\n\nDFG will fix this up in combinational logic, but here is a full example where this makes it into the C++ output:\n\n```systemverilog\nmodule top(\n  input wire clk,\n  input wire [1:0] x,\n  input wire [1:0] y,\n  output reg a,\n  output reg b\n);\n\n  always @(posedge clk) begin\n    {a, b} <= x + y;\n  end\n\nendmodule\n```\n",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-28",
+  "closed_at": "2025-09-10",
+  "code_blocks": [
+    "  {a, b} = x + y;\n",
+    "  a = (x + y)[0];\n  b = (x + y)[1];\n",
+    "module top(\n  input wire clk,\n  input wire [1:0] x,\n  input wire [1:0] y,\n  output reg a,\n  output reg b\n);\n\n  always @(posedge clk) begin\n    {a, b} <= x + y;\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5904,
+  "issue_url": "https://github.com/verilator/verilator/issues/5904",
+  "title": "Malformed LHS in NBA when it is a simple expression",
+  "body": "This comes from the same file as \"#5846\" but minimized\n\noriginal error:\n```\n%Error: Internal Error: jtag_master.sv:97:13: /home/arch/repro/verilator/src/V3Delayed.cpp:351: Malformed LHS in NBA\n   97 |       data_o[i-1] <= tdo;\n      |             ^\n                        tb_hello_world.sv:7:1: ... note: In file included from 'tb_hello_world.sv'\n```\n\nafter minimization\n```\n%Error: Internal Error: jtag_master.sv:83:26: /home/arch/repro/verilator/src/V3Delayed.cpp:351: Malformed LHS in NBA\n   83 |     @(posedge tck) data_o[$size(data_i)-1] <= tdo;\n      |                          ^\n                        dm_pkg.sv:430:1: ... note: In file included from 'dm_pkg.sv'\n                        sv-bugpoint-minimized.sv:2:1: ... note: In file included from 'sv-bugpoint-minimized.sv'\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\n```\n\n\nminimized test using sv-bugpoint:\n\n```systemverilog\n`line 1 \"tb_hello_world.sv\" 1\nmodule tb_hello_world;\n  jtag_master jtag();\n\n\n  rvlab_tests uut (\n    .jtag(jtag)\n  );\n\n`line 19 \"tb_hello_world.sv\" 0\n\n  always begin\n\n`line 23 \"tb_hello_world.sv\" 0\n\n    uut.test_idcode();\n  end\n\n`line 29 \"tb_hello_world.sv\" 0\nendmodule\n\n`line 429 \"dm_pkg.sv\" 0\n`line 1 \"jtag_master.sv\" 1\n\n\n\n`line 4 \"jtag_master.sv\" 0\ninterface jtag_master;\n\n`line 6 \"jtag_master.sv\" 0\n  logic tck;\n  logic tdo;\n\n`line 82 \"jtag_master.sv\" 0\n  task cycle_dr_32(output logic [31:0] data_o, input logic [31:0] data_i);\n    @(posedge tck) data_o[$size(data_i)-1] <= tdo;\n  endtask\n\n`line 183 \"jtag_master.sv\" 0\nendinterface\n\n`line 185 \"jtag_master.sv\" 0\n`line 1 \"rvlab_tests.sv\" 1\n\n\n\n`line 4 \"rvlab_tests.sv\" 0\nmodule rvlab_tests (\n          jtag_master jtag\n);\n\n\n\n`line 11 \"rvlab_tests.sv\" 0\n\n\n\n`line 14 \"rvlab_tests.sv\" 0\n  task test_idcode();\n    bit [31:0] idcode_read;\n    jtag.cycle_dr_32(idcode_read, '0);\n\n`line 28 \"rvlab_tests.sv\" 0\n  endtask\n\n`line 30 \"rvlab_tests.sv\" 0\nendmodule\n```\n\nverilator version: b49351356e17abc392710d2a60cbff60d1dbad83\nrunning on archlinux.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-30",
+  "closed_at": "2025-03-30",
+  "code_blocks": [
+    "%Error: Internal Error: jtag_master.sv:97:13: /home/arch/repro/verilator/src/V3Delayed.cpp:351: Malformed LHS in NBA\n   97 |       data_o[i-1] <= tdo;\n      |             ^\n                        tb_hello_world.sv:7:1: ... note: In file included from 'tb_hello_world.sv'\n",
+    "%Error: Internal Error: jtag_master.sv:83:26: /home/arch/repro/verilator/src/V3Delayed.cpp:351: Malformed LHS in NBA\n   83 |     @(posedge tck) data_o[$size(data_i)-1] <= tdo;\n      |                          ^\n                        dm_pkg.sv:430:1: ... note: In file included from 'dm_pkg.sv'\n                        sv-bugpoint-minimized.sv:2:1: ... note: In file included from 'sv-bugpoint-minimized.sv'\n                        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\n",
+    "`line 1 \"tb_hello_world.sv\" 1\nmodule tb_hello_world;\n  jtag_master jtag();\n\n\n  rvlab_tests uut (\n    .jtag(jtag)\n  );\n\n`line 19 \"tb_hello_world.sv\" 0\n\n  always begin\n\n`line 23 \"tb_hello_world.sv\" 0\n\n    uut.test_idcode();\n  end\n\n`line 29 \"tb_hello_world.sv\" 0\nendmodule\n\n`line 429 \"dm_pkg.sv\" 0\n`line 1 \"jtag_master.sv\" 1\n\n\n\n`line 4 \"jtag_master.sv\" 0\ninterface jtag_master;\n\n`line 6 \"jtag_master.sv\" 0\n  logic tck;\n  logic tdo;\n\n`line 82 \"jtag_master.sv\" 0\n  task cycle_dr_32(output logic [31:0] data_o, input logic [31:0] data_i);\n    @(posedge tck) data_o[$size(data_i)-1] <= tdo;\n  endtask\n\n`line 183 \"jtag_master.sv\" 0\nendinterface\n\n`line 185 \"jtag_master.sv\" 0\n`line 1 \"rvlab_tests.sv\" 1\n\n\n\n`line 4 \"rvlab_tests.sv\" 0\nmodule rvlab_tests (\n          jtag_master jtag\n);\n\n\n\n`line 11 \"rvlab_tests.sv\" 0\n\n\n\n`line 14 \"rvlab_tests.sv\" 0\n  task test_idcode();\n    bit [31:0] idcode_read;\n    jtag.cycle_dr_32(idcode_read, '0);\n\n`line 28 \"rvlab_tests.sv\" 0\n  endtask\n\n`line 30 \"rvlab_tests.sv\" 0\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

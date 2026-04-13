@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4134,
+  "issue_url": "https://github.com/llvm/circt/issues/4134",
+  "title": "Legalize or reject sv.interface.instance ops missing names",
+  "body": "The corresponding verilog statement in the SV grammar requires instances have a name (A4.1.2/A4.1.1, ...), but we allow omitting the name.\r\n\r\nThe name is inferred from the SSA result (if not explicitly set in the attribute dict), but if it's numerical no name is set.\r\n\r\nWe currently happily emit invalid verilog when this happens, which can be seen in our [`name-legalize.mlir` test](https://github.com/llvm/circt/blob/41ec6c32bc97c5bda437d0525a8d273e6c0222a2/test/Conversion/ExportVerilog/name-legalize.mlir#L176) -- that CHECK line hints at it, but here's what we output for that portion:\r\n\r\n```\r\nmodule InterfaceAsInstance();\t// /home/will/src/sifive/circt/test/Conversion/ExportVerilog/name-legalize.mlir:176:1\r\n  output_2 ();\t// /home/will/src/sifive/circt/test/Conversion/ExportVerilog/name-legalize.mlir:178:8\r\nendmodule\r\n```\r\n\r\n`output_2` is the interface name, this is missing the `hierarchical_name`, as in `output_2 foo();`.\r\n\r\nThese should be given names if not rejected by verifier/construction, as this is not valid verilog.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-20",
+  "closed_at": "2022-11-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

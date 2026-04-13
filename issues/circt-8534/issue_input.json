@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8534,
+  "issue_url": "https://github.com/llvm/circt/pull/8534",
+  "title": "[LLHD] Add pass to combine drives to aggregate signals",
+  "body": "Add the *CombineDrives* LLHD pass. If multiple drives assign all fields of an aggregate signal, merge the drives into a single drive of the whole aggregate value. This is equivalent to replacing\r\n\r\n    a[0] = u;\r\n    a[1] = v;\r\n\r\n with\r\n\r\n    a = {v, u};\r\n\r\nPerforming this replacement is an important step to eliminate signal projection operations like `llhd.sig.extract`, `llhd.sig.array_slice`, `llhd.sig.array_get`, and `llhd.sig.struct_extract`.\r\n\r\nReal-world Verilog inputs will often declare struct, array, or bit vector signals and then separately assign its fields, elements, or bit slices in multiple concurrent assign statements. To simplify working with the IR in optimizations and later passes, we would much rather have a single SSA value be driven onto a signal. This makes it clear that the signal is uniquely driven and fully defined. In most cases we can then remove the signal altogether and use that aggregate SSA value instead.\r\n\r\nThe pass is pretty conservative at the moment. It does not support dynamic slice offsets and element indices since the semantics of driving such projections implies that individual bits are only driven under certain non-trivial conditions. The pass also makes no attempt at finding out if it can see all drives to a signal and whether it can use the signal's default value to fill in undriven portions of the signal. This might be a future optimization worth investigating.",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-04",
+  "closed_at": "2025-06-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

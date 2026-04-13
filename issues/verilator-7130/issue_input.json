@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7130,
+  "issue_url": "https://github.com/verilator/verilator/pull/7130",
+  "title": "Sched: Conditionally fire VIF triggers only on value change",
+  "body": "## Situation:\r\nI'm attempting to run the testbenches in https://github.com/pulp-platform/axi using Verilator. I'm running into a few issues, some of which I am initially working around in https://github.com/pulp-platform/axi/tree/open_ci. Something that is coming up is an issue that looks to be similar to #5116, which is harder to work around. To test, the `axi_sim_mem` testbench looks to work, but the very similar `axi_bus_compare` testbench fails with some additional logic (other TBs are still failing with other issues). I am not familiar with the Verilator internals, but I attempted to guide AI to get an appropriate fix. Happy to close the PR if the changes are unreasonable, just looking to improve compatibility!\r\n\r\n## Issue:\r\nVirtual interface triggers were previously set unconditionally to 1 on every write to a VIF signal, even when the value was not changing. This caused infinite ICO/NBA convergence loops when combinational logic continuously writes the same value to a VIF signal — a common pattern when using continuous assign statements that propagate both request and response signals across an interface boundary.\r\n\r\n## Fix:\r\nWhen the VIF write is the LHS of an assignment node, read the old value before the write and compare it to the RHS (new value). The trigger is only set if the value actually changes:\r\n\r\n    trigger = trigger | (old_vif_value != new_value_expr)\r\n\r\nIf the parent node is not a recognized assignment (e.g. the VIF signal is written via some other mechanism), fall back to the original unconditional trigger behavior to preserve correctness.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-23",
+  "closed_at": "2026-04-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

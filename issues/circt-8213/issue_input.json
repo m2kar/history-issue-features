@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8213,
+  "issue_url": "https://github.com/llvm/circt/pull/8213",
+  "title": "[ImportVerilog] Fix assertion with constant folding",
+  "body": "This PR fixes cases when selector maximum or minimum values do not fit into the range of the type for the folding `Moore` constant. \r\n\r\nCIRCT debug build fails with an [assertion](https://github.com/llvm/llvm-project/blob/aa580c2ec5eb4217c945a47a561181be7e7b1032/llvm/include/llvm/ADT/APInt.h#L120): \r\n\r\n```console\r\ncirct/llvm/llvm/include/llvm/ADT/APInt.h:120: llvm::APInt::APInt(unsigned int, uint64_t, bool, bool):\r\nAssertion llvm::isIntN(BitWidth, val) && \"Value is not an N-bit signed value\"' failed.\r\n```\r\n\r\nWith this test:\r\n```verilog\r\nmodule RangeElementSelection(\r\n    input reg [3:0] a [0:2],\r\n    output reg [3:0] b,\r\n    input reg [1:0] c);\r\n  \r\n    always_comb begin\r\n      b = a[c]; // Assertion here\r\n      b[3:0] = b[c[0]-:2]; // Assertion here\r\n    end\r\nendmodule\r\n```\r\n\r\nThis can be fixed by increasing `intType` size by `1` (which passed to `ConstantOp` builder) in order to include both maximum and minimum positive and negative numbers or making a builder sensitive to signedness.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-02-10",
+  "closed_at": "2025-02-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 366,
+  "issue_url": "https://github.com/llvm/circt/issues/366",
+  "title": "[FIRRTL] (dshr) signed mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_7: UInt<10>\r\n    output tmp12: SInt<5>\r\n    tmp12 <= dshr(SInt<5>(6), inp_7)\r\n```\r\n\r\nCompiled with `firtool --lower-to-rtl` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [9:0] inp_7,\r\n  output [4:0] tmp12);\r\n\r\n  assign tmp12 = $signed(5'h6) >>> $signed(inp_7[4:0]);\t// a_top_mod.fir:3:3, :6:{14,19}\r\nendmodule\r\n```\r\n\r\n![image](https://user-images.githubusercontent.com/511872/103143899-872fcd00-46d4-11eb-9ecd-c4bff7d0ba26.png)\r\n\r\nCompiled with `firrtl-1.4.0` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [9:0] inp_7,\r\n  output [4:0] tmp12\r\n);\r\n  assign tmp12 = 5'sh6 >>> inp_7;\r\nendmodule\r\n```\r\n\r\nYosys (Yosys 0.9+3755 (git sha1 442d19f6, clang 11.0.0 -fPIC -Os)) reports formal mismatch:\r\n\r\n```\r\nERROR: Found 3 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-26",
+  "closed_at": "2020-12-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

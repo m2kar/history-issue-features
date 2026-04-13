@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1289,
+  "issue_url": "https://github.com/llvm/circt/issues/1289",
+  "title": "[FIRRTL] (dshl, tail, mul) width inference mismatch",
+  "body": "The following FIRRTL program\r\n\r\nProduces different width for the output port `_tmp40`\r\n\r\n```python\r\n; seed: 1144\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output _tmp40: UInt\r\n    wire tmp19: UInt\r\n    tmp19 <= mul(UInt(\"o20575\"), UInt<1>(0))\r\n    _tmp40 <= dshl(UInt(\"b10011010000001011101\"), tail(tmp19, 15))\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output [19:0] _tmp40);\r\n\r\n  assign _tmp40 = 20'h9A05D;\t// a_top_mod.fir:3:3, :7:20\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output [18:0] _tmp40\r\n);\r\n  assign _tmp40 = 19'h1a05d;\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Can't match gold port `_tmp40_gold' to a gate port.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2021-06-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

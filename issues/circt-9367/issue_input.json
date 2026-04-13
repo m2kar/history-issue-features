@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9367,
+  "issue_url": "https://github.com/llvm/circt/issues/9367",
+  "title": "Memory leak in HW Aggregate to Comb conversion",
+  "body": "**Test commit**\n[417a5112947d9889cad54cb5b2110b37978b86b8](https://github.com/llvm/circt/commit/417a5112947d9889cad54cb5b2110b37978b86b8)\n\n**Description**\nThe `-hw-aggregate-to-comb` pass in circt-opt triggers a memory leak when processing `esi.wrap.fifo` (and `esi.wrap.vr`) operations.\n\n**Steps to reproduce**\n- Minimal MLIR program (test.mlir)\n```\n\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<>, parameters = [], sym_name = \"TestDanglingFIFO\"}> ({\n    %0 = \"hw.constant\"() <{value = false}> : () -> i1\n    %1:2 = \"esi.wrap.fifo\"(%0, %0) : (i1, i1) -> (!esi.channel<i1, FIFO>, i1)\n    \"hw.output\"() : () -> ()\n  }) : () -> ()\n}) : () -> ()\n```\n\n**Command**\n```\ncirct-opt -hw-aggregate-to-comb test.mlir\n```\n\n**Output**\n```\nmodule {\n  hw.module @TestDanglingFIFO() {\n    %false = hw.constant false\n    %false_0 = hw.constant false\n    hw.output\n  }\n}\n\n\n=================================================================\n==108046==ERROR: LeakSanitizer: detected memory leaks\n\nDirect leak of 80 byte(s) in 1 object(s) allocated from:\n    #0 0x5639e96e1c5e in malloc (/workdir/builds/circt/bin/circt-opt+0x6f95c5e) (BuildId: d0273fc7523026d0)\n    #1 0x5639ef78e52a in mlir::Operation::create(mlir::Location, mlir::OperationName, mlir::TypeRange, mlir::ValueRange, mlir::DictionaryAttr, mlir::OpaqueProperties, mlir::BlockRange, unsigned int) /workdir/sources/circt/llvm/mlir/lib/IR/Operation.cpp:114:46\n\nSUMMARY: AddressSanitizer: 80 byte(s) leaked in 1 allocation(s).\n```",
+  "labels": [
+    "ESI"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-19",
+  "closed_at": "2026-01-15",
+  "code_blocks": [
+    "\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<>, parameters = [], sym_name = \"TestDanglingFIFO\"}> ({\n    %0 = \"hw.constant\"() <{value = false}> : () -> i1\n    %1:2 = \"esi.wrap.fifo\"(%0, %0) : (i1, i1) -> (!esi.channel<i1, FIFO>, i1)\n    \"hw.output\"() : () -> ()\n  }) : () -> ()\n}) : () -> ()\n",
+    "circt-opt -hw-aggregate-to-comb test.mlir\n",
+    "module {\n  hw.module @TestDanglingFIFO() {\n    %false = hw.constant false\n    %false_0 = hw.constant false\n    hw.output\n  }\n}\n\n\n=================================================================\n==108046==ERROR: LeakSanitizer: detected memory leaks\n\nDirect leak of 80 byte(s) in 1 object(s) allocated from:\n    #0 0x5639e96e1c5e in malloc (/workdir/builds/circt/bin/circt-opt+0x6f95c5e) (BuildId: d0273fc7523026d0)\n    #1 0x5639ef78e52a in mlir::Operation::create(mlir::Location, mlir::OperationName, mlir::TypeRange, mlir::ValueRange, mlir::DictionaryAttr, mlir::OpaqueProperties, mlir::BlockRange, unsigned int) /workdir/sources/circt/llvm/mlir/lib/IR/Operation.cpp:114:46\n\nSUMMARY: AddressSanitizer: 80 byte(s) leaked in 1 allocation(s).\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

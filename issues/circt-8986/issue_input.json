@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8986,
+  "issue_url": "https://github.com/llvm/circt/pull/8986",
+  "title": "[DoNotMerge] Add signal trace capability to arcilator ",
+  "body": "Sorry for the code dump. I will split this up into more manageable PRs when I have the time. I just want to get this out of the door in case it is already useful for somebody and to get some feedback.\r\n\r\nThis PR allows arcilator to \"natively\" produce signal traces. When doing a JIT run, just add `--trace-taps --jit-vcd` to the command line and it _should_ produce a VCD file in your working directory containing the observed signals.\r\n\r\nIt breaks down to four major components:\r\n* The `CombineTaps` pass, which resolves signal aliases, so we don't trace the clock for each module individually.\r\n* Adding `TraceTap` attributes during `AllocState` when the `--trace-taps` option is provided, to maintain the association between the `StateWrite` ops and the traced signals.\r\n* The (unfortunately very verbose) LLVM IR creation in LowerArcToLLVM. In short, it inserts constant structs containing the model information, callbacks to the external trace handler library, and functions that append tracing information to a provided buffer whenever a traced `StateWriteOp` writes a value that is different from the one currently stored.\r\n* A trace backend library converting the raw trace buffers into VCD files, with some chunks taken out of @fabianschuiki's implementation in `arcilator-runtime.h`.\r\n\r\nIt involves a lot of ugly pointer wrangling. I've only run some basic tests so far, so I'm sure there are still plenty of bugs to find. It will also most likely (and to some extent inevitably) tank the performance. Unfortunately, I haven't been able to run the arc tests on it so far. For some reason, when enabling the `TRACE` option on my machine, it crashes with this funky LLVM Error, even when using a main branch build, and I've now run out of time to investigate:\r\n```\r\n/opt/homebrew/Cellar/llvm/21.1.1/bin/opt -O3 -S build/small-master/rocket-arc.ll | /opt/homebrew/Cellar/llvm/21.1.1/bin/llc -O3 --filetype=obj -o build/small-master/rocket-arc.o\r\nLLVM ERROR: Do not know how to promote this operator's operand!\r\nPLEASE submit a bug report to https://github.com/Homebrew/homebrew-core/issues and include the crash backtrace.\r\nStack dump:\r\n0.      Program arguments: /opt/homebrew/Cellar/llvm/21.1.1/bin/llc -O3 --filetype=obj -o build/small-master/rocket-arc.o\r\n1.      Running pass 'Function Pass Manager' on module '<stdin>'.\r\n2.      Running pass 'AArch64 Instruction Selection' on function '@RocketSystem_eval'\r\n```\r\n\r\n \r\n",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-18",
+  "closed_at": "2026-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

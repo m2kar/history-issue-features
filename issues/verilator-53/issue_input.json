@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 53,
+  "issue_url": "https://github.com/verilator/verilator/issues/53",
+  "title": "Problem with $fopen translation",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 53 from https://www.veripool.org\nOriginal Date: 2009-01-22\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nA couple of problems with @$fopen@ (taken from the OpenRISC 1000). I have the original Verilog:\r\n\r\n```\r\ninteger fflash;\r\n    initial fflash = $fopen(\"flash.log\");\r\n\r\n\n```\r\nFirst problem is that Verilator only accepts the two argument version of @$fopen@ (which returns a file descriptor), rather than the single argument version, which returns a multi-channel descriptor. I tried patching this to\r\n\r\n```\r\ninteger fflash;\r\n    initial fflash = $fopen(\"flash.log\",\"w\");\r\n\n```\r\n\r\nVerilator now works fine, but I get defective C++. The code generated includes:\r\n\r\n```\r\nvoid Vorpsoc::_initial__TOP(Vorpsoc__Syms* __restrict vlSymsp) {\r\n     VL_DEBUG_IF(cout<<\"    Vorpsoc::_initial__TOP\"<<endl; );\r\n     Vorpsoc* __restrict vlTOPp VL_ATTR_UNUSED = vlSymsp->TOPp;\r\n     // Variables\r\n     VL_SIGW(__Vtemp1,71,0,3);\r\n     // Body\r\n     // INITIAL at rtl/verilog/mem_if/flash_top.v:330\r\n     __Vtemp1[0] = 0x2e6c6f67;\r\n     __Vtemp1[1] = 0x6c617368;\r\n     __Vtemp1[2] = 0x66;\r\n     VL_EXTENDS_QI(64,32, vlTOPp->v__DOT__flash_top__DOT__fflash) = VL_FOPEN_WI(3, __Vtemp1, 0x77);\r\n\r\n\n```\r\nThis last line prompts the G++ error:\r\n\r\n```\r\nVorpsoc.cpp:5399: error: lvalue required as left operand of assignment\r\n\n```\r\n\r\nAs far as I can see @VL_EXTENDS_QI@ is an inline function, so should not appear on the LHS of an assignment.\r\n\r\nIt's not a killer (this is not an important part of the code), but any suggestions on a workaround welcome.\r\n\r\nOriginal Verilog file attached\r\n\r\nThanks, Jeremy\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2009-01-22",
+  "closed_at": "2009-06-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

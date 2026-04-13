@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7321,
+  "issue_url": "https://github.com/verilator/verilator/pull/7321",
+  "title": "Fix internal error on modport selection of virtual interface handle",
+  "body": "## Summary\r\nThis patch fixes an internal error when selecting a modport on a virtual\r\ninterface handle (e.g. `vif.passive_mp`).  The `MemberSel` visitor in\r\n`V3Width.cpp` only handled `AstVar` and `AstClocking` members; an\r\n`AstModport` member hit `v3fatalSrc(\"MemberSel of non-variable\")`.\r\n\r\nDiscovered during CORE-V-VERIF integration:\r\nhttps://github.com/openhwgroup/core-v-verif/pull/2724\r\n\r\n## Reproducer\r\n```systemverilog\r\ninterface my_if(input logic clk);\r\n  logic [7:0] data;\r\n  clocking mon_cb @(posedge clk);\r\n    input data;\r\n  endclocking\r\n  modport passive_mp(clocking mon_cb);\r\nendinterface\r\n\r\nclass Context;\r\n  virtual my_if vif;\r\nendclass\r\n\r\nclass Monitor;\r\n  virtual my_if.passive_mp mp;\r\n  function void connect(Context cntxt);\r\n    mp = cntxt.vif.passive_mp;\r\n  endfunction\r\nendclass\r\n\r\nmodule t;\r\n  logic clk = 0;\r\n  always #5 clk = ~clk;\r\n  my_if vif(.clk(clk));\r\n  initial begin\r\n    automatic Context c = new;\r\n    automatic Monitor m = new;\r\n    c.vif = vif;\r\n    m.connect(c);\r\n    $write(\"*-* All Finished *-*\\n\");\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error: Internal Error: V3Width.cpp:3523: MemberSel of non-variable\r\n```\r\n\r\n## Changes\r\n- `V3Width.cpp`: add `AstModport` branch in the `MemberSel` / `IfaceRefDType` visitor — replace MemberSel with its `fromp` operand re-typed to a modport-qualified `AstIfaceRefDType`\r\n\r\n## Test\r\n- Added `test_regress/t/t_interface_virtual_modport_sel.{v,py}` — chain access (`cntxt.vif.passive_mp`), direct access (`tmp.passive_mp`), active/passive/signal modports, clocking-block read, multi-cycle data propagation\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-25",
+  "closed_at": "2026-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

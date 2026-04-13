@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6639,
+  "issue_url": "https://github.com/verilator/verilator/pull/6639",
+  "title": "Support multi-expression sequences",
+  "body": "\r\nThis is a reimplementation of https://github.com/verilator/verilator/pull/6577 done using a decision tree. Sequences are transformed into a graph and then back to the AST. This allows generic handling of sequence expressions and leaves a room for optimization as well. Supported expressions:\r\n\r\n###  `a ##1 b`\r\n\r\nImplemented as:\r\n```verilog\r\n\r\nif (a)\r\n    ##1;\r\n    if (b) passsp\r\n    else failsp\r\nelse failsp\r\n```\r\n\r\n### `##1 a ##2 b`\r\n\r\nImplemented as:\r\n```verilog\r\n    ##1;\r\n    if (a)\r\n        ##2;\r\n        if (b) passsp\r\n        else failsp\r\n    else failsp\r\n```\r\n\r\n### `a ##1 b ##2 c`\r\n\r\nImplemented as:\r\n```verilog\r\n    if (a)\r\n        ##1;\r\n        if (b)\r\n            ##2;\r\n            if (c) passsp\r\n            else failsp\r\n        else failsp\r\n    else failsp\r\n```\r\n\r\nTransformation is mainly done in V3AssertProperties. Properties are wrapped in AstPExpr that are handled by V3Assert.\r\nHandling of `pass`/`fail` statements is done by introducing a placeholder node: AstPExprClause that is replaced in V3Assert as well.\r\n\r\nAttaching property graph for the sequences above:\r\n![Vt_property_sexpr_016_properties dot](https://github.com/user-attachments/assets/96bb6bad-5625-49ba-8605-18c655dec8b7)\r\n",
+  "labels": [
+    "pr: dev-coverage"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-05",
+  "closed_at": "2025-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

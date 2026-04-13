@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7788,
+  "issue_url": "https://github.com/llvm/circt/issues/7788",
+  "title": "ModulePrefixAnnotation not working properly on aggregate-typed cmems",
+  "body": "Consider the following FIRRTL\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"chisel3.ModulePrefixAnnotation\",\r\n    \"target\": \"~Top|Top>ram\",\r\n    \"prefix\":\"Foo_\"\r\n  },\r\n  {\r\n    \"class\":\"chisel3.ModulePrefixAnnotation\",\r\n    \"target\": \"~Top|Top>ram2\",\r\n    \"prefix\":\"Foo_\"\r\n  }\r\n]]\r\n  public module Top :\r\n    input clock : Clock\r\n    input raddr : UInt<6>\r\n    input waddr : UInt<6>\r\n    input wdata : { foo : UInt<8>, bar : UInt<8> }\r\n    output rdata : UInt<24>\r\n\r\n    cmem ram : { foo : UInt<8>, bar : UInt<8> }[64]\r\n\r\n    write mport w = ram[waddr], clock\r\n    connect w, wdata\r\n\r\n    read mport r = ram[raddr], clock\r\n\r\n    cmem ram2 : UInt<8>[64]\r\n\r\n    write mport w2 = ram2[waddr], clock\r\n    connect w2, wdata.foo\r\n\r\n    read mport r2 = ram2[raddr], clock\r\n\r\n    connect rdata, cat(r2, cat(r.foo, r.bar))\r\n```\r\n\r\nHere we have `ram` which has a Bundle data type and `ram2` which has `UInt<8>` as its data type.\r\n\r\nIf you compile this with firtool 1.92.0 you'll get the following Verilog instances:\r\n```verilog\r\n  ram_64x16 ram_ext (\r\n    ...\r\n  Foo_ram2_64x8 ram2_ext (\r\n```\r\n`ram2` gets prefixed properly, but `ram` does not.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-09",
+  "closed_at": "2024-11-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

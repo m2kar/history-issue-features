@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2071,
+  "issue_url": "https://github.com/llvm/circt/pull/2071",
+  "title": "[ExportVerilog] Don't spill expressions which are used only once",
+  "body": "For #840, this PR is trying to remove temporary wires caused by the line length restriction. \r\n\r\nIf the length of the buffer filled by the current subexpression is larger than threshold,\r\nit splits the buffer into multiple lines by inserting a endline character.\r\n\r\nWith this patch, this IR \r\n\r\n```mlir\r\nhw.module @longvariadic(%a: i8) -> (b: i8) {\r\n  %1 = comb.add %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a,\r\n                %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a,\r\n                %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a,\r\n                %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a, %a\r\n                 : i8\r\n  hw.output %1 : i8\r\n}\r\n```\r\nwill be convert into  \r\n```verilog\r\nmodule longvariadic(    // variadic.mlir:1:1\r\n  input  [7:0] a,\r\n  output [7:0] b);\r\n\r\n  assign b = a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a +\r\n                a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a +\r\n                a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a;\r\nendmodule\r\n```\r\n\r\n\r\n\r\n-----\r\nbefore\r\n```verilog\r\nmodule longvariadic\r\n  wire [7:0] _tmp = a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a;\r\n  wire [7:0] _tmp_0 = a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a;\r\n  wire [7:0] _tmp_1 = a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a;\r\n  wire [7:0] _tmp_2 = a + a + a + a + a + a + a + a + a + a + a + a + a + a + a + a;\r\n  assign b = _tmp + _tmp_0 + _tmp_1 + _tmp_2;\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-02",
+  "closed_at": "2021-11-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

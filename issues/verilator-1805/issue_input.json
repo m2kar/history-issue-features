@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1805,
+  "issue_url": "https://github.com/verilator/verilator/issues/1805",
+  "title": "Question: tracing   with SystemC and SystemPerl",
+  "body": "---\n\n\nAuthor Name: **Mark Jackson Pulver**\nOriginal Redmine Message: 1208 from https://www.veripool.org\n\n\n\n---\n\nStill just learing to use these tools.\n\nTrying to learn how to trace signals.  \nI had trouble linking code generated with SystemPerl.\nLooking deep in the difference between test_sc & test_sp (and sc_main.ccp),\nI discovered instead of including verilated_vcd_sc.cpp verilated_vcd_c.cpp in the compile it reqiure Sp.cpp.\n\nThere seems to be no mention of Sp.cpp in the verilator man pages.\n\nHere's a fragment of my final makefile:\n```\nVFLAGS=-DVERILATOR=1\nifdef TRACE\nifdef SYSPERL\nVFILES += Sp.cpp\nelse\nVFILES +=verilated_vcd_sc.cpp verilated_vcd_c.cpp\nendif\nVFLAGS +=--trace\nendif\nVK_GLOBAL_OBJS += ${VFILES:%.cpp=%.o}\nVK_GLOBAL_OBJS += verilated.o\n\nifdef SYSPERL\nobj_dir/%.sp: %.vdpends\n\tverilator ${VFLAGS} -Wall --sp --exe  $*.v ${VFILES}\n\nobj_dir/%.cpp: obj_dir/%.sp\n\tcd obj_dir;  ${SYSTEMPERL}/sp_preproc --preproc *.sp\nelse\nobj_dir/%.cpp: %.vdpends\n\tverilator ${VFLAGS} -Wall --sc --exe  $*.v ${VFILES}\nendif\n\nobj_dir/V%__ALL.a:  obj_dir/%.cpp\n\t${MAKE} -C obj_dir -j -f V$*.mk V$*__ALL.a\n\n%_tb.o: %_tb.cpp obj_dir/V%__ALL.a\n\t ${MAKE} -C obj_dir -j -f V$*.mk ../$*_tb.o ${VK_GLOBAL_OBJS}\n\n%_tb: %_tb.o\n\tg++ -L${SYSTEMC_LIBDIR} $*_tb.o ${VK_GLOBAL_OBJS:%=obj_dir/%} obj_dir/V$*__ALL*.o -o $*_tb -lsystemc -lm -lstdc++ \t\n\n```\n\nIt assumes   the testbech for module XXX  is in XXX_tb.cpp\n\nso make TRACE=1 SYSPERL=1  XXX_tb  creates the exe  using SYSTEMPERL generation stream\nand make TRACE=1 XXX_tb creates the exe using straight SystemC generation stream.\n\nI beleive the man page could use a bit about why SystemPerl verus SystemC.  Looks like coverage only works under SystemPerl.\n\nMark\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2013-07-25",
+  "closed_at": "2013-07-25",
+  "code_blocks": [
+    "VFLAGS=-DVERILATOR=1\nifdef TRACE\nifdef SYSPERL\nVFILES += Sp.cpp\nelse\nVFILES +=verilated_vcd_sc.cpp verilated_vcd_c.cpp\nendif\nVFLAGS +=--trace\nendif\nVK_GLOBAL_OBJS += ${VFILES:%.cpp=%.o}\nVK_GLOBAL_OBJS += verilated.o\n\nifdef SYSPERL\nobj_dir/%.sp: %.vdpends\n\tverilator ${VFLAGS} -Wall --sp --exe  $*.v ${VFILES}\n\nobj_dir/%.cpp: obj_dir/%.sp\n\tcd obj_dir;  ${SYSTEMPERL}/sp_preproc --preproc *.sp\nelse\nobj_dir/%.cpp: %.vdpends\n\tverilator ${VFLAGS} -Wall --sc --exe  $*.v ${VFILES}\nendif\n\nobj_dir/V%__ALL.a:  obj_dir/%.cpp\n\t${MAKE} -C obj_dir -j -f V$*.mk V$*__ALL.a\n\n%_tb.o: %_tb.cpp obj_dir/V%__ALL.a\n\t ${MAKE} -C obj_dir -j -f V$*.mk ../$*_tb.o ${VK_GLOBAL_OBJS}\n\n%_tb: %_tb.o\n\tg++ -L${SYSTEMC_LIBDIR} $*_tb.o ${VK_GLOBAL_OBJS:%=obj_dir/%} obj_dir/V$*__ALL*.o -o $*_tb -lsystemc -lm -lstdc++ \t\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

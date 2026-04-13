@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9723,
+  "issue_url": "https://github.com/llvm/circt/pull/9723",
+  "title": "[FIRRTL][LowerLayers] Fix instance input port capture",
+  "body": "When an instance input port is both captured in a layerblock and\nconnected to outside the layerblock, the LowerLayers pass was\nincorrectly performing RAUW on the instance port, replacing it with\na node. This caused flow verification errors because instance input\nports have special flow semantics (sink flow but can be read from),\nwhile nodes have source flow.\n\nThis commit fixes the issue by recursing on the driver of instance\ninput ports instead of creating a node for the port itself. When\nthe driver can support an inner symbol (e.g., a module port), the\nXMR references it directly. When the driver cannot support an inner\nsymbol (e.g., an invalidvalue operation), a node is created from\nthe driver and the XMR references that node. This approach avoids\ncreating unnecessary intermediate nodes while maintaining correct\nflow semantics.\n\nThe fix includes a comprehensive test case that validates both\nscenarios: instance input ports driven by operations that cannot\nsupport inner symbols, and those driven by module ports that can.\n\nAI-assisted-by: Augment (Claude Sonnet 4.5)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-22",
+  "closed_at": "2026-02-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

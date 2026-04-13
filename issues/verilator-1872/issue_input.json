@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1872,
+  "issue_url": "https://github.com/verilator/verilator/issues/1872",
+  "title": "Question: Reordering of DPI context function calls following blocking assigns",
+  "body": "---\n\n\nAuthor Name: **Kelson Gent**\nOriginal Redmine Message: 1804 from https://www.veripool.org\n\n\n\n---\n\nDPI context functions are being reordered to follow blocking statements. I have attached an example \non line 174 of b11.v and attached the generated code as well.\n\nHere is the reordered subsection of the generated C++:\n```\n// Function: test_func at b11.v:174\n++(vlSymsp->__Vcoverage[30]);\nif ((0x100U & (IData)(vlTOPp->v__DOT__cont1))) {\n     ++(vlSymsp->__Vcoverage[28]);\n     vlTOPp->x_out = (0x3fU \n\t\t     & VL_NEGATE_I((IData)(vlTOPp->v__DOT__cont1)));\n} else {\n     ++(vlSymsp->__Vcoverage[29]);\n     vlTOPp->x_out = (0x3fU \n\t\t     & (IData)(vlTOPp->v__DOT__cont1));\n}\nvlTOPp->v__DOT__stato = 1U;\nvlTOPp->__Vdpiimwrap_v__DOT__test_func_TOP(\n\t\t\t\t\t   (&(vlSymsp->__Vscope_v)), \n\t\t\t\t\t   \"b11.v\", 0xaeU);\n\n```\n\nI want to check if this is unintended behavior before reporting it as an issue. I believe this presents a problem because \nthe context function has access to the simulation state and should present a non-optimizable barrier during compilation with unknown data dependency.\n\nI have isolated the behavior to two pieces. First, AstNode's AddPrev function has a reorder side effect by using addNext instead of addNextHere.\nTrivial replacement solves this issue. Additionally, during the V3Split::splitReorderAll the blocking assign is being moved to precede the DPI CCall.\nI don't understand the graph system well enough to come up with a fix without unintended side effects yet, but I can look into it, if this is indeed a bug. \n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2016-02-15",
+  "closed_at": "2016-02-15",
+  "code_blocks": [
+    "// Function: test_func at b11.v:174\n++(vlSymsp->__Vcoverage[30]);\nif ((0x100U & (IData)(vlTOPp->v__DOT__cont1))) {\n     ++(vlSymsp->__Vcoverage[28]);\n     vlTOPp->x_out = (0x3fU \n\t\t     & VL_NEGATE_I((IData)(vlTOPp->v__DOT__cont1)));\n} else {\n     ++(vlSymsp->__Vcoverage[29]);\n     vlTOPp->x_out = (0x3fU \n\t\t     & (IData)(vlTOPp->v__DOT__cont1));\n}\nvlTOPp->v__DOT__stato = 1U;\nvlTOPp->__Vdpiimwrap_v__DOT__test_func_TOP(\n\t\t\t\t\t   (&(vlSymsp->__Vscope_v)), \n\t\t\t\t\t   \"b11.v\", 0xaeU);\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

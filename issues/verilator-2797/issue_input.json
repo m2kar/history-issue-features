@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2797,
+  "issue_url": "https://github.com/verilator/verilator/issues/2797",
+  "title": "Support pin concat converting to 2D pattern assignment",
+  "body": "Here is one example.\r\n\r\n```verilog\r\nmodule top;\r\n\r\nparameter WIDTH=256;\r\n\r\nwire [5-1:0] ex1;\r\nwire [5-1:0] ex2;\r\nwire [5-1:0] ex3;\r\n\r\nreg clk=0;\r\n\r\nwire [WIDTH-1:0] out_data [2:0];\r\n\r\nsub #(.RPORT(3), .WPORT(2), .WIDTH(256)) u0( \r\n    .clk(clk),\r\n    .r_idx({ex1, ex2, ex3}),\r\n    .r_dat(out_data)\r\n);\r\n\r\n\r\n\r\nendmodule\r\n\r\n\r\nmodule sub(clk, r_idx, r_dat);\r\n\r\nparameter RPORT = 3;\r\nparameter WPORT = 2;\r\nparameter WIDTH = 256;\r\n\r\n\r\ninput clk;\r\ninput [5-1:0] r_idx [RPORT-1:0];\r\noutput reg [WIDTH-1:0] r_dat[RPORT-1:0];\r\n\r\nalways @(posedge clk) begin\r\n    r_dat[0] = {16{r_idx[0]}};\r\n    r_dat[1] = {16{r_idx[1]}};\r\n    r_dat[2] = {16{r_idx[2]}};\r\nend\r\n\r\nendmodule\r\n\r\n```\r\n\r\nThe input r_idx in module sub is one 2-D array.\r\nBut one 1-D array is passed to it when sub is instantiated in module top.\r\n\r\nTo fix the issue in least cost, we could pass `{ex1, ex2, ex3} to port r_idx.\r\n\r\nI tried VCS and Xcelium. Both of them do auto conversion (no compile warning).\r\nHope verilator can be enhanced to support it as well.\r\n\r\n\r\n",
+  "labels": [
+    "area: data-types",
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-19",
+  "closed_at": "2025-09-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

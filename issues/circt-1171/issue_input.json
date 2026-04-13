@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1171,
+  "issue_url": "https://github.com/llvm/circt/issues/1171",
+  "title": "Using SystemVerilog Interfaces in Other Interfaces",
+  "body": "I've got a situation where I'd like to have one SystemVerilog interface instantiate another. I'd like to start a discussion about how we can represent nested interfaces in the IR (as this doesn't currently seem to work).\r\n\r\nAs an example, I need to represent the following (taken from #1170):\r\n```verilog\r\ninterface sub_regBundle;\r\n  logic [15:0] b;\r\n  logic [15:0] a;\r\nendinterface\r\n\r\ninterface View;\r\n  sub_regBundle sub_regBundle();\r\nendinterface\r\n```\r\n\r\nWith the current structure of `sv::InterfaceOp` there are a number of problems:\r\n\r\n1. Each `sv::InterfaceOp` is both a symbol and has a symbol table. This complicates things where you need to define an interface member which needs to resolve a symbol outside of its scope. This _should_ be able to resolve any public symbol and may motivate removing the symbol table from an `InterfaceOp`. (Why is there a symbol table on the `InterfaceOp`?)\r\n2. There's a bunch of missing logic related to handling this. Currently, this doesn't seem to verify correctly as [interfaces aren't handled in `hw::getBitWidth`](https://github.com/llvm/circt/blob/8e8df8f9c4ed313781c467ddc0590386756c94f2/lib/Dialect/HW/HWTypes.cpp#L92).\r\n\r\nTo work around all this, I'm resorting to using `sv::VerbatimOp` in #1170.",
+  "labels": [
+    "Verilog/SystemVerilog"
+  ],
+  "state": "open",
+  "created_at": "2021-05-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

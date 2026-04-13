@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2808,
+  "issue_url": "https://github.com/llvm/circt/issues/2808",
+  "title": "[FIRRTL][ExportVerilog] Better Underscore Wire Behavior",
+  "body": "The change introduce in https://github.com/llvm/circt/pull/2676 guarantees that all \"named\" Chisel things will be \"tapped\" in the output.  However, this can result in duplicate wires being emitted into the final Verilog design. \r\n\r\nDivine a way to improve the Verilog quality by, e.g., CSE'ing wires which are the same or by introducing a notion of symbols/don't touch which does not block optimizations, but will always exist in the output.\r\n\r\nConsider the following:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1>\r\n    input b: UInt<1>\r\n    output out: UInt<1>\r\n\r\n    node x = or(a, b)\r\n    out <= x\r\n```\r\n\r\nThis produces the following Verilog (`firtool Foo.fir --strip-debug-info`):\r\n```verilog\r\nmodule Foo(\r\n  input  a, b,\r\n  output out);\r\n\r\n  wire x;\r\n\r\n  wire _x = a | b;\r\n  assign x = _x;\r\n  assign out = _x;\r\nendmodule\r\n```\r\n\r\nWires `_x` and `x` are the exact same. Here, `_x` should not exist and any uses should be replaced with `x`.",
+  "labels": [
+    "FIRRTL",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-25",
+  "closed_at": "2022-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9561,
+  "issue_url": "https://github.com/llvm/circt/issues/9561",
+  "title": "[FIRRTL][circt-reduce] Instance Stubber Crash w/ Refs",
+  "body": "FIRRTL `instance-stubber` reduction crashes if it is given refs. Consider:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.module private @Bar(\n    out %ref: !firrtl.rwprobe<uint<32>>\n  ) {\n  }\n  firrtl.module private @Baz(\n    in %v_3: !firrtl.anyref\n  ) {\n    %Bar_ref = firrtl.instance Bar @Bar(\n      out ref: !firrtl.rwprobe<uint<32>>\n    )\n  }\n  firrtl.extmodule @Foo()\n}\n```\n\nRunning this will crash the instance-stubber:\n\n``` console\n# circt-reduce -skip-initial -test='exit 0' instance-stubber.0.mlir -include instance-stubber -o /dev/null 2>&1\nReading input\nTesting input with `exit 0`\nInitial module has size 286\nTrying reduction `instance-stubber`\nAssertion failed: (isa<To>(Val) && \"cast<Ty>() argument of incompatible type!\"), function cast, file Casting.h, line 560.\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\nStack dump:\n0.\tProgram arguments: circt-reduce -skip-initial \"-test=exit 0\" instance-stubber.0.mlir -include instance-stubber -o /dev/null\nStack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):\n0  circt-reduce             0x000000010429fc34 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 56\n1  circt-reduce             0x000000010429db1c llvm::sys::RunSignalHandlers() + 172\n2  circt-reduce             0x00000001042a06dc SignalHandler(int, __siginfo*, void*) + 300\n3  libsystem_platform.dylib 0x000000018fd516a4 _sigtramp + 56\n4  libsystem_pthread.dylib  0x000000018fd17848 pthread_kill + 296\n5  libsystem_c.dylib        0x000000018fc209e4 abort + 124\n6  libsystem_c.dylib        0x000000018fc1fc18 err + 0\n7  circt-reduce             0x00000001053f4068 llvm::StdThreadPool::wait() (.cold.1) + 0\n8  circt-reduce             0x00000001045d60d8 circt::firrtl::patterns::AddOfPad::~AddOfPad() + 0\n9  circt-reduce             0x00000001051d44ac (anonymous namespace)::invalidateOutputs(mlir::ImplicitLocOpBuilder&, mlir::Value, llvm::SmallDenseMap<mlir::Type, mlir::Value, 8u, llvm::DenseMapInfo<mlir::Type, void>, llvm::detail::DenseMapPair<mlir::Type, mlir::Value>>&, bool) + 640\n10 circt-reduce             0x00000001051d3ab8 (anonymous namespace)::InstanceStubber::rewrite(circt::firrtl::InstanceOp) + 808\n11 circt-reduce             0x000000010422b0dc execute(mlir::MLIRContext&) + 3988\n12 circt-reduce             0x0000000104229ebc main + 300\n13 dyld                     0x000000018f976b98 start + 6076\nzsh: abort      circt-reduce -skip-initial -test='exit 0' instance-stubber.0.mlir -include  -\n```",
+  "labels": [
+    "bug",
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-31",
+  "closed_at": "2026-02-02",
+  "code_blocks": [
+    "\nRunning this will crash the instance-stubber:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

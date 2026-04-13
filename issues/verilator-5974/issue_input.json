@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5974,
+  "issue_url": "https://github.com/verilator/verilator/issues/5974",
+  "title": "Fix virtual interface `null` assignments and comparisons",
+  "body": "Hello, verilator throws an error when i try to assign \"null\" to virtual interface\n```systemverilog\ninterface test_if;\nendinterface\n\nmodule top();\n\ttest_if real_if();\n\tvirtual test_if virt_if;\n\tinitial begin\n\t\tvirt_if = real_if;\n\t\tvirt_if = null;\n\tend\nendmodule\n``` \nits allowed by standard (IEEE Std 1800-2012 - Interface - Virtual interface)\n```\nOnly the following operations are directly allowed on virtual interface variables:\n— Assignment ( = ) to the following:\n    — Another virtual interface of the same type\n    — An interface instance of the same type\n    — The special constant null                              <---- this one\n— Equality ( == ) and inequality ( != ) with the following:\n    — Another virtual interface of the same type\n    — An interface instance of the same type\n    — The special constant null\n``` \nand simulation starts in vivado\n\nscript:\n```\nverilator --binary -j 0 --threads \"$(nproc)\" --Mdir build --top-module top top.sv\n```\nlog:\n```\n%Error: top.sv:9:13: Operator ASSIGN expected 'test_if' interface on Assign RHS but ''0' is not an interface.\n                   : ... note: In instance 'top'\n    9 |   virt_if = null;\n      |             ^~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.035 for more assistance.\n%Error: Exiting due to 1 error(s)\n``` \nversion: ```Verilator 5.035 devel rev v5.034-182-gc9be36911``` \nThanks",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-03",
+  "closed_at": "2026-03-20",
+  "code_blocks": [
+    "interface test_if;\nendinterface\n\nmodule top();\n\ttest_if real_if();\n\tvirtual test_if virt_if;\n\tinitial begin\n\t\tvirt_if = real_if;\n\t\tvirt_if = null;\n\tend\nendmodule\n",
+    "Only the following operations are directly allowed on virtual interface variables:\n— Assignment ( = ) to the following:\n    — Another virtual interface of the same type\n    — An interface instance of the same type\n    — The special constant null                              <---- this one\n— Equality ( == ) and inequality ( != ) with the following:\n    — Another virtual interface of the same type\n    — An interface instance of the same type\n    — The special constant null\n",
+    "verilator --binary -j 0 --threads \"$(nproc)\" --Mdir build --top-module top top.sv\n",
+    "%Error: top.sv:9:13: Operator ASSIGN expected 'test_if' interface on Assign RHS but ''0' is not an interface.\n                   : ... note: In instance 'top'\n    9 |   virt_if = null;\n      |             ^~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.035 for more assistance.\n%Error: Exiting due to 1 error(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

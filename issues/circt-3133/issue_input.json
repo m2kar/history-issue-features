@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3133,
+  "issue_url": "https://github.com/llvm/circt/issues/3133",
+  "title": "[ExportVerilog] Reuse output ports if possible",
+  "body": "Consider following IR (this kind of IR is frequently used to express FIRRTL's inout ports):\r\n```mlir\r\nhw.module @Foo(%x: i8) -> (y: i8, z: i8) {\r\n    %.z.output = sv.wire : !hw.inout<i8>\r\n    %0 = sv.read_inout %.z.output : !hw.inout<i8>\r\n    sv.assign %.z.output, %x : i8\r\n    hw.output %0, %0 : i8, i8\r\n }\r\n```\r\n`circt-opt -export-verilog`:\r\n```verilog\r\nmodule Foo(\t// foo.mlir:1:1\r\n  input  [7:0] x,\r\n  output [7:0] y,\r\n               z);\r\n\r\n  wire [7:0] _z_output;\t// foo.mlir:2:18\r\n\r\n  assign _z_output = x;\t// foo.mlir:4:5\r\n  assign y = _z_output;\t// foo.mlir:3:10, :5:5\r\n  assign z = _z_output;\t// foo.mlir:3:10, :5:5\r\nendmodule\r\n```\r\n\r\nIdeally we don't have to create temporary wires for output ports, e.g:\r\n```verilog\r\nmodule Foo(\t// foo.mlir:1:1\r\n  input  [7:0] x,\r\n  output [7:0] y,\r\n               z);\r\n\r\n  assign z = x;\t// foo.mlir:4:5\r\n  assign y = x;\t// foo.mlir:3:10, :5:5\r\nendmodule",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-05-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

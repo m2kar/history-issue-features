@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1931,
+  "issue_url": "https://github.com/llvm/circt/pull/1931",
+  "title": "[HWExportModuleHierarchy] Directly emit JSON to a file instead of an sv.verbatim op.",
+  "body": "This should unblock https://github.com/llvm/circt/issues/1708 as discussed in https://github.com/llvm/circt/pull/1792#issuecomment-934057209.\r\n\r\nPreviously this pass created an sv.verbatim op with the entirety of the\r\nmodule hierarchy JSON file embedded into it, with the expectation that\r\nthe --split-verilog mode of firtool would actually be the one to create\r\nit. This is now problematic because we'd like to move name legalization,\r\ninto the ExportVerilog pass, which means module names could change after\r\nExportVerilog runs.\r\n\r\nMoving the HWExportModuleHierarchy pass after ExportVerilog guarantees\r\nthat names match the final verilog, but that means that\r\nHWExportModuleHierarchy may no longer rely on the sv.verbatim op\r\noutput_file method to actually emit the file.\r\n\r\nThis commit changes HWExportModuleHierarchy to directly write the module\r\nhierarchy JSON files. Note that firtool will now only run the\r\nHWExportModuleHierarchy pass when --split-verilog mode is enabled, since\r\nwe now only want to run it when we have an output directory to dump\r\nfiles to.\r\n\r\n\r\nAlso, this PR does one small, independent refactoring to move the `appendPossiblyAbsolutePath()` function into a new `lib/Support/Path.cpp` file so that I could use it without having to create a third copy of the function: https://github.com/llvm/circt/commit/07f72f4061495d9c2467cddd5cd93ec4c401716b. I could land this commit separately from the rest of this PR if I need to do significant rework on the main changes here.\r\n\r\n\r\nA few questions I had about my changes here:\r\n\r\n- I'm still pretty unfamiliar with exactly how TableGen works, so I copied what the `ExportSplitVerilog` pass was doing in order to get an option for the directory name. Let me know if I missed something or if there's a better way of doing this.\r\n- I changed firtool to add the `HWExportModuleHierarchy` pass only if `ExportSplitVerilog` is run, just because I didn't think it'd be a good experience to have the export module hierarchy stuff dump a bunch of files into the current working directory. I could have this run after either `ExportVerilog` or `ExportSplitVerilog` if we think that's fine.\r\n- I'm now doing a lot of file system-y stuff in the pass, such as creating the output directory if it doesn't exist, opening each output file for writing, etc. Is this the `HWExportModuleHierarchy` pass the right place to be doing these kinds of things? Before it was very \"pure\" in the sense of not relying on system-y stuff, but now it needs to directly call these kinds of functions and appropriately handle failure.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-05",
+  "closed_at": "2021-10-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

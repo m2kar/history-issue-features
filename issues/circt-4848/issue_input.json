@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4848,
+  "issue_url": "https://github.com/llvm/circt/issues/4848",
+  "title": "[Lower SCF/Standard to Calyx] Support for memref.global",
+  "body": "Hi! I'd like to convert some SCF/Affine MLIR to Verilog, and going through an intermediate Calyx to HW to Verilog path.\r\n\r\nI'm running into some failure to support `memref.global` and was curious for some advice on a better way around this.\r\n\r\nA simple reproducer looks like:\r\n```\r\nmodule {\r\n  memref.global \"private\" constant @output : memref<2xi32> = dense<[0, 1]>\r\n  func.func @main(%arg0: index) -> i32 {\r\n    %9 = memref.get_global @output : memref<2xi32>\r\n    %arg2 = affine.load %9[%arg0] : memref<2xi32>\r\n\r\n    return %arg2 : i32\r\n  }\r\n}\r\n```\r\n\r\nCommand & Logs\r\n```\r\n$ circt-opt reproducer.memref_global.mlir --lower-scf-to-calyx\r\nreproducer.memref_global.mlir:4:10: error: Unhandled operation during BuildOpGroups()\r\n    %9 = memref.get_global @output : memref<2xi32>\r\n         ^\r\nreproducer.memref_global.mlir:4:10: note: see current operation: %0 = \"memref.get_global\"() {name = @output} : () -> memref<2xi32>\r\n```\r\n\r\nThis points to just lack of support, although I do know there is some support for some memref ops; e.g. https://github.com/llvm/circt/pull/1897\r\n\r\nI think in theory I could flatten and convert these to `arith.constant`. Or maybe there's a better conversion or pass to do before this? \r\n\r\nThanks!\r\n\r\ncc @j2kun",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-17",
+  "closed_at": "2023-04-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

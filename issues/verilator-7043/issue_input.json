@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7043,
+  "issue_url": "https://github.com/verilator/verilator/issues/7043",
+  "title": "Static variables in packages are duplicated in hierarchical mode or with --lib-create",
+  "body": "If there is a package (named, or the $unit package) which contains static variables (explicit or in functions/tasks), then when hierarchically verilating the design, each library module will have it's own copy of those statics. e.g in hierarchical mode, there will be 2 global_counters instead of one, each incrementing independent of the other:\n\n```systemverilog\n\n// in $unit\nint global_counter;\n\nmodule top(input wire clk);\n   sub sub(clk);\n   always (@posedge clk) global_counter += 1;\nendmodule\n\nmodule sub(input wire clk);\n   /* verilator hier_block */\n   always (@posedge clk) global_counter += 1;\nendmodule\n```\n\nBit of a corner case, but probably warrants a warning/unsupported (static state in package with --lib-crate). However this can arise more easily with static vars in functions in the package.\n\nSame applies with --lib-create instead of --hierarchical.\n\nJust recording for reference.\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-10",
+  "closed_at": null,
+  "code_blocks": [
+    "\n// in $unit\nint global_counter;\n\nmodule top(input wire clk);\n   sub sub(clk);\n   always (@posedge clk) global_counter += 1;\nendmodule\n\nmodule sub(input wire clk);\n   /* verilator hier_block */\n   always (@posedge clk) global_counter += 1;\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

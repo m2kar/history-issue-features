@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7039,
+  "issue_url": "https://github.com/verilator/verilator/issues/7039",
+  "title": "Support: std::randomize() fails to compile for queue and associative array variables",
+  "body": "\n`std::randomize()` causes C++ compilation errors when called on queue (`$`), dynamic array (`[]`), or associative array variables. The `VlStdRandomizer::basicStdRandomization()` template only has specializations for scalar, wide, and `VlUnpacked` types — missing overloads for `VlQueue` and `VlAssocArray`.\n\n\n```systemverilog\nmodule t;\n  bit [7:0] q [$];\n  initial begin\n    q = {8'd0, 8'd0, 8'd0};\n    if (std::randomize(q) != 1) $stop;\n    $finish;\n  end\nendmodule\n\n```\n\n### Error\n\nverilated_random.h:622: error: no match for 'operator=' (operand types are 'VlQueue<unsigned char>' and 'unsigned int')\nThe scalar specialization is selected instead of iterating queue elements.\n\n### Affected types\nVlQueue<T, N> — queues and dynamic arrays\nVlAssocArray<K, V> — associative arrays\nFixed-size unpacked arrays (VlUnpacked) work correctly (specialization exists at line 639).\n\n### IEEE reference\nIEEE 1800-2017 §18.5 — std::randomize() should support all variable types including arrays and queues.\n\n### Source\nFrom [PlanV_Verilator_Feature_Tests#33](https://github.com/planvtech/PlanV_Verilator_Feature_Tests/issues/33) and [#66](https://github.com/planvtech/PlanV_Verilator_Feature_Tests/issues/66).\n\nA PR is coming. ;)\n",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-10",
+  "closed_at": "2026-02-11",
+  "code_blocks": [
+    "module t;\n  bit [7:0] q [$];\n  initial begin\n    q = {8'd0, 8'd0, 8'd0};\n    if (std::randomize(q) != 1) $stop;\n    $finish;\n  end\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7351,
+  "issue_url": "https://github.com/verilator/verilator/issues/7351",
+  "title": "Add error when vriable written in an always_ff and initialization",
+  "body": "### Version\nVerilator 5.046 (2026-02-28)\n\n### Description\nVerilator accepts an `always_ff` variable that is also assigned in an `initial` block, even though SystemVerilog requires that a variable written in an `always_ff` block must not be written by any other process.\n\nExample:\n```\n    initial a = 1'b0;\n    always_ff @(posedge a) begin\n        a <= 1'b1;\n    end\n```\n\nPer IEEE 1800 `always_ff` semantics, variables assigned inside an `always_ff` procedure shall not be assigned by any other process. An `initial` block is a separate process, so this should be rejected. However, Verilator accepts this construct and only emits:\n    Variable 'a' driven in an `always_ff` block, may not be driven by any other process.\nThis appears to be a warning rather than a hard error, allowing invalid code to compile.\n\n### Expected behavior\nVerilator should reject the code because `a` is assigned in two separate processes:\n- `initial a = 1'b0;`\n- `always_ff @(posedge a) a <= 1'b1;`\n\nA variable written in `always_ff` must not be written by any other process, including `initial`, `always`, `always_comb`, or another `always_ff`.\n\nAt minimum, this should be treated as a compile error rather than a non-fatal warning.\n\n### Observed behavior\nVerilator accepts the design and there is no warnings.\n\nThis allows compilation of code that violates `always_ff` restrictions.\n\n### Cross-check\n- ModelSim: reject\n- Verilator: accepts the code without warning\n\n### Reproducer\ndut\n```\nmodule test;\n    logic a;\n\n    initial a = 1'b0;\n\n    always_ff @(posedge a) begin\n        a <= 1'b1;\n    end\nendmodule\n```",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "open",
+  "created_at": "2026-03-31",
+  "closed_at": null,
+  "code_blocks": [
+    "    initial a = 1'b0;\n    always_ff @(posedge a) begin\n        a <= 1'b1;\n    end\n",
+    "module test;\n    logic a;\n\n    initial a = 1'b0;\n\n    always_ff @(posedge a) begin\n        a <= 1'b1;\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

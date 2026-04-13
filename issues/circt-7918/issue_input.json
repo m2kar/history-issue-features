@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7918,
+  "issue_url": "https://github.com/llvm/circt/issues/7918",
+  "title": "[MooreToCore] `moore.extract` is converted to `hw.array_slice` when array's element type is also array",
+  "body": "Given this module:\n\n```mlir\nmodule {\n  moore.module @test(out x : !moore.l4) {\n    %arr = moore.variable : <array<2 x array<3 x l4>>>\n    %0 = moore.read %arr : <array<2 x array<3 x l4>>>\n    %1 = moore.extract %0 from 1 : array<2 x array<3 x l4>> -> array<3 x l4>\n    %2 = moore.extract %1 from 2 : array<3 x l4> -> l4\n    moore.output %2 : !moore.l4\n  }\n}\n```\n\nHere is the result of running `MooreToCore`:\n\n```mlir\nmodule {\n  hw.module @test(out x : i4) {\n    %c0_i24 = hw.constant 0 : i24\n    %0 = hw.bitcast %c0_i24 : (i24) -> !hw.array<2xarray<3xi4>>\n    %arr = llhd.sig %0 : !hw.array<2xarray<3xi4>>\n    %1 = llhd.prb %arr : !hw.inout<array<2xarray<3xi4>>>\n    %true = hw.constant true\n    %2 = hw.array_slice %1[%true] : (!hw.array<2xarray<3xi4>>) -> !hw.array<3xi4>\n    %c-2_i2 = hw.constant -2 : i2\n    %3 = hw.array_get %2[%c-2_i2] : !hw.array<3xi4>, i2\n    hw.output %3 : i4\n  }\n}\n```\n\nIt can be seen that `%1 = moore.extract ...` was translated to `%2 = hw.array_slice ...`: `moore.extract`'s result type is an array, so it was mistaken for a slicing operation.\n\nThe resulting module is malformed and fails validation after canonicalization (due to `hw.output`'s argument not matching the output port's type).",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-11-28",
+  "closed_at": null,
+  "code_blocks": [
+    "module {\n  moore.module @test(out x : !moore.l4) {\n    %arr = moore.variable : <array<2 x array<3 x l4>>>\n    %0 = moore.read %arr : <array<2 x array<3 x l4>>>\n    %1 = moore.extract %0 from 1 : array<2 x array<3 x l4>> -> array<3 x l4>\n    %2 = moore.extract %1 from 2 : array<3 x l4> -> l4\n    moore.output %2 : !moore.l4\n  }\n}\n",
+    "module {\n  hw.module @test(out x : i4) {\n    %c0_i24 = hw.constant 0 : i24\n    %0 = hw.bitcast %c0_i24 : (i24) -> !hw.array<2xarray<3xi4>>\n    %arr = llhd.sig %0 : !hw.array<2xarray<3xi4>>\n    %1 = llhd.prb %arr : !hw.inout<array<2xarray<3xi4>>>\n    %true = hw.constant true\n    %2 = hw.array_slice %1[%true] : (!hw.array<2xarray<3xi4>>) -> !hw.array<3xi4>\n    %c-2_i2 = hw.constant -2 : i2\n    %3 = hw.array_get %2[%c-2_i2] : !hw.array<3xi4>, i2\n    hw.output %3 : i4\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

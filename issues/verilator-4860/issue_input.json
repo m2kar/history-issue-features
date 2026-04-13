@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4860,
+  "issue_url": "https://github.com/verilator/verilator/issues/4860",
+  "title": "tracep error: expected unqualified-id on VerilatedTraceSigType",
+  "body": "It appears https://github.com/verilator/verilator/commit/95c4ade718a21d51c661cbe37b252924c0a822cd introduced a bug when [emitting](https://github.com/verilator/verilator/blob/23836ee8d00a4da961be6c761f7610a4cee74f36/src/V3EmitCImp.cpp#L743) the `tracep` for cases where tracing is supported, but `VerilatedTraceSigType` isn't [set](https://github.com/verilator/verilator/blob/8a7f36c34b2a04a73aa2b472eb502d02d28c9a4a/src/V3Ast.h#L681) (ie `chandle`).\r\n\r\nVerilator: 5.020\r\nCompiler: Clang 17.0.4\r\nOS: Rhel 8.7\r\n\r\nError Message\r\n```\r\nWARNING:root:Testbench__Trace__0__Slow.cpp:836:127: error: expected unqualified-id\r\nWARNING:root:  836 |     tracep->declQuad(c+25,0,\"foo_if\",-1, VerilatedTraceSigDirection::NONE, VerilatedTraceSigKind::VAR, VerilatedTraceSigType::, false,-1, 63,0);\r\nWARNING:root:      |                                                                                                                               ^\r\n```\r\n\r\nAs for a fix, I'm unsure if `chandle` needs it's own value in the [enum](https://github.com/verilator/verilator/blob/23836ee8d00a4da961be6c761f7610a4cee74f36/include/verilated_trace.h#L83), if there should be some `NONE` value in the enum, or a change is needed to the [function](https://github.com/verilator/verilator/blob/23836ee8d00a4da961be6c761f7610a4cee74f36/src/V3EmitCImp.cpp#L697).\r\n\r\n\r\nJust for reference, using an older version of verilator 5.012, the chandle will appear as\r\n```\r\n    tracep->declQuad(c+77,\"foo_if\", false,-1, 63,0);\r\n```\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-24",
+  "closed_at": "2024-01-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

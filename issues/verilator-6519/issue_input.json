@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6519,
+  "issue_url": "https://github.com/verilator/verilator/pull/6519",
+  "title": "Fix always_ff on constant edge",
+  "body": "Added `t_always_ff_never` to show an internal error we're hitting:\r\n```\r\n%Error: Internal Error: t/t_always_ff_never.v:19:25: ../V3Delayed.cpp:1216: <= assignment in non-clocked block, should have been converted in V3Active\r\n                                                   : ... note: In instance 't.the_sub'\r\n-node: ASSIGNDLY 0x555557091a40 <e1316> {f19az} u1=0x1 @dt=0x555557095bc0@(G/w64)\r\n   19 |         last_transition <= $time;\r\n      |                         ^~\r\n```\r\nThis happens because this in `V3Delayed`:\r\n```\r\n        UASSERT_OBJ(m_inSuspendableOrFork || m_activep->hasClocked(), nodep,\r\n                    \"<= assignment in non-clocked block, should have been converted in V3Active\");\r\n```\r\ndoesn't like that the `ACTIVE` only contains a `NEVER` `SENITEM`:\r\n```\r\n    1:2:2: ACTIVE 0x555557164c30 <e1583> {f18af}  sequent => SENTREE 0x555557162fd0 <e1582> {f18ap}\r\n    1:2:2:1: SENTREE 0x555557162fd0 <e1582> {f18ap}\r\n    1:2:2:1:1: SENITEM 0x555557163550 <e1717> {f18ar} [NEVER]\r\n    1:2:2:2: ALWAYS 0x555557162000 <e1584> {f18af} [always_ff]\r\n```\r\nI naively tried to just bypass the assert when that is the case but that ended poorly in other ways.\r\n\r\nI'm guessing that this whole active block should have been pruned before I got to this assert.  Is that a correct assumption and any suggestions on where that should happen?  I'm going to try adding such a thing to `V3Const` next.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-01",
+  "closed_at": "2025-10-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

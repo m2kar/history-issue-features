@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3268,
+  "issue_url": "https://github.com/llvm/circt/issues/3268",
+  "title": "[StandardToHandshake] Passing `memref` to a function will still use `memref.alloc` ",
+  "body": "Passing the following code to `--lower-std-to-handshake` produces a weird output.\r\n\r\n```mlir\r\nfunc.func @external_mem(%mem : memref<4xi32>) {\r\n  return\r\n}\r\n\r\nfunc.func @normal_mem() {\r\n  %mem = memref.alloc() : memref<4xi32>\r\n  func.call @external_mem(%mem) : (memref<4xi32>) -> ()\r\n  return\r\n}\r\n```\r\n\r\nOutput:\r\n\r\n```mlir\r\nhandshake.func @external_mem(%arg0: memref<4xi32>, %arg1: none, ...) -> none attributes {argNames = [\"in0\", \"inCtrl\"], resNames = [\"outCtrl\"]} {\r\n  extmemory[ld = 0, st = 0] (%arg0 : memref<4xi32>) () {id = 0 : i32} : () -> ()\r\n  return %arg1 : none\r\n }\r\nhandshake.func @normal_mem(%arg0: none, ...) -> none attributes {argNames = [\"inCtrl\"], resNames = [\"outCtrl\"]} {\r\n  %0:2 = fork [2] %arg0 : none\r\n  %1 = memref.alloc() : memref<4xi32>\r\n  %2 = instance @external_mem(%1, %0#0) : (memref<4xi32>, none) -> none\r\n  sink %2 : none\r\n  return %0#1 : none\r\n}\r\n```\r\n\r\nAs you can see, a `memref.alloc()` remains, which is not expected and thus breaks further transformations. \r\n\r\nI would expect that a correct lowering would construct a `MemoryOp` in the `@normal_mem` function. How this exactly interacts with the external memory op is not clear to me, as this will cause cross function dependencies depending on the amount of memory operations in `@external_mem`.",
+  "labels": [
+    "bug",
+    "Handshake"
+  ],
+  "state": "open",
+  "created_at": "2022-06-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

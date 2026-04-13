@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5052,
+  "issue_url": "https://github.com/llvm/circt/issues/5052",
+  "title": "[PyCDE] 'value' must be either ir.Value or Signal when using many data inputs in Mux construct",
+  "body": "Hi. After installing the PyCDE, I spent some time understanding the basics. I decided to build a simple calculator that has 4 operations hence need to use Mux with more than 2 values. I found already implemented Mux here:\r\n\r\nhttps://github.com/llvm/circt/blob/6ff1ddc0ea77d8adc47df1f0efb809fad1bace3d/frontends/PyCDE/src/constructs.py#L181\r\n\r\nThis simple mux with two data inputs runs and procudes correct SV.\r\n\r\n```python\r\nfrom pycde import Input, Output, Module, System\r\nfrom pycde import generator\r\nfrom pycde.types import Bits\r\nfrom pycde.constructs import Mux\r\n\r\nclass SimpleMux(Module):\r\n    op = Input(Bits(1))\r\n    a = Input(Bits(32))\r\n    b = Input(Bits(32))\r\n    out = Output(Bits(32))\r\n\r\n    @generator\r\n    def construct(self):\r\n        self.out = Mux(self.op, self.a, self.b)\r\n\r\n\r\nsystem = System([SimpleMux], name=\"ExampleSystem\", output_directory=\"exsys\")\r\nsystem.compile()\r\n```\r\n\r\nAfter checking how `Mux` works, I decided to add two more operations and see if it works.\r\n\r\n```python\r\nclass SimpleMux(Module):\r\n    op = Input(Bits(2))\r\n    a = Input(Bits(32))\r\n    b = Input(Bits(32))\r\n    c = Input(Bits(32))\r\n    d = Input(Bits(32))\r\n    out = Output(Bits(32))\r\n\r\n    @generator\r\n    def construct(self):\r\n        self.out = Mux(self.op, self.a, self.b, self.c, self.d)\r\n```\r\n\r\nThe first (solvable) issue was missing `type` argument here:\r\n\r\nhttps://github.com/llvm/circt/blob/6ff1ddc0ea77d8adc47df1f0efb809fad1bace3d/frontends/PyCDE/src/constructs.py#L194\r\n\r\nI managed to fix it by directly modifying PyCDE code (as a tmp workaround):\r\n\r\n```python\r\nArraySignal(..., type=data_inputs[0].type)\r\n```\r\n\r\nWhen I ran it again this error occurred:\r\n\r\n```\r\nFile \"/Users/vmois/miniforge3/envs/circt/lib/python3.8/site-packages/pycde/signals.py\", line 42, in __init__\r\n    assert False, \"'value' must be either ir.Value or Signal\"\r\nAssertionError: 'value' must be either ir.Value or Signal\r\n```\r\n\r\n`ArraySignal` inherets from `Signal` so when object is initializing `Signal` init method is used.\r\n\r\nhttps://github.com/llvm/circt/blob/6ff1ddc0ea77d8adc47df1f0efb809fad1bace3d/frontends/PyCDE/src/signals.py#L32-L43\r\n\r\nAfter checking with a debugger, I could see that value passed to `Signal.init` is a list of `BitsSignal` objects. And it can only work with a single values.\r\n\r\n```\r\n-> elif isinstance(value, Signal):\r\n(Pdb) value\r\n(<pycde.signals.BitsSignal object at 0x10586cd90>, <pycde.signals.BitsSignal object at 0x10586ce50>, <pycde.signals.BitsSignal object at 0x10586cf10>, <pycde.signals.BitsSignal object at 0x10586cee0>)\r\n(Pdb) isinstance(value, Signal)\r\nFalse\r\n```\r\n\r\nAm I doing something wrong with PyCDE API, or is it really a bug? Thank you very much.",
+  "labels": [
+    "PyCDE"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-14",
+  "closed_at": "2023-04-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

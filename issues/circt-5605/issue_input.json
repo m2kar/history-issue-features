@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5605,
+  "issue_url": "https://github.com/llvm/circt/issues/5605",
+  "title": "[ExportVerilog] Prepare for Emission Assertion Failure",
+  "body": "The composition of `PrepareForEmission` and `ExportVerilog` can cause assertion failures for certain IR. Consider the example below. Here, `sv.system.sampled` is used twice. This needs to get duplicated so it is inlined into its assertion use sites. The `concat` will then throw an assertion during `ExportVerilog` as it was not spilled to a wire:\r\n\r\n```mlir\r\nhw.module @Foo(%foo: i25, %bar: i12, %clock: i1, %reset: i1) {\r\n    %concat = comb.concat %foo, %bar : i25, i12\r\n    %415 = sv.system.sampled %concat : i37\r\n    sv.assert.concurrent posedge %clock, %reset label \"assert__verif\" message \"foo\"(%415) : i37\r\n    sv.assert.concurrent posedge %clock, %reset label \"assert__verif\" message \"bar\"(%415) : i37\r\n    hw.output\r\n  }\r\n```\r\n\r\nIt is reasonable if either the concat is inline into both use sites or if a temporary wire is created.\r\n\r\nThis hints at some problems with forward pass approach of `PrepareForEmission`. E.g., for the wire emission case, the concat should be spilled to a wire if it has more than one use. However, it only has more than one use if its one user becomes two. This is only know after visiting the sampled op which requires backtracking.\r\n\r\nIt would likely be cleaner to structure `PrepareForEmission` as a backwards pass over the IR as the logic for duplicating or wire spilling is all dependent on users.",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-17",
+  "closed_at": "2023-07-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

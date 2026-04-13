@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6977,
+  "issue_url": "https://github.com/llvm/circt/pull/6977",
+  "title": "[SV][ExportVerilog] Add sv.func, sv.func.call{.procedural}, sv.func.dpi.import",
+  "body": "\r\nThis PR adds operations sv.func, sv.func.call{.procedural} and sv.func.dpi.import to SV. \r\n\r\nsv.func op is model as a mixture of func.func and hw.module. Similar to hw.module, sv.func can mix the order of input and output arguments. sv.func implements FunctionOpInterface and can declare a function by an empty body region like func.func\r\n\r\nCode around PrepareForEmission is ported from https://github.com/llvm/circt/pull/6559.\r\n\r\n\r\n\r\n```mlir\r\nsv.func @fib(in %n : i32, out out : i32 {sv.func.explicitly_returned}) {\r\n  %one = hw.constant 1 : i32\r\n  %two = hw.constant 2 : i32\r\n  %cond = comb.icmp bin ule %n, %one: i32\r\n  %result = sv.logic : !hw.inout<i32>\r\n  sv.if %cond {\r\n    sv.bpassign %result, %n: i32 \r\n  } else {\r\n    %n1 = comb.sub %n, %one: i32\r\n    %result1 = sv.func.call.procedural @fib(%n1) : (i32) -> i32\r\n    %n2 = comb.sub %n, %two: i32\r\n    %result2 = sv.func.call.procedural @fib(%n2) : (i32) -> i32\r\n    %add = comb.add %n1, %n2: i32\r\n    sv.bpassign %result, %add: i32 \r\n  }\r\n  %read = sv.read_inout %result: !hw.inout<i32>\r\n  sv.return %read : i32\r\n}\r\n```\r\n\r\n \r\n```verilog\r\nfunction automatic logic [31:0] fib(    // test.mlir:1:1\r\n  input [31:0] n        // test.mlir:1:17\r\n);\r\n\r\n  logic           [31:0] _fib_0;        // test.mlir:12:16\r\n  logic           [31:0] _fib_0_0;      // test.mlir:10:16\r\n  logic           [31:0] result;        // test.mlir:5:13\r\n  if (n <= 32'h1)       // test.mlir:2:10, :4:11, :6:3\r\n    result = n; // test.mlir:7:5\r\n  else begin    // test.mlir:6:3\r\n    logic           [31:0] _GEN = n - 32'h1;    // test.mlir:2:10, :9:11\r\n    logic           [31:0] _GEN_0 = n - 32'h2;  // test.mlir:3:10, :11:11\r\n    _fib_0_0 = fib(_GEN);       // test.mlir:9:11, :10:16\r\n    _fib_0 = fib(_GEN_0);       // test.mlir:11:11, :12:16\r\n    result = _GEN + _GEN_0;     // test.mlir:9:11, :11:11, :13:12, :14:5\r\n  end\r\n  fib = result; // test.mlir:16:11, :17:3\r\nendfunction\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-01",
+  "closed_at": "2024-06-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

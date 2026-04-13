@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4022,
+  "issue_url": "https://github.com/verilator/verilator/issues/4022",
+  "title": "Why is \"Latch inferred for signal\" produced when linting the code below?",
+  "body": "If I change anything in this minimal example, then the warning goes away.\r\n\r\nWith the ALU.sv code below, run:\r\n\r\n```\r\n$ verilator --version\r\nVerilator 5.008 2023-03-04 rev v5.008\r\n$ verilator --lint-only ALU.sv\r\n%Warning-LATCH: ALU.sv:11:3: Latch inferred for signal 'ALU.unnamedblk1.unnamedblk2._aluOutput_T_22' (not all control paths of combinational always assign a value)\r\n                           : ... Suggest use of always_latch for intentional latches\r\n   11 |   always_comb begin\r\n      |   ^~~~~~~~~~~\r\n                ... For warning description see https://verilator.org/warn/LATCH?v=4.218\r\n                ... Use \"/* verilator lint_off LATCH */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n\r\n```\r\n\r\n\r\nALU.sv:\r\n\r\n```verilog\r\nmodule ALU(\r\n  input         clock,\r\n  input  [4:0]  operation,\r\n  input  [63:0] inputs_1,\r\n                inputs_0,\r\n                inputs_2,\r\n  input  [16:0] immediate,\r\n  output [63:0] output_0\r\n);\r\n  reg  [63:0]  casez_tmp_1;\r\n  always_comb begin\r\n    automatic logic [63:0] lowHigh;\r\n    casez (operation)\r\n      5'b00011:\r\n        casez_tmp_1 = inputs_0 & inputs_1;\r\n      5'b00100:\r\n        casez_tmp_1 = inputs_0 | inputs_1;\r\n      5'b00101:\r\n        casez_tmp_1 = inputs_0 ^ inputs_1;\r\n      5'b01001: begin\r\n        automatic logic [16:0] _aluOutput_T_22 =\r\n          immediate >> {14'h0, inputs_2, inputs_1[0], inputs_0[0]};\r\n        casez_tmp_1 = {63'h0, _aluOutput_T_22[0]};\r\n      end\r\n      default:\r\n        casez_tmp_1 = inputs_0;\r\n    endcase\r\n  end\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-14",
+  "closed_at": "2023-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

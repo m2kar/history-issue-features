@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6180,
+  "issue_url": "https://github.com/verilator/verilator/issues/6180",
+  "title": "Support IEEE Std 1800-2017, section 27.5, Conditional generate constructs",
+  "body": "Thanks for taking the time to report this.\n\nWhat would you like added/supported?\n\nPlease add support for IEEE Std 1800-2017, section 27.5, Conditional generate constructs.\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\nVerilator 5.038 2025-07-08 rev v5.038\n\nCan you attach an example that runs on other simulators?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\nHere is the example from IEEE Std 1800-2017, section 27.5\n\nmodule top;\n  // -----------------------------------------------------------------------------\n  parameter p = 1, q = 0;\n  \n  /* verilator lint_off UNUSEDSIGNAL */\n  wire a = 0;\n  wire b = 0;\n  wire c = 0;\n  /* verilator lint_on UNUSEDSIGNAL */\n  \n  //---------------------------------------------------------\n  // Code to either generate a u1.g1 instance or no instance.\n  // The u1.g1 instance of one of the following gates:\n  // (and, or, xor, xnor) is generated if\n  // {p,q} == {1,0}, {1,2}, {2,0}, {2,1}, {2,2}, {2, default}\n  //---------------------------------------------------------\n  \n  /* verilator lint_off GENUNNAMED */\n  if (p == 1)\n    if (q == 0)\n    begin : u1 // If p==1 and q==0, then instantiate\n      reg foo;\n      and g1(a, b, c); // AND with hierarchical name test.u1.g1\n    end\n    else if (q == 2)\n    begin : u1 // If p==1 and q==2, then instantiate\n      or g1(a, b, c); // OR with hierarchical name test.u1.g1\n    end\n    // \"else\" added to end \"if (q == 2)\" statement\n    else ; // If p==1 and q!=0 or 2, then no instantiation\n  else if (p == 2)\n    case (q)\n      0, 1, 2:\n      begin : u1 // If p==2 and q==0,1, or 2, then instantiate\n        xor g1(a, b, c); // XOR with hierarchical name test.u1.g1\n      end\n      default:\n      begin : u1 // If p==2 and q!=0,1, or 2, then instantiate\n        xnor g1(a, b, c); // XNOR with hierarchical name test.u1.g1\n      end\n    endcase\n    /* verilator lint_on GENUNNAMED */\n\n  // -----------------------------------------------------------------------------\n  // --------------------------------------------------------------------\n  bit clk;\n  initial forever #(10ns/2) clk = ~clk;  \n  \n  // -----------------------------------------------------------------------------\n  initial begin\n    repeat(8) @(posedge clk);\n    test.u1.foo <= 0;\n    repeat(8) @(posedge clk);\n    // test.u1.foo = 1;\n    $finish;\n  end\n\n// -----------------------------------------------------------------------------\nendmodule\n\n\nHere is the error message:\n\nverilator -sc --exe -x-assign fast --trace --assert --coverage --timing -f files.f ../../src/sc/sc_main.cpp\n%Error: top.sv:80:9: Can't find definition of 'u1' in dotted scope/variable: 'top.u1'\n   80 |     top.u1.foo <= 0;\n      |         ^~\n        ... Known scopes under 'top': <no instances found>\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.038 for more assistance.\n\n\nMay we assist you in trying to fix this in Verilator yourself?\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-15",
+  "closed_at": "2025-07-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

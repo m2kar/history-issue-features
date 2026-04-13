@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7161,
+  "issue_url": "https://github.com/llvm/circt/pull/7161",
+  "title": "[Moore] Add the SimplifyProcedures pass.",
+  "body": "Cause we intend to entirely inline the `always_comb` body into the module body(`moore.module`). Due to the difference way between continuous and blocking assignments, we decided to create a new pass named `SimplifyProcedures` to insert a local \"shadow\" variable in always blocks for every module-level/global variable that the process modifies. Quote @fabianschuiki 's example:\r\n### origin:\r\n```\r\nmodule Foo;\r\n  int a;\r\n  int x, y, z;\r\n  always_comb begin\r\n    a = 1;\r\n    x = a;\r\n    a += 1;\r\n    y = a;\r\n    a += 1;\r\n    z = a;\r\n  end\r\nendmodule\r\n```\r\n### after performing SimplifyProcedures pass:\r\n```\r\nmodule Foo;\r\n  int a;\r\n  int x, y, z;\r\n  always_comb begin\r\n    int local_a = a;\r\n    local_a = 1; a = local_a;\r\n    x = local_a;\r\n    local_a += 1; a = local_a;\r\n    y = local_a;\r\n    local_a += 1; a = local_a;\r\n    z = local_a;\r\n  end\r\nendmodule\r\n```",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-12",
+  "closed_at": "2024-06-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

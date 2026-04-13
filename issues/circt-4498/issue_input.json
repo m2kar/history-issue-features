@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4498,
+  "issue_url": "https://github.com/llvm/circt/issues/4498",
+  "title": "[FIRRTL] IMCP Tries to Drive Invalid Value",
+  "body": "#4445 introduced a bug where invalid can sometimes show up as the destination of a connect. \r\n\r\nConsider:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module @Foo(in %clock: !firrtl.clock) {\r\n    %a = firrtl.wire : !firrtl.uint<1>\r\n    %r = firrtl.reg interesting_name %clock : !firrtl.uint<1>\r\n    firrtl.strictconnect %r, %a : !firrtl.uint<1>\r\n  }\r\n}\r\n```\r\n\r\nRunning this through IMCP (`circt-opt -firrtl-imconstprop Foo.mlir`) produces:\r\n\r\n```\r\nTmp.mlir:5:5: error: connect has invalid flow: the destination expression has source flow, expected sink or duplex flow\r\n    firrtl.strictconnect %r, %a : !firrtl.uint<1>\r\n    ^\r\nTmp.mlir:4:10: note: the destination was defined here\r\n    %r = firrtl.reg interesting_name %clock : !firrtl.uint<1>\r\n         ^\r\n```\r\n\r\nWith the final illegal MLIR:\r\n\r\n```mlir\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg0: !firrtl.clock):\r\n    %0 = \"firrtl.wire\"() {annotations = [], name = \"a\", nameKind = #firrtl<name_kind droppable_name>} : () -> !firrtl.uint<1>\r\n    %1 = \"firrtl.invalidvalue\"() : () -> !firrtl.uint<1>\r\n    %2 = \"firrtl.reg\"(%arg0) {annotations = [], name = \"r\", nameKind = #firrtl<name_kind interesting_name>} : (!firrtl.clock) -> !firrtl.uint<1>\r\n    \"firrtl.strictconnect\"(%1, %0) : (!firrtl.uint<1>, !firrtl.uint<1>) -> ()\r\n  }) {annotations = [], parameters = [], portAnnotations = [], portDirections = false, portNames = [\"clock\"], portSyms = [], portTypes = [!firrtl.clock], sym_name = \"Foo\"} : () -> ()\r\n}) {annotations = [], name = \"Foo\"} : () -> ()\r\n```\r\n\r\nThis is a heavily reduced example derived from an internal design. The internal design showed this error only if compiled with `-O=debug`. The error was not present with `-O=release`.\r\n\r\n_Edit: this fixes the internal error I observed._",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-30",
+  "closed_at": "2022-12-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

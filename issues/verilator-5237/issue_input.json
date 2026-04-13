@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5237,
+  "issue_url": "https://github.com/verilator/verilator/issues/5237",
+  "title": "Interface delays cause too many arguments in function call to TASK",
+  "body": "I have some code that happens to work with questa and xilinix vivado, but it just does not work with verilator, and the error message seems misleading, however the code is long so I removed a big chunk just to have the most important part that still manages to reproduce it.\r\n\r\n\r\nhttps://gist.github.com/Kreijstal/4d0fed1e4e7818d9e14e73355bcb3210\r\n\r\n`git clone  https://gist.github.com/4d0fed1e4e7818d9e14e73355bcb3210.git example && cd example`\r\nrun with `verilator tb_hello_world.sv -main --timing --binary --trace-fst  dm_pkg.sv`\r\n\r\nand you get \r\n```\r\n%Error: rvlab_tests.sv:21:35: Too many arguments in function call to TASK 'cycle_dr_32'\r\n   21 |     jtag.cycle_dr_32(idcode_read, '0);\r\n      |                                   ^~\r\n        tb_hello_world.sv:16:1: ... note: In file included from 'tb_hello_world.sv'\r\n%Warning-INITIALDLY: jtag_master.sv:35:21: Non-blocking assignment '<=' in initial/final block\r\n                                         : ... note: In instance 'tb_hello_world.jtag'\r\n                                         : ... This will be executed as a blocking assignment '='!\r\n   35 |     ir_stored_valid <= '0;\r\n      |                     ^~\r\n                     tb_hello_world.sv:7:1: ... note: In file included from 'tb_hello_world.sv'\r\n                     ... For warning description see https://verilator.org/warn/INITIALDLY?v=5.026\r\n                     ... Use \"/* verilator lint_off INITIALDLY */\" and lint_on around source to disable this message.\r\n%Warning-INITIALDLY: jtag_master.sv:36:21: Non-blocking assignment '<=' in initial/final block\r\n                                         : ... note: In instance 'tb_hello_world.jtag'\r\n                                         : ... This will be executed as a blocking assignment '='!\r\n   36 |     ir_stored       <= '0;\r\n      |                     ^~\r\n                     tb_hello_world.sv:7:1: ... note: In file included from 'tb_hello_world.sv'\r\n%Error: Internal Error: tb_hello_world.sv:5:15: ../V3TraceDecl.cpp:439: Expected an interface scope name to have at least one dot\r\n                                              : ... note: In instance 'jtag_master::__VDynScope_2'\r\n    5 |   jtag_master jtag();\r\n      |               ^~~~\r\n```\r\n\r\nwhich makes no sense since cycle_dr_32 accepts exactly 2 arguments...?",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-08",
+  "closed_at": "2024-08-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

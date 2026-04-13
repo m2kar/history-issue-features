@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5638,
+  "issue_url": "https://github.com/verilator/verilator/issues/5638",
+  "title": "The order of clocking block and assertion evaluation",
+  "body": "The clocking block wait @(cb) seems to be released in the Observed region.\r\nI had understood that assertion evaluation occurs after that, but in Verilator, it appears to be happening before the assertion evaluation.\r\n\r\nIs my understanding incorrect?\r\n\r\n------------------------------------------------------------------------\r\n```\r\nmodule top();\r\n\r\n  // Gen Clock\r\n  localparam PERIOD = 10;\r\n\r\n  bit CLK;\r\n  initial\r\n  begin\r\n    #PERIOD;\r\n    forever\r\n    begin\r\n      CLK = ~CLK;\r\n      #(PERIOD/2);\r\n    end\r\n  end\r\n\r\n  logic RST_X = 1'b1;\r\n\r\n  clocking cb @(posedge CLK);\r\n  endclocking\r\n\r\n\r\n  logic [3:0] r_cnt;\r\n  always_ff @(posedge CLK, negedge RST_X)\r\n    if(~RST_X)\r\n      r_cnt <= '0;\r\n    else\r\n      r_cnt <= 4'(r_cnt + 1'b1);\r\n  \r\n\r\n  initial\r\n  begin\r\n    @(negedge CLK)\r\n      RST_X = 1'b0;\r\n    @(negedge CLK)\r\n      RST_X = 1'b1;\r\n\r\n    repeat(20)\r\n      @(posedge CLK);\r\n\r\n    $finish;\r\n  end\r\n\r\n\r\n  chk: assert property\r\n  (\r\n    @(posedge CLK)\r\n    (r_cnt == 4'd5) |-> (1'b0)\r\n  )\r\n    $display(\"\\nasset:  r_cnt=%1d\\n\", r_cnt);\r\n  else\r\n  begin\r\n    $display(\"\\nnot_asset:  r_cnt=%1d\\n\", r_cnt );\r\n  end\r\n\r\n\r\n  initial\r\n  begin\r\n    forever\r\n    begin\r\n      @(cb)\r\n      if(r_cnt == 4'd5)\r\n      begin\r\n        r_cnt = '0;   // This would affect the assertion.\r\n      end\r\n    end\r\n  end\r\n\r\nendmodule\r\n\r\n```",
+  "labels": [
+    "area: scheduling",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-27",
+  "closed_at": "2024-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

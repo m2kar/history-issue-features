@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9122,
+  "issue_url": "https://github.com/llvm/circt/pull/9122",
+  "title": "[Moore][ImportVerilog] Add real-valued ops + real-aware import; refactor logical handling",
+  "body": "\r\nIntroduce full **real (f32/f64)** operator support in the Moore dialect and the ImportVerilog conversion, including unary, arithmetic, equality, relational, logical, and ++/-- forms. Refactor logical operator lowering to a reusable helper and add comprehensive tests.\r\n\r\n- **Dialect (`MooreOps.td`):**\r\n  - New unary real op: `NegRealOp` -> `moore.fneg`.\r\n  - Real binary op base: `BinaryRealOpBase` for typed f32/f64 operands/results.\r\n  - Arithmetic: `AddRealOp` (`fadd`), `SubRealOp` (`fsub`), `MulRealOp` (`fmul`), `DivRealOp` (`fdiv`), `PowRealOp` (`fpow`).\r\n  - Equality: `EqRealOp` (`feq`), `NeRealOp` (`fne`).\r\n  - Relational: `FltOp` (`flt`), `FleOp` (`fle`), `FgtOp` (`fgt`), `FgeOp` (`fge`).\r\n  - All ops follow IEEE 1800-2023 §11.3.1, §11.4.3–§11.4.5 semantics.\r\n\r\n- **Import (`Expressions.cpp`):**\r\n  - Add `visitRealUOp` and `visitRealBOp` to lower real-typed unary/binary expressions.\r\n  - Implement pre/post **increment/decrement** for real variables via `fadd`/`fsub` with an exact `APFloat` **\"1.0\"** (IEEEsingle/IEEEdouble) constructor.\r\n  - Add `moore.fneg` for unary minus; unary plus becomes a no-op.\r\n  - Map real comparisons to `feq/fne/flt/fle/fgt/fge`.\r\n  - **Refactor logical ops** into `buildLogicalBOp(...)` (optional `Domain` param), shared by int/real paths. (Short-circuit remains TODO.)\r\n  - Route mixed/real expressions early to the real path; keep existing integral flow otherwise.\r\n\r\n- **Tests (`basic.sv`):**\r\n  - New end-to-end checks for f64/f32 arithmetic, comparisons, logicals, unary ops, and ++/--.\r\n  - Assert exact opcode emission (`moore.fadd/fsub/fmul/fdiv/fpow/feq/fne/flt/fle/fgt/fge/fneg`) and constant forms for `1.0`.\r\n",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-21",
+  "closed_at": "2025-10-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

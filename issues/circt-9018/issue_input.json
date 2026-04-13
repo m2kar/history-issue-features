@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9018,
+  "issue_url": "https://github.com/llvm/circt/pull/9018",
+  "title": "[SV] Support expressions as case patterns",
+  "body": "In the current version of CIRCT, constant expressions in case statements (see IEEE 1800-2017 §12.5.2) are not supported. This patch introduces a new case pattern kind, `CaseExprPattern`, which allows using expressions (SSA values) as case patterns. A simple test is included to validate this feature.\r\n\r\nMLIR Assembly:\r\n\r\n```mlir\r\n%foo = sv.wire : !hw.inout<i1>\r\n%bar = sv.wire : !hw.inout<i1>\r\n%2 = sv.read_inout %foo : !hw.inout<i1>\r\n%3 = sv.read_inout %bar : !hw.inout<i1>\r\nsv.initial {\r\n  sv.case %0 : i1\r\n  case %2: {\r\n    sv.fwrite %fd, \"foo\"\r\n  }\r\n  case %3: {\r\n    sv.fwrite %fd, \"bar\"\r\n  }\r\n  default: {\r\n    sv.fwrite %fd, \"default\"\r\n  }\r\n}\r\n```\r\n\r\nExported Verilog:\r\n\r\n```verilog\r\nwire foo;\r\nwire bar;\r\ninitial begin\r\n  case (1'h1)\r\n    foo:\r\n      $fwrite(32'h80000002, \"foo\");\r\n    bar:\r\n      $fwrite(32'h80000002, \"bar\");\r\n    default:\r\n      $fwrite(32'h80000002, \"default\");\r\n  endcase\r\nend // initial\r\n```\r\n\r\n## Implementation Details\r\n\r\nCase patterns are determined by the types of attributes attached to `sv::CaseOp`:\r\n\r\n- `CaseDefaultPattern` : `mlir::UnitAttr`\r\n- `CaseBitPattern` : `mlir::IntegerAttr`\r\n- `CaseEnumPattern` : `hw::EnumFieldAttr`\r\n- `CaseExprPattern` : `sv::CaseExprPatternAttr` (proposed)\r\n\r\nThis patch introduces `CaseExprPatternAttr` along with a variadic list of operands, `caseValues`, for `sv::CaseOp`. Each `CaseExprPatternAttr` corresponds, in order, to a value in `caseValues`. In the example below, `%5` and `%6` correspond to the first and second `#sv.expr`, respectively. Note: `%1` is the condition of the case statement.\r\n\r\n```mlir\r\n\"sv.case\"(%1, %5, %6) <{casePatterns = [#sv.expr, #sv.expr, unit], caseStyle = 0 : i32, validationQualifier = #sv<validation_qualifier plain>}> ({\r\n  \"sv.fwrite\"(%0) <{format_string = \"foo\"}> : (i32) -> ()\r\n}, {\r\n  \"sv.fwrite\"(%0) <{format_string = \"bar\"}> : (i32) -> ()\r\n}, {\r\n  \"sv.fwrite\"(%0) <{format_string = \"default\"}> : (i32) -> ()\r\n}) : (i1, i1, i1) -> ()\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-25",
+  "closed_at": "2025-10-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

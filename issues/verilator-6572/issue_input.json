@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6572,
+  "issue_url": "https://github.com/verilator/verilator/issues/6572",
+  "title": "Regression in parametrized hier blocks",
+  "body": "@gezalore \nThe commit https://github.com/verilator/verilator/commit/9dc0cf5a7cd82851039c68ba310a9d822898f7b6 introduced a regression leading to a verilation failure.\n\n```verilog\nmodule sub;\n  parametrized #(\n    .ARG(1)\n  ) parametrized1 (\n  );\n  parametrized #(\n    .ARG(2)\n  ) parametrized2 (\n  );\nendmodule\n\nmodule parametrized #(\n   parameter ARG=0\n);\nendmodule\n\nmodule t;\n  sub sub();\nendmodule\n\n`verilator_config\nhier_block -module \"sub\"\n```\n\nerror message:\n\n```\nverilator -f obj_vlt/t_hier_bug/Vsub__hierMkArgs.f\n%Error: Module name 'ARG' is duplicated in --hierarchical-block\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.041 for more assistance.\n%Error: Exiting due to 1 error(s)\n```\n\n`Vsub__hierMkArgs.f` :\n\n```\n--cc\n-Mdir obj_vlt/t_hier_bug/Vsub \nt/t_hier_bug.v\n --prefix Vsub\n --mod-prefix Vsub\n --top-module sub\n --lib-create sub\n --hierarchical-child 1\n-GARG=\\'sh1\n-GARG=\\'sh2\n--hierarchical-block sub,sub,ARG,\\'sh1,ARG,\\'sh2\n\"--fdedup\" \"--debug-check\" \"--comp-limit-members\" \"10\" \"--x-assign\" \"unique\" \"-Wno-IMPLICIT\" \"+define+TEST_OBJ_DIR=obj_vlt/t_hier_bug\" \"+define+TEST_DUMPFILE=obj_vlt/t_hier_bug/simx.vcd\"\n```\n\n It seems that hierarchical blocks are not correctly de-parametrized leading to amalgamated configs.\n\nTested on latest master as of https://github.com/verilator/verilator/commit/ffd7ec10071c2b956d9237ff81e082d30d4d0511.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-20",
+  "closed_at": "2025-10-20",
+  "code_blocks": [
+    "module sub;\n  parametrized #(\n    .ARG(1)\n  ) parametrized1 (\n  );\n  parametrized #(\n    .ARG(2)\n  ) parametrized2 (\n  );\nendmodule\n\nmodule parametrized #(\n   parameter ARG=0\n);\nendmodule\n\nmodule t;\n  sub sub();\nendmodule\n\n`verilator_config\nhier_block -module \"sub\"\n",
+    "verilator -f obj_vlt/t_hier_bug/Vsub__hierMkArgs.f\n%Error: Module name 'ARG' is duplicated in --hierarchical-block\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.041 for more assistance.\n%Error: Exiting due to 1 error(s)\n",
+    "--cc\n-Mdir obj_vlt/t_hier_bug/Vsub \nt/t_hier_bug.v\n --prefix Vsub\n --mod-prefix Vsub\n --top-module sub\n --lib-create sub\n --hierarchical-child 1\n-GARG=\\'sh1\n-GARG=\\'sh2\n--hierarchical-block sub,sub,ARG,\\'sh1,ARG,\\'sh2\n\"--fdedup\" \"--debug-check\" \"--comp-limit-members\" \"10\" \"--x-assign\" \"unique\" \"-Wno-IMPLICIT\" \"+define+TEST_OBJ_DIR=obj_vlt/t_hier_bug\" \"+define+TEST_DUMPFILE=obj_vlt/t_hier_bug/simx.vcd\"\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

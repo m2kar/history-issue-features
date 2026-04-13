@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 10086,
+  "issue_url": "https://github.com/llvm/circt/pull/10086",
+  "title": "[Arc][StripSV] Replace i1 macro references with true constants",
+  "body": "### Description\r\nThis PR fixes a symbol verification failure in `arc-strip-sv`. \r\n\r\n### Background\r\nDuring the lowering flow from Chisel/FIRRTL, `firtool` generates macro references (e.g., `@STOP_COND_`) to gate simulation-only logic. Currently, the `StripSV` pass removes the global `sv.macro.decl` but does not handle `sv.macro.ref.expr`. \r\n\r\nIn modern FIRRTL lowering, these references can appear outside of `sv.always` blocks (such as in `sim.clocked_terminate` operands). When `StripSV` runs, it deletes the declaration but leaves the reference, leading to an `undefined symbol` error.\r\n\r\n### Changes\r\n- Implemented a walker in `StripSV` to identify and replace `i1` macro references.\r\n- Replaces `@STOP_COND_`, `@PRINTF_COND_`, and `@ASSERT_VERBOSE_COND_` with `hw.constant 1 : i1`.\r\n- This approach ensures the simulation logic is preserved and the IR remains valid for downstream passes like `arcilator`.\r\n\r\n### Testing\r\n- Added `test/arcilator/macro-strip.mlir` to verify the transformation.\r\n- Passed `ninja check-circt`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-31",
+  "closed_at": "2026-03-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

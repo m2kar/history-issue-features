@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6384,
+  "issue_url": "https://github.com/verilator/verilator/issues/6384",
+  "title": "Support array reference arguments into 'std::randomize()'",
+  "body": "Thanks for taking the time to report this.\n\nCan you attach an example that shows the issue?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\n```\ngit diff\ndiff --git a/test_regress/t/t_std_randomize.v b/test_regress/t/t_std_randomize.v\nindex d62656019..7c783aa68 100644\n--- a/test_regress/t/t_std_randomize.v\n+++ b/test_regress/t/t_std_randomize.v\n@@ -34,6 +34,7 @@ endclass\n module t_scope_std_randomize;\n     bit [7:0] addr;\n     bit [15:0] data;\n+    int        limit[10];\n \n     function bit run();\n         int ready;\n@@ -75,6 +76,12 @@ module t_scope_std_randomize;\n         ok = test.std_randomize();\n         if (!ok) $stop;\n \n+        foreach (limit[i]) begin\n+           success = std::randomize(limit[i]); // with { limit[i] < 100;};\n+           ok = (success == 1); // && (limit[i] < 100);\n+            if (!ok) $stop;\n+       end\n+\n         $write(\"*-* All Finished *-*\\n\");\n         $finish;\n     end\n```\n\nWhat 'verilator' command line do we use to run your example?\n\n```\n./test_regress/t/t_std_randomize.py\n\n%Error: t/t_std_randomize.v:80:36: Non-variable arguments for 'std::randomize()'.\n                                 : ... note: In instance 't_scope_std_randomize'\n   80 |      success = std::randomize(limit[i]);  \n      |                                    ^\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n```\nVerilator 5.041 devel rev v5.040-44-ga12caa479\n```\n\nWhat OS and distribution are you using?\n\n```\nLinux 4.18.0-553.22.1.el8_10.x86_64\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-04",
+  "closed_at": "2025-12-15",
+  "code_blocks": [
+    "git diff\ndiff --git a/test_regress/t/t_std_randomize.v b/test_regress/t/t_std_randomize.v\nindex d62656019..7c783aa68 100644\n--- a/test_regress/t/t_std_randomize.v\n+++ b/test_regress/t/t_std_randomize.v\n@@ -34,6 +34,7 @@ endclass\n module t_scope_std_randomize;\n     bit [7:0] addr;\n     bit [15:0] data;\n+    int        limit[10];\n \n     function bit run();\n         int ready;\n@@ -75,6 +76,12 @@ module t_scope_std_randomize;\n         ok = test.std_randomize();\n         if (!ok) $stop;\n \n+        foreach (limit[i]) begin\n+           success = std::randomize(limit[i]); // with { limit[i] < 100;};\n+           ok = (success == 1); // && (limit[i] < 100);\n+            if (!ok) $stop;\n+       end\n+\n         $write(\"*-* All Finished *-*\\n\");\n         $finish;\n     end\n",
+    "./test_regress/t/t_std_randomize.py\n\n%Error: t/t_std_randomize.v:80:36: Non-variable arguments for 'std::randomize()'.\n                                 : ... note: In instance 't_scope_std_randomize'\n   80 |      success = std::randomize(limit[i]);  \n      |                                    ^\n",
+    "Verilator 5.041 devel rev v5.040-44-ga12caa479\n",
+    "Linux 4.18.0-553.22.1.el8_10.x86_64\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4329,
+  "issue_url": "https://github.com/verilator/verilator/pull/4329",
+  "title": "Fix queue slicing",
+  "body": "The change fixes slice operator on queues where indexes are variables. Such case occurs in UVM.\r\n\r\nIn the case of slicing operators, V3WidthSel [first constifies](https://github.com/verilator/verilator/blob/3d30527860039ee97366c338161e763afe2db447/src/V3WidthSel.cpp#L351) arguments of the operator. Then an error is produced if the sliced variable isn't a queue and the indexes didn't become constants.\r\n\r\nI assume that that's the expected behavior, but instead an error is produced anyway, because the routine V3Const::constifyParamsEdit produces an error whenever it cannot turn a variable into a constant.\r\n\r\nThe fix does the following:\r\n1. constifyParamsEdit is relaxed not to warn/error in the case above,\r\n2. A new routine constifyAllParamsEdit does produce warns/errors,\r\n3. Old calls to constifyParamsEdit are changed to constifyAllParamsEdit except for the aforementioned visitor.\r\n\r\n^ It could be done simpler, but I think doing it this way allowed for better naming of the routines.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-30",
+  "closed_at": "2023-07-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

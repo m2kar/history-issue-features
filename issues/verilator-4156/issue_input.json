@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4156,
+  "issue_url": "https://github.com/verilator/verilator/issues/4156",
+  "title": "SVA assertions have false positives when used in a sub-module",
+  "body": "Assertions in sub-modules sometimes trigger when they should not.\r\nI have a simple register module:\r\n```\r\nmodule register\r\n#(\r\n\tparameter WORD_WIDTH = 8,\r\n\tparameter RESET_VALUE = 0\r\n)\r\n(\r\n\tinput  logic clk,\r\n\tinput  logic rst_n,\r\n\tinput  logic en,\r\n\tinput  logic [WORD_WIDTH-1:0] word_in,\r\n\toutput logic [WORD_WIDTH-1:0] word_out\r\n);\r\n\r\n\talways @(posedge clk)\r\n\tbegin\r\n\t\tif(en) word_out <= word_in;\r\n\t\tif(!rst_n) word_out <= RESET_VALUE;\r\n\tend\r\n\r\n`ifdef ASSERT\r\n\talways @(posedge clk)\r\n\tbegin\r\n\t\tif($time > 1)\r\n\t\tbegin\r\n\t\t\tassert($past(rst_n) || word_out == RESET_VALUE);\r\n\t\t\tassert($past(en || !rst_n) || $stable(word_out));\r\n\t\t\tassert\r\n\t\t\t(\r\n\t\t\t\t$past(!en || !rst_n) || \r\n\t\t\t\t($past(word_in) == word_out)\r\n\t\t\t);\r\n\t\tend\r\n\tend\r\n`endif\r\n```\r\nIf do a simulation with random inputs (2^32 steps), none of the assertions are triggered. In particular, this does not fail :\r\n```\r\n0 TOP.register:\r\n\trst_n: 1, en: 1, word_in: 131, word_out: 222,  \r\n1 TOP.register:\r\n\trst_n: 1, en: 0, word_in: 216, word_out: 131,  \r\n2 TOP.register:\r\n\trst_n: 1, en: 1, word_in: 165, word_out: 131,\r\n```\r\nIf I instantiate one of this register in a top module, and simulate that, one assertion fail despite being given\r\nthe exact same inputs:\r\n\r\n```\r\n0 TOP.skid.word_out_reg:\r\n\trst_n: 1, en: 1, word_in: 131, word_out: 17,\r\n1 TOP.skid.word_out_reg:\r\n\trst_n: 1, en: 0, word_in: 216, word_out: 131,\r\n2 TOP.skid.word_out_reg:\r\n\trst_n: 1, en: 1, word_in: 165, word_out: 131,\r\n[2] %Error: base_register.sv:29: Assertion failed in TOP.skid.word_out_reg: 'assert' failed.\r\n%Error: /home/src/base_register.sv:29: Verilog $stop\r\n ```\r\n\r\nAlso not entirely related, but is it possible to enable assertions only for the top module ? It would solve this issue temporarily for me, and it would speed up simulation time.\r\n\r\nUsing Verilator 5.008 2023-03-04 rev UNKNOWN.REV, on linux",
+  "labels": [
+    "area: assertions",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-01",
+  "closed_at": "2023-05-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

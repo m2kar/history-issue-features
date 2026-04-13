@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2790,
+  "issue_url": "https://github.com/llvm/circt/issues/2790",
+  "title": "[FIRRTL][ModuleInliner] Should respect the NLAs when deciding to inline instances.",
+  "body": "The inliner is inlining all instances of a module with a non-local `InlineAnnotation`, irrespective of the current path.  I opened a similar issue for the Scala FIRRTL compiler here: https://github.com/chipsalliance/firrtl/issues/2498\r\n\r\n```mlir\r\n  firrtl.nla @nla [#hw.innerNameRef<@Top::@foo>, @Foo]\r\n  firrtl.module @Foo() attributes {annotations = [{circt.nonlocal = @nla, class = \"firrtl.passes.InlineAnnotation\"}]} {\r\n    %f = firrtl.wire  : !firrtl.uint<1>\r\n  }\r\n  firrtl.module @Top() {\r\n    firrtl.instance foo sym @foo  {annotations = [{circt.nonlocal = @nla, class = \"circt.nonlocal\"}]} @Foo()\r\n    firrtl.instance bar  @Foo()\r\n  }\r\n```\r\n`circt-opt --pass-pipeline='firrtl.circuit(firrtl-inliner)' inline.mlir` produces:\r\n```mlir\r\n  firrtl.circuit \"Top\"  {\r\n    firrtl.module @Top() {\r\n      %foo_f = firrtl.wire  : !firrtl.uint<1>\r\n      %bar_f = firrtl.wire  : !firrtl.uint<1>\r\n    }\r\n  }\r\n  ```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-03-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

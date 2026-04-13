@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8924,
+  "issue_url": "https://github.com/llvm/circt/issues/8924",
+  "title": "[Comb][Synth] Failed to optimize redundant comparisons",
+  "body": "```sv\nmodule Foo(input [2:0] c, output out);\n  assign out = c == 8'h1 | c == 8'h3 | c == 8'h5 | c == 8'h7 ;\nendmodule\n```\nThis is equivalent to `assign out = c[0]`.\n\n```mlir\n$ circt-verilog odd.sv | circt-synth \n hw.module @Foo(in %c : i3, out out : i1) {\n    %0 = comb.extract %c from 2 : (i3) -> i1\n    %1 = comb.extract %c from 1 : (i3) -> i1\n    %2 = comb.extract %c from 0 : (i3) -> i1\n    %3 = comb.extract %c from 1 : (i3) -> i1\n    %4 = comb.extract %c from 2 : (i3) -> i1\n    %5 = aig.and_inv not %3, not %4 : i1\n    %6 = aig.and_inv %2, %5 : i1\n    %7 = aig.and_inv %1, not %0 : i1\n    %8 = aig.and_inv %2, %7 : i1\n    %9 = aig.and_inv not %1, %0 : i1\n    %10 = aig.and_inv %2, %9 : i1\n    %11 = aig.and_inv %1, %0 : i1\n    %12 = aig.and_inv %2, %11 : i1\n    %13 = aig.and_inv not %6, not %8 : i1\n    %14 = aig.and_inv not %10, not %12 : i1\n    %15 = aig.and_inv %13, %14 : i1\n    %16 = aig.and_inv not %15 : i1\n    hw.output %16 : i1\n  }\n```\n\nWe could add comb level canonicalization but probably that's too heroic so would be nice to handle in synthesis side.\nABC's refactor pass works well for this IR so would be good to implement. \n```mlir\n$ circt-verilog odd.sv | circt-synth --abc-path=yosys-abc --abc-commands=refactor\nmodule {\n  hw.module @Foo(in %c : i3, out out : i1) {\n    %0 = comb.extract %c from 0 : (i3) -> i1\n    hw.output %0 : i1\n  }\n}\n```\n\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-05",
+  "closed_at": null,
+  "code_blocks": [
+    "module Foo(input [2:0] c, output out);\n  assign out = c == 8'h1 | c == 8'h3 | c == 8'h5 | c == 8'h7 ;\nendmodule\n",
+    "$ circt-verilog odd.sv | circt-synth \n hw.module @Foo(in %c : i3, out out : i1) {\n    %0 = comb.extract %c from 2 : (i3) -> i1\n    %1 = comb.extract %c from 1 : (i3) -> i1\n    %2 = comb.extract %c from 0 : (i3) -> i1\n    %3 = comb.extract %c from 1 : (i3) -> i1\n    %4 = comb.extract %c from 2 : (i3) -> i1\n    %5 = aig.and_inv not %3, not %4 : i1\n    %6 = aig.and_inv %2, %5 : i1\n    %7 = aig.and_inv %1, not %0 : i1\n    %8 = aig.and_inv %2, %7 : i1\n    %9 = aig.and_inv not %1, %0 : i1\n    %10 = aig.and_inv %2, %9 : i1\n    %11 = aig.and_inv %1, %0 : i1\n    %12 = aig.and_inv %2, %11 : i1\n    %13 = aig.and_inv not %6, not %8 : i1\n    %14 = aig.and_inv not %10, not %12 : i1\n    %15 = aig.and_inv %13, %14 : i1\n    %16 = aig.and_inv not %15 : i1\n    hw.output %16 : i1\n  }\n",
+    "$ circt-verilog odd.sv | circt-synth --abc-path=yosys-abc --abc-commands=refactor\nmodule {\n  hw.module @Foo(in %c : i3, out out : i1) {\n    %0 = comb.extract %c from 0 : (i3) -> i1\n    hw.output %0 : i1\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

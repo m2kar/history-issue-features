@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4968,
+  "issue_url": "https://github.com/verilator/verilator/issues/4968",
+  "title": "Ternary operator does not expect parameterized class type",
+  "body": "Hi! It looks like ternary operator does not expect parameterized class type. Without using `VAL_T` (hardcoded `foo`) it works well.\r\n\r\nThe code:\r\n\r\n```verilog\r\nmodule test;\r\n  class foo;\r\n  endclass\r\n\r\n  class wrapper#(type VAL_T=foo);\r\n    local VAL_T value;\r\n\r\n    static function wrapper#(VAL_T) create();\r\n      wrapper#(VAL_T) wrp = new();\r\n      wrp.value = new();\r\n      return wrp;\r\n    endfunction\r\n\r\n    virtual function VAL_T unwrap();\r\n      return this.value;\r\n    endfunction : unwrap\r\n  endclass : wrapper\r\n\r\n  function automatic foo test(bit sel);\r\n    return sel ? wrapper#(foo)::create().unwrap() : null;\r\n  endfunction\r\n\r\n  initial begin\r\n    foo obj = test(1);\r\n    if (obj == null) begin\r\n      $error(\"obj is null!\");\r\n    end\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nThe error:\r\n\r\n```bash\r\n$ verilator --binary test.sv && ./obj_dir/Vtest\r\n%Error: test.sv:20:16: Incompatible types of operands of condition operator: REFDTYPE 'VAL_T' and BASICDTYPE 'logic'\r\n                     : ... note: In instance 'test'\r\n   20 |     return sel ? wrapper#(foo)::create().unwrap() : null;\r\n      |                ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-171-gba47da658\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-12",
+  "closed_at": "2024-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

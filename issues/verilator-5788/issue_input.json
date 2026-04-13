@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5788,
+  "issue_url": "https://github.com/verilator/verilator/pull/5788",
+  "title": "Fix dpi context functions",
+  "body": "The following code:\r\n```systemverilog\r\nmodule t;\r\n   import \"DPI-C\" context function int get1;\r\n   function automatic int call_dpi;\r\n      int res = get1();\r\n      return res;\r\n   endfunction\r\nendmodule\r\n```\r\ngives the following error when verilator is run with `--debug` flag:\r\n```\r\n%Error: Internal Error: ex/dpi.sv:4:17: ../V3Ast.cpp:459: Adding to non-empty, non-list op4\r\n-node: FUNCREF 0x555556d63540 <e839#> {e4ar} @dt=0@  get1 -> FUNC 0x555556d4f700 <e603> {e2bo} @dt=0@  get1 [DPII] [PROTOTYPE]\r\n    4 |       int res = get1();\r\n      |                 ^~~~\r\n```\r\nThe error is thrown, because that `AstFuncRef` is visited for the second time. It is initially in the body of `AstInitialAutomatic`, but then that node is replaced with its body: https://github.com/verilator/verilator/blob/fe1517164998cc71f81db389a1daf016be01453d/src/V3LinkResolve.cpp#L116\r\nThen we visit its body again, because it was visited with `iterateAndNext`.\r\n\r\nThis PR prevents from assigning `scopeNamep` for the second time.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-02-20",
+  "closed_at": "2025-02-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

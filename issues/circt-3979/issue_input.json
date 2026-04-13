@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3979,
+  "issue_url": "https://github.com/llvm/circt/pull/3979",
+  "title": "[FIRRTL] Reuse HierPathOp's when creating in LA, fix GC(T) cleanup, add SymbolDCE to pipeline",
+  "body": "## Summary\r\nWe create and manage many thousands of HierPathOp's unnecessarily.\r\nFix this by addressing the primary location they're added to the IR: LowerAnnotations, by using a simple cache to avoid emitting duplicate ops.\r\nThis reduces the count from thousands to tens on even small-ish designs.\r\n\r\nModify GC and GCT passes to stop deleting HierPathOp's as they don't know if they're still used.  Indeed, in our tests we were deleting these ops despite them still being alive (breadcrumbs).\r\n\r\nAdd SymbolDCE to the pipeline to do this cleanup instead, thanks to various recent changes using private visibility in many places, particularly the HierPathOp's themselves (#3871).\r\n\r\n## More\r\n\r\nPreviously this was done in #3863, which was reverted due to breakage with passes deleting HP's under assumption their use case was only users of the op.  This revives that change, also adding a new statistic to track HP reuse.\r\n\r\nThe problematic passes were GC and GCT, which have been modified to no longer delete these ops.\r\nWhile it would be nice for these passes to delete them right away in the (likely?) case where they don't have other users, doing this safely requires scanning entire design for symbol references.\r\nInstead, leave this to the pass that already knows how to do this: SymbolDCE.\r\nThis pass is added to the firtool pipeline (not 100% where to best drop it in, other than downstream of GC/GCT to cleanup unused HierPathOp's now that they don't do this cleanup themselves).\r\n\r\nSymbolDCE computes the set of live symbols (see https://github.com/llvm/llvm-project/blob/1a50213ce7e8aa2a82ab3824cabc7f2a44805681/mlir/lib/Transforms/SymbolDCE.cpp#L83) walking from public/non-dead top-level ops, notably using the `SymbolOpInterface` method `canDiscardOnUseEmpty()` which we can use in the future to keep symbols alive if their liveness is not evident otherwise.\r\nSymbolDCE will delete any symbols that appear dead in this manner-- for example possibly deleting Module's with private visibility that are unused (which we do that in other places (Inliner, IMDCE, ...)).\r\n\r\nDrop breadcrumbs from test, as they would keep the HP's alive (rightfully so)-- actually we were generating invalid IR in those tests (fixed in d479173078ddb8e09be951f99f7c9ab26557d140), as nothing cleaned up the breadcrumbs so they were left with invalid symbol references to erased HierPathOp's.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-22",
+  "closed_at": "2022-09-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

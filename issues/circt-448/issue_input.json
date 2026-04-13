@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 448,
+  "issue_url": "https://github.com/llvm/circt/pull/448",
+  "title": "[RTL] Add canonicalizers for mux and icmp",
+  "body": "For https://github.com/llvm/circt/issues/402\r\n\r\nWith these changes we are getting closer to reasonable output, but still not there.  We are still not able to optimize out unneeded wires.\r\n\r\n```verilog\r\n// before:\r\nmodule top_mod(\r\n  output tmp28);\r\n\r\n  wire tmp11;\r\n\r\n  assign tmp11 = 1'h1;\r\n  assign tmp28 = tmp11 < 1'h1; // < changed\r\nendmodule\r\n\r\n// after:\r\nmodule top_mod1(\r\n  output tmp28);\r\n\r\n  wire tmp11;\r\n\r\n  assign tmp11 = 1'h1;\r\n  assign tmp28 = tmp11 == 1'h0; // < changed\r\nendmodule\r\n```\r\n\r\n```verilog\r\n// before\r\nmodule top_mod(\r\n  input  [10:0] inp_0,\r\n  output        tmp12, tmp2);\r\n\r\n  wire        _T;\r\n  wire [27:0] tmp6;\r\n\r\n  assign _T = $signed(13'h0) >= $signed({{2{inp_0[10]}}, inp_0});\r\n  assign tmp6 = {{27'd0}, _T} * 28'h1;\r\n  assign tmp12 = 28'h0 > tmp6;  // < changed\r\n  assign tmp2 = _T;\r\nendmodule\r\n\r\n// after\r\nmodule top_mod(\r\n  input  [10:0] inp_0,\r\n  output        tmp12, tmp2);\r\n\r\n  wire        _T;\r\n  wire [27:0] tmp6;\r\n\r\n  assign _T = $signed({{2{inp_0[10]}}, inp_0}) < 13'sh1;\r\n  wire _T_0 = _T;\r\n  assign tmp6 = {27'h0, _T_0} << 28'h0;\r\n  assign tmp12 = 1'h0; // < changed\r\n  assign tmp2 = _T_0;\r\nendmodule\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-13",
+  "closed_at": "2021-01-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

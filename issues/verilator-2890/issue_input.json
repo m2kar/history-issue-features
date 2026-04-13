@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2890,
+  "issue_url": "https://github.com/verilator/verilator/issues/2890",
+  "title": "Compilation with dependent packages requires file list to be ordered based on dependencies",
+  "body": "Verilator fails when processing a design using a file list, if a package earlier in the files list references a package later in the file list.  The error generated references IEEE 1800-2017, section 26.3.\r\n\r\n`Package/class 'foo_pkg' not found, and needs to be predeclared (IEEE 1800-2017 26.3)`\r\n\r\nReading section 26.3 of the spec the only text I saw that appeared relevant to this error is the following:\r\n\r\n`\"The compilation of a package shall precede the compilation of scopes in which the package is imported.\"`\r\n\r\nI interpret this as meaning that a package has to be compiled before any users of that package are compiled.  Which makes perfect sense.  But I don't interpret it as enforcing any limits/constraints on tools that haven't yet seen/processed the package.  They can simply defer compilation until such time as they process the referenced package.  Of course if no such package exists at all then it is an error.\r\n\r\nThe restriction in verilator means that file lists need to take into account all the dependencies between files.  If definitions are moved or refactored, this often necessitates a change to the file list, if dependency orders have changed.  In a large project with many packages this can be time consuming.\r\n\r\nOther tools seem to act differently (Vivado for example) and are happy with file lists with files in any order.  This restriction in verilator seems contrary to the spec (unless I've missed or misunderstood something) and at odds with other tools.\r\n\r\nTrivial Example:\r\n```SystemVerilog\r\npackage a;\r\n    import b::*;\r\n\r\n    function automatic integer a();\r\n        return 0;\r\n    endfunction\r\nendpackage\r\n```\r\n\r\n```SystemVerilog\r\npackage b;\r\n    function automatic integer b();\r\n        return 1;\r\n    endfunction\r\nendpackage\r\n```\r\n\r\n```SystemVerilog\r\nmodule c(\r\n        input  wire         clk,\r\n        input  wire         res_n,\r\n\r\n        output logic      result\r\n    );\r\n\r\n    import a::*;\r\n    import b::*;\r\n\r\n    logic a_b;\r\n    assign a_b = a() || b();\r\n\r\n    always_ff @(posedge clk)\r\n    begin\r\n        if (!res_n)\r\n        begin\r\n            result <= '0;\r\n        end\r\n        else\r\n        begin\r\n            result <= {a_b ? 1'b1 : 1'b0};\r\n        end\r\n    end\r\nendmodule\r\n```\r\n\r\n```\r\n# Packages\r\n# 'a' depends on 'b' (unnecessarily in this trivial example)\r\n# In this order, verilator fails.\r\n# Reverse the order of lines 5/6 and it is fine.\r\na.sv\r\nb.sv\r\n\r\n# Module\r\nc.sv\r\n```\r\n\r\nReversing the order of `a.sv` and `b.sv` in `files.lst` resolves the issue.",
+  "labels": [
+    "area: elaboration",
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-15",
+  "closed_at": "2021-04-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

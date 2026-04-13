@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5040,
+  "issue_url": "https://github.com/verilator/verilator/pull/5040",
+  "title": "Fix attempted to destroy locked thread pool error",
+  "body": "After increasing number of splits, splitted cfuncs and verilate jobs in the `t_sv_cpu.pl` test, I was able to still reproduce issue https://github.com/verilator/verilator/issues/4931.\r\n\r\nFlags for `t_sv_cpu.pl` test:\r\n```\r\nverilator_flags2 => [\"-y t/t_sv_cpu_code +libext+.sv+ +incdir+t/t_sv_cpu_code --top-module t\",\r\n                         \"--timescale-override 1ns/1ps --output-split 100000 --output-split-cfuncs 100000 --verilate-jobs 100\"],\r\n```\r\nIssue appears once per ~5mins during repeated runs in gdb.\r\n\r\nI have identified that simply spin-locking mutex `VL_LOCK_SPINS` times (currently set to 50000) does not give enough time for the workers to release lock while waiting on the `std::condition_variable_any`; `m_cv`.\r\n\r\nThis issue appears during successful runs, thus clean exit is required not to fail test suite.\r\n\r\nI propose the following fixe to this problem: \r\n- add timeout for locking mutex in `~ThreadPool`; this will give more time for workers to terminate gracefully, or unlock mutex while waiting on `condition_variable` `m_cv`. Timeout is currently set to 10 seconds.\r\n\r\nThis is not an ideal solution to this problem. It probably slows down Verilator shutdown, by waiting in `~ThreadPool` destructor for all workers to finish instead of killing them. Additionally, there still exist a chance that destruction will not be successful and will end with `std::abort`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-04-08",
+  "closed_at": "2024-04-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

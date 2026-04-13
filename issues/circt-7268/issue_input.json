@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7268,
+  "issue_url": "https://github.com/llvm/circt/issues/7268",
+  "title": "[FIRRTL] InferResets: does not catch uninferred abstract resets",
+  "body": "Given:\r\n```firrtl\r\nFIRRTL version 3.0.0\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock : Clock\r\n    reg r : Reset, clock\r\n\r\n  module Bar:\r\n    input in: {reset: Reset}\r\n```\r\nRunning it through `firtool` with no additional options, produces verilog.  This should be an error as there are two uninferred abstract resets in this design. The first problem is that we are not checking module bodies for uninferred resets.  The second problem is that when checking ports for uninferred resets we do not handle aggregates.\r\n\r\nYou can see that InferResets leaves behind the abstract resets:\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %clock: !firrtl.clock) attributes {convention = #firrtl<convention scalarized>} {\r\n    %r = firrtl.reg %clock : !firrtl.clock, !firrtl.reset\r\n  }\r\n  firrtl.module private @Bar(in %in: !firrtl.bundle<reset: reset>) {\r\n  }\r\n}\r\n\r\n// -----// IR Dump After InferResets (firrtl-infer-resets) //----- //\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %clock: !firrtl.clock) attributes {convention = #firrtl<convention scalarized>} {\r\n    %r = firrtl.reg %clock : !firrtl.clock, !firrtl.reset\r\n  }\r\n  firrtl.module private @Bar(in %in: !firrtl.bundle<reset: reset>) {\r\n  }\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

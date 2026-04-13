@@ -1,0 +1,117 @@
+{
+  "tool": "circt",
+  "issue_number": 10036,
+  "title": "[SCF to Calyx] Generates external memory outside top level component",
+  "features": [
+    {
+      "name": "local memref alloc in non-top-level func",
+      "category": "data_model",
+      "description": "Code should include a memref.alloc operation inside a non-top-level func.func that is called from the entry point",
+      "snippet": "func.func @test(%arg0 : memref<3xf32>) {\n  %alloc = memref.alloc() : memref<3xf32>\n  ...\n}",
+      "tags": [
+        "mlir",
+        "memref",
+        "alloc",
+        "func"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "external memory in non-top-level calyx component",
+      "category": "general",
+      "description": "Code should include a non-top-level calyx.component containing a calyx.seq_mem with the {external = true} attribute",
+      "snippet": "calyx.component @test(%clk: i1 {clk}, %reset: i1 {reset}, %go: i1 {go}) -> (%done: i1 {done}) {\n  %mem_0.addr0, %mem_0.clk, %mem_0.reset, %mem_0.content_en, %mem_0.write_en, %mem_0.write_data, %mem_0.read_data, %mem_0.done = calyx.seq_mem @mem_0 <[3] x 32> [2] {external = true} : i2, i1, i1, i1, i1, i32, i32, i1\n}",
+      "tags": [
+        "calyx",
+        "memory",
+        "external",
+        "invariant",
+        "component"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "scf for loop with memref store to local alloc",
+      "category": "control_flow",
+      "description": "Code should include an scf.for loop that performs a memref.store into a locally allocated memref",
+      "snippet": "scf.for %i = %c0 to %c3 step %step {\n  memref.store %cst_54, %alloc[%i] : memref<3xf32>\n}",
+      "tags": [
+        "mlir",
+        "scf",
+        "for",
+        "memref",
+        "store"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "mlir function with memref alloc and inter-function call",
+      "category": "general",
+      "description": "Code should include a func.func that allocates a local memref and is called from another function with a memref argument",
+      "snippet": "func.func @test(%arg0 : memref<3xf32>) {\n  %alloc = memref.alloc() : memref<3xf32>\n  ...\n  return\n}\nfunc.func @main() {\n  %alloc = memref.alloc() : memref<3xf32>\n  func.call @test(%alloc) : (memref<3xf32>) -> ()\n  return\n}",
+      "tags": [
+        "mlir",
+        "memref",
+        "func_call",
+        "lowering"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "local memory without external or ref in calyx component",
+      "category": "data_model",
+      "description": "Code should include a calyx.seq_mem inside a non-top-level calyx.component that lacks both external and ref attributes",
+      "snippet": "calyx.component @test(%clk: i1 {clk}, %reset: i1 {reset}, %go: i1 {go}) -> (%done: i1 {done}) {\n  %mem.addr0, %mem.clk, %mem.reset, %mem.content_en, %mem.write_en, %mem.write_data, %mem.read_data, %mem.done = calyx.seq_mem @mem <[3] x 32> [2] : i2, i1, i1, i1, i1, i32, i32, i1\n}",
+      "tags": [
+        "calyx",
+        "memory",
+        "local",
+        "component"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "top-level component with external memory",
+      "category": "general",
+      "description": "Code should include a calyx.component marked with a toplevel attribute containing a calyx.seq_mem with the {external = true} attribute",
+      "snippet": "calyx.component @main(%clk: i1 {clk}, %reset: i1 {reset}, %go: i1 {go}) -> (%done: i1 {done}) attributes {toplevel} {\n  %mem_0.addr0, %mem_0.clk, %mem_0.reset, %mem_0.content_en, %mem_0.write_en, %mem_0.write_data, %mem_0.read_data, %mem_0.done = calyx.seq_mem @mem_0 <[3] x 32> [2] {external = true} : i2, i1, i1, i1, i1, i32, i32, i1\n}",
+      "tags": [
+        "calyx",
+        "memory",
+        "external",
+        "toplevel",
+        "invariant"
+      ],
+      "source_bug_id": "circt-10036",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10036",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 9,
+    "features_after_dedup": 6
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3453,
+  "issue_url": "https://github.com/llvm/circt/pull/3453",
+  "title": "[SV] Add support for `sv.case` with `hw.enum`",
+  "body": "This commit adds support in `sv.case` for switching on enum values. In doing so, a fair bit of refactoring is done to `CasePattern`s to more cleanly handle the different cases of bit, enum, and default patterns.\r\n\r\nSince `hw.enum` doesn't yet include any notion of value encoding, the `sv.case` operation does not allow mixing enum and bit patterns.\r\nFurthermore, only a single case value can be compared in a case statement (as opposed to `case A, B : ...`). I think this is a good starting point - if support is needed in the future, it will not be complicated to add.\r\n\r\n```mlir\r\nhw.module @AnFSM(%clock : i1) {\r\n  %reg = sv.reg : !hw.inout<!hw.enum<A, B, C>>\r\n  %reg_read = sv.read_inout %reg : !hw.inout<!hw.enum<A, B, C>>\r\n\r\n  %A = hw.enum_get #hw.enum.value<A, !hw.enum<A, B, C>>\r\n  %B = hw.enum_get #hw.enum.value<B, !hw.enum<A, B, C>>\r\n  %C = hw.enum_get #hw.enum.value<C, !hw.enum<A, B, C>>\r\n\r\n  sv.always posedge %clock {\r\n    sv.case case %reg_read : !hw.enum<A, B, C>\r\n      case A : { sv.passign %reg, %B : !hw.enum<A, B, C> }\r\n      case B : { sv.passign %reg, %C : !hw.enum<A, B, C> }\r\n      default : { sv.passign %reg, %A : !hw.enum<A, B, C> }\r\n  }\r\n}\r\n```\r\n\r\nemits\r\n```systemverilog\r\nmodule AnFSM\r\n    enum {A, B, C} reg_0;\r\n    always @(posedge clock) begin\r\n    case (reg_0)\r\n        A:\r\n        reg_0 <= B;\r\n        B:\r\n        reg_0 <= C;\r\n        default:\r\n        reg_0 <= A;\r\n    endcase\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-30",
+  "closed_at": "2022-07-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

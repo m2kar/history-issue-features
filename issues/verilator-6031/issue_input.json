@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6031,
+  "issue_url": "https://github.com/verilator/verilator/issues/6031",
+  "title": "/V3EmitCFunc.h:1457: Unknown node type reached emitter: CVTPACKEDTOARRAY",
+  "body": "Verilator 5.036 2025-04-27 rev UNKNOWN.REV\n\nUnexpected crash from packed array assignment involving byte enddianness swap. This works in 5.024 but not in 5.036. I tried writing a test_regress example but don't have the time to figure out how to get that to work. A version of the affected code with variables names changed is below:\n\n```{verilog}\npackage some_pkg;\n\n  typedef struct packed {\n    logic [15:0]  a;\n    logic [2:0]   b;\n    logic [4:0]   c;\n    logic [20:0]  d;\n    logic [2:0]   e;\n    logic [15:0]  f;\n    logic         g;\n    some_other_t  h;\n    logic         i;\n    logic         j;\n  } some_t;\n\n  function logic [7:0][7:0] some_func(input some_t s);\n    logic [7:0][7:0] x;\n    begin\n      x[0][0]   = s.j;\n      x[0][1]   = s.i;\n      x[0][6:2] = s.h;\n      x[0][7]   = s.g;\n      x[2:1]    = {<<8{s.f}};\n      x[3][7:5] = s.e;\n      x[3][4:0] = s.d[20:16];\n      x[5:4]    = {<<8{s.d[15:0]}};\n      x[7:6]    = {<<8{s.a}};\n      return x;\n    end\n  endfunction\n\nendpackage\n```\n\n```{bash}\n%Error: Internal Error: ...\n/V3EmitCFunc.h:1457: Unknown node type reached emitter: CVTPACKEDTOARRAY\n  187 |       x[2:1]    = {<<8{s.f}};\n      |                    ^~\n```",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-22",
+  "closed_at": "2025-05-22",
+  "code_blocks": [
+    "\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

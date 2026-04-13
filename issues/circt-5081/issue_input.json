@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5081,
+  "issue_url": "https://github.com/llvm/circt/pull/5081",
+  "title": "[ExportVerilog] Add support for UnionCreate op.",
+  "body": "This adds support for `hw::UnionCreateOp` to ExportVerilog.  It works by emitting a bit concatenation and assigning it to a wire with a union type.  Each union member may have a prepadding, which is decided by the member's offset size, and a postpadding to ensure that each union element is the same size. The resulting bitconcat is `{prepadding, data, postpadding}`.  If there is no padding for a particular member, then bitconcat will not be used.\r\n\r\nThe following example has no offsets, but the member `a` requires post-padding of `1` bit.\r\n\r\n```mlir\r\nhw.module @unionCreate(%in: i1) -> (out: !hw.union<a: i1, b: i2>) {\r\n    %0 = hw.union_create \"a\", %in : !hw.union<a: i1, b: i2>\r\n    hw.output %0 : !hw.union<a: i1, b: i2>\r\n}\r\n```\r\n\r\n```verilog\r\nmodule unionCreate(\r\n  input                                                                                          in,\r\n  output union packed { struct packed {logic a; logic [0:0] __post_padding_a;} a;logic [1:0] b;} out\r\n);\r\n\r\n  assign out = {in, 1'h0};\r\nendmodule\r\n```",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-25",
+  "closed_at": "2023-04-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

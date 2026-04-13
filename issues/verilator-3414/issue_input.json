@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3414,
+  "issue_url": "https://github.com/verilator/verilator/issues/3414",
+  "title": "Assign statement line coverage missing",
+  "body": "Environment: \r\n* verilator version - `Verilator 4.222 2022-05-02 rev v4.222-24-g4618fd5a`\r\n* OS - Windows 11, wsl2 Ubuntu-18.04\r\n* \r\nI have a simple circuit:\r\n\r\n```verilog\r\nmodule cell_inv (\r\n    input  wire a,         //% a input.\r\n    output wire z          //% z output, z = ~a;\r\n    );\r\n    assign z = ~a;\r\nendmodule //cell_inv\r\n```\r\nI have a testbench that tests the karnaugh map and verilate it with `--coverage` to ensure both line and toggle coverage.\r\n\r\nMy C++ testbench instantiates the necessary verilator code and verilated cell_inv\r\n```cpp\r\n    std::unique_ptr<VerilatedContext> m_context; ///< Verilator Context\r\n    std::unique_ptr<VerilatedVcdC>    m_trace;   ///< Trace Class variable\r\n    std::unique_ptr<T>                m_dut;     ///< Device Under Test (DUT)\r\n ```\r\nAnd these are setup appropriately for execution for vcd generation and writing out the coverage at the end of the test.\r\n\r\n```cpp\r\nm_dut->a = 0\r\nm_context->timeInc(1);\r\nm_dut->eval();\r\nm_dut->a = 1\r\nm_context->timeInc(1);\r\nm_dut->eval()\r\n\r\n//on completion:\r\nm_context->coveragep()->write(m_covName.c_str());\r\n```\r\nI then use this to generate lcov/genhtml coverage and notice a few things:\r\n\r\n1. there is no line coverage for the assign statement - is this expected?\r\nThe `verilog_coverage --annotate-all --annotate annotate test.data` command is called and the output is:\r\n\r\n```\r\n        module cell_inv (\r\n%000002     input  wire a,         //% a input.\r\n%000003     output wire z          //% z output, z = ~a;\r\n            );\r\n            assign z = ~a;\r\n        endmodule //cell_buf\r\n```\r\n\r\nI see the coverage data file has only toggle instances, and there is no line coverage for the assignment.\r\n\r\nThanks.\r\n\r\nA few bonus questions/suggestions:\r\n\r\n1. When generating the genhtml - the line and toggle coverage is amalgamated into one group called `Hit`  I was expecting them to be separate groups - Line and toggle - which would be helpful.  eg: Line, Toggle, branch(later).\r\n2. Also toggle coverage typically separates out `0->1` and `1->0` counts - but it's not a big deal having the aggregate like it is right now.\r\n\r\n\r\n",
+  "labels": [
+    "area: coverage",
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-12",
+  "closed_at": "2022-05-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

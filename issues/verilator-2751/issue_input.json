@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2751,
+  "issue_url": "https://github.com/verilator/verilator/pull/2751",
+  "title": "Optimize bit op tree #2186, #2632, and #2633",
+  "body": "\r\nOptimize trees op bit ops to the following canonical form.\r\n\r\n#### And\r\n```SystemVerilog\r\n/*from*/ ~a[2] & a[1] & ~a[0]\r\n/*to*/ 3'b010 == (3'b111 & a)\r\n```\r\n\r\n```SystemVerilog\r\n/*from*/ ~a[3] & (4'b0010 == (4'b0111 & a))\r\n/*to*/ 4'b0010 == (4'b1111 & a)\r\n```\r\n\r\n### Or\r\n\r\n```SystemVerilog\r\n/*from*/ ~a[2] | a[1] | ~a[0]\r\n/*to*/ 3'b101 != (3'b111 & a)\r\n```\r\n\r\n```SystemVerilog\r\n/*from*/ ~a[3] ! (4'b0101 != (4'b0111 & a))\r\n/*to*/ 4'b1010 != (4'b1111 & a)\r\n```\r\n\r\n### Xor\r\n\r\n```SystemVerilog\r\n/*from*/ ~a[2] ^| a[1]^| a[0]\r\n/*to*/ ~(^(3'b111 & a))\r\n```\r\n\r\n```SystemVerilog\r\n/*from*/ ~a[3] ^ ~(^(4'b0111 & a))\r\n/*to*/ ^(4'b1111 & a)\r\n```\r\n\r\n### Verilated result of existing tests\r\n\r\n#### #2186  test case \r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_gate_ormux.v#L162\r\nlooks as below\r\n\r\n```c++\r\n| ((- (IData)((1U == (IData)(vlTOPp->t__DOT__test__DOT__sel_d1r)))) & vlTOPp->t__DOT__test__DOT__csr0001)\r\n```\r\n\r\n#### #2632 & #2633 test case\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L140\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L146\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L152\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L159-L161\r\n\r\n\r\n```c++\r\n    vlTOPp->t__DOT__a1 = (0x22U == (0x2aU & (IData)(vlTOPp->t__DOT__crc)));\r\n    vlTOPp->t__DOT__o1 = (0x22U != (0x2aU & (IData)(vlTOPp->t__DOT__crc)));\r\n    vlTOPp->t__DOT__x1 = (1U & (~ VL_REDXOR_32((0x2aU & (IData)(vlTOPp->t__DOT__crc)))));\r\n    vlTOPp->t__DOT__z1 = 0U;\r\n    vlTOPp->t__DOT__z2 = 1U;\r\n    vlTOPp->t__DOT__z3 = 0U;\r\n```\r\n\r\n\r\n\r\n#### t_func_crc test case\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_func_crc.v#L81-L82\r\n\r\n```c++\r\nvlTOPp->__Vfunc_t__DOT__newcrc__2__N = ((0xfffffffdU & vlTOPp->__Vfunc_t__DOT__newcrc__2__N) | \r\n                                        (2U & ((VL_REDXOR_32((0x4c116d21U & vlTOPp->__Vfunc_t__DOT__newcrc__2__C))\r\n                                                 ^ VL_REDXOR_64((0x2208882911711dc3ULL & vlTOPp->__Vfunc_t__DOT__newcrc__2__D))) << 1U)));\r\n```\r\n\r\n\r\nI will push this PR with a commit that only changes a test first to make sure that the passes without the optimization code. (I editted `EXPECTED_SUM` ). Then I will push the actual optimization change.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-13",
+  "closed_at": "2021-02-21",
+  "code_blocks": [
+    "#### #2632 & #2633 test case\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L140\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L146\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L152\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_const_opt_red.v#L159-L161",
+    "#### t_func_crc test case\r\nhttps://github.com/verilator/verilator/blob/ab5d4bd51dbd409b54a689d8db6ce2dc9644de44/test_regress/t/t_func_crc.v#L81-L82"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

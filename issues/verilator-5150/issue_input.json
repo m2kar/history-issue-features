@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5150,
+  "issue_url": "https://github.com/verilator/verilator/issues/5150",
+  "title": "Submodule port var not updated when module is not inlined",
+  "body": "## The problem\r\nAfter disabling module inlining for the submodule, val value is not updated properly.\r\n\r\n```verilog\r\nmodule t;\r\n   logic val = 0;\r\n   sub dut(.val(val));\r\n\r\n   initial begin\r\n      val = 1;\r\n      assert(dut.val == 1); // This fails when 'sub' is not inlined.\r\n\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n\r\nmodule sub(output logic val);\r\n   /* verilator no_inline_module */\r\n   // Pragma needed for the test failure.\r\nendmodule\r\n```\r\nFor the inlined version, assignments are aliased to the ports during `V3Inline` using `AstAssignAlias` and later optimized out to use local variable `t__DOT__val`. This is done both in the assignment before assertion and in the assertion condition.\r\n\r\nGenerated code:\r\n\r\n```cpp\r\n    t__DOT__val = 1U;\r\n    if (vlSymsp->_vm_contextp__->assertOn()) {\r\n        if (VL_UNLIKELY((1U & (~ (IData)(t__DOT__val))))) {\r\n          ... assertion code ...\r\n        }\r\n     }\r\n     ... the rest of the initial block code ...\r\n```\r\nHowever, the non-inlined variant only correctly resolves the assignment `t__DOT__val = 1U;` but does not resolve reference to that `AstVar` in the assert condition:\r\n\r\n```cpp\r\n    t__DOT__val = 1U;\r\n    if (vlSymsp->_vm_contextp__->assertOn()) {\r\n        if (VL_UNLIKELY((1U & (~ (IData)(vlSymsp->TOP__t__DOT__dut.val))))) {\r\n          ... assertion code ...\r\n        }\r\n     }\r\n     ... the rest of the initial block code ...\r\n```\r\nNon-inlined alias is generated but in `stl_sequent` phase, which runs too late for the earlier assignments to succeed.\r\n\r\n```cpp\r\nVL_ATTR_COLD void Vt_assign_bug___024root___stl_sequent__TOP__0(Vt_assign_bug___024root* vlSelf) {\r\n   ...  function init code ...\r\n\r\n    // Init\r\n    CData/*0:0*/ t__DOT__val;\r\n    t__DOT__val = 0;\r\n    // Body\r\n    t__DOT__val = vlSymsp->TOP__t__DOT__dut.val;\r\n}\r\n```\r\n\r\nMaybe `t__DOT__val` should be aliased with the port var and watched for its changes (only when inline is disabled), or `t__DOT__val` should be artificially updated each time it is modified (probably using `AstAssignW`).\r\n\r\n## Verilator command\r\n\r\n```bash\r\n./bin/verilator -cc --exe --main --build --assert t_assign_bug.v\r\n```\r\n\r\n## Verilator version\r\n\r\nMaster at https://github.com/verilator/verilator/commit/d4b35833073199d1d65d6bad7c2baec4a2caab01.",
+  "labels": [
+    "resolution: invalid"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-29",
+  "closed_at": "2024-05-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

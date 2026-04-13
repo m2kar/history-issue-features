@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3567,
+  "issue_url": "https://github.com/verilator/verilator/issues/3567",
+  "title": "Comparison with negation doesn't work",
+  "body": "The following test fails on current master:\r\n```verilog\r\nmodule t (/*AUTOARG*/\r\n   );\r\n   wire a = 1;\r\n\r\n   wire b = 0 == ~a;\r\n\r\n   always begin\r\n      if (b) begin\r\n         $write(\"*-* All Finished *-*\\n\");\r\n         $finish;\r\n      end\r\n   end\r\nendmodule\r\n```\r\nHere is AST of assignments (from *_012_width.tree):\r\n```\r\n    1:2: ASSIGNW 0x555556bc0000 <e91#> {c9al} @dt=0x555556b2a270@(w1)\r\n    1:2:1: CONST 0x555556bbe3c0 <e104#> {c9an} @dt=0x555556b2a270@(w1)  1'h1\r\n    1:2:2: VARREF 0x555556b24240 <e90#> {c9aj} @dt=0x555556b2a270@(w1)  a [LV] => VAR 0x555556b22180 <e89#> {c9aj} @dt=0x555556b2a270@(w1)  a [VSTATIC]  WIRE\r\n    1:2: VAR 0x555556b22300 <e107#> {c11aj} @dt=0x555556b2a680@(w1)  b [VSTATIC]  WIRE\r\n    1:2: ASSIGNW 0x555556bc0210 <e109#> {c11al} @dt=0x555556b2a680@(w1)\r\n    1:2:1: EQ 0x555556bc0160 <e45> {c11ap} @dt=0x555556b2a5b0@(G/w1)\r\n    1:2:1:1: CONST 0x555556bbe140 <e35> {c11an} @dt=0x555556b2a1a0@(G/swu32/1)  ?32?sh0\r\n    1:2:1:2: NOT 0x555556bc00b0 <e115#> {c11as} @dt=0x555556b2ab60@(G/wu32/1)\r\n    1:2:1:2:1: EXTEND 0x555556bc04d0 <e121#> {c11at} @dt=0x555556b2ab60@(G/wu32/1)\r\n    1:2:1:2:1:1: VARREF 0x555556b24480 <e119#> {c11at} @dt=0x555556b2a270@(w1)  a [RV] <- VAR 0x555556b22180 <e89#> {c9aj} @dt=0x555556b2a270@(w1)  a [VSTATIC]  WIRE\r\n```\r\nIt looks like the problem is that `a` (which equals `1'h1`) is first extended to 32 bits, so it equals `32'b0...001` then. Negation flips these bits and then it equals `32'b1...110`, so comparison with `0` returns false.",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-22",
+  "closed_at": "2022-08-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

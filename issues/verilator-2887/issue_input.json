@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2887,
+  "issue_url": "https://github.com/verilator/verilator/issues/2887",
+  "title": "How is vpi_iterate() supposed to work?",
+  "body": "I appear to have broken `t_vpi_module` for `iverilog` with #2885:\r\n```\r\n%Error: t_vpi_module.cpp:95: GOT = 600   EXP = 32\r\n%Error: t_vpi_module.cpp:95: C Test failed\r\n```\r\nThis is interesting because the expected value (32 or vpiModule) is what we asked for:\r\n```\r\n        it = vpi_iterate(vpiModule, topmod);\r\n```\r\nBut instead, we get a vpiPackage (600).  Of course, if I comment out my package in `t_vpi_module.v` the test runs fine.\r\n\r\nWhat is the expected behavior of vpi_iterate()'ing over vpiModule?  I'm looking at the LRM and its crazy VPI diagrams to try to figure this out, but I'm not sure I know which way is up here.  37.10 seems to show that the vpiInstance group contains both vpiModule and vpiPackage, so I'm wondering if this is an Icaraus bug in that it should only iterate modules when you specify vpiModule and if you want module-like things you need to use vpiInstance.  I'm additionally confused because cocotb also iterates over vpiModule but appears to expect various non-vpiModule things to come back:\r\nhttps://github.com/cocotb/cocotb/blob/master/cocotb/share/lib/vpi/VpiImpl.cpp#L514\r\n\r\nSo, do you think that the latest Verilator behavior is correct here?  If so, I'll open tickets for Icarus and cocotb.  Or should Verilator return things like packages and interfaces when iterating over vpiModules?\r\n\r\nI've also tried to run this test with `--nc` but that doesn't actually call into `mon_check()` right now.  I can mess with that some more to see if I can get another opinion on how this is supposed to work.\r\n\r\nAnd to be sure, this involves a lot of different projects.  I'm just starting the discussion here and will cross-post elsewhere.",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-13",
+  "closed_at": "2021-04-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

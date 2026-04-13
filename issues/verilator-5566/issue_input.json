@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5566,
+  "issue_url": "https://github.com/verilator/verilator/issues/5566",
+  "title": "Internal error with $countbits in property assertion",
+  "body": "### Issue\r\n\r\nThanks for taking the time to review this.\r\n\r\n#### Summary\r\nWhen using `$countbits` in a property assertion, Verilator throws an internal error indicating an unexpected `AstNode` type, while `$countones` works without issue.\r\n\r\n#### Code Example\r\nHere's a minimal code snippet that reproduces the issue:\r\n\r\n```systemverilog\r\nmodule Counter #(\r\n    parameter  int VectorWidth = 8,\r\n    localparam int CounterWidth = $clog2(VectorWidth + 1)\r\n) (\r\n    input  logic                    clk,\r\n    input  logic                    rst,\r\n    input  logic [ VectorWidth-1:0] vec,\r\n    output logic [CounterWidth-1:0] num_zeros,\r\n    output logic [ VectorWidth-1:0] num_ones\r\n);\r\n\r\n  always_comb begin\r\n    num_zeros = '0;\r\n    num_ones  = '0;\r\n    for (int i = 0; i < VectorWidth; i++) begin\r\n      if (vec[i] == 0) begin\r\n        num_zeros++;\r\n      end else begin\r\n        num_ones++;\r\n      end\r\n    end\r\n  end\r\n\r\n  assert property (@(negedge clk) disable iff (rst) (num_ones == $countones(vec)));\r\n  assert property (@(negedge clk) disable iff (rst) (num_zeros == $countbits(vec, '0)));\r\nendmodule\r\n```\r\n\r\n#### Error Message\r\nVerilator fails with the following error:\r\n\r\n```\r\n%Error: Internal Error: test.sv:25:78: ../V3Ast.h:2478: AstNode is not of expected type, but instead has type 'SAMPLED'\r\n                                     : ... note: In instance 'Testbench.counter'\r\n   25 |   assert property (@(negedge clk) disable iff (rst) (num_zeros == $countbits(vec, '0)));\r\n      |                                                                              ^~~\r\n... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\n\r\nInterestingly, `$countones` works correctly, even though it’s simply an alias for `$countbits(expression, '1)` as defined in LRM 20.9.\r\n\r\n#### Verilator Version\r\n```\r\nVerilator 5.027 devel rev v5.026-13-gd6a294b78\r\n```\r\n\r\n#### Additional Information\r\n- OS and distribution: Ubuntu 22.04.4 LTS\r\n- Verilator command line:\r\n  ```\r\n  verilator test.sv --cc --exe --binary --main --assert\r\n  ```\r\n- Tried on Git master version: No\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: assertions"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-26",
+  "closed_at": "2024-10-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

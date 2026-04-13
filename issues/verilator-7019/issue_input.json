@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7019,
+  "issue_url": "https://github.com/verilator/verilator/pull/7019",
+  "title": "Fix V3Tristate __en pin VAccess for input port processing (#7016)",
+  "body": "Fixes #7016\n\n## Summary\n- Fix assertion failure in `GateDedupeVarVisitor::findDupe()` when using `-fno-inline` on modules with tristate ports\n- Discovered as part of a `-fno-inline` audit for #1539\n\n## Fix Details\n\n### Root Cause\nIn `V3Tristate`, when creating `__en` (enable) pins for tristate signal decomposition, the pin expression `VarRef` always used `VAccess::WRITE`. For input ports (`inDeclProcessing == true`), the `__en` pin is an INPUT — the parent reads its value to send to the child — so the `VarRef` should use `VAccess::READ`. The incorrect write access caused `V3Inst` to generate `AstAssignW` nodes with `[LV]` on the RHS, creating wrong graph edges in `V3Gate` that triggered the dedup assertion.\n\nWith inlining enabled, cross-module pins are flattened before `V3Gate` runs, hiding the bug. With `-fno-inline`, the distinct `VarScope`s remain and the mismatch triggers:\n```\n%Error: Internal Error: V3Gate.cpp:961: Consumer doesn't match lhs of assign\n```\n\n### Changes\n- **`src/V3Tristate.cpp`**: Use `inDeclProcessing ? VAccess::READ : VAccess::WRITE` for the `__en` pin expression, matching the correct data-flow direction based on port directionality.\n\n### Tests\n\n#### `t_altera_lpm_bustri_noinl`\nCompiles `lpm_bustri` (tristate bus) with `-fno-inline`, which previously triggered the assertion.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-08",
+  "closed_at": "2026-02-09",
+  "code_blocks": [
+    "%Error: Internal Error: V3Gate.cpp:961: Consumer doesn't match lhs of assign\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4582,
+  "issue_url": "https://github.com/verilator/verilator/pull/4582",
+  "title": "Fix top-level interface port used in lint-only mode",
+  "body": "The following example fails if `--lint-only` and `--debug-check` is on.\r\n\r\n``` SystemVerilog\r\ninterface my_if #(\r\n    parameter integer DW = 8\r\n) ();\r\n    if (DW < 4) begin: gen_blk\r\n        // under generate block, where V3Width won't process\r\n        function automatic [DW-1:0] myfunc();\r\n            return DW;\r\n        endfunction\r\n    end\r\nendinterface\r\nmodule t (\r\n    my_if top_if\r\n);\r\n    // No other reference to the parameterizable interface 'my_if' here\r\nendmodule\r\n```\r\n\r\n```\r\n%Error: Internal Error: t_lint_iface_topmodule4.v:12:37: ../V3Broken.cpp:189: No dtype on node with hasDType(): FUNC 'myfunc'\r\n                                                       : ... In instance t\r\n   12 |         function automatic [DW-1:0] myfunc();\r\n      |                                     ^~~~~~\r\n```\r\n\r\nIn lint-only mode it's legal to use interface port in the top level module. However, since the port references the interface without using an AstCell, V3Param won't process the interface so the generate blocks under it in won't be eliminated. In V3Width it resolves data types for most of the nodes (except the nodes inside generate block, e.g. the function 'myfunc'), and then the node fails in the DTypesResolved check in V3Broken because it don't have a data type.\r\n\r\nNow V3Param is made to visit every interface (even if it's unused) in lint-only mode thus the generate blocks can be resolved.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-18",
+  "closed_at": "2024-10-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3740,
+  "issue_url": "https://github.com/verilator/verilator/issues/3740",
+  "title": "Internal fault when constructing sequence of assignment",
+  "body": "The following program produces an internal fault when running `verilator --lint-only`:\r\n```verilog\r\n`default_nettype none\r\n\r\nmodule add_one ();\r\n    logic out_write_en;\r\n    logic reg_to_mem_go_in;\r\n    logic reg_to_mem_done_out;\r\n    initial begin\r\n        out_write_en = 1'd0;\r\n        reg_to_mem_go_in = 1'd0;\r\n    end\r\n    assign out_write_en = reg_to_mem_go_in;\r\n    assign reg_to_mem_go_in = ~reg_to_mem_done_out;\r\nendmodule\r\n```\r\nOutput:\r\n```\r\n% verilator --lint-only out.sv        \r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n%Error: Command Failed /usr/local/Cellar/verilator/5.002/bin/verilator_bin --lint-only out.sv\r\n```\r\n\r\nVersion: Verilator 5.002 2022-10-29 rev UNKNOWN.REV\r\nWhat OS and distribution are you using? MacOS Ventura\r\n\r\nDebug mode points to this line:\r\n```\r\n- V3Ast.cpp:1121:     Dumping obj_dir/Vout_026_dfg-optimize.tree\r\n%Error: Internal Error: out.sv:9:9: ../V3Broken.cpp:173: Broken link in node (or something without maybePointedTo): 'm_varp && !m_varp->brokeExists()' @ ../V3AstNodes.cpp:64\r\n                                  : ... In instance add_one\r\n-node: VARREF 0x7f87e070f3b0 <e122> {c9aj} @dt=0x7f87e070d110@(G/w1)  reg_to_mem_go_in [LV] => VAR 0x7f87e070d540 <e183#> {c5al} @dt=0x7f87e070d110@(G/w1)  reg_to_mem_go_in [VSTATIC]  VAR\r\n    9 |         reg_to_mem_go_in = 1'd0;\r\n      |         ^~~~~~~~~~~~~~~~\r\n```\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-11-10",
+  "closed_at": "2022-11-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6254,
+  "issue_url": "https://github.com/verilator/verilator/issues/6254",
+  "title": "Bad assignment to triand",
+  "body": "Compilation of the following SystemVerilog module throws several errors:\n```SystemVerilog\nmodule a (output triand logic b [3:3][1:2]);\n  assign b = '{'{'b0,'bx}};\n  assign b = '{'{'bx,'bx}};\nendmodule: a\n```\n\nCommand:\n```\nverilator --cc --exe ./testbench.cpp --timing -Wno-fatal +1800-2023ext+sv test.sv\n```\nUsed [testbench](https://github.com/DepTyCheck/verilog-model/blob/master/.github/workflows/conf/verilator/testbench.cpp)\n\nOutput:\n```\n%Error: test.sv:2:12: AND unexpected in assignment to unpacked array\n    2 |   assign b = '{'{'b0,'bx}};\n      |            ^\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.037 for more assistance.\n%Error: test.sv:2:12: Slices of arrays in assignments have different unpacked dimensions, 2 versus 1\n    2 |   assign b = '{'{'b0,'bx}};\n      |            ^\n%Error: Internal Error: test.sv:2:14: ../V3Slice.cpp:316: Array initialization should have been removed earlier\n    2 |   assign b = '{'{'b0,'bx}};\n      |              ^~\n                        ... This fatal error may be caused by the earlier error(s); resolve those first.\n```\n\nExpected behavior:\nThis module should be compiled. `IEEE 10.3.2 The continuous assignment statement` says\n\n> Nets can be driven by multiple continuous assignments or by a mixture of primitive outputs, module outputs,\n> and continuous assignments.\n\nAlso given literals have correct structure according to dimensions.\n\nThis issue occurs in `Verilator 5.037 devel rev v5.036-207-g5a6d5ed96` on ubuntu.\n\nFound by a [verilog model](https://github.com/DepTyCheck/verilog-model) using [deptycheck](https://github.com/buzden/deptycheck)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-08-02",
+  "closed_at": null,
+  "code_blocks": [
+    "module a (output triand logic b [3:3][1:2]);\n  assign b = '{'{'b0,'bx}};\n  assign b = '{'{'bx,'bx}};\nendmodule: a\n",
+    "verilator --cc --exe ./testbench.cpp --timing -Wno-fatal +1800-2023ext+sv test.sv\n",
+    "%Error: test.sv:2:12: AND unexpected in assignment to unpacked array\n    2 |   assign b = '{'{'b0,'bx}};\n      |            ^\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.037 for more assistance.\n%Error: test.sv:2:12: Slices of arrays in assignments have different unpacked dimensions, 2 versus 1\n    2 |   assign b = '{'{'b0,'bx}};\n      |            ^\n%Error: Internal Error: test.sv:2:14: ../V3Slice.cpp:316: Array initialization should have been removed earlier\n    2 |   assign b = '{'{'b0,'bx}};\n      |              ^~\n                        ... This fatal error may be caused by the earlier error(s); resolve those first.\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3270,
+  "issue_url": "https://github.com/llvm/circt/pull/3270",
+  "title": "[HW] Add HWRemoveUnusedPorts pass",
+  "body": "This PR is based on https://github.com/llvm/circt/pull/3251.\r\nThis commit implements HWRemoveUnusedPorts which removes dead ports\r\nof private modules by inspecting dataflow globally in a similar way to\r\nllvm::DeadArgumentsElimination pass. We use worklist based algorithm to\r\nget optimal results.\r\n\r\n1. Input ports are dead if there is no user.\r\n2. Output ports are dead if output values are constant, or results are not\r\n   used at any instance.\r\n3. It is necessary to delete normal operations as well since erased ports can\r\n   introduce extra dead code.\r\n\r\nExample:\r\n`circt-opt hw-remove-unused-ports`\r\n```mlir\r\n  hw.module private @Child2(%in: i1) {\r\n    hw.output\r\n  }\r\n  hw.module private @Child1(%in: i1) -> (out: i1) {\r\n    hw.output %in : i1\r\n  }\r\n  hw.module @Parent(%in: i1) {\r\n    %child1.out = hw.instance \"child1\" @Child1(in: %in: i1) -> (out: i1)\r\n    hw.instance \"child2\" @Child2(in: %child1.out: i1) -> ()\r\n    hw.output\r\n  }\r\n```\r\nbecomes\r\n```mlir\r\nhw.module private @Child2() {\r\n    hw.output\r\n }\r\n hw.module private @Child1() {\r\n    hw.output\r\n }\r\n hw.module @Parent(%in: i1) {\r\n    hw.instance \"child1\" @Child1() -> ()\r\n    hw.instance \"child2\" @Child2() -> ()\r\n    hw.output\r\n }\r\n```\r\n\r\nClose https://github.com/llvm/circt/issues/3146",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-03",
+  "closed_at": "2023-02-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

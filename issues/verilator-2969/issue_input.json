@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2969,
+  "issue_url": "https://github.com/verilator/verilator/issues/2969",
+  "title": "UNOPTFLAT lint warning (for tree arbiter)",
+  "body": "If you download the attached `prim_arbiter_tree.sv` and run Verilator lint on it, you see the following warnings:\r\n```\r\n> verilator --lint-only -Wno-ALWCOMBORDER tst/prim_arbiter_tree.sv\r\n%Warning-UNOPTFLAT: tst/prim_arbiter_tree.sv:45:39: Signal unoptimizable: Feedback to clock or circular logic: 'prim_arbiter_tree.gen_normal_case.idx_tree[5:4]'\r\n   45 |     logic [2**(IdxW+1)-2:0][IdxW-1:0] idx_tree /*verilator split_var*/ ;\r\n      |                                       ^~~~~~~~\r\n                    ... For warning description see https://verilator.org/warn/UNOPTFLAT?v=4.203\r\n                    ... Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n                    tst/prim_arbiter_tree.sv:45:39:      Example path: prim_arbiter_tree.gen_normal_case.idx_tree[5:4]\r\n                    tst/prim_arbiter_tree.sv:108:11:      Example path: ALWAYS\r\n                    tst/prim_arbiter_tree.sv:43:39:      Example path: prim_arbiter_tree.gen_normal_case.sel_tree[2]\r\n                    tst/prim_arbiter_tree.sv:108:11:      Example path: ALWAYS\r\n                    tst/prim_arbiter_tree.sv:45:39:      Example path: prim_arbiter_tree.gen_normal_case.idx_tree[5:4]\r\n%Warning-UNOPTFLAT: tst/prim_arbiter_tree.sv:46:39: Signal unoptimizable: Feedback to clock or circular logic: 'prim_arbiter_tree.gen_normal_case.data_tree[2]'\r\n   46 |     logic [2**(IdxW+1)-2:0][DW-1:0]   data_tree /*verilator split_var*/ ;\r\n      |                                       ^~~~~~~~~\r\n                    tst/prim_arbiter_tree.sv:46:39:      Example path: prim_arbiter_tree.gen_normal_case.data_tree[2]\r\n                    tst/prim_arbiter_tree.sv:108:11:      Example path: ALWAYS\r\n                    tst/prim_arbiter_tree.sv:43:39:      Example path: prim_arbiter_tree.gen_normal_case.sel_tree[2]\r\n                    tst/prim_arbiter_tree.sv:108:11:      Example path: ALWAYS\r\n                    tst/prim_arbiter_tree.sv:46:39:      Example path: prim_arbiter_tree.gen_normal_case.data_tree[2]\r\n%Error: Exiting due to 2 warning(s)\r\n```\r\n\r\nThis is with the current head of master:\r\n```\r\n> verilator --version\r\nVerilator 4.203 devel rev v4.202-41-g0f7ec6c9\r\n```\r\n\r\nThe code is a (slightly hacked) version of a tree arbiter [from OpenTitan](https://github.com/lowRISC/opentitan/blob/master/hw/ip/prim/rtl/prim_arbiter_tree.sv). This is structured as a full binary tree and I've set parameters so that it has 4 leaves, giving the following indices:\r\n```\r\n     0\r\n    / \\\r\n   /   \\\r\n  1     2\r\n / \\   / \\\r\n|   | |   |\r\n3   4 5   6\r\n```\r\n\r\nI chose parameters to give a data width of just 1 bit, which makes the apparent mutual dependency between `data_tree` and `sel_tree` as easy as possible to debug. I can't see any path between them, so I *think* this is a bug?\r\n\r\n\r\n[prim_arbiter_tree.sv.txt](https://github.com/verilator/verilator/files/6502367/prim_arbiter_tree.sv.txt)\r\n",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-18",
+  "closed_at": "2025-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

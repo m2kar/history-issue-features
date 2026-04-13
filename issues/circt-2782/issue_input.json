@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2782,
+  "issue_url": "https://github.com/llvm/circt/issues/2782",
+  "title": "[FIRRTL][IMCP]  Should not be propagating invalid values through wires/regs/module ports",
+  "body": "This is another attempt to find some bad behaviour in IMCP\r\n\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    output b: UInt<8>\r\n\r\n    inst bar of Bar\r\n\r\n    reg r : UInt<8>, clock with:\r\n      (reset => (reset, UInt<8>(4)))\r\n    r <= bar.b\r\n    b <= r\r\n\r\n  module Bar :\r\n    output b: UInt<8>\r\n    b is invalid\r\n```\r\nMFC:\r\n```verilog\r\nmodule Foo(\t// ./x.fir:2:10\r\n  input        clock, reset,\r\n  output [7:0] b);\r\n\r\n  Bar bar ();\t// ./x.fir:7:5\r\n  assign b = 8'h4;\t// ./x.fir:2:10, :9:5\r\nendmodule\r\n\r\nmodule Bar();\t// ./x.fir:14:10\r\nendmodule\r\n```\r\nSFC:\r\n```verilog\r\nmodule Foo(\r\n  input        clock,\r\n  input        reset,\r\n  output [7:0] b\r\n);\r\n  reg [7:0] r;\r\n  assign b = r;\r\n  always @(posedge clock) begin\r\n    if (reset) begin\r\n      r <= 8'h4;\r\n    end else begin\r\n      r <= 8'h0;\r\n    end\r\n  end\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-17",
+  "closed_at": "2022-04-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

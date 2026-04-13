@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6649,
+  "issue_url": "https://github.com/llvm/circt/pull/6649",
+  "title": "[LTL to Core] Add support for overlapping and non-overlapping implications without SVA",
+  "body": "Hi,\r\n\r\nThe goal of this PR is to introduce a lowering of the operations in the `ltl` and `verif` dialects to the core dialects as to allow for the use of the `AssertProperty` construct on boolean conditions in CIRCT's frontends. The reason we want this is that `AssertProperty` generates a disable operation conditioned on the reset, which means that the assertion is only valid if the reset has been raised at some point in the past.   \r\n\r\nThis solves one of the shortcomings of the current `btor2` backend, which was that there was no way to give registers initial values purely for verification. `AssertProperty` solves that by disabling the assertion until the reset has been raised, thus disallowing the model checker to simply assign whatever value to the register at cycle 0.\r\n\r\nThe logic behind this is as follows:\r\n`AssertProperty` generates the following operations:  \r\n  1. `verif.has_been_reset`\r\n  2. `ltl.disable`\r\n  3. `ltl.clock`\r\n  4. `verif.assert`\r\n\r\nThis can then be translated to:  \r\n  1. `verif.has_been_reset` --> `seq.compreg + or with reset`\r\n  2. `ltl.disable cond if input`--> `~cond -> input` --> `cond || input`\r\n  3. `ltl.clock posedge %clock`  --> `sv.always posedge %clock {...}`\r\n  4. `verif.assert`--> `sv.assert disabled_cond`  \r\n\r\nFor more details, I invite you to take a look at the `LTLToCore.cpp` conversion patterns. Note that `ltl.clock` and `verif.assert` are converted in the same pattern as they are interdependent.\r\n\r\nThis PR also introduces a tiny bugfix for the btor2 pass, where the reset value of a `compreg` was generated out of order for some reason.   \r\n\r\nThis PR is the first part of a larger lowering from LTL to Core done through the FSM dialect, and is required for the rest of it to work.  \r\n\r\nLet me know what you think !",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-02-06",
+  "closed_at": "2024-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

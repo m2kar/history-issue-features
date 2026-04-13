@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4190,
+  "issue_url": "https://github.com/verilator/verilator/issues/4190",
+  "title": "Incorrect release of forced assignment",
+  "body": "Verilator version: befb415f278af51fc3ecc3dda1dfe820de023bd1\r\nTest case:\r\n\r\n```systemverilog\r\n// verilator lint_off MULTIDRIVEN\r\nmodule t (clk);\r\n  input clk;\r\n\r\n  logic [31:0] lhs1, lhs2, rhs;\r\n  logic cond = 0;\r\n\r\n  always_comb lhs1 = rhs;\r\n  assign lhs2 = rhs;\r\n\r\n  always @(posedge clk) rhs = '1;\r\n\r\n  always @(negedge clk) begin\r\n    if (cond) begin\r\n      force lhs1 = 'hdeadbeef;\r\n      force lhs2 = 'hfeedface;\r\n    end\r\n    else begin\r\n      release lhs1;\r\n      release lhs2;\r\n    end\r\n  end\r\n\r\n  int cyc = 0;\r\n  always @(posedge clk) begin\r\n    cyc <= cyc + 1;\r\n    if (cyc == 0) cond <= 1;\r\n    if (cyc == 3) cond <= 0;\r\n    if (cyc > 0) begin\r\n      $display(\"cyc=%0d, cond=%b, lhs1=%x, lhs2=%x\", cyc, cond, lhs1, lhs2);\r\n      if (cond) begin\r\n        if (lhs1 != 'hdeadbeef) $stop;\r\n        if (lhs2 != 'hfeedface) $stop;\r\n      end\r\n      else begin\r\n        if (lhs1 != '1) $stop;\r\n        if (lhs2 != '1) $stop;\r\n      end\r\n      if (cyc > 8) begin\r\n        $write(\"*-* All Finished *-*\\n\");\r\n        $finish;\r\n      end\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\nOutput:\r\n\r\n```\r\ncyc=1, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=2, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=3, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=4, cond=0, lhs1=deadbeef, lhs2=deadbeef\r\n%Error: test.v:36: Verilog $stop\r\n```\r\n\r\n`lhs2` is set to `lhs1`'s override for some reason.\r\nWith `-O0` it's a bit better:\r\n\r\n```\r\ncyc=1, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=2, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=3, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=4, cond=0, lhs1=deadbeef, lhs2=ffffffff\r\n%Error: test.v:36: Verilog $stop\r\n```\r\n\r\nWhat's interesting, if we swap the `lhs1` and `lhs2` declarations, we get a different result.\r\n\r\n```systemverilog\r\n  logic [31:0] lhs2, lhs1, rhs;\r\n```\r\n\r\nWithout `-O0` it actually works:\r\n\r\n```\r\ncyc=1, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=2, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=3, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=4, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\ncyc=5, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\ncyc=6, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\ncyc=7, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\ncyc=8, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\ncyc=9, cond=0, lhs1=ffffffff, lhs2=ffffffff\r\n*-* All Finished *-*\r\n- test.v:41: Verilog $finish\r\n```\r\n\r\nWith `-O0` it's the same as the original code:\r\n\r\n```\r\ncyc=1, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=2, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=3, cond=1, lhs1=deadbeef, lhs2=feedface\r\ncyc=4, cond=0, lhs1=deadbeef, lhs2=ffffffff\r\n%Error: test.v:36: Verilog $stop\r\n```\r\n\r\nNot sure what's going on here, looks to me like two bugs on top of one another (invalid release + misoptimization).",
+  "labels": [
+    "status: ready",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-11",
+  "closed_at": "2026-03-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

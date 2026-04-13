@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4821,
+  "issue_url": "https://github.com/verilator/verilator/issues/4821",
+  "title": "Verilator sometimes misorders `$dumpvars` before `$dumpfile`",
+  "body": "## Can you attach an example that shows the issue?\r\nHere is a minified show case extracted from the problem I encountered in my project.\r\n\r\nIt contains two file `top.sv` and `top_dpi.cpp`. The `top_dpi.cpp` is just trivial.\r\n\r\n```sv\r\n// top.sv\r\n`timescale 1ns/1ps\r\n\r\nimport \"DPI-C\" function string dpi_waveform_filename();\r\nimport \"DPI-C\" function int dpi_waveform_enable();\r\n\r\nmodule sim_top;\r\n    bit clk;\r\n\r\n    clock_gen U_clock(.clk);\r\n    initial begin\r\n        if (dpi_waveform_enable() != 0) begin\r\n            automatic string waveform_filename = dpi_waveform_filename();\r\n            $dumpfile(waveform_filename);\r\n            $dumpvars;\r\n        end\r\n\r\n        #10 $finish();\r\n    end\r\nendmodule\r\n\r\nmodule clock_gen(clk);\r\n    output bit clk = 1'b0;\r\n    always #1 clk = ~clk;\r\nendmodule\r\n```\r\n\r\n```c++\r\n// top_dpi.cpp\r\n#include \"Vtop__Dpi.h\"\r\nint dpi_waveform_enable() {\r\n    return 1;\r\n}\r\nconst char* dpi_waveform_filename() {\r\n    return \"wave.vcd\";\r\n}\r\n```\r\n\r\n## What 'verilator' command line do we use to run your example?\r\n\r\n`verilator --cc --trace-fst --timing --timescale 1ns/1ps --top-module sim_top sim/sim_top.sv`\r\n\r\nIt's expected generated a waveform `wave.vcd`.\r\n\r\nHowever, it gives following warning without any waveform.\r\n\r\n```\r\n%Warning: $dumpvar ignored as not preceded by $dumpfile\r\n- top.sv:17: Verilog $finish\r\n```\r\n\r\n## What 'verilator --version' are you using?\r\n\r\n`Verilator 5.020 2024-01-01 rev UNKNOWN.REV` on ArchLinux\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n# Analysis\r\n\r\nI inspect `Vtop___024root__DepSet_h84412442__0.cpp`, and the following code seems suspicious.\r\n```c++\r\nVL_INLINE_OPT VlCoroutine Vtop___024root___eval_initial__TOP__Vtiming__0(Vtop___024root* vlSelf) {\r\n    if (false && vlSelf) {}  // Prevent unused\r\n    Vtop__Syms* const __restrict vlSymsp VL_ATTR_UNUSED = vlSelf->vlSymsp;\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vtop___024root___eval_initial__TOP__Vtiming__0\\n\"); );\r\n    // Init\r\n    IData/*31:0*/ __Vfunc_dpi_waveform_enable__0__Vfuncout;\r\n    __Vfunc_dpi_waveform_enable__0__Vfuncout = 0;\r\n    std::string __Vfunc_dpi_waveform_filename__1__Vfuncout;\r\n    // Body\r\n    if ((0U != ([&]() {\r\n                    Vtop___024unit____Vdpiimwrap_dpi_waveform_enable_TOP____024unit(__Vfunc_dpi_waveform_enable__0__Vfuncout);\r\n                }(), __Vfunc_dpi_waveform_enable__0__Vfuncout))) {\r\n        Vtop___024unit____Vdpiimwrap_dpi_waveform_filename_TOP____024unit(__Vfunc_dpi_waveform_filename__1__Vfuncout);\r\n        vlSymsp->_traceDumpOpen();\r\n        vlSelf->sim_top__DOT__unnamedblk1__DOT__waveform_filename \r\n            = __Vfunc_dpi_waveform_filename__1__Vfuncout;\r\n        vlSymsp->_vm_contextp__->dumpfile(VL_CVT_PACK_STR_NN(vlSelf->sim_top__DOT__unnamedblk1__DOT__waveform_filename));\r\n    }\r\n    co_await vlSelf->__VdlySched.delay(0x2710ULL, nullptr, \r\n                                       \"top.sv\", 17);\r\n    VL_FINISH_MT(\"top.sv\", 17, \"\");\r\n}\r\n```\r\n\r\nIf I understand correctly, `vlSymsp->_traceDumpOpen()` corresponds to `$dumpvar`. It explains everything, but I have no idea how and why Verilator performs the reordering.",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-12",
+  "closed_at": "2024-01-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

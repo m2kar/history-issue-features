@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9900,
+  "issue_url": "https://github.com/llvm/circt/pull/9900",
+  "title": "[SV] Add sv.macro_instance operation",
+  "body": "The PR is still draft and tests are missing. \r\n\r\nThis commit introduces a new sv.macro_instance operation to the SV dialect, which allows instantiating a module where the actual module to instantiate is determined by a macro at elaboration time.\r\n\r\n```mlir\r\n %c = sv.macro_instance \"foo\" @Macro [@A, @B] (a: %a: i1, b: %b: i4) -> (c: i5)\r\n ```\r\n\r\n```verilog\r\n`Macro foo (\r\n   .a(a),\r\n   .b(b),\r\n   .c(c)\r\n );\r\n```\r\n\r\nThe operation takes:\r\n- An instance name\r\n- A macro name (referencing an sv.macro.decl)\r\n- A list of candidate module names\r\n- Input and output ports matching the candidate modules\r\n\r\nWhen exported to Verilog, it emits a macro-based module instantiation where the macro name is used as the module name.\r\n\r\nAlternative representation considered was `sv.macro.module` which associates a macro with Module side, instead of with instances. This was not used because it doesn't compose well with the concept of candidate modules names and existing InstanceGraph:\r\n```\r\nhw.module public @A(in %a: i1, in %b: i1, out: c) \r\nhw.module @B(in %a: i1, in %b: i1, out: c) noescape\r\nsv.macro.module @Module  macro @MacroName (in %a: i1, in %b: i1, out: c)\r\n```\r\n\r\nAlso we can in fact do the same thing with existing hw.module.extern by embedding macro into its verilog name attribute, however I didn't like we have to embed macro into verilog name, and also I wanted to create edges from instances to modules in InstanceGraph\r\n\r\nAI-assisted-by Sonnet 4.5\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-10",
+  "closed_at": "2026-03-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

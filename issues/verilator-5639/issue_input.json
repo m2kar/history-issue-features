@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5639,
+  "issue_url": "https://github.com/verilator/verilator/pull/5639",
+  "title": "Fix interface and struct pattern collision (#5640)",
+  "body": "#5596 causes internal errors when there is a collision between struct field names and other identifiers (in this case an interface).  `t_interface_and_struct_pattern.py` demonstrates the problem:\r\n```\r\n%Error: Internal Error: t/t_interface_and_struct_pattern.v:38:23: ../V3Width.cpp:2318: Unlinked varref\r\n                                                                : ... note: In instance 't.the_sub'\r\n   38 |         bar: the_intf.data.foo,\r\n      |                       ^~~~\r\n```\r\n\r\n`A.6.7.1` says:\r\n```\r\narray_pattern_key ::= constant_expression | assignment_pattern_key\r\n```\r\n\r\nSo I believe my change is needed to enforce the constness.\r\n\r\n@gregdavill I think this is necessary, but you may want to test this against your use case to make sure I haven't broken you.  However, the test from #5596 is still working.\r\n\r\n@wsnyder I first tried to solve this with `AstVar::isConst()` but then I noticed this:\r\n```\r\n(rr) p AstNode::dumpGdb(varp)\r\nThis=VAR 0x555556eedd40 back=0x555556eede60 next=0x555557004000 headtail=0x55555700f290 op1p=0x555556f7b980 op3p=0x555556f7ca50 user1p=0x555556f80cf0\r\n  Fileline = t/t_param_pattern_init.v:12:28: \r\n  VAR 0x555556eedd40 <e609> {f12bc} u1=0x555556f80cf0 @dt=0@  SPI_INDEX [VSTATIC]  LPARAM\r\n$4 = void\r\n(rr) p varp->m_isConst \r\n$5 = false\r\n(rr) p varp->m_varType \r\n$6 = {m_e = VVarType::LPARAM}\r\n```\r\nwhich seems counterintuitive to me.  Why is a localparam not `isConst()`?\r\n\r\nAlso, you mentioned in #5631 about creating an issue and a PR.  I'm not quite sure if I understand the implementation details here.  Can you elaborate on what the right workflow is?  AKA, where should the main conversation be?  I the issue or in the PR?\r\n\r\nRegardless, I'll open an issue in a minute which points at this guy.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-27",
+  "closed_at": "2024-11-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

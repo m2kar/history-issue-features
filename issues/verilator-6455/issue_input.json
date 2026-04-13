@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6455,
+  "issue_url": "https://github.com/verilator/verilator/issues/6455",
+  "title": "Support `array.sum() with (...)` constraints",
+  "body": "Thanks for taking the time to report this.\n\n> Can you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n\nHere's the code which fails to compile on verilator (error message listed below):\n```systemverilog\n// Minimal reproducer for Verilator bug report:\n// - Shows array constraints for repeated values\n// - Should randomize array with repeated_value exactly three times and others once\n\nclass three_duplicates_only;\n  rand byte array[5];\n  rand byte repeated_value;\n  constraint three_duplicates_only_c {\n    array.sum() with (int'(item==repeated_value)) == 3;\n    foreach(array[i]) {\n      array[i] != repeated_value -> array.sum() with (int'(item==array[i]))== 1;\n    }\n  }\n  function void display();\n    foreach (array[i]) begin\n      $display(\"Array[%0d]: %d\", i, array[i]);\n    end\n  endfunction\nendclass\n\nmodule three_duplicates_only_top;\n  three_duplicates_only inst;\n  initial begin\n    inst = new();\n    if (inst.randomize()==0) begin\n      $fatal(1, \"Failed to randomize array.\");\n    end\n    inst.display();\n  end\nendmodule\n\n```\n\n> What output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n```\n%Warning-CONSTRAINTIGN: top.sv:33:11: Unsupported: randomizing this expression, treating as state\n   33 |     array.sum() with (int'(item == array[i])) == 1;\n      |           ^~~\n                        top.sv:13:1:\n                        ... For warning description see https://verilator.org/warn/CONSTRAINTIGN?v=5.041\n                        ... Use \"/* verilator lint_off CONSTRAINTIGN */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n```\n\n> What 'verilator' command line do we use to run your example?\n\n```verilator -cc --exe --binary --timing --top-module three_duplicates_only_top  three_duplicates_only.sv```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\n```Verilator 5.041 devel rev v5.040-121-gdca555b6d```\n\nExpected output from other simulators:\n```\nArray[0]:   90\nArray[1]:   90\nArray[2]:    7\nArray[3]:  123\nArray[4]:   90\n```\n\n> What OS and distribution are you using?\n\nmacOS\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nWould be happy to help but unfortunately I still haven't been able to find my way around the verilator source code. \n",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-18",
+  "closed_at": "2026-03-04",
+  "code_blocks": [
+    "// Minimal reproducer for Verilator bug report:\n// - Shows array constraints for repeated values\n// - Should randomize array with repeated_value exactly three times and others once\n\nclass three_duplicates_only;\n  rand byte array[5];\n  rand byte repeated_value;\n  constraint three_duplicates_only_c {\n    array.sum() with (int'(item==repeated_value)) == 3;\n    foreach(array[i]) {\n      array[i] != repeated_value -> array.sum() with (int'(item==array[i]))== 1;\n    }\n  }\n  function void display();\n    foreach (array[i]) begin\n      $display(\"Array[%0d]: %d\", i, array[i]);\n    end\n  endfunction\nendclass\n\nmodule three_duplicates_only_top;\n  three_duplicates_only inst;\n  initial begin\n    inst = new();\n    if (inst.randomize()==0) begin\n      $fatal(1, \"Failed to randomize array.\");\n    end\n    inst.display();\n  end\nendmodule\n\n",
+    "%Warning-CONSTRAINTIGN: top.sv:33:11: Unsupported: randomizing this expression, treating as state\n   33 |     array.sum() with (int'(item == array[i])) == 1;\n      |           ^~~\n                        top.sv:13:1:\n                        ... For warning description see https://verilator.org/warn/CONSTRAINTIGN?v=5.041\n                        ... Use \"/* verilator lint_off CONSTRAINTIGN */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n",
+    "\n> What 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\n",
+    "\nExpected output from other simulators:\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

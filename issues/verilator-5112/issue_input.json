@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5112,
+  "issue_url": "https://github.com/verilator/verilator/issues/5112",
+  "title": "Redundant AstExtend breaks DFG",
+  "body": "Commit 3cb4033c97720934455cc9077edaf6081dab647b introduces redundant AstExtend nodes (extend from N bits to N bits, that is, a no-op). This trip this assertion in DFG with the code below:\r\n\r\nhttps://github.com/verilator/verilator/blob/45eb5b8a5c99001d336c717d34a8cc3529c3fa1b/src/V3DfgPeephole.cpp#L619\r\n\r\ntest:\r\n\r\n```verilog\r\n   module top(input wire clk);\r\n\r\n     reg [127:1][7:0] array;\r\n\r\n     reg [6:0] index = 0;\r\n\r\n     wire logic [7:0] selected = array[index];\r\n\r\n     always @(posedge clk) begin\r\n       index <= index + 1;\r\n       $display(selected);\r\n     end\r\n\r\n   endmodule\r\n```\r\n\r\nI could relax the assertion, and accept equality of widths, and subsequently drop the Extend node, but we should probably just not be creating redundant nodes. I'm not very familiar with V3Width, and is unclear to me how to fix this properly. @wsnyder would you mind taking a look or provide some suggestions?\r\n\r\nI'm pretty sure it's this AstExtend introduced in the commit above:\r\n\r\nhttps://github.com/verilator/verilator/blob/45eb5b8a5c99001d336c717d34a8cc3529c3fa1b/src/V3WidthSel.cpp#L171\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-10",
+  "closed_at": "2024-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7485,
+  "issue_url": "https://github.com/llvm/circt/issues/7485",
+  "title": "[FIRRTL] Tighten Layerblock Checking of Writes Outside the Layerblock",
+  "body": "A `firrtl.layerblock` is supposed to contain no operations which write outside the `layerblock`. Improve the verifier for the `layerblock` to be able to check this.\r\n\r\nThe problem is specifically with a `connect` involving non-passively typed aggregate operands. When the operands have this type, one of three things could be happening:\r\n\r\n1. The source could be driving the destination.\r\n2. The destination could be driving the source.\r\n3. The source and destination could be driving each other, i.e., both (1) and (2) for some ground types.\r\n\r\nI made a decision in https://github.com/llvm/circt/pull/7462 to _not_ verify this as it is tricky and we didn't have infrastructure in place to do it. Additionally, the aggressive conversion of `connect` to `matchingconnect` (which requires passive types) almost immediately makes this verifier unnecessary. Additionally, anything parsed from FIRRTL text will use the `emitConnect` utility which intentionally doesn't create constructions like below. This can likely only come up for manually crafted MLIR or by passes that choose to create connects like this. That said, not checking this is far from ideal.\r\n\r\nAn example of problematic connects that should be rejected are:\r\n\r\n``` mlir\r\nfirrtl.module @ConnectTests() {\r\n  %a = firrtl.wire : !firrtl.uint<1>\r\n  %b = firrtl.wire : !firrtl.bundle<a: uint<1>>\r\n  %c = firrtl.wire : !firrtl.bundle<a flip: uint<1>>\r\n  %d = firrtl.wire : !firrtl.bundle<a : bundle< a flip : uint<1>>>\r\n  %e = firrtl.wire : !firrtl.bundle<a flip : bundle< a flip : uint<1>>>\r\n  firrtl.layerblock @A {\r\n    %_a = firrtl.wire : !firrtl.uint<1>\r\n    %_b = firrtl.wire : !firrtl.bundle<a: uint<1>>\r\n    %_c = firrtl.wire : !firrtl.bundle<a flip: uint<1>>\r\n    %_d = firrtl.wire : !firrtl.bundle<a : bundle< a flip : uint<1>>>\r\n    %_e = firrtl.wire : !firrtl.bundle<a flip : bundle< a flip : uint<1>>>\r\n\r\n    firrtl.connect %a, %_a : !firrtl.uint<1>\r\n    firrtl.connect %b, %_b : !firrtl.bundle<a: uint<1>>\r\n    firrtl.connect %_c, %c : !firrtl.bundle<a flip: uint<1>>\r\n    firrtl.connect %_d, %d : !firrtl.bundle<a : bundle< a flip : uint<1>>>\r\n    firrtl.connect %e, %_e : !firrtl.bundle<a flip : bundle< a flip : uint<1>>>\r\n  }\r\n}\r\n```\r\n\r\nNote that all of these examples are cases of (1) or (2). No case of (3) is shown. That would occur if you have a type which contains a bundle which has opposite direction leaves.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-08-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

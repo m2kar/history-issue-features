@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3926,
+  "issue_url": "https://github.com/verilator/verilator/pull/3926",
+  "title": "Pass m_unresolvedClass to the outer dot expr only if it exists",
+  "body": "I found a problem with `m_unresolvedClass` field. This flag is passed to the outer dot state even if that dot state is not related to a dot expression, but to a class definition. It results in marking all next class members as unable to resolve, even if they don't have any parameter references in their definitions. Currently selects need to be visited in the first pass of V3LinkDot, so an error was raised on the test I added.\r\n\r\nUnfortunately, the problem with selects is more general. Currently, we don't iterate through the body of a class that extends its parameter, but there may be selects in its methods. And if they are, an error is raised.\r\nHere is an example (I simplified one of classed from UVM):\r\n```systemverilog\r\nclass Cls;\r\nendclass\r\n\r\nclass uvm_port_base #(type T=Cls) extends T;\r\n   int m_dict[string];\r\n   \r\n   function void set (string s, int x);\r\n      m_dict[s] = x;\r\n   endfunction\r\nendclass\r\n```\r\nFix for that case will probably make my test passed too, but I think that this PR is needed anyway, because resolvable class fields shouldn't be marked as unresolved.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-02-02",
+  "closed_at": "2023-02-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 235,
+  "issue_url": "https://github.com/llvm/circt/issues/235",
+  "title": "[FIRRTL] Align dhsl lowering with Scala FIRRTL Compiler",
+  "body": "The Scala FIRRTL Compiler (SFC) does some width padding of the `dshl` operator which is not done by FIRRTL Dialect lowering, i.e., using `firtool`. Specifically, the padding for a shift is:\r\n\r\n1. Sign extend the input up to the max width of the shift\r\n2. Convert the `dshl` to a `dshlw`\r\n3. Sign extend the input up to the width of the output\r\n\r\nThe current lowering from FIRRTL dialect will, from my quick look, cause an issue when lowering `firrtl.sint` shifted into a larger value because the sign extension won't be applied.\r\n\r\nConsider the following circuit:\r\n\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input a_uint: UInt<2>\r\n    output b_uint: UInt<8>\r\n    input a_sint: SInt<2>\r\n    output b_sint: SInt<8>\r\n    input c: UInt<1>\r\n    b_uint <= dshl(a_uint, c)\r\n    b_sint <= dshl(a_sint, c)\r\n```\r\n\r\nThe SFC will produce, after the `firrtl.passes.PadWidths` transform (`firrtl -i Foo.fir -cll 'firrtl.passes.PadWidths$:trace' && cat Foo.v`):\r\n\r\n```\r\ncircuit Foo :\r\n  module Foo :\r\n    input a_uint : UInt<2>\r\n    output b_uint : UInt<8>\r\n    input a_sint : SInt<2>\r\n    output b_sint : SInt<8>\r\n    input c : UInt<1>\r\n\r\n    b_uint <= pad(dshlw(pad(a_uint, 3), c), 8)\r\n    b_sint <= pad(dshlw(pad(a_sint, 3), c), 8)\r\n```\r\n\r\nAnd the following Verilog:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [1:0] a_uint,\r\n  output [7:0] b_uint,\r\n  input  [1:0] a_sint,\r\n  output [7:0] b_sint,\r\n  input        c\r\n);\r\n  wire [2:0] _GEN_0 = {{1'd0}, a_uint};\r\n  wire [2:0] _GEN_1 = _GEN_0 << c;\r\n  wire [2:0] _GEN_2 = {{1{a_sint[1]}},a_sint};\r\n  wire [2:0] _GEN_3 = $signed(_GEN_2) << c;\r\n  assign b_uint = {{5'd0}, _GEN_1};\r\n  assign b_sint = {{5{_GEN_3[2]}},_GEN_3};\r\nendmodule\r\n```\r\n\r\nUsing `firtool` we get (`firtool -verilog Foo.fir`):\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [1:0] a_uint,\r\n  output [7:0] b_uint,\r\n  input  [1:0] a_sint,\r\n  output [7:0] b_sint,\r\n  input        c);\r\n\r\n  assign b_uint = a_uint << c;\t// Foo.fir:8:{12,15}\r\n  assign b_sint = a_sint << c;\t// Foo.fir:9:{12,15}\r\nendmodule\r\n```\r\n\r\nNote that this style of padding will happen for all other primops, but `dshl` is the only one that results in an operand conversion. \r\n\r\nThis issue doesn't matter for any FIRRTL where optimizations have run (since optimizations include `firrtl.passes.PadWidths`). However, this will crop up when trying to lower SFC unoptimized Low FIRRTL.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-11",
+  "closed_at": "2020-11-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

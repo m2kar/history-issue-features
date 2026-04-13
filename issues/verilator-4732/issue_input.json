@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4732,
+  "issue_url": "https://github.com/verilator/verilator/issues/4732",
+  "title": "Support elaboration-time printing of unpacked array with ‘%p’",
+  "body": "Verilator produces a compilation error when trying to print an unpacked array with `%p`. This issue is not seen when simulating with Questa.\r\n\r\n### Example file `my_file.sv`\r\n```\r\nmodule my_file;\r\n\r\nlocalparam integer unpacked_array [1:0] = '{0, 1};\r\n\r\nfunction integer foo();\r\n    $fatal(1, \"%p\", unpacked_array);\r\n    return 0;\r\nendfunction\r\n\r\nlocalparam integer return_val = foo();\r\n\r\ninitial begin\r\n    $finish;\r\nend\r\n\r\nendmodule // my_file\r\n```\r\n\r\nThe command to execute is `verilator --top-module my_file --binary --assert -Wall -Wno-fatal --timescale 1ns/1ps --trace --trace-structs my_file.sv`. The error is shown below.\r\n```\r\n%Error: my_file.sv:10:33: Expecting expression to be constant, but can't determine constant for FUNCREF 'foo'\r\n                                                                                               : ... In instance my_file\r\n        my_file.sv:6:5: ... Location of non-constant CEXPR: Unknown node type, perhaps missing visitor in SimulateVisitor\r\n        my_file.sv:10:33: ... Called from foo() with parameters:\r\n   10 | localparam integer return_val = foo();\r\n      |                                 ^~~\r\n```\r\n\r\nThe expected behavior is that there would be no compilation error and the value of the array would be printed out. As an example, this is the output when the same code is simulated with Questa.\r\n```\r\n# ** Fatal: '{0, 1}\r\n#    Time: 0 ns  Scope: my_file.foo File: my_file.sv Line: 6\r\n```\r\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-12-01",
+  "closed_at": "2025-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

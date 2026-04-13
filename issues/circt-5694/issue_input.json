@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5694,
+  "issue_url": "https://github.com/llvm/circt/pull/5694",
+  "title": "[Verif] Add has_been_reset op",
+  "body": "Add the `verif.has_been_reset` operation to detect if a circuit has been properly reset. Useful to disable assertions before and during reset.\r\n\r\nThe result of `verif.has_been_reset` reads as 0 immediately after simulation startup and after each power-cycle in a power-aware simulation. The result remains 0 before and during reset and only switches to 1 after the reset is deasserted again.\r\n\r\nThis is a useful utility to disable the evaluation of assertions and other verification constructs in the IR before the circuit being tested has been properly reset. Verification failures due to uninitialized or randomized initial state can thus be prevented.\r\n\r\nUsing the result of `verif.has_been_reset` to enable verification is more powerful and proper than just disabling verification during reset. The latter does not properly handle the period of time between simulation startup or power-cycling and the start of reset. `verif.has_been_reset` is guaranteed to produce a 0 value in that period, as well as during the reset.\r\n\r\nExample:\r\n```\r\nhw.module @HasBeenResetAsync(%clock: i1, %reset: i1) -> (out: i1) {\r\n  %0 = verif.has_been_reset %clock, async %reset\r\n  hw.output %0 : i1\r\n}\r\n```\r\n\r\nThe above produces the following Verilog:\r\n```\r\nmodule HasBeenResetAsync(input clock, reset, output out);\r\n  reg hasBeenResetReg;\r\n  initial begin\r\n    if (reset)\r\n      hasBeenResetReg = 1'h1;\r\n    else\r\n      hasBeenResetReg = 1'bx;\r\n  end\r\n  always @(posedge reset) hasBeenResetReg <= 1'h1;\r\n  assign out = hasBeenResetReg === 1'h1 & reset === 1'h0;\r\nendmodule\r\n```\r\n\r\n*Future work:* This is a verification-only construct. It lowers to a register that will not behave in the right way in actual silicon. Tools like `firtool` may need a linting pass that ensures the results of this op don't leak into synthesizable parts of the IR.",
+  "labels": [
+    "verif"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-26",
+  "closed_at": "2023-08-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

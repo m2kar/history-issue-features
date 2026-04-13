@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5442,
+  "issue_url": "https://github.com/llvm/circt/issues/5442",
+  "title": "[FIRRTL][CheckCombLoops] Non-deterministic ability to find a combinational cycle",
+  "body": "The following example has a combinational loop, but sometimes it is not found by the pass.  Running `firtool` on this example:\r\n```\r\ncircuit Foo:\r\n\r\n  module Bar:\r\n    input a : UInt<1>\r\n    output b : UInt<1>\r\n    b <= a\r\n\r\n  module Baz:\r\n    input a : UInt<1>\r\n    output b : UInt<1>\r\n    output c : {d : UInt<1>}\r\n    b <= a\r\n    c.d <= a\r\n\r\n  module Foo:\r\n    inst bar of Bar\r\n    inst baz of Baz\r\n\r\n    bar.a <= baz.b\r\n    baz.a <= bar.b\r\n```\r\nWill sometimes produce no error, or sometimes produce:\r\n```\r\n./test.fir:15:10: error: detected combinational cycle in a FIRRTL module, sample path: Foo.{bar.a <- baz.b <- baz.a <- bar.b <- bar.a}\r\n  module Foo:\r\n```\r\n\r\nI suspect that the non-deterministic iteration order of `handlePorts` mixed with the early return might be responsible for this issue: \r\nhttps://github.com/llvm/circt/blob/30a7e7a6f18dcaf598640eb432fa4264f2927ad2/lib/Dialect/FIRRTL/Transforms/CheckCombLoops.cpp#L386-L396\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-21",
+  "closed_at": "2023-06-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

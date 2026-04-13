@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 911,
+  "issue_url": "https://github.com/llvm/circt/issues/911",
+  "title": "Hierarchy Viewer Pass/Tool",
+  "body": "A common request is to provide hierarchy information for a design. \r\n\r\nE.g., for a given design, you'd like to have a representation of the design that includes who instantiated what. This format could be textual/command line (like the output of `tree`), conforming to some standard (IP-XACT, DuH), or entirely one-off.\r\n\r\nThis should support the ability to dump out a hierarchy for different operation types. E.g., a mix of FIRRTL, RTL, and SV modules should compose correctly.\r\n\r\nBuild a command line tool that can read in some MLIR and dump out its hierarchy in some format. (This is likely a single pass and a wrapper tool where the pass could be including in a pass pipeline if desired.)\r\n\r\n### Examples\r\n\r\n#### `Verilog::Perl` utility `vhier`\r\n\r\nWilson Snyder ships a tool as part of [`Verilog::Perl`](https://metacpan.org/release/Verilog-Perl) called [`vhier`](https://metacpan.org/pod/distribution/Verilog-Perl/vhier) that will dump out a `tree`-like output or give you an XML representation of a Verilog hierarchy.\r\n\r\nE.g., for the following Verilog:\r\n\r\n```verilog\r\n// Foo.v\r\nmodule Baz(\r\n  input a);\r\n\r\nendmodule\r\n\r\nmodule Bar(\r\n  input a);\r\n\r\n  Baz baz1 (\r\n    .a (a)\r\n  );\r\n  Baz baz2 (\r\n    .a (a)\r\n  );\r\nendmodule\r\n\r\nmodule Foo(\r\n  input a);\r\n\r\n  Bar bar1 (\r\n    .a (a)\r\n  );\r\n  Bar bar2 (\r\n    .a (a)\r\n  );\r\nendmodule\r\n```\r\n\r\nYou can then dump out something `tree`-like with `vhier --forest --instance --cells Foo.v`:\r\n\r\n``` \r\n  Foo Foo\r\n  |--bar1 Bar\r\n  |  |--baz1 Baz\r\n  |  \\--baz2 Baz\r\n  \\--bar2 Bar\r\n     |--baz1 Baz\r\n     \\--baz2 Baz\r\n```\r\n\r\nAlternatively, you can get an XML-based representation (which is non-standard as far as I can tell) with `vhier --xml --instance --cells Foo.v`:\r\n\r\n```xml\r\n<vhier>\r\n <cells>\r\n  <cell name=\"Foo\" submodname=\"Foo\" hier=\"Foo\" filename=\"Foo.v\">\r\n    <cell name=\"bar1\" submodname=\"Bar\" hier=\"Foo.bar1\" filename=\"Foo.v\">\r\n      <cell name=\"baz1\" submodname=\"Baz\" hier=\"Foo.bar1.baz1\" filename=\"Foo.v\">\r\n      </cell>\r\n      <cell name=\"baz2\" submodname=\"Baz\" hier=\"Foo.bar1.baz2\" filename=\"Foo.v\">\r\n      </cell>\r\n    </cell>\r\n    <cell name=\"bar2\" submodname=\"Bar\" hier=\"Foo.bar2\" filename=\"Foo.v\">\r\n      <cell name=\"baz1\" submodname=\"Baz\" hier=\"Foo.bar2.baz1\" filename=\"Foo.v\">\r\n      </cell>\r\n      <cell name=\"baz2\" submodname=\"Baz\" hier=\"Foo.bar2.baz2\" filename=\"Foo.v\">\r\n      </cell>\r\n    </cell>\r\n  </cell>\r\n </cells>\r\n</vhier>\r\n```\r\n\r\n#### Vendor Tools\r\n\r\nVendor tools support this in varying forms. E.g., in some tools you can bring up a window that lets you browse different \"views\" of a design. These may include module/instance hierarchy, looking at different nets in the design, and grouping in different ways.\r\n\r\nVendor tools also provide some APIs for directly querying their data model representation which _allows users to build hierarchy dumpers in some language_ (probably TCL).\r\n\r\n(I envision us solving this with Python bindings that allow querying the MLIR directly. However, this is out of scope of this issue.)",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-04-12",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

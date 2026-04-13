@@ -1,0 +1,24 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9341,
+  "issue_url": "https://github.com/llvm/circt/issues/9341",
+  "title": "[FIRRTL] Inconsistent Constant Propagation Behavior with Zero-Width Signals",
+  "body": "I've encountered what appears to be an inconsistency in `firtool`'s constant propagation when zero-width signals are involved.\n\n## Reproducer\n\nMy `firtool` was built from a recent checkout a few days ago; any recent version may reproduce the same behavior.\n\n```shell\n$ firtool --version\nLLVM (http://llvm.org/):\n  LLVM version 22.0.0git\n  DEBUG build with assertions.\nCIRCT 24ad90a75\n```\n\nBelow are two minimal FIRRTL examples, `demo1.fir` and `demo2.fir`.\n\n`demo1.fir`\n\n```firrtl\nFIRRTL version 3.2.0\ncircuit demo1:\n    module demo1:\n        input a: UInt<0>\n        output b: UInt<1>\n\n        wire r: UInt<0>\n        connect r,  a\n        connect b, pad(r, 1)\n```\n\n`demo2.fir`\n\n```firrtl\nFIRRTL version 3.2.0\ncircuit demo2:\n    module demo2:\n        input a: UInt<0>\n        output b: UInt<1>\n\n        wire r: UInt<0>\n        connect r, a\n        connect b, tail(add(pad(r, 1), UInt<1>(1)), 1)\n```\n\nIn my intuition, since `a` and `r` have type `UInt<0>`:\n\n- In `demo1`, `pad(r, 1)` should always evaluate to `0`, so `b` should be constant `0`.\n\n- In `demo2`, `pad(r, 1)` is `0`, so `add(0, 1)` yields `1`, and `tail(..., 1)` preserves that value; thus `b` should be constant `1`.\n\n## Observed Behavior\n\nRunning `firtool` with `--ir-fir` produces different optimization results:\n\n```shell\n$ firtool --ir-fir demo1.fir\n```\n\n```mlir\nmodule {\n  firrtl.circuit \"demo1\" {\n    firrtl.module @demo1(in %a: !firrtl.uint<0>, out %b: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\n      %0 = firrtl.pad %a, 1 : (!firrtl.uint<0>) -> !firrtl.uint<1>\n      firrtl.matchingconnect %b, %0 : !firrtl.uint<1>\n    }\n  }\n}\n```\n\n```\n$ firtool --ir-fir demo2.fir\n```\n\n```mlir\nmodule {\n  firrtl.circuit \"demo2\" {\n    firrtl.module @demo2(in %a: !firrtl.uint<0>, out %b: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\n      firrtl.matchingconnect %b, %c1_ui1 : !firrtl.uint<1>\n    }\n  }\n}\n```\n\nAs shown above:\n \n- `demo2` is optimized as expected, with `b` recognized as the constant `1`.\n\n- `demo1`, however, is left unoptimized, and `b` is not recognized as a constant `0`.\n\n## Question\n\nCould someone help clarify why constant propagation succeeds in `demo2` but not in `demo1`?\n\nThanks in advance for any insight. This is a great project, and I appreciate your time and work on `firtool`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-13",
+  "closed_at": "2025-12-16",
+  "code_blocks": [
+    "$ firtool --version\nLLVM (http://llvm.org/):\n  LLVM version 22.0.0git\n  DEBUG build with assertions.\nCIRCT 24ad90a75\n",
+    "FIRRTL version 3.2.0\ncircuit demo1:\n    module demo1:\n        input a: UInt<0>\n        output b: UInt<1>\n\n        wire r: UInt<0>\n        connect r,  a\n        connect b, pad(r, 1)\n",
+    "FIRRTL version 3.2.0\ncircuit demo2:\n    module demo2:\n        input a: UInt<0>\n        output b: UInt<1>\n\n        wire r: UInt<0>\n        connect r, a\n        connect b, tail(add(pad(r, 1), UInt<1>(1)), 1)\n",
+    "$ firtool --ir-fir demo1.fir\n",
+    "module {\n  firrtl.circuit \"demo1\" {\n    firrtl.module @demo1(in %a: !firrtl.uint<0>, out %b: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\n      %0 = firrtl.pad %a, 1 : (!firrtl.uint<0>) -> !firrtl.uint<1>\n      firrtl.matchingconnect %b, %0 : !firrtl.uint<1>\n    }\n  }\n}\n",
+    "$ firtool --ir-fir demo2.fir\n",
+    "module {\n  firrtl.circuit \"demo2\" {\n    firrtl.module @demo2(in %a: !firrtl.uint<0>, out %b: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\n      firrtl.matchingconnect %b, %c1_ui1 : !firrtl.uint<1>\n    }\n  }\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

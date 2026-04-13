@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2300,
+  "issue_url": "https://github.com/verilator/verilator/issues/2300",
+  "title": "Issue in AND-reduction",
+  "body": "I have created a repo that illustrates the issue: https://github.com/jackkoenig/verilator-and-reduction-bug\r\nCommit of the above repo at time of filing issue: 9a38b944bd9909d32611ed3c0a920a3f49170fd5\r\n\r\nPasted from README:\r\n\r\nIt seems there is a bug in handling of AND-reduction (and possibly other reductions, I haven't checked) for wires with >64-bits. I have confirmed the buggy behavior in versions >= 4.026.\r\n\r\nThis test case compares the results of equivalent operations AND-reduce and checking equality with all ones for a 68-bit register:\r\n```verilog\r\n  assign and_reduce = &r;\r\n  assign check_equal = r == 68'hffff_ffff_ffff_ffff_f;\r\n```\r\n\r\nTo reproduce, setup verilator and run:\r\n```\r\nmake run\r\n```\r\n\r\nOn versions < 4.026 you will see the correct output:\r\n```\r\nreset = 0, r = 00000000000000000, and_reduce = 0, check_equal = 0\r\nreset = 0, r = ffffffffffffffffe, and_reduce = 0, check_equal = 0\r\nreset = 0, r = fffffffffffffffff, and_reduce = 1, check_equal = 1\r\n```\r\n\r\nFor versions >= 4.026, you will see the incorrect output:\r\n```\r\nreset = 0, r = 00000000000000000, and_reduce = 1, check_equal = 0\r\nreset = 0, r = ffffffffffffffffe, and_reduce = 0, check_equal = 0\r\nreset = 0, r = fffffffffffffffff, and_reduce = 0, check_equal = 1\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-30",
+  "closed_at": "2020-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

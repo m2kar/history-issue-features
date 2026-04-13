@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5618,
+  "issue_url": "https://github.com/verilator/verilator/issues/5618",
+  "title": "assignment to member of array of struct not working in some constellations ",
+  "body": "Some of my test suites started failing when upgrading from 5.020 to 5.030 and I tried to locate the breaking change. At first it looked like the culprit is this, because after this change my tests start to fail: (When I undo the change to V3Unknown.cpp the tests are green again.)\r\n\r\nhttps://github.com/verilator/verilator/commit/8c3cc3af8f39d30dd2afa1700077562d17dbf6e7#diff-bf2735b07bd0b382ff641879225a1d4957732b6fbfc5d4a91d77cf0668964f73R122\r\n\r\nHowever, in the process of creating a small example of the problem for this bug report I ended up with the code below which is already not working for me in 5.020.\r\n\r\nProblem: `counter` will not get incremented unless the line making the assignment to `flag` is commented out.\r\n\r\n```sv\r\nmodule demo_tb;\r\n    typedef struct {\r\n        logic [2:0] counter;\r\n        logic flag;\r\n    } SimpleStruct;\r\n\r\n    SimpleStruct s [1];\r\n\r\n    logic clock = 0;\r\n\r\n    initial forever #5 clock = ~clock;\r\n\r\n    always @(posedge clock) begin\r\n        for (int i = 0; i < 1; i++) begin\r\n            s[i].counter <= s[i].counter + 3'd1;\r\n            s[i].flag <= 0; // <-- comment out this line and the test will pass\r\n        end        \r\n    end\r\n    \r\n    initial begin\r\n        if (s[0].counter != 0) $stop;\r\n        for (int i = 1; i < 8; i++)\r\n            #10 if (s[0].counter != 3'(i)) $stop;\r\n\r\n        $write(\"*-* All Finished *-*\\n\");\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\nReproduced with:\r\n- Verilator 5.020\r\n- Verilator 5.031 devel rev v5.030-78-g5470cf9fa\r\n\r\nOS: Ubuntu 24.04.1 LTS\r\nRun from cocotb 1.9 via python runner.",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-18",
+  "closed_at": "2024-11-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

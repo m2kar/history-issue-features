@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5044,
+  "issue_url": "https://github.com/verilator/verilator/issues/5044",
+  "title": "Wires driven through virtual interface traced improperly",
+  "body": "If there is an interface and a class that uses this interface to drive wires, the driven wires remain at the same level throughout the simulation in the trace (though they seem to be simulated correctly).\r\n\r\nTo reproduce, compile the following code with ``verilator --trace --exe --build -j `nproc` --binary signal_driver.sv -o signal_driver`` (using the git master version):\r\n```systemverilog\r\ninterface INTF;\r\n    wire signal;\r\nendinterface\r\n\r\nclass sig_driver_class;\r\n    virtual INTF i;\r\n\r\n    function new(virtual INTF i);\r\n        this.i = i;\r\n    endfunction\r\n\r\n    task clear_signal;\r\n        i.signal = 0;\r\n    endtask\r\n\r\n    task set_signal;\r\n        i.signal = 1;\r\n    endtask\r\nendclass\r\n\r\nmodule top();\r\n    INTF i();\r\n    wire s;\r\n    assign s = i.signal;\r\n\r\n    sig_driver_class driver = new(i);\r\n\r\n    initial begin\r\n        $dumpfile(\"signal_driver.vcd\");\r\n        $dumpvars(0, top);\r\n\r\n        #1ns;\r\n        driver.set_signal();\r\n        $display(\"Signal is %b\", s);\r\n        \r\n        #1ns;\r\n        driver.clear_signal();\r\n        $display(\"Signal is %b\", s);\r\n\r\n        #1ns;\r\n        // i.signal = 1;\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nViewing the VCD file will show both `s` and `i.signal` as logic low throughout the simulation, even though the `$display` statements reflect the signal changing.\r\n\r\nI also noticed that if the interface is at any point driven from outside of the class, the wire(s) will be traced correctly (remove the `//` before `i.signal = 1;` to reproduce).\r\n\r\nWithout driving the interface directly:\r\n![image](https://github.com/verilator/verilator/assets/41953062/8001a153-4bf6-4655-b8ac-be6dd11f5021)\r\n\r\nWith driving the interface directly.\r\n![image](https://github.com/verilator/verilator/assets/41953062/2a5de15f-7bb9-4fe9-8bab-523d7b0506bf)\r\n\r\nComparing the verilated result with and without the `i.signal = 1;` line yields a large number of differences: [verilated_diff.patch](https://github.com/verilator/verilator/files/14934237/verilated_diff.patch)\r\nOne possible point of interest is that the file `Vsignal_driver___024root__DepSet_hee9ce67b__0__Slow.cpp` is generated, but not included anywhere in the rest of the files in the erroneous verilated files.\r\n",
+  "labels": [
+    "status: ready",
+    "area: tracing"
+  ],
+  "state": "open",
+  "created_at": "2024-04-10",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

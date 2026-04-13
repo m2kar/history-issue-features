@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9963,
+  "issue_url": "https://github.com/llvm/circt/issues/9963",
+  "title": "[circt-verilog] Need to carry macro defined in previous file?",
+  "body": "```bash\n$ head *.sv\n==> A.sv <==\n`define FILE_A\n\n==> B.sv <==\n`ifndef FILE_A\n  `err\n`endif\n\nmodule Top();\nendmodule\n```\n```bash\n$ verilator A.sv B.sv --lint-only\n- V e r i l a t i o n   R e p o r t: Verilator 5.047 devel rev v5.046-29-ga3870c5e5\n- Verilator: Built from 0.045 MB sources in 2 modules, into 0.002 MB in 3 C++ files needing 0.000 MB\n- Verilator: Walltime 0.034 s (elab=0.014, cvt=0.015, bld=0.000); cpu 0.005 s on 1 threads; allocated 25.441 MB\n$ verilator  B.sv A.sv --lint-only\n%Error: B.sv:2:3: Define or directive not defined: '`err'\n                : ... Suggested alternative: '`error'\n    2 |   `err\n      |   ^~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.047 for more assistance.\n%Error: Exiting due to 1 error(s)\n$ circt-verilog A.sv B.sv\nB.sv:2:3: error: unknown macro or compiler directive '`err'\n  `err\n  ^\n```\nI tested Yosys and other commercial tools and the macro is expanded in B.sv if A.sv read first. \nNot sure this behavior is well-defined in the SV spec",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-17",
+  "closed_at": null,
+  "code_blocks": [
+    "$ head *.sv\n==> A.sv <==\n`define FILE_A\n\n==> B.sv <==\n`ifndef FILE_A\n  `err\n`endif\n\nmodule Top();\nendmodule\n",
+    "$ verilator A.sv B.sv --lint-only\n- V e r i l a t i o n   R e p o r t: Verilator 5.047 devel rev v5.046-29-ga3870c5e5\n- Verilator: Built from 0.045 MB sources in 2 modules, into 0.002 MB in 3 C++ files needing 0.000 MB\n- Verilator: Walltime 0.034 s (elab=0.014, cvt=0.015, bld=0.000); cpu 0.005 s on 1 threads; allocated 25.441 MB\n$ verilator  B.sv A.sv --lint-only\n%Error: B.sv:2:3: Define or directive not defined: '`err'\n                : ... Suggested alternative: '`error'\n    2 |   `err\n      |   ^~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.047 for more assistance.\n%Error: Exiting due to 1 error(s)\n$ circt-verilog A.sv B.sv\nB.sv:2:3: error: unknown macro or compiler directive '`err'\n  `err\n  ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

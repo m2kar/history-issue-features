@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2858,
+  "issue_url": "https://github.com/llvm/circt/pull/2858",
+  "title": "[InferResets] Fix inference for zero-length vectors",
+  "body": "When tracing resets through the design, the `InferResets` pass always uses the ID of the first vector element if it encounters a vector type. This is done to ensure that connections to an element of a vector affects the type inference of all the other elements too, since the pass can only pick a single reset type for the entire vector instead of individual types for each vector element.\r\n\r\nThis is problematic since it assumes that all vectors have at least one element, which may not be the case in practice. If such a vector is encountered, the field IDs get out of sync in weird ways if the vector is embedded in a bundle: when the bundle is asked to resolve a field ID to one of its fields, it treats the zero-length vector as actually having zero elements, such that forcibly asking for the first, non-existent element of that vector spills over into the next bundle field.\r\n\r\nThis commit changes the handling of vectors by always using the vector's self-referential field ID (i.e., the ID 0) to capture connections during reset tracing. Later in type updating, vectors correspondingly assume that a field ID 0 means that the vector element type is to be updated. This is not generally how field refs are supposed to work, but since the ID abuse is limited to this file we should be fine.\r\n\r\nFixes #2857.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-07",
+  "closed_at": "2022-04-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

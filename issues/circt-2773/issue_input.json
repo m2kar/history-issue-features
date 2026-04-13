@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2773,
+  "issue_url": "https://github.com/llvm/circt/pull/2773",
+  "title": "[ExportVerilog] Respect disallowLocalVariables when spilling temps.",
+  "body": "When spilling a large expression into a temporary, we need to respect\r\ndisallowLocalVariables inside procedural regions. There are actually a\r\nfew intertwined things that need to happen.\r\n\r\nFirst, the logic checking if the spilled temp is inside a procedural\r\nregion needs to be enhanced to capture situations like the included\r\ntest case. Even if the large expression is originally defined within a\r\nprocedural region, we may hoist it to the top-level of the module in\r\nPrepareForEmission. The check for being inside a procedural region has\r\nto be extended to consider the users of the expression, not just where\r\nit is defined.\r\n\r\nSecond, we need to be able to put the temps in the right\r\nplace. Before, they would get rearranged to the front of the current\r\nblock of statements being processed. This is not sufficient when\r\ndisallowLocalVariables is set, because the current block may be nested\r\ninside other procedural regions. To be safe, we rearrange spilled\r\nexpressions to the top-level of the module body in this case. To\r\nenable this, a second cursor and indent level are stored, which always\r\npoint to the end of the declaration block in the top-level.\r\n\r\nFinally, in the case disallowLocalVariables is set and we spill into\r\nthe top-level, the call to emitDeclarationForTemporary may actually\r\nemit the entire expression. This previously wouldn't happen, and the\r\ndeclaration and assignment would always be separate. Now, we need to\r\nkeep track of which declarations were emitted with a complete\r\nassignment, and use that information to avoid emitting duplicates.\r\n\r\nWith these three changes, the example in the test case is properly\r\nspilled to the top-level of the module body when\r\ndisallowLocalVariables is set. This closes https://github.com/llvm/circt/issues/2772.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-16",
+  "closed_at": "2022-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

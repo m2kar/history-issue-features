@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1567,
+  "issue_url": "https://github.com/llvm/circt/issues/1567",
+  "title": "[exportverilog] \"automatic logic\" variables should try to fold their initializers",
+  "body": "We generate \"automatic logic\" variables in procedural blocks when we need to split expressions for various reasons, but don't fold the initializer expression into them.  Here's on example that shows the problem:\r\n\r\n```\r\nhw.module @foo(%reset: i1) {\r\n   \r\n    %true = hw.constant true\r\n\r\n    %119 = sv.reg  : !hw.inout<i3>\r\n    %120 = sv.reg  : !hw.inout<i3>\r\n    %121 = sv.reg  : !hw.inout<i3>\r\n\r\n    sv.initial {\r\n      %504 = comb.xor %reset, %true : i1\r\n      sv.if %504  {\r\n        %RANDOM = sv.verbatim.expr.se \"`RANDOM\" : () -> i32\r\n        %505 = comb.extract %RANDOM from 0 : (i32) -> i3\r\n        sv.bpassign %119, %505 : i3\r\n        %RANDOM_0 = sv.verbatim.expr.se \"`RANDOM\" : () -> i32\r\n        %506 = comb.extract %RANDOM_0 from 0 : (i32) -> i3\r\n        sv.bpassign %120, %506 : i3\r\n        %RANDOM_1 = sv.verbatim.expr.se \"`RANDOM\" : () -> i32\r\n        %507 = comb.extract %RANDOM_1 from 0 : (i32) -> i3\r\n        sv.bpassign %121, %507 : i3\r\n      }\r\n    }\r\n    \r\n    hw.output \r\n  }\r\n```\r\n\r\nGenerates:\r\n\r\n```\r\nmodule foo(\r\n  input reset);\r\n\r\n  reg [2:0] _T;\t// a.mlir:8:12\r\n  reg [2:0] _T_0;\t// a.mlir:9:12\r\n  reg [2:0] _T_1;\t// a.mlir:10:12\r\n\r\n  initial begin\t// a.mlir:12:5\r\n    if (~reset) begin\t// a.mlir:13:14, :14:7\r\n      automatic logic [31:0] _T_2;\t// a.mlir:15:19\r\n      automatic logic [31:0] _T_3;\t// a.mlir:18:21\r\n      automatic logic [31:0] _T_4;\t// a.mlir:21:21\r\n\r\n      _T_2 = `RANDOM;\t// a.mlir:15:19\r\n      _T = _T_2[2:0];\t// a.mlir:16:16, :17:9\r\n      _T_3 = `RANDOM;\t// a.mlir:18:21\r\n      _T_0 = _T_3[2:0];\t// a.mlir:19:16, :20:9\r\n      _T_4 = `RANDOM;\t// a.mlir:21:21\r\n      _T_1 = _T_4[2:0];\t// a.mlir:22:16, :23:9\r\n    end\r\n  end // initial\r\nendmodule\r\n```\r\n\r\nWe should generate:\r\n\r\n```\r\nmodule foo(\r\n  input reset);\r\n\r\n  reg [2:0] _T;\t// a.mlir:8:12\r\n  reg [2:0] _T_0;\t// a.mlir:9:12\r\n  reg [2:0] _T_1;\t// a.mlir:10:12\r\n\r\n  initial begin\t// a.mlir:12:5\r\n    if (~reset) begin\t// a.mlir:13:14, :14:7\r\n      automatic logic [31:0] _T_2 = `RANDOM;\r\n      automatic logic [31:0] _T_3 = `RANDOM;\r\n      automatic logic [31:0] _T_4 = `RANDOM;\r\n\r\n      _T = _T_2[2:0];\t// a.mlir:16:16, :17:9\r\n      _T_0 = _T_3[2:0];\t// a.mlir:19:16, :20:9\r\n      _T_1 = _T_4[2:0];\t// a.mlir:22:16, :23:9\r\n    end\r\n  end // initial\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-13",
+  "closed_at": "2021-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

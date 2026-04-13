@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4203,
+  "issue_url": "https://github.com/llvm/circt/issues/4203",
+  "title": "[ExportVerilog] Reference to i0 port when loading struct with i0 field",
+  "body": "```mlir\r\n  hw.module @hw_struct_create_in_ui0_ui32_out_struct_address_ui0_data_ui32(%in0: i0, %in0_valid: i1, %in1: i32, %in1_valid: i1, %out0_ready: i1) -> (out0: !hw.struct<address: i0, data: i32>, out0_valid: i1, in0_ready: i1, in1_ready: i1) {\r\n    %0 = comb.and %in0_valid, %in1_valid : i1\r\n    %1 = sv.wire  {hw.verilogName = \"_GEN\"} : !hw.inout<i1>\r\n    sv.assign %1, %0 : i1\r\n    %2 = sv.read_inout %1 : !hw.inout<i1>\r\n    %3 = comb.and %out0_ready, %2 : i1\r\n    %4 = sv.wire  {hw.verilogName = \"_GEN_0\"} : !hw.inout<i1>\r\n    sv.assign %4, %3 : i1\r\n    %5 = hw.struct_create (%in0, %in1) : !hw.struct<address: i0, data: i32>\r\n    %6 = sv.read_inout %1 : !hw.inout<i1>\r\n    %7 = sv.read_inout %4 : !hw.inout<i1>\r\n    %8 = sv.read_inout %4 : !hw.inout<i1>\r\n    hw.output %5, %6, %8, %7 : !hw.struct<address: i0, data: i32>, i1, i1, i1\r\n  }\r\n```\r\n\r\n```verilog\r\nmodule hw_struct_create_in_ui0_ui32_out_struct_address_ui0_data_ui32(\r\n  // input  /*Zero Width*/                                                    in0,\r\n     input                                                                    in0_valid,\r\n     input  [31:0]                                                            in1,\r\n     input                                                                    in1_valid,\r\n                                                                              out0_ready,\r\n     output struct packed {logic /*Zero Width*/ address; logic [31:0] data; } out0,\r\n     output                                                                   out0_valid,\r\n                                                                              in0_ready,\r\n                                                                              in1_ready);\r\n\r\n  wire _GEN = in0_valid & in1_valid;\r\n  wire _GEN_0 = out0_ready & _GEN;\r\n  assign out0 = '{address: in0, data: in1};\r\n  assign out0_valid = _GEN;\r\n  assign in0_ready = _GEN_0;\r\n  assign in1_ready = _GEN_0;\r\nendmodule\r\n```\r\n\r\n`** Error: PyCDESystem/hw_struct_create_in_ui0_ui32_out_struct_address_ui0_data_ui32.sv(15): (vlog-2730) Undefined variable: 'in0'.`\r\n\r\nWelp, we apparently do have to worry about zero-bit fields in structs. The fact that the zero bit field gets emitted as a single bit field isn't the problem syntactically in this case, it's that `in0` doesn't exist... but if a generated struct is wider than circt thinks it is, that's gonna be a problem.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-28",
+  "closed_at": "2022-10-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6299,
+  "issue_url": "https://github.com/verilator/verilator/issues/6299",
+  "title": "high impedance equality  ` === 1'bz`",
+  "body": "> Thanks for taking the time to report this.\n> Can you attach an example that shows the issue?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\nHello, \nI know that officially verilator does not support z, nevertheless as this failed silently I was wondering if this was not a bug. \n\n```verilog\n// https://www.edaplayground.com/x/dKYA\nmodule m_caseeq_demo (\n    input logic in,\n    output logic eq,\n    output logic neq\n);\n    logic tri_sig = 1'bz;\n    assign eq  = (in === tri_sig); \n    assign neq = (in !== tri_sig); \nendmodule\n\nmodule top;\n    logic in;\n    logic eq;\n    logic neq;\n    m_caseeq_demo dut (\n        .in(in),\n        .eq(eq),\n        .neq(neq)\n    );\n\n    initial begin\n        in = 0; \n\n        #10; \n\n        $display(\"eq = %b\", eq);\n        $display(\"neq = %b\", neq);\n\n        $finish;\n    end\nendmodule\n```\n\n> What 'verilator' command line do we use to run your example?\n\nI ran this with the following command\n```bash\nverilator --binary --exe --build -Mdir obj_dir --timing -sv minimal.sv && ./obj_dir/Vminimal\n[...]\neq = 1\nneq = 0\n- minimal.sv:29: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.038 2025-07-08\n- Verilator: $finish at 10ps; walltime 0.005 s; speed 1.832 ns/s\n- Verilator: cpu 0.005 s on 1 threads; alloced 249 MB\n```\n\nThe IEEE says that \n> For the case equality and case inequality operators (=== and !==), the comparison shall be done just as it is in the procedural case statement (see 12.5). Bits that are x or z shall be included in the comparison and shall match for the result to be considered equal. The result of these operators shall always be a known value, either 1'b1 or 1'b0.\n\nI would thus have expected the output to be \n```txt\neq = 0\nneq = 1\n```\n\nI guess that verilator considers the z value to be equal to 0. But I would have expected a warning that RHS assignements to `z`  are currenlty unsupported 🤷. \n\n> What 'verilator --version' are you using?  Did you try it with the git master version?\n\nI ran it with the master version \n```sh\nverilator --version                                                                         \nVerilator 5.039 devel rev v5.038-175-g48a12fb0f\n```\n\n> What OS and distribution are you using? \n\nlinux debian12\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nI am pretty confident I this is too complex for me 😅 \n\n(This is produced by a fuzzer whose objective is to find deterministic code samples that produce different outputs on different simulators to create [mistranslation gadgets](https://www.usenix.org/system/files/usenixsecurity25-solt.pdf) )\n\nAnyway thanks for the work on verilator ! \nSorry if you already answered this in another issue, I did not find it.\nThanks for your time. \n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-17",
+  "closed_at": "2025-08-17",
+  "code_blocks": [
+    "// https://www.edaplayground.com/x/dKYA\nmodule m_caseeq_demo (\n    input logic in,\n    output logic eq,\n    output logic neq\n);\n    logic tri_sig = 1'bz;\n    assign eq  = (in === tri_sig); \n    assign neq = (in !== tri_sig); \nendmodule\n\nmodule top;\n    logic in;\n    logic eq;\n    logic neq;\n    m_caseeq_demo dut (\n        .in(in),\n        .eq(eq),\n        .neq(neq)\n    );\n\n    initial begin\n        in = 0; \n\n        #10; \n\n        $display(\"eq = %b\", eq);\n        $display(\"neq = %b\", neq);\n\n        $finish;\n    end\nendmodule\n",
+    "verilator --binary --exe --build -Mdir obj_dir --timing -sv minimal.sv && ./obj_dir/Vminimal\n[...]\neq = 1\nneq = 0\n- minimal.sv:29: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.038 2025-07-08\n- Verilator: $finish at 10ps; walltime 0.005 s; speed 1.832 ns/s\n- Verilator: cpu 0.005 s on 1 threads; alloced 249 MB\n",
+    "eq = 0\nneq = 1\n",
+    "verilator --version                                                                         \nVerilator 5.039 devel rev v5.038-175-g48a12fb0f\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

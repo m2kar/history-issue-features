@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4953,
+  "issue_url": "https://github.com/verilator/verilator/pull/4953",
+  "title": "Split V3Order into further parts and decouple various components",
+  "body": "Follow up from #4950, more code movement, but it includes a bit of necessary refactoring to decouple the components.\r\n\r\nContinuing the idea of decoupling the implementations of the various algorithms.\r\n\r\nThe main points:\r\n- Move the former \"processDomain\" stuff, dealing with assigning combinational logic into the relevant sensitivity domains into V3OrderProcessDomains.cpp\r\n- Move the parallel code construction in V3OrderParallel.cpp (Could combine this with some parts of V3Partition - those not called from V3Partition::finalize - but that's not for this patch).\r\n- Move the serial code construction into V3OrderSerial.cpp\r\n- Factored the very small common code between the parallel and serial code construction (processMoveOneLogic) into V3OrderCFuncEmitter.cpp\r\n\r\nI had to make a small change to the algorithm in V3OrderProcessDomains to decouple it from the rest, which is that logic that is never triggered (the old m_deleteDomain thing) is removed right there in that algorithm, and not in the later parts. This has the effect of slightly perturbing output as more vertices are ready with no input dependencies at the beginning, before removing the dead logic.\r\n\r\nI did clean up the code in V3OrderCFuncEmitter a bit to make it simpler, so the interfaces are cleaner. This has the effect of fixing a previous silly things about function splitting create completely empty CFuncs that we used to do (there is also a TODOs left in there).\r\n\r\nThe third thing that changes the output slightly is the removal of the ET_ILLEGAL VEdgeType, which changes some variable names based on hashes.\r\n\r\nOther than the 3 things above, output is identical.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-03-08",
+  "closed_at": "2024-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

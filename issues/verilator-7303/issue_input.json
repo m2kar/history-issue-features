@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7303,
+  "issue_url": "https://github.com/verilator/verilator/issues/7303",
+  "title": "Assignments through virtual interface are unsafe in multi-threaded mode",
+  "body": "Recording for reference after some discussion related to #7130 \n\nNeither scheduling, nor V3Split (and possibly other passes) understand assignments through a virtual interface variable to an interface member:\n\n```systemverilog\nIFace iface();\nvirtual IFace viface = iface;\n\nalways @(posedge clk) begin\n   iface.foo <= '0;\nend\n\nalways @(posedge clk) begin\n   viface.foo <= '1;\nend\n```\n\nWhile this is dubious code, if `foo` is wide and not updated atomically, in multi-threaded mode it can end up in an arbitrary mixed state as the OrderGraph only tracks `viface`, which is an unrelated variable, while the write is to `iface.foo`.\n\nEven worse, this has defined semantics in SV (if a bit dubious code still, but latest should win), but due to block splitting in V3Split, it can be scheduled in the reverse order.\n\n```systemverilog\nalways @(posedge clk) begin\n   iface.foo <= '0;\n   viface.foo <= '1;\nend\n```\n\nSimilar issues exist when multiple virtual interface variables reference the same interface instance.\n\n@micprog in case you need to reference the issue in text, e.g. any new tests added for #7130.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-21",
+  "closed_at": null,
+  "code_blocks": [
+    "IFace iface();\nvirtual IFace viface = iface;\n\nalways @(posedge clk) begin\n   iface.foo <= '0;\nend\n\nalways @(posedge clk) begin\n   viface.foo <= '1;\nend\n",
+    "always @(posedge clk) begin\n   iface.foo <= '0;\n   viface.foo <= '1;\nend\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

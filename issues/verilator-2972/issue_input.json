@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2972,
+  "issue_url": "https://github.com/verilator/verilator/issues/2972",
+  "title": "Incorrect MULTIDRIVEN warning on unpacked array",
+  "body": "A MULTIDRIVEN warning is produced, when using 2 different clocks (clk0 and clk1) on 2 different processes which drives independant elements on an unpacked array (b). Here is the most simple example of this :\r\n\r\nmodule t (\r\n   input logic    clk0,\r\n   input logic    clk1,\r\n   output logic   b[2]\r\n);\r\nalways_ff @(posedge clk0) begin\r\n   b[0] <= 1;\r\nend\r\nalways_ff @(posedge clk1) begin\r\n   b[1] <= 1;\r\nend\r\nendmodule\r\n\r\nRunning **verilator --cc t.sv** will produce the following message :\r\n\r\n%Warning-MULTIDRIVEN: test_tb.sv:4:19: Signal has multiple driving blocks with different clocking: 'b'\r\n                      test_tb.sv:11:4: ... Location of first driving block\r\n   11 |    b[1] <= 1;\r\n      |    ^\r\n                      test_tb.sv:7:4: ... Location of other driving block\r\n    7 |    b[0] <= 1;\r\n      |    ^\r\n                      ... For warning description see https://verilator.org/warn/MULTIDRIVEN?v=4.202\r\n                      ... Use \"/* verilator lint_off MULTIDRIVEN */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n\r\n\r\nI believe this is a bug as both instance of \"b\" should be considered independent and could be driven by different clocks.\r\n\r\nVerilator version v4.202",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-19",
+  "closed_at": "2021-05-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

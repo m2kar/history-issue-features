@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5941,
+  "issue_url": "https://github.com/verilator/verilator/issues/5941",
+  "title": "Modport interface field access via hierarchy fails",
+  "body": "This design causes Verilator to error when accessing a signal through a modport-connected interface via hierarchy. Other tools like slang and VCS accept it without issues.\n\n### Testcase\n\n```systemverilog\ninterface bus_if(input logic clk);\n  logic [7:0] data;\n  modport slave(output data, input clk);\nendinterface\n\nmodule slave(bus_if.slave bus);\n  always_ff @(posedge bus.clk)\n    bus.data <= 8'h5A;\nendmodule\n\nmodule top;\n  logic clk = 0;\n  always #5 clk = ~clk;\n\n  bus_if bus(clk);\n  slave slave_inst(bus);\n\n  initial begin\n    #20;\n    $display(\"bus.data = %h\", bus.data);                       // OK\n    $display(\"slave_inst.bus.data = %h\", slave_inst.bus.data); // Fails\n    $finish;\n  end\nendmodule\n```\n\n### Command\n\n```\nverilator --binary -j 0 --top-module top test.sv\n```\n\n### Output\n\n```\n%Error: test.sv:21:57: Can't find definition of 'bus' in dotted signal: 'slave_inst.bus.data'\n   21 |     $display(\"slave_inst.bus.data = %h\", slave_inst.bus.data);\n      |                                                         ^~~~\n        ... Known scopes under 'data': <no instances found>\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n```\n\n### Versions tested\n\n- Verilator 5.028  \n- Verilator 5.034 (latest)  \nBoth show the same error.\n\n### OS\n\nUbuntu 22.04.4 LTS (WSL2)\n\n### Notes\n\nNot 100% sure if this is technically valid per the LRM, but other tools like slang and VCS compile and simulate it without issue. At the very least, Verilator should not crash internally when encountering this pattern.",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-17",
+  "closed_at": "2026-02-06",
+  "code_blocks": [
+    "interface bus_if(input logic clk);\n  logic [7:0] data;\n  modport slave(output data, input clk);\nendinterface\n\nmodule slave(bus_if.slave bus);\n  always_ff @(posedge bus.clk)\n    bus.data <= 8'h5A;\nendmodule\n\nmodule top;\n  logic clk = 0;\n  always #5 clk = ~clk;\n\n  bus_if bus(clk);\n  slave slave_inst(bus);\n\n  initial begin\n    #20;\n    $display(\"bus.data = %h\", bus.data);                       // OK\n    $display(\"slave_inst.bus.data = %h\", slave_inst.bus.data); // Fails\n    $finish;\n  end\nendmodule\n",
+    "verilator --binary -j 0 --top-module top test.sv\n",
+    "%Error: test.sv:21:57: Can't find definition of 'bus' in dotted signal: 'slave_inst.bus.data'\n   21 |     $display(\"slave_inst.bus.data = %h\", slave_inst.bus.data);\n      |                                                         ^~~~\n        ... Known scopes under 'data': <no instances found>\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,23 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8939,
+  "issue_url": "https://github.com/llvm/circt/issues/8939",
+  "title": "[MooreToCore] Generating invalid llhd.sig.array_slice",
+  "body": "For input\n\n```mlir\nmodule {\n  moore.module @a(in %b : !moore.l1, in %in : !moore.l64, out out : !moore.l64) {\n    %out = moore.variable : <l64>\n    %0 = moore.read %out : <l64>\n    moore.output %0 : !moore.l64\n  }\n  moore.module @c(out d : !moore.array<1 x l1>, out e : !moore.array<1 x array<1 x l3>>, out f : !moore.l1, out g : !moore.l64) {\n    %h = moore.variable : <l3>\n    %d = moore.variable : <array<1 x l1>>\n    %f = moore.variable : <l1>\n    %g = moore.variable : <l64>\n    %j = moore.variable : <array<1 x array<1 x l3>>>\n    %0 = moore.extract_ref %j from 0 : <array<1 x array<1 x l3>>> -> <array<1 x l3>>\n    %1 = moore.extract_ref %0 from 0 : <array<1 x l3>> -> <l3>\n    %2 = moore.read %h : <l3>\n    moore.assign %1, %2 : l3\n    %3 = moore.read %j : <array<1 x array<1 x l3>>>\n    %4 = moore.read %f : <l1>\n    %.out = moore.instance \"\" @a(b: %4: !moore.l1, in: %.out: !moore.l64) -> (out: !moore.l64)\n    %5 = moore.read %d : <array<1 x l1>>\n    %6 = moore.read %f : <l1>\n    %7 = moore.read %g : <l64>\n    moore.output %5, %3, %6, %7 : !moore.array<1 x l1>, !moore.array<1 x array<1 x l3>>, !moore.l1, !moore.l64\n  }\n}\n```\n\nthe output of convert-moore-to-core results in\n\n```\nsmall.mlir:13:10: error: 'llhd.sig.array_slice' op failed to verify that arrays element type must match\n    %0 = moore.extract_ref %j from 0 : <array<1 x array<1 x l3>>> -> <array<1 x l3>>\n         ^\nsmall.mlir:13:10: note: see current operation: %13 = \"llhd.sig.array_slice\"(%11, %12) : (!hw.inout<array<1xarray<1xi3>>>, i0) -> !hw.inout<array<1xi3>>\n```\n\nsnippet\n\n```\n%11 = \"llhd.sig\"(%10) <{name = \"j\"}> : (!hw.array<1xarray<1xi3>>) -> !hw.inout<array<1xarray<1xi3>>>\n    %12 = \"hw.constant\"() <{value = 0 : i0}> : () -> i0\n    %13 = \"llhd.sig.array_slice\"(%11, %12) : (!hw.inout<array<1xarray<1xi3>>>, i0) -> !hw.inout<array<1xi3>>\n```\n\nfrom `ExtractRefOpConversion`.",
+  "labels": [
+    "bug",
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-10",
+  "closed_at": "2025-09-11",
+  "code_blocks": [
+    "module {\n  moore.module @a(in %b : !moore.l1, in %in : !moore.l64, out out : !moore.l64) {\n    %out = moore.variable : <l64>\n    %0 = moore.read %out : <l64>\n    moore.output %0 : !moore.l64\n  }\n  moore.module @c(out d : !moore.array<1 x l1>, out e : !moore.array<1 x array<1 x l3>>, out f : !moore.l1, out g : !moore.l64) {\n    %h = moore.variable : <l3>\n    %d = moore.variable : <array<1 x l1>>\n    %f = moore.variable : <l1>\n    %g = moore.variable : <l64>\n    %j = moore.variable : <array<1 x array<1 x l3>>>\n    %0 = moore.extract_ref %j from 0 : <array<1 x array<1 x l3>>> -> <array<1 x l3>>\n    %1 = moore.extract_ref %0 from 0 : <array<1 x l3>> -> <l3>\n    %2 = moore.read %h : <l3>\n    moore.assign %1, %2 : l3\n    %3 = moore.read %j : <array<1 x array<1 x l3>>>\n    %4 = moore.read %f : <l1>\n    %.out = moore.instance \"\" @a(b: %4: !moore.l1, in: %.out: !moore.l64) -> (out: !moore.l64)\n    %5 = moore.read %d : <array<1 x l1>>\n    %6 = moore.read %f : <l1>\n    %7 = moore.read %g : <l64>\n    moore.output %5, %3, %6, %7 : !moore.array<1 x l1>, !moore.array<1 x array<1 x l3>>, !moore.l1, !moore.l64\n  }\n}\n",
+    "small.mlir:13:10: error: 'llhd.sig.array_slice' op failed to verify that arrays element type must match\n    %0 = moore.extract_ref %j from 0 : <array<1 x array<1 x l3>>> -> <array<1 x l3>>\n         ^\nsmall.mlir:13:10: note: see current operation: %13 = \"llhd.sig.array_slice\"(%11, %12) : (!hw.inout<array<1xarray<1xi3>>>, i0) -> !hw.inout<array<1xi3>>\n",
+    "%11 = \"llhd.sig\"(%10) <{name = \"j\"}> : (!hw.array<1xarray<1xi3>>) -> !hw.inout<array<1xarray<1xi3>>>\n    %12 = \"hw.constant\"() <{value = 0 : i0}> : () -> i0\n    %13 = \"llhd.sig.array_slice\"(%11, %12) : (!hw.inout<array<1xarray<1xi3>>>, i0) -> !hw.inout<array<1xi3>>\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

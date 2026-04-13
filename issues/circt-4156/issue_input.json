@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4156,
+  "issue_url": "https://github.com/llvm/circt/issues/4156",
+  "title": "[ExportVerilog] Unused Ports Generate Unused Wires",
+  "body": "If a submodule's output is unused we currently generate an output wire in each instantiation site for this to drive. However, I think it is reasonable to not generate this wire and instead, omit the port when hooking up the instance.\r\n\r\nConsider:\r\n\r\n```\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n  module Foo:\r\n    output a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    a <= bar.a\r\n```\r\n\r\nThis currently compiles to:\r\n\r\n```verilog\r\nmodule Foo(\r\n  output a);\r\n\r\n  wire _bar_b;\r\n  Bar bar (\r\n    .a (a),\r\n    .b (_bar_b)\r\n  );\r\nendmodule\r\n```\r\n\r\nHowever, it seems fine to remove `_bar_b` and instead emit:\r\n```verilog\r\nmodule Foo(\r\n  output a);\r\n\r\n  Bar bar (\r\n    .a (a),\r\n    .b (/* unused */)\r\n  );\r\nendmodule\r\n```",
+  "labels": [
+    "enhancement",
+    "good first issue",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-21",
+  "closed_at": "2023-03-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

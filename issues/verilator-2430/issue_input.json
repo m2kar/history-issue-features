@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2430,
+  "issue_url": "https://github.com/verilator/verilator/issues/2430",
+  "title": "Lint: DECLFILENAME warning is picking up a blackboxed module inside the actual module",
+  "body": "Have a look at this file:\r\n\r\nhttps://github.com/lowRISC/opentitan/blob/master/hw/ip/prim_xilinx/rtl/prim_xilinx_clock_mux2.sv\r\n\r\nSimplified:\r\n\r\n```systemverilog\r\nmodule prim_xilinx_clock_mux2 (\r\n  input        clk0_i,\r\n);\r\n\r\n  BUFGMUX bufgmux_i (\r\n    .I1 ( clk1_i )\r\n  );\r\nendmodule\r\n```\r\n\r\n`BUFGMUX` is a Xilinx-provided module which is effectively a black-box for Verilator.\r\n\r\nThis file is always compiled, but not used for Verilator (an implementation is selected through a generate if/else block).\r\n\r\nWhen running this through Verilator lint, I get:\r\n\r\n```\r\n%Warning-DECLFILENAME: ../../../hw/ip/prim_xilinx/rtl/prim_xilinx_clock_mux2.sv:17:11: Filename 'prim_xilinx_clock_mux2' does not match NOTFOUNDMODULE name: 'BUFGMUX'\r\n   17 |   BUFGMUX bufgmux_i (\r\n      |           ^~~~~~~~~\r\n                       ... Use \"/* verilator lint_off DECLFILENAME */\" and lint_on around source to disable this message.\r\n```\r\n\r\nI'm not sure what happens here, but the message is strange: the filename of the module has nothing to do with the BUFGMUX module, which is instantiated inside it. And the actual module name prim_xilinx_clock_mux2 matches the file name prim_xilinx_clock_mux2.sv.\r\n\r\n\r\n```\r\n$ verilator --version\r\nVerilator 4.037 devel rev v4.036-60-gfa828ac9b\r\n```\r\n(A recent master.)",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-17",
+  "closed_at": "2020-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7194,
+  "issue_url": "https://github.com/verilator/verilator/issues/7194",
+  "title": "Bug: Internal Error in V3TSP (\"No unmarked edges found in tour\") with `--threads > 1` and `-j > 1`",
+  "body": "# Internal Error in V3TSP (\"No unmarked edges found in tour\") with `--threads > 1` and `-j > 1`\n\nThanks for taking the time to review this report.\n\n## Example / reproducer\n\nI can reproduce this with an RTL-only `dut.v` (no C++ sources involved).\n- File: [dut.v.gz](https://github.com/user-attachments/files/25743791/dut.v.gz)\n\n## Wrong vs expected output\n\n**Wrong (unmodified v5.046):**\n\n```text\n%Error: Internal Error: ../V3TSP.cpp:355: No unmarked edges found in tour\n```\n\n**Expected:**\n\nVerilator should not crash with an internal error.\n\n## Command line\n\nFrom this bundle directory:\n\n```bash\n./install/verilator-bug/bin/verilator -cc \\\n  --error-limit 100 \\\n  --x-assign fast --x-initial unique \\\n  -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC \\\n  -DPRINTF_COND=1 -DRANDOMIZE -DRANDOMIZE_MEM_INIT -DRANDOMIZE_REG_INIT \\\n  --trace-fst --assert \\\n  --threads 8 \\\n  --trace-threads 2 \\\n  -j 192 \\\n  --prefix Vdut \\\n  -Mdir /tmp/verilator_bug_dut.XXXXXX \\\n  repro/dut.v\n```\n\n## Verilator version\n\n```text\nVerilator 5.046 2026-02-28 rev v5.046\n```\n\n## OS / distro\n\n```text\nUbuntu 24.04.4 LTS (Noble Numbat)\nLinux 6.14.0-37-generic x86_64\n```\n\n## Did you try git master / other simulators?\n\n- git master: yes, still fails in my environment (Verilator 5.047 devel rev v5.046-41-g44701201a)\n- other simulators: not tried yet\n\n## Root cause analysis (suspected) (by AI)\n\nThis appears to be a **data race** when Verilator runs with more than one verilation job (`-j > 1`).\n\nWhen `--threads > 1`, `V3VariableOrder::orderAll()` enables the TSP-based variable ordering path (`tspSortVars()`), and it enqueues per-module sorting work into a thread pool (`V3ThreadScope::enqueue`), so multiple `V3TSP::tspSort()` calls can run concurrently in a single Verilator process.\n\nIn v5.046, `V3TSP` uses a global static counter (`V3TSP::s_edgeIdNext`) to generate `edgeId` values in `TspGraphTmpl::addEdge()`. Because this counter is not atomic and not protected by a lock, concurrent `tspSort()` calls can corrupt it (UB), leading to duplicate `edgeId` values *within a single TSP graph*. The Euler tour implementation marks edges by `edgeId`, so duplicate IDs can cause the tour to get stuck and trigger:\n\n```text\nInternal Error: ../V3TSP.cpp:355: No unmarked edges found in tour\n```\n\n## Fix (by AI)\n\nThe minimal fix is to remove the global counter and make it per-graph:\n\n- Add `uint32_t m_edgeIdNext = 0;` to `TspGraphTmpl`\n- Use `++m_edgeIdNext` instead of `++V3TSP::s_edgeIdNext`\n\nPatch included here:\n[v3tsp-edgeid-per-graph.patch.gz](https://github.com/user-attachments/files/25743886/v3tsp-edgeid-per-graph.patch.gz)\n\nWith this patch applied (still v5.046), the same command line succeeds reliably in my environment.\n\n## May we assist you in trying to fix this in Verilator yourself?\n\nAlready fixed with `v3tsp-edgeid-per-graph.patch`",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-04",
+  "closed_at": null,
+  "code_blocks": [
+    "%Error: Internal Error: ../V3TSP.cpp:355: No unmarked edges found in tour\n",
+    "./install/verilator-bug/bin/verilator -cc \\\n  --error-limit 100 \\\n  --x-assign fast --x-initial unique \\\n  -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC \\\n  -DPRINTF_COND=1 -DRANDOMIZE -DRANDOMIZE_MEM_INIT -DRANDOMIZE_REG_INIT \\\n  --trace-fst --assert \\\n  --threads 8 \\\n  --trace-threads 2 \\\n  -j 192 \\\n  --prefix Vdut \\\n  -Mdir /tmp/verilator_bug_dut.XXXXXX \\\n  repro/dut.v\n",
+    "Verilator 5.046 2026-02-28 rev v5.046\n",
+    "Ubuntu 24.04.4 LTS (Noble Numbat)\nLinux 6.14.0-37-generic x86_64\n",
+    "Internal Error: ../V3TSP.cpp:355: No unmarked edges found in tour\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

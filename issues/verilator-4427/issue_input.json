@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4427,
+  "issue_url": "https://github.com/verilator/verilator/issues/4427",
+  "title": "Generate localparam flagged as unused by lint mode.",
+  "body": "$ **verilator --version**\r\nVerilator 5.012 2023-06-13 rev v5.012-34-g4f13c4d1b\r\n$ **cat dut.v**\r\n```\r\n`timescale 1ns / 10ps\r\n`default_nettype none\r\n\r\nmodule dut\r\n  #( parameter SAMPLE_SIZE = 24 )\r\n   (\r\n    input [4:0] bit_counter,\r\n    output      data_done\r\n    );\r\n   generate\r\n      case (SAMPLE_SIZE)\r\n        16: begin : BIT_COUNTER\r\n           localparam MAX  = 4'd15;\r\n        end\r\n        24: begin : BIT_COUNTER\r\n           localparam MAX  = 5'd23;\r\n        end\r\n        32: begin : BIT_COUNTER\r\n           localparam MAX  = 5'd31;\r\n        end\r\n      endcase // case (SAMPLE_SIZE)\r\n   endgenerate\r\n\r\n   assign data_done = (bit_counter >= BIT_COUNTER.MAX);\r\n\r\nendmodule // dut\r\n```\r\n$ **verilator -Wall -Wfuture-UNUSEDPARAM -Wno-PINCONNECTEMPTY +1364-2005ext+v -y . --lint-only  dut.v**\r\n%Warning-UNUSEDPARAM: dut.v:16:23: Parameter is not used: 'MAX'\r\n                                 : ... In instance dut\r\n   16 |            localparam MAX  = 5'd23;\r\n      |                       ^~~\r\n                      ... For warning description see https://verilator.org/warn/UNUSEDPARAM?v=5.012\r\n                      ... Use \"/* verilator lint_off UNUSEDPARAM */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n\r\nAlso updated to 5.014 and a similar issue occurs.  \r\n\r\n$ **verilator --version**\r\nVerilator 5.014 2023-08-06 rev v5.014-35-ge6b0bdd4d\r\n\r\nI have reduced the test case significantly.  The issue is that in 'verilog' to find a maximum for a parameterized module, I am using a generate case for localparam.  I think this is the trigger for the issue (but it could be even simpler).\r\n\r\nI guess the use `BIT_COUNTER.MAX` scoping might also cause issues with the 'unused' analysis?  \r\nAlso, the 'bit_counter' bus depth is a parameter, but I fixed it for this test case (default SAMPLE_SIZE=24).\r\n\r\nAlso, this is a nice warning otherwise.  Thank you to the implementers.",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-18",
+  "closed_at": "2023-08-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

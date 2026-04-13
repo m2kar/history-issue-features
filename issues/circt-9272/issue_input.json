@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9272,
+  "issue_url": "https://github.com/llvm/circt/pull/9272",
+  "title": "[HW][NFC] Add BitWidthTypeInterface for extensible bit width calculations",
+  "body": "Extracts `hw::getBitWidth(Type)` functionality into a `BitWidthTypeInterface`, enabling non-HW types (e.g., ESI's Window type) to participate in bit width calculations for operations like `hw.bitcast`.\n\n### Changes\n\n- **New interface** (`HWTypeInterfaces.td`): `BitWidthTypeInterface` with `getBitWidth() -> std::optional<int64_t>`\n- **Interface implementations** (`HWTypesImpl.td`, `HWTypes.cpp`): Added to `ArrayType`, `UnpackedArrayType`, `StructType`, `UnionType`, `EnumType`, `TypeAliasType`\n- **Updated `getBitWidth(Type)`**: Checks interface first, falls back to `IntegerType` handling\n\n### Example\n\nTypes from other dialects can now implement the interface:\n\n```cpp\n// In another dialect's type definition (.td)\ndef MyCustomType : TypeDef<MyDialect, \"Custom\", [\n  DeclareTypeInterfaceMethods<BitWidthTypeInterface>\n]> { ... }\n\n// Implementation (.cpp)\nstd::optional<int64_t> MyCustomType::getBitWidth() const {\n  return 32; // or std::nullopt if not statically computable\n}\n```\n\nAPI compatibility preserved—no changes required to existing `getBitWidth()` callers.\n\n<!-- START COPILOT CODING AGENT SUFFIX -->\n\n\n\n<details>\n\n<summary>Original prompt</summary>\n\n> \n> ----\n> \n> *This section details on the original issue you should resolve*\n> \n> <issue_title>[HW] Make hw::getBitwidth use an TypeInterface?</issue_title>\n> <issue_description>Should we make a `StaticallyComputableWidth` Type interface and get `hw::getBitWidth` to use it? Or potentially replace it?\n> \n> The use case here is one might have a `hw.struct` with a field which is not a `hw` type. (As I do with ESI's Window type.) At a minimum, `hw.bitcast` compares the two bitwidths. While said field would not be able to be lowered directly to SystemVerilog though it may get lowered of removed by a later pass.\n> \n> IIRC we've always said that the HW dialect should be as open as possible, this is something which isn't terribly open. I seem to recall having this discussion in the past...\n> \n> What do people think?</issue_description>\n> \n> <agent_instructions>Extract the functionality in `circt::hw::getBitwidth(Type)` into a TypeInterface (a new on specified in ODS), implement it for all of the types currently implemented in getBitwidth, and have the existing getBitwidth use it (to maintain API compatibility).</agent_instructions>\n> \n> ## Comments on the Issue (you are @copilot in this section)\n> \n> <comments>\n> <comment_new><author>@teqdruid</author><body>\n> @darthscsi @seldridge ?</body></comment_new>\n> </comments>\n> \n\n\n</details>\n\n- Fixes llvm/circt#9269\n\n<!-- START COPILOT CODING AGENT TIPS -->\n---\n\n💡 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-26",
+  "closed_at": "2025-12-02",
+  "code_blocks": [
+    "// In another dialect's type definition (.td)\ndef MyCustomType : TypeDef<MyDialect, \"Custom\", [\n  DeclareTypeInterfaceMethods<BitWidthTypeInterface>\n]> { ... }\n\n// Implementation (.cpp)\nstd::optional<int64_t> MyCustomType::getBitWidth() const {\n  return 32; // or std::nullopt if not statically computable\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

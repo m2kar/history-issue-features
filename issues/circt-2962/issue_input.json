@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2962,
+  "issue_url": "https://github.com/llvm/circt/issues/2962",
+  "title": "[ExportVerilog] Unnecessary temporary wires for single use values ",
+  "body": "input: \r\n```mlir\r\nmodule attributes {circt.loweringOptions = \"disallowLocalVariables\"} {\r\n  hw.module @Foo( %clock: i1, %opcode: i3) {\r\n    %c-2_i3 = hw.constant -2 : i3\r\n    %0 = comb.icmp eq %opcode, %c-2_i3 : i3\r\n    sv.ifdef  \"SYNTHESIS\" {\r\n    } else {\r\n      sv.always posedge %clock {\r\n        sv.if %0 {\r\n          sv.error \"Foo\"\r\n        }\r\n      }\r\n    }\r\n    hw.output\r\n  }\r\n}\r\n```\r\n```verilog\r\nmodule Foo(     // tmp2.mlir:2:3\r\n  input       clock,\r\n  input [2:0] opcode);\r\n\r\n  `ifndef SYNTHESIS     // tmp2.mlir:5:5\r\n  wire _GEN = opcode == 3'h6;   // tmp2.mlir:3:15, :4:10\r\n    always @(posedge clock) begin       // tmp2.mlir:7:7\r\n      if (_GEN) // tmp2.mlir:8:9\r\n        $error(\"Foo\");  // tmp2.mlir:9:11\r\n    end // always @(posedge)\r\n  `endif\r\nendmodule\r\n```\r\n\r\n`_GEN` should be inlined to if condition since it is used only once. If `sv.always` and `sv.ifdef` are reversed, `_GEN` is inlined so it seems https://github.com/llvm/circt/commit/28f3193971cabd88a82a21d4ce8154ebd16a44c7 exposed this problem. \r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-25",
+  "closed_at": "2022-05-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

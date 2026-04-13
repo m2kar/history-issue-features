@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3423,
+  "issue_url": "https://github.com/llvm/circt/pull/3423",
+  "title": "[FSMToHW] Add FSM to HW conversion pass",
+  "body": "This commit introduces an FSM to HW conversion pass, as well as some small modifications to the FSM dialect to facilitate the conversion.\r\n\r\nThe implementation diverges from #1506 in that:\r\n- strictly the HW/Seq dialects are targeted (with a few `sv.wire`s) with the goal of lowering the FSM to a structural RTL representation (as opposed to a behavioral style, with `sv` case statements). \r\n- Whereas #1506 allowed for software-like operations to be used within the various regions, this lowering strictly expects hardware-like operations.\r\n\r\nConversion approach:\r\n- A state register is created of size `ceillog2(N states)`\r\n- Each state is encoded using an integer [0:N[\r\n- For each state, transition, operations within their respective regions are copied into the `hw.module`\r\n- A states' next-state transition is a chain of 2:1 muxes perfoming the priority-encoded transition logic, with the final option being a transition to itself.\r\n- For each output of the FSM, a mux is used to select between the output of the states, selected by the current state register.\r\n- Similarly, a mux is used to select the next state based on the current state.\r\n\r\ne.g.:\r\n<img alt=\"image\" src=\"https://user-images.githubusercontent.com/16338943/176110511-92e8649a-e55a-472f-a506-bdb15873b7ce.png\">\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-27",
+  "closed_at": "2022-06-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6748,
+  "issue_url": "https://github.com/verilator/verilator/issues/6748",
+  "title": "How to Optimize Performance for Verilator 5.040 (Significant Degradation vs. 5.026)?",
+  "body": " Project Background\nCurrent Version: Long-term use of Verilator 5.026 with stable simulation performance ~78 CPS,(Cycles Per Second).\nDesign Scale:\n~30 million signals, with dozens of HierBlock (hierarchical) modules.\nAfter applying --hier-block-dpi cost-estimate, performance in 5.026 reaches 100 CPS.\nHardware Configuration:\n256-core CPU, with sufficient resources and high parallelization potential.\nPerformance Issue\nAfter upgrading to Verilator 5.040:\n\nPerformance drops by 30%-40% (down to 52 CPS).\nTested versions (5.028, 5.034, 5.040) all fail to match 5.026’s performance.\nCurrent Compilation Flags\n```BASH\nverilator --vpi -Wno-lint \\\n    --build-jobs 31 --verilate-jobs 32 \\\n    --threads 48 --threads-dpi all \\\n    --clk GLB_REF_CLK --no-timing -cc \\\n    --threads-max-tasks 45000 \\\n    --hierarchical --bbox-unsup\n```\nAttempted Optimizations\nThreading Parameter Adjustments\n\nTuned --threads and --threads-max-tasks:\nNo performance gain when threads >48 or tasks >45,000 (likely hitting CPU scheduling limits).\nProfile-Guided Optimization (PGO)\n\nUsed --prof-pgo and hier_workers for per-module threading:\nOnly minor improvement (~70 CPS), still worse than 5.026.\nAnomalies Observed:\nEnabling hier_workers for most modules degrades performance.\nOnly a single module benefits from multi-threading, but the improvement is marginal.\nDPI Cost Calculation Issue\n\nProblem Identified:\nIn V3ProtectLib.cpp, the profile_data assigns the same cost value to both combo_update and seq_update, which is clearly incorrect.\nTemporary Fix:\nManually divided DPI cost by 2, leading to performance gains—but this is a hacky solution.\nQuestion:\nIs there a more accurate DPI cost calculation method? Can this be fixed via parameter tuning or a code patch?\nWhy is the performance of version 5.040 so much worse than that of 5.026?\nDo you have any other performance optimization suggestions?",
+  "labels": [
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-02",
+  "closed_at": "2025-12-21",
+  "code_blocks": [
+    "verilator --vpi -Wno-lint \\\n    --build-jobs 31 --verilate-jobs 32 \\\n    --threads 48 --threads-dpi all \\\n    --clk GLB_REF_CLK --no-timing -cc \\\n    --threads-max-tasks 45000 \\\n    --hierarchical --bbox-unsup\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

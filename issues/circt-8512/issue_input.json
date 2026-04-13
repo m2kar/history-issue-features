@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8512,
+  "issue_url": "https://github.com/llvm/circt/issues/8512",
+  "title": "[LLHD] Deseq mistakenly marks `icmp ne %false, %false` as poison",
+  "body": "Consider the following input:\n```mlir\nhw.module @Foo(in %clk: i1, in %d: i7) {\n  %0 = llhd.constant_time <0ns, 1d, 0e>\n  %c0_i7 = hw.constant 0 : i7\n  %true = hw.constant true\n  %false = hw.constant false\n  %q = llhd.sig %c0_i7 : i7\n  %1:2 = llhd.process -> i7, i1 {\n    cf.br ^bb1(%clk, %c0_i7, %false : i1, i7, i1)\n  ^bb1(%2: i1, %3: i7, %4: i1):  // 4 preds: ^bb0, ^bb2, ^bb3, ^bb3\n    llhd.wait yield (%3, %4 : i7, i1), (%clk : i1), ^bb2(%2 : i1)\n  ^bb2(%5: i1):  // pred: ^bb1\n    %6 = comb.xor bin %5, %true : i1\n    %7 = comb.and bin %6, %clk : i1\n    cf.cond_br %7, ^bb3, ^bb1(%clk, %c0_i7, %false : i1, i7, i1)\n  ^bb3:  // pred: ^bb2\n    %8 = comb.icmp ne %false, %false : i1\n    %9 = comb.icmp ne %true, %true : i1\n    %10 = comb.xor %8, %9 : i1\n    cf.cond_br %10, ^bb1(%clk, %c0_i7, %true : i1, i7, i1), ^bb1(%clk, %d, %true : i1, i7, i1)\n  }\n  llhd.drv %q, %1#0 after %0 if %1#1 : !hw.inout<i7>\n}\n```\nRunning this through `circt-opt --llhd-deseq --debug-only=llhd-deseq` produces the following:\n```\n- Analyzing llhd.drv %q, %1#0 after %0 if %1#1 : !hw.inout<i7>\n- Boolean %true: true\n- Successor boolean ^bb3#succ0 -> ^bb1#arg2 = true\n- Block condition ^bb2: true\n- Boolean %6: !a1\n- Boolean %7: !a1&a2\n- Successor condition ^bb2#succ0 -> ^bb3 = !a1&a2\n- Block condition ^bb3: !a1&a2\n- Boolean %false: false\n- Boolean %8: poison\n- Boolean %9: poison\n- Boolean %10: poison\n- Successor condition ^bb3#succ0 -> ^bb1 = poison\n- Boolean %4: poison\n- Aborting loc(\"debug.mlir\":21:3): poison condition\n```\nThe values `%8`, %`9`, and `%10` get mistakenly marked as poison values. Only operations on the triggers (`%clk` in this case) should have their value poisoned if the Deseq pass does not support mapping them to a truth table.",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-23",
+  "closed_at": "2025-06-02",
+  "code_blocks": [
+    "hw.module @Foo(in %clk: i1, in %d: i7) {\n  %0 = llhd.constant_time <0ns, 1d, 0e>\n  %c0_i7 = hw.constant 0 : i7\n  %true = hw.constant true\n  %false = hw.constant false\n  %q = llhd.sig %c0_i7 : i7\n  %1:2 = llhd.process -> i7, i1 {\n    cf.br ^bb1(%clk, %c0_i7, %false : i1, i7, i1)\n  ^bb1(%2: i1, %3: i7, %4: i1):  // 4 preds: ^bb0, ^bb2, ^bb3, ^bb3\n    llhd.wait yield (%3, %4 : i7, i1), (%clk : i1), ^bb2(%2 : i1)\n  ^bb2(%5: i1):  // pred: ^bb1\n    %6 = comb.xor bin %5, %true : i1\n    %7 = comb.and bin %6, %clk : i1\n    cf.cond_br %7, ^bb3, ^bb1(%clk, %c0_i7, %false : i1, i7, i1)\n  ^bb3:  // pred: ^bb2\n    %8 = comb.icmp ne %false, %false : i1\n    %9 = comb.icmp ne %true, %true : i1\n    %10 = comb.xor %8, %9 : i1\n    cf.cond_br %10, ^bb1(%clk, %c0_i7, %true : i1, i7, i1), ^bb1(%clk, %d, %true : i1, i7, i1)\n  }\n  llhd.drv %q, %1#0 after %0 if %1#1 : !hw.inout<i7>\n}\n",
+    "- Analyzing llhd.drv %q, %1#0 after %0 if %1#1 : !hw.inout<i7>\n- Boolean %true: true\n- Successor boolean ^bb3#succ0 -> ^bb1#arg2 = true\n- Block condition ^bb2: true\n- Boolean %6: !a1\n- Boolean %7: !a1&a2\n- Successor condition ^bb2#succ0 -> ^bb3 = !a1&a2\n- Block condition ^bb3: !a1&a2\n- Boolean %false: false\n- Boolean %8: poison\n- Boolean %9: poison\n- Boolean %10: poison\n- Successor condition ^bb3#succ0 -> ^bb1 = poison\n- Boolean %4: poison\n- Aborting loc(\"debug.mlir\":21:3): poison condition\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

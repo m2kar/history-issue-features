@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1181,
+  "issue_url": "https://github.com/llvm/circt/issues/1181",
+  "title": "LowerTypes Exposes Bare Flips that Trip Primop Verifier",
+  "body": "Consider the following circuit:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Bar:\r\n    output a: { flip a: UInt<1> }\r\n    input b: UInt<1>\r\n  module Foo:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar is invalid\r\n\r\n    b <= and(bar.a.a, bar.b)\r\n```\r\n\r\nBoth `bar.a.a` and `bar.b` have sink flow. However, the `bar.a.a` reference results in a malformed `and` op (according to its verifier). That verifier requires that no flips appear:\r\n\r\n```mlir\r\n%0 = \"firrtl.asPassive\"(%bar_b) : (!firrtl.flip<uint<1>>) -> !firrtl.uint<1>\r\n%1 = \"firrtl.and\"(%bar_a_a, %0) : (!firrtl.flip<uint<1>>, !firrtl.uint<1>) -> !firrtl.uint<1>\r\n```\r\n\r\nThe reason why this _doesn't_ fail for `bar.b` is because an `asPassive` op is inserted during parsing. The parser checks for flips used as right-hand-side expression in a primitive op. However, this is just a subset of \"sink used as source\".\r\n\r\nThere are a bunch of ways that this could be fixed:\r\n\r\n1) Expand the parser check to look for sinks used as sources and insert `asPassive` when needed.\r\n2) Lower Types should recognize this case and insert `asPassive`.\r\n3) This verifier should stop checking flip and actually check flow.\r\n\r\n### Background\r\n\r\nThis is a reduced case that shows up when trying to compile a middle FIRRTL file from Chipyard. This pattern occurs in the `TLError` module.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-31",
+  "closed_at": "2021-06-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 795,
+  "issue_url": "https://github.com/llvm/circt/issues/795",
+  "title": "[FIRRTL] Type lowering of registers crashes if name attribute not present",
+  "body": "Operation name attribute is accessed without checking if it exists, at several places in LowerTypes, \r\nhttps://github.com/llvm/circt/blob/main/lib/Dialect/FIRRTL/Transforms/LowerTypes.cpp#L574\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(%clock: !firrtl.clock, %a_d: !firrtl.vector<uint<1>, 2>, %a_q: !firrtl.flip<vector<uint<1>, 2>>) {\r\n      %r = firrtl.reg %clock : (!firrtl.clock) -> !firrtl.vector<uint<1>, 2>\r\n      firrtl.connect %r, %a_d : !firrtl.vector<uint<1>, 2>, !firrtl.vector<uint<1>, 2>\r\n      firrtl.connect %a_q, %r : !firrtl.flip<vector<uint<1>, 2>>, !firrtl.vector<uint<1>, 2>\r\n    }\r\n  }\r\n}\r\n```\r\nOn running ``` circt-opt -pass-pipeline='firrtl.circuit(firrtl-lower-types)'``` produces the following crash, \r\n```\r\n0.      Program arguments: circt-opt -pass-pipeline=firrtl.circuit(firrtl-lower-types) crash.mlir\r\n1.      2.       #0 0x00000000013b163e llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) /home/prithayan/work/sifive/fork-circt/circt/llvm/llvm/lib/Support/Unix/Signals.inc:565:0\r\n #1 0x00000000013b16f5 PrintStackTraceSignalHandler(void*) /home/prithayan/work/sifive/fork-circt/circt/llvm/llvm/lib/Support/Unix/Signals.inc:632:0\r\n #2 0x00000000013af3b3 llvm::sys::RunSignalHandlers() /home/prithayan/work/sifive/fork-circt/circt/llvm/llvm/lib/Support/Signals.cpp:71:0\r\n #3 0x00000000013b0fbf SignalHandler(int) /home/prithayan/work/sifive/fork-circt/circt/llvm/llvm/lib/Support/Unix/Signals.inc:407:0\r\n #4 0x00007fc273131890 __restore_rt (/lib/x86_64-linux-gnu/libpthread.so.0+0x12890)\r\n #5 0x00000000008361d4 mlir::StringAttr::getValue() const /home/prithayan/work/sifive/fork-circt/circt/llvm/build/tools/mlir/include/mlir/IR/BuiltinAttributes.cpp.inc:266:0\r\n #6 0x000000000043d1b3 (anonymous namespace)::TypeLoweringVisitor::visitDecl(circt::firrtl::RegOp) /home/prithayan/work/sifive/fork-circt/circt/build/../lib/Dialect/FIRRTL/Transforms/LowerTypes.cpp:574:47\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-19",
+  "closed_at": "2021-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

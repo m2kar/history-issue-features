@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7650,
+  "issue_url": "https://github.com/llvm/circt/pull/7650",
+  "title": "[Arc] Automatic module partition",
+  "body": "**This is a draft PR, which mostly serves the purpose of gathering feedbacks. Implemention is imcomplete and very hacky in places. See the \"Unresolved issues\" section below.**\r\n\r\nThis PR introduces a new pass (`--hw-partition`) into CIRCT to partition HW top-level modules into two or more parts. Each parts contains parts of the logic and states of the original circuit. Additional ports are created for signals that crosses partition bondaries. The pass tries to perserve origional modules and hierarchies.\r\n\r\n## Motivation\r\n\r\nThe primary motivation is multithreaded simulation with Arcilator. To be more concrete, the targeted typical usecase of this pass is high performance multithreaded simulation using Arcilator, with HW modules compiled from FIRRTL, on a single CPU, with (mostly) static scheduling. Time stepping happens in a lock-step style.\r\n\r\nHowever, doing this on the HW level may also benifit other use cases, e.g. large scale verification with multiple FPGAs.\r\n\r\n## Unresolved Issues\r\n\r\n- How do we deal with `inout`?\r\n- How do we utilize operation duplication, i.e. a single operation appears in multiple parts to reduce communication? Currently no operation is duplicated. We can also approach this from the other end: partition by only by states first, duplicate the entire combinatory subtree, and then do optimization.\r\n- What graph paritioning optimization goal should we use? Most graph partitioning algorithm / library only optimize for cut-size (or total width of cross module ports in our case, or amount of communication), while the size of each component serves as constraints. METIS supports \r\n- The implementation of combinaory path is incorrect. Currently it directly edits existing modules. When there are multiple nesting instances of a same module, this approach will fail.\r\n\r\n## Acknowledgement\r\n\r\nThanks to @CircuitCoder for mentoring this work.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-09-30",
+  "closed_at": "2024-10-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

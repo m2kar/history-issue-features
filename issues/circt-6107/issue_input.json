@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6107,
+  "issue_url": "https://github.com/llvm/circt/issues/6107",
+  "title": "[FIRRTL][CheckCombLoops] Support aggregates with flips",
+  "body": "This is not an issue as long as this executes after LowerTypes, as it will break apart bundles with flips.  So prioritize accordingly.\r\n\r\nAnyway, example input:\r\n\r\n```mlir\r\nfirrtl.circuit \"Check\" {\r\n  firrtl.module private @Child(in %in: !firrtl.bundle<x: uint<5>, y flip: uint<5>>, out %out: !firrtl.bundle<x: uint<5>, y flip: uint<5>>) {\r\n    %0 = firrtl.subfield %out[x] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    %1 = firrtl.subfield %in[x] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    firrtl.strictconnect %0, %1 : !firrtl.uint<5>\r\n    %2 = firrtl.subfield %out[y] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    %3 = firrtl.subfield %in[y] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    firrtl.strictconnect %3, %2 : !firrtl.uint<5>\r\n  }\r\n  firrtl.module @Check() attributes {convention = #firrtl<convention scalarized>} {\r\n    %c_in, %c_out = firrtl.instance c @Child(in in: !firrtl.bundle<x: uint<5>, y flip: uint<5>>, out out: !firrtl.bundle<x: uint<5>, y flip: uint<5>>)\r\n    %0 = firrtl.subfield %c_in[x] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    %1 = firrtl.subfield %c_in[y] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    %2 = firrtl.subfield %c_out[y] : !firrtl.bundle<x: uint<5>, y flip: uint<5>>\r\n    firrtl.strictconnect %2, %1 : !firrtl.uint<5>\r\n    %c5_ui3 = firrtl.constant 5 : !firrtl.uint<3>\r\n    firrtl.connect %0, %c5_ui3 : !firrtl.uint<5>, !firrtl.uint<3>\r\n  }\r\n}\r\n```\r\n\r\nOriginal FIRRTL input FWIW:\r\n```firrtl\r\ncircuit Check:\r\n  module Child:\r\n    input in : { x : UInt<5>, flip y : UInt<5> }\r\n    output out : { x : UInt<5>, flip y : UInt<5> }\r\n\r\n    out <= in\r\n\r\n  module Check:\r\n    inst c of Child\r\n\r\n    c.out.y <= c.in.y\r\n    c.in.x <= UInt(5)\r\n```\r\n\r\nNoticed reviewing code where Direction of port is used, but with flips there may be more to the story.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-09-11",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

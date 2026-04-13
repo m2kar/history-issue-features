@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6829,
+  "issue_url": "https://github.com/verilator/verilator/issues/6829",
+  "title": "Array of events not supported",
+  "body": "I am attempting to compile a list of RTL and tb files. When I define an array of events, I encounter no issue:\n\n` event e_all_xfers_completed[4];`\n\nHowever, once I attempt to use this in a fork as follows:\n\n```\n  task run_traffic_per_port(int port_id); \n    fork\n      automatic int id = port_id;\n      begin\n        fork\n          begin\n            @(e_all_xfers_monitored_tx[id]);\n            debug($sformatf(\"[%t] [Per-Port Guard %0d] TX monitoring complete\", $time, id));\n          end\n          begin\n            @(e_all_xfers_monitored_rx[id]);\n            debug($sformatf(\"[%t] [Per-Port Guard %0d] RX monitoring complete\", $time, id));\n          end\n        join  \n        // Both complete - signal this port is done\n        ->e_all_xfers_completed[id];\n        $display(\"[%t] [Per-Port Guard %0d] All transfers completed\", $time, id);\n      end\n    join_none \n  endtask\n```\nThe output is:\n\n`%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n%Error: Command Failed ulimit -s unlimited 2>/dev/null;`\n\nWhen I try to debug, I do not get any more meaningful information (snippet):\n\n`Warning-suppressed-WIDTHTRUNC: verif/src/classes/FLIT_env.sv:136:18: Operator FUNCREF 'generate_packet' expects 2 bits on the Function Argument, but Function Argument's VARREF 'port_id' generates 32 bits....\n%Error: export VERILATOR_ROOT=/path/to/verilator\n%Error: ulimit -s unlimited 2>/dev/null; ` \n\nI checked the revision history of 5.043, but this is not listed as a \"Fix\", so I assume the version I am using should be fine.\n\n**What 'verilator' command line do we use to run your example?**\n\n`verilator --timing --debug --binary -f src_files.f -f sim_files.f --top tb  -Wno-lint  -CFLAGS -std=c++20`\n\n**What 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?**\nVerilator 5.040\nYes, VCS and Vivado.\n**What OS and distribution are you using?**\n\nRocky Linux release 8.10 (Green Obsidian)\n\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-17",
+  "closed_at": "2025-12-19",
+  "code_blocks": [
+    "  task run_traffic_per_port(int port_id); \n    fork\n      automatic int id = port_id;\n      begin\n        fork\n          begin\n            @(e_all_xfers_monitored_tx[id]);\n            debug($sformatf(\"[%t] [Per-Port Guard %0d] TX monitoring complete\", $time, id));\n          end\n          begin\n            @(e_all_xfers_monitored_rx[id]);\n            debug($sformatf(\"[%t] [Per-Port Guard %0d] RX monitoring complete\", $time, id));\n          end\n        join  \n        // Both complete - signal this port is done\n        ->e_all_xfers_completed[id];\n        $display(\"[%t] [Per-Port Guard %0d] All transfers completed\", $time, id);\n      end\n    join_none \n  endtask\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3248,
+  "issue_url": "https://github.com/verilator/verilator/issues/3248",
+  "title": "Standalone reference to 'this' is marked as a symbol-resolution error",
+  "body": "Thanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nI've modified t_class_uses_this.v to show the issue. Specifically, I've added a method that sets the 'addr' field by assigning 'this' to a temp variable, and assigning 'addr' via this temp variable (see set_indirect below):\r\n\r\n```\r\nclass Cls;\r\n   bit [3:0] addr;\r\n   function void set(bit [3:0] addr);\r\n   begin : body\r\n     this.addr = addr;\r\n   end : body\r\n   endfunction\r\n\r\n   function void set_indirect(bit [3:0] addr);\r\n   begin : body\r\n     Cls c = this;\r\n     c.addr = addr;\r\n   end : body\r\n   endfunction\r\n\r\n   extern function void setext(bit [3:0] addr);\r\nendclass\r\n```\r\n\r\nWhen I do this, Verilator reports:\r\n```\r\n%Error: t/t_class_uses_this.v:16:14: Can't find definition of variable: 'this'\r\n   16 |      Cls c = this;\r\n      |              ^~~~\r\n%Error: Exiting due to 1 error(s)\r\n%Warning: vlt/t_class_uses_this: Exec of perl failed: %Error: t/t_class_uses_this.v:16:14: Can't find definition of variable: 'this'\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\nI'm using the latest Git source.\r\n\r\nWhat OS and distribution are you using?\r\nCentOS 8\r\n\r\nWould you be willing to try to fix Verilator yourself with assistance?\r\nYes, would be happy to. I've been able to recognize the 'this' reference in \"visit(AstParseRef* nodep)\". I tried to adapt the this-reference code from \"visit(AstDot* nodep)\", but this results in:\r\n```\r\n%Error: Internal Error: t/t_class_uses_this.v:16:14: ../V3Width.cpp:4812: Visit function missing? Widthed expectation for this node: PARSEREF 0x2340f10 <e343#> {d16ao}  this [$root]\r\n```\r\n\r\nI suspect that I need to make a nodep->replaceWith() call, but I'm uncertain what to pass to provide the representation of the class instance. \r\n",
+  "labels": [
+    "area: elaboration",
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-12",
+  "closed_at": "2022-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

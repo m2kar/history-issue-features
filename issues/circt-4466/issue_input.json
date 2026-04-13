@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4466,
+  "issue_url": "https://github.com/llvm/circt/pull/4466",
+  "title": "[FIRRTL] Simplify internal Analog connections",
+  "body": "Context for this is in #4112. Resolves #4112.\r\n\r\nFor all analog connections which are only internal to a module, generate a wire for that connection, rather than the alias/assign construct.\r\n\r\n### Questions\r\n\r\nI'm not completely sure that I've implemented this properly. When running the tests that I added, I saw that the output from the tests looked like it had some extra statements that I didn't expect. Perhaps this is just due to me not being so familiar with the expected MLIR output. For example, for one test, the input looks like this:\r\n\r\n```mlir\r\nfirrtl.module @AnalogMergeThree() {\r\n  %result_iInA = firrtl.instance iInA @AnalogInModA(in a: !firrtl.analog<8>)\r\n  %result_iInB = firrtl.instance iInB @AnalogInModB(in a: !firrtl.analog<8>)\r\n  %result_iOut = firrtl.instance iOut @AnalogOutModA(out a: !firrtl.analog<8>)\r\n  firrtl.attach %result_iInA, %result_iInB, %result_iOut : !firrtl.analog<8>, !firrtl.analog<8>, !firrtl.analog<8>\r\n}\r\n```\r\n\r\nThe output looks like this:\r\n\r\n```mlir\r\nhw.module @AnalogMergeThree() {\r\n  %.a.wire = sv.wire : !hw.inout<i8>\r\n  hw.instance \"iInA\" @AnalogInModA(a: %.a.wire: !hw.inout<i8>) -> ()\r\n  %.a.wire_0 = sv.wire {name = \".a.wire\"} : !hw.inout<i8>\r\n  hw.instance \"iInB\" @AnalogInModB(a: %.a.wire: !hw.inout<i8>) -> () \r\n  %.a.wire_1 = sv.wire {name = \".a.wire\"} : !hw.inout<i8>\r\n  hw.instance \"iOut\" @AnalogOutModA(a: %.a.wire: !hw.inout<i8>) -> ()\r\n  hw.output\r\n}\r\n```\r\n\r\nShould `%.a.wire_0` and `%.a.wire_1` be generated? Are they a byproduct of me not pruning MLIR nodes properly?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-20",
+  "closed_at": "2022-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

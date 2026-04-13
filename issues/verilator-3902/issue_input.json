@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3902,
+  "issue_url": "https://github.com/verilator/verilator/issues/3902",
+  "title": "Support function call without ()",
+  "body": "While porting SVUnit to Verilator I stumbled upon a subtle issue. Function calls in SV are allowed without braces - (). Looks like Verilator does not like that style. Sample error:\r\n\r\n```log\r\n%Error: vw_vlt_issue_1.sv:11:42: Found definition of 'get_start_tag_contents' as a FUNC but expected a variable\r\n   11 |     result = $sformatf(\"%s<%s>\", indent, get_start_tag_contents);\r\n      \r\n```\r\n\r\n\r\nThanks for taking the time to report this.\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nCommands:\r\n```sh\r\nverilator --binary vw_vlt_issue_1.sv -DBUG\r\nverilator --binary vw_vlt_issue_1.sv (Works)\r\n```\r\n\r\n```verilog\r\nclass c;\r\n  function string get_start_tag_contents;\r\n  endfunction : get_start_tag_contents\r\n\r\n  local function string as_string_with_indent(string indent);\r\n    string result;\r\n    string tmp_s;\r\n   `ifndef BUG\r\n    result = $sformatf(\"%s<%s>\", indent, get_start_tag_contents());\r\n  `else\r\n    result = $sformatf(\"%s<%s>\", indent, get_start_tag_contents);\r\n  `endif // BUG\r\n  endfunction : as_string_with_indent\r\nendclass : c\r\nmodule top;\r\n  c c_0;\r\n\r\n  initial begin\r\n    c_0 = new();\r\n\r\n    #100 $finish (2);\r\n  end\r\nendmodule : top\r\n\r\n\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n> Verilator 5.005 devel rev v5.004-75-gbe53eec5c\r\n\r\nWhat OS and distribution are you using?\r\n\r\n> WSL, Ubuntu\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n> Yes please, though my Lex/yacc expertise is read-only so far.",
+  "labels": [
+    "resolution: fixed",
+    "area: parser",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-24",
+  "closed_at": "2023-04-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

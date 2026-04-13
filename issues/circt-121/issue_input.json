@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 121,
+  "issue_url": "https://github.com/llvm/circt/pull/121",
+  "title": "[rtl] Add flattening for `xor`, `or`, `add`, `mul`.",
+  "body": "One thing to note is the amount of duplication in each case. To reduce this, I could do something like:\r\n```\r\ntemplate <typename Inputs, typename Op>\r\nauto flattenInputs(const Inputs &inputs, Op op,\r\n                   size_t flattenedOpIndex) {\r\n  auto flattenedOpInputs = op.inputs();\r\n  SmallVector<Value, 4> newOperands;\r\n  newOperands.reserve(inputs.size() + flattenedOpInputs.size());\r\n\r\n  auto opPosition = inputs.begin() + flattenedOpIndex;\r\n  newOperands.append(inputs.begin(), opPosition);\r\n  newOperands.append(flattenedOpInputs.begin(), flattenedOpInputs.end());\r\n  newOperands.append(opPosition + 1, inputs.end());\r\n  return newOperands;\r\n}\r\n\r\n...\r\n\r\n      // and(x, and(...)) -> and(x, ...) -- flatten\r\n      for (size_t i = 0; i != size; ++i) {\r\n        if (!inputs[i].hasOneUse())\r\n          continue;\r\n        auto andOp = inputs[i].getDefiningOp<rtl::AndOp>();\r\n        if (!andOp)\r\n          continue;\r\n        rewriter.replaceOpWithNewOp<AndOp>(op, op.getType(),\r\n                                           flattenInputs(inputs, andOp, i));\r\n        return success();\r\n```\r\nI'm not sure if that's worth the extra level of abstraction or not, so looking for input.",
+  "labels": [
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2020-10-05",
+  "closed_at": "2020-10-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

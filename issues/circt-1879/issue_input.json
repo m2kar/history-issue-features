@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1879,
+  "issue_url": "https://github.com/llvm/circt/pull/1879",
+  "title": "[Calyx] Use native compiler representation for guarded assignments and ports.",
+  "body": "Switches the GroupGoOp, GroupDoneOp, and AssignOp to match the native compiler representation.\r\n\r\n```mlir\r\n// Before\r\ncalyx.assign %dest = %src, %guard ? : i8\r\n\r\ncalyx.group_done %src, %guard ? : i1 \r\n\r\n%result = calyx.group_go %src, %guard ? : i1\r\n```\r\n\r\n```mlir\r\n// After\r\ncalyx.assign %dest = %guard ? %src : i8\r\n\r\ncalyx.group_done %guard ? %src : i1\r\n\r\n%result = calyx.group_go %guard ? %src : i1\r\n```\r\n\r\nI think Mike brought up a good point in #1873. We're still pretty dependent on the native compiler, so it seems right to keep the IRs as similar as possible. Note that placing the (optional) guard last in the arguments is necessary; otherwise the compiler assumes the source is the guard and wants to mix the types up. Not a huge deal, just requires being careful when writing out the logic for parsing.\r\n\r\nCloses #1873; issue for necessary changes in native compiler's CIRCT backend found [here](https://github.com/cucapra/calyx/issues/692) (...and subsequently fixed [here](https://github.com/cucapra/calyx/pull/693)).",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-25",
+  "closed_at": "2021-09-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

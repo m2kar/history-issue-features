@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7217,
+  "issue_url": "https://github.com/verilator/verilator/pull/7217",
+  "title": "Extend VerilatedVar to hold force control signal pointers",
+  "body": "This commit is the updated version of #6705. It makes changes to the Verilated `__Syms` file in order to convey additional information about the relation of a forceable signal to its force control signals without needing to rely on a runtime lookup in the scope's `m_varsp` within `verilated_vpi.cpp`. In my tests, it improved the performance of `vpi_put_value` and `vpi_get_value` on forceable signals by a factor of 6x over #6704, at the cost of slightly more memory usage.\r\n\r\nThis is done by extending `VerilatedVar` with an owning unique_ptr to a `VerilatedForceControlSignals` struct object, which contains pointers to the `VerilatedVar`s for the `__VforceEn` and `__VforceVal` signals and receives these pointers at compile time through an adapted `varInsert` function. The `unique_ptr` necessitates re-introducing `VerilatedVar`'s move constructor to allow it to be moved into the `m_varsp` map. This commit operates under the assumption that the `VerilatedVarNameMap` is immutable and no signal is ever removed from it. If this assumption is violated, this implementation is not memory safe.\r\n\r\nUnlike the original #6705, the `__VforceRd` signal is _not_ part of the `VerilatedForceControlSignals`, since as discussed in #7092, the `__VforceRd` signal may need to be eliminated entirely soon.\r\n\r\nNo functional change expected.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-08",
+  "closed_at": "2026-03-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

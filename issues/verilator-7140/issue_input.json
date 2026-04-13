@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7140,
+  "issue_url": "https://github.com/verilator/verilator/pull/7140",
+  "title": "Fix parameters inside std::randomize `with` clause ",
+  "body": "This PR fixes verilation error when using parameter inside `with` clause.\r\n\r\n```\r\n%Error: t_std_randomize.v:128:44: Function/task ref connected to constant instead of variable: 'PARAM'\r\n  128 |         void'(std::randomize(x) with { x > PARAM; });\r\n```\r\n\r\nThis error is caused by parameter `Var` having its direction set to `VDirection::REF`, because reference cannot be created for `Const` and `VarRef`s to parameters are converted into `Const`s during V3Const. Arguments to std::randomize are converted to `Var`s named `__Varg*` before visiting other arguments in `with` clause. Because of that `captureVariable` method is called only for variables which are not modified by `std::randomize()`, so the direction can be always set to `VDirection::INPUT`.\r\n\r\nIt also required fixing `ArraySel` comparison, because index was assumed to be `VarRef` but it can also be `Const`. This resulted in a bad argument -> __Varg* conversion which was unnoticeable when the direction was set to `VDirection::REF`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-24",
+  "closed_at": "2026-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

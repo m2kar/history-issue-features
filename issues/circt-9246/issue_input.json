@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9246,
+  "issue_url": "https://github.com/llvm/circt/issues/9246",
+  "title": "Bug: op failed to verify that width of result type has to be smaller than or equal to the input type",
+  "body": "```systemverilog\n\ntypedef struct packed {\n    logic                   element;    \n} mystruct_t;\n\nmodule my_module\n\n#(\n    parameter DEPTH = 16              \n)\n(\n    input mystruct_t D_flopped\n);\n\nmystruct_t [1:0][DEPTH-1:0] Qall;\n\nalways_latch begin\n    for ( int array=0 ; array<2 ; array++ ) begin\n        for ( int row=0 ; row<DEPTH ; row++ ) begin \n                Qall[array][row] = D_flopped;\n        end\n    end\nend \n\nendmodule\n```\n\n```\ncirct-verilog my_file.sv;\n```\n```\nmy_file.sv:20:17: error: 'llhd.sig.array_slice' op failed to verify that width of result type has to be smaller than or equal to the input type\n                Qall[array][row] = D_flopped;\n                ^\nmy_file.sv:20:17: note: see current operation: %23 = \"llhd.sig.array_slice\"(%9, %22) : (!llhd.ref<!hw.array<2xarray<16xstruct<element: i1>>>>, i1) -> !llhd.ref<!hw.array<16xstruct<element: i1>>>\n```\n\nThis works in all big simulators. I tried forcing casting and bit concatenation but that wouldn't work either. Problem is with the struct. If i replace the struct with just logic type it runs fine.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-20",
+  "closed_at": "2025-11-24",
+  "code_blocks": [
+    "\ntypedef struct packed {\n    logic                   element;    \n} mystruct_t;\n\nmodule my_module\n\n#(\n    parameter DEPTH = 16              \n)\n(\n    input mystruct_t D_flopped\n);\n\nmystruct_t [1:0][DEPTH-1:0] Qall;\n\nalways_latch begin\n    for ( int array=0 ; array<2 ; array++ ) begin\n        for ( int row=0 ; row<DEPTH ; row++ ) begin \n                Qall[array][row] = D_flopped;\n        end\n    end\nend \n\nendmodule\n",
+    "circt-verilog my_file.sv;\n",
+    "my_file.sv:20:17: error: 'llhd.sig.array_slice' op failed to verify that width of result type has to be smaller than or equal to the input type\n                Qall[array][row] = D_flopped;\n                ^\nmy_file.sv:20:17: note: see current operation: %23 = \"llhd.sig.array_slice\"(%9, %22) : (!llhd.ref<!hw.array<2xarray<16xstruct<element: i1>>>>, i1) -> !llhd.ref<!hw.array<16xstruct<element: i1>>>\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

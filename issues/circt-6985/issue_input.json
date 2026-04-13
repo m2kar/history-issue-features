@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6985,
+  "issue_url": "https://github.com/llvm/circt/pull/6985",
+  "title": "[FIRRTL][Dedup] Alter dedup group handling, avoid exponential behavior.",
+  "body": "Transmute these annotations to simple (temporary) attributes on modules.\r\nThis causes the desired behavior for hashing and since this must match, when deduplicating no work is needed.\r\n\r\nPresently, as annotations, each module dedup'd into the group walks all annotations and \"adds context\" (makes them non-local) and interns a new annotation array with those annotations. At the end of the pass, all dedupGroup annotations are removed.\r\n\r\nThis causes a lot of unnecessary symbols, hierpaths, annotations, and arrays of annotations as well as some quadratic behavior.\r\n\r\nDedupGroup annotations are commonly on every single module, so for those designs large dedup groups scaled poorly.\r\n\r\nInstead, drop these annotations immediately and add as a simple named attribute indicating the group.\r\n\r\nDrop the (temporary) dedup group attributes at end of pass, as they are just an in-IR way to track this per-module during the pass.\r\n\r\nFixes #6979.\r\n\r\n----------\r\n\r\nBenchmarking (n=10, median) on some quick synthetic examples put together, FWIW (top has instances of the many identical empty modules):\r\n\r\n|Name     |Modules|Instances|real before (s)|real after (s)|Before/After|maxrss before (kb)|maxrss after (kb)|Before/After|\r\n|---------|-------|---------|---------------|--------------|------------|------------------|-----------------|------------|\r\n|Groups   |3001   |3000     |1.035          |0.311         |3.33        |124,096           |72,944           |1.70        |\r\n|Groups_3x|3001   |9000     |2.237          |0.361         |6.20        |216,696           |77,456           |2.80        |\r\n|Many     |10001  |30000    |33.349         |3.461         |9.64        |1,802,784         |475,366          |3.79        |\r\n\r\nSignificantly improves performance where there are many instances of deduplicated modules and there are dedup group annotations.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-03",
+  "closed_at": "2024-05-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

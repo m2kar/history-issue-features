@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2583,
+  "issue_url": "https://github.com/llvm/circt/issues/2583",
+  "title": "[ExportVerilog] Type scope emission in split outputs mode",
+  "body": "Currently type scopes are all copied to each output file:\r\nFor example this mlir, `firtool -split-verilog` creates two files \"UseA.sv\" and \"UseB.sv\".\r\n```mlir\r\nhw.type_scope @scope_A  { hw.typedecl @T_A : i1 }\r\nhw.module @UseA(%source: !hw.typealias<@scope_A::@T_A, i1>) {}\r\nhw.type_scope @scope_B  { hw.typedecl @T_B : i1 }\r\nhw.module @UseB(%source: !hw.typealias<@scope_B::@T_B, i1>) {}\r\n```\r\n\r\nFollowings are current outputs. \r\n* UseA.sv\r\n```sv\r\ntypedef logic T_A;\r\nmodule UseA(    // hoge.mlir:2:1\r\n  input T_A source);\r\n\r\nendmodule\r\n\r\ntypedef logic T_B;\r\n```\r\n* UseB.sv\r\n```sv\r\ntypedef logic T_A;\r\ntypedef logic T_B;\r\nmodule UseB(    // hoge.mlir:4:1\r\n  input T_B source);\r\n\r\nendmodule\r\n```\r\n\r\nIt is better not to emit all type decls but emit subsets of types used by emitted module. ",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-02-04",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 884,
+  "issue_url": "https://github.com/llvm/circt/issues/884",
+  "title": "Warning that Verilog may cause mismatches between simulation and synthesis",
+  "body": "The formal verification tool flags this as a warning (not error).  I have attached the MLIR output and a corrected version below.\r\n\r\nWarning: Variable(s) is(are) being read asynchronously. This may cause simulation-synthesis mismatches. (Signal: _T_0 Block: testcase_mfc.sv Line: 43) \r\nThe problem with this description is that the simulation model does not react to changes in reset_data while reset_enable is held high.\r\nIn Verilog, you can't add _T_0 to the sensitivity list without breaking the model. You must verify that your model does not rely on the fact that during reset, the simulator holds tmp50 steady even though _TMP_50 changes. The synthesized register will be transparent during reset.\r\n\r\nOr change the RTL, to have constant driving reset line.\r\n\r\n_The FIR file_circuit top_mod :\r\n```verilog\r\n  module top_mod :\r\n    input clock: Clock\r\n    input reset: UInt<1>\r\n    input arst: AsyncReset\r\n    input inp_i: SInt<170>\r\n    output out_i: SInt<170>\r\n    reg tmp50: SInt<2>, clock with: (reset => (arst, SInt<2>(0)))\r\n    tmp50 <= inp_i\r\n    out_i <= tmp50\r\n```\r\n\r\n**The output that produces the warning (just the relevant section):\r\n```verilog\r\n always_ff @(posedge clock or posedge arst**) begin      // testcase.fir:9:5\r\n    if (arst)   // testcase.fir:9:5\r\n      **tmp50 <= _T_0;    // testcase.fir:9:5**\r\n    else        // testcase.fir:9:5\r\n      tmp50 <= _T;      // testcase.fir:10:11\r\n  end // always_ff @(posedge or posedge)\r\n```\r\n\r\n**The structure that is read without warnings:**\r\n```verilog\r\nmodule top_mod(\r\n  input          clock,\r\n  input          reset,\r\n  input          arst,\r\n  input  [169:0] inp_i,\r\n  output [169:0] out_i\r\n);\r\n`ifdef RANDOMIZE_REG_INIT\r\n  reg [31:0] _RAND_0;\r\n`endif // RANDOMIZE_REG_INIT\r\n  reg [1:0] tmp50;\r\n  assign out_i = {{168{tmp50[1]}},tmp50};\r\n  always @(posedge clock or posedge arst) begin\r\n    if (arst) begin\r\n      **tmp50 <= 2'sh0;**\r\n    end else begin\r\n      tmp50 <= inp_i[1:0];\r\n    end\r\n  end\r\n```\r\n",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-03",
+  "closed_at": "2021-04-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

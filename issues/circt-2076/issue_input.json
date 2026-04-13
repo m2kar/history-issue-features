@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2076,
+  "issue_url": "https://github.com/llvm/circt/pull/2076",
+  "title": "[ExportVerilog] Emit zero param as \"0\" not \"64'd0\"",
+  "body": "Change ExportVerilog emission of a zero-valued parameter to use \"0\" and\r\nnot \"64'd0\".  MLIR infrastructure will parse a zero as an APInt of type\r\ni64.  This causes problem for emission of FIRRTL-parsed parameters which\r\nneed to show up in the output as \"0\" instead of \"64'd0\" which some tools\r\nmay reject.\r\n\r\nThis is special cased during Verilog emission to prevent having to\r\ndeviate from the seemingly canonical handling of a zero-valued APInt\r\nbeing stored as an i64.\r\n\r\nConcretely, this fixes a problem that @Ramlakshmi3733 has seen where a circuit like the following:\r\n\r\n```scala\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    input a: UInt<1>\r\n    parameter X = 0\r\n    parameter Y = 1\r\n\r\n  module Foo:\r\n    input a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar.a <= a\r\n```\r\n\r\nWould, without this, result in:\r\n\r\n```verilog\r\nmodule Foo(\t\r\n  input a);\r\n\r\n  Bar #(\r\n    .X(64'd0),\r\n    .Y(1)\r\n  ) bar (\t\r\n    .a (a)\r\n  );\r\nendmodule\r\n```\r\n\r\nWith this patch, this will result in:\r\n\r\n```verilog\r\nmodule Foo(\t\r\n  input a);\r\n\r\n  Bar #(\r\n    .X(0),\r\n    .Y(1)\r\n  ) bar (\t\r\n    .a (a)\r\n  );\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-04",
+  "closed_at": "2021-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

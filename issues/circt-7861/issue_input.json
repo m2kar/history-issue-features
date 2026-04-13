@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7861,
+  "issue_url": "https://github.com/llvm/circt/issues/7861",
+  "title": "[SCFToCalyx] `buildLibraryBinaryPipeOp` should replace `TSrcOp`'s result with output with the register output",
+  "body": "When lowering the example:\r\n```mlir\r\nmodule {\r\n  func.func @main(%arg0 : i32) -> i32 {\r\n    %0 = arith.constant 4 : i32\r\n    %1 = arith.muli %arg0, %0 : i32\r\n\r\n    return %1 : i32\r\n  }\r\n}\r\n```\r\ncurrent `--lower-scf-to-calyx` gives:\r\n```mlir\r\nmodule attributes {calyx.entrypoint = \"main\"} {\r\n  calyx.component @main(%in0: i32, %clk: i1 {clk}, %reset: i1 {reset}, %go: i1 {go}) -> (%out0: i32, %done: i1 {done}) {\r\n    %c4_i32 = hw.constant 4 : i32\r\n    %true = hw.constant true\r\n    %muli_0_reg.in, %muli_0_reg.write_en, %muli_0_reg.clk, %muli_0_reg.reset, %muli_0_reg.out, %muli_0_reg.done = calyx.register @muli_0_reg : i32, i1, i1, i1, i32, i1\r\n    %std_mult_pipe_0.clk, %std_mult_pipe_0.reset, %std_mult_pipe_0.go, %std_mult_pipe_0.left, %std_mult_pipe_0.right, %std_mult_pipe_0.out, %std_mult_pipe_0.done = calyx.std_mult_pipe @std_mult_pipe_0 : i1, i1, i1, i32, i32, i32, i1\r\n    %ret_arg0_reg.in, %ret_arg0_reg.write_en, %ret_arg0_reg.clk, %ret_arg0_reg.reset, %ret_arg0_reg.out, %ret_arg0_reg.done = calyx.register @ret_arg0_reg : i32, i1, i1, i1, i32, i1\r\n    calyx.wires {\r\n      calyx.assign %out0 = %ret_arg0_reg.out : i32\r\n      calyx.group @bb0_0 {\r\n        calyx.assign %std_mult_pipe_0.left = %in0 : i32\r\n        calyx.assign %std_mult_pipe_0.right = %c4_i32 : i32\r\n        calyx.assign %muli_0_reg.in = %std_mult_pipe_0.out : i32\r\n        calyx.assign %muli_0_reg.write_en = %std_mult_pipe_0.done : i1\r\n        %0 = comb.xor %std_mult_pipe_0.done, %true : i1\r\n        calyx.assign %std_mult_pipe_0.go = %0 ? %true : i1\r\n        calyx.group_done %muli_0_reg.done : i1\r\n      }\r\n      calyx.group @ret_assign_0 {\r\n        calyx.assign %ret_arg0_reg.in = %std_mult_pipe_0.out : i32\r\n        calyx.assign %ret_arg0_reg.write_en = %true : i1\r\n        calyx.group_done %ret_arg0_reg.done : i1\r\n      }\r\n    }\r\n    calyx.control {\r\n      calyx.seq {\r\n        calyx.seq {\r\n          calyx.enable @bb0_0\r\n          calyx.enable @ret_assign_0\r\n        }\r\n      }\r\n    }\r\n  } {toplevel}\r\n}\r\n```\r\nbut it should be `calyx.assign %ret_arg0_reg.in = %muli_0_reg.out : i32` in the `ret_assign_0` group.\r\n",
+  "labels": [
+    "Calyx"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-21",
+  "closed_at": "2024-11-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

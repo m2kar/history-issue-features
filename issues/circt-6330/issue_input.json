@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6330,
+  "issue_url": "https://github.com/llvm/circt/issues/6330",
+  "title": "N-level nested symbol tables, the Inner* infra, and upstreaming",
+  "body": "In the process of addressing #6294 by attempting to move it over to the Inner* infra, we've encountered a case of requiring support for two levels of nested symbol tables. That is, we have an `ibis.class` op - which is nested under `builtin.module` and defines an `InnerSymbolTable` - that may have `ibis.container` ops inside, which itself defines a `NestedSymbolTable`.\r\n\r\nWhile i still have some experimenting to do, I'm opening this issue to have a place for capturing discussion about the \"canonical\" way of/how we want to support arbitrarily-nested symbol tables. This seems apt if we're planning on eventually upstreaming Inner* stuff, wherein i cannot imagine that only supporting a single level of nesting is acceptable.\r\n\r\nThings to discuss:\r\n* How is a symbol table hierarchy expressed?\r\n  * In the current state, the most obvious representation would be a sequence of ops that inherit both `InnerSymbolTable` and `InnerRefNamespace`.\r\n * How is a symbol table hierarchy verified?\r\n   * I.e. how can we verify operations that reach across/through multiple levels of symbol tables? Currently, an `InnerSymbolTableCollection` is generated for the top-level `InnerSymbolTable`s (e.g. a set of `hw.module`s) and then the IR is **walked** for `InnerRefUserOpInterface`s and these are verified with the set of symbol tables (https://github.com/llvm/circt/blob/main/lib/Dialect/HW/InnerSymbolTable.cpp#L222-L242). This thus only allows for a single, top level of symbol tables.\r\n   * A change could be that `InnerRefNamespace` is only present for the top-level operation, and then **any** operation at any level below that top-level op can implement `InnerSymbolTable`, as long as there is _some_ operation in its parent hierarchy that is an `InnerRefNamespace`. Verification would then likewise walk the hierarchy _from_ the `InnerRefNamespace` and build the symbol table collection based on the symbol table hierarchy.\r\n\r\n",
+  "labels": [
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-23",
+  "closed_at": "2024-02-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

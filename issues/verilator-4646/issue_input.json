@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4646,
+  "issue_url": "https://github.com/verilator/verilator/pull/4646",
+  "title": "A type safe, generic interface for AstNode 'user' data",
+  "body": "I hope you like templates :grin:.\r\n\r\nThis is a proposal for a new, type safe, generic, and efficient interface for accessing the `AstNode` user fields. I would like to propose for this to be the universal mechanism for accessing the user data in the nodes.\r\n\r\nImprovements over the current APIs:\r\n- Uniformity: This can replace both the `AstNode::user*` methods, and the `AstNodeUser*Allocator` classes.\r\n- Type safety: you can only access the user data on nodes that you declared in the type of `VNUser*Handle`, and the associated data is strongly typed, eliminating the need for casts in the user code.\r\n- Disambiguation: You can declare different [non overlapping] node types to have different associated data types. This improves the static safety of keeping different kind of data associated with different types of nodes under the same user data field (e.g.: bools on Vars but node pointers on Stmts).\r\n- Enforced documentation: You no longer need to add the \"NODE STATE\" section in comments, it is all encoded in the code as types, and the program does not type check if you fail to update the declaration correctly.\r\n- Memory efficiency: You can now easily store any 8 byte structure directly within the user data field, so you no longer need 2 user fields for 2 bools for example (you need to give a type with 2 bools as the associated data, preferably a struct with well named fields).\r\n\r\nOtherwise the efficiency is the same or better as the current APIs. Anything less or equal to a pointer is stored directly (as if using AstNode::user*), and anything larger than a pointer is automatically allocated in a `std::deque` by value and is held indirectly.\r\n\r\nFWIW I believe this is all just C++11.\r\n\r\nWe can change names of things.\r\n\r\nI have only applied to user1 in V3Delayed as a demonstration to get feedback (and discovered some out of date comments and unnecessary type ascriptions in the process), but I'm fairly sure *all* usage of the AstNode::user* methods could be replace with this new mechanism, if you are happy with it. I probably won't have time to do them all in one go though.\r\n\r\nTODO:\r\n- [ ] A static assertion that the VNAux::Nodes are not overlapping subtypes",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-30",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

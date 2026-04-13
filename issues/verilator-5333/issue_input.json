@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5333,
+  "issue_url": "https://github.com/verilator/verilator/pull/5333",
+  "title": "Support 'parameter type' in hierarchical blocks (#5309)",
+  "body": "This RFC PR introduces an intermediate file-based approach for implementing type parameter passing in hierarchical verilation.\r\n\r\nNote: a huge part of the diff originates from trace tests due to running an additional type parameter flow (previously unsupported).\r\n\r\n## Current implementation of simple parameter passing\r\n\r\nCurrently, Verilator supports passing simple parameters, such as number and string literals, between modules.\r\nThis is implemented by stringifying those parameters and appending them to `*hierMkArgs` of a hierarchical module.\r\nThese parameters are later used in the `V3Param` where, based on hashed parameters, relevant deparameterized hierarchical module instances are assigned to cells.\r\n\r\nHowever, this approach would not be applicable to type parameters. As I mentioned previously in https://github.com/verilator/verilator/issues/5309,\r\nhandling type parameters with this stringifcation approach would introduce the need for reimplementing SystemVerilog parsing just for that.\r\n\r\n## Proposed implementation of type parameter passing\r\n\r\nI propose an intermediate file-based approach for passing type parameters to `hier_block` modules.\r\nThis approach introduces modifications to all 3 phases of hierarchical verilation.\r\n\r\n### Phase 1 (Launched when `m_hierarchical` is set)\r\n  In `V3HierBlock` for each `hier_block` generate:\r\n    1. Generate `*__hierMkArgs`\r\n    2. Generate `*__hierTypeParameters.sv` (if type parameters present)\r\n        Example `*__hierTypeParameters.sv`:\r\n        ```verilog\r\n          module _V_type_parameters();\r\n            typedef logic[8:0] PARAM;\r\n          endmodule\r\n        ```\r\n\r\n### Phase 2 (Launched when `m_hierChild` is set)\r\n  In `V3LinkDot`:\r\n    1. Read `*__hierTypeParameters.sv` and insert them into `VSymEnt`.\r\n    2. Replace each `AstParamTypeDType*` with type parameter inserted previously.\r\n\r\n### Phase 3 (Launched when !`m_hierBlocks.empty()` && !`m_hierChild` holds)\r\n  In `V3Param`:\r\n    1. If type parameter file was generated, find instantiations of module cells by its type param value hashes.\r\n\r\n\r\nNote: this implementation only works for `AstBasicDType` types. For more complex types, a rewrite of `V3Param` is required, but this is also the case for a stringification-based approach.\r\n\r\nFor simplicity's sake, the stringification-based implementation was not replaced by the intermediate file-based approach, but these two should be unified in the final implementation.\r\n\r\n__Please take a look at the PoC implementation and evaluate whether it is a good approach for implementing this feature.__",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-06",
+  "closed_at": "2024-08-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

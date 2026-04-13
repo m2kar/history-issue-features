@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2420,
+  "issue_url": "https://github.com/llvm/circt/issues/2420",
+  "title": "[FIRRTL] Remove Unused Module Inputs",
+  "body": "CIRCT is currently _not_ pruning unused non-top module inputs while the Scala FIRRTL Compiler (SFC) is.\r\n\r\nConsider the following circuit:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Bar:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n    input c_unused: UInt<1>\r\n    output d_unused: UInt<1>\r\n\r\n    b <= a\r\n    d_unused is invalid\r\n\r\n  module Foo:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar.a <= a\r\n    b <= bar.b\r\n\r\n    bar.c_unused is invalid\r\n```\r\n\r\nCIRCT produces (`firtool Foo.fir`):\r\n```verilog\r\nmodule Bar(\t// Bar.fir:2:10\r\n  input  a, c_unused,\r\n  output b, d_unused);\r\n\r\n  assign b = a;\t// Bar.fir:2:10\r\n  assign d_unused = 1'h0;\t// Bar.fir:2:10, :9:14\r\nendmodule\r\n\r\nmodule Foo(\t// Bar.fir:11:10\r\n  input  a,\r\n  output b);\r\n\r\n  wire bar_d_unused;\t// Bar.fir:15:5\r\n\r\n  Bar bar (\t// Bar.fir:15:5\r\n    .a        (a),\r\n    .c_unused (1'h0),\t// Bar.fir:19:18\r\n    .b        (b),\r\n    .d_unused (bar_d_unused)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe SFC produces:\r\n```verilog\r\nmodule Bar(\r\n  input   a,\r\n  output  b\r\n);\r\n  assign b = a;\r\nendmodule\r\nmodule Foo(\r\n  input   a,\r\n  output  b\r\n);\r\n  wire  bar_a;\r\n  wire  bar_b;\r\n  Bar bar (\r\n    .a(bar_a),\r\n    .b(bar_b)\r\n  );\r\n  assign b = bar_b;\r\n  assign bar_a = a;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL",
+    "Verilog Quality"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-04",
+  "closed_at": "2022-01-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

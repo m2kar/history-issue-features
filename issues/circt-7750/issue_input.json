@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7750,
+  "issue_url": "https://github.com/llvm/circt/pull/7750",
+  "title": "[FIRRTL] enable properties for inherent attributes",
+  "body": "[[FIRRTL] Clean up inferReturnTypes implementation](https://github.com/llvm/circt/pull/7750/commits/739cf51aa467e0fe6976f234902368fe64e8d20c) \r\n[739cf51](https://github.com/llvm/circt/pull/7750/commits/739cf51aa467e0fe6976f234902368fe64e8d20c)\r\n\r\nThis is a big change to clean up our implementation of\r\n`inferReturnTypes` in an effort to get ourselves ready to enable\r\nproperties in the FIRRTL dialect. We had structured our API so that\r\n`inferReturnType` would call out to a simpler version of itself with\r\nsome of the useless arguments removed.  This prevented us from using op\r\nadaptors to abstract over whether or not an inherent attribute was\r\ncontained inside the attr-dict or the properties.\r\n\r\nThis change keeps the old structure of a two level API, but with\r\ndifferent boundaries: The large API takes all arguments, creates an\r\nadapter, pulls out the necessary attributes and then calls in to the\r\nsimpler interface. FIRParser uses the simpler API when inferring return\r\ntypes.  The simpler interface is now specific to each operation and not\r\ncommon with other operations.\r\n\r\nThis last change caused a problem for `parsePrimExp`, which relied on a\r\ngeneric interface to create all expressions. This function is now\r\ntemplated over exactly how many arguments the specific prim op takes,\r\nparses exactly that many, and splats them out when calling\r\n`inferReturnType`.  As an upside to this, we can also call a more\r\nspecific builder for each operation, which should speed up building\r\noperations when we move to properties.\r\n\r\n---\r\n\r\n[[FIRRTL] enable properties for inherent attributes](https://github.com/llvm/circt/pull/7750/commits/f38c9b291b9efb035522027a983bc1b21d605f12) \r\n[f38c9b2](https://github.com/llvm/circt/pull/7750/commits/f38c9b291b9efb035522027a983bc1b21d605f12)\r\nThis enables properties in the FIRRTL dialect. Some op parsers which\r\ncalled `inferReturnTypes` had to be updated to store inherent attributes\r\nas properties on the OperationState, as the call to `inferReturnTypes`\r\nexpects properties to have already been populated.  This is a change\r\nthat we should make for all operation parsers and builders, to make\r\nthings faster, but is not strictly necessary at this time.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-30",
+  "closed_at": "2024-10-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

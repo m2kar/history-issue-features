@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6784,
+  "issue_url": "https://github.com/verilator/verilator/issues/6784",
+  "title": "Compilation failure: error: use of undeclared identifier 'x'",
+  "body": "Thanks for taking the time to report this.\n\nCan you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n\n```systemverilog\nclass base_reg_block;\n  function new(string name, int x);\n    if(name == x) $finish;\n  endfunction\n\n  function string build_coverage(int x);\n    return $sformatf(\"%0d\", x);\n  endfunction\nendclass\n\nclass spi_reg_block extends base_reg_block;\n  function new();\n    int x = $random();\n    super.new(build_coverage(x), x);\n  endfunction\nendclass\n\nmodule hvl_top;\n  initial begin\n    spi_reg_block test = new;\n    $finish;\n  end\nendmodule\n```\n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\n```\n./Vtest___024unit__03a__03aspi_reg_block__Vclpkg__0.cpp:12:59: error: use of undeclared identifier 'x'\n   12 |                 this->__VnoInFunc_build_coverage(vlSymsp, x, __Vfunc_build_coverage__1__Vfuncout);\n      |                                                           ^\n./Vtest___024unit__03a__03aspi_reg_block__Vclpkg__0.cpp:14:20: error: use of undeclared identifier 'x'\n   14 |             }())), x) {\n      |                    ^\n```\n\nWhat 'verilator' command line do we use to run your example?\n`verilator --binary test.sv`\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n`Verilator 5.043 devel rev v5.042-153-ge6a3d61d2`\nWhat OS and distribution are you using?\n`Linux 6.17.8-arch1-1`\nMay we assist you in trying to fix this in Verilator yourself?\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-09",
+  "closed_at": "2025-12-10",
+  "code_blocks": [
+    "class base_reg_block;\n  function new(string name, int x);\n    if(name == x) $finish;\n  endfunction\n\n  function string build_coverage(int x);\n    return $sformatf(\"%0d\", x);\n  endfunction\nendclass\n\nclass spi_reg_block extends base_reg_block;\n  function new();\n    int x = $random();\n    super.new(build_coverage(x), x);\n  endfunction\nendclass\n\nmodule hvl_top;\n  initial begin\n    spi_reg_block test = new;\n    $finish;\n  end\nendmodule\n",
+    "./Vtest___024unit__03a__03aspi_reg_block__Vclpkg__0.cpp:12:59: error: use of undeclared identifier 'x'\n   12 |                 this->__VnoInFunc_build_coverage(vlSymsp, x, __Vfunc_build_coverage__1__Vfuncout);\n      |                                                           ^\n./Vtest___024unit__03a__03aspi_reg_block__Vclpkg__0.cpp:14:20: error: use of undeclared identifier 'x'\n   14 |             }())), x) {\n      |                    ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

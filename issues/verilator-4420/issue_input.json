@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4420,
+  "issue_url": "https://github.com/verilator/verilator/pull/4420",
+  "title": "Refactor `AstNode::checkTreeIter` function",
+  "body": "The old `AstNode::checkTreeIter` function used a big switch-case statement to determine the checking operation for different node type. It seems to be fine on Linux, but the generated V3Ast.cpp.obj object file by MSVC is about 62MB due to the complexity of the function, and what's wrose is that it require about 336kB of the stack per call function call, on Windows (GCC can make it dynamically allocate the stack frame but MSVC seems not). This makes the program easy to stack-overflow especially with the default configuration of 1MB stack size. So the giant function is rewritten and it's now using a new `VNTypeInfo` table which saves the types and names for each `op[1-4]p` for each `AstNode`s, so the operation can be implemented with simpler code by looking-up the table.\r\n\r\nThe content in the new generated `V3Ast__gen_type_info.h` file looks like\r\n\r\n``` C++\r\n    { \"AstActive\", {VNTypeInfo::OP_OPTIONAL, VNTypeInfo::OP_LIST, VNTypeInfo::OP_UNUSED, VNTypeInfo::OP_UNUSED}, {\"sensesStorep\", \"stmtsp\", \"op3p\", \"op4p\"} },\r\n    { \"AstBind\", {VNTypeInfo::OP_LIST, VNTypeInfo::OP_UNUSED, VNTypeInfo::OP_UNUSED, VNTypeInfo::OP_UNUSED}, {\"cellsp\", \"op2p\", \"op3p\", \"op4p\"} },\r\n    ...\r\n```\r\n\r\n\r\nTo my surprise, this simple optimization reduces the size of the final binary files by about 3MB.\r\n\r\nLinux:\r\n```\r\nold\r\n  21337720 verilator_bin\r\n 104657192 verilator_bin_dbg\r\nnew\r\n  18435328 verilator_bin\r\n 100067480 verilator_bin_dbg\r\n```\r\n\r\nWindows:\r\n```\r\nold\r\n  11908608 verilator_bin.exe\r\n  34540032 verilator_bin_dbg.exe\r\nnew\r\n   9884672 verilator_bin.exe\r\n  28452352 verilator_bin_dbg.exe\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-15",
+  "closed_at": "2023-08-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

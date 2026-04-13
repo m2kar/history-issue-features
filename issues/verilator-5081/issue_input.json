@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5081,
+  "issue_url": "https://github.com/verilator/verilator/issues/5081",
+  "title": "Deferred assertions have the same behavior as the immediate assertion if `--trace-fst` is used",
+  "body": "Deferred assertions defined in LRM 16.4: `assert final` and `assert #0`. Are useful for waiting for signals to settle like `$strobe`.\r\n\r\n#### Example\r\n\r\n```sv\r\nmodule tb;\r\n  logic i, o;\r\n  assign o = i;\r\n  initial begin\r\n    i = 0;\r\n\r\n    #1 $display(\"\\nAfter #1\");\r\n    i = 1;\r\n    $display(\"%d: o: %d\", $time, o);\r\n    $strobe(\"%dstrobe: o: %d\", $time, o);\r\n    assert (o == 1)\r\n    else $display(\"immediate assert failed\");\r\n    assert final (o == 1)\r\n    else $display(\"final assert failed\");\r\n    assert #0 (o == 1)\r\n    else $display(\"#0 assert failed\");\r\n\r\n    #0 $display(\"\\nAfter zero delay\");\r\n    $display(\"%d: o: %d\", $time, o);\r\n    $strobe(\"%dstrobe: o: %d\", $time, o);\r\n    assert (o == 1)\r\n    else $display(\"immediate assert failed\");\r\n    assert final (o == 1)\r\n    else $display(\"final assert failed\");\r\n    assert #0 (o == 1)\r\n    else $display(\"#0 assert failed\");\r\n\r\n    #1 $display(\"\\nAfter #1\");\r\n    $display(\"%d: o: %d\", $time, o);\r\n    assert (o == 1);\r\n\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\n#### Command\r\n\r\nThe following command leads to no assertion errors at all:\r\n\r\n```sh\r\nverilator \\\r\n                -MAKEFLAGS '--quiet' \\\r\n                --quiet \\\r\n                --assert \\\r\n                --binary \\\r\n                --timing \\\r\n                -o sim \\\r\n                m.sv\r\n./obj_dir/sim\r\n```\r\n\r\nHowever if we add `--trace-fst` as follows:\r\n\r\n```sh\r\nverilator \\\r\n                -MAKEFLAGS '--quiet' \\\r\n                --quiet \\\r\n                --assert \\\r\n                --binary \\\r\n                --timing \\\r\n                -o sim \\\r\n                m.sv \\\r\n                --trace-fst\r\n./obj_dir/sim\r\n```\r\n\r\nthen we get the following output:\r\n\r\n#### Output\r\n\r\nAll assertions but the one after the last `#1` fail:\r\n\r\n```\r\n\r\nAfter #1\r\n                   1: o: 0\r\nimmediate assert failed\r\nfinal assert failed\r\n#0 assert failed\r\n\r\nAfter zero delay\r\n                   1: o: 0\r\nimmediate assert failed\r\nfinal assert failed\r\n#0 assert failed\r\n                   1strobe: o: 1\r\n                   1strobe: o: 1\r\n\r\nAfter #1\r\n                   2: o: 1\r\n```\r\n\r\n#### Expected\r\n\r\nOnly the first immediate assertion should fail. For example Questa output:\r\n\r\n```\r\n# \r\n# After #1\r\n#                    1: o: 0\r\n# immediate assert failed\r\n# \r\n# After zero delay\r\n#                    1: o: 1\r\n#                    1strobe: o: 1\r\n#                    1strobe: o: 1\r\n# \r\n# After #1\r\n#                    2: o: 1\r\n```\r\n\r\n#### Version\r\n\r\nVerilator 5.024 2024-04-05\r\n\r\n#### More info\r\n\r\n1. I saw [this closed issue about deferred assertions](https://github.com/verilator/verilator/issues/1449) however I don't know whether they are only implemented in the linter.\r\n2. `$strobe` has a similar function and it seems to work correctly (compared to deferred assertions).\r\n3. According to the docs\r\n    https://github.com/verilator/verilator/blob/72b96d506953fe9f86c5687411a8975b89a7a14a/docs/guide/languages.rst?plain=1#L125\r\n\r\n    I believe the doc was not updated.",
+  "labels": [
+    "area: assertions",
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-29",
+  "closed_at": "2024-08-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 854,
+  "issue_url": "https://github.com/llvm/circt/issues/854",
+  "title": "circt-translate crashes with small testcase",
+  "body": "I think this is either an MLIR bug or a bug in how we're using it, but this works fine:\r\n\r\n```\r\n$ cat x1.mlir\r\nrtl.module @cyclic(%a: i1) -> (%b: i1) {\r\n  %ASB = sv.wire : !rtl.inout<i1>\r\n  %1 = comb.add %0, %0 : i1\r\n  %0 = comb.shl %a, %a : i1\r\n  %2 = comb.add %1, %1 : i1\r\n  rtl.output %2 : i1\r\n}\r\n\r\n$ circt-translate x1.mlir -export-verilog \r\n```\r\n\r\nHowever if you delete the ASB wire, we get:\r\n\r\n```\r\n$ cat x1.mlir \r\nrtl.module @cyclic(%a: i1) -> (%b: i1) {\r\n  %1 = comb.add %0, %0 : i1\r\n  %0 = comb.shl %a, %a : i1\r\n  %2 = comb.add %1, %1 : i1\r\n  rtl.output %2 : i1\r\n}\r\n$ circt-translate x1.mlir -export-verilog \r\nLLVM ERROR: Building op `sv.wire` but it isn't registered in this MLIRContext\r\nPLEASE submit a bug report to https://bugs.llvm.org/ and include the crash backtrace.\r\nStack dump:\r\n0.\tProgram arguments: circt-translate x1.mlir -export-verilog\r\n... crash\r\n```\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-31",
+  "closed_at": "2021-04-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3303,
+  "issue_url": "https://github.com/verilator/verilator/issues/3303",
+  "title": "Portable way to mix enums visible in C++ and DontCare values?",
+  "body": "I want to have an enum visible in C++ and I also want to initialize variables of this type with dont-cares. What is the portable way to do it?\r\nI've tried 2 things and they both fail in one of the tools I want to use.\r\n\r\nHere is an example:\r\n```\r\npackage pkg;\r\n    typedef enum logic [1:0] {\r\n        E0=2'b00,\r\n        E1=2'b01,\r\n        E2=2'b10,\r\n        E_dont_care=2'b??\r\n    } MyE /*verilator public*/;\r\nendpackage\r\n\r\nmodule m(input logic[1:0] a, output logic b, output logic c );\r\n    pkg::MyE e;\r\n    always_comb begin\r\n        // e=2'b??; // <- works in verilator, fails in vivado's synthesis tool (it doesn't allow non-enum values to be used)\r\n        e=pkg::E_dont_care; // <- works in vivado, fails in verilator\r\n        case (a)\r\n            2'b00: e=pkg::E0;\r\n            2'b01: e=pkg::E1;\r\n        endcase\r\n    end\r\n\r\n    logic [1:0] test;\r\n    assign test=e;\r\n    assign b=test[0];\r\n    assign c=test[1];\r\nendmodule\r\n```\r\n\r\nThe C++ main.cpp file:\r\n```\r\n#include \"verilated.h\"\r\n#include \"Vtest_always_comb.h\"\r\n\r\nint main() {\r\n\treturn 0;\r\n}\r\n```\r\n\r\nThe verilator command and the error it produces is below:\r\n```\r\n> verilator -Wall -Wpedantic -Wno-fatal test_always_comb.sv  --exe --build --cc main.cpp\r\n%Warning-DECLFILENAME: test_always_comb.sv:1:9: Filename 'test_always_comb' does not match PACKAGE name: 'pkg'\r\n    1 | package pkg;\r\n      |         ^~~\r\n                       ... For warning description see https://verilator.org/warn/DECLFILENAME?v=4.218\r\n                       ... Use \"/* verilator lint_off DECLFILENAME */\" and lint_on around source to disable this message.\r\n%Warning-CASEINCOMPLETE: test_always_comb.sv:15:9: Case values incompletely covered (example pattern 0x2)\r\n   15 |         case (a)\r\n      |         ^~~~\r\n%Error: Internal Error: test_always_comb.sv:6:21: ../V3EmitCConstInit.h:103: 4-state value in constant pool\r\n    6 |         E_dont_care=2'b??\r\n      |                     ^~~~~\r\n```\r\nI suppose this error is expected, because enum in C doesn't support 4-state values, but error message is pretty obscure, I've discovered that the problem is caused the presence of the public comment only after trying to make a simpler example to post a question.",
+  "labels": [
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-10",
+  "closed_at": "2022-02-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

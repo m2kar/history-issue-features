@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8716,
+  "issue_url": "https://github.com/llvm/circt/pull/8716",
+  "title": "[Seq] Add a pass to convert an array seq.firreg to seq.firmem",
+  "body": "\r\nThis PR introduces a new transformation pass `RegOfVecToMem` that converts register arrays following memory access patterns into `seq.firmem` operations.\r\n\r\nThis is required for the `circt-verilog` tool, to identify memories, such that other `circt` transformations/analysis can be run in the `seq` dialect on the `mlir` parsed from verilog.\r\n \r\nThe pass analyzes `seq.firreg` operations with array types and identifies memory access patterns consisting of:\r\n- A register array representing memory storage\r\n- `hw.array_get` operations for reads  \r\n- `hw.array_inject` operations for writes\r\n- `comb.mux` operations controlling read/write enables\r\n- Optional output registers for read data\r\n\r\nWhen a valid pattern is detected, the pass replaces the register array with a `seq.firmem` operation and corresponding read/write ports.\r\n\r\nTODO: \r\n1. This pass cannot extract the read enable pattern yet.\r\n2. Parallelize the implementation.\r\n\r\n## Example Transformation\r\n\r\n**Input:**\r\n````mlir\r\nhw.module @memory_example(in %clk: i1, in %addr: i13, in %data: i8, in %we: i1, out result: i8) {\r\n  %clock = seq.to_clock %clk\r\n  \r\n  // Memory implemented as register array\r\n  %mem_next = comb.mux %we, %mem_updated, %mem : !hw.array<8192xi8>\r\n  %mem_updated = hw.array_inject %mem[%addr], %data : !hw.array<8192xi8>, i13\r\n  %mem = seq.firreg %mem_next clock %clock : !hw.array<8192xi8>\r\n  \r\n  // Read operation\r\n  %read_data = hw.array_get %mem[%addr] : !hw.array<8192xi8>, i13\r\n  \r\n  hw.output %read_data : i8\r\n}\r\n````\r\n\r\n**Output:**\r\n````mlir\r\nhw.module @memory_example(in %clk: i1, in %addr: i13, in %data: i8, in %we: i1, out result: i8) {\r\n  %clock = seq.to_clock %clk\r\n  \r\n  // Memory implemented as seq.firmem\r\n  %mem = seq.firmem 0, 1, undefined, undefined : <8192 x 8, mask 1>\r\n  %read_data = seq.firmem.read_port %mem[%addr], clock %clock enable %true\r\n  seq.firmem.write_port %mem[%addr] = %data, clock %clock enable %we\r\n  \r\n  hw.output %read_data : i8\r\n}\r\n````\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-16",
+  "closed_at": "2025-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2674,
+  "issue_url": "https://github.com/llvm/circt/issues/2674",
+  "title": "[firtool][ExportVerilog] Inline CSE'd Expressions",
+  "body": "Currently, `firtool` isn't inlining expressions which would help Verilog readability.  This is coming from CSE'd expressions which are then not re-inlined.\r\n\r\nConsider the following:\r\n\r\n```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input a : UInt<1>\r\n    input b : UInt<1>\r\n    input c : UInt<1>\r\n    input d : UInt<1>\r\n    output e : UInt<1>\r\n    output f : UInt<1>\r\n\r\n    node _x_T = or(a, b)\r\n    node _x_T_1 = or(c, d)\r\n    node x = or(_x_T, _x_T_1)\r\n    node _y_T = or(a, b)\r\n    node _y_T_1 = and(c, d)\r\n    node y = or(_y_T, _y_T_1)\r\n    e <= x\r\n    f <= y\r\n```\r\n\r\nWith `firtool`, this produces:\r\n\r\n```verilog\r\nmodule Foo(\t// Foo.fir:2:10\r\n  input  a, b, c, d,\r\n  output e, f);\r\n\r\n  wire _x_T = a | b;\t// Foo.fir:10:17\r\n  assign e = _x_T | c | d;\t// Foo.fir:2:10, :12:14\r\n  assign f = _x_T | c & d;\t// Foo.fir:2:10, :14:19, :15:14\r\nendmodule\r\n```\r\n\r\nThe SFC produces:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input   a,\r\n  input   b,\r\n  input   c,\r\n  input   d,\r\n  output  e,\r\n  output  f\r\n);\r\n  assign e = a | b | (c | d);\r\n  assign f = a | b | c & d;\r\nendmodule\r\n```\r\n\r\nIn this situation, it would be better to not emit the CSE'd temporary `a | b` and instead emit it inline.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-02-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4159,
+  "issue_url": "https://github.com/llvm/circt/pull/4159",
+  "title": "[ExportVerilog] Fix missing clog2 paren, omit double parens sometimes.",
+  "body": "Primarily:\r\n* Fix missing paren for clog2 when nested.\r\n* Fix double parens when adding `$signed()` around an operand.\r\n\r\nSee test, here's relevant before/after:\r\n\r\nBefore:\r\n\r\n```systemverilog\r\nmodule ParamsParensPrecedence\r\n  #(parameter /*integer*/ param) ();\t// ./test/Conversion/ExportVerilog/hw-dialect.mlir:1235:1\r\n  wire [31:0] _GEN = $clog2($unsigned(param));\t// ./test/Conversion/ExportVerilog/hw-dialect.mlir:1237:8\r\n  wire [31:0] _GEN_0 = $clog2($unsigned($clog2$unsigned(param + 8)));\t// ./test/Conversion/ExportVerilog/hw-dialect.mlir:1240:8\r\n  wire [31:0] _GEN_1 = $signed(param) >>> $signed((param & 8));\t// ./test/Conversion/ExportVerilog/hw-dialect.mlir:1243:8\r\nendmodule\r\n```\r\n\r\nAfter:\r\n```systemverilog\r\nmodule ParamsParensPrecedence\r\n  #(parameter /*integer*/ param) ();    // ./test/Conversion/ExportVerilog/hw-dialect.mlir:1235:1\r\n  wire [31:0] _GEN = $clog2($unsigned(param));  // ./test/Conversion/ExportVerilog/hw-dialect.mlir:1237:8\r\n  wire [31:0] _GEN_0 = $clog2($unsigned($clog2($unsigned(param + 8)))); // ./test/Conversion/ExportVerilog/hw-dialect.mlir:1240:8\r\n  wire [31:0] _GEN_1 = $signed(param) >>> $signed(param & 8);   // ./test/Conversion/ExportVerilog/hw-dialect.mlir:1243:8\r\nendmodule\r\n```\r\n\r\n---\r\n\r\nBit more:\r\n\r\n`clog2` needs parens regardless of inner expression, since it's a function.  Instead of getting this to happen by giving this `ForceEmitMultiUse` precedence (so it's lower than default `LowestPredence`), handle operations with outer syntax differently.\r\n\r\nSeparate out operations that are \"unary\" (`!`, etc.) from functions and Concat with `hasOpenClose`.  We do not currently support any unary (non-function) operators presently.\r\n\r\nWhen wrapping the expression in parens, the returned precedence should be `Selection`.\r\n\r\nWhile visiting, fix emission of extra parens in some cases by setting parenthesize-if-looser-than appropriately when emitting within `$signed`/`$unsigned` which add parentheses already.\r\n\r\nAs a bonus, drops the only (useful) use of `ForceEmitMultiUse` which will be removed in a follow-up.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-21",
+  "closed_at": "2022-10-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

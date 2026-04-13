@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5896,
+  "issue_url": "https://github.com/verilator/verilator/issues/5896",
+  "title": "Process comparison returns 'unequal' unexpectedly",
+  "body": "Can you attach an example that shows the issue?\n```systemverilog\nmodule process_test;\nclass A;\n    local process proc2;\n    task run;\n        process proc1;\n        proc1 = process::self();\n        if (proc1 == proc2) begin\n            $display(\"process is equal %p %p\", proc1, proc2);\n        end\n        else begin\n            $display(\"process is not equal %p %p\", proc1, proc2);\n            proc2 = proc1;\n        end\n    endtask\n\nendclass\n    initial begin\n        A a;\n        a = new();\n        a.run();\n        a.run();\n    end\nendmodule\n\n```\nDuring simulation, when invoking a.run() for the second time, the comparison between proc1 and proc2 unexpectedly returns \"not equal\". According to the code logic, proc2 should hold the value of proc1 from the first call, leading to an equality in the second comparison. However, the actual output shows they remain unequal:\n```\nprocess is not equal '{m_process:process} null\nprocess is not equal '{m_process:process} '{m_process:process}\n```\nWhat 'verilator' command line do we use to run your example?\n```bash\n$VERILATOR_ROOT/bin/verilator  --binary -top sema_test sema_test.sv;./obj_dir/Vsema_test\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n```\nrev v5.034-81-g464e19caa\n```\nWhat OS and distribution are you using?\n\nMacos Sequoia 15.3.2\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-28",
+  "closed_at": "2025-03-29",
+  "code_blocks": [
+    "module process_test;\nclass A;\n    local process proc2;\n    task run;\n        process proc1;\n        proc1 = process::self();\n        if (proc1 == proc2) begin\n            $display(\"process is equal %p %p\", proc1, proc2);\n        end\n        else begin\n            $display(\"process is not equal %p %p\", proc1, proc2);\n            proc2 = proc1;\n        end\n    endtask\n\nendclass\n    initial begin\n        A a;\n        a = new();\n        a.run();\n        a.run();\n    end\nendmodule\n\n",
+    "process is not equal '{m_process:process} null\nprocess is not equal '{m_process:process} '{m_process:process}\n",
+    "$VERILATOR_ROOT/bin/verilator  --binary -top sema_test sema_test.sv;./obj_dir/Vsema_test\n",
+    "rev v5.034-81-g464e19caa\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

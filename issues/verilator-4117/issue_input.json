@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4117,
+  "issue_url": "https://github.com/verilator/verilator/issues/4117",
+  "title": "Assignment of wire to other portions of itself creates a VGate.cpp:1004 Internal Error",
+  "body": "Using a third-party processor that is from a company that is also an `upper body appendage`, so cannot provide you a code drop.\r\n\r\nVersion: Verilator 5.006 2023-01-22 rev v5.006 on Ubuntu-22.04\r\n\r\nWhen verilating a particular portion of the verilog - I get the following errors:\r\n\r\n```\r\n%Error: Internal Error: <upper body appendage file>.vline:loc: ../V3Gate.cpp:1004: Can't replace lvalue assignments with const var\r\n```\r\n\r\nI originally added -fno-gate, but have been seeing some weird things that are going on in the simulation output vcd files, so decided to fix this and see if those resolve.\r\n\r\n*Note:* Would be nice to allow the -fno-gate to be applied to only a single file of a larger design.\r\n\r\nI tracked it down to the following style of code - and the driver of the wire - names of variables/wires have been changed.\r\n\r\n```verilog\r\nwire [4:0] foo;\r\n// ... lots of other code.\r\n\r\n`ifdef VERILATOR_WORKAROUND\r\n  wire [4:1] foo_order;\r\n  assign foo_order[1] = foo[0];\r\n  assign foo_order[2] = |foo[1:0];\r\n  assign foo_order[3] = |foo[2:0];\r\n  assign foo_order[4] = |foo[3:0];\r\n\r\n  assign foo[0] = a_bar_status[1];\r\n  assign foo[1] = b_bar_status[1] & ~foo_order[1];\r\n  assign foo[2] = c_bar_status[1] & ~foo_order[2];\r\n  assign foo[3] = d_bar_status[1] & ~foo_order[3];\r\n  assign foo[4] = e_bar_status[1] & ~foo_order[4];\r\n`else\r\n  assign foo[0] = a_bar_status[1];\r\n  assign foo[1] = b_bar_status[1] & ~foo[0];\r\n  assign foo[2] = c_bar_status[1] & ~(|foo[1:0]);\r\n  assign foo[3] = d_bar_status[1] & ~(|foo[2:0]);\r\n  assign foo[4] = e_bar_status[1] & ~(|foo[3:0]);\r\n`endif\r\n```\r\n\r\nSince the above with `-DVERILATOR_WORKAROUND=1` works and there are no other internal errors, I'm no longer investigating this issue, but I thought I'd add it here so that you can augment your test suite to include this style and possibly fix it in the future.\r\n",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-13",
+  "closed_at": "2023-07-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

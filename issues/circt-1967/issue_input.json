@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1967,
+  "issue_url": "https://github.com/llvm/circt/issues/1967",
+  "title": "[exportverilog] Interface renamification doesn't work",
+  "body": "hw-legalize-names points out that interface symbols get renamed but their uses in types don't get renamed.  \r\n\r\n```\r\n// CHECK-LABEL: sv.interface @output_0\r\nsv.interface @output {\r\n  // CHECK-NEXT: sv.interface.signal @input_0 : i1\r\n  sv.interface.signal @input : i1\r\n  // CHECK-NEXT: sv.interface.signal @output_1 : i1\r\n  sv.interface.signal @output : i1\r\n  // CHECK-NEXT: sv.interface.modport @always_2\r\n  // CHECK-SAME: (\"input\" @input_0, \"output\" @output_1)\r\n  sv.interface.modport @always (\"input\" @input, \"output\" @output)\r\n}\r\n\r\n// TODO: Renaming the above interface declarations currently does not rename\r\n// their use in the following types.\r\n\r\n// hw.module @InterfaceAsInstance () {\r\n//   %0 = sv.interface.instance : !sv.interface<@output>\r\n// }\r\n// hw.module @InterfaceInPort (%m: !sv.modport<@output::@always>) {\r\n// }\r\n```\r\n\r\nThis is for a very similar reason that this approach doesn't work for parameters.  I'll take care of this when I get to it.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-10",
+  "closed_at": "2021-10-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

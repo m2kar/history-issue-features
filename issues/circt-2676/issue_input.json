@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2676,
+  "issue_url": "https://github.com/llvm/circt/pull/2676",
+  "title": "[FIRRTL] Preserve All Wires",
+  "body": "Change end-to-end FIRRTL compilation behavior to preserve all wires that\r\nexist in CHIRRTL.  This is accomplished by creating a \"shadow wire\" that\r\nis assigned the value of the actual wire and marked \"don't touch\".\r\n\r\nThis is done to enable better debug-ability of Chisel designs by, with a\r\nfuture change to Chisel to convert any named Scala val to a wire,\r\nenabling users to always have references to named things they define in\r\nChisel.\r\n\r\nThis has the effect of changing the compilation of the following:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    wire x: UInt<1>\r\n    x <= a\r\n\r\n    b <= x\r\n```\r\n\r\nTo produce:\r\n```verilog\r\nmodule Foo(\t\r\n  input  a,\r\n  output b);\r\n\r\n  wire x;\t\r\n\r\n  assign x = a;\r\n  assign b = a;\r\nendmodule\r\n```\r\n\r\nWith the change that @jackkoenig shows in [this Chisel branch](https://github.com/chipsalliance/chisel3/compare/emit-named-nodes-as-wires), this will preserve _almost_ every Chisel-defined `val`.\r\n\r\nNote: this is the absolute simplest possible way to implement this change.  There are cleaner ways like building out more support for FIRRTL probe ops and enabling named probes.  Users should also likely have a way of opting out of preserve all wires behavior.\r\n\r\nh/t: @jsmithsf",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-24",
+  "closed_at": "2022-02-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

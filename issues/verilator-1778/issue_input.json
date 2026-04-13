@@ -1,0 +1,23 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1778,
+  "issue_url": "https://github.com/verilator/verilator/issues/1778",
+  "title": "Question: Implementing SystemVerilog 'alias'",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Message: 1041 from https://www.veripool.org\n\n\n\n---\n\nI'm about to try implementing the SystemVerilog 'alias' keyword. This is similar to continuous assignment, but it is bi-directional, so useful with inouts. IEEE 1800-2012 gives the example\n\n```\nmodule swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] b\n\t     );\n\n    alias {a[7:0],a[15:8],a[23:16],a[31:24]} = b;\n\nendmodule\n\n```\n\nto swap the bytes of a pair of inputs. This is fundamentally a synonym, and it would be nice to think that a simple substitution of one name with the other would suffice. However that leads to nonsense syntax for non-trivial cases. The example above would become:\n\n```\nmodule swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] {a[7:0],a[15:8],a[23:16],a[31:24]}\n\t     );\n\nendmodule\n\n```\n\nwhich is not valid SystemVerilog. One approach which seems to work is to rewrite as a pair of continuous assignments:\n\n```\nmodule swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] b\n\t     );\n\n    // alias {a[7:0],a[15:8],a[23:16],a[31:24]} = b;\n\n    wire [31:0] a_prime;\n    wire [31:0] b_prime;\n\n    assign b_prime = {a[7:0],a[15:8],a[23:16],a[31:24]};\n    assign {a_prime[7:0],a_prime[15:8],a_prime[23:16],a_prime[31:24]} = b;\n    assign b = b_prime;\n    assign a = a_prime;\n\nendmodule\n\n```\n\nWe do seem to need the intermediate variables a_prime and b_prime. Without these, although Verilator accepts the code, it complains about UNOPTFLAT,and if that is ignored fails to make the transform.\n\nI can't help feeling there must be a much simpler approach, since Verilator already does a great deal of internal aliasing when it flattens the module hierarchy. Any ideas welcome.\n\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2013-04-01",
+  "closed_at": "2013-04-12",
+  "code_blocks": [
+    "module swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] b\n\t     );\n\n    alias {a[7:0],a[15:8],a[23:16],a[31:24]} = b;\n\nendmodule\n\n",
+    "module swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] {a[7:0],a[15:8],a[23:16],a[31:24]}\n\t     );\n\nendmodule\n\n",
+    "module swap (\n\t     inout wire [31:0] a,\n\t     inout wire [31:0] b\n\t     );\n\n    // alias {a[7:0],a[15:8],a[23:16],a[31:24]} = b;\n\n    wire [31:0] a_prime;\n    wire [31:0] b_prime;\n\n    assign b_prime = {a[7:0],a[15:8],a[23:16],a[31:24]};\n    assign {a_prime[7:0],a_prime[15:8],a_prime[23:16],a_prime[31:24]} = b;\n    assign b = b_prime;\n    assign a = a_prime;\n\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

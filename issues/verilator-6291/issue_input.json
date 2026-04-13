@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6291,
+  "issue_url": "https://github.com/verilator/verilator/issues/6291",
+  "title": "Add warning on `always @*` with no variables read inside",
+  "body": "Consider this, which sometimes catches out Verilog newcomers:\n\n```systemverilog\nmodule t;\n  int a = 42;\n  always @* a = 100;\n  initial #10 $display(\"a should be 42, but is: %0d\", a);\nendmodule\n```\n\nOn event based simulators, the always block is never run, because it has no sensitivities (no variables read inside), so `a` will be observed as `42` in the `$display`. Verilator executes it at time zero (as if it was an `always_comb`), so `a` is printed as 100.\n\nThere should be a warning that this (`always @*` with nothing read inside) will not match event based simulators, and that you probably meant `always_comb`.\n\nNote with -Wall there is PROCASSINIT, but if you omit the static initializer (which I only added for emphasis), you get nothing (and on event based 4 state simulators `a` would remain an x value).\n",
+  "labels": [
+    "area: lint",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-15",
+  "closed_at": "2025-08-18",
+  "code_blocks": [
+    "module t;\n  int a = 42;\n  always @* a = 100;\n  initial #10 $display(\"a should be 42, but is: %0d\", a);\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

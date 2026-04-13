@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3958,
+  "issue_url": "https://github.com/verilator/verilator/issues/3958",
+  "title": "Local declaration should hide package wildcard import",
+  "body": "Although the error here is \"Unsupported in C\", it's a similar case to #599, which is fixed, so it may be that this is intended to work but the fix for #599 just didn't handle the enum case.\r\n\r\n```\r\npackage pack;\r\n  typedef enum logic[0:0] { P = 1'b0 } e_t;\r\nendpackage\r\n\r\nmodule a\r\nimport pack::*;\r\n();\r\n  localparam P = 1;\r\nendmodule\r\n```\r\noutput:\r\n```\r\n%Error: a.sv:8:14: Unsupported in C: Variable has same name as ENUMITEM 'P': 'P'\r\n    8 |   localparam P = 1;\r\n      |              ^\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual at https://verilator.org/verilator_doc.html for more assistance.\r\n```\r\nSystemVerilog standard says pack::P is \"potentially locally visible\" in a, and it ends up not being visible since P is locally declared in a. Seems like once Verilator front end has resolved the scope, it does not need to generate C code for pack::P in a at all, so there should be no clash of names in the C code - but even if it had to somehow reference both pack::P and the localparam, it could achieve that by mangling the names somehow.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-13",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

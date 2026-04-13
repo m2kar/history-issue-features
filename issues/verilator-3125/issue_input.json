@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3125,
+  "issue_url": "https://github.com/verilator/verilator/pull/3125",
+  "title": "Improve V3MergeCond by reordering statements",
+  "body": "V3MergeCond merges consecutive conditional `_ = cond ? _ : _` and\r\n`if (cond) ...` statements. This patch adds an analysis and ordering\r\nphase that moves statements with identical conditions closer to each\r\nother, in order to enable more merging opportunities. This in turn\r\neliminates a lot of repeated conditionals which reduced dynamic branch\r\ncount and branch misprediction rate\r\n\r\nThis is helpful for performance and build time. Performance with my\r\nstandard OpenTitan benchmark is as follows (about 2.5% speedup,\r\nand I finally hit an IPC > 1 yay!):\r\n\r\n```\r\n// master:\r\n\r\n      59,977.31 msec task-clock                #    1.000 CPUs utilized            ( +-  0.03% )\r\n             82      context-switches          #    0.001 K/sec                    ( +- 40.28% )\r\n              0      cpu-migrations            #    0.000 K/sec\r\n          1,430      page-faults               #    0.024 K/sec\r\n209,798,377,329      cycles                    #    3.498 GHz                      ( +-  0.03% )\r\n206,783,685,808      instructions              #    0.99  insn per cycle           ( +-  0.00% )\r\n 11,324,243,166      branches                  #  188.809 M/sec                    ( +-  0.00% )\r\n    185,879,401      branch-misses             #    1.64% of all branches          ( +-  0.50% )\r\n\r\n        59.9806 +- 0.0168 seconds time elapsed  ( +-  0.03% )\r\n\r\n// Improved merging:\r\n\r\n      58,498.52 msec task-clock                #    1.000 CPUs utilized            ( +-  0.05% )\r\n             80      context-switches          #    0.001 K/sec                    ( +- 40.10% )\r\n              0      cpu-migrations            #    0.000 K/sec\r\n          1,428      page-faults               #    0.024 K/sec\r\n204,625,635,595      cycles                    #    3.498 GHz                      ( +-  0.05% )\r\n205,825,130,320      instructions              #    1.01  insn per cycle           ( +-  0.00% )\r\n 10,935,311,938      branches                  #  186.933 M/sec                    ( +-  0.00% )\r\n    159,406,663      branch-misses             #    1.46% of all branches          ( +-  1.23% )\r\n\r\n        58.5016 +- 0.0283 seconds time elapsed  ( +-  0.05% )\r\n```\r\n\r\nVerilation time is about 0.2 second longer, so the implementation is quite\r\nefficient (~60 sec min to Verilate this benchmark), so I am quite happy with\r\nthe algorithm. I could use your wisdom on whether more nodes should be\r\nmarked `m_isFence` (testsuite, ext texts and OpenTitan are happy as is).\r\n\r\nAs a curiosity, I recommend looking at a diff of the output of `t_case_write1`\r\nwith and without the conditional Merging (`-Ow`), it is now quite satisfying.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-09-11",
+  "closed_at": "2022-05-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

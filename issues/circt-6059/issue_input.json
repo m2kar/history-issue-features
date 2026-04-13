@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6059,
+  "issue_url": "https://github.com/llvm/circt/issues/6059",
+  "title": "[FIRRTL][IMDCE] Annotations on ports are not preserved when moving to wires",
+  "body": "Input:\r\n```mlir\r\n// -----\r\n// Test that annotations keep ports alive.\r\n// CHECK-LABEL: \"AnnoAlivePort\"\r\nfirrtl.circuit \"AnnoAlivePort\" {\r\n  // CHECK: module private @AnnoPort\r\n  firrtl.module private @AnnoPort(out %dead : !firrtl.uint<5> [{class = \"circt.test\"}]) {}\r\n  firrtl.module @AnnoAlivePort() {\r\n    // CHECK: firrtl.instance\r\n    %inst_dead = firrtl.instance inst @AnnoPort(out dead : !firrtl.uint<5>)\r\n  }\r\n}\r\n```\r\n\r\nThe port is dead at instantiation sites but alive within the module, so port is dropped and wire is created for it (maybe it's written/read locally, so on).\r\n\r\nLooks like annotations are not moved to the wire, however, here's the current output pointing IMDCE at the above:\r\n```mlir\r\nfirrtl.circuit \"AnnoAlivePort\" {\r\n  firrtl.module private @AnnoPort() {\r\n    %0 = firrtl.wire : !firrtl.uint<5>\r\n  }\r\n  firrtl.module @AnnoAlivePort() {\r\n    firrtl.instance inst @AnnoPort()\r\n  }\r\n}\r\n```\r\n\r\ncc #6046 for more discussion on annotations and IMDCE, but not directly related.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-09-06",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

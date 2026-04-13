@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1681,
+  "issue_url": "https://github.com/verilator/verilator/issues/1681",
+  "title": "Question: V3Localize not working outside of toplevel",
+  "body": "---\n\n\nAuthor Name: **Ted Campbell**\nOriginal Redmine Message: 166 from https://www.veripool.org\n\n\n\n---\n\nRunning Verilator-3.713 I notice that when a module isn't inlined (either by -Oi, or because it is large) that V3Localize will localize any variables in it.\n\nV3Localize depends on V3Descope to set hierThis for module variables, but with the disabled 'thisp' optimization, it is set incorrectly (I think!).  \n\nIn V3Descope.cpp - DescopeVisitor::descopedName, hierThis is cleared when scope isn't toplevel, even if scopep == m_scope.\n\nChanging \"hierThisr = false;\" to check that scope doesn't match solves the problem for me, and test_regress passes.\n```\n         } else {\n             // Reference to something else, use global variable\n             UINFO(8,\"      Descope \"<<scopep<<endl);\n             UINFO(8,\"           to \"<<scopep->name()<<endl);\n             UINFO(8,\"        under \"<<m_scopep->name()<<endl);\n+++         if (scopep != m_scopep) hierThisr = false;\n---         hierThisr = false;\n             if (!scopep->aboveScopep()) { // Top\n                 return \"vlTOPp->\";      // == \"vlSymsp->TOPp->\", but GCC would suspect aliases\n             } else {\n                 return scopep->nameVlSym()+\".\";\n             }\n         }\n\n```\n\nIs this valid?  Vars that fail to localize will still end up using the qualified names.\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2009-08-27",
+  "closed_at": "2009-08-27",
+  "code_blocks": [
+    "         } else {\n             // Reference to something else, use global variable\n             UINFO(8,\"      Descope \"<<scopep<<endl);\n             UINFO(8,\"           to \"<<scopep->name()<<endl);\n             UINFO(8,\"        under \"<<m_scopep->name()<<endl);\n+++         if (scopep != m_scopep) hierThisr = false;\n---         hierThisr = false;\n             if (!scopep->aboveScopep()) { // Top\n                 return \"vlTOPp->\";      // == \"vlSymsp->TOPp->\", but GCC would suspect aliases\n             } else {\n                 return scopep->nameVlSym()+\".\";\n             }\n         }\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

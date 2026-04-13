@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4444,
+  "issue_url": "https://github.com/verilator/verilator/pull/4444",
+  "title": "Add prepareClone and atClone APIs for Verilated models (#3503)",
+  "body": "This PR is to fix issue #3503. Since I'm not receiving information on other resources that are required to be re-allocated at clone, I assume the thread pool is the only thing.\r\n\r\nThis commit adds the `at_clone` member function for all verilated models to allow the user to manually clone the models without knowing about the model details.\r\n\r\nThis API would be helpful if the user copies the process using `fork` and similar OS-level mechanisms. The `at_clone` member function ensures that all model-allocated resources are re-allocated, such that the copied child process/model can simulate correctly.\r\n\r\nA typical allocated resource is the thread pool, which every model has its own pool.\r\n\r\nWe appreciate your contributing to Verilator.  If this is your first commit, please add your name to docs/CONTRIBUTORS, and read our contributing guidelines in docs/CONTRIBUTING.rst.\r\n\r\n**TODO**: I don't know how to add a CI testcase. I've upload my `clone.v` and `main.cpp` as the cases. The commands should be `verilator --cc --exe --build clone.v main.cpp` and `verilator --cc --exe --build clone.v main.cpp --threads 2`. Both single-thread and multi-thread models should be tested. Could you please help me on how I can add the test cases? I've uploaded them as attachments. Their outputs should be the same as follows. The `at_clone` should be a cross-platform feature though I'm using the `fork` example for test only.\r\n\r\n[testcase.tar.gz](https://github.com/verilator/verilator/files/12448161/testcase.tar.gz)\r\n\r\n```\r\ncounter =  0\r\ncounter =  1\r\ncounter =  2\r\ncounter =  3\r\ncounter =  4\r\ncounter =  5\r\nparent: let's wait for the child\r\nchild: here we go\r\ncounter =  6\r\ncounter =  7\r\ncounter =  8\r\n- clone.v:20: Verilog $finish\r\nparent: here we go\r\ncounter =  6\r\ncounter =  7\r\ncounter =  8\r\n- clone.v:20: Verilog $finish\r\n```\r\n\r\nBTW, when modifying the `__Vm_threadPoolp`, I noticed that it is commented with `TODO -- For now each model creates its own ThreadPool here, and deletes it in the destructor. ` However, I don't see the destructor deleting it. The destructor is empty at all. Plus, if I don't re-assign the `__Vm_threadPoolp` for multi-threaded models, the child process still simulates correctly, though I doubt this is the same as the older version I was trying earlier. So, I'm wondering whether I'm doing the correct thing for this `__Vm_threadPoolp` and whether it is expected to be updated.\r\n\r\nIf there is any issue, please let me know and I'll try to fix it.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-27",
+  "closed_at": "2023-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

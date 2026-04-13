@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5769,
+  "issue_url": "https://github.com/verilator/verilator/issues/5769",
+  "title": "/*verilator lint_save/restore*/ breaks VFileContent reference counting",
+  "body": "We have been chasing random crashes when running verilator for a while. Anecdotally they seem to be related to the positioning of lint_save/restore comments. We have seen SEGVs and linked list corruption errors on 5.028 through to cc1133c0 on master. We have also seen some really inexplicable parsing syntax errors.\n\nBuilding with \"CXX_FLAGS=\"-fsanitize=address -static-libasan\" gave a clue as to what might be going on. For example:\n```\nverilator --lint-only -debugi 5 test_regress/t/t_lint_restore_bad.v\n...\n--accepting rule at line 443 (\"// verilator lint_restore\")\n=================================================================\n==2678198==ERROR: AddressSanitizer: heap-use-after-free on address\n```\n\nInvestigating further it looks like the VFileContent reference counting doesn't take into account the m_contentp copy in verilatorCmtLintSave(). When verilatorCmtLintRestore() is called the VFileContent can be deleted prematurely. I think the implicit FileLine copy constructor is currently used. Adding an explicit copy constructor to FileLine that also calls m_contentp->refInc() like FileLine(FileLine* fromp) seems to fix it. e.g:\n\n```\ndiff --git a/src/V3FileLine.h b/src/V3FileLine.h\nindex e885cc7cd..13bbb8472 100644\n--- a/src/V3FileLine.h\n+++ b/src/V3FileLine.h\n@@ -183,6 +183,19 @@ public:\n         , m_filenameno{singleton().nameToNumber(filename)}\n         , m_waive{false}\n         , m_contentLineno{0} {}\n+    explicit FileLine(const FileLine& from)\n+        : m_msgEnIdx{from.m_msgEnIdx}\n+        , m_filenameno{from.m_filenameno}\n+        , m_waive{from.m_waive}\n+        , m_contentLineno{from.m_contentLineno}\n+        , m_firstLineno{from.m_firstLineno}\n+        , m_firstColumn{from.m_firstColumn}\n+        , m_lastLineno{from.m_lastLineno}\n+        , m_lastColumn{from.m_lastColumn}\n+        , m_contentp{from.m_contentp}\n+        , m_parent{from.m_parent} {\n+        if (m_contentp) m_contentp->refInc();\n+    }\n     explicit FileLine(FileLine* fromp)\n         : m_msgEnIdx{fromp->m_msgEnIdx}\n         , m_filenameno{fromp->m_filenameno}\n```\n\nThis is my first go at reading the verilator source code, I might be wrong!\n\nThanks for all your work developing verilator.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-09",
+  "closed_at": "2025-02-10",
+  "code_blocks": [
+    "verilator --lint-only -debugi 5 test_regress/t/t_lint_restore_bad.v\n...\n--accepting rule at line 443 (\"// verilator lint_restore\")\n=================================================================\n==2678198==ERROR: AddressSanitizer: heap-use-after-free on address\n",
+    "diff --git a/src/V3FileLine.h b/src/V3FileLine.h\nindex e885cc7cd..13bbb8472 100644\n--- a/src/V3FileLine.h\n+++ b/src/V3FileLine.h\n@@ -183,6 +183,19 @@ public:\n         , m_filenameno{singleton().nameToNumber(filename)}\n         , m_waive{false}\n         , m_contentLineno{0} {}\n+    explicit FileLine(const FileLine& from)\n+        : m_msgEnIdx{from.m_msgEnIdx}\n+        , m_filenameno{from.m_filenameno}\n+        , m_waive{from.m_waive}\n+        , m_contentLineno{from.m_contentLineno}\n+        , m_firstLineno{from.m_firstLineno}\n+        , m_firstColumn{from.m_firstColumn}\n+        , m_lastLineno{from.m_lastLineno}\n+        , m_lastColumn{from.m_lastColumn}\n+        , m_contentp{from.m_contentp}\n+        , m_parent{from.m_parent} {\n+        if (m_contentp) m_contentp->refInc();\n+    }\n     explicit FileLine(FileLine* fromp)\n         : m_msgEnIdx{fromp->m_msgEnIdx}\n         , m_filenameno{fromp->m_filenameno}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

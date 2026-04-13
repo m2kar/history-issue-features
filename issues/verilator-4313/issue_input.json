@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4313,
+  "issue_url": "https://github.com/verilator/verilator/issues/4313",
+  "title": "Support property definition with empty parentheses",
+  "body": "Currently, property definition with empty parentheses is not supported. For example, consider the following module.\r\n\r\n``` SystemVerilog\r\nmodule test (\r\n    input clk,\r\n    input rst,\r\n    input tvalid\r\n);\r\n\r\n    property my_property_1;\r\n        @(posedge clk) disable iff (rst) tvalid;\r\n    endproperty\r\n\r\n    property my_property_2();\r\n        @(posedge clk) disable iff (rst) tvalid;\r\n    endproperty\r\n\r\n    sva_1: assert property(my_property_1()) else $error(\"assertion failed\");\r\n    sva_2: assert property(my_property_2()) else $error(\"assertion failed\");\r\n\r\nendmodule : test\r\n```\r\n\r\nThis would result in such error\r\n\r\n```\r\n$ verilator --cc test.sv\r\n%Error: test.sv:11:28: syntax error, unexpected ')', expecting IDENTIFIER or randomize\r\n   11 |     property my_property_2();\r\n      |                            ^\r\n%Error: Internal Error: test.sv:1:8: ../V3ParseSym.h:124: Symbols suggest ending PROPERTY 'my_property_2' but parser thinks ending MODULE 'test'\r\n    1 | module test (\r\n      |        ^~~~\r\n```\r\n\r\nAs specified in *IEEE Std 1800-2017, Annex A.2.10 Assertion declarations*, a `property_declaration` can has none or multiple `property_port_item` in its parentheses, so hopping such syntax can be supported by Verilator.",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-25",
+  "closed_at": "2023-07-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

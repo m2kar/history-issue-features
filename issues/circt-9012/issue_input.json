@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9012,
+  "issue_url": "https://github.com/llvm/circt/pull/9012",
+  "title": "fix: use NLA to preserve externalized memory from being dropped",
+  "body": "This commit fixes a corner-case, where a memory module itself is not effectful, but it is connected to an effectful *ext* memory module. If we simply mark all memory modules as pure, this would optimise out the ext memory module, causing inconsistencies in the sifive -repl-seq-mem flow. The previous firrtl transforms and hierarchies would be generated correctly, yet the final _ext sram would be omitted completely.\r\n\r\nThis fixes https://github.com/llvm/circt/issues/8994, where the offending chisel looks like\r\n\r\n```scala\r\n  val rob_debug_inst_mem   = SyncReadMem(numRobRows, Vec(coreWidth, UInt(32.W)))\r\n  val rob_debug_inst_wmask = WireInit(VecInit(0.U(coreWidth.W).asBools))\r\n  val rob_debug_inst_wdata = Wire(Vec(coreWidth, UInt(32.W)))\r\n  rob_debug_inst_mem.write(rob_tail, rob_debug_inst_wdata, rob_debug_inst_wmask)\r\n  val rob_debug_inst_rdata = rob_debug_inst_mem.read(rob_head, will_commit.reduce(_||_))\r\n```\r\n\r\nBefore this patch, the following would have all the wires optimised out by this pass under rob_debug_inst_mem\r\n\r\n```\r\n @rob_debug_inst_mem(in %R0_addr: !firrtl.uint<5>, in %R0_en: !firrtl.uint<1>, in %R0_clk: !firrtl.clock, in %W0_addr: !firrtl.uint<5>, in %W0_clk: !firrtl.clock, in %W0_data: !firrtl.uint<64>, in %W0_mask: !\r\n firrtl.uint<2>) {\r\n     %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n     %rob_debug_inst_mem_ext_R0_addr, %rob_debug_inst_mem_ext_R0_en, rob_debug_inst_mem_ext_R0_clk, %rob_debug_inst_mem_ext_R0_data, rob_debug_inst_mem_ext_W0_addr, %rob_debug_inst_mem_ext_W0_en,\r\n %rob_debug_inst_mem_ext_W0_clk, %rob_debug_inst_mem_ext_W0_data, %rob_debug_inst_mem_ext_W0_mask = firrtl.instance rob_debug_inst_mem_ext @rob_debug_inst_mem_ext(in R0_addr: !firrtl.uint<5>, in R0_en: !\r\n firrtl.uint<1>, in R0_clk: !firrtl.clock, out R0_data: !firrtl.uint<64>, in W0_addr: !firrtl.uint<5>, in W0_en: !firrtl.uint<1>, in W0_clk: !firrtl.clock, in W0_data: !firrtl.uint<64>, in W0_mask: !\r\n firrtl.uint<2>)\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_R0_addr, %R0_addr : !firrtl.uint<5>\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_R0_en, %R0_en : !firrtl.uint<1>\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_R0_clk, %R0_clk : !firrtl.clock\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_W0_addr, %W0_addr : !firrtl.uint<5>\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_W0_en, %c1_ui1 : !firrtl.uint<1>\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_W0_clk, %W0_clk : !firrtl.clock\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_W0_data, %W0_data : !firrtl.uint<64>\r\n     firrtl.matchingconnect %rob_debug_inst_mem_ext_W0_mask, %W0_mask : !firrtl.uint<2>\r\n   }\r\n```\r\n\r\nOpen to suggestions on how to mitigate this issue in a potentially cleaner manner :)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

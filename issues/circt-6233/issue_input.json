@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6233,
+  "issue_url": "https://github.com/llvm/circt/issues/6233",
+  "title": "[FIRRTL] FirRegLowering mux-to-if conversion check could be more performant",
+  "body": "The logic that determines whether to emit a `comb.mux` or build an `sv.if` for a given register needs to know if the `comb.mux` is reachable from the register. This is currently implemented as a forward dataflow walk from the register, faning out until it reaches another register or an instance.\r\n\r\nhttps://github.com/llvm/circt/blob/1705306f41dea8243d72c262e5c30c87c458caf8/lib/Conversion/SeqToSV/FirRegLowering.cpp#L343-L354\r\n\r\nThis can be a performance concern--the current implementation could take 20% longer in SeqToSV than the previous implementation for real designs.\r\n\r\nThere are at least a couple ways to improve this.\r\n\r\nA simple way is to change the filtering logic in the getForwardSliceSimple callback to have a more restricted allow/deny list. Right now we have a deny list that is totally conservative--we know we can stop when we reach another register or an instance. A better approach might be to use an allow list--we know we want to fan out through muxes, but there are other \"wiring\" ops like array create/get that should also be allowed. If we can come up with an allowlist that is restrictive but not fragile, that would be an easy way to improve performance.\r\n\r\nA more involved way would be to step back and realize that this is a general reachability problem. I don't think there is anything immediately useful upstream in MLIR, but with the right data structure and algorithm, this should be solvable efficiently. Let the nerd sniping begin...",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-10-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

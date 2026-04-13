@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5978,
+  "issue_url": "https://github.com/verilator/verilator/issues/5978",
+  "title": "Fix segfault writing timestamp to VCD after buffer flush",
+  "body": "Running with `--trace` on a low activity testcase results in a segmentation fault in `VerilatedVcd::emitTimeChange`. Encountered this issue upgrading from v5.032 -> v5.036 and bisected to [this](https://github.com/verilator/verilator/commit/34a760b75b08370aa884cb6ba297abf67cdc78bb) commit. \n\nTracked down the issue to the following sequence of events:\n1. Call into `VerilatedVcd::emitTimeChange(timeui=N)`\n2. Printing the timestamp causes `VerilatedVcd::bufferFlush()` which nulls the `m_wrTimeBeginp` and `m_wrTimeEndp` pointers\n3. `m_wrTimeEndp = m_writep` on the way out of `VerilatedVcd::emitTimeChange(timeui=N)`\n4. \\<no traced activity\\>\n5. Call into `VerilatedVcd::emitTimeChange(timeui=N+1)` and assign write pointer to nullptr (`m_writep = m_wrTimeBeginp`)\n6. Segfault on trying to print \"#\"\n\nOne obvious solution is to add a nullptr check to specifically handle the buffer flush case:\n```diff\nvoid VerilatedVcd::emitTimeChange(uint64_t timeui) {\n    // Remember pointers when last emitted time stamp; if last output was\n    // timestamp backup and overwrite it.\n    // This is faster then checking on every signal change if time needs to\n    // be emitted.  Note buffer flushes may still emit a rare duplicate.\n-  if (m_wrTimeEndp == m_writep) m_writep = m_wrTimeBeginp;\n+  if (m_wrTimeEndp == m_writep) m_writep = m_wrTimeBeginp ? m_wrTimeBeginp : m_writep;\n    m_wrTimeBeginp = m_writep;\n    {\n        printStr(\"#\");        printStr(\"#\");\n        const std::string str = std::to_string(timeui);\n        printStr(str.c_str());        printStr(str.c_str());\n        printStr(\"\\n\");        printStr(\"\\n\");\n    }\n    m_wrTimeEndp = m_writep;\n}\n```\n\nI'm using closed source HDL/testbench that I can't share so I don't have a minimal reproduction. FWIW I haven't seen the issue since adding the above patch locally. Open to suggestions on the best way to generate/modify a testcase for this.\n\n",
+  "labels": [
+    "status: ready",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-05",
+  "closed_at": "2025-05-11",
+  "code_blocks": [
+    "void VerilatedVcd::emitTimeChange(uint64_t timeui) {\n    // Remember pointers when last emitted time stamp; if last output was\n    // timestamp backup and overwrite it.\n    // This is faster then checking on every signal change if time needs to\n    // be emitted.  Note buffer flushes may still emit a rare duplicate.\n-  if (m_wrTimeEndp == m_writep) m_writep = m_wrTimeBeginp;\n+  if (m_wrTimeEndp == m_writep) m_writep = m_wrTimeBeginp ? m_wrTimeBeginp : m_writep;\n    m_wrTimeBeginp = m_writep;\n    {\n        printStr(\"#\");        printStr(\"#\");\n        const std::string str = std::to_string(timeui);\n        printStr(str.c_str());        printStr(str.c_str());\n        printStr(\"\\n\");        printStr(\"\\n\");\n    }\n    m_wrTimeEndp = m_writep;\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

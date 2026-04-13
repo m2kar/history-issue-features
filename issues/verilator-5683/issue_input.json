@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5683,
+  "issue_url": "https://github.com/verilator/verilator/issues/5683",
+  "title": "Fix `--hierarchical` finding include files",
+  "body": "The `--hierarchical` option does not look for sources using `-I` like non-hierarchical mode when sources are not in the current directory. \r\n\r\nThis happens on master running linux. \r\n\r\nTest case contains 2 sources that are 2-level deep in hierarchy and I tried 2 verilator invocations. One works and one doesn't.\r\n```\r\nApptainer> more */*/*\r\n::::::::::::::\r\nbuild/src/mid.v\r\n::::::::::::::\r\nmodule mid(input clock, input reset, input a, input b, output c); /* verilator hier_block */\r\n\r\nassign c = a & b;\r\nendmodule\r\n::::::::::::::\r\nbuild/src/top.v\r\n::::::::::::::\r\nmodule top(input clock, input reset);\r\n\r\nwire a,b,c;\r\n\r\nmid mid(clock, reset, a, b, c);\r\n\r\n\r\nendmodule\r\nApptainer> ../build/src/verilator -Ibuild/src  top.v mid.v --top-module top --cc \r\n- V e r i l a t i o n   R e p o r t:  rev v5.030 (mod)\r\n- Verilator: Built from 0.033 MB sources in 3 modules, into 0.018 MB in 6 C++ files needing 0.000 MB\r\n- Verilator: Walltime 0.025 s (elab=0.001, cvt=0.008, bld=0.000); cpu 0.025 s on 1 threads; alloced 9.930 MB\r\nApptainer> rm -rf mdir ; ../build/src/verilator -Ibuild/src  top.v mid.v --top-module top --cc  --hierarchical\r\nmake: Entering directory '/home/awmoore/pta/verilator/test/obj_dir'\r\nmake: *** No rule to make target 'top.v', needed by 'Vtop.mk'.  Stop.\r\nmake: Leaving directory '/home/awmoore/pta/verilator/test/obj_dir'\r\n%Error: make -C obj_dir -f Vtop_hier.mk  -j 1  hier_verilation exited with 2\r\nApptainer> \r\n```",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-19",
+  "closed_at": "2024-12-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

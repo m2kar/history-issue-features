@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2303,
+  "issue_url": "https://github.com/verilator/verilator/issues/2303",
+  "title": "Tristate does not work with multiple assignments",
+  "body": "This creates correct tristate logic:\r\n```verilog\r\nalways_comb begin\r\n   if (condition)\r\n      s = 1'b1;\r\n   else\r\n      s = 1'bz;\r\nend\r\n```\r\n\r\nThis however creates some sort of latch (the 1 is written to the signal, but never cleared):\r\n```verilog\r\nalways_comb begin\r\n   s = 1'bz;\r\n   if (condition)\r\n      s = 1'b1;\r\nend\r\n```\r\n\r\nI am not sure if this is supposed to be supported, but the documentation does not mention anything.\r\n\r\nHere is a testcase with two drivers that consecutively write to a tristate signal:\r\n```verilog\r\n`define BROKEN\r\n\r\nmodule t(/*AUTOARG*/\r\n    // Inputs\r\n    clk\r\n);\r\n   input clk;\r\n\r\n   int cyc = 0;\r\n   always @(posedge clk) begin\r\n      cyc <= cyc + 1;\r\n      if (cyc == 99) begin\r\n         $write(\"*-* All Finished *-*\\n\");\r\n         $finish;\r\n      end\r\n   end\r\n\r\n   // tristate signal\r\n   reg s;\r\n\r\n   // drive during cyc == 0\r\n`ifdef BROKEN\r\n   always_comb begin\r\n      s = 1'bz;\r\n      if (cyc == 0)\r\n         s = 1'b1;\r\n   end\r\n`else\r\n   always_comb begin\r\n      if (cyc == 0)\r\n         s = 1'b1;\r\n      else\r\n         s = 1'bz;\r\n   end\r\n`endif\r\n\r\n   // drive during cyc == 1\r\n   always_comb\r\n      s = (cyc == 1) ? 1'b0 : 1'bz;\r\n\r\n   // verify signal\r\n   always @(posedge clk) begin\r\n      if (cyc == 0 && s != 1'b1) begin\r\n         $display(\"cyc 0: s = %d, expected 1!\\n\", s);\r\n         $stop;\r\n      end\r\n      if (cyc == 1 && s != 1'b0) begin\r\n         $display(\"cyc 1: s = %d, expected 0!\\n\", s);\r\n         $stop;\r\n      end\r\n   end\r\nendmodule\r\n```\r\nOn Verilator 4.034, this fails with `cyc 1: s = 1, expected 0!`.",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2020-05-04",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

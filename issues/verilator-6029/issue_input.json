@@ -1,0 +1,25 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6029,
+  "issue_url": "https://github.com/verilator/verilator/issues/6029",
+  "title": "Constant values zero in sim while they should be non-zero unsigned numbers",
+  "body": "## Issue\n\n### Example\n\nThe issue cannot be reproduced with a simple example (I tried).\n\n### Description\n\nPackage with definitions:\n```\n  const word15_u_t C_NAN_BF16     = 15'h7FC0;\n  const word15_u_t C_INF_BF16     = 15'h7F80;\n  const word15_u_t C_ONE_BF16     = 15'h3F80;\n```\n\nDesign using the package constants:\n```\n  const word31_u_t          c_nan  = {C_NAN_BF16, 16'h0};\n  const word31_u_t          c_zero = 0;\n  const word31_u_t          c_one  = {C_ONE_BF16, 16'h0};\n```\n\nIn a contained example, the constants have the expected value. In my design (which I cannot disclose), the constants c_one and c_nan are both all zeroes. The vcd wavedump shows the wrong values and the output is wrong. Questa OTH simulates the exact same test with exact the same code correct. Honestly, I have no idea why these constants get set to zero instead of the correct values, any pointers to how this can be recreated is appreciated. Side note is that it used to work before when the code was for 16-bit wide numbers, eg:\n\n```\n  const word15_u_t          c_nan  = C_NAN_BF16;\n  const word15_u_t          c_zero = 0;\n  const word15_u_t          c_one  = C_ONE_BF16;\n```\n\n## Verilator\n\n### Command\n\nThis sim is run with cocotb:\n```\n/usr/local/bin/verilator -cc --exe -Mdir sim_build -DCOCOTB_SIM=1 --top-module tb --timing -Wno-UNOPTFLAT -Wno-ASSIGNIN --timescale 1ns/1ps --vpi --public-flat-rw --prefix Vtop -o Vtop -LDFLAGS \"-Wl,-rpath,lib/python3.12/site-packages/cocotb/libs -Llib/python3.12/site-packages/cocotb/libs -lcocotbvpi_verilator\"  ../../float/vlog/float_pkg.sv ../../tanh_bf16/vlog/tanh_bf16.sv ../vlog/tanh_bf16_array.sv tb.sv lib/python3.12/site-packages/cocotb/share/lib/verilator/verilator.cpp\n```\n\n### Version\n\n```\nVerilator 5.036 2025-04-27 rev v5.036\n```\n\n## OS and distribution\n\n```\nNAME=\"Rocky Linux\"\nVERSION=\"9.5 (Blue Onyx)\"\n```\n\n## Assistance\n\nI'm afraid my background is really systemverilog and not software, I doubt I will be able to change any code myself. However, I will support any debugging effort from my side if feasible.",
+  "labels": [
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-21",
+  "closed_at": "2025-07-03",
+  "code_blocks": [
+    "  const word15_u_t C_NAN_BF16     = 15'h7FC0;\n  const word15_u_t C_INF_BF16     = 15'h7F80;\n  const word15_u_t C_ONE_BF16     = 15'h3F80;\n",
+    "  const word31_u_t          c_nan  = {C_NAN_BF16, 16'h0};\n  const word31_u_t          c_zero = 0;\n  const word31_u_t          c_one  = {C_ONE_BF16, 16'h0};\n",
+    "  const word15_u_t          c_nan  = C_NAN_BF16;\n  const word15_u_t          c_zero = 0;\n  const word15_u_t          c_one  = C_ONE_BF16;\n",
+    "/usr/local/bin/verilator -cc --exe -Mdir sim_build -DCOCOTB_SIM=1 --top-module tb --timing -Wno-UNOPTFLAT -Wno-ASSIGNIN --timescale 1ns/1ps --vpi --public-flat-rw --prefix Vtop -o Vtop -LDFLAGS \"-Wl,-rpath,lib/python3.12/site-packages/cocotb/libs -Llib/python3.12/site-packages/cocotb/libs -lcocotbvpi_verilator\"  ../../float/vlog/float_pkg.sv ../../tanh_bf16/vlog/tanh_bf16.sv ../vlog/tanh_bf16_array.sv tb.sv lib/python3.12/site-packages/cocotb/share/lib/verilator/verilator.cpp\n",
+    "Verilator 5.036 2025-04-27 rev v5.036\n",
+    "NAME=\"Rocky Linux\"\nVERSION=\"9.5 (Blue Onyx)\"\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

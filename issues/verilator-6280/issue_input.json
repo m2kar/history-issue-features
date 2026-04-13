@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6280,
+  "issue_url": "https://github.com/verilator/verilator/issues/6280",
+  "title": "Make statements be AstNodeStmt",
+  "body": "Currently, all expressions derive from `AstNodeExpr`. This makes it very easy to see exactly what can and cannot appear in an expression position. (I know there is `AstExprStmt`, but you can special case that one specifically, rather than having to covert the root `AstNode` type.)\n\nThe case for procedural statements is not that clear. For clarity, by 'procedural statement' I am referring to anything that can appear inside an always/initial/final block, function, task or similar which describes sequentially executed code. Maybe all of them derive from `AstNodeStmt`, but there are also other things that derive from `AstNodeStmt`.\n\nThis was discussed in #3420 also.\n\nSome examples that are `AstNodeStmt` that are not procedural statements:\n- `AstAssignW`\n- `AstAssignAlias`\n- `AstAssignPre`\n- `AstAssignPost`\n- `AstAssignVarScope` ? Not sure what this is\n- `AstGenIf` - Can't appear inside procedural code\n- `AstGenCase` - Can't appear inside procedural code\n\nIt's arguable whether this subtyping relationship is appropriate or not. It violates the common substitutability criterion (e.g.: an AstAssignW is not substitutable where a generic AstNodeStmt might be valid). I understand it's done this way to save on typing by using `visit(AstNodeAssign)`, however that is a false economy when you actually want to do more detailed reasoning about the code.\n\nNotable example that can appear in a statement position but is not an `AstNodeStmt` is `AstVar` (a variable declaration), as mentioned in #3420.\n\nI propose we clean these things up and make sure that only procedural statements derive from `AstNodeStmt`. Adjusting the modeling is quite easy:\n\n- `AstAssignW` -> `AstAlways(AstAssign)` (with a special always keyword saying this was an `assign` indeed.) I would go as far as as cleaning up the `AstNodeProcedure` subclasses as well, but not strictly necessary. This also has the benefit of enabling you to insert new statements around the assignment, should you need to inline functions for example...\n\n- `AstAssignAlias`: This is a special internal thing that I'm not even sure is necessary in it's current form, but in either case the comment in the code says \"a true bidirect interconnection alias. If both sides are wires, there's no LHS vs RHS\", so maybe shouldn't be an \"assignment\"? Can handle separately if it actually needs to be retained.\n\n- `AstAssignPre` -> `AstAlwaysPre(AstAssign)`\n\n- `AstAssignPost` -> `AstAlwaysPost(AstAssign)`\n\n- `AstAssignVarScope`: Again not sure what this is, but can be handled as a special construct if needed\n\n- `AstGenIf`: Derive from AstNodeGen instead, and fix up code in the front-end that processes it.\n\n- `AstGenCase`: Derive from AstNodeGen instead, like `AstGenIf`.\n\n- For declaration in statement position we can add an `AstStmtDecl` that wraps a declaration (similar to `AstStmtExpr`/`AstExprStmt`)\n\nI'm happy to do the work on this.",
+  "labels": [
+    "type: maintenance"
+  ],
+  "state": "open",
+  "created_at": "2025-08-11",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

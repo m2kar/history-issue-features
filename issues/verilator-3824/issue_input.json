@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3824,
+  "issue_url": "https://github.com/verilator/verilator/issues/3824",
+  "title": "Bit OR tree misoptimization",
+  "body": "To observe this bug, run Verilator with `-fno-dfg` or `-fno-dfg-peephole`. Otherwise the DFG optimizations take care of this logic before the bit op tree optimizer.\r\nTest case:\r\n```systemverilog\r\nmodule t(input [5:0] A);\r\n    wire [6:0] B;\r\n    assign B = {1'h0, A};\r\n    wire C = ~(B[6]);\r\n    wire D = (|A) | C;\r\n\r\n    initial\r\n        if (~D) $stop;\r\n        else $finish;\r\nendmodule\r\n```\r\nGenerated code:\r\n```cpp\r\nif ((IData)((0U != (IData)(vlSelf->A)))) {\r\n    VL_FINISH_MT(\"test.sv\", 9, \"\");\r\n} else {\r\n    VL_STOP_MT(\"test.sv\", 8, \"\");\r\n}    \r\n```\r\nThe `| C` part gets optimized out, even though `C == ~(B[6]) == ~(0) == 1`.\r\nThe problem is somwehere in `V3Const`'s `ConstBitOpTreeVisitor`. Running Verilator with `-fno-const-bit-op-tree` fixes the issue.",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-22",
+  "closed_at": "2023-01-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

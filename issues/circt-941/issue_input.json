@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 941,
+  "issue_url": "https://github.com/llvm/circt/pull/941",
+  "title": "Subfield/Subindex Local Annotation Support ",
+  "body": "This PR adds support for adding Subfield/Subindex local annotation , https://github.com/llvm/circt/issues/877.\r\nGiven any annotation on an array instance or subfield,  ``~Foo|Foo>bar[1].baz``,  ``circt::firrtl::fromJSON`` parses the target\r\nstring into a prefix(``~Foo|Foo>bar``) and suffix(``[1].baz``). The suffix being the subfield/subindex part. \r\nHere we assume the target specification are well formed and valid.\r\nThe suffix is then stored as part of the annotation, with the key \"target\", for example ``target = [\"[1]\", \".baz\"]``, along with the actual annotation.\r\nThis suffix will be parsed by the lowerTypes, and the annotation will be applied on the appropriate lowered instance.\r\nThe lowerTypes, will construct the suffix from the String attribute array, and add the annotation to only those declarations after lowering which match this suffix.\r\n\r\nInput FIR:\r\n```\r\ncircuit Foo: %[[{\"one\":null,\"target\":\"~Foo|Foo>bar.qux\"},{\"two\":null,\"target\":\"~Foo|Foo>bar[1].baz\"} ]]\r\n  module Foo:\r\n    wire bar: {baz: UInt<1>, qux: UInt<1>}[2]\r\n```\r\nGenerated MLIR, before lowering\r\n```\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module @Foo() {\r\n    %bar = firrtl.wire  {annotations = [{one, target = [\".qux\"]}, {target = [\"[1]\", \".baz\"], two}]} : !firrtl.vector<bundle<baz: uint<1>, qux: uint<1>>, 2>\r\n  }\r\n```\r\nGenerated MLIR after lowering\r\n```\r\nfirrtl.circuit \"Foo\"  {\r\n  firrtl.module @Foo() {\r\n    %bar_0_baz = firrtl.wire  : !firrtl.uint<1>\r\n    %bar_0_qux = firrtl.wire  {annotations = [{one, target = [\".qux\"]}]} : !firrtl.uint<1>\r\n    %bar_1_baz = firrtl.wire  {annotations = [{target = [\"[1]\", \".baz\"], two}]} : !firrtl.uint<1>\r\n    %bar_1_qux = firrtl.wire  {annotations = [{one, target = [\".qux\"]}]} : !firrtl.uint<1>\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-04-21",
+  "closed_at": "2021-05-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

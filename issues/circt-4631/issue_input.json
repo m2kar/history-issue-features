@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4631,
+  "issue_url": "https://github.com/llvm/circt/issues/4631",
+  "title": "[firtool] Strip Debug Info Crashing",
+  "body": "FIRRTL source locators which do not match the debug info stripping predicate (\"ends with .fir\") seem to cause a crash.\r\n\r\nConsider:\r\n\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1> @[Foo.scala 1:1]\r\n    output b: UInt<1> @[Foo.scala 2:1]\r\n\r\n    b <= a\r\n```\r\n\r\nRunning with `firtool -strip-debug-info Foo.fir` produces:\r\n\r\n```\r\n<unknown>:0: error: 'hw.module' op block argument locations should match signature locations\r\n<unknown>:0: note: see current operation: \r\n\"hw.module\"() ({\r\n^bb0(%arg0: i1):\r\n  \"hw.output\"(%arg0) : (i1) -> ()\r\n}) {argLocs = [loc(\"Foo.scala\":1:1)], argNames = [\"a\"], arg_attrs = [{}], comment = \"\", function_type = (i1) -> i1, parameters = [], res_attrs = [{}], resultLocs = [loc(\"Foo.scala\":2:1)], resultNames = [\"b\"], sym_name = \"Foo\"} : () -> ()\r\n```\r\n\r\nThe generic MLIR before the pass is:\r\n\r\n```mlir\r\n#loc = loc(\"Foo.scala\":1:1)\r\n#loc1 = loc(\"Foo.scala\":2:1)\r\n\"builtin.module\"() ({\r\n  \"hw.module\"() ({\r\n  ^bb0(%arg0: i1):\r\n    \"hw.output\"(%arg0) : (i1) -> ()\r\n  }) {argLocs = [#loc], argNames = [\"a\"], arg_attrs = [{}], comment = \"\", function_type = (i1) -> i1, parameters = [], res_attrs = [{}], resultLocs = [#loc1], resultNames = [\"b\"], sym_name = \"Foo\"} : () -> ()\r\n}) : () -> ()\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-06",
+  "closed_at": "2023-02-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

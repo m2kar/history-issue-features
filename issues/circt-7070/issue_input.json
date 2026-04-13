@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7070,
+  "issue_url": "https://github.com/llvm/circt/issues/7070",
+  "title": "[Arc] Allow uniform operands to the VectorizeOp",
+  "body": "The `arc.vectorize` op currently has no way of capturing if some of the vector lanes all have the exact same input operand. This is important for vectorizing `arc.state` ops which have a clock, enable, and reset that all must be identical in order to be able to vectorize the op.\r\n\r\nFor example,\r\n```mlir\r\narc.vectorize (%0, %1), (%2, %3), (%clk, %clk) {\r\n^bb0(%arg0, %arg1, %arg2):\r\n  arc.state @Foo(%arg0, %arg1) clock %arg2\r\n}\r\n```\r\nwould vectorize into (psuedo-ops)\r\n```mlir\r\n%v0 = vector_create %0, %1\r\n%v1 = vector_create %2, %3\r\narc.state @FooVec(%v0, %v1) clock %clk\r\n```\r\nwhere the inputs to the arc `@Foo` can be vectorized, because we can vectorize the entire arc definition as `@FooVec`, but the clock `%clk` has to remain a scalar. This is only possible if all vector lanes used the same clock `%clk`.\r\n\r\nIt might be useful to capture the uniformity of `%clk` as part of the vectorize op itself:\r\n```mlir\r\narc.vectorize (%0, %1), (%2, %3) uniform %clk {\r\n^bb0(%arg0, %arg1, %arg2):\r\n  arc.state @Foo(%arg0, %arg1) clock %arg2\r\n}\r\n```\r\nThis makes lowering easier, since the vectorize op allows for its operands to be vectorized at a different point in time than its body. Without the uniform operands, the block arguments of the body would vectorize into something like `%arg0: vector<2 x i42>, %arg2: vector<2 x i42>, %arg3: vector<2 x !seq.clock>`. However, the `arc.state` op requires a scalar clock `%arg2`, so the lowering would not be possible. However, with the uniform operands, it would be clear that `%arg2` is a single uniform `!seq.clock`, which would allow the vectorization of the body to occur.\r\n\r\nTo implement this, @maerhart had suggested that we could have an additional group of variadic operands that contains all the uniform operands. For example:\r\n```\r\narc.vectorize (a, b), (c, d), (e, f) {\r\n^bb0(%vAB, %vCD, %e, %f):\r\n  ...\r\n}\r\n```\r\nThe last operand group `(e, f)` is understood to be the uniform operands. It can be empty if there are no uniform operands. The body block would have one block argument for the first group `(a, b)`, one block argument for the second group `(c, d)`, and then block arguments for each operand in the final group `(e, f)`.",
+  "labels": [
+    "Arc"
+  ],
+  "state": "open",
+  "created_at": "2024-05-21",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

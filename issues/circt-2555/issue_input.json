@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2555,
+  "issue_url": "https://github.com/llvm/circt/pull/2555",
+  "title": "[LowerToHW] Create type decl for bundle types",
+  "body": "This commit modifies LowerToHW to cerate type decl ops for bundle types\r\nsince lowerd struct types are occasionally very long. Basically,\r\n`lowerType` function is changed to create type decl ops when bundle\r\ntypes are passed. This feature is opt-in. I added a flag `-create-type-declarations` to firtool. \r\n\r\nI added `TypeScope` class and `ModuleTypeScope` which inherits `TypeScope`.\r\nThey both return type alias type for bundle type.  Since we have to use consistent types for \r\nmodule instances globally, we first lower all port types  by `GlobalTypeScope` (which is an instance of `TypeScope`).\r\n\r\n\r\n\r\nWith this PR, for the following fir.\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input source: {foo: UInt<1>, bar: {a: UInt<1>, b:UInt<1>}}\r\n```\r\nthe output is\r\n```sv\r\ntypedef struct packed {logic a; logic b; } Global_bar;\r\ntypedef struct packed {logic foo; Global_bar bar; } Global_BundleType2;\r\nmodule Foo(     // foo.fir:2:10\r\n  input Global_BundleType2 source);\r\n\r\nendmodule\r\n```\r\n\r\nWill close https://github.com/llvm/circt/issues/2329",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-01",
+  "closed_at": "2023-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

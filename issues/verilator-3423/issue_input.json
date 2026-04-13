@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3423,
+  "issue_url": "https://github.com/verilator/verilator/issues/3423",
+  "title": "Support callback handlers instead of verilated.cpp ifdefs",
+  "body": "@gezalore in #3419 suggests:\r\n\r\n>being able to register custom handlers for things like vl_fatal and friends by overriding VerilatedContext methods is also something I would favour in contrast to the current ifdefery.\r\n\r\nThis seems a reasonable idea for v5.  Ones of interest:\r\n\r\n#ifdef VL_PRINTF\r\n#ifdef VL_USER_FATAL  ///< Define this to override the vl_fatal function\r\n#ifdef VL_USER_FINISH  ///< Define this to override the vl_finish function\r\n#ifdef VL_USER_STOP  ///< Define this to override the vl_stop function\r\n#ifdef VL_USER_STOP_MAYBE  ///< Define this to override the vl_stop_maybe function\r\n#ifdef VL_USER_WARN  ///< Define this to override the vl_warn function\r\n#ifdef VL_VPRINTF\r\n\r\nRather than callbacks, probably better to call virtual functions in a user provided class that derives from a Verilator-provided base class. (The #ifdefs above predate Verilator even using C++!).  We'd want the functions there to take a VerilatedContext pointer (or have it a member variable?)\r\n\r\nI grepped all github projects using Verilator for the above, and \r\n\r\n* VL_PRINTF - many set to just \"printf\" which was the default anyways, no other settings found\r\n* VL_USER_FATAL - no usages\r\n* VL_USER_FINISH - 70+ overrides, so important\r\n* VL_USER_STOP - opentitan uses\r\n* VL_USER_STOP_MAYBE - no usages\r\n* VL_USER_WARN - no usages\r\n* VL_VPRINTF - no usages\r\n\r\nSo perhaps we need to make sure to keep VL_USER_FINISH working (unless VL_NO_LEGACY), but we could remove the rest and throw errors on if used.\r\n",
+  "labels": [
+    "area: vpi/dpi/api"
+  ],
+  "state": "open",
+  "created_at": "2022-05-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

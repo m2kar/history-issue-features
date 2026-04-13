@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2614,
+  "issue_url": "https://github.com/verilator/verilator/issues/2614",
+  "title": "Internal error with array reference to interface with modport",
+  "body": "Hello,\r\n\r\nI am getting the \"Internal Error\" below while compiling a systemverilog code that uses dotted cross-hierarchy references. The verilator manual indicates that dotted cross-hierarchy references are supported. But the error message is pointing to a line number in the code where a dotted cross-hierarchy reference is used. The command used to compile is (I added `--debg --gdbbt` to show the errors in verbose): \r\n\r\n`verilator +systemverilogext+.sv +verilog2001ext+.v --cc -f ../cm0_sys/tbench_M0.vc --timescale 1ns/1ps --Wno-TIMESCALEMOD --top-module CM0_SYS  --Wno-WIDTH --Wno-UNSIGNED --Wno-CMPCONST --debug --gdbbt`\r\n\r\nThe error message is: \r\n\r\n```\r\n- V3Ast.cpp:1120:     Dumping obj_dir/VCM0_SYS_018_const.tree\r\n- V3SplitVar.cpp:1259:splitVariable: \r\n- V3Inst.cpp:610:     dearrayAll: \r\n- V3Ast.cpp:1156:     Ran out of iterations finding locationStr on BASICDTYPE 0x31a1400 <e802774> {ca810ag} @dt=this@(w1)  logic kwd=logic\r\n%Error: Internal Error: ../cm0_sys//../cm0_sys/CM0_SYS.sv:222:13: ../V3Broken.cpp:251: Broken link in node (or something without maybePointedTo): m_cellp && !m_cellp->brokeExists()\r\n-node: IFACEREFDTYPE 0x79da280 <e1353900> {e222an} @dt=this@(w1)iface cell=AHB_S if=ahb_slave_intf mp=source -> CELL 0x1924a00 <e1753318#> {e150aq}  AHB_S -> IFACE 0x1925900 <e402522> {f16al}  ahb_slave_intf  L5 [LIB] [1ns]\r\n  222 | .S(AHB_S[2].source),\r\n      |             ^~~~~~\r\n                        ... See the manual and https://verilator.org for more assistance.\r\n- V3Ast.cpp:1120:     Dumping obj_dir/VCM0_SYS_990_final.tree\r\n- V3Broken.cpp:300:   Broken called under broken, skipping recursion.\r\n- V3StatsReport.cpp:229:statsReport: \r\n%Error: Internal Error: Aborting since under --debug\r\n```\r\n\r\nThe error is pointing to the dotted cross-hierarchy reference in line 222 from the code as shown below\r\n\r\n```\r\n212 logic UART0_RXD;    \r\n213 logic UART0_TXD;\r\n214 logic UART1_RXD;\r\n215 logic UART1_TXD;\r\n216 logic [31:0] APBSUBSYS_INTERRUPT;\r\n217 logic WATCHDOG_INTERRUPT;\r\n218\r\n219 APB_SYS uAPB_SYS (\r\n220 .HCLK,\r\n221 .HRESETn,\r\n222 .S(AHB_S[2].source),\r\n223\r\n224 .UART0_RXD,\r\n225 .UART0_TXD,\r\n226 .UART0_TXEN(),\r\n227\r\n228 .UART1_RXD,\r\n229 .UART1_TXD,\r\n230 .UART1_TXEN(),\r\n231\r\n232 .UART2_RXD,\r\n233 .UART2_TXD,\r\n234 .UART2_TXEN(),\r\n235\r\n236 .TIMER0_EXTIN,\r\n237 .TIMER1_EXTIN,\r\n238\r\n239 .APBSUBSYS_INTERRUPT,\r\n240 .WATCHDOG_INTERRUPT,\r\n241 .WDOGRESETREQ\r\n242 );\r\n```\r\n\r\nAm I missing a required argument in the verilator command line? Can you please help here? I'd note that the same code compiles without error on vcs.\r\n\r\nThe verilator version is: Verilator 4.102 2020-10-15 rev v4.102-11-g818318d\r\n\r\nThank you!",
+  "labels": [
+    "resolution: fixed",
+    "effort: days"
+  ],
+  "state": "closed",
+  "created_at": "2020-10-28",
+  "closed_at": "2020-11-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

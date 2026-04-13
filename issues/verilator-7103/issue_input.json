@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7103,
+  "issue_url": "https://github.com/verilator/verilator/issues/7103",
+  "title": "Fix associative array size() constraint generating invalid resize() call",
+  "body": "## Summary\n\nWhen a constraint block contains `assoc_array.size() == N`, Verilator generates C++ code calling `resize()` on `VlAssocArray`, which does not have that method. Elaboration succeeds but C++ compilation fails. Per IEEE 1800-2017 §7.9, associative arrays are key-value maps, not resizable sequential containers.\n\n## Current Behavior\n\n- `constraint c { data.size() == 2; }` on a `rand int data[string]` passes Verilator elaboration\n- C++ compilation fails: `'class VlAssocArray<std::string, unsigned int>' has no member named 'resize'`\n- Generated function name `__VnoInFunc_c_resize_constrained_array` confirms dynamic-array resize logic is incorrectly applied\n\n## Expected Behavior\n\n- Either: associative array size constraints are supported correctly\n- Or: Verilator reports an unsupported-feature error at elaboration time (not a C++ compilation failure)\n\n## Source\n\n- planvtech/PlanV_Verilator_Feature_Tests#52",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-19",
+  "closed_at": "2026-02-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

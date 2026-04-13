@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1316,
+  "issue_url": "https://github.com/verilator/verilator/issues/1316",
+  "title": "Linear searches exposed by large design (v4.0)",
+  "body": "---\n\n\nAuthor Name: **John Coiner** (@jcoiner)\nOriginal Redmine Issue: 1316 from https://www.veripool.org\n\nOriginal Assignee: John Coiner (@jcoiner)\n\n---\n\nI'm running a large cpu core design through verilator, and have found a few linear searches that are adding a few hours to the verilation time.\r\n\r\n1) In V3Active.cpp, there's a linear search for a matching SenList, below a comment about it being \"not the fastest\" :)\r\n\r\nThis build spent about 30 minutes in the V3Active pass. During this window, when I ctrl-C'ed into gdb, it was always doing one of these linear searches. (I like to send random CTRL-C's into gdb while the thing is running. Not super precise, but you find out what it's doing. It's the \"Fermi profiler\"...)\r\n\r\nWhy do we have so many unique SenLists? That I don't know, and it's a good question. Maybe there's a Good Reason like Extensive Clock Gating, though it seems just as likely to be a bug, some kind of weird interaction between verilator and a particular coding style. In any case, we can still fix the linear search.\r\n\r\n2) In V3Delayed.cpp, the createActivePost() routine calls addNext() for each active it creates. This addNext() scans from the middle of a linked-list to find the end, so you get an N^2 runtime if you are creating N actives.\r\n\r\n3) We have another linear search in SenTreeFinder::getSenTree() which looks exactly like (1) except it's another copy of almost the same code.\r\n\r\nFor the SenTree searches, I'm thinking that we can have AstSenTree support a sameHash() routine, and use a V3Hashed to reduce the search to SenTree's with the same hash.\r\n\r\nFor (2) it looks like we can simply start the search from near the end of the list, where we inserted the last active, instead of from the middle of the list.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2018-06-05",
+  "closed_at": "2018-09-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

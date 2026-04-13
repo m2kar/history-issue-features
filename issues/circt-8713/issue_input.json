@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8713,
+  "issue_url": "https://github.com/llvm/circt/pull/8713",
+  "title": "[Verif] Add RefinementCheckingOp",
+  "body": "This PR adds the `RefinementCheckingOp` to the `verif` dialect. The motivation behind this operation is to be able to automatically check whether a 'target' circuit is a refinement of a 'source' circuit. This should be a small step towards performing translation validation comparable to [Alive2](https://users.cs.utah.edu/~regehr/alive2-pldi21.pdf). The operation is structurally identical to the `LogicEquivalenceCheckingOp`, so I factored out most of the ODS into a common `CircuitRelationCheckOp`. If there is no non-determinism present in the circuits, the operation is also functionally identical to `LogicEquivalenceCheckingOp`.\r\n\r\nFinding a good definition of the `refines` relation is hard, so please just consider this as a humble first attempt. In essence, there are (at least) three factors to consider:\r\n- Does it permit all optimizations we want to be able to do?\r\n- Does it reject all \"optimizations\" we want to be illegal?\r\n- Is it viable to perform model checking with the tools available to us?\r\n\r\nOur current definition of logical equivalence is too restrictive for translation validation. In the presence of non-determinism it is not guaranteed that `A == A`, see #7025 . Stating that a circuit cannot be translated to itself is problematic.\r\nIn contrast, the `RefinementCheckingOp` as described here compares the sets of possible outputs for a given input. This is \r\npotentially too permissive, as it allows a different non-deterministic value to be picked for each possible input assignment.\r\n\r\nNote that the [current specification](https://circt.llvm.org/docs/Dialects/Comb/RationaleComb/#undefined-values) of the undefined value in `comb` puts the non-determinism in the domain of functions, getting us dangerously close to second-order logic. While I think it is a good model for the likely behavior of real hardware, it is probably impractical for SMT modeling.",
+  "labels": [
+    "verif"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-16",
+  "closed_at": "2025-07-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

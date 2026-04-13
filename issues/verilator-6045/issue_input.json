@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6045,
+  "issue_url": "https://github.com/verilator/verilator/issues/6045",
+  "title": "Struct assignment misinterpreted as concatenation",
+  "body": "This seems like a verilator lint bug, but I wouldn't be surprised if undefined by spec. Happy to convert to a test_regress if this is an actual bug\n\ntestcase.sv:\n```\nmodule testcase;\n\n    typedef enum logic [1:0] { e_0, e_1, e_2, e_3 } enum_e;\n\n    typedef struct packed {\n        integer unsigned x;\n        integer unsigned y;\n    } foo_s;\n\n    typedef struct packed {\n        integer unsigned y;\n    } bar_s;\n\n    // Warning due to concatenation, but this is actually a member assignment\n    localparam foo_s foo = '{\n        y: (1 << e_0) | (1 << e_3)\n        ,default: '0\n    };\n\n    // No warning\n    localparam bar_s bar = '{\n        y: (1 << e_0) | (1 << e_3)\n    };\n\nendmodule\n```\n\n> What 'verilator' command line do we use to run your example?\n\n```\nverilator --lint-only -Wall -Wno-UNUSEDPARAM testcase.sv\n...\n%Warning-WIDTHCONCAT: testcase.sv:12:23: Unsized numbers/parameters not allowed in concatenations.\n                                       : ... note: In instance 'testcase'\n   12 |         y: (1 << e_0) | (1 << e_3)\n      |                       ^\n                      ... For warning description see https://verilator.org/warn/WIDTHCONCAT?v=5.036\n                      ... Use \"/* verilator lint_off WIDTHCONCAT */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?\n\nVerilator 5.037 devel rev v5.036-110-g5fcd0e52e (current master)\n\n> What OS and distribution are you using?\n\nCentos7\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nIf trivial, sure! If non-trivial it will be low priority since it's just a warning.\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-28",
+  "closed_at": "2025-05-31",
+  "code_blocks": [
+    "module testcase;\n\n    typedef enum logic [1:0] { e_0, e_1, e_2, e_3 } enum_e;\n\n    typedef struct packed {\n        integer unsigned x;\n        integer unsigned y;\n    } foo_s;\n\n    typedef struct packed {\n        integer unsigned y;\n    } bar_s;\n\n    // Warning due to concatenation, but this is actually a member assignment\n    localparam foo_s foo = '{\n        y: (1 << e_0) | (1 << e_3)\n        ,default: '0\n    };\n\n    // No warning\n    localparam bar_s bar = '{\n        y: (1 << e_0) | (1 << e_3)\n    };\n\nendmodule\n",
+    "verilator --lint-only -Wall -Wno-UNUSEDPARAM testcase.sv\n...\n%Warning-WIDTHCONCAT: testcase.sv:12:23: Unsized numbers/parameters not allowed in concatenations.\n                                       : ... note: In instance 'testcase'\n   12 |         y: (1 << e_0) | (1 << e_3)\n      |                       ^\n                      ... For warning description see https://verilator.org/warn/WIDTHCONCAT?v=5.036\n                      ... Use \"/* verilator lint_off WIDTHCONCAT */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

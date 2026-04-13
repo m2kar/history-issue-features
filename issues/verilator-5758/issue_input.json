@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5758,
+  "issue_url": "https://github.com/verilator/verilator/issues/5758",
+  "title": "No VPI access to interface members when using --public-depth instead of --public-flat-rw",
+  "body": "I am using Verilator 5.024 with VPI / cocotb. I found that using `--public-depth 1` instead of `--public-flat-rw` speeds up simulations by a factor of 2.3x, a gigantic improvement if your python testbench does not need to reach deep into the DUT hierarchy to peek/poke signals and can just access the top level ports and signals. This works fine for systemverilog DUTs that do not use interfaces.\n\nHowever, for DUTs that do use systemverilog interfaces, I am finding that signals become inaccessible, which is a problem since I want to hook up a python AXI-stream (or similar) agent which connects to the interfaces declared in the body of the DUT. This all works well with `--public-flat-rw`. However, when using `--public-depth 2` I get the error `AttributeError: s_axis_if contains no object named tdata`.\n\nI looked into the verilated files and observed that with `--public-depth 1` the signals which are part of the interface do not exist in the public section of the generated C++ class (which is defined in `Vtop_AXIS_IF__U20_I1_DB1_S0.h` in this case), and with `--public-depth 2` they signals that are members of the interface do exist. This is as I would expect, since the interfaces are part of the DUT top level and thus the signals in that interface would be 2 levels deep. This is shown in the screenshot diff below:\n\n![Image](https://github.com/user-attachments/assets/52235523-5269-435a-9b78-3b944a6b5de2)\n\nHowever, even when the public depth is set appropriately, there must be some additional step where these signals become registered with or accessible using the VPI interface. For whatever reason, the appropriate setting of `--public-depth N` works for regular verilog signals, allowing Cocotb/python to reach into the hierarchy and read/write those signals. But it does not work for signals that are embedded in a systemverilog interface, even if I make N adequately large.\n\nI attempted to tag some signals with `/* verilator public */` and similar source code directives, but this did not change the result. Is there a place in the Verilator code where signals of an interface are treated differently, with regard to the VPI interface, when one or the other of `--public-depth` and `--public-flat-rw` is used?\n",
+  "labels": [
+    "status: ready",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-28",
+  "closed_at": "2025-09-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

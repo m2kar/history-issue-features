@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 358,
+  "issue_url": "https://github.com/llvm/circt/issues/358",
+  "title": "[LowerToRTL] CircuitOp should lower the firrtl boilerplate",
+  "body": "EmitVerilog on CircuitOp generates this stuff. We should add a #define operation to the SV dialect, then change LowerToRTL to generate it.  It would also make sense to add a \"sv.comment\" operation as well.\r\n\r\n```\r\n os << R\"XXX(\r\n// Standard header to adapt well known macros to our needs.\\n\";\r\n`ifdef RANDOMIZE_GARBAGE_ASSIGN\r\n`define RANDOMIZE\r\n`endif\r\n`ifdef RANDOMIZE_INVALID_ASSIGN\r\n`define RANDOMIZE\r\n`endif\r\n`ifdef RANDOMIZE_REG_INIT\r\n`define RANDOMIZE\r\n`endif\r\n`ifdef RANDOMIZE_MEM_INIT\r\n`define RANDOMIZE\r\n`endif\r\n`ifndef RANDOM\r\n`define RANDOM $random\r\n`endif\r\n// Users can define 'PRINTF_COND' to add an extra gate to prints.\r\n`ifdef PRINTF_COND\r\n`define PRINTF_COND_ (`PRINTF_COND)\r\n`else\r\n`define PRINTF_COND_ 1\r\n`endif\r\n// Users can define 'STOP_COND' to add an extra gate to stop conditions.\r\n`ifdef STOP_COND\r\n`define STOP_COND_ (`STOP_COND)\r\n`else\r\n`define STOP_COND_ 1\r\n`endif\r\n\r\n// Users can define INIT_RANDOM as general code that gets injected into the\r\n// initializer block for modules with registers.\r\n`ifndef INIT_RANDOM\r\n`define INIT_RANDOM\r\n`endif\r\n\r\n// If using random initialization, you can also define RANDOMIZE_DELAY to\r\n// customize the delay used, otherwise 0.002 is used.\r\n`ifndef RANDOMIZE_DELAY\r\n`define RANDOMIZE_DELAY 0.002\r\n`endif\r\n\r\n// Define INIT_RANDOM_PROLOG_ for use in our modules below.\r\n`ifdef RANDOMIZE\r\n  `ifndef VERILATOR\r\n    `define INIT_RANDOM_PROLOG_ `INIT_RANDOM #`RANDOMIZE_DELAY begin end\r\n  `else\r\n    `define INIT_RANDOM_PROLOG_ `INIT_RANDOM\r\n  `endif\r\n`else\r\n  `define INIT_RANDOM_PROLOG_\r\n`endif\r\n)XXX\";\r\n```\r\n",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-25",
+  "closed_at": "2020-12-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

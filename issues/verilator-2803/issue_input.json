@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2803,
+  "issue_url": "https://github.com/verilator/verilator/issues/2803",
+  "title": "When using a bit-slice to assign to bits which don't exist, the assigned value erroneously gets stored",
+  "body": "If have a 2-bit signal `foo` and use a slice based on a variable to assign to bits 1-2, I expect the upper bit of my assignment to get thrown away. What actually happens in verilator is the whole assignment gets stored and the signal takes an erroneously large value given its width. Also, if you later downshift that signal using `>>` then the bits which should have been thrown away end up in the actual bits of the signal.\r\n\r\nVerilator defends against this when slicing using a literal offset (i.e. `foo[1'd1 +: 2'd2]`) but you can bypass this by doing `foo[offset +: 2'd2]` where `offset = 1'd1`.\r\n\r\nI've attached a simple example of this issue in the test_regress format. This displays `foo = 4, downshifted = 2`, where I would expect it to display `foo = 0, downshifted = 0`.\r\n\r\n[t_assign_slice_overflow.pl.txt](https://github.com/verilator/verilator/files/6023417/t_assign_slice_overflow.pl.txt)\r\n[t_assign_slice_overflow.v.txt](https://github.com/verilator/verilator/files/6023418/t_assign_slice_overflow.v.txt)\r\n\r\nI've observed this with verilator `48986ccd` (current master) as well as `50c28fa9d3d1`\r\n\r\nI haven't tried this exact regression test with other simulators but in a similar case I've confirmed that Questa, VCS, and Xcelium all discard the overhanging bits and do not reinstate them when downshifting.\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-22",
+  "closed_at": "2021-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

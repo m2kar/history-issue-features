@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6903,
+  "issue_url": "https://github.com/llvm/circt/pull/6903",
+  "title": "[Comb] Remove more idempotent operands",
+  "body": "I'm unsure if this is a good way to go about this, but I wanted to try my hand at #6840. I'm unsure if this is a good way to go about the problem, any feedback would be greatly appreciated.\r\n\r\nThe example provided by @uenoku in #6840 is\r\n```\r\nhw.module @Baz(in %cond : i2, in %value : i2, out o1: i2, out o2: i2) {\r\n  %0 = comb.and bin %cond, %value : i2\r\n  %1 = comb.and bin %0, %value : i2\r\n  hw.output %0, %1: i2, i2\r\n}\r\n```\r\nwhich canonicalizes to\r\n```\r\n$ ./bin/circt-opt --canonicalize bin/baz.mlir\r\nmodule {\r\n  hw.module @Baz(in %cond : i2, in %value : i2, out o1 : i2, out o2 : i2) {\r\n    %0 = comb.and bin %cond, %value : i2\r\n    %1 = comb.and bin %0, %value : i2\r\n    hw.output %0, %1 : i2, i2\r\n  }\r\n}\r\n```\r\ninstead of\r\n```\r\nmodule {\r\n  hw.module @Baz(in %cond : i2, in %value : i2, out o1 : i2, out o2 : i2) {\r\n    %0 = comb.and bin %cond, %value : i2\r\n    hw.output %0, %0 : i2, i2\r\n  }\r\n}\r\n```\r\nCurrently `template <typename Op> bool canonicalizeIdempotentInputs(Op op, PatternRewriter &rewriter)` makes sure that a value can appear _maximum one time_ in `op`'s operands. This patch makes `template <typename Op> bool canonicalizeIdempotentInputs(Op op, PatternRewriter &rewriter)` consider whether any of `op`s operands are themselves defined by an `Op`, whose operands we can omit from `op`'s operands.\r\n\r\nIn the example above, that means\r\n\r\n1. `%1` is a `comb.and` whose operands are `%0`, `%value`\r\n2. `%0` is an `comb.and`, matching `%1`s operation\r\n3. `%value` and be removed from `%1`, since input `0` of `%1` is a `comb.and` with a `%value` operand\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-04-08",
+  "closed_at": "2024-04-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

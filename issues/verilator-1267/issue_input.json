@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1267,
+  "issue_url": "https://github.com/verilator/verilator/issues/1267",
+  "title": "Unlinked error on input-only tristate comparisons",
+  "body": "---\n\n\nAuthor Name: **Alexis G**\nOriginal Redmine Issue: 1267 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nI am using basic Altera's IPcores such as *220model.v* (for `lpm_mult`) and *altera_mf.v* (for `scfifo`).\r\n\r\nCode snippet:\r\n```<code class=\"text\">\r\n%Error: Internal Error: /home/work/gitmodelsim/sim_lib/220model.v:3009: ../V3Tristate.cpp:1123: Unlinked\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed /home/extssd/git/verilator//bin/verilator_bin -Wall +1364-2001ext+v --cc /home/work/gitmodelsim/sim_lib/220model.v --top-module lpm_mult --exe lpm_mult.cpp\r\n</code>\n```\r\n\r\n```<code class=\"text\">\r\nmodule lpm_mult (\r\n     dataa,  // Multiplicand. (Required)\r\n     datab,  // Multiplier. (Required)\r\n     sum,    // Partial sum.\r\n     aclr,   // Asynchronous clear for pipelined usage.\r\n     sclr,   // Synchronous clear for pipelined usage.\r\n     clock,  // Clock for pipelined usage.\r\n     clken,  // Clock enable for pipelined usage.\r\n     result  // result = dataa[] * datab[] + sum. The product LSB is aligned with the sum LSB.\r\n);\r\n\r\n// GLOBAL PARAMETER DECLARATION\r\n     parameter lpm_widtha = 1; // Width of the dataa[] port. (Required)\r\n     parameter lpm_widthb = 1; // Width of the datab[] port. (Required)\r\n     parameter lpm_widthp = 1; // Width of the result[] port. (Required)\r\n     parameter lpm_widths = 1; // Width of the sum[] port. (Required)\r\n     parameter lpm_representation  = \"UNSIGNED\"; // Type of multiplication performed\r\n     parameter lpm_pipeline  = 0; // Number of clock cycles of latency\r\n     parameter lpm_type = \"lpm_mult\";\r\n     parameter lpm_hint = \"UNUSED\";\r\n\r\n// INPUT PORT DECLARATION\r\n     input  [lpm_widtha-1:0] dataa;\r\n     input  [lpm_widthb-1:0] datab;\r\n     input  [lpm_widths-1:0] sum;  =====================> here is the line 3009\r\n     input  aclr;\r\n     input  sclr;\r\n     input  clock;\r\n     input  clken;\r\n...\r\n</code>\n```\r\n\r\nThe compilation of the *lpm_mult* only results in this error with *--debugi-V3LinkDot 9*:\r\n```<code class=\"text\">\r\n- V3LinkDot.cpp:2191:    BEGIN 0x27a11b0 <e26718> {d3229} u1=0x295fcd0 [UNNAMED]\r\n- V3LinkDot.cpp:2196:    cur=se0x295fcd0\r\n- V3LinkDot.cpp:2200:    cur=se0x2967580\r\n- V3LinkDot.cpp:2200:    cur=se0x296a6e0\r\n- V3LinkDot.cpp:2200:    cur=se0x24e6b20\r\n- V3LinkDot.cpp:1587:   MODULE 0x26ee430 <e69135> {d2985} u1=0x24d8d40 u4=0x1  TOP_lpm_mult  L1 [P]\r\n- V3LinkDot.cpp:1632: (Backto) Link Cell: CELL 0x26f1620 <e69138> {d2985} u1=0x24e6b20  lpm_mult -> MODULE 0x2770dc0 <e69137> {d2985} u1=0x24e6b20 u4=0x1  lpm_mult  L2\r\n%Error: Internal Error: /home/work/gitmodelsim/sim_lib/220model.v:3009: ../V3Tristate.cpp:1123: Unlinked\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n%Error: Command Failed /home/extssd/git/verilator//bin/verilator_bin -Wall +1364-2001ext+v --cc /home/work/gitmodelsim/sim_lib/220model.v --top-module lpm_mult --exe lpm_mult.cpp --debugi-V3LinkDot 9\r\n</code>\n```\r\n\r\nI will try to investigate by myself but if you have any idea, you're welcome.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2018-01-24",
+  "closed_at": "2018-02-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 531,
+  "issue_url": "https://github.com/verilator/verilator/issues/531",
+  "title": "Combinatorial loop fails to converge",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 531 from https://www.veripool.org\nOriginal Date: 2012-07-17\n\n\n---\n\nThis may not be a bug, but a failure by me to understand the limitations of cycle accurate modeling. The following code is intended to increment register @y1@ every time the clock changes:\r\n\r\n```\r\nmodule t (/*AUTOARG*/\r\n    // Inputs\r\n    clk\r\n    );\r\n    input clk;\r\n\r\n    integer   cnt = 0;\r\n\r\n    reg [1:0] y1;\r\n\r\n`ifndef VERILATOR\r\n    initial begin\r\n       $dumpfile(\"obj_dir/iv_t_eval_problem6/iv_t_eval_problem6.vcd\");\r\n       $dumpvars;\r\n    end\r\n`endif\r\n\r\n    initial begin\r\n       y1 = 0;\r\n    end\r\n\r\n    always @(clk) begin\r\n       y1 = y1 + 1;\r\n    end\r\n\r\n    always @(posedge clk) begin\r\n       cnt = cnt + 1;\r\n    end\r\n\r\n    always @(clk) begin\r\n`ifdef TEST_VERBOSE\r\n       $display(\"clk = %x, y1 = %x\", clk, y1);\r\n`endif\r\n       if (cnt > 4) begin\r\n          $write(\"*-* All Finished *-*\\n\");\r\n          $finish;\r\n       end\r\n    end\r\n\r\nendmodule\r\n\n```\r\nIt works just fine with Icarus Verilog, producing the expected VCD, with y1 incrementing on each clock edge. However with Verilator, the code fails to compile\r\n```\r\n%Warning-UNOPTFLAT: t/t_eval_problem6.v:17: Signal unoptimizable: Feedback to clock or circular logic: v.y1\r\n%Warning-UNOPTFLAT: Use \"/* verilator lint_off UNOPTFLAT */\" and lint_on around source to disable this message.\r\n%Warning-UNOPTFLAT:      Example path: t/t_eval_problem6.v:17:  v.y1\r\n%Warning-UNOPTFLAT:      Example path: t/t_eval_problem6.v:30:  ALWAYS\r\n%Warning-UNOPTFLAT:      Example path: t/t_eval_problem6.v:17:  v.y1\r\n\n```\r\nI don't understand this. Sure @y1@ is assigned from an expression involving itself. But this is in a combinatorial @always@ block sensitive to @clk@, not @y1@, so there is no circularity.\r\n\r\nBTW, if I disable UNOPTFLAT, I just get a Verilator program which fails to converge.\r\n\r\nAdvice appreciated.\r\n\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2012-07-17",
+  "closed_at": "2012-11-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2513,
+  "issue_url": "https://github.com/llvm/circt/pull/2513",
+  "title": "[FIRRTL] Handle NonLocalAnchor on Bundle fields",
+  "body": "We must add a symbol on the operation which has a `Nonlocal` anchor associated with any of its fields.\r\nParser was not adding symbol when the `circt.nonlocal` is present on a subfield of a Bundle type.\r\n\r\nThe `LowerTypes` must then fixup the `NonLocalAnchor` after lowering, because the lowered bundle fields \r\nwill get new symbols. This requires the NLA to be updated with the new lowered symbol.\r\n\r\n`LowerTypes` should record all the bundle fields which have a reference to the NLA, and the corresponding \r\nsymbol for the subfield. The NLA is then updated at the end of the pass. \r\n\r\n\r\nIn the following example, the symbol must exist on the `wire` when its field has a `NonLocal` anchor.\r\nAnd after lowering, the NLA must be updated with the correct symbol.\r\n```\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.nla @nla_1 [#hw.innerNameRef<@Foo::@bar>, #hw.innerNameRef<@Bar::@b>]\r\n    firrtl.module @Bar() {\r\n      %b = firrtl.wire sym @b  {annotations = [#firrtl.subAnno<fieldID = 2, {circt.nonlocal = @nla_1, three}>]} : !firrtl.bundle<baz: uint<1>, qux: uint<1>>\r\n    }\r\n    firrtl.module @Foo() {\r\n       firrtl.instance bar sym @bar  {annotations = [{circt.nonlocal = @nla_1, class = \"circt.nonlocal\"}]} @Bar()\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-24",
+  "closed_at": "2022-01-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

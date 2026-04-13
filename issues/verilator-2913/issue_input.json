@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2913,
+  "issue_url": "https://github.com/verilator/verilator/issues/2913",
+  "title": "Using multiple threads on tiny design shows dramatic slowdown",
+  "body": "I built verilator from the latest master on running debian 10. I was using a simple module and tried to run it using multithreading, but the performance drops dramatically.\r\n\r\n--no-threads : 1.89565s\r\n--threads 1: 3.15899s\r\n--threads 4 : 7.63842s\r\n\r\nNow I wonder why, because I expected an increase of performance, but not such a dramatic slowdown. I was using other modules which are more complex and the result is pretty similar so I created this small module to see if there is some problem with my code but it seems it's not related to that.\r\n\r\nI also used the numactl but there is no difference. So I wonder if I did something wrong, or if there is some proble with verilator.\r\n\r\n\r\nModule:\r\n\r\n ```\r\nmodule our(\r\n        input clock, \r\n        output reg [31:0] fn = 0);\r\n\r\n   reg [31:0] fn1 = 1;\r\n\r\n   always @(posedge clock) begin\r\n      fn <= fn1;\r\n      fn1 <= fn1 + fn;\r\n   end\r\n\r\n  initial begin\r\n    $display(\"Fibonacci numbers:\");\r\n  end\r\nendmodule\r\n ```\r\n\r\nAnd using this cpp code:\r\n ```#include <iostream>\r\n\r\n#include \"Vour.h\"\r\n#include \"verilated.h\"\r\n#include <chrono>\r\n\r\nstruct profiler\r\n{\r\n    std::string name;\r\n    std::chrono::high_resolution_clock::time_point p;\r\n    profiler(std::string const &n) :\r\n        name(n), p(std::chrono::high_resolution_clock::now()) { }\r\n    ~profiler()\r\n    {\r\n        using dura = std::chrono::duration<double>;\r\n        auto d = std::chrono::high_resolution_clock::now() - p;\r\n        std::cout << name << \": \"\r\n            << std::chrono::duration_cast<dura>(d).count()\r\n            << std::endl;\r\n    }\r\n};\r\n\r\n#define PROFILE_BLOCK(pbn) profiler _pfinstance(pbn)\r\n\r\nint main(int argc, char **argv, char **env)\r\n{\r\n\tvolatile uint64_t loop = 0;\r\n\tVerilated::commandArgs(argc, argv);\r\n\tVour *top = new Vour;\r\n\r\n\t{\r\n\t\tPROFILE_BLOCK(\"Timer\");\r\n\r\n\t\twhile (!Verilated::gotFinish())\r\n\t\t{\r\n\t\t\tif (top->clock)\r\n\t\t\t\tloop++;\r\n\r\n\t\t\ttop->clock ^= 1;\r\n\t\t\ttop->eval();\r\n\t\t\tif(loop >= 100000000)\r\n\t\t\t\tbreak;\r\n\t\t}\r\n\t}\r\n\r\n\tstd::cout << \"Loops: \" << loop << std::endl;\r\n\tdelete top;\r\n\treturn 0;\r\n}\r\n ```\r\n\r\nBuilding:\r\n ```\r\nverilator -Wall --threads 4 --cc our.v --exe sim_main.cpp\r\n ```\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-01",
+  "closed_at": "2021-05-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

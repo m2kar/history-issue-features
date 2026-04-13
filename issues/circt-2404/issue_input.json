@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2404,
+  "issue_url": "https://github.com/llvm/circt/issues/2404",
+  "title": "[ExportVerilog] Crash with disallowLocalVariables option",
+  "body": "input:\r\n```mlir\r\nhw.module @Foo(%clock: i1) {\r\n    %false = hw.constant false\r\n    %c0_i16 = hw.constant 0 : i16\r\n    %status_regs = sv.reg : !hw.inout<array<1xi32>>\r\n    %0 = sv.array_index_inout %status_regs[%false] : !hw.inout<array<1xi32>>, i1\r\n    %1 = sv.read_inout %0 : !hw.inout<i32>\r\n    %2 = comb.extract %1 from 0 : (i32) -> i16\r\n    %3 = comb.concat %c0_i16, %2 : i16, i16\r\n    sv.always posedge %clock  {\r\n       sv.passign %0, %3 : i32\r\n    }\r\n    hw.output\r\n  }\r\n```\r\n```\r\n./bin/firtool --lowering-options=disallowLocalVariables foo.mlir\r\n```\r\ncauses the assertion failure:\r\n```\r\n./lib/Conversion/ExportVerilog/ExportVerilog.cpp:355: llvm::StringRef getVerilogDeclWord(mlir::Operation *, const circt::LoweringOptions &): Assertion `!options.disallowLocalVariables && \"automatic variables not allowed\"' failed\r\n```\r\n\r\n(This is reduced by circt-reduce. Thank you @fabianschuiki for creating circt-reduce!)",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-28",
+  "closed_at": "2022-01-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

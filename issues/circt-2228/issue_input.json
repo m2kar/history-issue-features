@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2228,
+  "issue_url": "https://github.com/llvm/circt/pull/2228",
+  "title": "[ExportVerilog] Fix bind port names not being legalized",
+  "body": "Fix an issue in `ExportVerilog` where the signal names used as port connections in emitted `bind` statements would not use the legalized name. The underlying issue is twofold:\r\n\r\nFirst, the call to `prepareHWModule`, which generates additional wires for instances emitted as ports, occurs after name legalization. Any wires inserted by this function would not get legalized. This change moves the calls to `prepareHWModule` into a (parallelized) loop before name legalization occurs.\r\n\r\nSecond, the `getNameRemotely` function which provides the names for the bind port connections would not properly see through the IR pattern used to make output ports of the instance always connect to a wire:\r\n\r\n    %tmpWire = sv.wire\r\n    %output = hw.instance ... () -> (output: i1) {doNotPrint = true}\r\n    sv.assign %tmpWire, %output\r\n\r\nThis change updates this function to look through any `sv.assign` ops from instance outputs to wires, and produces that wire's legalized name.\r\n\r\nAlso adds an assert to ensure that we always have a legal name to use for the bind port connections. This used to be some optional code that came up with a name on the spot.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-22",
+  "closed_at": "2021-12-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

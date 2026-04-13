@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2669,
+  "issue_url": "https://github.com/llvm/circt/issues/2669",
+  "title": "[FIRRTL] Bitwidth conventions for artihmetic ops",
+  "body": "`firtool` bit extends each operand to the destination type. This seems to differ from `firrtl` output.\r\nThe output is semantically correct, but this might be a verilog output quality issue.\r\nSo, if a multiplication produces 3 bit result, then the input operands are extended to 3 bits.\r\nThis is the standard assumption for `HW` dialect, https://github.com/llvm/circt/blob/main/lib/Conversion/FIRRTLToHW/LowerToHW.cpp#L3005\r\n\r\nInput `fir` \r\n```python \r\ncircuit MyModule :\r\n\r\n  module MyModule :\r\n    input in1: UInt<1>\r\n    input in2: UInt<2>\r\n    output out: UInt<3>\r\n\r\n    out <= mul(in1, in2)\r\n```\r\n`firtool` output\r\n``` verilog\r\nmodule MyModule( \r\n  input        in1,\r\n  input  [1:0] in2,\r\n  output [2:0] out);                                                                                                                                                                                                                        \r\n  assign out = {2'h0, in1} * {1'h0, in2}; \r\nendmodule\r\n```\r\n`firrtl` output\r\n```verilog\r\nmodule MyModule(\r\n  input        in1,\r\n  input  [1:0] in2,\r\n  output [2:0] out\r\n);                                 \r\nassign out = in1 * in2;\r\nendmodule\r\n```\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-02-22",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

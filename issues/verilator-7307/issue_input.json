@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7307,
+  "issue_url": "https://github.com/verilator/verilator/issues/7307",
+  "title": "Support array map() method",
+  "body": "---\nExample (t_array_map.sv):\n```\n// From IEEE 1800-2023 Section 7.12.5\nmodule t;\n  int A[] = '{1,2,3}, B[] = '{2,3,5}, C[$];\n  bit Compare[];\n\n  initial begin\n    // Form 1: map with implicit iterator 'item'\n    A = A.map() with (item + 1'b1);\n    // A should be {2,3,4}\n\n    // Form 2: map with named iterator and index\n    C = A.map(a) with (a + B[a.index]);\n    // C should be {4,6,9}\n\n    // Form 3: element-wise comparison producing bit array\n    Compare = A.map(a) with (a == B[a.index]);\n    // Compare should be {1,1,0}\n\n    if (A[0] !== 2 || A[1] !== 3 || A[2] !== 4) $stop;\n    if (C[0] !== 4 || C[1] !== 6 || C[2] !== 9) $stop;\n    if (Compare[0] !== 1'b1 || Compare[1] !== 1'b1 || Compare[2] !== 1'b0) $stop;\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\nendmodule\n```\n\n---\nCommand line:\nverilator --lint-only --sv t_array_map.sv\n\n---\nActual output:\n%Error-UNSUPPORTED: t_array_map.sv:12:15: Unsupported: Array 'map' method (IEEE 1800-2023 7.12.5)\n%Error-UNSUPPORTED: t_array_map.sv:12:15: Unsupported/unknown built-in dynamic array method 'map'\n%Error-UNSUPPORTED: t_array_map.sv:16:15: Unsupported: Array 'map' method (IEEE 1800-2023 7.12.5)\n%Error-UNSUPPORTED: t_array_map.sv:16:15: Unsupported/unknown built-in dynamic array method 'map'\n%Error-UNSUPPORTED: t_array_map.sv:20:21: Unsupported: Array 'map' method (IEEE 1800-2023 7.12.5)\n%Error-UNSUPPORTED: t_array_map.sv:20:21: Unsupported/unknown built-in dynamic array method 'map'\n%Error: Exiting due to 6 error(s)\n\nExpected output: No errors. When run as a simulation, the test should print:\n*-* All Finished *-*\n\n---\nVerilator version:\nVerilator 5.047 devel rev v5.046-144-ga3222bee9\n\nYes, tested against git master. Not tested against other simulators.\n\n---\nOS: macOS 15.0.1 (Sequoia), Apple Silicon.\n\n---\nCan you help fix this?\n\nHappy to attempt a fix.",
+  "labels": [
+    "area: data-types",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-22",
+  "closed_at": "2026-03-24",
+  "code_blocks": [
+    "// From IEEE 1800-2023 Section 7.12.5\nmodule t;\n  int A[] = '{1,2,3}, B[] = '{2,3,5}, C[$];\n  bit Compare[];\n\n  initial begin\n    // Form 1: map with implicit iterator 'item'\n    A = A.map() with (item + 1'b1);\n    // A should be {2,3,4}\n\n    // Form 2: map with named iterator and index\n    C = A.map(a) with (a + B[a.index]);\n    // C should be {4,6,9}\n\n    // Form 3: element-wise comparison producing bit array\n    Compare = A.map(a) with (a == B[a.index]);\n    // Compare should be {1,1,0}\n\n    if (A[0] !== 2 || A[1] !== 3 || A[2] !== 4) $stop;\n    if (C[0] !== 4 || C[1] !== 6 || C[2] !== 9) $stop;\n    if (Compare[0] !== 1'b1 || Compare[1] !== 1'b1 || Compare[2] !== 1'b0) $stop;\n    $write(\"*-* All Finished *-*\\n\");\n    $finish;\n  end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4665,
+  "issue_url": "https://github.com/llvm/circt/pull/4665",
+  "title": "[FIRRTL] Add a convention attribute to modules",
+  "body": "The convention attribute give us module-by-module control over how a module's ports should be lowered. When a module uses the \"scalarized\" convention, its ports are guaranteed be fully scalarized in the output verilog. When a module uses the \"internal\" convention, then it's ports will be lowered according to the configured aggregate preservation mode.\r\n\r\nA module's convention is internal by default, but can be set using a new annotation, or through the firtool command line options `--scalarize-top-module` and `--scalarize-ext-modules`.\r\n\r\nEnabling both `--scalarize-top-module` and `--scalarize-ext-modules` together (which is the default) should be a drop-in replacement of the older `--preserve-public-types` option, which has been removed.\r\n\r\n\r\n## Changes\r\n- FIRRTL Dialect\r\n  - add new `convention` attribute to `FModuleLike` objects. This property is either `scalarized` or `internal`.\r\n  - The convention controls how a module's ports are lowered by `LowerTypesPass`.\r\n  - `FModule` and `FExtModule` have new builders that let you pass a convention through. Otherwise, they default to `internal` convention.\r\n  - `FMemModule` always uses the `internal` convention, for now.\r\n  - In the printed format, the convention is printed in the attribute-dict, but only if it's set to `scalarized`.\r\n- lowerTypes\r\n  - when a module has the `scalarized` convention, the pass _must_ scalarize it's ports, regardless of the aggregate preservation mode.\r\n  - when a module has the `internal` convention, the pass lowers ports based on the configured aggregate preservation mode.\r\n  - The `preservePublicTypes` option is removed.\r\n- Firtool\r\n  - remove preserve-public-types option\r\n   - add two new options, `--scalarize-top-module` and `--scalarize-ext-modules`.\r\n   - both default to *on*.\r\n   - when `--scalarize-top-module` is enabled, FIRParser will mark the main module with the `scalarized` convention. Otherwise, the top module will use the `internal` convention.\r\n   - when `--scalarize-ext-modules` is enabled, FIRParser will mark any ext modules with the `scalarized` convention.\r\n   - An external top module will be scalarized if either option is enabled.\r\n- Annotations:\r\n  - add a new annotation called `firrtl.module.Convention` (please suggest a better name!)\r\n  - allows the convention to be specified through annotations.\r\n  - conventions applied in lowerAnnotations.\r\n  - Because annotations are applied later in the pipeline, annotations takes precedence over any scalarization option passed to firrtool.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-16",
+  "closed_at": "2023-04-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

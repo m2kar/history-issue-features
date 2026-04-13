@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6550,
+  "issue_url": "https://github.com/verilator/verilator/issues/6550",
+  "title": "Process `get_randstate()` breaks random stability",
+  "body": "> Can you attach an example that shows the issue?\n\nExample:\n\n```verilog\nmodule sv_rand_stability;\n\n    initial begin\n\n        process p; string s;\n        p = process::self();\n\n        $display(\"%8h\", $urandom());\n        $display(\"%8h\", $urandom());\n        if($test$plusargs(\"save_randstate\")) begin\n            s = p.get_randstate();\n        end\n        $display(\"%8h\", $urandom());\n        $display(\"%8h\", $urandom());\n\n        $finish();\n\n    end\n\nendmodule\n```\n\nOutputs with and without `+save_randstate` must be the same. `get_randstate()` must not change process RNG. Tested with big-3.\n\n> What 'verilator' command line do we use to run your example?\n\n```bash\nverilator --binary ./sv_rand_stability.sv\n./obj_dir/Vsv_rand_stability +verilator+seed+12345\n./obj_dir/Vsv_rand_stability +verilator+seed+12345 +save_randstate\n```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?\n\n`Verilator 5.035 devel rev v5.034-69-g780163b91`\n\n> What OS and distribution are you using?\n\nCentOS Linux release 7.9.2009.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-12",
+  "closed_at": "2025-10-17",
+  "code_blocks": [
+    "module sv_rand_stability;\n\n    initial begin\n\n        process p; string s;\n        p = process::self();\n\n        $display(\"%8h\", $urandom());\n        $display(\"%8h\", $urandom());\n        if($test$plusargs(\"save_randstate\")) begin\n            s = p.get_randstate();\n        end\n        $display(\"%8h\", $urandom());\n        $display(\"%8h\", $urandom());\n\n        $finish();\n\n    end\n\nendmodule\n",
+    "verilator --binary ./sv_rand_stability.sv\n./obj_dir/Vsv_rand_stability +verilator+seed+12345\n./obj_dir/Vsv_rand_stability +verilator+seed+12345 +save_randstate\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7011,
+  "issue_url": "https://github.com/verilator/verilator/pull/7011",
+  "title": "Add test cases for interface array access with loop variable index",
+  "body": "## Summary\n\nAdds test cases documenting that Verilator errors when a `for` loop indexes into an interface array with its loop variable:\n```systemverilog\nsimple_if ifaces [3:0] ();\n\nalways_comb begin\n  for (int i = 0; i < 4; i++) begin\n    ifaces[i].value = 8'(i);  // Error: Expecting expression to be constant\n  end\nend\n```\n\nBaseline for #1418 (#1454, #5825, #2788). All tests expect compilation to fail on current master.\n\n### Background\n\nThe original version of this PR added an early loop-unrolling pass, but per review feedback this was dropped — it works around the core issue (flattened instantiations can't be indexed at runtime) rather than fixing it. This PR now contains only the test cases as a baseline for a future proper fix.\n\n### Tests\n\n#### `t_interface_array_loop[_noinl]` (expected compile failure)\n- Simple ascending/descending loops with all comparison operators (`<`, `<=`, `>`, `>=`)\n- Non-unit step (`+= 2`, `-= 2`)\n- Multiple interface arrays in the same loop\n- Submodule ports with interface array modports (`sink`, `source`, bare)\n- Parameterized submodule with overridden `NUM_IFACES`\n- Complex index expressions (`N-1-i`)\n- Non-zero-based array ranges (`[2:5]`)\n\n#### `t_interface_array_loop_bad` (expected lint failure)\n- Runtime-variable loop bound (`i < limit`) correctly produces the existing error",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-06",
+  "closed_at": "2026-02-07",
+  "code_blocks": [
+    "simple_if ifaces [3:0] ();\n\nalways_comb begin\n  for (int i = 0; i < 4; i++) begin\n    ifaces[i].value = 8'(i);  // Error: Expecting expression to be constant\n  end\nend\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

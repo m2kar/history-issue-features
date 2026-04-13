@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3569,
+  "issue_url": "https://github.com/verilator/verilator/pull/3569",
+  "title": "Value sampling support",
+  "body": "The change adds support for value sampling, i.e. access to values of expressions at the beginning of each time slot.\r\n\r\nThis is done with `$sampled` function except for concurrent assertions where sampling is done by default.\r\nBefore the change, the function was deleted during V3Assert pass when encountered in AST.\r\n\r\nThe change makes `$past`, `$fell`, `$rose`, `$stable` and `$changed` refer to sampled values, as expected by IEEE.\r\nThe change can simplify implementation of explicit clocking for these functions, but such functionality is not added here.\r\n\r\nSampling is implemented in three stages:\r\n1. On parsing stage concurrent asserts are created with `$sampled` around their test expressions.\r\n2. On V3Assert stage each variable reference inside a sampled expression is wrapped into a call to `$sampled`, all other uses of `$sampled` are removed.\r\n3. On V3Clock stage every call to `$sampled` is replaced by their only subexpression, and for every variable in the subexpression:\r\n- a helper variable holding the sampled value is created,\r\n- an assignment to the variable is added to the `eval` to occur at the beginning of every simulation step,\r\n- the original variable reference is replaced by a reference to the helper variable.\r\n\r\nThe code that creates variables used for keeping sampled values, is placed in V3Clock pass. The reason for that is that it's the earliest pass that runs after the `_eval` function is created and can be accessed for modification. V3Clock also runs before any of the final optimizations are performed.\r\n\r\nIt is undefined what should happen if a sampled expression has side effects. Expressions like `$sampled(a++)` and `$sampled(f(a))` (where `f` has side effects) behave very differently in various SystemVerilog simulators. This PR makes Verilator produce an `E_UNSUPPORTED` warning in the first case, but the second case is harder to detect, and thus ignored.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-08-23",
+  "closed_at": "2022-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7480,
+  "issue_url": "https://github.com/llvm/circt/pull/7480",
+  "title": "[Arc] Add InitialOp and lowering support for FirReg preset values.",
+  "body": "An ongoing effort to carve out a path through the Arc dialect from the LLVM end towards memory and register initializers and miscellaneous stuff that may happen once at the start of simulation.  Please don't look too closely at the code, yet. But I'd be happy to know if I'm on the right path or have taken a wrong turn already.\r\n\r\n**Outdated. See comments below.**\r\nThe central addition so far is an `initial` region to the Arc `ModelOp`. which is able to modifiy the ~~state~~ storage that gets passed to the body region e.g.,:\r\n```\r\narc.model @counter io !hw.modty<input clk : i1, output o : i8> {\r\n  ^bb0(%arg0: !arc.storage<4>):\r\n    [...]\r\n  } initial {\r\n  ^bb0(%arg0: !arc.storage<4>):\r\n    %c42_i8 = arith.constant 42 : i8\r\n    %0 = arc.storage.get %arg0[3] : !arc.storage<4> -> !arc.state<i8>\r\n    arc.state_write %0 = %c42_i8 : <i8>\r\n    arc.yield_storage %arg0 : !arc.storage<4>\r\n  }\r\n```\r\n\r\nThe initial values are currently derived from an attribute attached to the `AllocStateOp`. Similarly, I intend to add an attribute for file based initialization to the `AllocMemoryOp`. What I have to figure out yet is how to best get these Attributes to those Ops during lowering. I'm reluctant to add even more stuff to the `StateOp`, although that seems like the obvious path. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-08",
+  "closed_at": "2024-08-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

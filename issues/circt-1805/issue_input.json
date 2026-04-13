@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1805,
+  "issue_url": "https://github.com/llvm/circt/pull/1805",
+  "title": "[FIRRTL][HW] Add Support for \"Port Order\" Write-Under-Write to HWMemSimImpl, Use for FIRRTL Lowering",
+  "body": "Fixes #1757.\r\n\r\nThis PR changes the lowering for FIRRTL memories.  Previously, each write port on the same clock would be emitted into a separate always block.  This resulted in Verilog that behaviorally described \"undefined\" write-under-write behavior.  I.e., it described a memory where any write port could \"win\" in a write collision (where two ports write to the same address) and would likely have written an `x` to the memory in simulation.\r\n\r\nFIRRTL memories have \"port order\" write-under-write behavior for ports on the same clock.  This means that if multiple ports on the same clock write to the same memory address, the highest numbered port will win.  In effect, this is explicitly encoding an ordering which a synthesis tool must respect.  This was then producing formal equivalence mismatches that @drom was seeing (and I reported in #1757).\r\n\r\nThe FIRRTL specification is entirely silent about this behavior, so we're relying on what the Scala FIRRTL Compiler empirically does here.\r\n\r\nThis PR adds some infrastructure for describing the write-under-write behavior.  There's a new FIRRTL enum attribute (which can be either \"undefined\" or \"port order\").  This is then plumbed through and used to set a \"write-under-write\" attribute in the `FIRRTLMemory` schema.  The `HWMemSimImpl` pass is then updated to lower \"undefined\" the same as it does now and to lower \"port order\" correctly.\r\n\r\nTo determine the grouping of ports, this uses a trivial check of looking to see what value drives a memory write port clock.  _All instances of the memory must have the same write port clock driving._  Each set of write ports is then emitted into a separate always block where writes are ordered based on port order.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-09-17",
+  "closed_at": "2021-09-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

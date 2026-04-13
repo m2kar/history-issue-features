@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3521,
+  "issue_url": "https://github.com/verilator/verilator/pull/3521",
+  "title": "Reduce V3Number size",
+  "body": "V3Number size has been reduced from 96 bytes to 48 bytes.\r\nAt the same time, its inline storage has been increased from 64 to 96 four-state bits.\r\nThese numbers apply to a common case where std::string has 32 bytes.\r\n\r\nThis has measurable effect on a total Verilator memory consumption, as V3Number is a member of `AstConst`, one of the most used nodes.\r\n\r\nDesign note:\r\nAll data members ended up in separate class. I've decided to keep it this way in order to improve encapsulation and prevent unchecked access to union fields in public V3Number functions' implementations.\r\n\r\n## Benchmarks\r\n\r\nMemory usage differences for two larger designs I've tested:\r\n\r\n- default glibc allocator:\r\n  - 21.84 GB → 20.74 GB (-1.10 GB)\r\n  - 65.25 GB → 61.55 GB (-3.70 GB)\r\n\r\n- tcmalloc:\r\n  - 22.38 GB → 21.00 GB (-1.39 GB)\r\n  - 68.35 GB → 67.03 GB (-1.32 GB)\r\n  \r\nVerilation speed change for the smaller design (average from 8 executions):\r\n\r\n- default glibc allocator:\r\n  392.8 s → 387.4 s (-5.5s)\r\n- tcmalloc:\r\n  249.2 s → 249.8 (+0.6s)\r\n\r\n---\r\n\r\nbtw. `V3Number::toHash()` ignores string values (both before and after the change). Is this OK?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-29",
+  "closed_at": "2022-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

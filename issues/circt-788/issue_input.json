@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 788,
+  "issue_url": "https://github.com/llvm/circt/issues/788",
+  "title": "[FIRRTL] More alias copy propagation",
+  "body": "This is really just more of #738 and #740.\r\n\r\nCIRCT needs to work harder to eliminate or copy-propagate FIRRTL `Analog` types or Verilog `inout` types. `inout` support is _extremely_ spotty and weird across different tooling. \r\n\r\nAnnoyingly, the typical situation where use of `Analog` or `inout` shows up in code is purely passing these from a module's IO to a submodule's IO. Doing the direct assignment is fine and supported by basically all tooling, but anything else is extremely spotty.\r\n\r\nConsider something like:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Bar:\r\n    input a: Analog<1>\r\n  module Foo:\r\n    input a: Analog<1>\r\n    inst bar of Bar\r\n\r\n    wire b: Analog<1>\r\n\r\n    attach(b, a)\r\n    attach(bar.a, b)\r\n```\r\n\r\nThe `wire b: Analog<1>` is really just a temporary and can be trivially copy propagated through.\r\n\r\nThe Scala FIRRTL Compiler will get rid of this and produce:\r\n\r\n```verilog\r\nmodule Bar(\r\n  inout   a\r\n);\r\nendmodule\r\nmodule Foo(\r\n  inout   a\r\n);\r\n  Bar bar (\r\n    .a(a)\r\n  );\r\nendmodule\r\n```\r\n\r\nHowever, CIRCT is much less aggressive here and produces:\r\n\r\n```verilog\r\nmodule Bar(\r\n  inout a);\r\n\r\nendmodule\r\n\r\nmodule Foo(\r\n  inout a);\r\n\r\n  wire _a_wire;\t// Analog.fir:6:5\r\n  wire b;\t// Analog.fir:8:5\r\n\r\n  Bar bar (\t// Analog.fir:6:5\r\n    .a (_a_wire)\r\n  );\r\n  `ifdef SYNTHESIS\t// Analog.fir:10:5\r\n    wire _T = b;\t// Analog.fir:10:5\r\n    assign b = a;\t// Analog.fir:10:5\r\n    assign a = _T;\t// Analog.fir:10:5\r\n    assign _a_wire = _T;\t// Analog.fir:11:5\r\n    assign b = _a_wire;\t// Analog.fir:11:5\r\n  `else\r\n    `ifdef verilator\t// Analog.fir:11:5\r\n      `error \"Verilator does not support alias and thus cannot arbitrarily connect bidirectional wires and ports\"\t// Analog.fir:10:5\r\n      `error \"Verilator does not support alias and thus cannot arbitrarily connect bidirectional wires and ports\"\t// Analog.fir:11:5\r\n    `else\r\n      alias b = a;\t// Analog.fir:10:5\r\n      alias _a_wire = b;\t// Analog.fir:11:5\r\n    `endif\r\n  `endif\r\nendmodule\r\n```\r\n\r\nThis has consequences because just about any tool will handle the SFC code, but the CIRCT code is extremely problematic due to spotty tooling support (see below).\r\n\r\n### Summary of Spotty Tooling\r\n\r\nThanks to @jackkoenig for finding and documenting all this. :+1:\r\n\r\nConcretely, any tool is happy with:\r\n\r\n```verilog\r\nmodule Foo(inout bar);\r\n  SubFoo SubFoo(bar);\r\nendmodule\r\n```\r\n\r\nWhile entirely equivalent, if you introduce a temporary wire for `inout bar`, you're in trouble.\r\n\r\nSynopsys Design Compiler will accept, but VCS will not accept:\r\n\r\n```verilog\r\nmodule Foo(inout bar);\r\n  wire tmp;\r\n  assign tmp = bar;\r\n  assign bar = tmp;\r\n  SubFoo SubFoo(tmp);\r\nendmodule\r\n```\r\n\r\nVCS will accept this if you express this using `alias`:\r\n\r\n```verilog\r\nmodule Foo(inout bar);\r\n  wire tmp;\r\n  alias tmp = bar;\r\n  SubFoo SubFoo(tmp);\r\nendmodule\r\n```\r\n\r\nVerilator accepts neither the double assign nor alias.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-18",
+  "closed_at": "2021-03-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

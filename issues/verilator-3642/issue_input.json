@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3642,
+  "issue_url": "https://github.com/verilator/verilator/pull/3642",
+  "title": "Initial support for tracing strings",
+  "body": "Adds optional support for embedding verilog strings into traces. My personal use case for this is embedding assembly into a trace alongside the instructions themselves.\r\n\r\nNote this needs a nightly GtkWave due to a fixed GtkWave bug.\r\n\r\nImplementation notes:\r\n - This introduces --trace-strings and --trace-max-string args since strings are big and most users don't need them in traces by default.\r\n - Users can trace big strings if needed, but viewers can't really view big strings anyhow. 64 bytes was chosen as a good balance for usability.\r\n - If something changes beyond the max size of the traced string, it will still appear as a change in the wave viewers (even if you can't tell what changed in them).\r\n - Arrays of strings can be traced, but they don't currently appear in GTKWave.\r\n\r\nMax sizes:\r\n   - When async tracing, there's a max of 16MB (could be increased).\r\n   - When using FST, there's a max of 4GB (implementation limit).\r\n   - The limitation of the VCD encoder is complicated but shorter than either of the previous ones. It's proportional to the max signal size, plus many characters use more space due to string escaping.\r\n   - 1 additional copy of the string (not clamped to max size) will be present in memory while tracing. If using async tracing, 2 copies.\r\n\r\nMajor changes from V1:\r\n - Now allows setting an arbitrary string max size.\r\n - Since the user can provide a large max string value, it's not good to always preallocate the max length. Lean on std::string for this. This is about a 5% overhead vs doing it manually, but it simplifies things in most places over an indirect buffer. We also now need to keep track of which values are strings in the tracer so we can clean up memory when it's destroyed.\r\n - Now traces string arrays too. It was a 2-line change.\r\n\r\nSigned-off-by: Jake Merdich <jake@merdich.com>\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-27",
+  "closed_at": "2023-10-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

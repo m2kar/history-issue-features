@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6379,
+  "issue_url": "https://github.com/llvm/circt/pull/6379",
+  "title": "[Arc] Fix InlineArcs pass performance",
+  "body": "In a previous change we generalized the inliner to also be able to inline arcs into other arcs (see `arc.call` operation). There we also migrated our custom implementation to use the MLIR InliningUtils instead. However, it turned out that it performs poorly because of a lot of block splicing.\r\n\r\nNote that the old pass traversed the call-graph bottom-up (inline arcs that don't have other calls inside first), while the current implementation processes arcs in the order in which they appear in the IR. However, the way it is implemented makes it easy to pre-compute any other ordering and pass it to the inliner.\r\n\r\nAlso, I slightly changed the way single-use and trivial arcs are counted in the statistics (now it just collects the statistics on the initial state of the IR instead of taking into account the inlining decisions of previously processed Arcs). The reason why there are that many more single-use arcs is that previously single-use arcs that were also trivial were only counted as trivial, but now they are additionally counted as single-use as well.\r\n\r\nThe current performance and statistics on the boom-large design (from github.com/circt/arc-tests) look like this:\r\n\r\n```\r\n===-------------------------------------------------------------------------===\r\n                         ... Pass statistics report ...\r\n===-------------------------------------------------------------------------===\r\nInlineArcs\r\n  (S) 45033 inlined-arcs    - Arcs inlined at a use site\r\n  (S)  3180 removed-arcs    - Arcs removed after full inlining\r\n  (S)   781 single-use-arcs - Arcs with a single use\r\n  (S)  2399 trivial-arcs    - Arcs with very few ops\r\n\r\n===-------------------------------------------------------------------------===\r\n                         ... Execution time report ...\r\n===-------------------------------------------------------------------------===\r\n  Total Execution Time: 105.3202 seconds\r\n\r\n  ----Wall Time----  ----Name----\r\n    0.5896 (  0.6%)  Parser\r\n  104.3781 ( 99.1%)  InlineArcs\r\n    0.2972 (  0.3%)  Output\r\n    0.0553 (  0.1%)  Rest\r\n  105.3202 (100.0%)  Total\r\n```\r\n\r\nThis new implementation changes it to\r\n\r\n```\r\n===-------------------------------------------------------------------------===\r\n                         ... Pass statistics report ...\r\n===-------------------------------------------------------------------------===\r\nInlineArcs\r\n  (S) 38902 inlined-arcs    - Arcs inlined at a use site\r\n  (S)  2924 removed-arcs    - Arcs removed after full inlining\r\n  (S)  1778 single-use-arcs - Arcs with a single use\r\n  (S)  1883 trivial-arcs    - Arcs with very few ops\r\n\r\n===-------------------------------------------------------------------------===\r\n                         ... Execution time report ...\r\n===-------------------------------------------------------------------------===\r\n  Total Execution Time: 1.0538 seconds\r\n\r\n  ----Wall Time----  ----Name----\r\n    0.6331 ( 60.1%)  Parser\r\n    0.1528 ( 14.5%)  InlineArcs\r\n    0.2354 ( 22.3%)  Output\r\n    0.0326 (  3.1%)  Rest\r\n    1.0538 (100.0%)  Total\r\n```\r\n\r\nFixes #6245",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-06",
+  "closed_at": "2023-11-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

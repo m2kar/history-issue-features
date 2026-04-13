@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5049,
+  "issue_url": "https://github.com/verilator/verilator/issues/5049",
+  "title": "Fix $typename return on `array.min` etc",
+  "body": "#### Example\r\n\r\n```sv\r\nmodule m;\r\n  int unsigned x[3] = '{0, 1, 2};\r\n  initial begin\r\n    $display(x.min);\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nRun:\r\n\r\n```sh\r\nverilator -MAKEFLAGS '-s' --quiet --binary m.sv && obj_dir/Vm +verilator+quiet\r\n```\r\n\r\nResult:\r\n\r\n```\r\n2302531392            (comment: changes after every execution)\r\n- m.sv:5: Verilog $finish\r\n```\r\n\r\nExpected:\r\n\r\n```\r\n'{'h0}        (comment: array locator methods return a queue)\r\n- m.sv:5: Verilog $finish\r\n```\r\n\r\nVersion and OS\r\n\r\n```\r\nVerilator 5.024 2024-04-05\r\nArchlinux\r\n```\r\n---\r\n\r\n#### Notes\r\n\r\nI could only find tests for fixed-sized size unpacked arrays but:\r\n1. for associative arrays\r\n\r\n     https://github.com/verilator/verilator/blob/1315aa31ed1b980b05778f5a0a1f3ff9718be680/test_regress/t/t_assoc_method.v#L90\r\n\r\n2. for queues\r\n   \r\n      https://github.com/verilator/verilator/blob/1315aa31ed1b980b05778f5a0a1f3ff9718be680/test_regress/t/t_queue_method.v#L161\r\n\r\nSo using a queue instead works as expected:\r\n\r\n```sv\r\nmodule m;\r\n  int unsigned x[$] = '{0, 1, 2};\r\n  initial begin\r\n    $display(x.min);\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\nResult:\r\n\r\n```\r\n'{'h0}\r\n- m.sv:5: Verilog $finish\r\n```\r\n\r\n`min` and `max` are defined in *LRM 2023 7.12.1 Array locator methods*. AFAI understand these must be defined for all arrays.\r\n\r\n---\r\n\r\nCurrently I don't have the capacity for a PR other than preparing a test case.",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-15",
+  "closed_at": "2024-05-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

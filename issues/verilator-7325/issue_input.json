@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7325,
+  "issue_url": "https://github.com/verilator/verilator/issues/7325",
+  "title": "Verilator `+verilator+seed` Bugs",
+  "body": "## Documentation Claim\n\nFrom the Verilator docs (`docs/guide/exe_sim.rst`):\n\n> **+verilator+seed+\\<value\\>**: For `$random` and `--x-initial unique`, set\n> the simulation runtime random seed value. If zero or not specified picks a\n> value from the system random number generator.\n\nTwo bugs prevent this from working as documented.\n\n---\n\n## Bug 1: Cannot pass 0 as seed value\n\nPassing `+verilator+seed+0` on the command line to request random seeding (as documented) produces a fatal error instead of enabling random behavior. Users who follow the documentation and use `0` to mean \"pick a seed randomly\" cannot do so.\n\nThe command-line argument parser enforces a minimum value of `1`:\n\n**`include/verilated.cpp:3088-3090`**\n```cpp\n} else if (commandArgVlUint64(arg,\n    \"+verilator+seed+\", u64, 1, std::numeric_limits<int>::max())) {\n    randSeed(static_cast<int>(u64));\n```\n\nThe `min` parameter passed to `commandArgVlUint64` is `1`, so passing\n`+verilator+seed+0` produces:\n\n```\n%Error: COMMAND_LINE:0: Argument '+verilator+seed+' must be an unsigned\ninteger, greater than 0, less than 2147483648\n```\n\nInternally, the seed **does** default to `0` and the \"0 means use system RNG\"\nlogic exists:\n\n**`include/verilated.h:393`**\n```cpp\nint m_randSeed = 0;  // Random seed: 0=random\n```\n\n**`include/verilated.cpp:3154-3160`**\n```cpp\nuint64_t VerilatedContextImp::randSeedDefault64() const VL_MT_SAFE {\n    if (randSeed() != 0) {\n        return ((static_cast<uint64_t>(randSeed()) << 32) ^\n                (static_cast<uint64_t>(randSeed())));\n    } else {\n        return ((static_cast<uint64_t>(vl_sys_rand32()) << 32) ^\n                (static_cast<uint64_t>(vl_sys_rand32())));\n    }\n}\n```\n\n**Fix**: Change the `min` on line 3088 from `1` to `0`.\n\n---\n\n## Bug 2: System RNG is never seeded, producing deterministic output\n\nWhen no `+verilator+seed` is specified, the simulation produces the **same results on every run**. Users who rely on the default behavior to get non-deterministic simulation — for example, to randomize initial register values or expose different corner cases across runs — will instead get an identical execution every time, silently defeating the purpose of random testing.\n\nWhen no `+verilator+seed` is provided (or if seed is `0`),\n`randSeedDefault64()` falls through to `vl_sys_rand32()`, which uses\n`lrand48()`:\n\n**`include/verilated.cpp:411-422`**\n```cpp\nstatic uint32_t vl_sys_rand32() VL_MT_SAFE {\n    static VerilatedMutex s_mutex;\n    const VerilatedLockGuard lock{s_mutex};\n#if defined(_WIN32) && !defined(__CYGWIN__)\n    return (std::rand() << 16) ^ std::rand();\n#else\n    return (lrand48() << 16) ^ lrand48();\n#endif\n}\n```\n\nPer the POSIX specification, `lrand48()` uses a default seed of `0` when\n`srand48()` has not been called. Since Verilator never calls `srand48()` with a\nnon-deterministic value (e.g. from `time()`, `getpid()`, or `/dev/urandom`),\n`vl_sys_rand32()` returns the same sequence on every run.\n\nThis means the documentation's claim that omitting the seed \"picks a value from\nthe system random number generator\" is misleading — it does call `lrand48()`,\nbut that RNG itself is never randomized.\n\n**Fix**: Seed `lrand48()` with a non-deterministic source during initialization\nof `vl_sys_rand32()` (e.g. `srand48(time(nullptr) ^ getpid())`), or replace\n`lrand48()` with a source that is inherently non-deterministic (e.g. reading\nfrom `/dev/urandom`).",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "open",
+  "created_at": "2026-03-26",
+  "closed_at": null,
+  "code_blocks": [
+    "} else if (commandArgVlUint64(arg,\n    \"+verilator+seed+\", u64, 1, std::numeric_limits<int>::max())) {\n    randSeed(static_cast<int>(u64));\n",
+    "%Error: COMMAND_LINE:0: Argument '+verilator+seed+' must be an unsigned\ninteger, greater than 0, less than 2147483648\n",
+    "int m_randSeed = 0;  // Random seed: 0=random\n",
+    "uint64_t VerilatedContextImp::randSeedDefault64() const VL_MT_SAFE {\n    if (randSeed() != 0) {\n        return ((static_cast<uint64_t>(randSeed()) << 32) ^\n                (static_cast<uint64_t>(randSeed())));\n    } else {\n        return ((static_cast<uint64_t>(vl_sys_rand32()) << 32) ^\n                (static_cast<uint64_t>(vl_sys_rand32())));\n    }\n}\n",
+    "static uint32_t vl_sys_rand32() VL_MT_SAFE {\n    static VerilatedMutex s_mutex;\n    const VerilatedLockGuard lock{s_mutex};\n#if defined(_WIN32) && !defined(__CYGWIN__)\n    return (std::rand() << 16) ^ std::rand();\n#else\n    return (lrand48() << 16) ^ lrand48();\n#endif\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

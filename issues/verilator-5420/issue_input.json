@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5420,
+  "issue_url": "https://github.com/verilator/verilator/issues/5420",
+  "title": "Fix Internal: Solver error: Argument size at position 1 has sort (_ BitVec 4) it does not match declaration",
+  "body": "```\r\ndriver: Leaving directory '.../verilator/test_regress/obj_vlt/t_constraint_operators'\r\n\tobj_vlt/t_constraint_operators/Vt_constraint_operators    > obj_vlt/t_constraint_operators/vlt_sim.log\r\n%Warning: .../verilator/test_regress/../include/verilated_random.cpp:365: Internal: Solver error: (error \"line 11 column 330: Argument size at position 1 has sort (_ BitVec 4) it does not match declaration (declare-fun bvshl ((_ BitVec 37) (_ BitVec 37)) (_ BitVec 37))\")\r\n*-* All Finished *-*\r\n- t/t_constraint_operators.v:58: Verilog $finish\r\n```\r\n\r\nCan you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```\r\n// DESCRIPTION: Verilator: Verilog Test module\r\n//\r\n// This file ONLY is placed under the Creative Commons Public Domain, for\r\n// any use, without warranty, 2023 by Wilson Snyder.\r\n// SPDX-License-Identifier: CC0-1.0\r\n\r\npackage z_pkg;\r\n   localparam int ADDRW=37;\r\n   localparam int SIZEW=4;\r\n\r\n   typedef logic [ADDRW-1:0] address_t;\r\n   typedef logic [SIZEW-1:0] size_t;\r\n\r\n   typedef enum {\r\n      TXN_0,\r\n      TXN_1,\r\n      TXN_2,\r\n      TXN_3,\r\n      TXN_4,\r\n      TXN_5,\r\n      TXN_6,\r\n      TXN_7\r\n   } txn_type_t;\r\nendpackage\r\n\r\nimport z_pkg::*;\r\n\r\nclass Packet;\r\n   rand txn_type_t   req_txn_type;\r\n   rand size_t       size;\r\n   rand address_t    address;\r\n\r\n   constraint con_address {\r\n      req_txn_type inside {TXN_1, TXN_2, TXN_3, TXN_4, TXN_5} -> address%(1<<size) == 0;\r\n      req_txn_type inside {TXN_6, TXN_7} -> address%(1<<10) == 0;\r\n   }\r\n\r\n   static function Packet generate_txn(txn_type_t txn_type);\r\n      Packet txn = new;\r\n      int success = txn_type == TXN_0 ? txn.randomize() :\r\n                                        txn.randomize() with { req_txn_type == txn_type;\r\n                                                               size == 6; };\r\n      assert(success != 0);\r\n      return txn;\r\n   endfunction // generate_txn\r\nendclass\r\n\r\nmodule t (/*AUTOARG*/);\r\n\r\n   Packet p;\r\n\r\n   int v;\r\n\r\n   initial begin\r\n      p = Packet::generate_txn(TXN_1);\r\n\r\n      $write(\"*-* All Finished *-*\\n\");\r\n      $finish;\r\n   end\r\nendmodule\r\n```\r\n\r\nWhat 'verilator' command line do we use to run your example?\r\n\r\n`test_regress/../bin/verilator --prefix Vt_constraint_operators ../obj_vlt/t_constraint_operators/Vt_constraint_operators__main.cpp --exe --make gmake --x-assign unique -cc -Mdir obj_vlt/t_constraint_operators --fdedup --debug-check --comp-limit-members 10 --clk clk  -f input.vc +define+TEST_OBJ_DIR=obj_vlt/t_constraint_operators +define+TEST_DUMPFILE=obj_vlt/t_constraint_operators/simx.vcd t/t_constraint_operators.v`\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\n`v5.029-gcdfb2221b`\r\n\r\nWhat OS and distribution are you using?\r\n\r\n`Linux 5.14.0-427.31.1.el9_4.x86_64`",
+  "labels": [
+    "status: ready",
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-30",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8021,
+  "issue_url": "https://github.com/llvm/circt/issues/8021",
+  "title": "[ImportVerilog] Support handling the slang::ast::StatementBlockSymbol.",
+  "body": "Now, we ignore statement block symbols. But in some cases, we'll trigger the dominance error. For example:\n```\nmodule top_module;\n    always @(*) begin\n        integer j;\n        for(j = 0; j < 4; j++);\n    end \nendmodule\n```\n**Error:**\n``` cxx\nforLoop.sv:2:12: error: operand #0 does not dominate this use\n    always @(*) begin\n           ^\nforLoop.sv:2:12: note: see current operation: %20 = \"moore.read\"(%0) : (!moore.ref<l32>) -> !moore.l32\nforLoop.sv:3:17: note: note: operand defined here (op in a parent region)\n        integer j;\n```\nor\n```\nmodule top_module;\n    always @(*) begin\n        for(int i = 0;i<4;i++);\n    end\nendmodule\n```\n**Error:**\n```cxx\nforLoop.sv:2:12: error: operand #0 does not dominate this use\n    always @(*) begin\n           ^\nforLoop.sv:2:12: note: see current operation: %9 = \"moore.read\"(%1) : (!moore.ref<i32>) -> !moore.i32\nforLoop.sv:3:17: note: operand defined here (op in a parent region)\n        for(int i = 0;i<4;i++);\n```\n\nThis error is caused by the `moore.wait_event`. When we handle `always @(*)`, we must ensure which signal will lead to recalculating the whole always block. If we declare `integer j` out of the always block, we can generate the following Moore IR:\n```\nmodule {\n  moore.module @top_module() {\n    %j = moore.variable : <l32>\n    moore.procedure always {\n      moore.wait_event {\n        %10 = moore.read %j : <l32>\n        moore.detect_event any %10 : l32\n      }\n      %0 = moore.constant 0 : i32\n      %1 = moore.conversion %0 : !moore.i32 -> !moore.l32\n      moore.blocking_assign %j, %1 : l32\n      cf.br ^bb1\n    ^bb1:  // 2 preds: ^bb0, ^bb3\n      %2 = moore.read %j : <l32>\n      %3 = moore.constant 4 : i32\n      %4 = moore.conversion %3 : !moore.i32 -> !moore.l32\n      %5 = moore.slt %2, %4 : l32 -> l1\n      %6 = moore.conversion %5 : !moore.l1 -> i1\n      cf.cond_br %6, ^bb2, ^bb4\n    ^bb2:  // pred: ^bb1\n      cf.br ^bb3\n    ^bb3:  // pred: ^bb2\n      %7 = moore.read %j : <l32>\n      %8 = moore.constant 1 : l32\n      %9 = moore.add %7, %8 : l32\n      moore.blocking_assign %j, %9 : l32\n      cf.br ^bb1\n    ^bb4:  // pred: ^bb1\n      moore.return\n    }\n    moore.output\n  }\n}\n```\nThe `%10 = moore.read %j : <l32>` means that we must have already created the `%j = moore.variable : <l32>`. So I think maybe we don't ignore `slang::ast::StatementBlockSymbol`.",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2024-12-30",
+  "closed_at": null,
+  "code_blocks": [
+    "module top_module;\n    always @(*) begin\n        integer j;\n        for(j = 0; j < 4; j++);\n    end \nendmodule\n",
+    "or\n",
+    "**Error:**\n",
+    "\nThis error is caused by the `moore.wait_event`. When we handle `always @(*)`, we must ensure which signal will lead to recalculating the whole always block. If we declare `integer j` out of the always block, we can generate the following Moore IR:\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3479,
+  "issue_url": "https://github.com/llvm/circt/issues/3479",
+  "title": "[reduce] Try reductions on promising ops first",
+  "body": "It would be great if `circt-reduce` would try to apply reductions on the \"juiciest\" operations first, to hopefully get the input size down quickly.\r\n\r\nCurrently the reducer walks the IR, considering only ops to which the current reduction applies, numbers them, and applies the reduction to those ops whose number are inside the current \"reduction chunk\". The chunks get progressively smaller, in a binary search like pattern, to try and get rid of large consecutive chunks of ops quickly.\r\n\r\nHowever, the ops are just considered in the order in which they appeared in the IR. It would be great if `Reduction::match` could not only indicate if it applies to an op, but also return a measure of the expected benefit of successfully applying the reduction. That could be just an unsigned number, where 0 indicates \"doesn't apply\", and >0 indicates the expected benefit. The *instance-stubber* or *module-externalizer* reduction could return the (recursive) number of ops in the instantiated module as a benefit, since turning a large `firrtl.module` into a `firrtl.extmodule` is going to have a huge impact on the input.\r\n\r\nInstead of directly walking the IR and numbering ops here\r\nhttps://github.com/llvm/circt/blob/eb624a76fada2058daa11c4496d5323531d1adea/tools/circt-reduce/circt-reduce.cpp#L181-L198\r\nthe reducer could instead collect them along with the reported benefit into a vector, sort the vector by decreasing benefit, and then apply the reduction to the current range of vector indices selected by `rangeBase, rangeLength`.\r\n\r\nAs a result, I would expect the reducer to try to get rid of the heaviest modules first, which should lead to a much more significant reduction early on. Also, since the benefit is likely so somewhat correlate with how \"entangled\" an op is in the design (e.g. small leaf modules have a small benefit, large aggregate top-level modules a large benefit), the reducer should be much more effective at pruning off the tail end of the low-benefit reductions. For example, in the second and third reduction iteration the ops have been split into two groups which are processed one after the other. In this case the reduction is likely to fail on the first half (which contains all the high-benefit reductions, likely containing the bug to be reduced), but then is likely to succeed in the second half (which contains all the low-benefit reductions).\r\n\r\n### Todo\r\n- [ ] Make `Reduction::match(Operation *)` return a benefit measure instead of a boolean\r\n- [ ] Make the `ModuleExternalizer` and `InstanceStubber` reductions return a benefit from `match` computed as the number of instructions in the module (ideally transitively, counting submodules as well)\r\n- [ ] Make [pattern application](https://github.com/llvm/circt/blob/eb624a76fada2058daa11c4496d5323531d1adea/tools/circt-reduce/circt-reduce.cpp#L181-L198) aggregate ops and their benefit returned from `match(...)` into a vector, e.g. as int-op pair\r\n- [ ] Sort the vector by benefit, high benefit first\r\n- [ ] Apply reduction on the `rangeBase .. rangeBase+rangeLength` subrange of the vector",
+  "labels": [
+    "good first issue",
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-06",
+  "closed_at": "2022-07-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

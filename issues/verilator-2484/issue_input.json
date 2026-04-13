@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2484,
+  "issue_url": "https://github.com/verilator/verilator/issues/2484",
+  "title": "Module parameters of different bit-width get conflated",
+  "body": "Given that SystemVerilog seems to respect bit-width of parameters (e.g., it's possible to use $bits on them), I would expect instances of the same module differing only by bit-width of a parameter value to be distinct.\r\nVerilator seems to conflate them (likely by caching on bit-agnostic parameter values).\r\n\r\nHow to reproduce:\r\n```\r\nmodule bus(input clk);\r\n  socket #(3'b000) s0();\r\n  socket #(3'b010) s1();\r\n  socket #(2'b10) s2();\r\n  socket #(2'b11) s3();\r\n\r\n  always_ff @ (posedge clk) begin\r\n    $finish;\r\n  end\r\nendmodule\r\n\r\nmodule socket #(addr)();\r\n  initial\r\n    $display(\"bits %d, addr %b\", $bits(addr), addr);\r\nendmodule\r\n```\r\n\r\nOutput:\r\n```\r\nbits           3, addr 000\r\nbits           3, addr 010\r\nbits           3, addr 010\r\nbits           2, addr 11\r\n```\r\nThe middle two instances get conflated, apparently because they only differ by a bit-width of their only parameter.\r\n\r\nUsing Verilator 4.020 devel rev v4.020-13-g58a42834.\r\n\r\nIf this is by specification, would be nice to generate a warning when merging instances, and an error when using $bits on a parameter.",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-25",
+  "closed_at": "2020-07-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

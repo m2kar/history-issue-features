@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7479,
+  "issue_url": "https://github.com/llvm/circt/issues/7479",
+  "title": "[Verif][Sim][Feature] Inline Simulation Tests",
+  "body": "Current testing infrastructure in CIRCT makes it inconvenient to express test intent in the IR, these thus often rely on external tools and/or libraries implemented in the front-end languages to write out simulation unit-tests.  \r\n\r\nSimilarly to the `verif.formal` ops and the [firrtl formal constructs](https://github.com/llvm/circt/pull/7374), we would like to be able to express simulation test code along-side the designs.  \r\n\r\nThis could potentially be done through the following steps:  \r\n\r\n1.  Create simulation test intent ops:  \r\n-   `verif.simulate @TestName { /* Procedural Region */ }` : Simulation intent op that has a referable symbol and exists at the top-level, similar to verif.formal. The main difference is that this op supports simulation ops and has a procedural region.  \r\n- [Optional] `sim.instance @DUT(...)`: potentially optional op that refers to an instance used in simulation. This can be interacted with through ops such as peek and poke. This could potentially be replaced with hw.instance mixed with block arguments to generate the original inputs, e.g.  \r\n```mlir\r\nverif.simulate @sim1 {  \r\n    ^bb0(%a: i1, %b: i1, %clk: !seq.clock):\r\n        %foo = hw.instance \"dut\" @Foo(clk: %clk : !seq.clock, a: %a : i1, b : %b : i1) -> (i1)\r\n        %true = hw.constant 1 : i1\r\n        sim.poke %a, %true : i1 // set a to 1\r\n        sim.poke %b, %true : i1 // set b to 1\r\n        sim.step %clk, 1 //; advance the clock by 1 cycle\r\n        sim.eval \"foo\" // commit the changes\r\n        %foo1 = sim.peek %foo : i1 // get the value of foo at that clock cycle\r\n        %cond = comb.icmp bin eq %foo1, %true: i1\r\n        verif.assert %cond : i1\r\n}\r\n```\r\n- `sim.peek`, `sim.poke` , `sim.eval`, `sim.step`: DUT interaction operations that allow to set and get i/o values at specific cylces. Peeks and steps are only committed during an `sim.eval`.\r\n\r\n2. Create a lowering from these ops to the arc dialect.  \r\n3. [potentially tricky] Update the verilog emission (in export verilog) to generate a testbench file for each simulation region and emits these as individual tests.  \r\n \r\nThere are of course various other issues to think about such as:\r\n- How can we represent control flow?  \r\n- How can we drive our test using arbitrary code blocks?  \r\n- How can we minimize the number of DPI calls made in our tests?  \r\n\r\nPlease feel free to reach out to me if you want to tackle this problem, this issue can hopefully be a good starting point to getting a working inline simulation test backend. Also feel free to comment on this issue if there are any other things that should be considered to solve this problem!",
+  "labels": [
+    "enhancement",
+    "Simulator",
+    "verif"
+  ],
+  "state": "open",
+  "created_at": "2024-08-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

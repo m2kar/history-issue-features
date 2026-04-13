@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7212,
+  "issue_url": "https://github.com/verilator/verilator/issues/7212",
+  "title": "Support `$sformat` with runtime format string",
+  "body": "Surprising no one has filed an issue before now, but `$sformat` currently only works with a fixed format string.\n\nShould fix UVM tests/70regs/90Mantis/6814\n\n```\n// verilog_format: off\n`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n`ifdef verilator\n `define no_optimize(v) $c(v)\n`else\n `define no_optimize(v) (v)\n`endif\n// verilog_format: on\n\nmodule t;\n\n  function string cvt2string(input int width, input int v);\n    string fmt;\n    $sformat(fmt, \"%0d'h%%%0dh\", width, (width - 1) / 4 + 1);\n    $sformat(cvt2string, {\"FMT=\", fmt}, v);\n    $display(\"Format '%s' -> '%s'\", fmt, cvt2string);\n  endfunction\n\n  initial begin\n    string s;\n\n    s = cvt2string(`no_optimize(2), `no_optimize(2 * 16));\n    `checks(s, \"FMT=2'h20\");\n\n    s = cvt2string(`no_optimize(14), `no_optimize(14 * 16));\n    `checks(s, \"FMT=14'h00e0\");\n\n    $finish;\n  end\n\nendmodule\n\n```",
+  "labels": [
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2026-03-07",
+  "closed_at": "2026-03-15",
+  "code_blocks": [
+    "// verilog_format: off\n`define stop $stop\n`define checks(gotv,expv) do if ((gotv) != (expv)) begin $write(\"%%Error: %s:%0d:  got='%s' exp='%s'\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n`ifdef verilator\n `define no_optimize(v) $c(v)\n`else\n `define no_optimize(v) (v)\n`endif\n// verilog_format: on\n\nmodule t;\n\n  function string cvt2string(input int width, input int v);\n    string fmt;\n    $sformat(fmt, \"%0d'h%%%0dh\", width, (width - 1) / 4 + 1);\n    $sformat(cvt2string, {\"FMT=\", fmt}, v);\n    $display(\"Format '%s' -> '%s'\", fmt, cvt2string);\n  endfunction\n\n  initial begin\n    string s;\n\n    s = cvt2string(`no_optimize(2), `no_optimize(2 * 16));\n    `checks(s, \"FMT=2'h20\");\n\n    s = cvt2string(`no_optimize(14), `no_optimize(14 * 16));\n    `checks(s, \"FMT=14'h00e0\");\n\n    $finish;\n  end\n\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

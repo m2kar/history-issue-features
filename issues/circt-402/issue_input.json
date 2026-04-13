@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 402,
+  "issue_url": "https://github.com/llvm/circt/issues/402",
+  "title": "[RTL] Strength reduce and constant fold comparisons (Verilator lint)",
+  "body": "This not a BUG\r\n\r\nAs part of an effort to make emitted Verilog Lint clean.\r\n\r\nThe following FIRRTL programs,\r\ncompiled with `firtool --lower-to-rtl` produces Verilog,\r\n`verilator --lint-only` reports the following Warning:\r\n\r\nTrue for all comparison operators.\r\n\r\n## %Warning-CMPCONST : Comparison is constant due to limited range\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output tmp28: UInt<1>\r\n    wire tmp11: UInt<1>\r\n    tmp11 <= UInt<1>(1)\r\n    tmp28 <= lt(tmp11, UInt<1>(1))\r\n```\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output tmp28);\r\n\r\n  wire tmp11;\t// a_top_mod.fir:4:5\r\n\r\n  assign tmp11 = 1'h1;\t// a_top_mod.fir:5:{11,14}\r\n  assign tmp28 = tmp11 < 1'h1;\t// a_top_mod.fir:2:3, :5:14, :6:14\r\nendmodule\r\n```\r\n\r\n```verilog\r\n%Warning-CMPCONST: a_top_mod_new.v:7:24: Comparison is constant due to limited range\r\n                                       : ... In instance top_mod\r\n    7 |   assign tmp28 = tmp11 < 1'h1;  \r\n      |                        ^\r\n                   ... Use \"/* verilator lint_off CMPCONST */\" and lint_on around source to disable this message.\r\n```\r\n\r\n## %Warning-UNSIGNED : Comparison is constant due to unsigned arithmetic\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_0: SInt<11>\r\n    output tmp12: UInt<1>\r\n    output tmp2: UInt<1>\r\n    wire tmp6: UInt<28>\r\n    tmp2 <= geq(SInt<13>(0), inp_0)\r\n    tmp6 <= mul(UInt<27>(1), tmp2)\r\n    tmp12 <= gt(UInt<1>(0), tmp6)\r\n```\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [10:0] inp_0,\r\n  output        tmp12, tmp2);\r\n\r\n  wire        _T;\t// a_top_mod.fir:3:3\r\n  wire [27:0] tmp6;\t// a_top_mod.fir:7:5\r\n\r\n  assign _T = $signed(13'h0) >= $signed({{2{inp_0[10]}}, inp_0});\t// a_top_mod.fir:8:{10,13,17}\r\n  assign tmp6 = {{27'd0}, _T} * 28'h1;\t// a_top_mod.fir:9:{10,13}\r\n  assign tmp12 = 28'h0 > tmp6;\t// a_top_mod.fir:3:3, :10:14\r\n  assign tmp2 = _T;\t// a_top_mod.fir:3:3, :10:14\r\nendmodule\r\n```\r\n\r\n```verilog\r\n%Warning-UNSIGNED: a_top_mod_new.v:10:24: Comparison is constant due to unsigned arithmetic\r\n                                        : ... In instance top_mod\r\n   10 |   assign tmp12 = 28'h0 > tmp6;  \r\n      |                        ^\r\n                   ... Use \"/* verilator lint_off UNSIGNED */\" and lint_on around source to disable this message.\r\n```\r\n",
+  "labels": [
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-05",
+  "closed_at": "2021-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

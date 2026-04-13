@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9491,
+  "issue_url": "https://github.com/llvm/circt/issues/9491",
+  "title": "[FIRRTL][SV] Inliner inlines an instance with an inner ref captured by sv.verbatim",
+  "body": "```mlir\nmodule {\n  firrtl.circuit \"Foo\" {\n    sv.verbatim \"{{0}}\" {symbols = [#hw.innerNameRef<@Foo::@sym>] }\n    firrtl.module private @Baz() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\n      %a = firrtl.wire interesting_name : !firrtl.uint<1>\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\n      firrtl.matchingconnect %a, %invalid_ui1 : !firrtl.uint<1>\n    }\n    firrtl.module @Foo() {\n      firrtl.instance baz sym @sym interesting_name @Baz()\n    }\n  }\n}\n\n$ circt-opt --firrtl-inliner\nmodule {\n  firrtl.circuit \"Foo\" {\n    sv.verbatim \"{{0}}\" {symbols = [#hw.innerNameRef<@Foo::@sym>]}\n    firrtl.module @Foo() {\n      %baz_a = firrtl.wire interesting_name : !firrtl.uint<1>\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\n      firrtl.matchingconnect %baz_a, %invalid_ui1 : !firrtl.uint<1>\n    }\n  }\n}\n\n```\n\n`@sym` doesn't exist anymore and raises an error in ExportVerilog. \nIt also passes a verifier because sv.verbatim doesn't implement InnerRefUserOpInterface",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-01-22",
+  "closed_at": null,
+  "code_blocks": [
+    "module {\n  firrtl.circuit \"Foo\" {\n    sv.verbatim \"{{0}}\" {symbols = [#hw.innerNameRef<@Foo::@sym>] }\n    firrtl.module private @Baz() attributes {annotations = [{class = \"firrtl.passes.InlineAnnotation\"}]} {\n      %a = firrtl.wire interesting_name : !firrtl.uint<1>\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\n      firrtl.matchingconnect %a, %invalid_ui1 : !firrtl.uint<1>\n    }\n    firrtl.module @Foo() {\n      firrtl.instance baz sym @sym interesting_name @Baz()\n    }\n  }\n}\n\n$ circt-opt --firrtl-inliner\nmodule {\n  firrtl.circuit \"Foo\" {\n    sv.verbatim \"{{0}}\" {symbols = [#hw.innerNameRef<@Foo::@sym>]}\n    firrtl.module @Foo() {\n      %baz_a = firrtl.wire interesting_name : !firrtl.uint<1>\n      %invalid_ui1 = firrtl.invalidvalue : !firrtl.uint<1>\n      firrtl.matchingconnect %baz_a, %invalid_ui1 : !firrtl.uint<1>\n    }\n  }\n}\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

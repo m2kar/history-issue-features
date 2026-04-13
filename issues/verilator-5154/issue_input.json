@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5154,
+  "issue_url": "https://github.com/verilator/verilator/issues/5154",
+  "title": "Read & write (AXI-Lite) register using DPI-C imported function/task",
+  "body": "Verilator does not allow DPI-C imported tasks cannot pass simulation time, else they get deadlocked as per this issue: #4225, unlike other simulators (Vivado xsim...).\r\n\r\n### My use case:\r\nI am building an SV design that runs on the FPGA & controlled by the host ARM processor running a custom C firmware. I am using Verilator and Vivado Xsim to test them together in simulation. I have built the firmware as a set of C functions, and I call them from a main SystemVerilog testbench via DPI-C.\r\n\r\nEverything works fine, except writing into an AXI-lite register bank from the C firmware. Since the register bank is in SystemVerilog and not memory mapped to C's memory space, I need to export an SV function/task, import it in C, and use it to read & write to the register. But **writing to AXI-Lite register takes one or more clock cycles**, and the SV task I import in C cannot pass time, due to the above Verilator issue.\r\n\r\n### Workaround\r\n\r\nMy current workaround is to directly update the memory in SV function, bypassing AXI-Lite as follows:\r\n\r\n#### SV testbench\r\n```sv\r\nexport \"DPI-C\" function get_config;\r\nexport \"DPI-C\" function set_config;\r\nfunction integer get_config(input integer offset);\r\n  return dut.axi_lite_controller.cfg[offset];\r\nendfunction\r\n\r\nfunction void set_config(input integer offset, input integer data);\r\n  dut.axi_lite_controller.cfg[offset] = data;\r\nendfunction\r\n```\r\n\r\n#### C firmware\r\n```c\r\n#ifdef SIM\r\n  extern int32_t get_config(int32_t offset);\r\n  extern void set_config(int32_t offset, int32_t data);\r\n#else // when running on FPGA\r\n  int32_t get_config(int32_t offset){\r\n    return *((int32_t*)(CONFIG_BASEADDR + offset));\r\n  }\r\n  void set_config(int32_t offset, int32_t data){\t\r\n    *((int32_t*)(CONFIG_BASEADDR + offset)) = data;\r\n  }\r\n#endif\r\n\r\nvoid runtime() {\r\n // ...\r\n int conf3 = get_config(3);\r\n set_config(3, 27);\r\n // ...\r\n}\r\n```\r\n\r\n### Problem:\r\n\r\nBut this does not verify the AXI-Lite pipeline, which makes me uncomfortable. Is there a way I can call `get_config(offset)` and `set_config(offset, data)` from C, to read & write from AXI-Lite register bank?",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-03",
+  "closed_at": "2024-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

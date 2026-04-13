@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1071,
+  "issue_url": "https://github.com/verilator/verilator/issues/1071",
+  "title": "Array assignment and comparison don't use full array value",
+  "body": "---\n\n\nAuthor Name: **Andrew Bardsley**\nOriginal Redmine Issue: 1071 from https://www.veripool.org\nOriginal Date: 2016-07-05\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nComparisons of memory arrays don't yield the correct result as it seems only the 0-index elements of the arrays are compared. Also, it is possible to assign a reg from a whole array. This results in the reg getting element 0's value.\r\n\r\n```\r\nreg [3:0] array_1 [2:0];\r\nreg [3:0] array_2 [2:0];\r\nreg [3:0] elem;\r\nreg array_1_ne_array_2;\r\n\r\n// Comparisons only compare elements 0\r\narray_1_ne_array_2 = array_1 != array_2;\r\n \r\n// Assigns element 0\r\nelem = array_1;\r\n\n```\r\n\r\nThe code generated for these statements is:\r\n\r\n```\r\n    vlTOPp->top__DOT__array_1_ne_array_2 = (vlTOPp->top__DOT__array_1\r\n\t\t\t\t\t    [0U] != \r\n\t\t\t\t\t    vlTOPp->top__DOT__array_2\r\n\t\t\t\t\t    [0U]);\r\n\r\n     vlTOPp->top__DOT__elem = vlTOPp->top__DOT__array_1\r\n\t[0U];\r\n\n```\r\n\r\nTested with version 3.884 and git 891214fa72e6b0b72e23e119266b1792efc1ea1b\r\n\r\nRunning the same example on Questasim yields:\r\n\r\n```\r\n** Error: multidim_array_compare.sv(27): Illegal assignment to type 'reg[3:0]' from type 'reg[3:0] $[2:0]': Cannot assign an unpacked type to a packed type.\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2016-07-05",
+  "closed_at": "2016-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

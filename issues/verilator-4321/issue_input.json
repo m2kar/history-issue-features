@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4321,
+  "issue_url": "https://github.com/verilator/verilator/pull/4321",
+  "title": "Fix/Improve propagation of process",
+  "body": "This PR aims to solve issues related to \"process propagation\". That is creating and passing the extra `vlProcess` argument between functions.\r\n\r\nThe changes are:\r\n* **Decoupling process propagation from suspendability propagation**. Suspendability and needsProcess are two properties that are propagated in V3Tming through AST. They change the signatures of generated functions and they propagate with certain rules that ensure that the generated code does not contain mismatches between signatures and is logically equivalent to the System Verilog input. The current solution assumed that needsProcess implies suspendability. However, this is simply not true. It might've worked in some cases, given that runtime cost aside, marking a function as suspendable, even if it doesn't suspend, does not cause problems. However, this is not a case for constructors, as they simply cannot be turned into coroutines. They are not allowed to be suspendable at all.\r\n\r\n* **Support passing `vlProcess` as constructor argument**. The code responsible for generating calls to constructors uses some hardcoded elements to create a call. Those did not take into account a possibility that a constructor might require a process. My proposed change also takes into account the possibile need of passing `vlProcess` to constructor's initializer list.\r\n\r\n* **Other changes to the logic of process propagation**\r\n  * Processes are now passed down (from caller to callee) to reach all suspendable callees. This ensures that we pass the correct `vlProcess` to the scheduler when we are waiting.\r\n  * If a callee needs a process, but we don't, we instantiate the process in our own scope, so the same process will be passed to any number of callees that require it (unless those are forked, then they get a new `VlProcess`).\r\n\r\n* **Improved graph dumps**. Given that this PR modifies the graphs, there are slight cosmetic/debug changes made to the graphs. Methods get names that make it easier to identify them. The colors of nodes also differentiate between sources of propagation and nodes to which a property got propagated.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-27",
+  "closed_at": "2023-07-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

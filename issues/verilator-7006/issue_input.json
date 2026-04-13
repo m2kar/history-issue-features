@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7006,
+  "issue_url": "https://github.com/verilator/verilator/pull/7006",
+  "title": "Fix parameterized class typedef as interface type parameter (#7000)",
+  "body": "Fixes #7000\n\n## Summary\n\nFix resolution of parameterized class typedefs when used as interface type parameters.\nIssues #5461 and #5977 were already fixed upstream, so this PR now focuses solely on #7000.\n\nWhen a DOT expression like `X::td_t` is processed in `resolveDotToTypedef()`, `X` may point\nto a `ParamTypeDType` (the interface's type parameter) whose value contains a `ClassRefDType`.\nThe existing code only checked `classRefp->paramsp()` for specialization, missing the\nindirection through the type parameter.\n\n### Pattern fixed\n```systemverilog\nclass C #(parameter type T = logic);\n  typedef struct packed { T data; } td_t;\nendclass\n\ninterface outer #(parameter type X = C#(logic));\n  inner #(.P(X::td_t)) i();  // was: Can't find typedef: 'td_t'\nendinterface\n\nmodule top;\n  outer #(.X(C#(logic[7:0]))) inst();  // now works\nendmodule\n```\n\n### Changes\n\n- **V3Param.cpp**: `resolveDotToTypedef()` — handle `ParamTypeDType` targets by traversing\n  to the underlying `ClassRefDType` and calling `classRefDeparam()` to specialize the class\n- **V3Param.cpp**: `resolveParamClassRefDType()` — new helper to resolve deferred `RefDType`\n  nodes through parameterized class typedef chains; called from `cellPinCleanup()` for both\n  value and type parameter pins\n- **V3Param.cpp**: `cellPinCleanup()` — deparameterize `ClassRefDType` type parameter\n  expressions before comparison and name generation\n- **V3AstNodeDType.h** / **V3AstNodes.cpp**: `AstClassRefDType::similarDTypeNode()` — moved\n  out-of-line and extended to compare type parameter lists using `similarDType` (not `sameTree`)\n\n### Test\n\n`t_iface_param_class_type[_noinl]` — exercises 1-level and 2-level interface nesting,\ndefault type parameters, and multiple type parameters accessing different typedefs from\nthe same parameterized class.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-06",
+  "closed_at": "2026-04-13",
+  "code_blocks": [
+    "class C #(parameter type T = logic);\n  typedef struct packed { T data; } td_t;\nendclass\n\ninterface outer #(parameter type X = C#(logic));\n  inner #(.P(X::td_t)) i();  // was: Can't find typedef: 'td_t'\nendinterface\n\nmodule top;\n  outer #(.X(C#(logic[7:0]))) inst();  // now works\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

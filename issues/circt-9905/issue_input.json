@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9905,
+  "issue_url": "https://github.com/llvm/circt/pull/9905",
+  "title": "[CoreToFSM] Fix infinite loop in GuardConditionFoldPattern on constants",
+  "body": "\r\nThe following example would hang before in CoreToFSM:\r\n\r\n```mlir\r\nhw.module @constant_guard_no_hang(in %clk : !seq.clock, in %rst : i1, in %x : i1, out count : i2) {\r\n    %c0_i2 = hw.constant 0 : i2\r\n    %c1_i2 = hw.constant 1 : i2\r\n    %false = hw.constant false\r\n    %true = hw.constant true\r\n    %state_is_0 = comb.xor %state, %true : i1\r\n    %go_to_1 = comb.and %x, %state_is_0 : i1\r\n    %next_state = comb.mux %state, %false, %go_to_1 : i1\r\n    %state = seq.compreg name \"state\" %next_state, %clk reset %rst, %false : i1\r\n    %counter_plus_1 = comb.add %counter, %c1_i2 : i2\r\n    %not_x = comb.xor %x, %true : i1\r\n    %next_counter = comb.mux %not_x, %counter_plus_1, %counter : i2\r\n    %counter = seq.compreg name \"counter\" %next_counter, %clk reset %rst, %c0_i2 : i2\r\n    hw.output %counter : i2\r\n}\r\n```\r\n\r\n\r\nTo cause it not to hang, add the following change:\r\n\r\n\r\n```cpp\r\n if (isa<hw::ConstantOp>(op))\r\n      return failure();\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-11",
+  "closed_at": "2026-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

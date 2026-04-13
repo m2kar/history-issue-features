@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4111,
+  "issue_url": "https://github.com/verilator/verilator/issues/4111",
+  "title": "String `substr()` method returns wrong result under very specifc circumstances",
+  "body": "I have the following code:\r\n\r\n```\r\n// file test.sv\r\n\r\nclass string_utils;\r\n\r\n  typedef string array_of_string[];\r\n\r\n\r\n  static function array_of_string split_by_dash(string s);\r\n    string parts[$];\r\n    int last_char_position = -1;\r\n\r\n    for (int i = 0; i < s.len(); i++) begin\r\n      if (i == s.len()-1) begin\r\n        parts.push_back(s.substr(last_char_position+1, i));\r\n      end\r\n\r\n      // Can't remove this, because then the code will work\r\n      if (string'(s[i]) == \"-\") begin\r\n        parts.push_back(s.substr(last_char_position+1, i-1));\r\n        last_char_position = i;\r\n      end\r\n    end\r\n\r\n    return parts;\r\n  endfunction\r\n\r\nendclass\r\n\r\n\r\nclass filter;\r\n\r\n  local static filter single_instance;\r\n\r\n\r\n  static function filter get();\r\n    if (single_instance == null)\r\n      single_instance = new();\r\n    return single_instance;\r\n  endfunction\r\n\r\n\r\n  local function new();\r\n    string parts[] = string_utils::split_by_dash(\"*\");\r\n    \r\n    if (parts.size() != 1)\r\n      $fatal(0, \"Expected single element\");\r\n    if (parts[0] != \"*\")\r\n      $fatal(0, \"Expected element to be *\");\r\n  endfunction\r\n\r\nendclass\r\n\r\n\r\nconst filter _filter = filter::get();\r\n```\r\n\r\nWhen I compile and run with `verilator --binary test.sv && obj_dir/Vtest` I get:\r\n\r\n```\r\n[0] %Fatal: test.sv:46: Assertion failed in TOP.$unit.filter.new: Expected element to be *\r\n%Error: test.sv:46: Verilog $stop\r\nAborting...\r\n```\r\n\r\nThe code essentially tries to split the single character string `\"*\"` by dashes, which should just return an array containing `\"*\"`. This generally works, I've tried to test `split_by_dash()` (more specifically the function I extracted it from) in isolation and I got the expected result. The function uses `substr()` to compute the parts. In this concrete case, `s.substr(last_char_position+1, i)` (which \"expands\" to `\"*\".substr(-1+1, 0)`) returns an empty string, instead of the string itself.\r\n\r\nThis is the smallest code I could manage that reproduces the issue. Removing the dead code (marked with the comment), which compares against the dash, leads to the first `substr` working as expected (i.e. returning `\"*\"`). Moving the code from `new()` into the static `get()` function causes `split_by_dash()` to return an empty array (though I didn't debug this thoroughly and might warrant an own issue). What I'm trying to say is that I don't see how to make the code much smaller.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-12",
+  "closed_at": "2023-04-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

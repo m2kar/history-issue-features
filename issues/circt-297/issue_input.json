@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 297,
+  "issue_url": "https://github.com/llvm/circt/issues/297",
+  "title": "[CMAKE] CIRCT targets not exported",
+  "body": "When using CIRCT from other cmake projects, another project should be able to use CIRCT like so:\r\n\r\n```cmake\r\nproject(my-circuit-project ...)\r\nfind_package(CIRCT REQUIRED CONFIG)\r\nadd_executable(my-tool)\r\ntarget_link_libraries(my-tool PUBLIC MLIRFIRRTL)\r\n```\r\nThe `find_package()` command loads `CIRCTConfig.cmake`, which in turn loads `CIRCTTargets.cmake`. `CIRCTTargets` is where all targets exported from CIRCT must be listed. `CIRCTTargets.cmake` must be populated somewhat manually. In MLIR and CIRCT, we export every target in `${MLIR_EXPORTS}` and `${CIRCT_EXPORTS}`, respectively:\r\n```cmake\r\n# Generate a list of CMake library targets so that other CMake projects can\r\n# link against them. LLVM calls its version of this file LLVMExports.cmake, but\r\n# the usual CMake convention seems to be ${Project}Targets.cmake.\r\nget_property(CIRCT_EXPORTS GLOBAL PROPERTY CIRCT_EXPORTS)\r\nexport(TARGETS ${CIRCT_EXPORTS} FILE ${circt_cmake_builddir}/CIRCTTargets.cmake)\r\n```\r\n\r\nIn CIRCT, since we are using `add_mlir_library()` and friends, the `${CIRCT_EXPORTS}` variable is actually empty, while `${MLIR_EXPORTS}` contains all our targets. This means that `CIRCTTargets.cmake` is empty, and `find_package(CIRCT)` does not allow anyone to link against CIRCT libraries. We can change `CIRCTTargets.cmake` to export `MLIR_EXPORTS` instead, but that may be problematic if we try to build in alongside MLIR in the LLVM mono-repo.  (I'm guessing we will start exporting all MLIR targets, and have problems with double-exporting targets from the build tree).\r\n\r\nA better long term solution might be to add `add_circt_library()`.  These functions can start off as thin wrappers around `add_mlir_library()` which also populate `CIRCT_EXPORTS`.  Eventually, we might customize them more, such as adding the ability to run `clang-tidy` on just CIRCT libraries.  This might make it easier to transition to the llvm mono-repo in the long run.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-12-02",
+  "closed_at": "2020-12-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

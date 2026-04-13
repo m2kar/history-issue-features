@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5584,
+  "issue_url": "https://github.com/verilator/verilator/pull/5584",
+  "title": "Fix scope identifiers being decoded twice",
+  "body": "This PR fixes an issue in V3EmitCSyms phase where scope identifiers were decoded twice, where only one special-character decoding is sufficient.\r\n\r\nThis bug appears when a scope identifier name has a group of characters that look like encoded character, for instance `__0_`.\r\nThose characters were then decoded twice (by `AstNode::prettyName` and `scopeDecodeIdentifier`) causing VPI name mismatches and, in case of `__0_`, compilation errors:\r\n\r\n```cpp\r\nIn file included from Vt_vpi_escape__ALL.cpp:10:\r\n./Vt_vpi_escape__Syms.cpp:37:91: error: no viable conversion from 'basic_string<char>' to 'const char *'\r\n   37 |     __Vscope_t__02ehas__02edots_____05F_0_.configure(this, name(), \"\\\\t.has.dots .___0_\", \"_\\000\"s, -12, VerilatedScope::SCOPE_MODULE);\r\n      |                                                                                           ^~~~~~~~\r\n../../../include/verilated.h:724:32: note: passing argument to parameter 'identifier' here\r\n  724 |                    const char* identifier, int8_t timeunit, const Type& type) VL_MT_UNSAFE;\r\n      |                                ^\r\n1 error generated.\r\n```\r\n\r\nThis particular error was caused by [putsQuoted](https://github.com/verilator/verilator/blob/7854118883cdce48124cb92962f9a27626e2345a/src/V3File.cpp#L836) that appended C++14 string literal suffix to the string with null byte character that arose after the second decoding.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-04",
+  "closed_at": "2024-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

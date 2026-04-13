@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7263,
+  "issue_url": "https://github.com/verilator/verilator/pull/7263",
+  "title": "Fix array reduction in constraints crashing with class inheritance (#7226)",
+  "body": "## Summary\r\nFixes #7226. This patch fixes an internal error (`V3Scope.cpp: Can't locate varref scope`) when using array reduction methods (`.sum()`, `.xor()`, etc.) inside constraints in a class that extends another class. The regression was introduced in #7108.\r\n\r\n## Reproducer\r\n```systemverilog\r\nclass Base;\r\n  rand int base_val;\r\n  constraint c_base { base_val inside {[1:100]}; }\r\nendclass\r\n\r\nclass Derived extends Base;\r\n  rand int arr[];\r\n  constraint c_size { arr.size() == 4; }\r\n  constraint c_sum { arr.sum() == 200; }\r\n  function new();\r\n    arr = new[4];\r\n  endfunction\r\nendclass\r\n\r\nmodule t;\r\n  initial begin\r\n    Derived d = new();\r\n    if (d.randomize()) $display(\"PASS\");\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\n%Error: Internal Error: ../V3Scope.cpp:88: Can't locate varref scope\r\n```\r\n\r\n## Changes\r\n- `src/V3Randomize.cpp`: In the array reduction constraint handler, the `classOrPackagep` for the randomizer (`m_genp`) VarRef was incorrectly set to `m_classp` (the derived class), but `m_genp` is always declared in the root base class. Changed to use `VN_AS(m_genp->user2p(), NodeModule)` which correctly resolves to the declaring class, consistent with all other `m_genp` VarRef sites in the file.\r\n- `src/V3Randomize.cpp`: Similarly fixed the `arrVarp` VarRef to use `VN_AS(arrVarp->user2p(), NodeModule)` so inherited array variables also resolve correctly.\r\n\r\n## Test\r\n- Added `test_regress/t/t_constraint_array_reduction_inherit.{v,py}` -- tests `.sum()` and `.or()` reduction in constraints with single and multi-level class inheritance.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-16",
+  "closed_at": "2026-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6936,
+  "issue_url": "https://github.com/verilator/verilator/issues/6936",
+  "title": "Interface localparam dependencies and arbitrary nesting",
+  "body": "Spin off from #6872 that will ultimately make fixing that simpler.\n\nThe below fails (along with most dependent and nested interface localparam assignments).  I have working in my sandbox arbitrary nesting and dependent assignments as well as hierarchical access.  Will take me some time yet to get it cleaned up.\n\n```\npackage sc;\n  typedef struct packed {\n    int unsigned Capacity;\n    int unsigned LineSize;\n  } cfg_t;\nendpackage\n\ninterface simple_cache_types_if #(\n  parameter sc::cfg_t cfg = 0\n)();\n\n  localparam int  SC_NUM_LINES = cfg.Capacity / cfg.LineSize;\n\n  typedef logic [(cfg.Capacity / cfg.LineSize)-1:0] sc_num_lines_t;\n\nendinterface\n\ninterface simple_cache_if #(\n  parameter sc::cfg_t cfg = 0\n)();\n  simple_cache_types_if #(cfg) types();\n\nendinterface\n\nmodule simple_cache #(parameter sc::cfg_t cfg=0) (\n  simple_cache_if io\n);\n\n  localparam int  SC_NUM_LINES = io.types.SC_NUM_LINES;\n\n  typedef io.types.sc_num_lines_t sc_num_lines_t;\n\n  initial begin\n    #1;\n    $display(\"SC_NUM_LINES = %d\", SC_NUM_LINES);  // <--- this evaluates to 'x'\n    $display(\"bits SC_NUM_LINES = %d\", $bits(sc_num_lines_t));  // <--- this correctly evalulates to '16'\n    `checkd(SC_NUM_LINES, 16);\n    `checkd($bits(sc_num_lines_t), 16);\n  end\nendmodule\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-16",
+  "closed_at": "2026-03-03",
+  "code_blocks": [
+    "package sc;\n  typedef struct packed {\n    int unsigned Capacity;\n    int unsigned LineSize;\n  } cfg_t;\nendpackage\n\ninterface simple_cache_types_if #(\n  parameter sc::cfg_t cfg = 0\n)();\n\n  localparam int  SC_NUM_LINES = cfg.Capacity / cfg.LineSize;\n\n  typedef logic [(cfg.Capacity / cfg.LineSize)-1:0] sc_num_lines_t;\n\nendinterface\n\ninterface simple_cache_if #(\n  parameter sc::cfg_t cfg = 0\n)();\n  simple_cache_types_if #(cfg) types();\n\nendinterface\n\nmodule simple_cache #(parameter sc::cfg_t cfg=0) (\n  simple_cache_if io\n);\n\n  localparam int  SC_NUM_LINES = io.types.SC_NUM_LINES;\n\n  typedef io.types.sc_num_lines_t sc_num_lines_t;\n\n  initial begin\n    #1;\n    $display(\"SC_NUM_LINES = %d\", SC_NUM_LINES);  // <--- this evaluates to 'x'\n    $display(\"bits SC_NUM_LINES = %d\", $bits(sc_num_lines_t));  // <--- this correctly evalulates to '16'\n    `checkd(SC_NUM_LINES, 16);\n    `checkd($bits(sc_num_lines_t), 16);\n  end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

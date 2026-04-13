@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8420,
+  "issue_url": "https://github.com/llvm/circt/pull/8420",
+  "title": "[FIRRTL][SV] Add fflush operation",
+  "body": "Add support for fflush operation in FIRRTL and SV dialects. This operation maps to SystemVerilog's $fflush system task, which flushes buffered output to files.\r\n\r\nThe implementation adds FFlushOp to FIRRTL dialect with clock, condition operands and optional filename with substitutions, adds FFlushOp to SystemVerilog dialect with optional file descriptor, implements lowering from FIRRTL to SystemVerilog, guards fflush with #ifndef SYNTHESIS like other simulation constructs, and adds visitor pattern support in both dialects.\r\n\r\nSimilar to StopOp in implementation pattern and behavior.\r\n\r\n```scala\r\ncircuit PrintTest:\r\n  public module PrintTest :\r\n    input clock : Clock\r\n    input cond : UInt<1>\r\n    input a : UInt<8>\r\n    node c = UInt<8>(97)\r\n    fflush(clock, cond)\r\n\r\n    fflush(clock, cond, \"{{SimulationTime}}%d.txt\", a)\r\n```\r\n\r\n```verilog\r\nmodule PrintTest(\r\n  input       clock,\r\n              cond,\r\n  input [7:0] a\r\n);\r\n\r\n  logic [31:0] ___circt_lib_logging3A3AFileDescriptor3A3Aget_0;\r\n  `ifndef SYNTHESIS\r\n    always @(posedge clock) begin\r\n      if ((`PRINTF_COND_) & cond) begin\r\n        $fflush(`PRINTF_FD_);\r\n        ___circt_lib_logging3A3AFileDescriptor3A3Aget_0 = __circt_lib_logging::FileDescriptor::get($sformatf(\"%0t%d.txt\",\r\n                                                                                                             $time,\r\n                                                                                                             a));\r\n        $fflush(___circt_lib_logging3A3AFileDescriptor3A3Aget_0);\r\n      end\r\n    end // always @(posedge)\r\n  `endif // not def SYNTHESIS\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-15",
+  "closed_at": "2025-04-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

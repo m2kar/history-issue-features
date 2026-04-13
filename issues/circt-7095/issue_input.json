@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7095,
+  "issue_url": "https://github.com/llvm/circt/pull/7095",
+  "title": "[Moore] Introduce RefType and tweak the related ops.",
+  "body": "Add a wrapper type(`moore::RefType`) to work for `VariableOp/NetOp`, `ReadOp`, and `AssignOpBase`, and it can wrap any SystemVerilog types. We added `RefType` in order to introduce `Mem2Reg` into `moore` to eliminate the local temporary variables. Meanwhile, we added a new op named `moore.extract_ref` which is the copy of `moore.extract` that explicitly works on the ref type. And `moore.concat_ref` is the copy of `moore.concat`. Later, we will tweak `union/struct` ops like `moore.struct_create` in order to support the `ref` type.\r\n\r\n`moore.variable/moore.net` will return a result with `ref<T>`, it's similar to `memref.alloca`.\r\n\r\nChange `moore::ReadLValueOp` to `moore::ReadOp`, it's similar to `memref.load`.  Initially, we need `moore.read_lvalue` only to service for assigmen operations(like `+=`, `*=`, etc).  However, `moore. read` is not only for assignment operations but also to take a value with `RefType`(ref<T>) and return the current value with the nested type(`T`). For example, `a = b + c`, `moore.read` will take `b` and `c`(both are `ref<T>`), and then return a value with the nested type(`T`).\r\n\r\nWe think the `MooreLValueType` and `VariableDeclOp`(https://github.com/llvm/circt/commit/52a71a681e8cdd1d38936b8f5e1bb5716babf9e5) that had been removed eventually found their proper site.\r\n\r\nWe also divide `convertExpression()` into `convertLvalueExpression()` for the LHS of assignments and `convertRvalueExpression()` for the RHS of assignments. The former will return a value with `RefType` like `ref<i32>`, but the latter returns a value without `RefType` like `i32`.",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-28",
+  "closed_at": "2024-06-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

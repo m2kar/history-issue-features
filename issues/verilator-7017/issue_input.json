@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7017,
+  "issue_url": "https://github.com/verilator/verilator/issues/7017",
+  "title": "Support class:: constant function references in elaboration",
+  "body": "In the following code:\n\n```SystemVerilog\nmodule test;\n    virtual class C #(parameter a = 0);\n        static function zero ();\n            return 0;\n        endfunction\n    endclass\n\n    localparam b = C#(0)::zero();\nendmodule\n```\n\n`verilator --lint-only test.sv`\n\n```\n%Error-UNSUPPORTED: test.sv:9:27: dotted expressions in parameters\n                                : ... note: In instance 'test'\n                                : ... Suggest use a typedef\n    9 |     localparam b = C#(0)::zero();\n      |                           ^~~~\n```\nI see the use of this message in [t_class_param_nested_bad.out](https://github.com/verilator/verilator/blob/3752102879c4545a372c2a21142385df9965fef2/test_regress/t/t_class_param_nested_bad.out#L4) only in context of dotted reference in a class parameter list, so maybe a false positive? `Wrap2 #(Wrap#(19)::PBASE * 2) w38;`\n\nIf `b` is not a parameter (e. g. `logic`): `logic b = C#(0)::zero();`, the error goes away. If class `C` is not parameterized, there's no error either.\n\nVersion:\n`Verilator 5.045 devel rev v5.044-154-gbbb231dfe (mod)`\n\nOS:\nArch Linux\n\nI'm planning on learning C++, but it would probably take months before I'll be able to understand what's going on and try to fix it.",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "open",
+  "created_at": "2026-02-08",
+  "closed_at": null,
+  "code_blocks": [
+    "module test;\n    virtual class C #(parameter a = 0);\n        static function zero ();\n            return 0;\n        endfunction\n    endclass\n\n    localparam b = C#(0)::zero();\nendmodule\n",
+    "%Error-UNSUPPORTED: test.sv:9:27: dotted expressions in parameters\n                                : ... note: In instance 'test'\n                                : ... Suggest use a typedef\n    9 |     localparam b = C#(0)::zero();\n      |                           ^~~~\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

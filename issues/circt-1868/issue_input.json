@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1868,
+  "issue_url": "https://github.com/llvm/circt/pull/1868",
+  "title": "[FIRRTL] Create a single FIRRTL memory from an aggregate data type ",
+  "body": "FIRRTL lowers a memory with an aggregate type into a new memory for every leaf element in the memory's data type.\r\nThis PR adds a flag to instead lower the memory  to a single new memory with flattened data type. \r\nThe data and mask bits need to be mapped to the new memory accordingly.\r\n\r\nBelow is an example of how the flattened memory is generated in verilog, \r\nIn this example, `SiFive_mem_ext` is the memory node with data ports of 32 bits.\r\nAnd `Sifive_mem` is how a module with `4` `8` bit elements in a vector is lowered by default. \r\nThe module body is an example of how the data ports and mask bits are lowered to the flattened memory.\r\n```verilog\r\nmodule SiFive_mem(\r\n  input  [12:0] RW0_addr,\r\n  input         RW0_en,\r\n  input         RW0_clk,\r\n  input         RW0_wmode,\r\n  input  [7:0]  RW0_wdata_0,\r\n  input  [7:0]  RW0_wdata_1,\r\n  input  [7:0]  RW0_wdata_2,\r\n  input  [7:0]  RW0_wdata_3,\r\n  output [7:0]  RW0_rdata_0,\r\n  output [7:0]  RW0_rdata_1,\r\n  output [7:0]  RW0_rdata_2,\r\n  output [7:0]  RW0_rdata_3,\r\n  input         RW0_wmask_0,\r\n  input         RW0_wmask_1,\r\n  input         RW0_wmask_2,\r\n  input         RW0_wmask_3\r\n);\r\n  wire [12:0] mem_ext_RW0_addr;\r\n  wire  mem_ext_RW0_en;\r\n  wire  mem_ext_RW0_clk;\r\n  wire  mem_ext_RW0_wmode;\r\n  wire [31:0] mem_ext_RW0_wdata;\r\n  wire [31:0] mem_ext_RW0_rdata;\r\n  wire [3:0] mem_ext_RW0_wmask;\r\n  wire [15:0] _GEN_0 = {RW0_wdata_3,RW0_wdata_2};\r\n  wire [15:0] _GEN_1 = {RW0_wdata_1,RW0_wdata_0};\r\n  wire [1:0] _GEN_2 = {RW0_wmask_3,RW0_wmask_2};\r\n  wire [1:0] _GEN_3 = {RW0_wmask_1,RW0_wmask_0};\r\n  SiFive_mem_ext mem_ext (\r\n    .RW0_addr(mem_ext_RW0_addr),\r\n    .RW0_en(mem_ext_RW0_en),\r\n    .RW0_clk(mem_ext_RW0_clk),\r\n    .RW0_wmode(mem_ext_RW0_wmode),\r\n    .RW0_wdata(mem_ext_RW0_wdata),\r\n    .RW0_rdata(mem_ext_RW0_rdata),\r\n    .RW0_wmask(mem_ext_RW0_wmask)\r\n  );\r\n  assign mem_ext_RW0_clk = RW0_clk;\r\n  assign mem_ext_RW0_en = RW0_en;\r\n  assign mem_ext_RW0_addr = RW0_addr;\r\n  assign RW0_rdata_0 = mem_ext_RW0_rdata[7:0];\r\n  assign RW0_rdata_1 = mem_ext_RW0_rdata[15:8];\r\n  assign RW0_rdata_2 = mem_ext_RW0_rdata[23:16];\r\n  assign RW0_rdata_3 = mem_ext_RW0_rdata[31:24];\r\n  assign mem_ext_RW0_wmode = RW0_wmode;\r\n  assign mem_ext_RW0_wdata = {_GEN_0,_GEN_1};\r\n  assign mem_ext_RW0_wmask = {_GEN_2,_GEN_3};\r\nendmodule\r\n```\r\n\r\nThis PR depends on https://github.com/llvm/circt/pull/1864\r\nThis is an alternate implementation for https://github.com/llvm/circt/pull/1832",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-09-23",
+  "closed_at": "2021-10-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

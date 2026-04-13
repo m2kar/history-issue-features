@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5107,
+  "issue_url": "https://github.com/llvm/circt/pull/5107",
+  "title": "[ExportVerilog] Transform anonymous enumerations in to typedefs",
+  "body": "Our Verilog output for anonymous enumeration is highly problematic:\r\nevery time we write out the type, the variants or members of the\r\nenumeration enter the global namespace.  This makes it impossible to\r\nhave multiple declarations share the same enumeration type.\r\n\r\nThis adds walk of all operations in the ModuleOp to find and replace all\r\nenumeration types used with typedefs.  The typedefs are automatically\r\ninjected into a typescope with the name \"Enums\".\r\n\r\nHere is an example of what that looks like:\r\n```verilog\r\nifndef _TYPESCOPE_Enums\r\n`define _TYPESCOPE_Enums\r\ntypedef enum bit [0:0] {enum0_A, enum0_B} enum0;\r\n`endif // _TYPESCOPE_Enums\r\n\r\nmodule EnumCmp(\r\n  input  enum0 test,\r\n  output       result\r\n)\r\n\r\n  assign result = test == enum0_A;\r\nendmodule\r\n```\r\n\r\nThis also adds support for 0 width typedecls, which allow us to comment\r\nout the zero width typedefs and the ports of that type.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-28",
+  "closed_at": "2023-05-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

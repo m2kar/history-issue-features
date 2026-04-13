@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6871,
+  "issue_url": "https://github.com/verilator/verilator/issues/6871",
+  "title": "Proposal: 2x Acceleration for FST Waveform Dumping (Native C++ Rewrite)",
+  "body": "Hi maintainers (@wsnyder),\n\nMy friend @yodalee and I have been profiling the FST waveform dumping performance in Verilator.\n\n**The Problem:** Verilator simulates logic using native C++ integer types (CData, IData, QData, etc.), but the current verilated_fst_c implementation (derived from gtkwave's C API) relies heavily on string-based data structures for intermediate storage. This creates a significant bottleneck: every signal update forces an expensive \"Integer-to-String\" conversion just to pass data to the writer, even before the actual FST compression happens.\n\n**The Proposal:** We have implemented a native C++ rewrite of the FST writer. Key Architectural Change: Instead of using strings as the intermediate format, our implementation uses strongly-typed uintX_t native data structures (e.g., uint8_t, uint32_t, uint64_t). This aligns the writer's internal storage directly with Verilator’s simulation kernel, eliminating the serialization overhead entirely. You can view our proof-of-concept snapshot here: https://github.com/yodalee/verilator_snapshot\n\n**Current Results:** In our local benchmarks using a pico-riscv core simulation, this architecture change achieves 1.5-2x speedup in dumping time compared to the current string-based implementation, even when I have not implemented compression yet.\n\n**Validation Strategy:** To ensure the output FST is valid:\n\n1. We convert both \"legacy\" (string-based) and \"new\" (uint-based) FST outputs to VCD using fst2vcd.\n2. We perform a diff on the resulting VCD files. So far, the waveform logic remains identical. \n\n**Licensing:** The new implementation is a derivative of the existing logic already present in the Verilator source tree. I intend to contribute this under the same license as Verilator (LGPL/Artistic).\n\n**Status & Questions:** The code is functional but still in a \"Work in Progress\" state.\n\n1. **Integration:** Given the fundamental change in data structure (String vs. uintX_t), do you prefer we introduce this as an optional backend first?\n2. **Compatibility:** Are there specific test cases in the regression suite that heavily rely on the string-based behavior (e.g., very specific formatting of X/Z states) that we should be aware of?\n\nLooking forward to your feedback!\n\nBest regards, Yu-Sheng Lin",
+  "labels": [
+    "status: discussion",
+    "area: tracing"
+  ],
+  "state": "open",
+  "created_at": "2025-12-29",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

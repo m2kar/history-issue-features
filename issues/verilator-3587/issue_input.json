@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3587,
+  "issue_url": "https://github.com/verilator/verilator/pull/3587",
+  "title": "V3Partition: Reduce working set size of PartContraction",
+  "body": "I'm PR-ing this to discuss some behaviour and what our policy should be about it.\r\n\r\nThis is another speed-up patch for PartContraction, taking advantage of the properties of the input graph (as described in the code added in this patch) to eliminate some of the edges (which are merge candidates in PartContraction) at the very beginning when the initial MTask graph is created. The eliminated (bypassed) vertices have 0 cost, so removing them should not influence any initial critical path estimates, and not adding them to the various scoreboards/heaps/maps saves time. Verilation speed is improved noticeably, the long-pole scheduling pass is 25% faster on my largest design.\r\n\r\nThe catch is that on the benchmarks I have access to, the model performance is worse (4T Open Titan ~2% worse, on 4T XiangShan, it's ~20% worse...). This performance regression however is only due to the order in which we process vertices/edges in the graph (tied scores in MTask merging are broken based on ID, which is allocated in creation order, which this patch perturbs, I guess due to the stepped cost function we use, ties are somewhat common), so with this optimization in, we end up being unlucky on these benchmarks.\r\n\r\nI am fairly confident there isn't anything more nefarious going on. I observed significant processing order dependent speed variance before while working on this. E.g.: I just went and shuffled the input vertices and can get model performance variance of the same order. Also, for example applying #3527 on top of this yields a model that is noticeably faster for 4T XiangShan than with just #3527 (and is in fact the fastest I have ever measured), so luck is on our side with that combination. Another example is this comment that I discovered and added recently:\r\nhttps://github.com/verilator/verilator/blob/c0f9b0d8f689e695100aa9f0d9bb544a9edc3a4e/src/V3Partition.cpp#L2024-L2029\r\nSimilarly, incorporating this into the loop above (which again, only changes IDs) yields similar differences:\r\nhttps://github.com/verilator/verilator/blob/c0f9b0d8f689e695100aa9f0d9bb544a9edc3a4e/src/V3Partition.cpp#L2668-L2677\r\nThere are also hints towards the same in existing code:\r\nhttps://github.com/verilator/verilator/blob/c0f9b0d8f689e695100aa9f0d9bb544a9edc3a4e/src/V3Partition.cpp#L2715-L2723\r\n\r\nWith that in mind, the question is, what should our policy be about patches that are \"clearly algorithmic improvements\", but hurt current benchmark sets/configurations due to chance? And that leads to the question of whether I should merge this now or only after #3527 which makes the stars align?\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-08-31",
+  "closed_at": "2022-09-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

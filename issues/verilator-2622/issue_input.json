@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2622,
+  "issue_url": "https://github.com/verilator/verilator/issues/2622",
+  "title": "Dangling reference at exported function with output string",
+  "body": "While debugging #2508, I found that a dangling reference.\r\n\r\nI am willing to make a PR to fix this issue.\r\nAny feedback is appreciated. ( I am not familiar with verilated C++ code especially about naming convention and thread safe for `--threads` ).\r\n\r\n### Example to show the symptom\r\n```systemverilog\r\nmodule t;\r\n   function automatic void set_abc(output string s);\r\n      s = \"abc\";\r\n   endfunction\r\n   export \"DPI-C\" function set_abc;\r\nendmodule\r\n```\r\n\r\n### Generated C++ code\r\n```c++\r\nvoid Vt::set_abc(const char** s) {\r\n    VL_DEBUG_IF(VL_DBG_MSGF(\"+    Vt::set_abc\\n\"); );\r\n    // Variables\r\n    std::string s__Vcvt;\r\n    // Body\r\n    static int __Vfuncnum = -1;\r\n    if (VL_UNLIKELY(__Vfuncnum==-1)) { __Vfuncnum = Verilated::exportFuncNum(\"set_abc\"); }\r\n    const VerilatedScope* __Vscopep = Verilated::dpiScope();\r\n    Vt__Vcb_set_abc_t __Vcb = (Vt__Vcb_set_abc_t)(VerilatedScope::exportFind(__Vscopep, __Vfuncnum));\r\n    (*__Vcb)((Vt__Syms*)(__Vscopep->symsp()), s__Vcvt);\r\n    *s = s__Vcvt.c_str();  // <=== s__Vcvt is a local variable, so *s will be a dangling pointer!\r\n}\r\n```\r\n`s__Vcvt` is a local variable, so s__Vcvt.c_str() will be invalid after exiting the function.\r\n\r\nIEEE 1800-2017 H.8.10 requires SystemVerilog side to manage the lifetime of strings.\r\n\r\n### Fix that I am thinking\r\nAdd a member variable `__dpiExportCvt` to the top module of VL_MODULE.\r\n```c++\r\n    // INTERNAL VARIABLES\r\n    // Internals; generally not touched by application code\r\n    Vt_dpi_export_string__Syms* __VlSymsp;  // Symbol table\r\n    std::vector<std::unique_ptr<std::string[]>> __dpiExportCvt;  // Add this member variable\r\n```\r\nNote that `std::unique_ptr<std::string[]> ` is used instead of `std::unique_ptr<std::string>` because I will add unpacked array support later.\r\n\r\n\r\nThen use the `__dpiExportCvt` in each export wrapper as below.\r\n``` c++\r\n    auto& __dpiExportCvt = ((Vt_dpi_export_string__Syms*) __Vscopep->symsp())->TOPp->__dpiExportCvt;\r\n    __dpiExportCvt.clear();  // delete temporary objects created in the previous call\r\n    __dpiExportCvt.emplace_back(new std::string[1]);  // Create the temporary object\r\n    std::string& s__Vcvt = __dpiExportCvt.back()[0];\r\n    // do something to s__Vcvt;\r\n   *s = s__Vcvt.c_str();  // Now  *s is valid until the next call of any exported function\r\n```\r\n\r\nThe returned pointer will be valid until the next call of any exported functions with `output string` because \r\n`__dpiExportCvt` is shared among them. I think this behavior is compliant to IEEE standard as it says:\r\n\r\n>  If it is desired to refer to the string’s valueat some point in the future, the user shall copy the string value to memory owned by the C domain. \r\n\r\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-03",
+  "closed_at": "2020-11-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

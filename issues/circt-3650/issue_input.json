@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3650,
+  "issue_url": "https://github.com/llvm/circt/pull/3650",
+  "title": "[Pipeline] Add retimeable pipeline operation",
+  "body": "The `pipeline.rtp` operation represents a retimeable pipeline.\r\nThe pipeline contains a single block representing a graph region. Pipeline stages are represented by `pipeline.rt.register` operations. Semantics of values crossing register boundaries are defined by lowering passes.\r\nThe pipeline representation is centered around providing latency insensitive values (valid signals between stages). Such signals can either be removed (in the feedforward, statically scheduled case), used to control stalling (feedback, statically scheduled case) or in conjunction with handshake signals for dynamically scheduled pipelines.\r\n\r\nAlongside this, some old, unused code (StandardToStaticLogic) is pruned to remove a maintenance burden associated with this change.\r\n\r\nA typical flow would go like this:\r\n\r\nAn untimed datapath is defined:\r\n```mlir\r\npipeline.rtp(%in0 : i32, %in1 : i32,  %go : i1) -> (i32) {\r\n    ^bb0:(%arg0 : i32, %arg1: i32, %go : i1):\r\n    %add0 = comb.add %arg0, %arg1 : i32\r\n    %add1 = comb.add %add0, %arg0 : i32\r\n    %add2 = comb.add %add1, %arg1 : i32\r\n    pipeline.rtp.return %add2 valid %go : i32\r\n}\r\n```\r\nThe datapath is scheduled (future pass). At this point, stage separating registers can be inserted at arbitrary points in the datapath. In future commits, delays will always be specified relative to the op that produces it - either by `pipeline.delay %0 by N` operations that can delay an arbitrary SSA value across the next `N` stages, or annotating that some values take multiple cycles to produce (pipelined operators).\r\n```mlir\r\npipeline.rtp(%in0 : i32, %in1 : i32, %go : i1) -> (i32) {\r\n    ^bb0:(%arg0 : i32, %arg1: i32, %go : i1):\r\n    %add0 = comb.add %arg0, %arg1 : i32\r\n\r\n    %s0_valid = pipeline.stage when %go\r\n    %add1 = comb.add %add0, %arg0 : i32\r\n\r\n    %s1_valid = pipeline.stage when %s0_valid\r\n    %add2 = comb.add %add1, %arg1 : i32\r\n\r\n    pipeline.rtp.return %add2 valid %s1_valid : i32\r\n}\r\n```\r\n\r\nStage-crossing dependencies are made explicit through registers (future pass). At this point, `pipeline.stage` operations are illegal, and the pipeline has been timed.\r\n```mlir\r\npipeline.rtp(%in0 : i32, %in1 : i32,  %go : i1) -> (i32) {\r\n    ^bb0:(%arg0 : i32, %arg1: i32,  %go : i1):\r\n    %add0 = comb.add %arg0, %arg1 : i32\r\n\r\n    %s0_valid, %add0_r = pipeline.stage.register when %go regs (%add0: i32)\r\n    %add1 = comb.add %add0_r, %arg0 : i32\r\n\r\n    %s1_valid, %add1_r = pipeline.stage.register when %s0_valid regs (%add1: i32)\r\n    %add2 = comb.add %add1_r, %arg1 : i32\r\n\r\n    pipeline.rtp.return %add2 valid %s1_valid : i32\r\n}\r\n```\r\n\r\nThis representation can then be lowered to statically or dynamically scheduled pipelines.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-08-03",
+  "closed_at": "2022-08-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

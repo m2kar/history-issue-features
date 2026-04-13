@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2920,
+  "issue_url": "https://github.com/verilator/verilator/issues/2920",
+  "title": "Verilator 4.202 uses Makefile syntax which doesn't work on RHEL/CentOS 7",
+  "body": "https://github.com/verilator/verilator/commit/6a189a1f8174bfa7c6829f1c0611092c5dbf2bc6, a fix for https://github.com/verilator/verilator/issues/2834, released in Verilator 4.202, introduced Makefile syntax which is incompatible with GNU Make < 4 shipped with CentOS/RHEL 7, causing `make test` and other builds to fail with an unhelpful error message.\r\n\r\nExemplary error message:\r\n\r\n```\r\nmake test\r\n# ... snip ...\r\nar: @Vt_a1_first_cc__ALL.a.tmp: No such file or directory\r\n```\r\n\r\nThe `.tmp` file is created through code in `verilated.mk`:\r\n\r\n```\r\n\t$(file >$@.tmp)\r\n\t$(foreach L, $(filter-out %.a,$^), $(file >>$@.tmp, $L))\r\n```\r\n\r\nRunning with `make --warn-undefined-variables test` results in \r\n\r\n```\r\n/home/abuild/rpmbuild/BUILD/verilator-4.202/test_regress/../include/verilated.mk:210: warning: undefined variable `file >Vt_EXAMPLE__ALL.a.tmp'\r\n/home/abuild/rpmbuild/BUILD/verilator-4.202/test_regress/../include/verilated.mk:210: warning: undefined variable `file >>Vt_EXAMPLE__ALL.a.tmp, Vt_EXAMPLE__ALL.o'\r\n```\r\n\r\nThe [`file` make function](https://www.gnu.org/software/make/manual/html_node/File-Function.html) seems to be added in 2012 and was first released in GNU Make 4.0 (https://github.com/ndmitchell/gnumake/blob/master/ChangeLog#L234). RHEL/CentOS7 ships with GNU Make 3.82.\r\n",
+  "labels": [
+    "area: portability",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-04",
+  "closed_at": "2021-05-06",
+  "code_blocks": [
+    "/home/abuild/rpmbuild/BUILD/verilator-4.202/test_regress/../include/verilated.mk:210: warning: undefined variable `file >Vt_EXAMPLE__ALL.a.tmp'\r\n/home/abuild/rpmbuild/BUILD/verilator-4.202/test_regress/../include/verilated.mk:210: warning: undefined variable `file >>Vt_EXAMPLE__ALL.a.tmp, Vt_EXAMPLE__ALL.o'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

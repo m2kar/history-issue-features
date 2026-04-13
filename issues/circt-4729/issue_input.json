@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4729,
+  "issue_url": "https://github.com/llvm/circt/pull/4729",
+  "title": "[Arc] Add state lowering pass",
+  "body": "Add the `LowerState` pass and accompanying operations to convert a design from a pure state transfer graph composed of arcs to a more procedural read-modify-write representation. After this transformation the design is a significant step down the path of becoming a software model.\r\n\r\nThe `LowerState` pass proceeds as follows:\r\n\r\n- Group all `arc.state` ops according to their clock into `arc.clock_tree`s. Operations that are on direct input-to-output passthrough or on state-to-output paths are grouped into a `arc.passthrough` op.\r\n- Introduce an explicit state storage allocation op for every state op, memory op, as well as every input and output port of the root module.\r\n- Replace the root `hw.module` with a `arc.model` which no longer has any input and output ports, but a storage pointer argument instead. Storage allocation ops represent specific chunks of memory behind this pointer.\r\n- Split every `arc.state` op with latency >0 up into a `arc.state_read`, `arc.state` with latency 0, and `arc.state_write` operation. This essentially breaks `arc.state` up into two parts: a read for all users of the state, and a transfer function plus write for all operands of the arc.\r\n\r\nIn doing so, the sea-of-gates representation of the HW dialect, which is a pure graph without op ordering constraints, is converted into a a sea-of-clocks, where each group contains the parts of the circuit that are triggered by the same clock. The actual computation that occurs on that trigger is represented procedurally in a proper SSA/CFG block.\r\n\r\nTL;DR: This goes from \"How do the gates connect together?\" to \"How does a computer simulate these gates?\".",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-25",
+  "closed_at": "2023-03-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

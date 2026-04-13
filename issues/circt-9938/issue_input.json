@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9938,
+  "issue_url": "https://github.com/llvm/circt/issues/9938",
+  "title": "Build instructions don't work out of the box for Mac OS X",
+  "body": "I tried to follow the build instructions to install CIRCT in my Mac (OS X Sequoia 15.6.1) but they don't quite work out of the box.\n\nOne issue is the linker, I add to specify `-DLLVM_ENABLE_LLD=OFF`.\n\nAnother issue seems to be confusion about `llvm::Type` vs. `mlir::Type` e.g. in `PruneZeroValuedLogic.cpp`\nPerhaps in such files one should write:\n\n```cpp\ntypes, [](mlir::Type type) { return ExportVerilog::isZeroBitType(type); });\n```\n\ninstead of:\n\n```cpp\ntypes, [](Type type) { return ExportVerilog::isZeroBitType(type); });\n```\n\nto qualify the `Type`?\n\nOr do something like this:\n\n```cpp\nusing mlir::Type;\nusing mlir::Value;\n```\n\nI got around this problem by first building LLVM that comes in the submodule.\nThen I built with:\n\n```\ncmake -G Ninja . -B build \\\n    -DCMAKE_BUILD_TYPE=RelWithDebInfo \\\n    -DLLVM_ENABLE_ASSERTIONS=ON \\\n    -DMLIR_DIR=$PWD/llvm/build/lib/cmake/mlir \\\n    -DLLVM_DIR=$PWD/llvm/build/lib/cmake/llvm \\\n    -DLLVM_TARGETS_TO_BUILD=host \\\n    -DLLVM_ENABLE_PROJECTS=mlir \\\n    -DLLVM_EXTERNAL_PROJECTS=circt \\\n    -DLLVM_EXTERNAL_CIRCT_SOURCE_DIR=$PWD \\\n    -DLLVM_ENABLE_LLD=OFF \\\n    -DCIRCT_SLANG_FRONTEND_ENABLED=ON\n```\n\nI had to specify ` -DLLVM_ENABLE_LLD=OFF`.\n\nPerhaps worth updating the documentation, or build, to give a smoother install experience for Mac OS X?\n\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-14",
+  "closed_at": null,
+  "code_blocks": [
+    "types, [](mlir::Type type) { return ExportVerilog::isZeroBitType(type); });\n",
+    "types, [](Type type) { return ExportVerilog::isZeroBitType(type); });\n",
+    "using mlir::Type;\nusing mlir::Value;\n",
+    "cmake -G Ninja . -B build \\\n    -DCMAKE_BUILD_TYPE=RelWithDebInfo \\\n    -DLLVM_ENABLE_ASSERTIONS=ON \\\n    -DMLIR_DIR=$PWD/llvm/build/lib/cmake/mlir \\\n    -DLLVM_DIR=$PWD/llvm/build/lib/cmake/llvm \\\n    -DLLVM_TARGETS_TO_BUILD=host \\\n    -DLLVM_ENABLE_PROJECTS=mlir \\\n    -DLLVM_EXTERNAL_PROJECTS=circt \\\n    -DLLVM_EXTERNAL_CIRCT_SOURCE_DIR=$PWD \\\n    -DLLVM_ENABLE_LLD=OFF \\\n    -DCIRCT_SLANG_FRONTEND_ENABLED=ON\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

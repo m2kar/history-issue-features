@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1600,
+  "issue_url": "https://github.com/llvm/circt/issues/1600",
+  "title": "test/ExportVerilog/sv-dialect.mlir: issue439 testcase generates invalid verilog",
+  "body": "Sez @seldridge in [this comment](https://github.com/llvm/circt/commit/e043814d2c1fcf418070a5f977c96ba75451bee5): \r\n\r\nI've been taking a look at sv-dialect.mlir to make sure that this is generating legal Verilog. The test added here is actually invalid Verilog. The full output for the added test is:\r\n\r\n```\r\nmodule issue439(\r\n  input in1, in2);\r\n\r\n  wire _T;      // issue439.mlir:7:3\r\n  wire _T_0;    // issue439.mlir:10:15\r\n\r\n  assign _T = in1 | in2;        // issue439.mlir:4:12, :7:3\r\n  always @(posedge _T) begin    // issue439.mlir:7:3\r\n    _T_0 <= in1;        // issue439.mlir:10:15\r\n    _T_0 <= in2;        // issue439.mlir:10:15\r\n    $fwrite(32'h80000002, \"Bye %x\\n\", _T_0);    // issue439.mlir:10:15, :12:5\r\n  end // always @(posedge)\r\nendmodule\r\n```\r\n\r\nProblematically, wire can only be driven from an assign (any blocking or blocking assignment, = or <=, is illegal for wires).\r\n\r\nI'm not entirely sure what comb.merge is supposed to be modeling, but I think this really wants to be a SystemVerilog inout and either connected by alias or a bi-directional connect. (Tools will accept different things here.) This is the lowering that FIRRTL analog types are using and is probably fine to re-use here.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-18",
+  "closed_at": "2021-08-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

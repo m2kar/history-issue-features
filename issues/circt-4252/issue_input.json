@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4252,
+  "issue_url": "https://github.com/llvm/circt/issues/4252",
+  "title": "Design with multiple modules using `--split-verilog` option outputs empty top file",
+  "body": "I have a design (sample from Chisel docs) with two modules. If I use the FirToolOptions below to split my modules into files, the Topmodule file ends-up empty.\r\n\r\n```scala\r\n//> using scala \"2.13.8\"\r\n//> using lib \"edu.berkeley.cs::chisel3::3.5.4\"\r\n//> using lib \"com.sifive::chisel-circt::0.6.0\"\r\n//> using plugin \"edu.berkeley.cs:::chisel3-plugin::3.5.4\"\r\n\r\nimport chisel3._\r\nimport circt.stage.{ChiselStage, FirtoolOption}\r\nimport chisel3.stage.ChiselGeneratorAnnotation\r\n\r\nclass Foo extends Module {\r\n  val io = IO(new Bundle {\r\n    val a = Input(Bool())\r\n    val b = Output(Bool())\r\n  })\r\n  io.b := !io.a\r\n}\r\n\r\nclass FooWrapper extends RawModule {\r\n  val a_i = IO(Input(Bool()))\r\n  val b_o = IO(Output(Bool()))\r\n  val clk = IO(Input(Clock()))\r\n  val rstn = IO(Input(Bool()))\r\n\r\n  val foo = withClockAndReset(clk, !rstn) { Module(new Foo) }\r\n\r\n  foo.io.a := a_i\r\n  b_o := foo.io.b\r\n}\r\n\r\nobject Toplevel extends App {\r\n  val chiselArgs =\r\n    Array(\r\n      \"--target\",\r\n      \"systemverilog\",\r\n      \"--target-dir\",\r\n      \"generated\",\r\n    )\r\n  (new ChiselStage).execute(\r\n    chiselArgs,\r\n    Seq(\r\n      ChiselGeneratorAnnotation(() => new FooWrapper),\r\n      FirtoolOption(\"--split-verilog\"),\r\n      FirtoolOption(\"-o=generated\"),\r\n    ),\r\n  )\r\n}\r\n```\r\n\r\nRunning:\r\n```\r\n> scala-cli FooWrapper.scala\r\n\r\nRunning CIRCT: 'firtool -format=fir -warn-on-unprocessed-annotations -verify-each=false --split-verilog -o=generated -disable-infer-rw -dedup -annotation-file generated/FooWrapper.anno.json < $input'\r\n```\r\n\r\nAs a result, firtool generated in `generated` directory, 2 files, `Foo.sv` and `FooWrapper.sv` where the Toplevel module file, `FooWrapper` is blank. The `FooWrapper.fir` file has the contents showing Chisel output it correctly.\r\n\r\nThis doesn't happen when running without the FirToolOptions listed above (all in a single `sv` file where both modules end-up in `FooWrapper.sv`.\r\n\r\n```\r\n❯ firtool --version\r\nLLVM (http://llvm.org/):\r\n  LLVM version 16.0.0git\r\n  Optimized build.\r\n  Default target: x86_64-apple-darwin21.6.0\r\n  Host CPU: skylake\r\n\r\nCIRCT sifive/1/21/0\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-04",
+  "closed_at": "2023-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

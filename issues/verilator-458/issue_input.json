@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 458,
+  "issue_url": "https://github.com/verilator/verilator/issues/458",
+  "title": "verilator generates vluint64_t ports for signed types",
+  "body": "---\n\n\nAuthor Name: **Alex Solomatnikov**\nOriginal Redmine Issue: 458 from https://www.veripool.org\nOriginal Date: 2012-03-16\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nSlightly modified test case from bug 456:\r\n\r\n```\r\ntypedef logic signed [35-1:0] rc_t;\r\n\r\nmodule test_negative( output logic o,\r\n                       output rc_t  rc_out,\r\n                       input       rc_t rc,\r\n                       input logic clk);\r\n\r\n    localparam RATIO = 2;\r\n\r\n    rc_t rc_d[RATIO:1];\r\n\r\n    always_ff @(posedge clk) begin\r\n       integer  k;\r\n\r\n       rc_d[1] <= rc;\r\n\r\n       for( k=2; k<RATIO+1; k++ ) begin\r\n          rc_d[k] <= rc_d[k-1];\r\n       end\r\n    end // always_ff @\r\n\r\n    assign o = rc_d[RATIO] < 0;\r\n    assign rc_out = rc_d[RATIO];\r\n\r\nendmodule // test_negative\r\n\n```\r\n\r\nverilator -sv --sp --top-module test_negative test_negative.v \r\n\r\n```\r\nSC_MODULE(Vtest_negative) {\r\n     /*AUTOATTR(verilated)*/\r\n     \r\n  public:\r\n     /*AUTOSUBCELLS*/\r\n     \r\n     \r\n     // PORTS\r\n     // The application code writes and reads these signals to\r\n     // propagate new values into/out from the Verilated model.\r\n     sc_out<bool>\to;\r\n     sc_in<bool>\tclk;\r\n     sc_out<vluint64_t>\trc_out;\r\n     sc_in<vluint64_t>\trc;\r\n\r\n\n```\r\n\r\nNot clear how sign would be handled when casting signed 35-bit value to unsigned 64-bit value.\r\n\n\n\n",
+  "labels": [
+    "resolution: wontfix",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2012-03-16",
+  "closed_at": "2012-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

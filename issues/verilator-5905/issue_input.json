@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5905,
+  "issue_url": "https://github.com/verilator/verilator/issues/5905",
+  "title": "Custom Time Range for Coverage Collection",
+  "body": "I'm trying to collect coverage data from a simulation, but I'm unsure if I'm missing something. Currently, the coverage collection spans from the simulation start to the end, but I would like to specify a custom time range for collecting coverage. Is this possible?\n\nFor example, in the following code, I clear the coverage information at t = 4 and write the coverage data at t = 5:\n```cpp\n#include \"Vtb.h\"\n#include \"verilated.h\"\nint main(int argc, char** argv) {\n    VerilatedContext* contextp = new VerilatedContext;\n    contextp->commandArgs(argc, argv);\n\tVerilated::traceEverOn(true);\n    Vtb* top = new Vtb{contextp};\n    int t = 0;\n    while (!contextp->gotFinish()){\n        top->eval();\n        if (t == 4) {\n            VerilatedCov::zero();\n        }\n\tif (t == 5) {\n\t\tVerilatedCov::write(\"coverage.dat\");\n\t}\n        if (!top->eventsPending()) break;\n        contextp->time(top->nextTimeSlot());\n        t++;\n    }\n    std::cout << \"t = \" << t << std::endl;\n    delete top;\n    delete contextp;\n    return 0;\n}\n```\n\nI would like to know if there is a more convenient or elegant way to implement a custom time range for coverage collection.\n\nAdditionally, is it possible to record coverage information for each simulation cycle, so that coverage is collected between the last positive edge of the clock and the current positive edge? Essentially, can coverage be recorded cycle-by-cycle, rather than accumulating coverage data over the entire simulation?\n\nThanks a lot~",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-31",
+  "closed_at": "2025-03-31",
+  "code_blocks": [
+    "#include \"Vtb.h\"\n#include \"verilated.h\"\nint main(int argc, char** argv) {\n    VerilatedContext* contextp = new VerilatedContext;\n    contextp->commandArgs(argc, argv);\n\tVerilated::traceEverOn(true);\n    Vtb* top = new Vtb{contextp};\n    int t = 0;\n    while (!contextp->gotFinish()){\n        top->eval();\n        if (t == 4) {\n            VerilatedCov::zero();\n        }\n\tif (t == 5) {\n\t\tVerilatedCov::write(\"coverage.dat\");\n\t}\n        if (!top->eventsPending()) break;\n        contextp->time(top->nextTimeSlot());\n        t++;\n    }\n    std::cout << \"t = \" << t << std::endl;\n    delete top;\n    delete contextp;\n    return 0;\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

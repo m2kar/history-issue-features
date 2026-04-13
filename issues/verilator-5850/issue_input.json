@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5850,
+  "issue_url": "https://github.com/verilator/verilator/issues/5850",
+  "title": "Internal Error with $clog2 and types",
+  "body": "Internal assertion failure during parsing a statement:\n\n`    typedef logic [$clog2(NoSlvPorts)-1:0] select_t;`\n\n`%Error: Internal Error: xxx/axi_lite_mux.sv:139:38: ../V3Ast.cpp:1111: Comparison of a node with dtypep() with a node without dtypep()`\n\nCode can be replaced with \n\n`    typedef logic [(NoSlvPorts)-1:0] select_t;`\n\nor \n\n```\n  function integer clogb2;\n      input [31:0] value;\n      integer \ti;\n      begin\n          clogb2 = 0;\n          for(i = 0; 2**i < value; i = i + 1)\n      clogb2 = i + 1;\n      end\n  endfunction\n\ntypedef logic [$clogb2(NoSlvPorts)-1:0] select_t;\n```\n\nwhich allows parsing. Failing parse tree from running with --debug here:\n\nhttps://drive.google.com/file/d/1gt4BtojjPrYzBtX95Reeqnf2N7iuKTgY/view?usp=sharing\n\n----\n\n**What 'verilator' command line do we use to run your example?**\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\nVerilator 5.035 devel rev v5.034-45-g8157f21c3 but also failes with 5.022 (fedora-5.022)\n\nWhat OS and distribution are you using?\n\nAlmaLinux 9.4\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-11",
+  "closed_at": "2025-03-19",
+  "code_blocks": [
+    "  function integer clogb2;\n      input [31:0] value;\n      integer \ti;\n      begin\n          clogb2 = 0;\n          for(i = 0; 2**i < value; i = i + 1)\n      clogb2 = i + 1;\n      end\n  endfunction\n\ntypedef logic [$clogb2(NoSlvPorts)-1:0] select_t;\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

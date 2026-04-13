@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3411,
+  "issue_url": "https://github.com/llvm/circt/pull/3411",
+  "title": "[FIRRTL] Add a new FIRRTL XMR Op",
+  "body": "This PR adds a new `FIRRTL` op for specifying a cross module reference, also known as an XMR.\r\nThe XMR represents a non-local hierarchical name to a net. \r\nThe hierarchical path is specified by a reference to the symbol defined by a `HierPathOp`.\r\nOnly downward reference is allowed, hence the `HierPathOp` must be rooted at the module in which it is used. \r\nThe verifier will fail, if the `HierPathOp` is not rooted at the current module.\r\nIt is assumed that the result type of the `XMROp` matches with the result type of the remote net, but the op verifier doesn't check this property now.\r\nThis will be lowered to the `sv::XMROp`.  The use of this op was demonstrated in https://github.com/llvm/circt/pull/3290.\r\nThis `XMROp` is intended to replace the GrandCentral generated XMR as `VerbatimOp`.\r\n\r\n```mlir\r\nfirrtl.hierpath @nla_1 [@XMRTop::@test,@Aardvark::@test_1, @Zebra::@w]\r\n  firrtl.module @XMRTop() {\r\n    firrtl.instance test  sym @test @Aardvark()\r\n    %1 = firrtl.xmr @nla_1 : !firrtl.uint<3>\r\n  }\r\n\r\n  firrtl.module @Aardvark() {\r\n    firrtl.instance test sym @test @Zebra()\r\n    firrtl.instance test1 sym @test_1 @Zebra()\r\n  }\r\n\r\n  firrtl.module @Zebra() {\r\n    %w = firrtl.wire sym @w : !firrtl.uint<3>\r\n  }\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-23",
+  "closed_at": "2023-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3921,
+  "issue_url": "https://github.com/llvm/circt/issues/3921",
+  "title": "[HandshakeToHW] The `JoinOp` lowering does not resolve all backedges",
+  "body": "When lowering the following handshake IR directly to HW\r\n\r\n```mlir\r\nhandshake.func @main(%arg0: none, %arg1: none) -> (none) {\r\n  %res = join %arg0, %arg1 : none, none\r\n  return %res : none\r\n}\r\n```\r\none get's the following errors:\r\n\r\n```\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: error: backedge of type `'none'`still in use\r\n  %res = join %arg0, %arg1 : none, none\r\n         ^\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: note: see current operation: %0 = \"builtin.unreal\r\nized_conversion_cast\"() : () -> none\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: note: used by %chanOutput, %ready = esi.wrap.vr <\r\n<UNKNOWN SSA VALUE>>, <<UNKNOWN SSA VALUE>> : none\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: error: backedge of type `'i1'`still in use\r\n  %res = join %arg0, %arg1 : none, none\r\n         ^\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: note: see current operation: %0 = \"builtin.unreal\r\nized_conversion_cast\"() : () -> i1\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: note: used by %chanOutput, %ready = esi.wrap.vr <\r\n<UNKNOWN SSA VALUE>>, <<UNKNOWN SSA VALUE>> : none\r\n../test/Conversion/HandshakeToHW/test_join.mlir:4:10: remark: abandoned 2 backedges\r\n  %res = join %arg0, %arg1 : none, none\r\n         ^\r\nmodule {\r\n  hw.module @main(%arg0: !esi.channel<none>, %arg1: !esi.channel<none>, %clock: i1, %reset: i1) -> (out\r\nCtrl: !esi.channel<none>) {\r\n    %handshake_join0.out0 = hw.instance \"handshake_join0\" @handshake_join_2ins_1outs_ctrl(in0: %arg0: !\r\nesi.channel<none>, in1: %arg1: !esi.channel<none>) -> (out0: !esi.channel<none>)\r\n    hw.output %handshake_join0.out0 : !esi.channel<none>\r\n  }\r\n  hw.module @handshake_join_2ins_1outs_ctrl(%in0: !esi.channel<none>, %in1: !esi.channel<none>) -> (out\r\n0: !esi.channel<none>) {\r\n    %rawOutput, %valid = esi.unwrap.vr %in0, %3 : none\r\n    %rawOutput_0, %valid_1 = esi.unwrap.vr %in1, %3 : none\r\n    %0 = builtin.unrealized_conversion_cast to none\r\n    %1 = builtin.unrealized_conversion_cast to i1\r\n    %chanOutput, %ready = esi.wrap.vr %0, %1 : none\r\n    %2 = comb.and %valid, %valid_1 : i1\r\n    %3 = comb.and %ready, %2 : i1\r\n    hw.output %chanOutput : !esi.channel<none>\r\n  }\r\n}\r\n```\r\n\r\nAs far as I can tell, this is caused by neither connecting the `outValid` not the `outData` signals.\r\n\r\nFixing the `outValid` is simple, e.g., by connecting it to the \"and\" of all input valids. On the other hand, a solution for the data is not that obvious. Connecting it to any of the input's data will not work, as no input might be a `NoneType`. Furthermore, there are no `NoneType` constants in HW.\r\n\r\nIdeally, `NoneType` inputs would not have any kind of data fields, but that would complicate some other things.\r\n\r\nCC @mortbopet ",
+  "labels": [
+    "HandshakeToHW"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-16",
+  "closed_at": "2022-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7292,
+  "issue_url": "https://github.com/verilator/verilator/issues/7292",
+  "title": "Incorrect simulation of nonoverlapped implication property",
+  "body": "```verilog\nmodule t;\n  logic clk = 0;\n  initial forever #1 clk = ~clk;\n\n  event e;\n  int cyc = 0;\n\n  always @(posedge clk) begin\n    cyc <= cyc + 1;\n    $display(\"[%0t] Triggered event\", $time);\n    ->e;\n    if (cyc == 2) begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n  end\n\n  assert property (@(e) 1 |=> 1) $display(\"[%0t] Implication fullfilled\", $time);\nendmodule\n```\n\nWhere `1 |=> 1` should be interpreted as:\n\n```verilog\n 1 ##1 `true |-> 1\n```\n\nBut currently uses `$past` as:\n\n```verilog\n1 | $past(1, @e)\n```\n\nPer IEEE 1800-2023 16.12.7 Implication:\n\n\n        Therefore,\n             sequence_expr |=> property_expr\n        is equivalent to the following:\n             sequence_expr ##1 `true |-> property_expr\n        ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-20",
+  "closed_at": null,
+  "code_blocks": [
+    "module t;\n  logic clk = 0;\n  initial forever #1 clk = ~clk;\n\n  event e;\n  int cyc = 0;\n\n  always @(posedge clk) begin\n    cyc <= cyc + 1;\n    $display(\"[%0t] Triggered event\", $time);\n    ->e;\n    if (cyc == 2) begin\n      $write(\"*-* All Finished *-*\\n\");\n      $finish;\n    end\n  end\n\n  assert property (@(e) 1 |=> 1) $display(\"[%0t] Implication fullfilled\", $time);\nendmodule\n",
+    " 1 ##1 `true |-> 1\n",
+    "1 | $past(1, @e)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

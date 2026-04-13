@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8758,
+  "issue_url": "https://github.com/llvm/circt/pull/8758",
+  "title": "[Comb] Add comb.reverse operation with Verilog Export",
+  "body": "This PR introduces a new operation to the Comb dialect: `comb.reverse`, which performs bitwise reversal (mirroring) of an integer value.\r\nIt also adds Verilog export support for this operation using SystemVerilog’s streaming operator `{<<{}}`.\r\n\r\nBit reversal is a common operation in hardware design, especially in signal processing and communication protocols.\r\nPreviously, reversing bits required generating many explicit `assign` statements.\r\nThis new operation makes the IR cleaner and enables direct export to compact Verilog syntax.\r\n\r\n### Example\r\n\r\n**Original Verilog:**\r\n```systemverilog\r\nassign out[0] = in[7];\r\nassign out[1] = in[6];\r\nassign out[2] = in[5];\r\nassign out[3] = in[4];\r\nassign out[4] = in[3];\r\nassign out[5] = in[2];\r\nassign out[6] = in[1];\r\nassign out[7] = in[0];\r\n```\r\n\r\n**MLIR**\r\n`%rev = comb.reverse %in : (i8) -> i8`\r\n\r\n**Verilog (exported)**\r\n`assign rev = {<<{in}};`\r\n\r\n### Implementation Details\r\nThe implementation is divided into three main parts:\r\n\r\n1.  **Operation Definition (`CombOps.td`, `CombOps.cpp`):**\r\n    * The `Comb_ReverseOp` is defined in `CombOps.td` with `Pure` and `SameOperandsAndResultType` traits.\r\n    * The C++ implementation in `CombOps.cpp` includes:\r\n        * **Constant Folding:** Handles bit-reversal for constant operands at compile time.\r\n        * **Canonicalization Pattern:**  Simplifies `comb.reverse(comb.reverse(x))` to` x`.\r\n        * Implements `verify()` for operand/result checks and `inferResultType()` for result inference.\r\n\r\n2.  **Verilog Lowering (`ExportVerilog.cpp`):**\r\n    * A dedicated emitter case for `comb::ReverseOp` was added.\r\n    * Lowers the operation to SystemVerilog’s streaming operator `{<<{in}}`, generating compact and readable Verilog design.\r\n\r\n3.  **Testing (`reverse.mlir, comb-reverse.mlir`):**\r\n    * A new test file was created to verify:\r\n        * Constant folding and canonicalization via `-canonicalize`.\r\n        * Verilog emission via `-export-verilog` and `FileCheck`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-21",
+  "closed_at": "2025-07-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

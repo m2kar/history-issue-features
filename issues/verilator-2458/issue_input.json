@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2458,
+  "issue_url": "https://github.com/verilator/verilator/issues/2458",
+  "title": "Provide array needs an array index warning",
+  "body": "When a programmer writes some wrong code such as the following array as a right value without index:\r\nIf the array is a one-bit array such following line, it would not report error message at lint time and it would not cause C++ code to compile error.\r\n```\r\n valids [i] <= valids; // no warning and no error when compile c++ code\r\n```\r\nHowever, if the array is vector array such as the following line, it would not report error message too. But it could cause compile error.\r\n```\r\ndata_array[i] <= data_array; // no warning at lint time and there are some errors in compile c++ code\r\n```\r\nCompile error message would be the following messages:\r\n```\r\n...\r\nVtest.cpp:874:27: error: invalid array assignment                                                                            \r\n                 = vlTOPp->test__DOT__data_array;                                                                            \r\n                           ^~~~~~~~~~~~~~~~~~~~~                                                                             \r\nVtest.cpp:888:45: error: invalid conversion from ‘CData* {aka unsigned char*}’ to ‘CData {aka unsigned char}’ [-fpermissive] \r\n         vlTOPp->test__DOT__data_array[0U] = __Vdlyvval__test__DOT__data_array__v257;\r\n...\r\n```\r\nI think it is not clear for the programmer to understand which line in RTL code produces such error messages. We can only try to feel it out from C++ Compile error.\r\nIcarus verilog  will produce error messages in the above case like:\r\n```\r\ntest.v:23: error: Array valids needs an array index here.\r\ntest.v:33: error: Array data_array needs an array index here.\r\n```\r\n\r\n\r\nThe following is a full code for testing this feature.\r\n```\r\nmodule test(\r\n    input clk,\r\n    input rst,\r\n    input [7:0] addr,\r\n    input we,\r\n    output [7:0] data\r\n);\r\n\r\nreg [7:0] data_array [0:255];\r\nreg valids[0:255];\r\n\r\ninteger i;\r\n\r\nalways@(posedge clk)\r\n    if (rst)\r\n        for (i = 0 ; i < 256 ; i = i + 1)\r\n            valids [i] <= 0;\r\n    else if (we)\r\n        valids [addr] <= 1;\r\n    else\r\n        for (i = 0 ; i < 256 ; i = i + 1)\r\n            valids [i] <= valids; // no warning and no error when compile c++ code\r\n\r\nalways@(posedge clk)\r\n    if (rst)\r\n        for(i = 0 ; i < 256 ; i = i + 1)\r\n            data_array[i] <= 0;\r\n    else if (we)\r\n        data_array[addr] <= 1;\r\n    else\r\n        for (i = 0 ; i < 256 ; i = i + 1)\r\n            data_array[i] <= data_array; // no warning at lint time and there are some errors in compile c++ code\r\n\r\n\r\nassign data = data_array[addr];\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "area: lint",
+    "area: data-types",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2020-07-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 405,
+  "issue_url": "https://github.com/verilator/verilator/issues/405",
+  "title": "generate-conditional always succeeds",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 405 from https://www.veripool.org\nOriginal Date: 2011-10-26\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe tests in a generate conditional block always appear to succeed. The attached example modulegen.v contains two such conditional blocks, only the first of which should be generated. In fact both are generated, leading to an error due to a missing module.\r\n\r\n```\r\nmodule foobar\r\n  #( parameter\r\n      FOO_START = 0,\r\n      FOO_NUM = 2,\r\n      FOO_TYPE = 0  // This means we should instatiate foo0\r\n      )\r\n     (\r\n     input wire[FOO_NUM-1:0] foo, \r\n     output wire[FOO_NUM-1:0] bar);\r\n\r\n\r\n    generate\r\n       begin: g\r\n          genvar j;\r\n          for (j = FOO_START; j < FOO_NUM+FOO_START; j = j + 1)\r\n            begin: foo_inst;\r\n               if (FOO_TYPE == 0)\r\n                 begin: foo_0\r\n                    // instatiate foo0\r\n                    foo0 i_foo(.x(foo[j]), .y(bar[j]));\r\n                 end\r\n               if (FOO_TYPE == 1)\r\n                 begin: foo_1\r\n                    // instatiate foo1\r\n                    foo1 i_foo(.x(foo[j]), .y(bar[j]));\r\n                 end\r\n            end // block: foo_inst;\r\n       end // block: g\r\n    endgenerate\r\nendmodule // foobar\r\n\r\nmodule foo0(input wire x, output wire y);\r\n\r\n    assign y = ~x;\r\n    \r\nendmodule\r\n\n```\r\n\r\nWe build with verilator:\r\n\r\n```\r\nverilator -cc --language 1364-2001 --top-module foobar modulegen.v\r\n\n```\r\n\r\nThe error message is:\r\n\r\n```\r\n$ verilator -cc --language 1364-2001 --top-module foobar modulegen.v\r\n%Error: modulegen.v:31: Cannot find file containing module: foo1\r\n%Error: modulegen.v:31: Looked in:\r\n%Error: modulegen.v:31:       foo1\r\n%Error: modulegen.v:31:       foo1.v\r\n%Error: modulegen.v:31:       foo1.sv\r\n%Error: modulegen.v:31:       obj_dir/foo1\r\n%Error: modulegen.v:31:       obj_dir/foo1.v\r\n%Error: modulegen.v:31:       obj_dir/foo1.sv\r\n%Error: Exiting due to 8 warning(s)\r\n%Error: Command Failed $VERILATOR_ROOT/verilator_bin -cc --language 1364-2001 --top-module foobar modulegen.v\r\n\n```\r\n\r\nThis shows that the second conditional block has been generated, which it should not, because FOO_TYPE is 0.\r\n\r\nFound with Verilator 3.824.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2011-10-26",
+  "closed_at": "2011-11-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

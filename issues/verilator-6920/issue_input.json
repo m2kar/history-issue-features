@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6920,
+  "issue_url": "https://github.com/verilator/verilator/issues/6920",
+  "title": "Issue with widths of instances of the same interface with different parameters",
+  "body": "This code:\n```\ninterface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [15:0] x;\n    ifc #(.width(16)) x_ifc(x);\n    logic [7:0] y;\n    ifc #(.width(8)) y_ifc(y);\nendmodule\n```\ngenerates a warning on the second instance:\n```\n%Warning-WIDTHTRUNC: issue.sv:4:19: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's CASTWRAP generates 16 bits.\n                                  : ... note: In instance 'tb'\n    4 |     always_comb a = type_t'(b);\n      |                   ^\n                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.045\n                     ... Use \"/* verilator lint_off WIDTHTRUNC */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n```\nSeemingly by having an internally incorrect notion of the width which should be harmless in this example but could potentially lead to real truncations. This:\n```\ninterface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [15:0] x = 16'hFFFF;\n    ifc #(.width(16)) x_ifc(x);\n    initial begin\n        $display(x_ifc.a);\n    end\nendmodule\n```\nproduces the expected `65535`. However, reintroducing the other smaller instance before it:\n```\ninterface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [7:0] y;\n    ifc #(.width(8)) y_ifc(y);\n    logic [15:0] x = 16'hFFFF;\n    ifc #(.width(16)) x_ifc(x);\n    initial begin\n        $display(x_ifc.a);\n    end\nendmodule\n```\n\nand building with `-Wno-WIDTHEXPAND` results in `255`.\n\nFrom bisecting, this seems to have been introduced with #6732 ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-13",
+  "closed_at": "2026-03-30",
+  "code_blocks": [
+    "interface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [15:0] x;\n    ifc #(.width(16)) x_ifc(x);\n    logic [7:0] y;\n    ifc #(.width(8)) y_ifc(y);\nendmodule\n",
+    "%Warning-WIDTHTRUNC: issue.sv:4:19: Operator ASSIGN expects 8 bits on the Assign RHS, but Assign RHS's CASTWRAP generates 16 bits.\n                                  : ... note: In instance 'tb'\n    4 |     always_comb a = type_t'(b);\n      |                   ^\n                     ... For warning description see https://verilator.org/warn/WIDTHTRUNC?v=5.045\n                     ... Use \"/* verilator lint_off WIDTHTRUNC */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 warning(s)\n",
+    "interface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [15:0] x = 16'hFFFF;\n    ifc #(.width(16)) x_ifc(x);\n    initial begin\n        $display(x_ifc.a);\n    end\nendmodule\n",
+    "interface ifc #(parameter int width)(logic [width-1:0] b);\n    logic [width-1:0] a;\n    typedef logic[$bits(type(a))-1:0] type_t;\n    always_comb a = type_t'(b);\nendinterface\n\nmodule tb();\n    logic [7:0] y;\n    ifc #(.width(8)) y_ifc(y);\n    logic [15:0] x = 16'hFFFF;\n    ifc #(.width(16)) x_ifc(x);\n    initial begin\n        $display(x_ifc.a);\n    end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

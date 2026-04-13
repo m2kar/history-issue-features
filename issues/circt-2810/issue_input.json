@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2810,
+  "issue_url": "https://github.com/llvm/circt/issues/2810",
+  "title": "[ExportVerilog] Smarter handling of large expression splitting and spilling.",
+  "body": "We have logic related to splitting large expressions into multiple lines, as well as spilling expressions into wires. This is split between both ExportVerilog and PrepareForEmission. We should clean this up, and handle splitting and spilling into wires in PrepareForEmission.\r\n\r\nCurrently, PrepareForEmission does two things here: first, it looks at variadic expressions, and spills them to their own wire in the top-level module body, when that is possible: https://github.com/llvm/circt/blob/286c48301256e0c53944c17edd79dec2e92c7abf/lib/Conversion/ExportVerilog/PrepareForEmission.cpp#L474-L491\r\n\r\nThen, it splits up the variadic expressions into a binary tree of expressions, which makes it easier to break them up into multiple lines in ExportVerilog: https://github.com/llvm/circt/blob/286c48301256e0c53944c17edd79dec2e92c7abf/lib/Conversion/ExportVerilog/PrepareForEmission.cpp#L493-L513\r\n\r\nWe should improve and combine this logic. The checking for what is \"too large\" should be considering the entire expression tree, and inserting splits and wires according to the defined expression term limit. It should also keep the (sub-)expressions neat, so that ExportVerilog can easily break them into multiple lines, which may require further splitting into a binary tree as is done now.\r\n\r\nAfter we've finished that, we can remove the old large expression spilling logic from ExportVerilog once and for all: https://github.com/llvm/circt/pull/2802",
+  "labels": [
+    "enhancement",
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-03-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

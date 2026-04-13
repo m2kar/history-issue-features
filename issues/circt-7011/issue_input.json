@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7011,
+  "issue_url": "https://github.com/llvm/circt/pull/7011",
+  "title": "[Moore] Make simple bit vectors a proper MLIR type",
+  "body": "The core type most SystemVerilog expressions are interested in and operate on is a \"simple bit vector type\". These are individual integer atoms like `bit` or `logic`, integral types like `int`, or packed arrays with a single dimension and an integer atom inner type, like `bit [42:0]`. So in a nutshell, simple bit vector types are MLIR's `i42` in the two-valued (`bit`) case, or the four-valued equivalent (`logic`).\r\n\r\nUp until this point, the Moore dialect reflected this pattern by providing an `IntType` for the integer atoms like `bit` and `int`, and using the `PackedRangeDim` for single dimension vectors of `bit`. A `SimpleBitVectorType` helper struct would then summarize the _actual_ bit vector that was expressed by the packed range and integer atom. This makes working with the types in TableGen files very annoying, since the thing you are actually interested in -- the simple bit vector -- is not a proper MLIR type, but more like a helper struct on the side.\r\n\r\nThis commit rips out the existing `IntType` and its composition with a packed array dimension, and replaces it with a proper simple bit vector type that is actually an MLIR type. As a result, SystemVerilog types like `int unsigned`, `bit [42:0]`, `reg`, `logic signed [31:0]`, or `integer` are all translated into the same MLIR type. This new simple bit vector MLIR type retains the `IntType` name, and prints as `!moore.i42` or `!moore.l42`, depending on whether it is a two-valued or four-valued integer. Single `bit` and `logic` atoms become `i1` and `l1` respectively.\r\n\r\nThis makes the Moore type system a lot easier to work with and removes a lot of unnecessary noise. Operations can now simply use `llvm::isa<IntType>` to check if a value is a simple bit vector.",
+  "labels": [
+    "Verilog/SystemVerilog",
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-09",
+  "closed_at": "2024-05-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

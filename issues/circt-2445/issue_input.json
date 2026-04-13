@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2445,
+  "issue_url": "https://github.com/llvm/circt/pull/2445",
+  "title": "[ExportVerilog] ProbeOp namifier",
+  "body": "This commit implements verbatim substitution of values\r\nassociated with probeop. Temporary wires are forced to be\r\ncreated for associated values at prepareForEmission.\r\nCurrently, \r\n```mlir\r\nhw.module @Foo(%a: i1) -> (b: i1) {\r\n  %wire = sv.wire  : !hw.inout<struct<a: i1>>\r\n  %0 = sv.struct_field_inout %wire[\"a\"] : !hw.inout<struct<a: i1>>\r\n  hw.probe @read_wire, %0 : !hw.inout<i1>\r\n  %1 = sv.verbatim.expr \"{{0}}.{{1}}\" : () -> i1\r\n       {symbols = [@Foo, #hw.innerNameRef<@Foo::@read_wire>]}\r\n  sv.assign %0, %a : i1\r\n  hw.output %1 : i1\r\n}\r\n``` \r\nwill emit\r\n```sv\r\nmodule Foo(     // foo.mlir:1:1\r\n  input  a,\r\n  output b);\r\n\r\n  wire                           _T;    // foo.mlir:4:3\r\n  wire struct packed {logic a; } wire_0;        // foo.mlir:2:11\r\n\r\n  assign _T = wire_0.a; // foo.mlir:3:8, :4:3\r\n  assign wire_0.a = a;  // foo.mlir:3:8, :7:3\r\n  assign b = Foo._T;    // foo.mlir:5:8, :8:3\r\nendmodule\r\n```\r\n\r\nDepends on https://github.com/llvm/circt/pull/2443",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-12",
+  "closed_at": "2023-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

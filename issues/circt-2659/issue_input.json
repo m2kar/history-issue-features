@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2659,
+  "issue_url": "https://github.com/llvm/circt/issues/2659",
+  "title": "[AffineToStaticLogic] Support iteratively lowering nested loops.",
+  "body": "After #2657 we can explore a new way to add support for nested loops. This is different from the idea in #2320, which would solve the nested loop problem within the scheduling analysis, and could be a good intermediate step before enhancing the scheduling analysis. Once the analysis can support nested loops, we could have the pass try the analysis, and fall back to this approach in general.\r\n\r\nThe idea is to keep the same analysis and transformation steps, which lower one Affine for loop, but apply them iteratively from the innermost loop out. This could be accomplished by updating the existing pass to use a RewritePattern that matches innermost loops, and applying the pattern greedily.\r\n\r\nIf we do this, innermost loops will be turned into pipelines, and the outer loops would need to know how to schedule pipelines. With the new bound attribute, we have enough information in the IR to compute the latency of PipelineWhileOp and communicate that back to the scheduling analysis.\r\n\r\nOne thing we need to be careful about is maintaining the sequential execution of inner loops, as mentioned in #2320. When an Affine for loop contains nested pipelines, we will need to special case this pass to generate the induction variable increment in a new, final stage, rather than putting it directly in the first stage.\r\n\r\nThere are probably some other details to work out, but this could be a relatively non-intrusive change to handle loop nests, including imperfect loop nests.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-02-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

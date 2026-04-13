@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2883,
+  "issue_url": "https://github.com/verilator/verilator/issues/2883",
+  "title": "Support generic interfaces -- actually not needed",
+  "body": "Any plans to support interfaces in near future?\r\n( at least in very basic form as just bunch of wires for modules connectivity) something like this:\r\n\r\n```\r\n\r\n// basic interface \r\ninterface tl_if;\r\nlogic a_ready;\r\nlogic a_valid;\r\nendinterface\r\n\r\n\r\n// multibus parameterizable interface\r\ninterface multi_tl #(CORES=4);\r\ntl_if bus[CORES]();\r\nendinterface\r\n\r\n//inner module, connected by the basic interface\r\nmodule tl_bus_proc(interface tl);\r\nendmodule\r\n\r\n// parent  module aka interconnect, containing parameterizable number of inner modules\r\nmodule llc # (\r\n    parameter CORES = 1,\r\n    parameter SIZE = 3\r\n)\r\n( \r\ninput clk,\r\ninterface tls\r\n);\r\n\r\nwire aready2 = tls.bus[2].a_ready; \r\n\r\nfor(genvar i=0; i<CORES; i++) begin : BP\r\n    tl_bus_proc bp(.tl(tls.bus[i]));\r\nend\r\n\r\ntl_if b[2]();\r\nendmodule\r\n\r\n//top module, containing N cores with standard interfaces\r\nmodule top;\r\n\r\nwire clk;\r\nfor( genvar i = 0, i<=3, i++) begin : CPU\r\n    core core(.tl(tls.bus[i]));\r\nend\r\nmulti_tl #3 tls();\r\n\r\nllc  #(.CORES(2)) llc0 (.clk(clk), .tls(tls));\r\nllc  #(.CORES(3)) llc1 (.*);\r\nendmodule\r\n```\r\n\r\nIt is very annoying to type multiple signals standard interfaces and their connections, especially when there are multiple similar interfaces like in the interconnect designs . Also it's kind of hard to make these designs to be parameterized with number of buses...\r\n",
+  "labels": [
+    "resolution: no fix needed"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-11",
+  "closed_at": "2021-04-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

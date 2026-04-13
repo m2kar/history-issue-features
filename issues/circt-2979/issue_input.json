@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2979,
+  "issue_url": "https://github.com/llvm/circt/pull/2979",
+  "title": "circt-reduce,firtool,llhd-sim: cleanup --help output, put options in category",
+  "body": "# Summary\r\n\r\nSlightly improve `--help` output for a few tools by grouping the options for each tool explicitly and hiding unrelated options.\r\n\r\nIn the default build configuration, the output change is not significantly different for `circt-reduce` and `firtool` (I'll post the output below).  `llhd-sim` does have a number of low-level flags hidden, which I believe are not useful but this should be vetted.\r\n\r\nTests are extended, and in the case of `llhd-sim`, added, to check for this new output.\r\n\r\n## Motivation\r\n\r\nWhen building CIRCT against LLVM built as shared libraries (or library), as preferred by packagers of LLVM in e.g., most Linux distributions, this change greatly improves the usability of these tools (200 -> 38 options, or so, for circt-reduce, IIRC).\r\n\r\nThat was the original motivation, as I wanted to see what options these tools offered and finding them among the hundreds of CodeGen flags is not great.\r\n\r\n## Why these tools?\r\n\r\nThe others would ideally be improved too, but they are mostly defined within MLIR so that's left as a separate effort.\r\nThis PR focuses on the tools we control the main + `cl::ParseCommandLine` call for.\r\n\r\n# Downsides / Caveats\r\n\r\nNo easy way to discover options that are hidden, if they are needed.\r\nThis really only makes sense under assumption that they're not needed at all.  While they still would be parsed, discoverability is important if they're useful.\r\n\r\nWhen reviewing the differences in `--help`, one option we may wish to preserve is the `--color` flag (which is in its own \"Color Options\" category).  I do not believe we have anything producing color output but if so we can include that in the list of command line \"categories\" we whitelist (it is overloaded to take an `ArrayRef` if needed).\r\n\r\nMLIR options are still under `General options`.  This seems fine to me, as those options are not specific to each tool, but wanted to highlight it.  If preferred, we can from our tools walk the options and move mlir options to a different category, using `getRegisteredOptions` [using code like this example in the documentation](https://llvm.org/docs/CommandLine.html#the-cl-getregisteredoptions-function), but this seems messy and brittle re:assumptions like \"assume MLIR options start with --mlir\".",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-27",
+  "closed_at": "2022-05-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

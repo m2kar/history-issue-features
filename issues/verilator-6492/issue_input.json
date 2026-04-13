@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6492,
+  "issue_url": "https://github.com/verilator/verilator/issues/6492",
+  "title": "False BLKSEQ warning for verilog v1995",
+  "body": "Verilator mistakenly thinks an explicit sensitivity list means a sequential logic process, which in the case below is not so.\nThis bug is a somewhat recent regression.\n\nCan you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n\n**xtime.v**\n```verilog\n`default_nettype none\n`timescale 1ns/1ps\n\nmodule xtime(\n  lhs,\n  o\n);\n  input  wire [7:0] lhs;\n  output reg [7:0]  o;\n  wire [7:0] shifted;\n  always @(shifted or lhs)\n  begin\n    if (lhs[7]) o = shifted ^ 8'h1b;\n    else o = shifted;\n  end\n  assign shifted = lhs << 1;\nendmodule\n```\n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\n```\n%Warning-BLKSEQ: xtime.v:13:19: Blocking assignment '=' in sequential logic process\n                              : ... note: In instance 'xtime'\n                              : ... Suggest using delayed assignment '<='\n   13 |     if (lhs[7]) o = shifted ^ 8'h1b;\n      |                   ^\n                 ... For warning description see https://verilator.org/warn/BLKSEQ?v=5.041\n                 ... Use \"/* verilator lint_off BLKSEQ */\" and lint_on around source to disable this message.\n%Warning-BLKSEQ: xtime.v:14:12: Blocking assignment '=' in sequential logic process\n                              : ... note: In instance 'xtime'\n                              : ... Suggest using delayed assignment '<='\n   14 |     else o = shifted;\n      |            ^\n```\n\n\nWhat 'verilator' command line do we use to run your example?\n`verilator_bin.exe --lint-only --assert --quiet-stats --top-module xtime --timing --default-language 1364-1995 -Wall -Wno-fatal xtime.v`\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n`Verilator 5.041 devel rev v5.040-201-g21dbdbf69`\n\nWhat OS and distribution are you using?\nWindows, from oss-cad-suite (Linux was the same)\n\nMay we assist you in trying to fix this in Verilator yourself?\nUnfortunately, no.\n\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-27",
+  "closed_at": "2025-09-28",
+  "code_blocks": [
+    "`default_nettype none\n`timescale 1ns/1ps\n\nmodule xtime(\n  lhs,\n  o\n);\n  input  wire [7:0] lhs;\n  output reg [7:0]  o;\n  wire [7:0] shifted;\n  always @(shifted or lhs)\n  begin\n    if (lhs[7]) o = shifted ^ 8'h1b;\n    else o = shifted;\n  end\n  assign shifted = lhs << 1;\nendmodule\n",
+    "%Warning-BLKSEQ: xtime.v:13:19: Blocking assignment '=' in sequential logic process\n                              : ... note: In instance 'xtime'\n                              : ... Suggest using delayed assignment '<='\n   13 |     if (lhs[7]) o = shifted ^ 8'h1b;\n      |                   ^\n                 ... For warning description see https://verilator.org/warn/BLKSEQ?v=5.041\n                 ... Use \"/* verilator lint_off BLKSEQ */\" and lint_on around source to disable this message.\n%Warning-BLKSEQ: xtime.v:14:12: Blocking assignment '=' in sequential logic process\n                              : ... note: In instance 'xtime'\n                              : ... Suggest using delayed assignment '<='\n   14 |     else o = shifted;\n      |            ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

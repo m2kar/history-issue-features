@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6809,
+  "issue_url": "https://github.com/verilator/verilator/issues/6809",
+  "title": "SV randomize on dynamic array - error",
+  "body": "```log\nVerilator 5.043 devel rev v5.026-1852-gaff501f5c\n```\nI get an error as below:\n\n```log\nverilator/include/verilated_random.h:173: indexed_name not found in m_arr_vars\nAborting...\n```\n\nTest:\n```systemverilog\nclass PatternConstraint;\n  //Create a random array of size 10 to hold the binary pattern.\n  rand int pattern[];\n\n  constraint pattern_c {pattern.size() == 10;}\n\n  // Constraint to enforce alternating 0 and 1 values\n  constraint alternating_c {\n    foreach (pattern[i])\n    if (i % 2 == 0)  // Even indices: 0, Odd indices: 1\n    pattern[i] == 0;\n    else\n    pattern[i] == 1;\n  }\n\n  // Post-randomization function to display the generated pattern\n  function void post_randomize();\n    $display(\"Generated pattern: %0p\", pattern);\n  endfunction\nendclass\n\nmodule top;\n  initial begin\n    PatternConstraint pc = new();\n    pc.pattern = new[10];\n    $display(\"Generated pattern: %0p\", pc.pattern);\n    // Attempt to randomize and verify the constraints\n    assert (pc.randomize())\n    else $error(\"Randomization failed!\");\n  end\n\nendmodule\n\n```\n\nThanks",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-13",
+  "closed_at": "2026-03-11",
+  "code_blocks": [
+    "Verilator 5.043 devel rev v5.026-1852-gaff501f5c\n",
+    "verilator/include/verilated_random.h:173: indexed_name not found in m_arr_vars\nAborting...\n",
+    "class PatternConstraint;\n  //Create a random array of size 10 to hold the binary pattern.\n  rand int pattern[];\n\n  constraint pattern_c {pattern.size() == 10;}\n\n  // Constraint to enforce alternating 0 and 1 values\n  constraint alternating_c {\n    foreach (pattern[i])\n    if (i % 2 == 0)  // Even indices: 0, Odd indices: 1\n    pattern[i] == 0;\n    else\n    pattern[i] == 1;\n  }\n\n  // Post-randomization function to display the generated pattern\n  function void post_randomize();\n    $display(\"Generated pattern: %0p\", pattern);\n  endfunction\nendclass\n\nmodule top;\n  initial begin\n    PatternConstraint pc = new();\n    pc.pattern = new[10];\n    $display(\"Generated pattern: %0p\", pc.pattern);\n    // Attempt to randomize and verify the constraints\n    assert (pc.randomize())\n    else $error(\"Randomization failed!\");\n  end\n\nendmodule\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

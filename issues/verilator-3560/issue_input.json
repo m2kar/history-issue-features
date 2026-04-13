@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3560,
+  "issue_url": "https://github.com/verilator/verilator/issues/3560",
+  "title": "Timing with `$strobe`",
+  "body": "`$strobe` doesn't always interact correctly with timing (#3363). Test:\r\n```systemverilog\r\nmodule t(input clk);\r\n   event e1;\r\n   event e2;\r\n   int v = 0;\r\n\r\n   initial begin\r\n     #1 $strobe(\"v = %0d\", v); ->e1;\r\n     @e2 $strobe(\"v = %0d\", v); ->e1;\r\n     @e2 $strobe(\"v = %0d\", v); ->e1;\r\n     @e2 $write(\"*-* All Finished *-*\\n\");\r\n     $finish;\r\n   end\r\n\r\n   initial begin\r\n     @e1 v = 1; #1 ->e2;\r\n     @e1 v = 2; #1 ->e2;\r\n     @e1 v = 3; #1 ->e2;\r\n   end\r\nendmodule\r\n```\r\nVerilator output:\r\n```\r\nv = 0\r\nv = 1\r\nv = 2\r\n*-* All Finished *-*\r\n- t/t_timing_strobe.v:21: Verilog $finish\r\n```\r\nDesired output:\r\n```\r\nv = 1\r\nv = 2\r\nv = 3\r\n*-* All Finished *-*\r\n- t/t_timing_strobe.v:21: Verilog $finish\r\n```\r\nIssue is, the `$strobe` gets executed too early, in `act`. That's before the process waiting on `e1` gets resumed.\r\n\r\n[Zip with test case](https://github.com/verilator/verilator/files/9383387/t_timing_strobe.zip)",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-19",
+  "closed_at": "2022-10-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

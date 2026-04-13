@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9562,
+  "issue_url": "https://github.com/llvm/circt/issues/9562",
+  "title": "[FIRRTL][circt-reduce] Connect Forwarder Crashes w/ Layers",
+  "body": "Consider the following:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.layer @A bind {\n  }\n  firrtl.module private @Bar() {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    %wire = firrtl.wire : !firrtl.probe<uint<1>, @A>\n    firrtl.layerblock @A {\n      %wire_0 = firrtl.wire {name = \"wire\"} : !firrtl.uint<1>\n      firrtl.matchingconnect %wire_0, %c0_ui1 : !firrtl.uint<1>\n      %0 = firrtl.ref.send %wire_0 : !firrtl.uint<1>\n      %1 = firrtl.ref.cast %0 : (!firrtl.probe<uint<1>>) -> !firrtl.probe<uint<1>, @A>\n      firrtl.ref.define %wire, %1 : !firrtl.probe<uint<1>, @A>\n    }\n  }\n  firrtl.extmodule @Foo()\n}\n```\n\nRunning the connect forwarder on this will crash:\n\n``` console\n# circt-reduce -skip-initial -test='exit 0' connect-forwarder.0.mlir -include connect-forwarder -o /dev/null \nReading input\nTesting input with `exit 0`\nInitial module has size 625\nTrying reduction `connect-forwarder`\nAssertion failed: (other && other->block == block && \"Expected other operation to have the same parent block.\"), function isBeforeInBlock, file Operation.cpp, line 386.\nPLEASE submit a bug report to https://github.com/llvm/circt and include the crash backtrace.\nStack dump:\n0.\tProgram arguments: circt-reduce -skip-initial \"-test=exit 0\" connect-forwarder.0.mlir -include connect-forwarder -o /dev/null\nStack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):\n0  circt-reduce             0x0000000102f9bc34 llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 56\n1  circt-reduce             0x0000000102f99b1c llvm::sys::RunSignalHandlers() + 172\n2  circt-reduce             0x0000000102f9c6dc SignalHandler(int, __siginfo*, void*) + 300\n3  libsystem_platform.dylib 0x000000018fd516a4 _sigtramp + 56\n4  libsystem_pthread.dylib  0x000000018fd17848 pthread_kill + 296\n5  libsystem_c.dylib        0x000000018fc209e4 abort + 124\n6  libsystem_c.dylib        0x000000018fc1fc18 err + 0\n7  circt-reduce             0x00000001041794dc mlir::Operation::isBeforeInBlock(mlir::Operation*) (.cold.2) + 0\n8  circt-reduce             0x0000000103f65048 mlir::Operation::isBeforeInBlock(mlir::Operation*) + 112\n9  circt-reduce             0x0000000103ed464c (anonymous namespace)::ConnectForwarder::match(mlir::Operation*) + 252\n10 circt-reduce             0x0000000103ebdd44 circt::Reduction::matches(mlir::Operation*, llvm::function_ref<void (unsigned long long, unsigned long long)>) + 36\n11 circt-reduce             0x0000000102f2c580 void llvm::function_ref<void (mlir::Operation*)>::callback_fn<execute(mlir::MLIRContext&)::$_2>(long, mlir::Operation*) + 64\n12 circt-reduce             0x0000000102f2c4dc void mlir::detail::walk<mlir::ForwardIterator>(mlir::Operation*, llvm::function_ref<void (mlir::Operation*)>, mlir::WalkOrder) + 180\n13 circt-reduce             0x0000000102f2c4dc void mlir::detail::walk<mlir::ForwardIterator>(mlir::Operation*, llvm::function_ref<void (mlir::Operation*)>, mlir::WalkOrder) + 180\n14 circt-reduce             0x0000000102f2c4dc void mlir::detail::walk<mlir::ForwardIterator>(mlir::Operation*, llvm::function_ref<void (mlir::Operation*)>, mlir::WalkOrder) + 180\n15 circt-reduce             0x0000000102f2c4dc void mlir::detail::walk<mlir::ForwardIterator>(mlir::Operation*, llvm::function_ref<void (mlir::Operation*)>, mlir::WalkOrder) + 180\n16 circt-reduce             0x0000000102f26d48 execute(mlir::MLIRContext&) + 3072\n17 circt-reduce             0x0000000102f25ebc main + 300\n18 dyld                     0x000000018f976b98 start + 6076\nzsh: abort      circt-reduce -skip-initial -test='exit 0' connect-forwarder.0.mlir -include  \n```",
+  "labels": [
+    "bug",
+    "FIRRTL",
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2026-01-31",
+  "closed_at": "2026-02-02",
+  "code_blocks": [
+    "\nRunning the connect forwarder on this will crash:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

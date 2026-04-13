@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4109,
+  "issue_url": "https://github.com/verilator/verilator/issues/4109",
+  "title": "Internal error when using array query function on list of objects inside begin...end block within function",
+  "body": "I have the following code:\r\n\r\n```\r\n// file test.sv\r\n\r\nclass some_class;\r\n\r\n  function int get_val();\r\n  endfunction\r\n\r\nendclass\r\n\r\n\r\nfunction void do_stuff();\r\n  some_class list_of_some_class[];\r\n  \r\n  // might have other statements above this line, so we need the begin...end to declare a new\r\n  // throwaway variable\r\n  begin\r\n    some_class match[$] = list_of_some_class.find() with (item.get_val() == 1);\r\n  end\r\nendfunction\r\n```\r\n\r\nCompiling it with `verilator --binary test.sv` leads to:\r\n\r\n```\r\nIn file included from Vtest__ALL.cpp:14:\r\nVtest___024unit__DepSet_h0b4ff0d4__0__Slow.cpp: In function ‘void Vtest___024unit___eval_static__TOP____024unit(Vtest___024unit*)’:\r\nVtest___024unit__DepSet_h0b4ff0d4__0__Slow.cpp:18:19: error: ‘item’ was not declared in this scope; did you mean ‘tm’?\r\n   18 |     VL_NULL_CHECK(item, \"test.sv\", 15)->__VnoInFunc_get_val(vlSymsp, __Vtask_get_val__0__Vfuncout);\r\n      |                   ^~~~\r\n      |                   tm\r\n```\r\n\r\nThis only seems to happen when using an array of objects; an array of int won't cause this issue. The `begin...end` block is also important. Also, if I declare the function as `function automatic void do_stuff()`, then it doesn't crash. Using `function static void do_stuff()` or declaring the function under a class causes it to crash with the same error message.",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-11",
+  "closed_at": "2023-04-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

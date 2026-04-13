@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5395,
+  "issue_url": "https://github.com/verilator/verilator/issues/5395",
+  "title": "Unsupported Union Randomization",
+  "body": "I encountered an issue while using master-branch Verilator related to randomization.\r\n\r\nWhile union and struct constrained randomization are supported after the #5344 commit, unconstrained randomization for union remains unsupported.\r\nTo address this, I wrote a simple patch that adds support for unconstrained randomization of union. I tested it with a custom test case, and it works as expected.\r\n\r\nTwo tests to run are:\r\nTest 1:\r\n```\r\ntypedef struct packed {\r\n    rand bit [3:0] a;\r\n    rand bit [11:0] b;\r\n} PackedStruct;\r\n\r\ntypedef union packed {\r\n    PackedStruct s;\r\n    bit [15:0] raw_bits;\r\n} InnerPackedUnion;\r\n\r\ntypedef union packed {\r\n    InnerPackedUnion u1;\r\n    bit [15:0] raw_data;\r\n} OuterPackedUnion;\r\n\r\nclass UnionInUnionTest;\r\n    rand OuterPackedUnion my_outer_union;\r\n\r\n    function new();\r\n        my_outer_union.raw_data = 16'b0;\r\n    endfunction\r\n\r\nendclass\r\n\r\nmodule union_in_union_unconstrained_test;\r\n    UnionInUnionTest test;\r\n\r\n    initial begin\r\n        test = new();\r\n        repeat(10) begin\r\n            if (!test.randomize()) $error(\"Randomization failed\");\r\n            $display(\"Inner Union Struct: a: %b, b: %b, raw_bits: %b\", test.my_outer_union.u1.s.a, test.my_outer_union.u1.s.b, test.my_outer_union.u1.raw_bits);\r\n            $display(\"Outer Union: raw_data: %b\", test.my_outer_union.raw_data);\r\n        end\r\n        $finish;\r\n    end\r\nendmodule\r\n\r\n```\r\nTest 2:\r\n```\r\ntypedef struct packed {\r\n    rand bit [3:0] a;\r\n    rand bit [7:0] b;\r\n} PackedStruct;\r\n\r\ntypedef union packed {\r\n    PackedStruct s;\r\n    bit [11:0] raw_bits;\r\n} PackedUnion;\r\n\r\nclass StructInUnionTest;\r\n    rand PackedUnion my_union;\r\n\r\n    function new();\r\n        my_union.raw_bits = 12'b0;\r\n    endfunction\r\n\r\nendclass\r\n\r\nmodule struct_in_union_unconstrained_test;\r\n    StructInUnionTest test;\r\n\r\n    initial begin\r\n        test = new();\r\n        repeat(10) begin\r\n            if (!test.randomize()) $error(\"Randomization failed\");\r\n            $display(\"Struct: a: %b, b: %b\", test.my_union.s.a, test.my_union.s.b);\r\n            $display(\"Union : raw_bits: %b\", test.my_union.raw_bits);\r\n        end\r\n        $finish;\r\n    end\r\nendmodule\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-22",
+  "closed_at": "2024-08-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

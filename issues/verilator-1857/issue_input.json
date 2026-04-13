@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1857,
+  "issue_url": "https://github.com/verilator/verilator/issues/1857",
+  "title": "Question: Verilator signal reflection?",
+  "body": "---\n\n\nAuthor Name: **Todd Strader** (@toddstrader)\nOriginal Redmine Message: 1697 from https://www.veripool.org\n\n\n\n---\n\nI'd like to be able to access a /* verilator public */ given that signal's canonical name (e.g. \"top.v.glbl.GSR\").  I've been messing around with the VerilatedScope objects in the *__Syms class seem to give me part of what I want.  I modified the t_trace_public_sig regression test to play around with this:\n\n```\n$ git diff\ndiff --git a/test_regress/t/t_trace_public_sig.cpp b/test_regress/t/t_trace_public_sig.cpp\nindex 4ad487d..d8e352a 100644\n--- a/test_regress/t/t_trace_public_sig.cpp\n+++ b/test_regress/t/t_trace_public_sig.cpp\n@@ -11,6 +11,7 @@\n #include \"Vt_trace_public_sig.h\"\n #include \"Vt_trace_public_sig_t.h\"\n #include \"Vt_trace_public_sig_glbl.h\"\n+#include \"Vt_trace_public_sig__Syms.h\"\n\n unsigned long long main_time = 0;\n double sc_time_stamp() {\n@@ -22,6 +23,9 @@ const unsigned long long dt_2 = 3;\n int main(int argc, char **argv, char **env) {\n      Vt_trace_public_sig *top = new Vt_trace_public_sig(\"top\");\n\n+    printf (\"Symbol table name = %s\\n\", top->__VlSymsp->name());\n+    top->__VlSymsp->__Vscope_v__glbl.scopeDump();\n+\n      Verilated::debug(0);\n      Verilated::traceEverOn(true);\n\n\n```\n\nscopeDump() shows me the public signal in the GSR module:\n\n```\nvlt/t_trace_public_sig: Run\n         obj_dir/t_trace_public_sig/Vt_trace_public_sig    > obj_dir/t_trace_public_sig/vlt_sim.log\nSymbol table name = top\n     SCOPE 0x1d1c540: top.v.glbl\n        VAR 0x1d1c6f8: GSR\n*-* All Finished *-*\n\n```\n\nAnd even better yet, I can discover GSR's type and access its data.  However, I can't find a way to link scopes together.  I'd like to be able to start with top or top's symbol table and get a VerilatedVar* for an arbitrary (public) signal in the design.  Is this possible?\n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2015-09-15",
+  "closed_at": "2015-09-15",
+  "code_blocks": [
+    "$ git diff\ndiff --git a/test_regress/t/t_trace_public_sig.cpp b/test_regress/t/t_trace_public_sig.cpp\nindex 4ad487d..d8e352a 100644\n--- a/test_regress/t/t_trace_public_sig.cpp\n+++ b/test_regress/t/t_trace_public_sig.cpp\n@@ -11,6 +11,7 @@\n #include \"Vt_trace_public_sig.h\"\n #include \"Vt_trace_public_sig_t.h\"\n #include \"Vt_trace_public_sig_glbl.h\"\n+#include \"Vt_trace_public_sig__Syms.h\"\n\n unsigned long long main_time = 0;\n double sc_time_stamp() {\n@@ -22,6 +23,9 @@ const unsigned long long dt_2 = 3;\n int main(int argc, char **argv, char **env) {\n      Vt_trace_public_sig *top = new Vt_trace_public_sig(\"top\");\n\n+    printf (\"Symbol table name = %s\\n\", top->__VlSymsp->name());\n+    top->__VlSymsp->__Vscope_v__glbl.scopeDump();\n+\n      Verilated::debug(0);\n      Verilated::traceEverOn(true);\n\n\n",
+    "vlt/t_trace_public_sig: Run\n         obj_dir/t_trace_public_sig/Vt_trace_public_sig    > obj_dir/t_trace_public_sig/vlt_sim.log\nSymbol table name = top\n     SCOPE 0x1d1c540: top.v.glbl\n        VAR 0x1d1c6f8: GSR\n*-* All Finished *-*\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

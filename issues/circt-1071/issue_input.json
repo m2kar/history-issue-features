@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1071,
+  "issue_url": "https://github.com/llvm/circt/issues/1071",
+  "title": "[LLHD] Buffer over-read during simulation",
+  "body": "In `LLHD/Engine.cpp`, a memory bytebuffer is converted to an APInt.  In order to do this, the buffer is converted from `uint8_t*` to `uint64_t*`, and the size of the buffer is rounded up to the next 64 bits.  After this, the constructor of APInt reads past the end of the original bytebuffer.\r\n\r\n```c++\r\n      APInt buff(\r\n          curr.size * 8,\r\n          llvm::makeArrayRef(reinterpret_cast<uint64_t *>(curr.value.get()),\r\n                             llvm::divideCeil(curr.size, 8)));\r\n```\r\n\r\nThere seems to be a purpose built function to do what we want, although I haven't checked how the memory buffer is supposed to be used on big endian systems.\r\n```c++\r\n      APInt buff(curr.size * 8, 0);\r\n      LoadIntFromMemory(buff, curr.value.get(), curr.size);\r\n```\r\n\r\nThere are at least two places that will have to be fixed:\r\nhttps://github.com/llvm/circt/blob/main/lib/Dialect/LLHD/Simulator/Engine.cpp#L131\r\nhttps://github.com/llvm/circt/blob/main/lib/Dialect/LLHD/Simulator/State.cpp#L113",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-18",
+  "closed_at": "2022-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

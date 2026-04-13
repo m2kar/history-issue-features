@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7112,
+  "issue_url": "https://github.com/llvm/circt/pull/7112",
+  "title": "[Moore] Add module and instance port support",
+  "body": "Add module types and support for ports to the `moore.module` and `moore.instance` operations. Also add a `moore.output` operation as a terminator for modules, similar to the HW dialect. Extend ImportVerilog to generate ports.\r\n\r\nThe ports on SVModuleOp follow a similar strategy as in HWModuleOp: all input, inout, and ref ports are passed to the module as inputs and are carried inside the module as block arguments, while output ports are assigned by the OutputOp terminator. The Moore dialect reuses the `hw::ModuleType` but does not use the `inout` direction. Instead, inout ports will be represented as inputs with a `net<T>` wrapper type, while ref ports will be wrapped as `ref<T>`.\r\n\r\nInstances work identically to the HW dialect: input, inout, and ref port connections are carried as operands, while output ports are represented as results.\r\n\r\nThis commit also adds module and instance port support to the ImportVerilog conversion. Regular ports are mapped to corresponding ports on the module with the appropriate direction. Multi-ports, which are a weird quirk of SystemVerilog that allow multiple ports to be grouped up and presented to the outside as a single named port, are split up into individual module ports. This is necessary since this group can contain ports of different directions.\r\n\r\nInside a module Slang automatically generates local net or variable declarations for all ports. The user may specify these declarations themselves when using non-ANSI port lists, which Slang handles properly. ImportVerilog inserts appropriate continuous assignments to drive the actual input port value onto the local net or variable declaration, and to drive the local declaration's value onto the actual output port of the module. This properly adapts from SystemVerilog's assignable and connectable ports that feel like nets or variables, to the Moore dialect's by-value passing of inputs and outputs.\r\n\r\nInstances in Slang have expressions connected to their ports. Input ports lower this expression and directly use the result as an operand. Output ports lower this expression and drive it through a continuous assignment inserted after the instance, with the instance's corresponding result on the right-hand side of the assignment.\r\n\r\nOnce we have a `ref<T>` type, and later potentially also a `net<T>` type, the port lowering shall be revisited to ensure that inout and ref ports are mapped to net and ref types, respectively. The lowering of expressions connected to ports requires more care to ensure that they are appropriately lowered to lvalues or rvalues, as needed by the port direction. A `moore.short_circuit` operation or similar would help to connect inout ports to the local net declarations in a module, and to capture `alias` statements.\r\n\r\n---------",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-06-01",
+  "closed_at": "2024-06-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4557,
+  "issue_url": "https://github.com/verilator/verilator/issues/4557",
+  "title": "Issue using packed struct with instance array",
+  "body": "When instanciating an array of modules with packed array output, connecting unpacked array of packed struct to modules output gives the following error when trying to verilate:\r\n```\r\n%Error: C:/Users/raph/testbenches/systemverilog/verilator_issue/tb.sv:21:20: VARREF 'tb.__Vcellout__dut1[1]____pinNumber2' is not an unpacked array, but is in an unpacked array context\r\n   21 |  dut dut1 [2] (in, out);\r\n      |                    ^~~\r\n%Error: C:/Users/raph/testbenches/systemverilog/verilator_issue/tb.sv:21:20: VARREF 'tb.__Vcellout__dut1[0]____pinNumber2' is not an unpacked array, but is in an unpacked array context\r\n   21 |  dut dut1 [2] (in, out);\r\n      |                    ^~~\r\n%Error: Exiting due to 4 error(s)\r\n```\r\n\r\nHere is the simple testbench I used:\r\n```\r\nmodule dut\r\n\t(input bit [1:0] in,\r\n\toutput bit [1:0] out);\r\n\r\n\tassign out = in;\r\nendmodule\r\n\r\nmodule tb;\r\n\tbit clock = 0, finish = 0;\r\n\t\r\n\talways #1 clock = ~clock;\r\n\t\r\n\ttypedef struct packed {\r\n\t\tbit one;\r\n\t\tbit two;\r\n\t\t} ps;\r\n\t\r\n\tps in [2] = {{1'b1, 1'b0}, {1'b0, 1'b1}};\r\n\tps out [2];\r\n\t\r\n\tdut dut1 [2] (in, out);\r\n\t\r\n\ttask error ();\r\n\t\t$fatal(2, \"\\ninvalid out for in\\nout[0]: %0h | in[0]: %0h | out[1]: %0h | in[1]: %0h\", out[0], in[0], out[1], in[1]);\r\n\tendtask\r\n\t\r\n\tint unsigned step = 0;\r\n\talways @(clock) begin\r\n\t\tif (!finish) begin\r\n\t\t\tif (step == 0) begin\r\n\t\t\t\tif (out[0] != 2'h2 || out[1] != 2'h1) error();\r\n\t\t\tend\r\n\t\t\tif (step == 0) finish = 1;\r\n\t\t\telse step++;\r\n\t\tend\r\n\tend\r\n\t\r\n\talways @(clock) begin\r\n\t\tif (finish) begin\r\n\t\t\t$display(\"tb success\");\r\n\t\t\t$finish;\r\n\t\tend\r\n\tend\r\nendmodule\r\n```\r\n\r\nI also tried changing the packed struct type to a packed array like this: `bit [1:0] out [2];`\r\nIt verilates without errors, but it throws errors at compilation time: `cannot convert from 'VlUnpacked<CData,2>' to 'T_Value'`\r\n\r\nTested on edaplayground.com with Aldec, Inc. Riviera-PRO version 2022.04.117.8517 and testbench finish without errors.\r\nIssue may be related to issue #798.\r\nI am using Verilator 5.014 built from sources on WIndows using MSVC.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-12",
+  "closed_at": "2023-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

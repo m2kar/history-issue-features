@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5965,
+  "issue_url": "https://github.com/verilator/verilator/issues/5965",
+  "title": "Incorrect signal expansion with unsigned variables causes wrong simulation result",
+  "body": "The following is the problematic code `test.v`, which I have minimized (deleting any line will cause the unexpected behavior to disappear):\n\n```verilog\n`timescale 1ns/1ps\nmodule tjzeyzoicm ();\n\n    reg  [27:5] in0;\n    reg [26:11] in1;\n    wire  [24:14] wire_0;\n    wire [26:5] out1;\n    wire _085_;\n    wire _082_;\n    wire [10:0] _092_;\n    wire [9:0] _028_;\n    \n    initial begin\n        in0 = 6902127;\n        in1 = 10000;\n        #10;\n        $display(\"out1: %0d\\n\", out1);\n    end\n\n    assign _028_ = ~ { 9'h000, in0[23] };\n    assign _092_[1] = 1'h0;\n    assign { _092_[10:2], _092_[0] } = _028_;\n    assign wire_0 = _092_;\n    assign _082_ = | wire_0[18:17];\n    assign _085_ = _082_ ? in1[11] : 1'h0;\n    assign out1 = { 21'h000000, _085_ };\nendmodule\n```\n\nThe issue can be reproduced by running the following commands:\n\n```\nverilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n```\n\nThe program outputs:\n\n```\nout1: 10000\n```\n\nHowever, based on the code of `test.v`, the assignment `assign out1 = { 21'h000000, _085_ };` only allows the least significant bit to vary. Therefore, the output value of `out1` should only be `0` or `1`, but not the value of `in1`.\n\nUsing the `-fno-expand` option eliminates the error, so this issue might be related to https://github.com/verilator/verilator/issues/5963. However, the difference is that in this issue, all involved variables are unsigned, so the root cause might be different.",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-28",
+  "closed_at": "2025-04-28",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule tjzeyzoicm ();\n\n    reg  [27:5] in0;\n    reg [26:11] in1;\n    wire  [24:14] wire_0;\n    wire [26:5] out1;\n    wire _085_;\n    wire _082_;\n    wire [10:0] _092_;\n    wire [9:0] _028_;\n    \n    initial begin\n        in0 = 6902127;\n        in1 = 10000;\n        #10;\n        $display(\"out1: %0d\\n\", out1);\n    end\n\n    assign _028_ = ~ { 9'h000, in0[23] };\n    assign _092_[1] = 1'h0;\n    assign { _092_[10:2], _092_[0] } = _028_;\n    assign wire_0 = _092_;\n    assign _082_ = | wire_0[18:17];\n    assign _085_ = _082_ ? in1[11] : 1'h0;\n    assign out1 = { 21'h000000, _085_ };\nendmodule\n",
+    "verilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n",
+    "out1: 10000\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

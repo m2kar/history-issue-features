@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6939,
+  "issue_url": "https://github.com/verilator/verilator/issues/6939",
+  "title": "Legit Warning-LATCH is suppressed by incomplete case with default",
+  "body": "The following code produces a latch warning due to `c` being assigned only in `if (a)` branch. This is expected.\n\n```SystemVerilog\nmodule test (\n    input        a,\n    input [1:0]  b,\n    output logic c\n);\n    always_comb\n        if (a) begin\n            case (b)\n                2'd0, 2'd1, 2'd2, 2'd3: c = '0;\n                default:;\n            endcase\n        end\nendmodule\n```\n\nWhen running in debug mode ` verilator --lint-only -Wall --debug test.sv`:\n\n```\n- V3Active.cpp:626:   activeAll:\n%Warning-LATCH: test.sv:6:5: Latch inferred for signal 'c' (not all control paths of combinational always assign a value)\n                           : ... Suggest use of always_latch for intentional latches\n-node: ALWAYS 0x5555555d3ad0 <e1997#> {e6af} [always_comb]\n    6 |     always_comb\n      |     ^~~~~~~~~~~\n                ... For warning description see https://verilator.org/warn/LATCH?v=5.045\n                ... Use \"/* verilator lint_off LATCH */\" and lint_on around source to disable this message.\n```\n\nHowever, if the case is incomplete and `default` is present, then that warning is suppressed:\n\n```SystemVerilog\ncase (b)\n    2'd0, 2'd1, 2'd2: c = '0;\n    default:;\nendcase\n```\n\n```\n- V3Active.cpp:626:   activeAll:\n-arning-suppressed-LATCH: test.sv:6:5: Latch inferred for signal 'c' (not all control paths of combinational always assign a value)...\n```\n\n`Verilator 5.045 devel rev v5.044-54-g913cf933e`\nOS: Arch Linux\n\nEDIT:\n\nSame thing happens even without `default`, if case item is unsized (32 bit) constant: \n\n```SystemVerilog\ncase (b)\n    0: c = '0;\nendcase\n```",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "open",
+  "created_at": "2026-01-17",
+  "closed_at": null,
+  "code_blocks": [
+    "module test (\n    input        a,\n    input [1:0]  b,\n    output logic c\n);\n    always_comb\n        if (a) begin\n            case (b)\n                2'd0, 2'd1, 2'd2, 2'd3: c = '0;\n                default:;\n            endcase\n        end\nendmodule\n",
+    "- V3Active.cpp:626:   activeAll:\n%Warning-LATCH: test.sv:6:5: Latch inferred for signal 'c' (not all control paths of combinational always assign a value)\n                           : ... Suggest use of always_latch for intentional latches\n-node: ALWAYS 0x5555555d3ad0 <e1997#> {e6af} [always_comb]\n    6 |     always_comb\n      |     ^~~~~~~~~~~\n                ... For warning description see https://verilator.org/warn/LATCH?v=5.045\n                ... Use \"/* verilator lint_off LATCH */\" and lint_on around source to disable this message.\n",
+    "case (b)\n    2'd0, 2'd1, 2'd2: c = '0;\n    default:;\nendcase\n",
+    "- V3Active.cpp:626:   activeAll:\n-arning-suppressed-LATCH: test.sv:6:5: Latch inferred for signal 'c' (not all control paths of combinational always assign a value)...\n",
+    "case (b)\n    0: c = '0;\nendcase\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

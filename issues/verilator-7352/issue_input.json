@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7352,
+  "issue_url": "https://github.com/verilator/verilator/issues/7352",
+  "title": "Add error on mixed-initialization",
+  "body": "### Version\nVerilator 5.046 (2026-02-28)\n\n### Description\nVerilator accepts a mixed-driver pattern where a `logic` variable is both declaration-initialized and continuously driven, without reporting a diagnostic specific to the conflicting assignment styles.\n\nExample:\n```\n    logic a = 1'b0;   // declaration initialization\n    assign a = 1'b1;  // continuous assignment\n```\nIn SystemVerilog, declaration initialization of a variable is procedural-style initialization, while `assign` is a continuous driver. A `logic` variable should not be driven by both a declaration-time initializer and a continuous assignment in this way. Other simulators iverilog, modelsim(commercial simulator) and verisim(commercial simulator) reject this construct, but Verilator accepts it silently.\n\n### Expected behavior\nVerilator should reject the design (or at minimum emit a clear diagnostic) because `a` has conflicting driver styles:\n- declaration-time initialization: `logic a = 1'b0;`\n- continuous assignment: `assign a = 1'b1;`\n\nThis should not be accepted as a valid single-driver `logic` usage.\n\n### Observed behavior\nVerilator accepts the design without reporting a specific error or warning about the mixed procedural/continuous driver conflict.\n\n### Reproduce\ndut \n```\nmodule complex_logic_unit (\n    output wire out\n);\n\n    logic a = 1'b0;   // declaration initialization (procedural-style driver)\n    assign a = 1'b1;  // continuous assignment driver\n\n    assign out = a;\n\nendmodule\n```\n\nverilator commands\n`verilator -cc -Wall complex_logic_unit.sv`",
+  "labels": [
+    "area: lint",
+    "area: parser"
+  ],
+  "state": "open",
+  "created_at": "2026-03-31",
+  "closed_at": null,
+  "code_blocks": [
+    "    logic a = 1'b0;   // declaration initialization\n    assign a = 1'b1;  // continuous assignment\n",
+    "module complex_logic_unit (\n    output wire out\n);\n\n    logic a = 1'b0;   // declaration initialization (procedural-style driver)\n    assign a = 1'b1;  // continuous assignment driver\n\n    assign out = a;\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

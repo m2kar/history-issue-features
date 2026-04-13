@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3491,
+  "issue_url": "https://github.com/llvm/circt/pull/3491",
+  "title": "[HW] Memory Lowering: Use Generated Op and Schema to lower FMemModuleOp",
+  "body": "This PR lowers the `FMemModuleOp` to `HWModuleGeneratedOp` and `HWGeneratorSchemaOp` instead of `HWModuleExternOp`. Also ensure the `HWModuleGeneratedOp` is lowered exactly as `HWModuleExternOp` in `ExportVerilog`.\r\n\r\nThis PR is an attempt to preserve the metadata required for memory macro replacement from the FIRRTL dialect, after `LowerToHW`. This should replace the requirement for embedding the memory metadata into verbatim Ops for json export.\r\n\r\nAll the attributes that are being embedded into the `VerbatimOp` in the `CreateSifiveMetadata` will be stored with the `hw.generator.schema` op, and the `hw.module.generated` stores the values for the corresponding attributes.\r\n\r\nAn example:\r\n```\r\nhw.generator.schema @FIRRTLSeqMemSchema, \"FIRRTL_Seq_Memory\", \r\n  [\"depth\", \"numReadPorts\", \"numWritePorts\", \"numReadWritePorts\", \"readLatency\", \"writeLatency\",\r\n   \"width\", \"maskGran\", \"extraPorts\"]\r\nhw.module.generated @SiFive_CCache_cc_dir_ext, @FIRRTLSeqMemSchema(%RW0_addr: i8, %RW0_en: i1, %RW0_clk: i1, %RW0_wmode: i1, %RW0_wdata: i216, %RW0_wmask: i8, %user_inputs: i8)\r\n  ->  (RW0_rdata: i216) attributes \r\n    {depth = 256 : ui64, extraPorts = [{direction = \"input\", name = \"user_inputs\", width = 8 : ui32}],\r\n     maskGran = 27 : ui32, numReadPorts = 0 : ui32, numReadWritePorts = 1 : ui32, numWritePorts = 0 : ui32,\r\n     readLatency = 1 : ui32, verilogName = \"SiFive_CCache_cc_dir_ext\", width = 216 : ui32, writeLatency = 1 : ui32}\r\n```\r\n\r\nThe `mlir` can now be queried by other tools like python, to get the required metadata instead of parsing the json.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-08",
+  "closed_at": "2023-02-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4334,
+  "issue_url": "https://github.com/llvm/circt/issues/4334",
+  "title": "GrandCentralTaps: ExpandWhen's \"not fully initialized\"(tapping val under when)",
+  "body": "Another tapping scenario to consider:\r\n\r\n```firrtl\r\ncircuit Top : %[[\r\n  {\r\n    \"class\":\"sifive.enterprise.grandcentral.DataTapsAnnotation\",\r\n    \"keys\":[\r\n      {\r\n        \"class\":\"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\":\"~Top|Top>val\",\r\n        \"sink\":\"~Top|Top/mid:Middle/leaf:Leaf>tap\"\r\n      },\r\n      {\r\n        \"class\":\"sifive.enterprise.grandcentral.ReferenceDataTapKey\",\r\n        \"source\":\"~Top|Top/mid:Middle/leaf:Leaf>val\",\r\n        \"sink\":\"~Top|Top>tap\"\r\n      }\r\n    ]\r\n  }\r\n]]\r\n  module Leaf :\r\n    input c: UInt<1>\r\n\r\n    when c:\r\n      wire val : UInt<3>\r\n      val <= UInt(2)\r\n\r\n      ; Tap Top's val\r\n      wire tap : UInt<4>\r\n      tap is invalid\r\n\r\n  module Middle :\r\n    input c: UInt<1>\r\n    \r\n    when c:\r\n      inst leaf of Leaf\r\n      leaf.c <= c\r\n\r\n  module Top :\r\n    input c: UInt<1>\r\n    output o: UInt\r\n\r\n    wire val : UInt<3>\r\n    val <= UInt(1)\r\n\r\n    inst mid of Middle\r\n    mid.c <= c\r\n\r\n    o is invalid\r\n\r\n    ; Tap Leaf's val\r\n    when c:\r\n      wire tap : UInt\r\n      tap is invalid\r\n      o <= tap\r\n\r\n```\r\n\r\nProduces:\r\n\r\n```\r\nsimpler.fir:23:10: error: port \"_gen_tap_0\" not fully initialized in module \"Leaf\"\r\n  module Leaf :\r\n         ^\r\nsimpler.fir:34:10: error: port \"_gen_tap_0\" not fully initialized in module \"Middle\"\r\n  module Middle :\r\n         ^\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-18",
+  "closed_at": "2023-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

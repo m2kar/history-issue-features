@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3983,
+  "issue_url": "https://github.com/llvm/circt/issues/3983",
+  "title": "[ExportVerilog,i0 support] sv.passign with i0 is not commented out",
+  "body": "(under the assumption that `i0` support for `isHWIntegerType` is merged) emitting `sv.passign` with `i0` wires results in invalid SV:\r\n\r\n```mlir\r\n  hw.module @Top(%arg0: i0, %clk: i1) -> (out: i0) {\r\n    %0 = sv.reg  {hw.verilogName = \"_GEN\"} : !hw.inout<i0>\r\n    sv.alwaysff(posedge %clk) {\r\n      sv.passign %0, %arg0 : i0\r\n    }\r\n    %1 = sv.read_inout %0 : !hw.inout<i0>\r\n    hw.output %1 : i0\r\n  }\r\n```\r\nemits as\r\n```sv\r\nmodule Top(     \r\n  // input  /*Zero Width*/ arg0,\r\n     input                 clk\r\n  // output /*Zero Width*/ out\r\n   );\r\n\r\n  // Zero width: reg /*Zero Width*/ _GEN;       \r\n  always_ff @(posedge clk)      \r\n    _GEN <= arg0;       \r\n  // Zero width: assign out = _GEN;     \r\nendmodule\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-23",
+  "closed_at": "2022-09-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

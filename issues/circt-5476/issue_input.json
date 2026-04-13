@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5476,
+  "issue_url": "https://github.com/llvm/circt/issues/5476",
+  "title": "[ExportVerilog] Check given `hw.verilogName` is a valid verilog word",
+  "body": "`ForceNameAnnotation` adds `hw.verilogName` to force the emitter to use annotated names but currently the emitter doesn't check the validity of the given names. Even though it's users' responsibility to use 1hw.verilogName` but it's better for the emitter to reject invalid verilogs at the compile time, e.g:\r\n* a given name conflicts with verilog keyword\r\n* a given name conflicts with other names\r\n\r\n```scala\r\ncircuit Foo: %[[\r\n  {\r\n    \"class\": \"chisel3.util.experimental.ForceNameAnnotation\",\r\n    \"target\": \"~Foo|Foo>bar\",\r\n    \"name\": \"wire\"\r\n  },\r\n  {\r\n    \"class\": \"chisel3.util.experimental.ForceNameAnnotation\",\r\n    \"target\": \"~Foo|Foo>bar1\",\r\n    \"name\": \"bar\"\r\n  },\r\n  {\r\n    \"class\": \"chisel3.util.experimental.ForceNameAnnotation\",\r\n    \"target\": \"~Foo|Foo>bar2\",\r\n    \"name\": \"bar\"\r\n  }\r\n]]\r\n  module Bar:\r\n    input in: Clock\r\n    output out: Clock\r\n    out <= in\r\n    \r\n  module Foo:\r\n    input in: Clock\r\n    output out: Clock\r\n\r\n    inst bar of Bar\r\n    bar.in <= in \r\n    out <= bar.out \r\n    inst bar1 of Bar\r\n    bar1.in <= in \r\n    inst bar2 of Bar\r\n    bar2.in <= in \r\n\r\n    out <= bar1.out \r\n\r\n```\r\n\r\n`firtool foo.fir` produces following verilog which is clearly invalid. \r\n\r\n```verilog\r\n  Bar wire (\r\n    .in  (in),\r\n    .out (/* unused */)\r\n  );\r\n  Bar bar (\r\n    .in  (in),\r\n    .out (out)\r\n  );\r\n  Bar bar (\r\n    .in  (in),\r\n    .out (/* unused */)\r\n  );\r\n```\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-06-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

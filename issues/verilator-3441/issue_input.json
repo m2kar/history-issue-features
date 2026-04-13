@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3441,
+  "issue_url": "https://github.com/verilator/verilator/issues/3441",
+  "title": "typedef derived from type defined inside interface",
+  "body": "What would you like added/supported?\r\n\r\n**typedef derived from type defined inside interface**\r\n\r\nCan you attach an example that runs on other simulators?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nhttps://verificationacademy.com/forums/systemverilog/parameterized-struct-systemverilog-design#answer-61637\r\n\r\n```\r\ninterface common_intf #(int  ADDR_W, DATA_W);\r\ntypedef struct packed {\r\n\r\nlogic [ADDR_W-1:0] cntr_idx;\r\nlogic [DATA_W-1:0] cntr_val;\r\n\r\n} stage_t;\r\n\r\n  stage_t bus;\r\n\r\nendinterface\r\n\r\nmodule mod1(common_intf p1);\r\n  initial $display(\"%m idx bits %0d, val bits %0d\", $bits(p1.bus.cntr_idx), $bits(p1.bus.cntr_val));\r\n  typedef p1.stage_t stage_t; // \"imports\" type into module\r\n  stage_t local_bus;\r\nendmodule\r\n\r\nmodule mod2(common_intf p1, p2);\r\n  initial $display(\"%m-1 idx bits %0d, val bits %0d\",\r\n                   $bits(p1.bus.cntr_idx),\r\n                   $bits(p1.bus.cntr_val));\r\n  typedef p1.stage_t stage1_t; // \"imports\" type into module\r\n  stage1_t local_bus1;\r\n  initial $display(\"%m-2 idx bits %0d, val bits %0d\",\r\n                   $bits(p2.bus.cntr_idx),\r\n                   $bits(p2.bus.cntr_val));\r\n  typedef p2.stage_t stage2_t; // \"imports\" type into module\r\n  stage2_t local_bus2;\r\n  initial $display(\"%m params p1 ADDR_W %0d DATA_W %0d\", p1.ADDR_W, p1.DATA_W);\r\n  initial $display(\"%m params p2 ADDR_W %0d DATA_W %0d\", p2.ADDR_W, p2.DATA_W);\r\n\r\nendmodule\r\n\r\nmodule top;\r\n  common_intf #(8,16) i1_2(); // connects m1 to m2\r\n  common_intf #(4,32) i2_3(); // connects m2 to m3\r\n  mod1 m1(i1_2);\r\n  mod2 m2(i1_2,i2_3);\r\n  mod1 m3(i2_3);\r\nendmodule\r\n```\r\n\r\n```\r\n%Error-UNSUPPORTED: ....sv:123:3: Unsupported: SystemVerilog 2005 typedef in this context\r\n  123 |   typedef p1.stage_t stage_t;  \r\n      |   ^~~~~~~\r\n                    ... For error description see https://verilator.org/warn/UNSUPPORTED?v=4.221\r\n%Error-UNSUPPORTED: ....sv:131:3: Unsupported: SystemVerilog 2005 typedef in this context\r\n  131 |   typedef p1.stage_t stage1_t;  \r\n      |   ^~~~~~~\r\n%Error-UNSUPPORTED: ....sv:136:3: Unsupported: SystemVerilog 2005 typedef in this context\r\n  136 |   typedef p2.stage_t stage2_t;  \r\n      |   ^~~~~~~\r\n```\r\n",
+  "labels": [
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-22",
+  "closed_at": "2025-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

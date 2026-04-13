@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6394,
+  "issue_url": "https://github.com/verilator/verilator/issues/6394",
+  "title": "Fix DfgVertexVar::setHasRdXRefs crash on hier ref error",
+  "body": "From last night sv-tests/third_party/tools/icarus/ivtest/ivltests/sv_import_hier_fail1.v\n\n```\npackage P;\n  integer x;\nendpackage\n\nmodule M;\n  import P::x;\n  integer y;\n  always_comb y = x;\nendmodule\n\nmodule test;\n\n  M m ();\n\n  initial begin\n    integer y;\n    y = m.x; // This should fail. Imported identifiers are not visible through\n             // hierarchical names.\n    $display(\"FAILED\");\n  end\n\nendmodule\n```\n\nGives\n\n```\n%Error: /svaha/wsnyder/SandBox/sv-tests/third_party/tools/icarus/ivtest/ivltests/sv_import_hier_fail1.v:19:11: Can't find definition of 'x' in dotted signal: 'm.x'\n                                                                                                             : ... note: In instance 'test'\n   19 |     y = m.x;\n        ... Known scopes under 'x': <no instances found>\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n```\n\nThe error is fine, and perhaps the error handling needs to get fixed, but DFG which is giving the segfault needs to change to give some assert/internal error instead, as segfaults (correctly IMO) always fail sv-tests.\n\nLikewise sv_import_hier_fail2.v sv_import_hier_fail3.v but presumably identical.\n\nThanks\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-06",
+  "closed_at": "2025-09-10",
+  "code_blocks": [
+    "package P;\n  integer x;\nendpackage\n\nmodule M;\n  import P::x;\n  integer y;\n  always_comb y = x;\nendmodule\n\nmodule test;\n\n  M m ();\n\n  initial begin\n    integer y;\n    y = m.x; // This should fail. Imported identifiers are not visible through\n             // hierarchical names.\n    $display(\"FAILED\");\n  end\n\nendmodule\n",
+    "%Error: /svaha/wsnyder/SandBox/sv-tests/third_party/tools/icarus/ivtest/ivltests/sv_import_hier_fail1.v:19:11: Can't find definition of 'x' in dotted signal: 'm.x'\n                                                                                                             : ... note: In instance 'test'\n   19 |     y = m.x;\n        ... Known scopes under 'x': <no instances found>\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

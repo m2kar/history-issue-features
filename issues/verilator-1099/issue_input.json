@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1099,
+  "issue_url": "https://github.com/verilator/verilator/issues/1099",
+  "title": "Crash with struct combined with parameters",
+  "body": "---\n\n\nAuthor Name: **Ian Thompson**\nOriginal Redmine Issue: 1099 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nVerilator crashes when compiling a child module which accesses a struct signal in a parent module, that parent module takes a parameter, and the parameter is set to a non-default value. I'm not sure whether this is legal Verilog in the first place (I came across it as a bug inside a larger project), but it would be nice to at least get a clean error message, rather than a crash.\r\n\r\nExample RTL:\r\n```\r\ntypedef struct packed {\r\n  logic foo;\r\n} some_struct_t;\r\n\r\nmodule child ();\r\n  logic a;\r\n  assign a = bar.foo;\r\n  // note that \"foo\" can be replaced with any string,\r\n  // and the same error occurs\r\nendmodule\r\n\r\nmodule parent \r\n#(\r\n  parameter some_param = 0\r\n)\r\n(\r\n);\r\n  some_struct_t bar;\r\n  child c ();\r\nendmodule\r\n\r\nmodule top ();\r\n  // The parameter must be anything other than the default\r\n  parent #( 1 ) p ();\r\nendmodule\r\n\n```\r\n\r\nOutput:\r\n```\r\n $ verilator --cc --top-module top struct_bug.v\r\n%Error: Verilator internal fault, sorry.  Consider trying --debug --gdbbt\r\n%Error: Command Failed /usr/local/bin/verilator_bin --cc --top-module top struct_bug.v\r\n\n```\n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2016-10-26",
+  "closed_at": "2016-11-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

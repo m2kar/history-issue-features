@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4556,
+  "issue_url": "https://github.com/llvm/circt/pull/4556",
+  "title": "[PyCDE] Change module API to extend `Module` instead of using a decorator",
+  "body": "Refactor PyCDE module creation to the following syntax. This is a breaking API change, but a largely mechanical update to users code.\r\n\r\n```py\r\nclass Mux(Module):\r\n  clk = Clock()\r\n  data = Input(dim(8, 14))\r\n  sel = Input(types.i4)\r\n\r\n  out = Output(types.i8)\r\n\r\n  @generator\r\n  def build(self):\r\n    sel_reg = self.sel.reg()\r\n    self.out = self.data.reg()[sel_reg].reg()\r\n```\r\n\r\nThe previous approach had several issues:\r\n- It wasn't possible for users to extend their modules by just subclassing them.\r\n- Code completion for ports inside of generators didn't work.\r\n- We are going to introduce functional models, wherein a method of a model will be interacting with the instance. We wanted hardware generation to have a similar feeling.\r\n- Internally, supporting more module like constructs (e.g. ESI service implementations) involved specifying a bunch of callbacks. This replaces that with an OOP approach.\r\n- The new code is far better structured (and documented).\r\n\r\nMuch as I tried to not boil the ocean, I ended up boiling a small pond. AFAICT, this cannot be split up into multiple PRs. It also appears larger than it is since I had to update all the tests and git got confused and thinks there's a bunch more new code than there actually is.",
+  "labels": [
+    "PyCDE"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-19",
+  "closed_at": "2023-01-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

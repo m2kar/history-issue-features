@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 794,
+  "issue_url": "https://github.com/llvm/circt/issues/794",
+  "title": "[FIRRTL] Memories with Multiple Write Ports Emit as Multiple Drivers",
+  "body": "A memory with multiple write ports is incorrectly emitted as Verilog which looks like there are multiple drivers on the same signal. However, this is really just the appearance of multiple clocks that are all wired together and create multiple always blocks.\r\n\r\nI think this is either one of two issues:\r\n\r\n1. We need more copy-propagation that aggressively removes \"temporaries\" (something that a front end language created and marked as optimizable) or \"synthetics\" (something that CIRCT created). There's a balance here because we don't want to impair Verilog readability, but we also don't want to have temporary/synthetic soup.\r\n2. Always block merging needs to be beefed up to look across wires.\r\n\r\nThis overlaps to some extent with the omnibus memory issue: #754.\r\n\r\nConsider:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input clock: Clock\r\n    input rAddr: UInt<4>\r\n    input rEn: UInt<1>\r\n    output rData: UInt<8>\r\n    input wAddr: UInt<4>[2]\r\n    input wEn: UInt<1>[2]\r\n    input wMask: UInt<1>[2]\r\n    input wData: UInt<8>[2]\r\n\r\n    mem memory:\r\n      data-type => UInt<8>\r\n      depth => 16\r\n      reader => r\r\n      writer => w0,w1\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n\r\n    memory.r.clk <= clock\r\n    memory.r.en <= rEn\r\n    memory.r.addr <= rAddr\r\n    rData <= memory.r.data\r\n\r\n    memory.w0.clk <= clock\r\n    memory.w0.en <= wEn[0]\r\n    memory.w0.addr <= wAddr[0]\r\n    memory.w0.mask <= wMask[0]\r\n    memory.w0.data <= wData[0]\r\n\r\n    memory.w1.clk <= clock\r\n    memory.w1.en <= wEn[1]\r\n    memory.w1.addr <= wAddr[1]\r\n    memory.w1.mask <= wMask[1]\r\n    memory.w1.data <= wData[1]\r\n```\r\n\r\nThis produces the following (trimmed) Verilog:\r\n\r\n```verilog\r\n  wire       memory_w0_clk;     // Foo.fir:12:5\r\n  wire       memory_w1_clk;     // Foo.fir:12:5\r\n  wire       _T_1;      // Foo.fir:12:5\r\n  wire       _T_2;      // Foo.fir:12:5\r\n  wire _T = memory_w0_en & wMask_0;     // Foo.fir:12:5\r\n  always_ff @(posedge _T_1) begin       // Foo.fir:12:5\r\n    if (_T)     // Foo.fir:12:5\r\n      memory[memory_w0_addr] <= wData_0;        // Foo.fir:12:5\r\n  end // always_ff @(posedge)\r\n  wire _T_0 = memory_w1_en & wMask_1;   // Foo.fir:12:5\r\n  always_ff @(posedge _T_2) begin       // Foo.fir:12:5\r\n    if (_T_0)   // Foo.fir:12:5\r\n      memory[memory_w1_addr] <= wData_1;        // Foo.fir:12:5\r\n  assign _T_1 = memory_w0_clk;  // Foo.fir:12:5\r\n  assign _T_2 = memory_w1_clk;  // Foo.fir:12:5\r\n  assign memory_w0_clk = clock; // Foo.fir:26:19\r\n  assign memory_w1_clk = clock; // Foo.fir:32:19\r\n```\r\n\r\nTools will barf on this because \"memory has multiple drivers\". This should be emitted like how the SFC does this:\r\n\r\n```verilog\r\n  always @(posedge clock) begin\r\n    if(memory_w0_en & memory_w0_mask) begin\r\n      memory[memory_w0_addr] <= memory_w0_data;\r\n    end\r\n    if(memory_w1_en & memory_w1_mask) begin\r\n      memory[memory_w1_addr] <= memory_w1_data;\r\n    end\r\n  end\r\n```",
+  "labels": [
+    "enhancement",
+    "HW",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-19",
+  "closed_at": "2021-03-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5879,
+  "issue_url": "https://github.com/verilator/verilator/issues/5879",
+  "title": "force/release for the instance connection and hierarchical reference signal",
+  "body": "Can you attach an example that shows the issue? \nWhen testing the DFT pre-simulation netlist, the testbench requires a lot of force/release operations on internal SI (scan-in).\nsimplification...\nIf the COND_0 macro is defined, after release, inst1.i captures **forceval**;   In another branch, releasing signal_0 captures **driven val.** . I think their behavior should remain consistent.\n```\n`timescale 1ns/1ps\n`define COND_0\n\nmodule inv(\n    output o,\n    input i);\n    assign o = ~i;\nendmodule\n\nmodule dff(\n    output reg o,\n    input i, clk);\n    always_ff@(posedge clk)begin\n\t    o <= i;\n    end\nendmodule\n\nmodule top;\nwire signal_1 = 1'b1;\nwire signal_0;\n\nreg clk;\nwire out;\n\ninv inst0(.i(signal_1), .o(signal_0));\ndff inst1(.clk(clk), .i(signal_0), .o(out));\n\ninitial begin\n`ifdef COND_0\n    #1;\n    force inst1.i = 1;\n    #15;\n    release inst1.i;\n\n`else\n\n    #1;\n    force signal_0 = 1;\n    #15;\n    release signal_0;\n`endif\n\n    #50;\n    $finish();\nend\n\ninitial begin\n    #0;\n    clk = 1;\n    forever #5 clk = ~clk;\nend\n\nendmodule\n```\n\nWhat 'verilator' command line do we use to run your example?\nverilator --flatten --cc --top top --timing top.sv\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\nVerilator 5.035 devel master(20250324)\n\nWhat OS and distribution are you using?\nrockylinux\nMay we assist you in trying to fix this in Verilator yourself?\nno",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2025-03-24",
+  "closed_at": null,
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define COND_0\n\nmodule inv(\n    output o,\n    input i);\n    assign o = ~i;\nendmodule\n\nmodule dff(\n    output reg o,\n    input i, clk);\n    always_ff@(posedge clk)begin\n\t    o <= i;\n    end\nendmodule\n\nmodule top;\nwire signal_1 = 1'b1;\nwire signal_0;\n\nreg clk;\nwire out;\n\ninv inst0(.i(signal_1), .o(signal_0));\ndff inst1(.clk(clk), .i(signal_0), .o(out));\n\ninitial begin\n`ifdef COND_0\n    #1;\n    force inst1.i = 1;\n    #15;\n    release inst1.i;\n\n`else\n\n    #1;\n    force signal_0 = 1;\n    #15;\n    release signal_0;\n`endif\n\n    #50;\n    $finish();\nend\n\ninitial begin\n    #0;\n    clk = 1;\n    forever #5 clk = ~clk;\nend\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3504,
+  "issue_url": "https://github.com/llvm/circt/issues/3504",
+  "title": "[FIRRTL][LowerTypes] DontTouch on a field going missing",
+  "body": "```mlir\r\nfirrtl.circuit \"Test\" {\r\n  firrtl.module @Test (in %front_port_ahb_0: !firrtl.bundle<hmastlock: uint<1>> [\r\n    {circt.fieldID = 1 : i32, class = \"firrtl.transforms.DontTouchAnnotation\"},\r\n    {circt.fieldID = 1 : i32, class = \"Test\"}\r\n  ]) {\r\n }\r\n}\r\n```\r\n`/bin/circt-opt --firrtl-lower-types ./test.mlir` produces: \r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Test\"  {\r\n    firrtl.module @Test(in %front_port_ahb_0_hmastlock: !firrtl.uint<1> [{class = \"Test\"}]) {\r\n    }\r\n  }\r\n}\r\n```\r\nThe port should have a symbol on it to indicate `DontTouch`.  If you reverse the order of the annotations, the symbol appears:\r\n```mlir\r\nfirrtl.circuit \"Test\" {\r\n  firrtl.module @Test (in %front_port_ahb_0: !firrtl.bundle<hmastlock: uint<1>> [\r\n    {circt.fieldID = 1 : i32, class = \"Test\"},\r\n    {circt.fieldID = 1 : i32, class = \"firrtl.transforms.DontTouchAnnotation\"}\r\n  ]) {\r\n }\r\n}\r\n\r\n```\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Test\"  {\r\n    firrtl.module @Test(in %front_port_ahb_0_hmastlock: !firrtl.uint<1> sym @front_port_ahb_0_hmastlock [{class = \"Test\"}]) {\r\n    }\r\n  }\r\n}\r\n```\r\n\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-11",
+  "closed_at": "2022-07-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

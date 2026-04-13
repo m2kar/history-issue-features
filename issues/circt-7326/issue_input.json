@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7326,
+  "issue_url": "https://github.com/llvm/circt/pull/7326",
+  "title": "[Moore] Add MergeExtractRef pass.",
+  "body": "This pass is used to merge `moore.extract_ref` together in the little-endian without\r\nexisting in `if/for` statements and nested `moore.extract_ref`.\r\nFor example:\r\n```\r\nbit [31:0] arr;\r\nassign arr[23:16] = 8'd5;\r\nalways_comb begin\r\narr[15:8] = 8'd10;\r\nend\r\n```\r\nAfter running this pass\r\n```\r\nbit [31:0] arr;\r\n...\r\nalways_comb begin\r\n...\r\narr[15:8] = 8'd10;\r\n%concat = {arr[31:24], 8'd5, 8'd10, arr[7:0]} // concat\r\narr = %concat\r\nend\r\n```\r\nHowever, cannot handle the complex situations of missing some middle bits, such as:\r\n```\r\nbit [3:0] arr;\r\narr[3:2] = 2'b0;\r\narr[0] = 1'b0;\r\n```\r\n`arr[1]` don't be assigned a value, this situation belongs to missing some middle bits.\r\n\r\nAnd if the same slice is assigned a value repeatedly, will emit an error and interrupt.",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-16",
+  "closed_at": "2025-02-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

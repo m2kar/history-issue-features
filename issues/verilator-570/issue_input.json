@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 570,
+  "issue_url": "https://github.com/verilator/verilator/issues/570",
+  "title": "Triggering initial edge from X",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 570 from https://www.veripool.org\nOriginal Date: 2012-10-18\nOriginal Assignee: Jeremy Bennett (@jeremybennett)\n\n---\n\nEvent driven simulators will generally trigger an edge on a transition from X to 1 (@posedge@) or X to 0 (@negedge@). Thus the following code, where @rst_n@ is uninitialized would set @res_n@ to @1'b1@ when @rst_n@ is first set to zero:\r\n\r\n     reg  res_n = 1'b0;\r\n\r\n     always @(negedge rst_n) begin\r\n        if (rst_n == 1'b0) begin\r\n           res_n <= 1'b1;\r\n        end\r\n     end\r\n\r\nIn Verilator, by default, uninitialized clocks are given a value of zero, so the above @always@ block would not trigger.\r\n\r\nWhilst it is not good design practice, there are some designs that rely on X -> 0 triggering a @negedge@, particularly in reset sequences.\r\n\r\nThis patch adds a new option, @--x-initial-edge@, to Verilator which will cause initial edges from X to trigger @posedge@ or @negedge@ as appropriate. This matches the behaviour of event driven simulators (and reportedly commercial cycle-accurate simulators).\r\n\r\nThe patch works by setting initial values of @clklast@ variables in the constructor not to zero, but to the inverse of the associated clock variable.\r\n\r\nI would appreciate review of the approach I use. I only test for this in @emitVarResets@ (in @V3EmitC.cpp@) in the case of 1-bit wide variables for which @zeroit@ is true, but I think this is always the case for clocks.\r\n\r\nThe @clklast@ variable is constructed in @getCreateLastClk@ (in @V3Clock.cpp@) using the @shortName@ of the clock variable, which removes any @__PVT__@ strings from local variables. I couldn't see why this is done, but it makes it impossible to reconstruct the name of the clock variable from the name of the clklast variable. So I have extended @AstVar@ with a new field (@m_lastBasep@) to record this variable. I have also updated the constructors to set this and provided an accessor function. This field is NULL, except in the case where a @clklast@ variable is created, when it points to the associated clock variable.\r\n\r\nI have updated the documentation accordingly. I noticed some inconsistencies in the use of @--@ or @-@ in naming long options to Verilator, which I have tidied up (I hope). I've also added some clarifications to the Internals manual, based on my experience with this patch.\r\n\r\nTwo new regression tests, check this behaviour works correctly when the option is set, and does not work when the option is not set.\r\n\r\nPlease pull the patch from the initial-edge branch at git@github.com:jeremybennett/verilator.git.\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2012-10-18",
+  "closed_at": "2012-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

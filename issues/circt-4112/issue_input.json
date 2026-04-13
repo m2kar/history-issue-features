@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4112,
+  "issue_url": "https://github.com/llvm/circt/issues/4112",
+  "title": "[FIRRTL] Analog Module Connection Generates Unnecessary Alias/Assign",
+  "body": "The following circuit generates an alias/attach for an analog connection from an instance to another instance. However, anytime we can avoid generating an alias/attach means that more tools will accept it. This should just generate a wire.\r\n\r\n```\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output a: Analog<1>\r\n  extmodule Baz:\r\n    input a: Analog<1>\r\n  module Foo:\r\n\r\n    inst bar of Bar\r\n    inst baz of Baz\r\n\r\n    attach(baz.a, bar.a)\r\n```\r\n\r\nThis produces with the MFC:\r\n```verilog\r\nmodule Foo();\r\n  wire _a_wire;\r\n  wire _a_wire_0;\r\n  `ifdef SYNTHESIS\r\n    assign _a_wire_0 = _a_wire;\r\n    assign _a_wire = _a_wire_0;\r\n  `else  // SYNTHESIS\r\n    `ifdef verilator\r\n      `error \"Verilator does not support alias and thus cannot arbitrarily connect bidirectional wires and ports\"\r\n    `else  // verilator\r\n      alias _a_wire_0 = _a_wire;\r\n    `endif // verilator\r\n  `endif // SYNTHESIS\r\n  Bar bar (\r\n    .a (_a_wire)\r\n  );\r\n  Baz baz (\r\n    .a (_a_wire_0)\r\n  );\r\nendmodule\r\n```\r\n\r\nSFC produces:\r\n```verilog\r\nmodule Foo(\r\n);\r\n  wire  _GEN_0;\r\n  Bar bar (\r\n    .a(_GEN_0)\r\n  );\r\n  Baz baz (\r\n    .a(_GEN_0)\r\n  );\r\nendmodule\r\n```",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-10-15",
+  "closed_at": "2022-12-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

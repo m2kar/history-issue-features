@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4291,
+  "issue_url": "https://github.com/verilator/verilator/issues/4291",
+  "title": "Ongoing Verilator parallelization",
+  "body": "I and @kamilrakoczy at Antmicro experiment with parallelization of V3Expand and V3Gate stages.\r\n\r\nWhen picking a stage for parallelization we've first limited our options to longest running stages, then picked stages that look like they should profit from parallelization.\r\n\r\nThe table below shows execution time of longest running stages during Verilation of a larger design (note that const_cpp runs twice):\r\n\r\n|    time [s] | stage                        |\r\n|------------:|:-----------------------------|\r\n|  26.683474  |  058_reorder                 |\r\n|  23.547353  |  088_expand                  |\r\n|  18.088358  |  090_subst                   |\r\n|  17.510266  |  055_gate                    |\r\n|  16.529585  |  072_sched-create-nba        |\r\n|  12.475455  |  089_const_cpp               |\r\n|  12.427678  |  036_scope                   |\r\n|  12.038215  |  080_trace                   |\r\n|   8.947663  |  101_emit (already parallel) |\r\n|   7.790785  |  066_sched-settle            |\r\n|   6.777922  |  030_linkdot                 |\r\n|   6.504149  |  091_const_cpp               |\r\n\r\n(measured using Verilator 5.011 built with tcmalloc on Linux @ i7-12700)\r\n\r\nAs for V3Expand, it takes at input an AST consisting mainly of a long list of AstCFunc nodes. Conveniently, all work done by V3Expand happens inside those nodes, and operations in each node are generally independent from operations in other nodes.\r\nThe idea is to process each AstCFunc as a separate parallelizable job. Since each AstCFunc is worked on independently the AST doesn't require synchronization between threads.\r\n\r\nThe one thing ignored above is type table access, which is used quite often and almost everywhere, including node constructors and quite a lot of property getters, making it rather a separate issue. The type table is a part of the root node, which also needs synchronization for occasionally run functions like tree dumping.\r\nMy plan is to synchronize type table and the root node access using two separate read-write mutexes. Type table reading and AST modification (assuming that threads work on independent AST branches) would require obtaining a shared locks. Type table modification and exclusive AST access (where it is guaranteed that the whole AST stays in a stable valid state) should happen after obtaining exclusive locks.\r\nThere's also the global const pool, another part of the root node, which seems to need locking in a way similar to the type table locking.",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-13",
+  "closed_at": "2024-04-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

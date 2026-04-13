@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3002,
+  "issue_url": "https://github.com/llvm/circt/issues/3002",
+  "title": "[comb] Missing Optimization to Build Reduction Ops",
+  "body": "We are missing an optimization to build reduction ops when possible. Consider the following which is doing `b[0] | b[1]`:\r\n\r\n```mlir\r\nmodule {\r\n  hw.module @Foo(%a: i1, %b: i2) -> (c: i1) {\r\n    %0 = comb.extract %b from 1 : (i2) -> i1\r\n    %1 = comb.extract %b from 0 : (i2) -> i1\r\n    %2 = comb.or %0, %1 {sv.namehint = \"_b\"} : i1\r\n    hw.output %2 : i1\r\n  }\r\n}\r\n```\r\n\r\nThis produces:\r\n```verilog\r\nmodule Foo(\r\n  input        a,\r\n  input  [1:0] b,\r\n  output       c);\r\n\r\n  assign c = b[1] | b[0];\r\nendmodule\r\n```\r\n\r\nIt would be better to produce (`comb.icmp ne 0`):\r\n```verilog\r\nassign c = |b;\r\n```\r\n\r\nThis optimization should be possible for any of `comb.or`, `comb.and`, and `comb.xor`.",
+  "labels": [
+    "enhancement",
+    "good first issue",
+    "Comb"
+  ],
+  "state": "open",
+  "created_at": "2022-04-29",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

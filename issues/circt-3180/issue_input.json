@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3180,
+  "issue_url": "https://github.com/llvm/circt/issues/3180",
+  "title": "[Handshake][IntegrationTests] Using `--handshake-insert-buffers=strategy=all` on IR with sequential buffer produces unexpected output.",
+  "body": "I'm playing around with the CIRCT integration tests. While doing so, I discovered some very weird behaviour related to buffers with more than one initial value. \r\n\r\nI'm lowering the following to Verilog (through FIRRTL) and run a simulation with a driver that looks as `integration_test/Dialect/Handshake/driver.sv`, except that it expects a `i1` output. I'm using Vivado to run the simulation.\r\n\r\n```mlir\r\nmodule {\r\n  handshake.func @top(%ctrl: none) -> (i1, none) attributes {argNames = [\"inCtrl\"], resNames = [\"out0\", \"outCtrl\"]} {\r\n    // Using this causes the result to be 0/false\r\n    %c20 = buffer [2] seq %c20 {initValues = [20 : i64, 20 : i64]} : i64 \r\n\r\n    // Using one of the following results in the expected 1/true\r\n    //%c20 = buffer [1] seq %c20 {initValues = [20 : i64]} : i64\r\n    //%c20 = constant %ctrl {value = 20 : i64} : i64\r\n\r\n    %c10 = constant %ctrl {value = 10 : i64} : i64\r\n    %cond = arith.cmpi ne, %c20, %c10 : i64\r\n    return %cond, %ctrl : i1, none\r\n  }\r\n}\r\n```\r\n\r\nAs you see in the inline comments, this produces faulty results. \r\nThe code can be found in the following branch: [dinistro/handshake-buffer-problem](https://github.com/llvm/circt/tree/dinistro/handshake-buffer-problem)\r\n\r\nIt turns out that removing the `--handshake-insert-buffers=strategy=all` flag fixes the issue. Does this pass have assumptions that my IR does not satisfy or is this a bug in the pass?",
+  "labels": [
+    "Handshake"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-24",
+  "closed_at": "2022-05-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

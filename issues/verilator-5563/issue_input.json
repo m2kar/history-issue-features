@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5563,
+  "issue_url": "https://github.com/verilator/verilator/pull/5563",
+  "title": "Fix enum name method",
+  "body": "@wsnyder one more related to:\r\n```\r\ncommit 2fc94557a09f2d91d9f4b14752090af5cef9dea7 (HEAD -> master)\r\nAuthor: Wilson Snyder <wsnyder@wsnyder.org>\r\nDate:   Fri Oct 11 22:37:48 2024 -0400\r\n\r\n    Fix error on enums with x/z using .name(), and internal refactoring\r\n```\r\n\r\nIf I use the enum `name()` method in a parametric scope I end up getting duplicate `__Venumtab_enum_name#` `VAR`s under `$unit::` which cause:\r\n```\r\n%Error: Internal Error: t/t_enum_name_sformatf.v:8:12: ../V3Broken.cpp:168: Broken link in node (or something without maybePointedTo): 'm_varp && !m_varp->brokeExists()' @ ./V3Ast__gen_impl.h:4694\r\n                                                     : ... note: In instance 't.the_sub1'\r\n-node: VARREF 0x555556fc6750 <e1270> {e8am} @dt=0x555556fc95c0@(str)uc[3:0]  __Venumtab_enum_name3 pkg=0x555556fc50e0 [RV] <- VAR 0x555556fc5200 <e1367#> {e8am} @dt=0x555556fc95c0@(str)uc[3:0]  __Venumtab_enum_name3 [CONST] [VSTATIC]  MODULETEMP\r\n    8 |    typedef enum logic [1:0] {\r\n      |            ^~~~\r\n```\r\n\r\nThis is happening in `WidthVisitor::enumVarp()`.  I don't yet understand `AstEnumDType::tableMap()`, but that's where I'm headed next.  However, any advice on how to solve this is appreciated.  I'm guessing we should have the duplicate `VAR`s and all the `VARREF`s should just point to the single name table.  But I'm not sure yet.\r\n\r\nI also don't know what will happen if the enum depends on a parameter (e.g. `FOO = some_param`).  But hopefully we can solve for both here.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-10-25",
+  "closed_at": "2024-10-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

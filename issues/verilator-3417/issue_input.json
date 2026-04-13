@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3417,
+  "issue_url": "https://github.com/verilator/verilator/issues/3417",
+  "title": "SystemVerilog size (tick) operator with expressions",
+  "body": "In SystemVerilog the tick operator can be used to change the width of an expression:\r\n\r\n&lt;const&gt;<b>'(</b> &lt;expression&gt; <b>)</b>\r\n\r\nwhere &lt;expression&gt; will be extended/cropped to &lt;const&gt; bits width; if it was a signed expression and &lt;const&gt; is larger that its natural width, then signum extension will be performed. Now consider this example:\r\n\r\n`module test ( input [5:0] b1, input [5:0] b2, output [9:0] a1, output [9:0] a2 );`\r\n`assign a1 = 10'( b1 );       // Verilator is happy`\r\n`assign a2 = 10'( b2-b1 );  // Verilator spits the dummy`\r\n`endmodule`\r\n\r\nIn the second assign case Verilator 4.210-19 emits a warning: \"Operator SUB expects 10 bits on the LHS but LHS's VARREF b2 generates 6 bits.\"\r\n\r\nI do believe that that is incorrect: the tick operator should be applied on the <i>result</i> of the SUB, which has the same width as its operands. It seems that instead of extending the 6 bits wide SUB result to 10 bits, Verilator expects the SUB to return a 10 bits wide result.\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-15",
+  "closed_at": "2024-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5674,
+  "issue_url": "https://github.com/verilator/verilator/issues/5674",
+  "title": "Add type checking for $countones",
+  "body": "## Summary\r\nCurrently, Verilator does not catch type mismatches for `$countones` during the Verilate step. The issue only surfaces during the C++ compilation step, which can make debugging more challenging. It would be helpful if this type of issue could be identified during Verilation.\r\n\r\n## Versions\r\n- Verilator 5.031 devel rev v5.030-144-g54ef9ad31 (latest)\r\n- OS: WSL Ubuntu 24.04\r\n\r\n## Steps to Reproduce\r\n\r\nCode snippet:\r\n\r\n```systemverilog\r\nmodule Test;\r\n\r\n  logic my_vec [4];\r\n  int count_ones;\r\n\r\n  initial begin\r\n    my_vec = '{1, 0, 1, 0};\r\n    count_ones = $countones(my_vec);\r\n    $display(\"Number of ones in my_vec is %d\", count_ones);\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\nCommands to run:\r\n```\r\nverilator test.sv --cc --exe --binary --main\r\n```\r\n\r\nError during C++ compilation:\r\n\r\n```\r\nVtest___024root__DepSet_hc07518e4__0__Slow.cpp:39:54: error: cannot convert ‘VlUnpacked<unsigned char, 4>’ to ‘IData’ {aka ‘unsigned int’}\r\n   39 |     Test__DOT__count_ones = VL_COUNTONES_I(vlSelfRef.Test__DOT__my_vec);\r\n      |                                            ~~~~~~~~~~^~~~~~~~~~~~~~~~~\r\n      |                                                      |\r\n      |                                                      VlUnpacked<unsigned char, 4>\r\n```\r\n\r\n## Expected Behavior\r\nIt would be great if Verilator could report an error during the Verilate step, such as:\r\n```\r\nError: $countones requires a scalar or packed array, but an unpacked array 'my_vec' was provided.\r\n```\r\n\r\nThis would make it easier to identify and resolve the issue early in the design flow.",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-12",
+  "closed_at": "2025-03-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

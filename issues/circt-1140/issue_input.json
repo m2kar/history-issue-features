@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1140,
+  "issue_url": "https://github.com/llvm/circt/issues/1140",
+  "title": "[FIRParser] Locations for expressions are set wrong",
+  "body": "We're blasting translateLocation in the FIR parser (it is about 6% of parser time).  Consider an example like this:\r\n\r\n```\r\n$ cat x.fir \r\ncircuit foo :\r\n  module foo:\r\n    input mask_bit_2 : UInt<1>\r\n    node mask_nbit_2 = eq(mask_bit_2, UInt<1>(\"h0\")) @[Misc.scala 210:20]\r\n```\r\n\r\nwhich then parses like so:\r\n\r\n```\r\n$ firtool x.fir -disable-opt --mlir-print-debuginfo    \r\nmodule  {\r\n  firrtl.circuit \"foo\"  {\r\n    firrtl.module @foo(in %mask_bit_2: !firrtl.uint<1>) {\r\n      %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1> loc(#loc3)\r\n      %0 = firrtl.eq %mask_bit_2, %c0_ui1 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1> loc(#loc3)\r\n      %mask_nbit_2 = firrtl.node %0  : !firrtl.uint<1> loc(#loc3)\r\n    } loc(#loc2)\r\n  } loc(#loc1)\r\n} loc(#loc0)\r\n#loc0 = loc(\"x.fir\":0:0)\r\n#loc1 = loc(\"x.fir\":2:1)\r\n#loc2 = loc(\"x.fir\":3:3)\r\n#loc3 = loc(\"Misc.scala\":210:20)\r\n```\r\n\r\nNotice that the locator specified for the firrtl.constant and firrtl.eq nodes are *in the fir file itself* instead of being the locator specified on the statement.  This is incorrect (it won't be helpful to the user) and is inefficient in both time and memory (because we're creating garbage location nodes).\r\n\r\nWe should defer resolution of the SMLoc's until the statement is complete and apply a locator at that time (or not).\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-25",
+  "closed_at": "2021-05-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

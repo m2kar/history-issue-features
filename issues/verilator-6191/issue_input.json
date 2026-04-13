@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6191,
+  "issue_url": "https://github.com/verilator/verilator/issues/6191",
+  "title": "Fix structure select causing 'Wide Op' error",
+  "body": "Greatly stripped down a testbench that runs fine on xcelium to just this:\n\nExample:\n```systemverilog\n`timescale 1ns / 1ps\n\ntypedef struct packed {\n    logic [152-2-1:0] hdr;\n    logic [2-1:0] vc;\n} packet_t;\n\n\nmodule dut_tb;\n\n    logic clk;\n\n    typedef struct {packet_t [2-1:0] pkt_i;} dut_if_t;\n\n    dut_if_t dut[2];\n\n    initial begin\n        clk = 0;\n        forever #(0.5) clk = ~clk;\n    end\n\n    task automatic send_req_packets(int module_id, int channel);\n\n        packet_t packet = '0;\n\n        dut[module_id].pkt_i[channel] = packet;\n\n        @(posedge clk);  // If you comment out this line. It will build.\n    endtask\n\n    initial begin\n        for (int m = 0; m < 2; m++) begin\n\n            for (int i = 0; i < 2; i++) begin\n                automatic int mod = m;\n                automatic int ch = i;\n                send_req_packets(mod, ch);\n            end\n        end\n\n\n        $finish;\n    end\n\nendmodule\n```\n```\n%Error: Internal Error: tb.sv:26:29: ../V3EmitCFunc.cpp:105: Wide Op w/ no temp, perhaps missing op in V3EmitC?\n   26 |         dut[module_id].pkt_i[channel] = packet;\n      |                             ^\n```\n\nWhat 'verilator' command line do we use to run your example?\n`verilator -cc --binary --build -j 0 -sv --timescale 1ns/10ps --Mdir tb_verilator -o dut_tb_verilator tb.sv -timing`\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n`Verilator 5.038 2025-07-08 rev v5.038`\n\nWhat OS and distribution are you using?\nNAME=\"Red Hat Enterprise Linux\"\nVERSION=\"9.3 (Plow)\"\n\nMay we assist you in trying to fix this in Verilator yourself?\nCan try my best\n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-17",
+  "closed_at": "2025-07-17",
+  "code_blocks": [
+    "`timescale 1ns / 1ps\n\ntypedef struct packed {\n    logic [152-2-1:0] hdr;\n    logic [2-1:0] vc;\n} packet_t;\n\n\nmodule dut_tb;\n\n    logic clk;\n\n    typedef struct {packet_t [2-1:0] pkt_i;} dut_if_t;\n\n    dut_if_t dut[2];\n\n    initial begin\n        clk = 0;\n        forever #(0.5) clk = ~clk;\n    end\n\n    task automatic send_req_packets(int module_id, int channel);\n\n        packet_t packet = '0;\n\n        dut[module_id].pkt_i[channel] = packet;\n\n        @(posedge clk);  // If you comment out this line. It will build.\n    endtask\n\n    initial begin\n        for (int m = 0; m < 2; m++) begin\n\n            for (int i = 0; i < 2; i++) begin\n                automatic int mod = m;\n                automatic int ch = i;\n                send_req_packets(mod, ch);\n            end\n        end\n\n\n        $finish;\n    end\n\nendmodule\n",
+    "%Error: Internal Error: tb.sv:26:29: ../V3EmitCFunc.cpp:105: Wide Op w/ no temp, perhaps missing op in V3EmitC?\n   26 |         dut[module_id].pkt_i[channel] = packet;\n      |                             ^\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

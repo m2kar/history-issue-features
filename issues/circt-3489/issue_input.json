@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3489,
+  "issue_url": "https://github.com/llvm/circt/issues/3489",
+  "title": "[reduce] Invert test exit code requirement",
+  "body": "Right now the reducer considers an input to be interesting if the test exits with a non-zero exit code. This technically makes sense because you are likely trying to isolate a crash.\r\n\r\nIn practice however, it's far more common to run a lot of commands in a script to check if the current reduction exhibits interesting behaviour, for example by running the input through two unrelated chains of tools and comparing the output. If any of these preparatory commands fail, the reducer will immediately consider the input interesting. This is usually *not* what you want; instead you want the input to be interesting only if it runs through all preparatory commands and then fails at the very last comparison point.\r\n\r\nA similar thing holds for programs that process the input to look for something interesting. If that program returns from main with non-zero exit code upon finding the behaviour, the reducer is *very* likely to change the input in a way that triggers an assertion in your program, which would also exit with a non-zero code.\r\n\r\nTest scripts therefore end up looking like the following:\r\n```\r\nset -e\r\ntool1 || exit 0\r\ntool2 || exit 0\r\ntool3 || exit 0\r\ngrep \"interesting stuff\" || exit 0\r\nexit 1\r\n```\r\n\r\nIt would be better to consider exit code **zero** as interesting (because there's only one such exit code, but 256 or more non-zero ones). Should be an easy change in `tools/circt-reduce/Tester.{h,cpp}`. This might also warrant a `--test-must-fail` command line option to restore the old behaviour.",
+  "labels": [
+    "good first issue",
+    "Reducer"
+  ],
+  "state": "closed",
+  "created_at": "2022-07-08",
+  "closed_at": "2022-07-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

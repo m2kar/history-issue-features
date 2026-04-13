@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7551,
+  "issue_url": "https://github.com/llvm/circt/issues/7551",
+  "title": "[FIRRTL] Poor Asymptotic Performance of Layer Merge and Layer Sink",
+  "body": "There are scaling problems with both `LayerMerge` and `LayerSink`. You can tickle the bad behavior here by generating circuits which have large numbers of layerblocks which need to be merged and have lots of operations that need to be sunk.\r\n\r\nYou can generate such circuits with the following scala-cli snippet:\r\n\r\n``` scala\r\n//> using scala \"2.13.12\"\r\n//> using repository sonatype-s01:snapshots\r\n//> using lib \"org.chipsalliance::chisel::7.0.0-M2+59-5c129120-SNAPSHOT\"\r\n//> using plugin \"org.chipsalliance:::chisel-plugin::7.0.0-M2+59-5c129120-SNAPSHOT\"\r\n//> using options \"-unchecked\", \"-deprecation\", \"-language:reflectiveCalls\", \"-feature\", \"-Xcheckinit\", \"-Xfatal-warnings\", \"-Ywarn-dead-code\", \"-Ywarn-unused\", \"-Ymacro-annotations\"\r\n\r\nimport chisel3._\r\nimport circt.stage.ChiselStage\r\n\r\nclass Foo(size: Int) extends Module {\r\n  val a = Seq.fill(size)(IO(Input(Bool())))\r\n  val b = Seq.fill(size)(IO(Input(Bool())))\r\n\r\n  a.zip(b).foreach{ case (a, b) => assert(a ^ b) }\r\n}\r\n\r\nobject Main extends App {\r\n  val gen = () => new Foo(1024 * 16)\r\n\r\n  println(\r\n    ChiselStage.emitCHIRRTL(\r\n      gen()\r\n    )\r\n  )\r\n\r\n}\r\n```\r\n\r\nI'm seeing the following runtimes in a release build. Times are for layer merge followed by layer sink:\r\n\r\n- 16K assertions: 1s, 0.5s\r\n- 32K assertions: 3s, 1s\r\n- 64K assertions: 15s, 7s\r\n- 128k assertions: 148s, 40s",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-24",
+  "closed_at": "2024-08-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

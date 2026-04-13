@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6735,
+  "issue_url": "https://github.com/llvm/circt/issues/6735",
+  "title": "[HGLDD] Don't access instance ports as hierarchical path",
+  "body": "HGLDD emission currently emits instance output ports as `bar.a` hierarchical paths, instead of pointing to the wire that is attached to `bar`'s port `a`. Consider this example:\r\n```mlir\r\nhw.module @Foo(out x : i36, out y : i36) {\r\n  %a, %b = hw.instance \"bar\" @Bar() -> (a: i36, b: i36)\r\n  hw.output %a, %b : i36, i36\r\n}\r\nhw.module.extern @Bar(out a : i36, out b : i36) attributes {verilogName = \"Bar\"}\r\n```\r\nRunning this through `firtool -g --emit-hgldd reduced15.mlir` produces the following problematic HGLDD JSON snippet:\r\n```\r\n\"value\": {\"field\":\"a\",\"var_ref\":{\"sig_name\":\"bar\"}},\r\n\"value\": {\"field\":\"b\",\"var_ref\":{\"sig_name\":\"bar\"}},\r\n```\r\nIn this case, the `{\"sig_name\":\"bar\"}` is trying to refer to the instance of `Bar`, which is invalid. Instead, EmitHGLDD should do the following:\r\n- Also look at the `hw.output` op to see if an instance output is directly used as a module's output, and use that output's name in the HGLDD. We already do this for local wires.\r\n- Never emit the `{\"field\":\"a\",\"var_ref\":{\"sig_name\":\"bar\"}}` style of hierarchical path access into instances. Instead, just drop the instance port if it cannot be materialized.",
+  "labels": [
+    "bug",
+    "Debug"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-22",
+  "closed_at": "2024-02-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

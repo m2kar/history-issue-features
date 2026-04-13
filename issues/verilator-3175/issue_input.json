@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3175,
+  "issue_url": "https://github.com/verilator/verilator/issues/3175",
+  "title": "Usage of attributes clocker and clock_enable",
+  "body": "I am really struggling with the clocker and clock_enable attributes.\r\n\r\nLet's start with clock_enable: Reading V3Order all this seems to achieve is ignore a the dependency in combinational logic on the annotated signal. Under what circumstance is this useful (and does not kill you by ignoring the dependency)? I cannot think of a use case.\r\n\r\nAs of clocker: This seems to do two things:\r\n1. Make some dependencies [as defined by whatever `OrderClkMarkVisitor` propagates this attribute to, which is by no means comprehensive] feeding this variable through combinational logic be a hard edge, instead of the a cutable one. The point of this is that we don't have a change detect on the generated clock, which seems fair, but Verilator could compute this itself without any annotation.\r\n2. Similar to clock_enable, ignore all *other* variable dependencies in combinational logic driving the clocker. I.e.: as fi all other signals feeding the clocker had clock_enable.\r\n\r\nFor the \"let's not have the generated clock circular\" part (which seems like just a performance thing?), shouldn't we just change all edges that feed a sensitivity list (i.e.: clocks) to non-cutable in the V3Order dependency graph. If we end up with a hard cycle, throw up hands, or warn and automatically pick an edge to cut in some intelligent way?\r\n\r\nAs of the ignored dependencies, when are these useful? They seem always unsafe.",
+  "labels": [
+    "area: scheduling",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2021-10-17",
+  "closed_at": "2022-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1440,
+  "issue_url": "https://github.com/llvm/circt/pull/1440",
+  "title": "[FIRRTL] Error on Annotations that Do Not Apply",
+  "body": "Change the FIRRTL parser to error if any Annotations are unapplied to\r\nthe circuit.  Put differently, this will error if any Target in an\r\nAnnotation (or a generated Target from Annotation scattering) points at\r\nsomething which does not exist in the circuit.\r\n\r\nResidual Annotations indicate either a user problem like inconsistent\r\nFIRRTL and Annotation files or some problem with scattering logic or the\r\nparser itself.  E.g., you can hit this if you have busted scattering\r\ncode (that creates targets that do not exist) or for cases where\r\nnon-local Annotations get through scattering logic.  This is a situation\r\nthat needs to be addressed and continuing compilation may result in\r\nextremely tedious errors due to the compiler effectively dropping\r\nAnnotation information which is assumed to be critical to control\r\ncompilation in a way the user wants.\r\n\r\nTogether with a894ad8c and a08f15ca this should cause all unapplied\r\nAnnotations to produce parse-time errors.\r\n\r\nFixes #1013.  #1280 and #1327 do a great job of taking care of malformed Annotations where a field/index doesn't exist or the circuit is invalid.  This takes care of the remaining situations and catches anything that gets into the parser with invalid syntax (e.g., with hypothetical third-party Annotation scattering code or presently unchecked scattered annotations that have non-local targets).\r\n\r\n~_Note: I am not happy about this implementation, but wanted to get something going._~\r\n\r\n~This is currently implemented as exfiltrating the discovered module namespace into a `SmallVector<StringAttr>`, converting that to a `StringSet<>`, and then asserting that each key (a target) in the Annotation map exists in the set.  This set can be very large and the majority of it is thrown away.  Also, this is using `StringAttr`s (which should be uniqued and pretty cheap?), but it seems like switching to `StringRef`s pointing at things that will exist after the modules are parsed is better.  This is all done using `parallelTransformReduce` so that it's actually safe.~\r\n\r\n~A better formulation would be to exfiltrate _annotations that do apply_ and then diffing this with the Annotation map.  The Annotation map cannot be mutated directly, but each parsing thread could append to an \"applied annotations\" data structure passed into `parseModuleBody` and its child calls.  (I initially didn't see a way to mutate the Annotation map and thought the `StringSet<>` approach was necessary...)~\r\n\r\n*This PR was updated to use the better approach of recording what targets were found and applied by `getAnnotations` and `getSplitAnnotations`.  No massive set of all names is being built up anymore.*",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-07-17",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

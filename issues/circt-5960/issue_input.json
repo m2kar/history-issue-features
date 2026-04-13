@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5960,
+  "issue_url": "https://github.com/llvm/circt/pull/5960",
+  "title": "[OM] Fix symbol resolution for classes and path operations",
+  "body": "This PR has two changes which together are needed to have OM path operations work correctly. \r\n\r\n---\r\n\r\n[OM] Class ops should not be symbol tables\r\n\r\nCurrently OM class operations are symbol tables and fields are symbols, which\r\nis used to facilitate the lookup of fields.  The ObjectFieldOp verifier needs\r\nto verify that it is accessing a legal field of the class, and does this by\r\nfirst looking up the class in the MLIRModuleOp, and then the field in the\r\nClassOp.  This double lookup strategy is problematic because it does not follow\r\nthe normal rules of symbol resolution as defined by the SymbolTable.  This\r\nmeans that anything that examines symbol uses (e.g. SymbolDCE) will be\r\nincorrect.  We have faced this kind of problem before, which is why we invented\r\nInnerSymbolTables and InnerSymbols.\r\n\r\nThis is also needed to properly support path operations: path ops will have a\r\nreferences to HierPathOps and we need lookup to work correctly. For this, we\r\nwill need two things:\r\n1. Since HierPathOps will live inside a FIRRTL circuit, and FIRRTL circuits are\r\n   themselves symbol tables, we will need to put OM classes under the circuit\r\n   as well.\r\n2. When this happens, it will no longer be acceptable for the ObjectFieldOp\r\n   verifier to \"jump up\" to the MLIRModule op's symbol table for lookup, since\r\n   the classes will actually be under the FIRRTL circuit op.\r\n\r\nBy removing the SymbolTable interface from class operations, we can change\r\nsymbol resolution to use the normal rules, which enables both path operations\r\nto reference NLAs and OM class operations to live in FIRRTL circuits.\r\n\r\nThis PR removes the SymbolTable op interface from ClassOps, and switches the\r\nObjectField verifier to perform a manual walk of the ClassOp to find the target\r\nfield. In the future, we should switch to InnerSymbols or invent something\r\ntotally new for these operations.\r\n\r\n---\r\n\r\n[FIRRTL][LowerClasses] Insert lowered ClassOps into the FIRRTL circuit\r\n\r\nOM path operations use a hierarchical path operation to identify their target.\r\nTo facilitate this, it makes sense to insert OM classes under the FIRRTL\r\ncircuit, as HierPathOp should be under the same symbol table as the path\r\noperation for lookup to work correctly. If they were not under the same symbol\r\ntable, it would be possible to craft a nested symbol reference, but that would\r\njust complicate the LowerToHw pass.\r\n\r\nThis change removes the restriction that OM ClassOps have MLIRModuleOp as a\r\nparent, changes LowerClasses from a MLIRModule pass to a FIRRTL CircuitOp pass,\r\nand updates some logic to ensure that we are inserting the class operations in\r\nto the correct location.\r\n\r\nAs a quick example of how this will look with path operations:\r\n\r\n```mlir\r\nmodule { // SymbolTable\r\n  firrtl.circuit \"Foo\" { // SymbolTable\r\n    hw.hierpath @Path [@foo::@wire]\r\n    firrtl.module @foo {\r\n        %wire = firrtl.wire sym @wire : !firrtl.uint<1>\r\n    }\r\n    om.class @Class() { // No longer a SymbolTable\r\n      %0 = firrtl.path @Path\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "FIRRTL",
+    "OM"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-25",
+  "closed_at": "2023-08-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

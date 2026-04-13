@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2951,
+  "issue_url": "https://github.com/llvm/circt/issues/2951",
+  "title": "[StandardToHandshake] Support for partial lowering",
+  "body": "I’m working on a custom streaming dialect that encapsulates regions containing `arith` and `cf` operations. The most promising lowering target seems to be the handshake dialect, as this can be integrated into our existing infrastructure. \r\nUnfortunately, the streaming dialect cannot be lowered through std as this is not classical sequential code. While transforming the streaming operations directly to `handshake` is fine, I would like to reuse the transformations from `StandardToHandshake` for the encapsulated regions. \r\n\r\nCurrently, the `StandardToHandshake` conversion pass only matches on `func::FuncOp`s and transforms them (and the content of their region) in more or less one big step to `handshake::FuncOp`s. There is no clear way of reusing only parts of this pass to transform code like the following:\r\n\r\n```\r\nmodule {\r\n  handshake.func @opt(%cond: i1, %input: i32, %ctrl: none) -> (i32, none) {\r\n    %true_val, %false_val = cond_br %cond, %input : i32\r\n    sink %false_val : i32\r\n    handshake.return %true_val, %ctrl : i32, none\r\n  }\r\n  \r\n  handshake.func @filter(%ctrl: none) -> (i32, none) {\r\n    %cond = arith.constant 0 : i1\r\n    %val = arith.constant 42 : i32\r\n    %res:2 = handshake.instance @opt(%cond, %val, %ctrl) : (i1, i32, none) -> (i32, none)\r\n    handshake.return %res#0, %res#1 : i32, none\r\n  }\r\n}\r\n```\r\n\r\nDo you guys see any hope in refactoring or enhancing the `StandardToHandshake` pass to allow for such use cases?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-22",
+  "closed_at": "2022-04-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

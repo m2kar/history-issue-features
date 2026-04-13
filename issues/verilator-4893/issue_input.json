@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4893,
+  "issue_url": "https://github.com/verilator/verilator/issues/4893",
+  "title": "VERILATOR_ROOT breaks relocated installations",
+  "body": "Whether relocating an installation should be supported is up for discussion, but I would like to report this anyway, at least to record the problem for others.\r\n\r\nThe issue is that bin/verilator (the perl script) uses VERILATOR_ROOT to find verilator_bin, so expects it to be set to the installation prefix, but the generated makefile uses VERILATOR_ROOT to find the run-time lib, so expects it to be set to the pkdata dir (which is <prefix>/share/verilator common Linux hosts), which are different when using an installation instead of a source tree.\r\n\r\nNow imagine you installed into a prefix 'foo', then `mv foo bar`\r\n\r\nNow you run `./bar/bin/verilator --cc a.sv`\r\nyou get this, as it can't find the old pkgdatadir, which is the default for VERILATOR_ROOT when it's not in the environment\r\n```\r\n%Error: Cannot find verilated_std.sv containing built-in std:: definitions: foo/share/verilator/include/verilated_std.sv\r\n%Error: This may be because there's no search path specified with -I<dir>.\r\n        ... Looked in:\r\n             foo/share/verilator/include/verilated_std.sv\r\n             foo/share/verilator/include/verilated_std.sv.v\r\n             foo/include/verilated_std.sv.sv\r\n...\r\n%Error: Exiting due to 2 error(s)\r\n```\r\n\r\nOk, fine, I know where it is:\r\n`env VERILATOR_ROOT=bar ./bar/bin/verilator --cc a.sv`\r\nNow you get this, as bin/verilator fails to find verilator_bin:\r\n```\r\nsh: 1: exec: bar/share/verilator/verilator_bin: not found\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec bar/share/verilator/verilator_bin --cc a.sv\r\n```\r\n\r\nI suspect this (setting VERILATOR_ROOT) was the real cause of the failure described in #3933 (and was due to https://github.com/verilator/verilator/blob/65b632a7dd8927930c85c8236e73d0fb1d9a31d5/ci/ci-win-test.ps1#L2), but was worked around by installing verilated_std.sv in the required place.\r\n\r\nI appreciate if you don't care about having the installation relocatable, and there are various ways to work around this (though none that works with --build as well I think). Just reporting for the record, in case you want to think of this or improve the experience.",
+  "labels": [
+    "area: configure/compiling",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-13",
+  "closed_at": "2024-03-01",
+  "code_blocks": [
+    "sh: 1: exec: bar/share/verilator/verilator_bin: not found\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec bar/share/verilator/verilator_bin --cc a.sv"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5379,
+  "issue_url": "https://github.com/llvm/circt/issues/5379",
+  "title": "[FIRRTL] Cache Parsed Width/Const Casts ",
+  "body": "Currently constants are cached during parsing. However, the width/const casts of them are not. This creates a lot of unnecessary IR expansion that CSE will remove later. Fix this to avoid the blow-up.\r\n\r\nConsider:\r\n\r\n```\r\nFIRRTL version 2.0.0\r\ncircuit Foo:\r\n  module Foo:\r\n    output bu: UInt<8>\r\n    output ou: UInt<8>\r\n\r\n    bu <= UInt(\"b101010\")\r\n    ou <= UInt(\"o052\")\r\n```\r\n\r\nThis is parsed as:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\" {\r\n    firrtl.module @Foo(out %bu: !firrtl.uint<8>, out %ou: !firrtl.uint<8>) attributes {convention = #firrtl<convention scalarized>} {\r\n      %c42_ui = firrtl.constant 42 : !firrtl.const.uint\r\n      %0 = firrtl.widthCast %c42_ui : (!firrtl.const.uint) -> !firrtl.const.uint<8>\r\n      %1 = firrtl.constCast %0 : (!firrtl.const.uint<8>) -> !firrtl.uint<8>\r\n      firrtl.strictconnect %bu, %1 : !firrtl.uint<8>\r\n      %2 = firrtl.widthCast %c42_ui : (!firrtl.const.uint) -> !firrtl.const.uint<8>\r\n      %3 = firrtl.constCast %2 : (!firrtl.const.uint<8>) -> !firrtl.uint<8>\r\n      firrtl.strictconnect %ou, %3 : !firrtl.uint<8>\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-06-13",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

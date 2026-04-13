@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3818,
+  "issue_url": "https://github.com/verilator/verilator/issues/3818",
+  "title": "Static variables in module-level functions",
+  "body": "The **SystemVerilog** standard states that:\r\n\r\n> **13.4.2 Static and automatic functions**\r\n     Functions defined within a module, interface, program, or package default to being static, with all declared\r\nitems being statically allocated. These items shall be shared across all uses of the function executing\r\nconcurrently. __(see, for instance, [IEEE Std 1800-2012](http://www.ece.uah.edu/~gaede/cpe526/2012%20System%20Verilog%20Language%20Reference%20Manual.pdf))__\r\n\r\nTherefore I expect that this module:\r\n```\r\nmodule mytest;\r\n   function /* static */ integer mygenerator;\r\n      /* static */ integer state = 5;\r\n      mygenerator = ++state;\r\n   endfunction\r\n   initial\r\n     for (integer n=0; n<=3; ++n)\r\n       $display(mygenerator());\r\nendmodule\r\n```\r\nwould display the numbers from 1 to 4. \r\n\r\nIndeed, this is the case if I test it with **iverilog**:\r\n```\r\n>> iverilog -g2005-sv mytest.sv \r\nmytest.sv:3: warning: Static variable initialization requires explicit lifetime in this context.\r\n>> ./a.out\r\n         6\r\n         7\r\n         8\r\n         9\r\n```\r\nBut testing it with **verilator --prefix DUT -cc mytest.sv** and a minimal testbench in C++:\r\n```\r\n#include \"DUT.h\" // from verilator\r\nint main() { DUT dut; dut.eval(); return 0; }\r\n```\r\ndisplays `6` four times to the screen, as if variable `state` inside function `mygenerator` was automatic and reinitialised to .\r\n\r\nI haven't found reference to **static variables** either in verilator's manual or in the FAQs. Is this a known limitation? Can it be lifted? Rationale: having access to static functions (with static local variables) allows to parametrically build circuits in a SystemVerilog's generate block when components' interconnections are algorithmically computable, but for which no closed formula exists.\r\n\r\n_What 'verilator --version' are you using?_\r\n\r\nI tested with a locally installed `Verilator 5.003 devel rev v5.002-83-g66d85b338\r\n\r\n_What OS and distribution are you using?_\r\n\r\nLinux Ubuntu Kinetic Kudu = Ubuntu 22.10",
+  "labels": [
+    "resolution: duplicate",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-16",
+  "closed_at": "2022-12-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

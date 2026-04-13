@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6147,
+  "issue_url": "https://github.com/llvm/circt/pull/6147",
+  "title": "[ExportVerilog] Remove useless assert from NameCollector",
+  "body": "The `NameCollector` is only used to compute declaration word and type string length such that we can format declarations nicely. Currently it also asserts a weird invariant that `PrepareForEmission` must uphold, but then it never actually relies on that invariant. And for some reason the `NameCollector` also collects names in else branches of `IfOp`s, but not in then branches.\r\n\r\nPush `NameCollector` more into the best-effort cosmetics direction it's already going by removing that assert and not visiting else branches. Either we visit both branches of an if, or none at all. And since if blocks introduce a separate scope with a separate place for decls, the visition is not necessary. (It would just potentially add whitespace to the if's surrounding scope's decl stack, to account for decls that are actually emitted within the if scope.)\r\n\r\nThis also uncovered one instance of `maxDeclNameWidth - x` that was left unguarded by `if (x < maxDeclNameWidth)`. Fix this.\r\n\r\nThis change doesn't affect the output, but makes ExportVerilog less brittle by not enforcing invariants that it actually doesn't care about.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-19",
+  "closed_at": "2023-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

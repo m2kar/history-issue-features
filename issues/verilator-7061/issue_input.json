@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7061,
+  "issue_url": "https://github.com/verilator/verilator/issues/7061",
+  "title": "Support function calls with random arguments in constraints",
+  "body": "## Summary\n\nFunction calls that take random variable arguments in constraint expressions (IEEE 1800-2017 Section 18.5.12) are evaluated with pre-randomization default values instead of solver-determined values, producing incorrect randomization results.\n\n## Current Behavior\n\n- Constraint `value >= get_min_value(mask)` where `get_min_value(bit[7:0] m)` returns `m & 8'hF0` and `mask` is a `rand` variable: the function is evaluated at constraint setup time with `mask = 0` (default), producing `get_min_value(0) = 0`\n- The solver sees a constant `0` instead of the symbolic expression `(bvand mask #xf0)`, so the constraint is effectively `value >= 0` — always trivially satisfied\n- Randomized values violate the intended constraint relationship\n\n## Expected Behavior\n\n- Function calls with random variable arguments should be inlined into SMT constraints so the solver evaluates them with the solved values\n- `value >= get_min_value(mask)` should produce SMT constraint `(bvuge value (bvand mask #xf0))`\n- Randomized values should satisfy `value >= (mask & 0xF0)` for every randomization\n\n## Source\n\n- planvtech/PlanV_Verilator_Feature_Tests#27\n\n---\nPR is coming.",
+  "labels": [
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-12",
+  "closed_at": "2026-02-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

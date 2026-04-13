@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5345,
+  "issue_url": "https://github.com/verilator/verilator/issues/5345",
+  "title": "Indexed vector part-select behaves incorrectly on arrays that have nonzero starting index range",
+  "body": "Using the indexed vector part-select mechanism to slice an array that has been defined with an non-zero-starting index range behaves incorrectly. I am suspicious that verilator may make some assumptions that arrays start from zero index under certain circumstances.\r\n\r\nI am running Verilator 5.027 devel rev v5.026-107-ge6fe367bd\r\n\r\nI have created two small testcases to show this behaviour.\r\n\r\nThe first: I can elicit a unexpected compile failure giving a bit more insight into the failure by starting the vectored slice at a negative index:\r\n\r\n    module test;\r\n        int A[-10:10];\r\n        int slice[3];\r\n    \r\n        initial begin\r\n            foreach(A[i])\r\n                A[i] = i;\r\n    \r\n            $display(\"Contents of A\");\r\n            foreach(A[i])\r\n                $display(i, A[i]);\r\n    \r\n            $display(\"Contents of slice\");\r\n            slice = A[-1 +: 3];\r\n            foreach(slice[i])\r\n                $display(i, slice[i]);\r\n    \r\n            $finish();\r\n        end\r\n    endmodule\r\n\r\nProduces this compile failure\r\n\r\n    %Error: test2.sv:15:18: Slice selection index '[-11:-9]' outside data type's '[-10:10]'\r\n                          : ... note: In instance 'test'\r\n       15 |         slice = A[-1+:3];\r\n          |\r\n\r\nNote that while I should be selecting indices [-1:1] verilator thinks I am selecting [-11:-9]\r\n\r\nThe second: The wrong part of the array is selected and a functional bug is observed during runtime.\r\n\r\n    module test;\r\n    \r\n        int A[-10:10];\r\n        int slice[3];\r\n    \r\n        initial begin\r\n            foreach(A[i])\r\n                A[i] = i;\r\n    \r\n            $display(\"Contents of A\");\r\n            foreach(A[i])\r\n                $display(i, A[i]);\r\n    \r\n            $display(\"Contents of slice\");\r\n            slice = A[0+:3];\r\n            foreach(slice[i])\r\n                $display(i, slice[i]);\r\n    \r\n            $finish();\r\n        end\r\n    \r\n    endmodule\r\n\r\nGives the following result:\r\n\r\n    Contents of A\r\n            -10        -10\r\n             -9         -9\r\n             -8         -8\r\n             -7         -7\r\n             -6         -6\r\n             -5         -5\r\n             -4         -4\r\n             -3         -3\r\n             -2         -2\r\n             -1         -1\r\n              0          0\r\n              1          1\r\n              2          2\r\n              3          3\r\n              4          4\r\n              5          5\r\n              6          6\r\n              7          7\r\n              8          8\r\n              9          9\r\n             10         10\r\n    Contents of slice\r\n              0        -10\r\n              1         -9\r\n              2         -8\r\n\r\n\r\nNote that the code should be selecting indices [0:2] but instead verilator selects [-10:-8]\r\n\r\n\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-08",
+  "closed_at": "2024-08-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

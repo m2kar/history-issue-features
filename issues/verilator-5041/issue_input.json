@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5041,
+  "issue_url": "https://github.com/verilator/verilator/issues/5041",
+  "title": "Verilator not handling hierarchical signal references correctly",
+  "body": "Thanks for taking the time to report this.\r\n\r\nThis git issue details the problem. https://github.com/openhwgroup/cvw/issues/715\r\n\r\nOnce building our repo's tests and sourcing cvw/setup.sh, running `cd ${WALLY}/sim/verilator && verilator -GTEST=\"\\\"arch64i\\\"\" -DVERILATOR=1 --timescale \"1ns/1ns\" --timing --binary --top-module testbench -I${WALLY}/config/shared -I${WALLY}/config/rv64gc ${WALLY}/src/cvw.sv ${WALLY}/testbench/testbench.sv ${WALLY}/testbench/common/*.sv ${WALLY}/src/*/*.sv ${WALLY}/src/*/*/*.sv --relative-includes` should cause an error related to not finding an instance which is known to exist in other EDA tools.\r\n\r\nThe exact path is dut.uncore.uncore.uart.uart.u.[signalname]. Expected versus actual behavior is as follows\r\n\r\n- Use `dut.uncore.uncore.uart.uart.uart.uart.uart.uart.PCLK`. Expected: Errors when it runs out of \"uart\" instance names and points to bad location. Actual: Does not complain at all.\r\n- Try to detect `dut.uncore.uncore.uart.uart.UARTSin` Expected: Does not detect it as we are inside the uart_apb.sv module which maps UARTSin to SIN, causing an error Actual: Works just fine\r\n- Rename uart_apb to use uart2 and then use `dut.uncore.uncore.uart.uart2.PCLK` Expected: Finds PCLK. Actual: Fails to find uart2 and then fails to find PCLK.\r\n\r\nI suspect the nested if generate blocks are causing issues, as simply trying to access `dut.uncore.uncore.uart.uart` finds a BEGIN rather than a CELL, while `dut.uncore.uncore` results in the statement finding a CELL.\r\n\r\nReplication steps:\r\n> Make three-layer hierarchical model, DUT -> if generate begin : A -> CELL B -> if generate begin : C -> CELL D.\r\n> Try to reference CELL D in a testbench for the DUT using DUT.A.B.C.D.\r\n> DUT.A.B.C.D results in error where dotted variable D does not exist\r\n> DUT.A.B.C.C... results in error where C is a BEGIN statement but Verilator expects a variable.\r\n\r\nVerilator 5.022 2024-02-24 rev v5.020-157-g2b4852048\r\n\r\nUbuntu 22.04\r\n\r\nYes, you may help me fix this if it's an issue on our end.",
+  "labels": [
+    "status: discussion",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-09",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2707,
+  "issue_url": "https://github.com/llvm/circt/issues/2707",
+  "title": "[firtool] Unused Modules Should be Removed",
+  "body": "Consider the following:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Bar:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    wire w: UInt<1>\r\n\r\n    w <= a\r\n    b <= w\r\n\r\n  module Foo:\r\n    output b: UInt<1>\r\n\r\n    inst bar of Bar\r\n    bar.a <= UInt<1>(1)\r\n    b <= bar.b\r\n```\r\n\r\nWhen compiled with CIRCT, this leaves module `Bar` around even though it is dead due to constant propagation:\r\n\r\n```verilog\r\nmodule Bar(\r\n  output b);\r\n\r\n  wire w;\r\n\r\n  assign w = 1'h1;\r\n  assign b = 1'h1;\r\nendmodule\r\n\r\nmodule Foo(\r\n  output b);\r\n\r\n  wire bar_b;\r\n\r\n  Bar bar (\r\n    .b (bar_b)\r\n  );\r\n  assign b = 1'h1;\r\nendmodule\r\n```\r\n\r\nWith SFC, `Bar` will be removed:\r\n```verilog\r\nmodule Foo(\r\n  output  b\r\n);\r\n  assign b = 1'h1;\r\nendmodule\r\n```\r\n\r\nh/t @jackkoenig for identifying this.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-01",
+  "closed_at": "2022-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

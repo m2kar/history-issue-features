@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3340,
+  "issue_url": "https://github.com/verilator/verilator/pull/3340",
+  "title": "Improve V3Split capability",
+  "body": "This PR resolves UNOPTFLAT in #2969 without any HDL change.\r\n\r\nCurrent V3Split can split if all RHS of always_comb is set outside of the always block.\r\nI think this can be relaxed to \r\n- All RHS must be set before it is referred\r\n\r\ne.g.\r\n```systemverilog\r\nalways_comb begin\r\n  sig_a = in0 & in1;\r\n  sig_b = ~sig_a;\r\nend\r\n```\r\ncan be safely split to\r\n```systemverilog\r\nalways_comb sig_a = in0 & in1;\r\nalways_comb sig_b = ~sig_a;\r\n```\r\n\r\nBut\r\n```systemverilog\r\nalways_comb begin\r\n  sig_a = in0 & in1;\r\n  sig_b = ~sig_a;\r\n  sig_a = in0;\r\nend\r\n```\r\ncannot be split.\r\n\r\n\r\nI thought ff3996b65459158122463ce0c6b2a6aced2ae1b4 can handle most of cases if a variable is written only in one always block, but this assumption is not necessarily satisfied as in t_order_comboclkloop test https://github.com/verilator/verilator/blob/e29132377ecf3d6fdaa093f547ea8b63ae751f94/test_regress/t/t_order_comboclkloop.v#L28-L43\r\n\r\ne1430abbdb3b2930d7b8ecaaebb23c859d9eaefb checks if a variable is written only in the always block.\r\nThis PR passes ext tests.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-06",
+  "closed_at": "2023-11-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

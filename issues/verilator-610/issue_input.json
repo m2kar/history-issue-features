@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 610,
+  "issue_url": "https://github.com/verilator/verilator/issues/610",
+  "title": "DETECTARRAY error on packed structures",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 610 from https://www.veripool.org\nOriginal Date: 2013-02-03\nOriginal Assignee: Jeremy Bennett (@jeremybennett)\n\n---\n\nThe following triggers the DETECTARRAY error (ID_MSB is a localparam with value 1):\r\n\r\n```\r\n    typedef struct packed {\r\n       logic [ID_MSB:0] \tid;\r\n    } context_t;\r\n\r\n    context_t  tsb;\r\n\r\n    assign tsb.id = {tsb.id[0], clk};\r\n\r\n    initial begin\r\n       tsb.id = 0;\r\n    end\r\n\n```\r\n\r\nThis is a classic loop within a vector, so triggers UNOPTFLAT. However if UNOPTFLAT is turned off (-Wno-UNOPTFLAT), we get:\r\n\r\n```\r\n%Error-DETECTARRAY: t/t_detectarray_1.v:21: Unsupported: Can't detect changes on complex variable (probably with UNOPTFLAT warning suppressed): v.tsb\r\n%Error: Exiting due to 1 error(s)\r\n%Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n\n```\r\n\r\nDETECTARRAY is not actually in the manual (I've fixed that). The problem is in @genChangeDet()@ in @V3Changed.cpp@, which can only deal with change on basic types and unpacked arrays of modest size.\r\n\r\nI think this should not be too difficult to change for packed structures, since the standard allows them always to be treated as vectors (i.e. 1-D packed arrays). I'm working on a patch for this, but tripping over the type system a bit, so any hints on this are much appreciated.\r\n\r\nWhile working on this I found a second bug. If in the above example, I don't use a localparam, but just an explict constant, 1, I trigger an internal error due to a broken link:\r\n\r\n```\r\n  typedef struct packed {\r\n       logic [1:0] \tid;\r\n    } context_t;\r\n\r\n    context_t  tsb;\r\n\r\n    assign tsb.id = {tsb.id[0], clk};\r\n\r\n    initial begin\r\n       tsb.id = 0;\r\n    end\r\n\n```\r\n\r\nThis triggers:\r\n\r\n```\r\n%Error: Internal Error: ../V3Broken.cpp:206: Broken link in node (or something without maybePointedTo)\r\n%Error: Internal Error: See the manual and http://www.veripool.org/verilator for more assistance.\r\n\n```\r\n\r\nI haven't started looking at why this happens, but I suspect it is completely unrelated.\r\n\r\nIn the meantime, please pull a patch from branch *detectarray* at git@github.com:jeremybennett/verilator.git. This contains an update to the user guide, a test (t_detectarray_1) to demonstrate DETECTARRAY error with a packed structure and a test (t_detectarray_2) to trigger the broken link problem.\r\n\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-02-03",
+  "closed_at": "2013-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

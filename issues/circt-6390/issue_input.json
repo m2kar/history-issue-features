@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6390,
+  "issue_url": "https://github.com/llvm/circt/issues/6390",
+  "title": "[Arc] Improve how memory writes are legalized",
+  "body": "Memory write operations are currently legalized by just moving them after the last read from the same memory. This approach does not always work nicely because multiple memory reads and writes might already be grouped in a nested region (e.g., a `scf.if`). If the last read from memory happens outside of this nested region, but a write is inside that region, either the whole region has to be moved (possibly creating new conflicts due to the reads in the region also being moved) or the region has to be split up (currently not implemented).\r\nAlso, the implementation uses the following bit of code which leads to the pass running for ~17 sec (or 25% of the entire arcilator pipeline) on a dual-core MegaBoom config. Improving this would improve the runtime to only ~0.6 sec. Getting rid of this pattern would require first collecting all the op movements that have to be performed and then applying them all in the end. This can be difficult since the movement of read operations in the same nested region would also have to be considered.\r\n\r\nhttps://github.com/llvm/circt/blob/d7088aa368911fd1b47770a6c3f7ff9bfdc1b2c9/lib/Dialect/Arc/Transforms/LegalizeStateUpdate.cpp#L521-L524\r\n\r\nAlternatively, we could cache the memory write transactions somewhere (e.g., some space in the simulation state) until all reads are performed and only apply them afterward.\r\n",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-08",
+  "closed_at": "2024-10-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

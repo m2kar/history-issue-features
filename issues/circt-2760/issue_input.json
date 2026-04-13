@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2760,
+  "issue_url": "https://github.com/llvm/circt/issues/2760",
+  "title": "A dialect for scheduling problems",
+  "body": "@mikeurbach and I think it would be useful to have an import/export format for scheduling problem instances, e.g. for writing test cases and benchmarking independent from the concrete (and potentially proprietary!) synthesis flow.\r\n\r\nAt its core, the problem model in CIRCT consists of a bunch of maps, indexed by MLIR operations and attributes. To that end, it seems appropriate to define a new dialect to represent the problem components *operation*, *operator type*, *dependence* and *instance* as MLIR `Operation`s, and the problem properties attached to the components as MLIR `Attribute`s.\r\n\r\nThis could look like this: (fully TBD, of course)\r\n```mlir\r\nsched.instance @foo of \"CyclicProblem\" { initiation_interval=1 } {\r\n  sched.operator_type @cnst { latency=0 }\r\n  sched.operator_type @add { latency=1 }\r\n  sched.operator_type @mul { latency=3 }\r\n  ...\r\n  %0 = sched.operation @op0 deps() auxdeps() { linkedOpr=@cnst, start_time=0 }\r\n  ...\r\n  %4 = sched.operation @op4 deps(%0, %0) auxdeps() { linkedOpr=@add, start_time=3 }\r\n  ...\r\n  %11 = sched.operation @op11 deps(%4) auxdeps (@op17 { distance=2 }) { linkedOpr=@mul, start_time=42 }\r\n  ...\r\n}\r\n```\r\n\r\nGoing with the dialect approach (instead of just going with Cap'n'Proto, JSON, etc.) allows to generate Python bindings for the scheduling infrastructure with the usual mechanism. This would further benefit prototyping of new problem models and algorithms.\r\n\r\nNote: The proposed dialect is intended for testing/prototyping/benchmarking purposes only! Synthesis flows are supposed to use the API provided by the `Problem` class hierarchy directly.",
+  "labels": [
+    "enhancement",
+    "Scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-13",
+  "closed_at": "2022-07-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

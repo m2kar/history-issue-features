@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5421,
+  "issue_url": "https://github.com/llvm/circt/issues/5421",
+  "title": "[HWMemSimImp] Use for loop in the write stage",
+  "body": "Currently memory ops are lowered into:\r\n```verilog\r\n always @(posedge RW0_clk) begin       // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[0] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h0 +: 8] <= RW0_wdata[7:0];   // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[1] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h8 +: 8] <= RW0_wdata[15:8];  // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[2] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h10 +: 8] <= RW0_wdata[23:16];        // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[3] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h18 +: 8] <= RW0_wdata[31:24];        // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[4] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h20 +: 8] <= RW0_wdata[39:32];        // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[5] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h28 +: 8] <= RW0_wdata[47:40];        // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[6] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h30 +: 8] <= RW0_wdata[55:48];        // DescribedSRAM.scala:19:26\r\n    if (RW0_en & RW0_wmask[7] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n      Memory[RW0_addr][32'h38 +: 8] <= RW0_wdata[63:56];        // DescribedSRAM.scala:19:26\r\n  end // always @(posedge)\r\n```\r\nShould be implemented as\r\n```verilog\r\n always @(posedge RW0_clk) begin       // DescribedSRAM.scala:19:26\r\n    for (i) {\r\n      if (RW0_en & RW0_wmask[i] & RW0_wmode)      // DescribedSRAM.scala:19:26\r\n       Memory[RW0_addr][8*i +: 8] <= RW0_wdata[8*i:8*i-8];   // DescribedSRAM.scala:19:26\r\n   }\r\n  end // always @(posedge)\r\n```\r\n\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-06-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

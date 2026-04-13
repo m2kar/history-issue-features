@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4483,
+  "issue_url": "https://github.com/llvm/circt/issues/4483",
+  "title": "[Comb] Path-sensitive mux condition canonicalizer",
+  "body": "Input:\r\n```\r\ncircuit Foo:\r\n  module Foo:\r\n     input clock: Clock\r\n     input a: UInt<1>\r\n     input b: UInt<4>\r\n     output out: UInt<4>\r\n     reg release_state: UInt<4>, clock \r\n     release_state <= b\r\n     node _T_2238 = eq(release_state, UInt<4>(\"h5\"))\r\n     when _T_2238 : \r\n       release_state <= UInt<4>(\"h0\") \r\n     node _T_2240 = eq(release_state, UInt<4>(\"h2\")) \r\n     when _T_2240 : \r\n       release_state <= UInt<4>(\"h7\") \r\n     when _T_2238 :\r\n       release_state <= UInt<4>(\"h2\") \r\n\r\n     out <= release_state\r\n```\r\n\r\nCurrent output:\r\n```\r\n  always @(posedge clock) begin\r\n    automatic logic _T_2238;\r\n    _T_2238 = release_state == 4'h5; \r\n    if (_T_2238) \r\n      release_state <= 4'h2; \r\n    else if (release_state == 4'h2)\r\n      release_state <= 4'h7;\r\n    else if (_T_2238)  \r\n      release_state <= 4'h0;\r\n    else \r\n      release_state <= b;\r\n  end // always @(posedge)\r\n```\r\n\r\nThe second `if(_T_2238)` should be removed because that's clearly dead code. The canonicalizer can be implemented in comb mux canonilizer by analyzing mux chain's conditions.\r\n\r\n```mlir\r\nhw.module @Foo(%clock: i1, %a: i1, %b: i4) -> (out: i4) {\r\n  %c5_i4 = hw.constant 5 : i4\r\n  %c0_i4 = hw.constant 0 : i4\r\n  %c2_i4 = hw.constant 2 : i4\r\n  %c7_i4 = hw.constant 7 : i4\r\n  %release_state = seq.firreg %4 clock %clock {firrtl.random_init_start = 0 : ui64} : i4\r\n  %0 = comb.icmp bin eq %release_state, %c5_i4 {sv.namehint = \"_T_2238\"} : i4\r\n  %1 = comb.mux bin %0, %c0_i4, %b : i4\r\n  %2 = comb.icmp bin eq %release_state, %c2_i4 {sv.namehint = \"_T_2240\"} : i4\r\n  %3 = comb.mux bin %2, %c7_i4, %1 : i4\r\n  %4 = comb.mux bin %0, %c2_i4, %3 : i4\r\n  hw.output %release_state : i4\r\n}\r\n```\r\n\r\nShould be optimized into \r\n```mlir\r\nhw.module @Foo(%clock: i1, %a: i1, %b: i4) -> (out: i4) {\r\n  %c5_i4 = hw.constant 5 : i4\r\n  %c0_i4 = hw.constant 0 : i4\r\n  %c2_i4 = hw.constant 2 : i4\r\n  %c7_i4 = hw.constant 7 : i4\r\n  %release_state = seq.firreg %3 clock %clock {firrtl.random_init_start = 0 : ui64} : i4\r\n  %0 = comb.icmp bin eq %release_state, %c5_i4 {sv.namehint = \"_T_2238\"} : i4\r\n  %1 = comb.icmp bin eq %release_state, %c2_i4 {sv.namehint = \"_T_2240\"} : i4\r\n  %2 = comb.mux bin %1, %c7_i4, %b : i4\r\n  %3 = comb.mux bin %0, %c2_i4, %2 : i4\r\n  hw.output %release_state : i4\r\n}\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-12-23",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

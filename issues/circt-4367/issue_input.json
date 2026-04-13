@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4367,
+  "issue_url": "https://github.com/llvm/circt/issues/4367",
+  "title": "[PrepareForEmission] Incorrect emission of blocking assignments with disallowLocalVariables",
+  "body": "Currently PrepareForEmission hoist expressions if `disallowLocalVariables` exists but it has been broken. \r\n```mlir\r\nmodule attributes {circt.loweringOptions = \"disallowLocalVariables\"} {\r\n  hw.module @Foo(%fd: i32) -> () {\r\n     %r1 = sv.reg : !hw.inout<i4>\r\n     sv.initial {\r\n       %1 = sv.verbatim.expr \"`RANDOM\" : () -> i4\r\n       sv.bpassign %r1, %1 : i4\r\n       %read = sv.read_inout %r1: !hw.inout<i4>\r\n       %2 = comb.add %read, %read: i4\r\n       %3 = comb.extract %2 from 0 : (i4) -> i2\r\n       sv.fwrite %fd, \"%d\"(%3) : i2\r\n     }\r\n  }\r\n}\r\n```\r\n\r\nCurrent output is broken. `r1 + r1` must be spilled to a register. \r\n```verilog\r\nmodule Foo(\t// foo.mlir:3:3\r\n  input [31:0] fd);\r\n\r\n  reg  [3:0] r1;\t// foo.mlir:4:12\r\n  wire [3:0] _GEN = r1 + r1;\t// foo.mlir:8:16, :9:13\r\n  initial begin\t// foo.mlir:5:6\r\n    r1 = `RANDOM;\t// foo.mlir:6:13, :7:8\r\n    $fwrite(fd, \"%d\", _GEN[1:0]);\t// foo.mlir:9:13, :10:13, :11:8\r\n  end // initial\r\nendmodule\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-11-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

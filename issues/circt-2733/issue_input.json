@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2733,
+  "issue_url": "https://github.com/llvm/circt/issues/2733",
+  "title": "[FIRRTL] Incorrect location tracking in mux",
+  "body": "Hello,\r\n\r\nWhen I was generating symbol table for FIRRTL, I noticed that the mux location tracking is not handled properly. Here is how to reproduce it:\r\n1. Run the sample vending machine code: https://github.com/chipsalliance/chisel3/blob/master/src/test/scala/examples/ImplicitStateVendingMachine.scala\r\n2. Using the latest `firrtl` with `--disable-opt` on.\r\n\r\nHere is the FIRRTL output:\r\n\r\n```\r\nwhen doDispense : @[ImplicitStateVendingMachine.scala 15:21]\r\n      value <= UInt<1>(\"h00\") @[ImplicitStateVendingMachine.scala 16:11]\r\n      skip @[ImplicitStateVendingMachine.scala 15:21]\r\n    else : @[ImplicitStateVendingMachine.scala 17:16]\r\n      node _value_T = add(value, incValue) @[ImplicitStateVendingMachine.scala 18:20]\r\n      node _value_T_1 = tail(_value_T, 1) @[ImplicitStateVendingMachine.scala 18:20]\r\n      value <= _value_T_1 @[ImplicitStateVendingMachine.scala 18:11]\r\n      skip @[ImplicitStateVendingMachine.scala 17:16]\r\n```\r\n\r\nIn the generated RTL, the value update is generated as below:\r\n\r\n```SystemVerilog\r\n  assign doDispense = _GEN_0;   // ImplicitStateVendingMachine.scala:13:26\r\n      wire [3:0] _GEN_1 = {1'h0, value} + {1'h0, _incValue};    // /tmp/VendingMachine.fir:18:5, ImplicitStateVendingMachine.scala:13:26, :18:20, SimpleVendingMachine.scala:19:10\r\n  always @(posedge clock) begin // ImplicitStateVendingMachine.scala:11:22\r\n    if (reset)  // ImplicitStateVendingMachine.scala:11:22\r\n      value <= 3'h0;    // ImplicitStateVendingMachine.scala:11:22\r\n    else    // ImplicitStateVendingMachine.scala:11:22\r\n      value <= _GEN_0 ? 3'h0 : _GEN_1[2:0]; // ImplicitStateVendingMachine.scala:18:{11,20}\r\n```\r\n\r\nShouldn't the last assignment to be line 16 and line 18? Or did I miss something?\r\n\r\nThanks,\r\nKeyi\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-08",
+  "closed_at": "2022-03-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

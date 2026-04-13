@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5423,
+  "issue_url": "https://github.com/verilator/verilator/pull/5423",
+  "title": "sformatf internal error",
+  "body": "This problem only occurs when run with `--debug`.  The problem is that `AstSFormatF::scopeNamep()` is being called twice on the same node.  If I understand correctly, this is happening because in when visiting `INITIALAUTOMATIC` in `linkResolve()`:\r\n```\r\n    void visit(AstInitialAutomatic* nodep) override {\r\n        iterateChildren(nodep);\r\n        // Initial assignments under function/tasks can just be simple\r\n        // assignments without the initial\r\n        if (m_ftaskp) {\r\n            nodep->replaceWith(nodep->stmtsp()->unlinkFrBackWithNext());\r\n            VL_DO_DANGLING(pushDeletep(nodep), nodep);\r\n        }\r\n    }\r\n```\r\n\r\nwe replace the `INITIALAUTOMATIC` with `stmtsp` after iterating the children.  The problem is that the parent, `FUNC` in this case, is already iterating so the `SFORMATF` gets visited twice.\r\n\r\nMy fix appears to work, but I am not certain it is safe.  Can we assume that the `stmtsp` that replaces the `AstInitialAutomatic` will always be iterated by the ongoing `iterateChildren()` in the `AstNodeFTask` visitor?\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-30",
+  "closed_at": "2024-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

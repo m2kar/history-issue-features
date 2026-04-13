@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4659,
+  "issue_url": "https://github.com/verilator/verilator/issues/4659",
+  "title": "Question about modules level and elaboration order",
+  "body": "After all files are loaded, V3LinkLevel::modSortByLevel determines modules' topological level and then sort modules with it. Having searched the references of AstModule::level() I found that the information is only used to\r\n\r\n1) Determine top level module(s) and check whether a module is the top level\r\n\r\n2) Determine if a module is applied for --public-depth and --trace-depth.\r\n\r\n3) Perform deparam in the level order (rather than hierarchical order), so every cell referencing a parameterized module can be processed before the module, to avoid cloning the modified module.\r\n\r\nFor 1), to determine top modules it does requires leveling. And for 2), using module depth causes some imperfects (both A.B.X and A.X are applied if module X has matched depth). Instead I think it should use Scope depth.\r\n\r\nFor 3) I guess it was used to guarentee that cloning the original module is always before its modification (constant folding & deparam cells), so we can reuse the original module to save another copy. However after #4629 it's not possible to reuse the original module since it's not possible to evaluate the default values unless doing that in a cloned module, which doesn't make sense in avoiding another copy of the module.\r\n\r\n\r\nWhat's more, it makes it impossible to use some constant expressions during elaboration. E.g.\r\n\r\n- In #1593 it failed to use parameters or signal width as elaboration constants.\r\nIt's because the module referenced by a cell always has higher level than the module containing the cell, so the latter module is always processed after the former module. Thus V3Width will throw `Parameter-resolved constants must not use dotted references` error because the cross-referenced signal is not width'ed.\r\nBut if we perform V3Param and V3Width in hierarchical order, the xref expressions can be width'ed before constant folding, thus make it possible to referene it during elaboration.\r\n\r\n- `localparam V = ClsParam#(...)::A`\r\nIt's similar to the `#1593` case. The expression is processed before ClsParam so it fails.\r\n\r\n\r\n\r\nBesides I noticed that there're \"Vrcm\" cells cloned for recursive modules and it's [said to](https://github.com/verilator/verilator/blob/7ba6647c4f30a4c5198289fb26b10b4c48a4ccdf/src/V3LinkCells.cpp#L310-L312) avoid breaking parameter resolution. I haven't found why it breaks it yet but I think with hierarchical order it's easier to handle such cases (not necessary to clone a new module).\r\n\r\nSo based on these I propose to abandon the level-based elaboration (but keep some level information) so we can handle more valid cases. It might be a temporarily workaround for arbitrary parameter resolution but I think it's closer to #1540.",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-02",
+  "closed_at": "2023-12-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

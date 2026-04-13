@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 380,
+  "issue_url": "https://github.com/llvm/circt/issues/380",
+  "title": "[FIRRTL] Type Canonicalization May Require Connect Canonicalization",
+  "body": "Consider the following two circuits that the Scala FIRRTL Compiler (SFC) treats as equivalent:\r\n\r\n```\r\ncircuit Foo1 :\r\n  module Foo1 :\r\n    input a : { a : UInt<1>}\r\n    output b : { a : UInt<1>}\r\n    b <= a\r\n```\r\n\r\nHere, the inputs are flipped _and the connection order is flipped_:\r\n```\r\ncircuit Foo2 :\r\n  module Foo2 :\r\n    output a : { flip a : UInt<1>}\r\n    input b : { flip a : UInt<1>}\r\n    a <= b\r\n```\r\n\r\nEither a connect (`<=`) or partial connect (`<-`) can be used.\r\n\r\nThis is problematic, because MLIR FIRRTL Dialect type canonicalization changes the types of the ports from `Foo2` into those of `Foo1`. However, the connect is untouched.\r\n\r\nI'm not 100% sure how to handle this, but this may require tracking when type canonicalization results in an outer flip and then optionally updating the LHS and RHS.\r\n\r\nSimply swapping the connection order so it works is differently problematic because this will cause erroneous circuits to be accepted, e.g., `a <= b` would then work in `Foo1` and `b <= a` would work in `Foo2` when these are rejected by the SFC.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-30",
+  "closed_at": "2021-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

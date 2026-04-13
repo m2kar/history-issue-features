@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5570,
+  "issue_url": "https://github.com/verilator/verilator/issues/5570",
+  "title": "Fix to lint error on queue compared to int",
+  "body": "**Issue Description:**\r\nVerilator throws a compilation error when calling a function with a cross-module reference that includes a `$fatal` statement. The error only occurs when `$fatal` is present; otherwise, the code compiles without issues.\r\n\r\n**Example Code:**\r\n```systemverilog\r\nmodule DUT;\r\n  function automatic int find_elem(int elem, int array[]);\r\n    int index;\r\n\r\n    index = array.find_first_index(x) with (x == elem);\r\n    if (index == -1) begin\r\n      $fatal(1, \"Element not found in array\");\r\n    end\r\n\r\n    return index;\r\n  endfunction\r\nendmodule\r\n\r\nmodule Testbench;\r\n  DUT dut();\r\n\r\n  initial begin\r\n    int array[] = '{5, 4, 3, 2, 1};\r\n    int index = dut.find_elem(2, array);\r\n  end\r\nendmodule\r\n```\r\n\r\n**Verilator Command:**\r\n```bash\r\nverilator test.sv --cc --exe --binary --main\r\n```\r\n\r\n**Error Message:**\r\n```\r\nIn file included from Vtest__ALL.cpp:8:\r\nVtest___024root__DepSet_h9b2d61ff__0__Slow.cpp: In function ‘void Vtest___024root___eval_initial__TOP(Vtest___024root*)’:\r\nVtest___024root__DepSet_h9b2d61ff__0__Slow.cpp:31:81: error: cannot convert ‘VlQueue<unsigned int>’ to ‘IData’ {aka ‘unsigned int’} in assignment\r\n   31 |         = __Vfunc_Testbench__DOT__dut__DOT__find_elem__0__array.find_first_index(\r\n      |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\r\n      |                                                                                 |\r\n      |                                                                                 VlQueue<unsigned int>\r\n   32 |                                                                                 [&](\r\n      |                                                                                 ~~~~\r\n   33 |                                                                                 IData/*31:0*/ x__DOT__index,\r\n      |                                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n   34 |                                                                                 IData/*31:0*/ x) {\r\n      |                                                                                 ~~~~~~~~~~~~~~~~~~\r\n   35 |             return ((2U == x));\r\n      |             ~~~~~~~~~~~~~~~~~~~                                                  \r\n   36 |         }\r\n      |         ~                                                                        \r\n   37 |     );\r\n      |     ~ \r\n```\r\n\r\n**Verilator Version:**\r\nVerilator 5.031 (devel) rev v5.030-1-g68e0cf552 (git master)\r\n\r\n**OS and Distribution:**\r\nWSL Ubuntu 22.04.4\r\n\r\n**Additional Notes:**\r\n\r\n- The error only occurs when the function is called across modules.\r\n- Removing `$fatal` eliminates the issue.\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-28",
+  "closed_at": "2025-05-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

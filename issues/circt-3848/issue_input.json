@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3848,
+  "issue_url": "https://github.com/llvm/circt/pull/3848",
+  "title": "[PrepareForEmission] Add an option to anchor wiers for input ports",
+  "body": "Some LINT tool dislikes expression being inlined into instance ports. This PR adds an option to force wires for\r\ninput ports. \r\n\r\nExample:\r\n```mlir\r\n hw.module.extern @MyExtModule(%in: i8)\r\n hw.module @MoveInstances(%a_in: i8) -> (){\r\n  %0 = comb.add %a_in, %a_in : i8\r\n  hw.instance \"xyz3\" @MyExtModule(in: %0: i8) -> ()\r\n }\r\n```\r\nw/o PR:\r\n```verilog\r\n  MyExtModule xyz3 (    // foo.mlir:12:3\r\n    .in (a_in + a_in)   // foo.mlir:11:8\r\n  );\r\n```\r\nw/ PR and option:\r\n```verilog\r\n  wire [7:0] _xyz3_in;  // foo.mlir:12:3\r\n  assign _xyz3_in = a_in + a_in;        // foo.mlir:11:8, :12:3\r\n  MyExtModule xyz3 (    // foo.mlir:12:3\r\n    .in (_xyz3_in)      // foo.mlir:12:3\r\n  );\r\n```\r\n\r\nCC: @rsetaluri",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-09",
+  "closed_at": "2022-09-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

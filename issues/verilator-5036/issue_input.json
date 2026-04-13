@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5036,
+  "issue_url": "https://github.com/verilator/verilator/issues/5036",
+  "title": "Verilator's vpiStringVal implementation masks byte values of 32 and 0",
+  "body": "Verilator's vpiStringVal implementation masks byte values of 32 and 0.\r\n\r\nverilator version: `Verilator 5.022 2024-02-24 rev UNKNOWN.REV`\r\nOS: macOS Sonoma\r\n\r\nHello. I am writing handler functions to write and read signals from a Verilog Top module. My application uses `vpiStringVal` format. I noticed in the implementation for `vl_get_value(...)` that byte values equal to 0 are returned as spaces (8'b32) to the caller. \r\n\r\n```\r\n//verilated_vpi.cpp:vl_get_value:2349\r\n...\r\n// other simulators replace [leading?] zero chars with spaces, replicate here.\r\nt_outStr[i] = val ? val : ' ';\r\n```\r\n\r\nTo test an edge case where this mechanic might fail, I wrote a simple Verilog Top module that assigns the values (32 << 8) and 32 to two constant outputs. 32 is represented as the ASCII space character.\r\n\r\n```\r\n//Top.v\r\nmodule Top(output [15:0] const1, output [15:0] const2);\r\n   assign const1 = 16'h2000;\r\n   assign const2 = 16'h0020;\r\nendmodule;\r\n```\r\n\r\nAnd a test bench that calls the `vl_get_value` wrapper function `vpi_get_value()` for each output. \r\nThe result is two identical char arrays. This behavior is problematic because it is not possible to decode the true value of this output when using `vpiStringVal` format.\r\n\r\n```\r\n//TestBench.cpp\r\n...\r\nt_vpi_value const1;\r\nconst1.format = vpiStringVal;\r\nvpiHandle vh1 = vpi_handle_by_name(\"const1\", NULL);\r\nvpi_get_value(vh1, &const1);\r\nprintCharArray(const1.value.str); //{32, 32, 0}\r\n...\r\nt_vpi_value const2;\r\nconst2.format = vpiStringVal;\r\nvpiHandle vh1 = vpi_handle_by_name(\"const2\", NULL);\r\nvpi_get_value(vh1, &const2);\r\nprintCharArray(const2.value.str); //{32, 32, 0}\r\n```\r\n\r\nThe expected result of printing const1 is `{32, 0, 0}`, and const2 is `{0, 32, 0}`. ",
+  "labels": [
+    "status: ready",
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-04",
+  "closed_at": "2025-09-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4868,
+  "issue_url": "https://github.com/verilator/verilator/issues/4868",
+  "title": "Fail on a simple combinatol logic",
+  "body": "**Verilator version**: Verilator 5.018 2023-10-30 rev UNKNOWN.REV\r\n**OS**: MAC\r\n\r\nI wrote a simple combinatoral logic in verilog as follows:\r\n\r\n```\r\nmodule dummy (\r\n    input clk,\r\n    input [7:0] vector1 [3:0],\r\n    output reg [7:0] vector2 [3:0]\r\n);\r\n\r\nalways @* begin\r\n    for (integer i = 0; i < 4; i = i + 1) begin\r\n        vector2[i] = vector1[i];\r\n    end  \r\nend\r\n\r\nendmodule\r\n\r\n```\r\n\r\nAnd the following testbench:\r\n\r\n```\r\nmodule tb0;\r\n    // Inputs\r\n    reg clk;\r\n    reg [7:0] data_in1 [3:0];\r\n\r\n    // Output\r\n    wire [7:0] result [3:0];\r\n\r\n    // Instantiate the module under test\r\n    dummy uut (\r\n        .clk(clk),\r\n        .vector1(data_in1),\r\n        .vector2(result)\r\n    );\r\n\r\n    // Clock generation\r\n    always begin\r\n        #5 clk = ~clk; // Toggle clock every 5 ns\r\n    end\r\n\r\n    initial begin\r\n        $monitor(\"Time = %d: data_in1[1] = %d, data_out[1] = %d\", $time, data_in1[1], result[1]); \r\n        \r\n        clk = 0;\r\n        data_in1[0] = 8'h00;\r\n        data_in1[1] = 8'h00;\r\n        data_in1[2] = 8'h00;\r\n        data_in1[3] = 8'h00;\r\n\r\n        #11 data_in1[0] = 8'h0f;\r\n        #11 data_in1[1] = 8'h04;\r\n        #11 data_in1[2] = 8'h0e;\r\n        #11 data_in1[3] = 8'h0a;\r\n        \r\n        #20 $finish;\r\n    end\r\nendmodule\r\n\r\n```\r\n\r\nWhen I compile and run with: \r\n\r\n```\r\nverilator --binary tb0.v dummy.v -top-module tb0\r\n./obj_dir/Vtb0\r\n```\r\n\r\nI get the following output:\r\n\r\n```\r\nTime =                    0: data_in1[1] =   0, data_out[1] =   0\r\nTime =                    5: data_in1[1] =   0, data_out[1] =   0\r\nTime =                    5: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   10: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   10: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   11: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   11: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   15: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   15: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   20: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   20: data_in1[1] =   0, data_out[1] =   0\r\nTime =                   22: data_in1[1] =   4, data_out[1] =   0\r\nTime =                   22: data_in1[1] =   4, data_out[1] =   0\r\nTime =                   25: data_in1[1] =   4, data_out[1] =   0\r\nTime =                   25: data_in1[1] =   4, data_out[1] =   0\r\n....\r\n\r\n```\r\n\r\nBut `data_out[1]` should change to 4 at `time=20`. I tried the exactly the same code on other platforms (e.g., edaplayground), and was able to get `data_out[1]=4`. I wonder what am I missing? Or if this is a Verilator bug.",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-29",
+  "closed_at": "2024-02-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2314,
+  "issue_url": "https://github.com/llvm/circt/issues/2314",
+  "title": "[FIRRTL] Invalid clock values crashing canonicalization",
+  "body": "```\r\ncircuit X:\r\n  module X:\r\n    output c: Clock\r\n    wire w: Clock\r\n    w is invalid\r\n    c <= w\r\n```\r\n\r\n```\r\n #9 0x00000000006dc0a9 circt::firrtl::IntType::getWidthOrSentinel() /scratch/aryoung/circt/build-release/../include/circt/Dialect/FIRRTL/FIRRTLTypes.h:225:27\r\n#10 0x00000000006dc0a9 getIntZerosAttr(mlir::Type) /scratch/aryoung/circt/lib/Dialect/FIRRTL/FIRRTLFolds.cpp:53:62\r\n#11 0x00000000006e9d7d canonicalizeSingleSetConnect /scratch/aryoung/circt/lib/Dialect/FIRRTL/FIRRTLFolds.cpp:1435:67\r\n#12 0x00000000006e9d7d circt::firrtl::ConnectOp::canonicalize(circt::firrtl::ConnectOp, mlir::PatternRewriter&) /scratch/aryoung/circt/lib/Dialect/FIRRTL/FIRRTLFolds.cpp:1461:16\r\n```\r\n`getIntZerosAttr` is crashing when `op.dest().getType() == !firrtl.clock`\r\n```c++\r\n  auto replacement = op.src();\r\n  if (srcValueOp) {\r\n    // Replace with constant zero.\r\n    if (isa<InvalidValueOp>(srcValueOp)) {\r\n      auto constant =\r\n          rewriter.create<ConstantOp>(op.dest().getLoc(), op.dest().getType(),\r\n                                      getIntZerosAttr(op.dest().getType()));\r\n      replacement = constant;\r\n    }\r\n```\r\nThe last update to this code is was here: https://github.com/llvm/circt/pull/2288\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-09",
+  "closed_at": "2021-12-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

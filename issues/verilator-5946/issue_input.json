@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5946,
+  "issue_url": "https://github.com/verilator/verilator/issues/5946",
+  "title": "2D struct array parameter not treated as constant in generate-if",
+  "body": "This is a minimal example that shows the issue. Verilator reports an error when using a 2D array of packed structs as a parameter in a generate-if condition. The same setup works fine when using a 1D array.\n\n```systemverilog\nmodule Test;\n\n  typedef struct packed {\n    logic enable_feature;\n  } unit_config_t;\n\n  // Static configuration for 4 top units, 2 sub units each\n  parameter unit_config_t UnitConfig[4][2] = '{\n    '{ '{ enable_feature: 1'b1 }, '{ enable_feature: 1'b0 } },\n    '{ '{ enable_feature: 1'b0 }, '{ enable_feature: 1'b1 } },\n    '{ '{ enable_feature: 1'b1 }, '{ enable_feature: 1'b1 } },\n    '{ '{ enable_feature: 1'b0 }, '{ enable_feature: 1'b0 } }\n  };\n\n  for (genvar i = 0; i < 4; i++) begin : top_unit\n    for (genvar j = 0; j < 2; j++) begin : sub_unit\n      if (UnitConfig[i][j].enable_feature) begin\n        // Instantiate feature logic\n      end else begin\n        // Tie off outputs or insert stubs\n      end\n    end\n  end\n\nendmodule\n```\n\n## Command line\n\n```\nverilator test.sv --cc --exe --binary --main\n```\n\n## Output\n\n```\n%Error: test.sv:17:11: Expecting expression to be constant, but variable isn't const: 'UnitConfig'\n                     : ... note: In instance 'Test'\n   17 |       if (UnitConfig[i][j].enable_feature) begin\n      |           ^~~~~~~~~~\n%Error: test.sv:17:24: Generate If condition must evaluate to constant\n                     : ... note: In instance 'Test'\n   17 |       if (UnitConfig[i][j].enable_feature) begin\n      |                        ^\n%Error: Exiting due to 2 error(s)\n```\n\n## Version\n\nVerilator 5.034  \nBuild date: 2025-02-24  \nRev: v5.034\n\n## Notes\n\nThis only happens with a 2D array of structs. A 1D array with the same struct works without error.\n\nHappy to help debug this. Where should I start looking?",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-18",
+  "closed_at": "2025-04-18",
+  "code_blocks": [
+    "module Test;\n\n  typedef struct packed {\n    logic enable_feature;\n  } unit_config_t;\n\n  // Static configuration for 4 top units, 2 sub units each\n  parameter unit_config_t UnitConfig[4][2] = '{\n    '{ '{ enable_feature: 1'b1 }, '{ enable_feature: 1'b0 } },\n    '{ '{ enable_feature: 1'b0 }, '{ enable_feature: 1'b1 } },\n    '{ '{ enable_feature: 1'b1 }, '{ enable_feature: 1'b1 } },\n    '{ '{ enable_feature: 1'b0 }, '{ enable_feature: 1'b0 } }\n  };\n\n  for (genvar i = 0; i < 4; i++) begin : top_unit\n    for (genvar j = 0; j < 2; j++) begin : sub_unit\n      if (UnitConfig[i][j].enable_feature) begin\n        // Instantiate feature logic\n      end else begin\n        // Tie off outputs or insert stubs\n      end\n    end\n  end\n\nendmodule\n",
+    "verilator test.sv --cc --exe --binary --main\n",
+    "%Error: test.sv:17:11: Expecting expression to be constant, but variable isn't const: 'UnitConfig'\n                     : ... note: In instance 'Test'\n   17 |       if (UnitConfig[i][j].enable_feature) begin\n      |           ^~~~~~~~~~\n%Error: test.sv:17:24: Generate If condition must evaluate to constant\n                     : ... note: In instance 'Test'\n   17 |       if (UnitConfig[i][j].enable_feature) begin\n      |                        ^\n%Error: Exiting due to 2 error(s)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

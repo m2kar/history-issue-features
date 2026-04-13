@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1429,
+  "issue_url": "https://github.com/verilator/verilator/issues/1429",
+  "title": "Feature request: elaboration tasks",
+  "body": "---\n\n\nAuthor Name: **Udi Finkelstein**\nOriginal Redmine Issue: 1429 from https://www.veripool.org\n\n\n\n---\n\nWhile looking for a way to trigger an error on invalid parameter combinations of a parammetrized module, I stumbled upon this hidden gem:\r\n\r\n```\r\n20.11 Elaboration system tasks\r\nIt is often necessary to validate the actual parameter values used in a SystemVerilog model and report any\r\nerror without generating the executable simulation model. This is achieved by using elaboration system\r\ntasks. These tasks have the same names as the severity system tasks (see 20.10) that can be used during\r\nsimulation. However, the elaboration system tasks shall be called outside procedural code and their\r\nactivation can be controlled by conditional generate constructs. If such a task is called from within a\r\nprocedure, then it becomes a simulation-time severity system task.\r\nelaboration_system_task ::= // from A.1.4\r\n$fatal [ ( finish_number [, list_of_arguments ] ) ] ;\r\n| $error [ ( [ list_of_arguments ] ) ] ;\r\n| $warning [ ( [ list_of_arguments ] ) ] ;\r\n| $info [ ( [ list_of_arguments ] ) ] ;\r\nfinish_number ::= 0 | 1 | 2\r\nSyntax 20-11—Elaboration system task syntax (excerpt from Annex A)\r\n\n```\r\n\r\nSo it seems that if you call $error()/$wrning()/$info()/$fatal() directly within a generate section, outside any procedural always/initial block,\r\nit is treated as *elaboration* system atsks, not runtime system tasks!\r\n\r\nI've tried the following example, but it triggered no response from Verilator:\r\n\r\n```\r\nmodule t;\r\nlocalparam X=1;\r\ngenerate\r\nif (X == 1)\r\n  $info(\"X is 1\");\r\nelse\r\n  $info(\"X is not 1\");\r\nendgenerate\r\nendmodule\r\n\n```\r\n\r\nIs it possible to add support for these system tasks in elaboration time?\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2019-05-02",
+  "closed_at": "2019-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

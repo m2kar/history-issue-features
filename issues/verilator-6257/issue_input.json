@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6257,
+  "issue_url": "https://github.com/verilator/verilator/issues/6257",
+  "title": "Support parameter resolution of 1D unpacked array slices",
+  "body": "Verilator 5.036 2025-04-27 rev v5.036\n\nIn modules that process parameter arrays, Verilator seems to not realize that the parameter array is still constant. Commercial simulation and synthesis by at least one vendor supports this. Minimal example test:\n\nmodule top();\n\n   parameter int val_p[5-1:0] = '{5,4,3,2,1};\n \n   issue #(.els_p(5)\n\t   ,.val_p(val_p)) iss ();\n   \nendmodule\n\nmodule issue #(parameter els_p\n\t       ,parameter int val_p[els_p-1:0]\n\t       ) ();\n   \n   if (els_p > 1)\n     begin: r\n\tissue #(.els_p(els_p-1)\n\t       ,.val_p(val_p[els_p-1:1]))\n\t  x ();\n     end\n\n   initial $display(\"%h (%m)\",val_p[0]);\n\t       \nendmodule\n\n%Error: verilator-bug.sv:18:11: Can't convert defparam value to constant: Param 'val_p' of 'x'\n                              : ... note: In instance 'top.iss'\n   18 |         ,.val_p(val_p[els_p-1:1]))\n      |           ^~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.036 for more assistance.\n%Warning-WIDTHEXPAND: verilator-bug.sv:12:24: Operator VAR 'val_p' expects 32 bits on the Initial value, but Initial value's CONST '?1?h0' generates 1 bits.\n                                            : ... note: In instance 'top.iss.r.x'\n   12 |         ,parameter int val_p[els_p-1:0]\n      |                        ^~~~~\n                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.036\n                      ... Use \"/* verilator lint_off WIDTHEXPAND */\" and lint_on around source to disable this message.\n%Error: Exiting due to 1 error(s)\n\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-05",
+  "closed_at": "2025-08-06",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

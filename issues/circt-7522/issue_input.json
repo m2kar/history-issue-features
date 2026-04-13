@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7522,
+  "issue_url": "https://github.com/llvm/circt/pull/7522",
+  "title": "[FIRRTL] Update LowerClasses to alter what PathInfo stores.",
+  "body": "PathInfo stores a pointer to an Operation, which was problematic because that Operation may be deleted in updateInstanceInModule. The test case added in this patch would lead to a use-after-free.\r\n\r\nThis pointer was only really used for a few things, which can be handled differently to avoid needing to consider Operation lifetimes.\r\n\r\nOne use was the operator bool implementation, to check if a PathInfo is empty. In the one place this was used, an equivalent check is to query the PathInfoTable, and check if the key was not in the table.\r\n\r\nAnother use was adding the Operation's location in error messages and notes. We can safely store a Location directly for these messages.\r\n\r\nThe final use was to do an isa check while determining the target kind. This is where the use in the use-after-free would manifest. For this, we do the isa check early, and store the result in a bool.\r\n\r\nIn summary, we are able to simplify the data in PathInfo in order to avoid hanging on to an Operation pointer and needing to worry about its lifetime.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-15",
+  "closed_at": "2024-08-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

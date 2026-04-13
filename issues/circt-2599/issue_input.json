@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2599,
+  "issue_url": "https://github.com/llvm/circt/issues/2599",
+  "title": "[FIRRTL] Restore subaccess from multibit_mux in aggregate preservation mode",
+  "body": "input:\r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: UInt<1>[4]\r\n    input sel: UInt<2>\r\n    output b: UInt<1>\r\n    b <= a[sel]\r\n```\r\n`firtool -preserve-aggregate -preserve-public-types=false -imconstprop=false`\r\n\r\noutput is:\r\n```sv\r\nmodule Foo(\t// foo.fir:2:10\r\n  input  [3:0] a,\r\n  input  [1:0] sel,\r\n  output       b);\r\n\r\n  wire [3:0] _T = {{a[2'h3]}, {a[2'h2]}, {a[2'h1]}, {a[2'h0]}};\t// foo.fir:6:12\r\n  assign b = _T[sel];\t// foo.fir:2:10, :6:12\r\nendmodule\r\n```\r\n\r\nWe want to have:\r\n```sv\r\n assign b = a[sel];\r\n```\r\n\r\nLowerTypes eliminates subaccess to make things simple in the down streams passes. However, in the aggregate preservation mode, we can use the original aggregate array like `assign b = a[sel]`.  Most of the passes assume that subaccess ops are already removed, so we should restore them just before LowerToHW (maybe during MergeConnections).",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-08",
+  "closed_at": "2023-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

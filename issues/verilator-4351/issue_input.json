@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4351,
+  "issue_url": "https://github.com/verilator/verilator/issues/4351",
+  "title": "Data error when fork-join_none and automatic variables are used in loop",
+  "body": "Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\n```Verilog\r\n`timescale 1ns/1ps\r\ntask automatic run();\r\n\r\n    for (int i=0; i<5; i++) begin\r\n        fork\r\n            begin\r\n                #1ns;\r\n                $display(\"%s (%0d) @%0t: i=%0d\", `__FILE__, `__LINE__, $time, i);\r\n            end\r\n        join_none\r\n    end\r\n    #2ns;\r\n    for (int i=0; i<5; i++) begin\r\n        automatic int ii = i;\r\n        fork\r\n            begin\r\n                #1ns;\r\n                $display(\"%s (%0d) @%0t: i=%0d\", `__FILE__, `__LINE__, $time, ii);\r\n            end\r\n        join_none\r\n    end\r\n    #2ns;\r\nendtask: run\r\n\r\nmodule test();\r\n    initial begin\r\n        run();\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\nexpected results (from VCS)：\r\n```shell\r\ntest.sv (8) @1000: i=5\r\ntest.sv (8) @1000: i=5\r\ntest.sv (8) @1000: i=5\r\ntest.sv (8) @1000: i=5\r\ntest.sv (8) @1000: i=5\r\ntest.sv (18) @3000: i=0\r\ntest.sv (18) @3000: i=1\r\ntest.sv (18) @3000: i=2\r\ntest.sv (18) @3000: i=3\r\ntest.sv (18) @3000: i=4\r\n```\r\nActual results:\r\n```shell\r\ntest.sv (8) @1000: i=0\r\ntest.sv (8) @1000: i=1\r\ntest.sv (8) @1000: i=3\r\ntest.sv (8) @1000: i=4\r\ntest.sv (8) @1000: i=2\r\ntest.sv (18) @3000: i=4\r\ntest.sv (18) @3000: i=4\r\ntest.sv (18) @3000: i=4\r\ntest.sv (18) @3000: i=4\r\ntest.sv (18) @3000: i=4\r\n```\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\nVerilator 5.006 2023-01-22 rev UNKNOWN.REV \r\n(installed by brew on macOS )\r\n\r\nWhat OS and distribution are you using?\r\nmacOS 13.4.1 on Apple Silicon M2\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nI am a DV engineer with hardware background, instead of software background. Therefore I don't think I am able to fix it.",
+  "labels": [
+    "area: scheduling",
+    "effort: days",
+    "status: assigned"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-09",
+  "closed_at": "2023-08-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

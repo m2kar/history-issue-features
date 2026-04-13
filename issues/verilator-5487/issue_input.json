@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5487,
+  "issue_url": "https://github.com/verilator/verilator/issues/5487",
+  "title": "Scheduling reflection of program instances.",
+  "body": "The reflection of program instances in SystemVerilog is specified to occur in the Reactive region, but in Verilator, it seems to be reflected on the Active side instead. There is no issue with clocking blocks as they are correctly executed in the Reactive region, but I am curious about how program instances are implemented. Since program cannot be used with UVM, it might be acceptable to drop it from the specification, but as it stands, it is somewhat partially supported, which feels incomplete. In VCS and Xcelium, it reflects at the timing of the Reactive region.\r\n\r\nVerilator 5.029 devel rev v5.028-136-g4ec75b261\r\n------------------------------------------------------------------------------\r\n````\r\ntimescale 1ns/100ps\r\n\r\nmodule top();\r\n\r\n  // VCD or FST Dump\r\n  initial begin\r\n    $dumpfile(\"wave.dump\");\r\n    $dumpvars(0, top);\r\n  end\r\n\r\n  bit RST_X = 1'b1;\r\n\r\n  bit CLK;\r\n  always #10\r\n    CLK = ~CLK;\r\n\r\n  logic [3:0] r_cnt;\r\n  always_ff @(posedge CLK, negedge RST_X)\r\n    if(~RST_X)\r\n      r_cnt <= '0;\r\n    else\r\n      r_cnt <= 4'(r_cnt + 1'b1);\r\n\r\n  clocking cb @(posedge CLK);\r\n  endclocking\r\n\r\n  event Ev_rtl_tmg, Ev_cb_tmg, Ev_prg_tmg;;\r\n  always_ff @(posedge CLK)\r\n    if(r_cnt == 4'd5)\r\n      ->Ev_rtl_tmg;       // RTL (Active region)\r\n\r\n  initial begin\r\n    #3  RST_X = 1'b0;\r\n    #15 RST_X = 1'b1;\r\n\r\n    repeat (30) begin\r\n      @(cb);\r\n\r\n      if(r_cnt == 4'd5)\r\n        ->Ev_cb_tmg;   // Cloking block (Reactive region)\r\n    end\r\n\r\n    @(posedge CLK);\r\n    $finish;\r\n  end\r\n\r\n  test_prg  test_prg();   // Program instance\r\n\r\nendmodule\r\n\r\nprogram test_prg();\r\n\r\n  initial\r\n    forever\r\n    begin\r\n      @(posedge top.CLK);\r\n      if(top.r_cnt == 4'd5)\r\n        ->top.Ev_prg_tmg;\r\n    end\r\nendprogram\r\n```\r\n\r\n![image](https://github.com/user-attachments/assets/63e850c0-8b9b-46af-a775-6d899847c208)\r\n\r\n\r\n",
+  "labels": [
+    "area: scheduling",
+    "resolution: wontfix",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-25",
+  "closed_at": "2024-09-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6769,
+  "issue_url": "https://github.com/verilator/verilator/issues/6769",
+  "title": "Fix false recursive definition error",
+  "body": "The following rewritten from UVM tests/05components/50in_order/20int gives a false Verilation error:\n\n```\n%Error: t/t_0.v:16:43: Reference to 'T' type would form a recursive definition\n   16 |       type comp_type = uvm_built_in_comp#(T)\n      |                                           ^\n```\n\n```\nmodule t;\n  class uvm_built_in_comp #(\n      type T = int\n  );\n  endclass\n\n  class uvm_in_order_comparator #(\n      type T = int,\n      type comp_type = uvm_built_in_comp#(T)\n  );\n  endclass\n\n  class uvm_in_order_built_in_comparator #(\n      type T = int\n  ) extends uvm_in_order_comparator #(T);\n  endclass\n\n  initial begin\n    uvm_in_order_built_in_comparator #(int) sb;\n    $finish;\n  end\nendmodule\n```\n\nI'll get back to this eventually, but anyone else that wants to investigate is very welcome to, thanks.",
+  "labels": [
+    "area: elaboration"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-06",
+  "closed_at": "2026-03-30",
+  "code_blocks": [
+    "%Error: t/t_0.v:16:43: Reference to 'T' type would form a recursive definition\n   16 |       type comp_type = uvm_built_in_comp#(T)\n      |                                           ^\n",
+    "module t;\n  class uvm_built_in_comp #(\n      type T = int\n  );\n  endclass\n\n  class uvm_in_order_comparator #(\n      type T = int,\n      type comp_type = uvm_built_in_comp#(T)\n  );\n  endclass\n\n  class uvm_in_order_built_in_comparator #(\n      type T = int\n  ) extends uvm_in_order_comparator #(T);\n  endclass\n\n  initial begin\n    uvm_in_order_built_in_comparator #(int) sb;\n    $finish;\n  end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

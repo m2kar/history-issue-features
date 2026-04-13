@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7045,
+  "issue_url": "https://github.com/verilator/verilator/issues/7045",
+  "title": "Spurious MULTIDRIVEN warnings with -fno-inline on cell output port connections",
+  "body": "## Bug\n\nWith `-fno-inline`, Verilator emits spurious `%Warning-MULTIDRIVEN` on wires driven by multiple cell instances' output ports. Without inlining, `instAll()` creates separate `AstAssignW` continuous assignments for each cell's output port connection, making the parent wire appear multi-driven. With inlining, each instance gets separate `__DOT__`-prefixed variables and the conflict doesn't arise.\n\n```\n%Warning-MULTIDRIVEN: Signal has multiple combinational drivers\n```\n\n### Failing tests (5)\n\n- `t_cover_toggle` (x3 scenarios)\n- `t_interface_star`\n- `t_typedef_consistency_0`\n\n### Reproducer\n\n```bash\ncd test_regress\nverilator --cc --coverage-toggle -fno-inline t/t_cover_toggle.v\n# -> %Warning-MULTIDRIVEN on 'toggle_up'\n# Without -fno-inline, no warning\n```\n\n### Related\n\n- Found during the `-fno-inline` audit for #1539 (post-scope inliner)\n\n### Version\n\nTested on master at `bb0e1c8c6` (`Verilator 5.045 devel rev v5.044-152-gbb0e1c8c6`).",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-11",
+  "closed_at": null,
+  "code_blocks": [
+    "%Warning-MULTIDRIVEN: Signal has multiple combinational drivers\n",
+    "cd test_regress\nverilator --cc --coverage-toggle -fno-inline t/t_cover_toggle.v\n# -> %Warning-MULTIDRIVEN on 'toggle_up'\n# Without -fno-inline, no warning\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

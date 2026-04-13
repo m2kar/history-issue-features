@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1347,
+  "issue_url": "https://github.com/verilator/verilator/issues/1347",
+  "title": "Duplicate declaration on generate tristate UDP",
+  "body": "---\n\n\nAuthor Name: **Tomas Dzetkulic**\nOriginal Redmine Issue: 1347 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\n```module fnor2(f, a, b);\r\n  parameter W = 1;\r\n\r\n  output [W-1:0]f;\r\n  input [W-1:0]a, b;\r\n\r\n  supply0 gnd;\r\n  supply1 vcc;\r\n\r\n  generate\r\n     genvar i;\r\n     for (i = 0; i < W; i = i + 1) begin\r\n       wire w;\r\n       pmos (f[i], w, a[i]);\r\n       pmos (w, vcc, b[i]);\r\n       nmos (f[i], gnd, a[i]);\r\n       nmos (f[i], gnd, b[i]);\r\n     end\r\n  endgenerate\r\nendmodule  // fnor2\r\n\r\nmodule test(f, a, b);\r\n  output [1:0]f;\r\n  input [1:0]a, b;\r\n\r\n  fnor2 #(2) n(f, a, b);\r\nendmodule\n```\r\n\r\n```\r\n$ verilator --version\r\nVerilator 3.916 2017-11-25 rev verilator_3_914-65-g0478dbd\r\n$ verilator -I --cc bug.v --trace --top-module test -Mdir ../obj -CFLAGS \"-O2 -std=c++11 -fPIC\"\r\n%Error: bug.v:13: Duplicate declaration of signal: test.n.w__en\r\n%Error: bug.v:13: ... Location of original declaration\r\n%Error: Exiting due to 1 error(s)\r\n%Error: Command Failed /usr/bin/verilator_bin -I --cc bug.v --trace --top-module test -Mdir ../obj -CFLAGS '-O2 -std=c++11 -fPIC'\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2018-09-14",
+  "closed_at": "2018-09-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

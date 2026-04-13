@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8532,
+  "issue_url": "https://github.com/llvm/circt/issues/8532",
+  "title": "SCF execute regions are improperly inlined into parent modules",
+  "body": "I have just come across the following `scf.execute_region` operation that is inlined into the parent module in a somewhat unsavory way:\n```mlir\nhw.module @Foo() {\n  %c0_i5 = hw.constant 0 : i5\n  %c-118_i8 = hw.constant -118 : i8\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i153 = hw.constant 0 : i153\n  %a = llhd.sig %c0_i153 : i153\n  scf.execute_region {\n    cf.br ^bb1\n  ^bb1:  // pred: ^bb0\n    llhd.drv %a, %c0_i153 after %0 : !hw.inout<i153>\n    %1 = llhd.sig.extract %a from %c-118_i8 : (!hw.inout<i153>) -> !hw.inout<i5>\n    llhd.drv %1, %c0_i5 after %0 : !hw.inout<i5>\n    scf.yield\n  }\n  hw.output\n}\n```\nRunning this through `circt-opt --canonicalize` yields the following:\n```mlir\nhw.module @Foo() {\n  %c0_i5 = hw.constant 0 : i5\n  %c-118_i8 = hw.constant -118 : i8\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i153 = hw.constant 0 : i153\n  %a = llhd.sig %c0_i153 : i153\n  // ----- 8< -----\n  llhd.drv %a, %c0_i153 after %0 : !hw.inout<i153>\n  %1 = llhd.sig.extract %a from %c-118_i8 : (!hw.inout<i153>) -> !hw.inout<i5>\n  llhd.drv %1, %c0_i5 after %0 : !hw.inout<i5>\n  // ----- 8< -----\n  hw.output\n}\n```\nI'm not quite sure what to make of this. The `llhd.drv` in this case have store-like side effects, and the second drive overwrites part of the value written by the first drive. This is valid in an SSACFG region like `scf.execute_region`, but inlining this into a graph region is problematic. Within a module the drives co-exist and actually produce a drive conflict on the bits of `%a` that are targeted by both drives.\n\n@maerhart Do you have any ideas on how we could deal with something like this?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-03",
+  "closed_at": "2025-06-09",
+  "code_blocks": [
+    "hw.module @Foo() {\n  %c0_i5 = hw.constant 0 : i5\n  %c-118_i8 = hw.constant -118 : i8\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i153 = hw.constant 0 : i153\n  %a = llhd.sig %c0_i153 : i153\n  scf.execute_region {\n    cf.br ^bb1\n  ^bb1:  // pred: ^bb0\n    llhd.drv %a, %c0_i153 after %0 : !hw.inout<i153>\n    %1 = llhd.sig.extract %a from %c-118_i8 : (!hw.inout<i153>) -> !hw.inout<i5>\n    llhd.drv %1, %c0_i5 after %0 : !hw.inout<i5>\n    scf.yield\n  }\n  hw.output\n}\n",
+    "hw.module @Foo() {\n  %c0_i5 = hw.constant 0 : i5\n  %c-118_i8 = hw.constant -118 : i8\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i153 = hw.constant 0 : i153\n  %a = llhd.sig %c0_i153 : i153\n  // ----- 8< -----\n  llhd.drv %a, %c0_i153 after %0 : !hw.inout<i153>\n  %1 = llhd.sig.extract %a from %c-118_i8 : (!hw.inout<i153>) -> !hw.inout<i5>\n  llhd.drv %1, %c0_i5 after %0 : !hw.inout<i5>\n  // ----- 8< -----\n  hw.output\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

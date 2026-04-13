@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7292,
+  "issue_url": "https://github.com/llvm/circt/pull/7292",
+  "title": "[Sim] Add printing operations and transformation from non-procedural to procedural flavor",
+  "body": "Follow-up PR to #7208. Adds operations for formatted printing during simulation.\r\n\r\nThe print operation comes in two flavors: The non-procedural `sim.print` operation takes as arguments a single (concatenated) `!sim.fstring` value, a boolean condition value to enable the print, and a clock that triggers the print on its rising edge. \r\nThe procedural `sim.proc.print` <strike> takes only a variadic list of (generally non-concatenated) `!sim.fstring` values </strike>.* It is expected to be placed within a procedural region that provides the control flow.\r\n\r\nThe design of the `sim.print` operation is aligned with other synchronous side-effecting operations, like `sim.finish` and `verif.clocked_assert`. This should make lowering to it fairly easy and be suitable for dataflow-ish analyses and transformations. On the other hand, the `sim.proc.print` operation can be mapped directly to the respective function calls in both the SV and Arc/LLVM backends.\r\n\r\nThere isn't much logic to the operations themselves. The major part of this PR is the new \"ProceduralizeSim\" pass which performs the transformation from `sim.print` to `sim.proc.print`. To do so it groups the print operations by their clock signal, flattens their format string arguments to a list of primitive tokens, and creates the procedural print operations wrapped within an (isolated from above) `hw.triggered` op for the clock and a `scf.if` op for the condition. \r\n \r\nA potentially contentious point is ordering within non-procedural regions. I don't know if there is a consensus on how much, if at all, order matters in the body region of a HWModule. At first I considered giving the `sim.print` op an \"artificial\" argument and result to enforce a specific print order through a def-use-chain. But this felt like unnecessary complexity and I just went for order of occurrence for now.\r\n\r\nAnother problem is that there does not seem to be a cross-dialect notion of procedural vs. non-procedural regions. This is not the same as SSACFG region vs. graph region, is it? There is a `ProceduralRegion` OpTrait, but it is exclusive to the `SV` dialect. <strike> In practice this creates a bunch of ugly dependencies in the `sim.proc.print` verify method, as I need to explicitly list the legal parent ops. I'm tempted to just remove the verifier. </strike> *\r\n\r\n*UPDATE: Changed `sim.proc.print` to take a single  `!sim.fstring` argument, just like `sim.print`. I've also changed the verifier of the procedural print op. Since there is no good way to do an exhaustive check right now, it now only checks for parents that are definitely known to be non-procedural. In all uncertain cases it passes, to hopefully make lowering less of a hassle. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-09",
+  "closed_at": "2024-07-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

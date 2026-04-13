@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5043,
+  "issue_url": "https://github.com/verilator/verilator/issues/5043",
+  "title": "Delay with result of comparison causes invalid codegen",
+  "body": "Having a delay statement with the result of a comparison of two integers causes the generated C++ code to reference a non-existent function and thus leads to a compilation error.\r\n\r\nTo reproduce, compile the following code with ``verilator --timing --trace --exe --build -j `nproc` --binary invalid_codegen_delay.sv -o invalid_codegen_delay`` (using the git master version):\r\n```systemverilog\r\nmodule top();\r\n    int intvar;\r\n    int intvar2;\r\n\r\n    initial begin\r\n        #(intvar < intvar2);\r\n    end\r\nendmodule\r\n```\r\n\r\nThis produces an error during C++ compilation:\r\n```\r\nVinvalid_codegen_delay___024root__DepSet_h44aef0d8__0.cpp: In function ‘VlCoroutine Vinvalid_codegen_delay___024root___eval_initial__TOP__Vtiming__0(Vinvalid_codegen_delay___024root*)’:\r\nVinvalid_codegen_delay___024root__DepSet_h44aef0d8__0.cpp:23:40: error: ‘VL_LTS_QII’ was not declared in this scope; did you mean ‘VL_LTS_III’?\r\n   23 |     co_await vlSelf->__VdlySched.delay(VL_LTS_QII(32, vlSelf->top__DOT__intvar, vlSelf->top__DOT__intvar2),\r\n      |                                        ^~~~~~~~~~\r\n      |                                        VL_LTS_III\r\n```\r\n\r\nOf course, this code is somewhat nonsensical (I meant to use a `wait` statement when I was writing the original code that caused this issue), so I'm not sure if this is supposed to compile in the first place (since I would expect the argument to the delay statement to be of time type and not integral type...). If it isn't, Verilator should still throw an error during verilation, though.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-10",
+  "closed_at": "2024-04-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

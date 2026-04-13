@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 6277,
+  "issue_url": "https://github.com/llvm/circt/pull/6277",
+  "title": "[MSFT] Add module-level PD capability",
+  "body": "Some prototype-y work to investigate how to do module-level PD. That is, we want to be able to place PD constraints at a module-granularity, s.t. every instantiation of that module has the given PD constraint applied to it when compiling the design.\r\n\r\nTo do so:\r\n1. Allow placing PD constraint ops inside modules (e.g. `msft.pd.multicycle`)\r\n2. Introduce the `--msft-create-generic-pd-hierarchy` pass which will create `${module name}_generic_pd_config` `msft.instance.hierarchy` ops (sidenote: that name seems like a misnomer wrt. what it's used for) that denote _generic_ configuration of said module; that is, a TCL proc which should be called on _all_ instantiations of that module. Given these, a traversal of the instance hierarchy then calls these config routines on all instances of the respective modules. Config routines are only emitted for modules that actually require configuration (this is a transitive property wrt. if any leaf node requires configuration, such as in the `module_pd_constraints.mlir` example). The benefit of this (as opposed to a single, flat TCL proc) should be obvious; less LOC, way more readable, ...\r\n3. To facilitate this, `msft.instance.hierarchy` now defines a symbol that can be referred to by an `msft.instance.hierarchy.call` operation (again, misnomer).\r\n4. `msft-export-tcl` now also by default will emit ALL instance hierarchies (misnomer) if no `tops` argument is provided. This is obviously needed since the user should not have to manually specify every single module in the design (which will be required for this new capability). If anything, this options should probably be changed into an option for _excluding_ tops from the emission.\r\n\r\nThis seems like a very useful capability, that will compose well with the existing instance hierarchy PD constraints (e.g. non-generic PD constraints that apply to specific instances).\r\n\r\nFor the  `module_pd_constraints.mlir` test, the following TCL is produced:\r\n```tcl\r\nproc middle_config { parent } {\r\n  reg_0_config $parent|regA\r\n  reg_0_config $parent|regB\r\n}\r\nproc reg_0_config { parent } {\r\n  set_multicycle_path -hold 1 -setup 2 -from [get_registers {$parent|reg1}] -to [get_registers {$parent|reg2}]\r\n}\r\nproc top_config { parent } {\r\n  set_location_assignment FF_X1_Y2_N3 -to $parent|myMiddle|regA|reg1[1]\r\n  set_location_assignment FF_X1_Y2_N4 -to $parent|myMiddle|regA|reg1[2]\r\n  set_location_assignment FF_X1_Y2_N5 -to $parent|myMiddle|regA|reg1[3]\r\n  middle_config $parent|myMiddle\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-11",
+  "closed_at": "2024-06-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3128,
+  "issue_url": "https://github.com/llvm/circt/pull/3128",
+  "title": "[LowerToHW] Wrap aynsc reset initiliazation by ifdef",
+  "body": "This fixes the difference between SFC and MFC in async initializations.\r\n\r\nMFC with the PR:\r\n```\r\ninitial begin\t// foo.fir:7:5\r\n      `INIT_RANDOM_PROLOG_\t// foo.fir:7:5\r\n      `ifdef RANDOMIZE_REG_INIT\t// foo.fir:7:5\r\n        _RANDOM = {`RANDOM};\t// foo.fir:7:5\r\n        sync_0 = _RANDOM[0];\t// foo.fir:7:5\r\n      `endif\r\n      `ifdef RANDOMIZE\t// foo.fir:7:5\r\n        if (reset)\t// foo.fir:7:5\r\n          sync_0 = 1'h0;\t// foo.fir:7:5, :8:24\r\n      `endif\r\n    end // initial\r\n```\r\nSFC:\r\n```\r\ninitial begin\r\n  `ifdef RANDOMIZE\r\n    `ifdef INIT_RANDOM\r\n      `INIT_RANDOM\r\n    `endif\r\n    `ifndef VERILATOR\r\n      `ifdef RANDOMIZE_DELAY\r\n        #`RANDOMIZE_DELAY begin end\r\n      `else\r\n        #0.002 begin end\r\n      `endif\r\n    `endif\r\n`ifdef RANDOMIZE_REG_INIT\r\n  _RAND_0 = {1{`RANDOM}};\r\n  sync_0 = _RAND_0[0:0];\r\n`endif // RANDOMIZE_REG_INIT\r\n  if (reset) begin\r\n    sync_0 = 1'h0;\r\n  end\r\n  `endif // RANDOMIZE\r\nend // initial\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-13",
+  "closed_at": "2022-05-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5479,
+  "issue_url": "https://github.com/verilator/verilator/issues/5479",
+  "title": "Returning an object of the wrong type from a static function of a parameterized class",
+  "body": "Hello!\r\n\r\nA error occurs when trying to return an object of a parameterized class from a static function declared in the same class: the type of the returned object does not match the expected type.\r\n\r\nThe expected behavior is no errors.\r\n\r\nRelated (but my example does not use external definitions) issue: https://github.com/verilator/verilator/issues/4924 (see `Test 1` output)\r\n\r\n**Example:**\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class cls#(bit T = 1);\r\n    static function cls#(T) f();\r\n      cls#(T) c = new();\r\n      return c;\r\n    endfunction\r\n  endclass\r\n\r\n  initial begin\r\n    cls#(0) c = cls#(0)::f();\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\n**Output:**\r\n\r\n```text\r\n%Error: top.sv:11:26: Assign RHS expects a CLASSREFDTYPE 'cls__T0', got CLASSREFDTYPE 'cls__Tz1'\r\n                    : ... note: In instance 'top'\r\n   11 |     cls#(0) c = cls#(0)::f();\r\n      |                          ^\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n**Command:**\r\n\r\n```bash\r\nverilator --binary top.sv\r\n```\r\n\r\n---\r\n\r\n**Workaround:**\r\n\r\nThere is a workaround for this case: use `type(this)` as return types in function `f` (IEEE 1800-2023 \"6.23 Type operator\").\r\n\r\n```systemverilog\r\nmodule top;\r\n\r\n  class cls#(bit T = 1);\r\n    static function type(this) f();\r\n      type(this) c = new();\r\n      return c;\r\n    endfunction\r\n  endclass\r\n\r\n  initial begin\r\n    cls#(0) c = cls#(0)::f();\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\n---\r\n\r\nVerilator version (git master): `Verilator 5.029 devel rev v5.028-114-g0ee214a15`\r\n\r\nOS (verilator devcontainer): Ubuntu 22.04.4 LTS",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-22",
+  "closed_at": "2026-04-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

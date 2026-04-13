@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9571,
+  "issue_url": "https://github.com/llvm/circt/pull/9571",
+  "title": "[MooreToCore] Add UnionType conversion support (Fixes #9570)",
+  "body": "## Summary\r\n\r\nThis PR adds complete support for SystemVerilog union type conversion in the MooreToCore pass, fixing a crash when processing union types with `circt-verilog`.\r\n\r\n**Fixes #9570**\r\n\r\n## Problem\r\n\r\nWhen processing SystemVerilog code containing union types, `circt-verilog --ir-hw` would crash with an assertion failure because the MooreToCore conversion pass lacked support for union type conversion.\r\n\r\n**Example crash (from #9570):**\r\n```bash\r\n$ circt-verilog --ir-hw bug.sv\r\ncirct-verilog: assertion failed\r\n```\r\n\r\n## Solution\r\n\r\nThis PR implements:\r\n\r\n1. **Type Converters**: Added converters for `UnionType` and `UnpackedUnionType` to `hw::UnionType`\r\n2. **Operation Converters**: Added conversion patterns for:\r\n   - `UnionCreateOp` → `hw::UnionCreateOp`\r\n   - `UnionExtractOp` → `hw::UnionExtractOp`\r\n   - `UnionExtractRefOp` → `llhd::SigStructExtractOp`\r\n3. **Bug Fix**: Fixed `UnionCreateOp::verify()` which was incorrectly comparing `member.type` with `resultType` instead of `inputType`\r\n4. **LLHD Support**: Extended `SigStructExtractOp` to support both struct and union types\r\n5. **Test Coverage**: Added comprehensive union conversion test in `basic.mlir`\r\n\r\n## Changes\r\n\r\n- **include/circt/Dialect/LLHD/LLHDOps.td**: Updated type constraint to accept both structs and unions\r\n- **lib/Conversion/MooreToCore/MooreToCore.cpp**: Added union type converters and operation patterns\r\n- **lib/Dialect/LLHD/IR/LLHDOps.cpp**: Extended `SigStructExtractOp` for union support\r\n- **lib/Dialect/Moore/MooreOps.cpp**: Fixed verifier bug in `UnionCreateOp`\r\n- **test/Conversion/MooreToCore/basic.mlir**: Added union conversion test\r\n\r\n## Testing\r\n\r\n### New Tests\r\n- Added `@Union` test module covering all union operations\r\n- Tests `union_create`, `union_extract`, and `union_extract_ref`\r\n- Includes both value and reference operations\r\n\r\n### Verification\r\n```bash\r\n# All existing tests pass\r\n$ ninja -C build check-circt\r\n✅ All tests pass\r\n\r\n# Original bug is fixed\r\n$ ./build/bin/circt-verilog --ir-hw bug.sv\r\n✅ Successfully converts without crash\r\n```\r\n\r\n## Design Decisions\r\n\r\n1. **Mirrored Struct Patterns**: Union converters follow the same structure as existing struct converters for consistency\r\n2. **Reused LLHD Ops**: `SigStructExtractOp` now handles both structs and unions rather than creating a separate union-specific op\r\n3. **Zero Offset**: Packed unions use offset=0 for all fields (standard union semantics)\r\n\r\n## Backward Compatibility\r\n\r\n✅ All changes are backward compatible:\r\n- Existing struct operations unchanged\r\n- LLHD ops gracefully handle both types\r\n- No API changes\r\n\r\n## Related Issues\r\n\r\nFixes #9570 - Crash when processing SystemVerilog union types in MooreToCore conversion.\r\n\r\n---\r\n\r\n## Checklist\r\n\r\n- [x] Added comprehensive test coverage\r\n- [x] All existing tests pass\r\n- [x] Code follows CIRCT conventions\r\n- [x] Code formatted with clang-format\r\n- [x] No debug output or unnecessary changes\r\n- [x] Backward compatible\r\n\r\n",
+  "labels": [
+    "LLHD",
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2026-02-01",
+  "closed_at": "2026-02-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

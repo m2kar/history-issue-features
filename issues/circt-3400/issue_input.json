@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3400,
+  "issue_url": "https://github.com/llvm/circt/pull/3400",
+  "title": "[PyCDE,CAPI] Add support for the FSM dialect",
+  "body": "This is an initial commit for adding a CAPI for FSM as well as PyCDE support for constructing these.\r\n\r\nSee `test_fsm.py` for usage.\r\n\r\n```python\r\n@fsm.machine(clock=\"clock\")\r\nclass FSM:\r\n  a = Input(types.i1)\r\n  b = Input(types.i1)\r\n  c = Input(types.i1)\r\n\r\n  # States\r\n  A = fsm.State(initial=True)\r\n  (B, C) = fsm.States(2)\r\n\r\n  # Transitions\r\n  A.set_transitions((B, lambda ports: ports.a))\r\n  B.set_transitions((A, lambda ports: ports.b), (C,))\r\n  C.set_transitions((B, lambda ports: ports.a))\r\n```\r\n\r\nFSMs are constructed in a similar manner to PyCDE modules through a decorator on a class describing the FSM.\r\nThe FSM class may contain inputs (no outputs for now) and must provide\r\n- A dictionary containing the states and their transitions\r\n- A default state\r\n\r\nState transitions may be either always taken, or taken based on some guard. This guard is defined by a function provided to the transition, which (like `@generator` functions) acts on the ports of the FSM.\r\n\r\nThe FSM will then be constructed with an output for each state, asserted when that state is active.\r\n\r\nOne important implementation note is the fact that the `fsm.machine` operation is treated as a PyCDE Module - there was surprisingly little friction slotting it into the current code and everything works as expected wrt. referencing `fsm.machine` in/out arguments through the transition guard functions.\r\nHowever, modules instantiating the FSM expect a hardware-like interface, this being the ports of the `fsm.machine` operation + clock and reset signals. An `fsm.machine` op does not have these signals at the top level, since these are added during hardware lowering. To me, this is a sensible design choice, seeing that the FSM dialect should be applicable to both software and hardware representations (...eventually).\r\n\r\nTo get around this, the user will specify the intended name of the `clock` and optional `reset` signal of an FSM. A wrapper module is then created that provides the correct interface to the instantiating module, as well as instantiating the FSM through a `fsm.hw_instance` operation, doing the proper hoop-jumping to attach the clock signal (see `fsm_wrapper_class`).\r\n\r\nThere's still some work to do on the CIRCT side of the FSM dialect to clean it up a bit + make it a viable target for a front-end, but this commit represents the brunt of work on the PyCDE side.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-22",
+  "closed_at": "2022-06-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

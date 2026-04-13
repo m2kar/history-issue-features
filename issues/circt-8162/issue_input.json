@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8162,
+  "issue_url": "https://github.com/llvm/circt/issues/8162",
+  "title": "[Verif] `verif.symbolic_value` semantics are ambiguous",
+  "body": "It looks to me like the semantics of the `verif.symbolic_value` are unclear right now - specifically, there's no information in the docs about how/when the value is allowed to change. We discussed it a little [here](https://github.com/llvm/circt/pull/7145#discussion_r1678878295) when the op was first added, but I'm not sure we really reached a conclusion before it was merged.\n\nUltimately the issue stems from the fact that there are two interpretations of what a symbolic value means. In the SMT solver world it means a value that can have one assignment, whereas from a hardware verification angle it could potentially refer to an input that can change value over time.\n\nI had a chat with @maerhart and we think there are three options:\n\n1. `symbolic_value` can have only one assignment. (This is my preferred option, as I think the name `symbolic_value` implies it only ever has one value. In this case I'd suggest we also add a `symbolic_input` op where the values can change)\n2. `symbolic_value` can change value on a clock edge. I think this is what we assume in #7870 (and I believe is consistent with BTOR2), but the semantics are still pretty murky on this interpretation because we don't have an associated clock. If we pick this we think it the op needs a `!seq.clock` operand to determine when it can change.\n3. `symbolic_value` can change value whenever. This wouldn't require any modification to the op, and I think it probably holds with the interpretation taken in #7870 since I guess the value would always be latched when it's not going into combinational ops, but I'm not sure I haven't missed a corner case to do with comparing the value in a property or assumption later on.\n\nIMO any of these would be fine, I just think we need to clarify which is the case in the op description.\n\nCC: @fabianschuiki @leonardt @dobios ",
+  "labels": [
+    "verif"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-31",
+  "closed_at": "2025-02-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

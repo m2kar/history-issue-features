@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5542,
+  "issue_url": "https://github.com/llvm/circt/pull/5542",
+  "title": "[Pipeline] Improve pipeline naming",
+  "body": "* Adds an optional name parameter to the pipeline\r\n* Stage registers will look at their source values and, if provided a `sv.namehint`, will take its name from that.\r\n\r\nThere's still more naming work to be done here (naming pipeline in/outputs, explicit stage reg names, ...) - starting with these two since they're super low hanging fruit.\r\n\r\nExample verilog output:\r\n\r\n```mlir\r\n\r\nhw.module @testNaming(%arg0: i1, %clk: i1, %rst: i1) -> (out: i1) {\r\n  %0:2 = pipeline.scheduled \"MyPipeline\"(%arg0) clock %clk reset %rst go %arg0 : (i1) -> (i1) {\r\n  ^bb0(%a0: i1, %s0_valid: i1):\r\n    // The register will be named after the namehint on the source operation.\r\n    %add = comb.add %a0, %a0 {sv.namehint = \"myAdd\"} : i1\r\n    pipeline.stage ^bb1 regs(%add : i1)\r\n\r\n  ^bb1(%1 : i1, %s1_valid: i1):\r\n    pipeline.return %1 : i1\r\n\r\n  }\r\n  hw.output %0#0 : i1\r\n}\r\n```\r\nexports as\r\n\r\n```sv\r\nmodule testNaming_MyPipeline(\r\n  input  in0,\r\n         enable,\r\n         clk,\r\n         rst,\r\n  output out0,\r\n         valid\r\n);\r\n\r\n  testNaming_MyPipeline_s0 testNaming_MyPipeline_s0 (\r\n    .in0    (in0),\r\n    .enable (enable),\r\n    .clk    (clk),\r\n    .rst    (rst),\r\n    .out0   (out0),\r\n    .valid  (valid)\r\n  );\r\nendmodule\r\n\r\nmodule testNaming_MyPipeline_s0(\r\n  input  in0,\r\n         enable,\r\n         clk,\r\n         rst,\r\n  output out0,\r\n         valid\r\n);\r\n\r\n  reg s0_myAdd_reg;\r\n  always_ff @(posedge clk) begin\r\n    if (enable)\r\n      s0_myAdd_reg <= in0 + in0;\r\n  end\r\n  reg s0_valid;\r\n  always_ff @(posedge clk) begin\r\n    if (rst)\r\n      s0_valid <= 1'h0;\r\n    else\r\n      s0_valid <= enable;\r\n  end\r\n  assign out0 = s0_myAdd_reg;\r\n  assign valid = s0_valid;\r\nendmodule\r\n\r\nmodule testNaming(\r\n  input  arg0,\r\n         clk,\r\n         rst,\r\n  output out\r\n);\r\n\r\n  testNaming_MyPipeline testNaming_MyPipeline (\r\n    .in0    (arg0),\r\n    .enable (arg0),\r\n    .clk    (clk),\r\n    .rst    (rst),\r\n    .out0   (out),\r\n    .valid  (/* unused */)\r\n  );\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-06",
+  "closed_at": "2023-07-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

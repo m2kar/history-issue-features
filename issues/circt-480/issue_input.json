@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 480,
+  "issue_url": "https://github.com/llvm/circt/issues/480",
+  "title": "[FIRRTL] Handle read-write memory ports",
+  "body": "Currently, any read-write memory ports get dropped during conversion to RTL with an error (but no hard exit from `firtool`). These, as the error message suggests, should be split up into separate read and write ports sometime before conversion to RTL to align with how the SFC handles these. Alternatively, these could be directly lowered to some structure that more directly expressions a true read/write port.\r\n\r\nThe main question is whether this should be a new pass or if this should be handled during an existing pass/conversion.\r\n\r\n### Example\r\n\r\nConsider the following FIRRTL circuit:\r\n\r\n```\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock: Clock\r\n    input rwMode: UInt<1>\r\n    input rwEn: UInt<1>\r\n    input rwAddr: UInt<1>\r\n    input rwMask: UInt<1>\r\n    input rwDataIn: UInt<8>\r\n    output rwDataOut: UInt<8>\r\n\r\n    mem memory:\r\n      data-type => UInt<8>\r\n      depth => 16\r\n      readwriter => rw\r\n      read-latency => 0\r\n      write-latency => 1\r\n      read-under-write => undefined\r\n\r\n    memory.rw.clk <= clock\r\n    memory.rw.wmode <= rwMode\r\n    memory.rw.en <= rwEn\r\n    memory.rw.addr <= rwAddr\r\n    memory.rw.wdata <= rwDataIn\r\n    memory.rw.wmask <= rwMask\r\n    rwDataOut <= memory.rw.rdata\r\n```\r\n\r\nThe SFC will, during the `VerilogMemDelays` pass, split this into separate read and write ports. After that, the circuit looks like:\r\n\r\n```\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock : Clock\r\n    input rwMode : UInt<1>\r\n    input rwEn : UInt<1>\r\n    input rwAddr : UInt<1>\r\n    input rwMask : UInt<1>\r\n    input rwDataIn : UInt<8>\r\n    output rwDataOut : UInt<8>\r\n\r\n    mem memory :\r\n      data-type => UInt<8>\r\n      depth => 16\r\n      read-latency => 0\r\n      write-latency => 1\r\n      reader => rw_r\r\n      writer => rw_w\r\n      read-under-write => undefined\r\n    rwDataOut <= memory.rw_r.data\r\n    memory.rw_r.en <= and(rwEn, not(rwMode))\r\n    memory.rw_r.addr <= pad(rwAddr, 4)\r\n    memory.rw_r.clk <= clock\r\n    memory.rw_w.en <= and(rwEn, rwMode)\r\n    memory.rw_w.addr <= pad(rwAddr, 4)\r\n    memory.rw_w.mask <= rwMask\r\n    memory.rw_w.data <= rwDataIn\r\n    memory.rw_w.clk <= clock\r\n```\r\n\r\nCurrently, if we run the original FIRRTL IR through `firtool`, the memory is just dropped.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-18",
+  "closed_at": "2021-03-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

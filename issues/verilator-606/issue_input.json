@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 606,
+  "issue_url": "https://github.com/verilator/verilator/issues/606",
+  "title": "Mis-evaluation of typed parameter",
+  "body": "---\n\n\nAuthor Name: **Jeremy Bennett** (@jeremybennett)\nOriginal Redmine Issue: 606 from https://www.veripool.org\nOriginal Date: 2013-01-18\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nThe following code has a module parameterized with a typed localparam and triggers a compilation error.\r\n\r\n```\r\nmodule t (/*AUTOARG*/\r\n    // Inputs\r\n    clk\r\n    );\r\n    input clk;\r\n\r\n  localparam logic[4:0] WID = 16;\r\n  wire [15:0] b33;\r\n\r\n  test #(WID) i_test_33(.clk (clk),\r\n\t\t\t.b   (b33));\r\n\r\nendmodule\r\n\r\nmodule test (/*AUTOARG*/\r\n    //Inputs\r\n    clk,\r\n    // Outputs\r\n    b\r\n    );\r\n    parameter  WIDTH = 10;\r\n    localparam MSB   = WIDTH - 1;\r\n\r\n    input               clk;\r\n    output wire [MSB:0] b;\r\n\r\n    wire [MSB:0]        a;\r\n    assign b = {~a[MSB-1:0], clk};\r\n\r\nendmodule\r\n\n```\r\n\r\nA number of warnings and  errors follow, starting with:\r\n\r\n```\r\n%Warning-LITENDIAN: t/t_param_module.v:42: Little bit endian vector: MSB < LSB of bit range: -17:0\r\n\n```\r\n\r\nVerilator appears to mis-evaluate the localparam @WIDTH@ as -16 (rather than 16) when used in the test module to set the value of @MSB@. The problem appears to be with using a typed localparam declaration. If this is replaced with\r\n\r\n localparam WID = 16;\r\n\r\neverything works fine. Looking at the code, I have so far traced to the problem to @visit(AstVarRef* nodep, AstNUser*)@ in @V3Const.cpp@. I'm working on a fix, but in the meantime, please pull a test case from branch *param-module* at git@github.com:jeremybennett/verilator.git\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2013-01-18",
+  "closed_at": "2013-02-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

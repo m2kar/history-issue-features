@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7264,
+  "issue_url": "https://github.com/llvm/circt/issues/7264",
+  "title": "[FIRRTL] FullAsyncResetTransform: does not properly find dominating block to insert reset signal",
+  "body": "Given:\r\n```fir\r\nFIRRTL version 3.0.0\r\ncircuit Foo: %[[\r\n  {\"class\":\"sifive.enterprise.firrtl.FullAsyncResetAnnotation\", \"target\":\"~Foo|Foo>reset\"}\r\n]]\r\n  module Foo:\r\n    input p : UInt<1>\r\n    input r : AsyncReset\r\n    when p:\r\n      wire reset : AsyncReset\r\n      inst bar of Bar\r\n    inst bar of Bar\r\n\r\n  module Bar:\r\n```\r\nwhich if compiled with `firtool test.fir` gives the following error:\r\n\r\n ```\r\n ./fart2.fir:11:5: error: operand #1 does not dominate this use\r\n    inst bar of Bar\r\n    ^\r\n./fart2.fir:11:5: note: see current operation: \"firrtl.matchingconnect\"(%0, %1) : (!firrtl.asyncreset, !firrtl.asyncreset) -> ()\r\n./fart2.fir:9:7: note: operand defined here (op in a child region)\r\n      wire reset : AsyncReset\r\n```\r\n      \r\n   The issue is that it attempts to connect the wire `reset` to an input port the second instance of `bar`.  There is logic for handling things of this sort, but it seems to only care about the _first_ operation we need to wire the signal to, instead of looking at all operations.\r\n   https://github.com/llvm/circt/blob/281dc6cfa3638a4f77aba9a9f07bf2193bdc3959/lib/Dialect/FIRRTL/Transforms/InferResets.cpp#L1730-L1760\r\n   ",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7144,
+  "issue_url": "https://github.com/llvm/circt/issues/7144",
+  "title": "[FIRRTL][LowerLayers] Lower layers does not update HPs of non-local annotations",
+  "body": "Given this firrtl IR:\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Top: %[[ {\"class\": \"circt.test\", \"target\": \"~Top|Top/foo:Foo>w\"} ]]\r\n  layer A, bind:\r\n\r\n  public module Top:\r\n    inst foo of Foo\r\n    inst bar of Foo\r\n  module Foo:\r\n    layerblock A:\r\n      wire w : UInt<8>\r\n      invalidate w\r\n```\r\ncompiling with `firtool -parse-only test.fir` gives the following IR:\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Top\" {\r\n    hw.hierpath private @nla [@Top::@sym, @Foo]\r\n    firrtl.layer @A  bind {\r\n    }\r\n    firrtl.module @Top() attributes {convention = #firrtl<convention scalarized>} {\r\n      firrtl.instance foo sym @sym interesting_name @Foo()\r\n      firrtl.instance bar interesting_name @Foo()\r\n    }\r\n    firrtl.module private @Foo() {\r\n      firrtl.layerblock @A {\r\n        %w = firrtl.wire interesting_name {annotations = [{circt.nonlocal = @nla, class = \"circt.test\"}]} : !firrtl.uint<8>\r\n        %invalid_ui8 = firrtl.invalidvalue : !firrtl.uint<8>\r\n        firrtl.matchingconnect %w, %invalid_ui8 : !firrtl.uint<8>\r\n      }\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAfter LowerLayers runs we get this IR:\r\n```mlir\r\n// -----// IR Dump After LowerLayers (firrtl-lower-layers) //----- //\r\nfirrtl.circuit \"Top\" {\r\n  sv.verbatim \"`ifndef layers_Top_A\\0A`define layers_Top_A\" {output_file = #hw.output_file<\"layers_Top_A.sv\", excludeFromFileList>}\r\n  hw.hierpath private @nla [@Top::@sym, @Foo]\r\n  firrtl.module @Top() attributes {convention = #firrtl<convention scalarized>} {\r\n    firrtl.instance foo sym @sym @Foo()\r\n    firrtl.instance bar @Foo()\r\n  }\r\n  firrtl.module private @Foo_A() {\r\n    %w = firrtl.wire {annotations = [{circt.nonlocal = @nla, class = \"circt.test\"}]} : !firrtl.uint<8>\r\n    %c0_ui8 = firrtl.constant 0 : !firrtl.uint<8>\r\n    firrtl.matchingconnect %w, %c0_ui8 : !firrtl.uint<8>\r\n  }\r\n  firrtl.module private @Foo() {\r\n    firrtl.instance a {lowerToBind, output_file = #hw.output_file<\"layers_Top_A.sv\", excludeFromFileList>} @Foo_A()\r\n  }\r\n  sv.verbatim \"`endif // layers_Top_A\" {output_file = #hw.output_file<\"layers_Top_A.sv\", excludeFromFileList>}\r\n}\r\n```\r\n\r\nThis issue is that the non-local annotation on `wire w` is not updated when the wire is moved in to a module `Foo_A`, and corresponding hierpath operation still points to `@Foo`. I.e.\r\n```hw.hierpath private @nla [@Top::@sym, @Foo]```\r\nshould be\r\n```hw.hierpath private @nla [@Top::@sym, @Foo::@a_sym, @Foo_A]```\r\nand the instance of `Foo_A` needs a new symbol `a_sym`.\r\n\r\nNote that we can't just modify the original HierpathOp, since it may have other users which were not moved, so we must create a new Hierpath op.\r\n\r\nThis currently does not trigger a verifier error, which has a tracking issue here: https://github.com/llvm/circt/issues/4896\r\nA similar issue was tackled here: https://github.com/llvm/circt/issues/6717",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-06-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

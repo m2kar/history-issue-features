@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6462,
+  "issue_url": "https://github.com/verilator/verilator/issues/6462",
+  "title": "Fix static variable initialization in procedural blocks",
+  "body": "> Thanks for taking the time to report this.\n\n> Can you please attach an example that shows the issue or missing feature?  (Must be openly licensed, completely self-contained so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs)\n\nYou can find on [edaplayground](https://www.edaplayground.com/x/UXZC) the test case I ran into.\n\n```sv\nmodule lifetime_demo (\n    input logic clk,\n    input wire rst,\n    output logic inj_o_1755371996748_302,\n    output logic [7:0] out\n);\n    const int CONST_VAL = 8;\n    logic [7:0] out_reg;\n\n    always_ff @(posedge clk) begin : proc\n        automatic int auto_counter = 0;\n        static   int static_accum  = CONST_VAL;\n        auto_counter = auto_counter + 1;\n        static_accum = static_accum + auto_counter;\n        out_reg      <= static_accum[7:0];\n    end\n    assign out = out_reg;\nendmodule\n\n```\n\nI checked for all the open issues mentionning static and did not find any issue in which this fitted. \n\nFrom what I understand of the IEEE 1800-2023 6.22, normally the static instruction should only be run once at the start of the test, therefore on each iteration of the `always_ff` we should be seeing an incrementation of the value of `static_accum`. \n\n> What output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\nI would have expected the value to increment at each step, instead the value of out is constant through the test.\n\n> What 'verilator' command line do we use to run your example?\n\n```sh\nverilator --binary --exe --build -Mdir obj_dir -sv --timing --assert ./testbench.sv -O3 -I ./lifetime_demo.sv\n```\n\n> What 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\n```sh\nVerilator 5.041 devel rev v5.040-156-gbbcb9315f\n```\nI tried it on other simulators on eda playground : https://www.edaplayground.com/x/UXZC\n\n> What OS and distribution are you using?\n\nlinux - arch\n\n> May we assist you in trying to fix this in Verilator yourself?\n\nI am not sure I can fix this, but if this is not too complicated I don't mind trying. \n\nSorry if this is a duplicate. \n\n> (Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n\nThanks for the work on verilator\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-19",
+  "closed_at": "2026-02-25",
+  "code_blocks": [
+    "module lifetime_demo (\n    input logic clk,\n    input wire rst,\n    output logic inj_o_1755371996748_302,\n    output logic [7:0] out\n);\n    const int CONST_VAL = 8;\n    logic [7:0] out_reg;\n\n    always_ff @(posedge clk) begin : proc\n        automatic int auto_counter = 0;\n        static   int static_accum  = CONST_VAL;\n        auto_counter = auto_counter + 1;\n        static_accum = static_accum + auto_counter;\n        out_reg      <= static_accum[7:0];\n    end\n    assign out = out_reg;\nendmodule\n\n",
+    "verilator --binary --exe --build -Mdir obj_dir -sv --timing --assert ./testbench.sv -O3 -I ./lifetime_demo.sv\n",
+    "Verilator 5.041 devel rev v5.040-156-gbbcb9315f\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

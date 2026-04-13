@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1454,
+  "issue_url": "https://github.com/verilator/verilator/issues/1454",
+  "title": "Support for loop index into generated arrays",
+  "body": "---\n\n\nAuthor Name: **X Yyy**\nOriginal Redmine Issue: 1454 from https://www.veripool.org\n\n\n\n---\n\n```\r\nmodule test(input clk,\r\n             input rst\r\n             );\r\n\r\n    generate genvar idx;\r\n       for (idx = 0; idx < 10; idx = idx + 1) begin : prefix\r\n          reg [7:0] r;\r\n       end\r\n    endgenerate\r\n\r\n    integer         idx1;\r\n    \r\n    always @(posedge clk)\r\n      if (~rst) begin\r\n         for (idx1 = 0; idx1 < 10; idx1 = idx1 + 1) begin\r\n            prefix[idx1].r <= 0;\r\n         end\r\n      end\r\n    \r\nendmodule\r\n\n```\r\n\r\nFor the example above, Verilator fails with the following messages:\r\n```\r\n%Error: vtst.v:16: Expecting expression to be constant, but variable isn't const: idx1\r\n%Error: vtst.v:16: Could not expand constant selection inside dotted reference: idx1\r\n%Error: vtst.v:16: Can't find definition of 'r' in dotted signal: prefix__BRA__??__KET__.r\r\n%Error:      Known scopes under 'r': <no cells found>\r\n%Error: Exiting due to 3 error(s)\r\n\n```\r\n\r\nLooks like constant elaboration is attempted before the for loop is unrolled. Interestingly, Icarus fails in a very similar way here. Yosys handles this module correctly though, as well as Xilinx and Altera tools.\n\n\n",
+  "labels": [
+    "area: data-types",
+    "effort: days",
+    "status: blocked",
+    "type: feature-IEEE"
+  ],
+  "state": "open",
+  "created_at": "2019-06-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

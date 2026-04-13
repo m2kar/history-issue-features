@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3067,
+  "issue_url": "https://github.com/verilator/verilator/pull/3067",
+  "title": "Add V3VariableOrder pass",
+  "body": "This is what I was heading towards with #3061. I found it difficult to extract the variable ordering into a separate pass as a refactoring that preserves the original order, especially for the multi-threaded case, hence the tweaked order, which is also beneficial for performance (see below). I felt as we now have the model class that lists ports at the top, there is now little reason to keep the internal headers in a Ports/Signals/Else order. for a bit more readability however I tagged each variable with what kind it is, so they now come out like this:\r\n\r\n```c++\r\nVL_MODULE(Vt_EXAMPLE___024root) {\r\n  public:\r\n\r\n    // DESIGN SPECIFIC STATE\r\n    /* PORT      */ VL_IN8(clk,0,0);\r\n    /* INTERNAL  */ CData/*0:0*/ __Vclklast__TOP__clk;\r\n    /* SIGNAL    */ IData/*31:0*/ t__DOT__cyc;\r\n    /* SIGNAL    */ IData/*31:0*/ t__DOT__out;\r\n    /* SIGNAL    */ QData/*63:0*/ t__DOT__crc;\r\n    /* SIGNAL    */ QData/*63:0*/ t__DOT__sum;\r\n\r\n    // INTERNAL VARIABLES\r\n    Vt_EXAMPLE__Syms* vlSymsp;  // Symbol table\r\n```\r\n---\r\n\r\nA separate V3VariableOrder pass is now used to order module variables\r\nbefore Emit. All variables are now ordered together, without\r\nconsideration for whether they are ports, signals form the design, or\r\nadditional internal variables added by Verilator (which used to be\r\nordered and emitted as separate groups in Emit). For single threaded\r\nmodels, this is performance neutral. For multi-threaded models, the\r\nMTask affinity based sorting was slightly modified, so variables with no\r\nMTask affinity are emitted last, otherwise the MTask affinity sets are\r\nsorted using the TSP sorter as before, but again, ports, signals, and\r\ninternal variables are not differentiated. This yields a 2%+ speedup for\r\nthe multithreaded model on OpenTitan.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-07-11",
+  "closed_at": "2021-07-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

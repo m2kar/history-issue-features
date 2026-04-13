@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6574,
+  "issue_url": "https://github.com/verilator/verilator/issues/6574",
+  "title": "Fix compile error on bitstream with inline typecast",
+  "body": "```verilog\nmodule foo;\n   initial begin\n      automatic reg [2:0] foo0 [1:0] = '{0, 0};\n      $display(\"foo0 %p -> %b\", foo0, |type(logic [$bits(foo0)-1:0])'({>>{foo0}}));\n      $finish();\n   end\nendmodule\n```\n\nSaving above code into `foo.sv` running `verilator --lint-only foo.sv --debug` causes this error output:\n\n```\nexport VERILATOR_ROOT='/usr/local/share/verilator'\nStarting Verilator 5.040 2025-08-30 rev v5.040\n- Verilator.cpp:657:  Option --verilate: Start Verilation\n\n[...]\n\n- V3Dead.cpp:567:     deadifyDTypes:\n- V3Ast.cpp:1378:     Dumping obj_dir/Vverilator_bug_macro_or_reduce_033_deadDtypes.tree\n%Error: Internal Error: foo.sv:4:72: ../V3Broken.cpp:173: Broken link in node->dtypep() to 0x55555702dd40\n-node: STREAMR 0x5555570274a0 <e1134> {e4cu} @dt=0x55555702dd40@(G/w6)\n    4 |       $display(\"foo0 %p -> %b\", foo0, |type(logic [$bits(foo0)-1:0])'({>>{foo0}}));\n      |                                                                        ^~\n                        ... See the manual at https://verilator.org/verilator_doc.html?v=5.040 for more assistance.\n- V3Ast.cpp:1378:     Dumping obj_dir/Vverilator_bug_macro_or_reduce_990_final.tree\n- V3StatsReport.cpp:233:statsReport:\n%Error: Internal Error: Aborting since under --debug\n%Error: export VERILATOR_ROOT=/usr/local/share/verilator\n%Error: ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg --lint-only foo.sv --debug\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg --lint-only foo.sv --debug\n```\n\nTested on Ubuntu and `verilator v5.040`. (It passes on `v5.012`)\n\nIn contrast, linting this code with `--debug` is no problem:\n\n```verilog\nmodule foo;\n   wire [5:0] bar;\n\n   initial begin\n      automatic reg [2:0] foo0 [1:0] = '{0, 0};\n      $display(\"foo0 %p -> %b\", foo0, |type(bar)'({>>{foo0}}));\n      $finish();\n   end\nendmodule\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-10-20",
+  "closed_at": null,
+  "code_blocks": [
+    "module foo;\n   initial begin\n      automatic reg [2:0] foo0 [1:0] = '{0, 0};\n      $display(\"foo0 %p -> %b\", foo0, |type(logic [$bits(foo0)-1:0])'({>>{foo0}}));\n      $finish();\n   end\nendmodule\n",
+    "export VERILATOR_ROOT='/usr/local/share/verilator'\nStarting Verilator 5.040 2025-08-30 rev v5.040\n- Verilator.cpp:657:  Option --verilate: Start Verilation\n\n[...]\n\n- V3Dead.cpp:567:     deadifyDTypes:\n- V3Ast.cpp:1378:     Dumping obj_dir/Vverilator_bug_macro_or_reduce_033_deadDtypes.tree\n%Error: Internal Error: foo.sv:4:72: ../V3Broken.cpp:173: Broken link in node->dtypep() to 0x55555702dd40\n-node: STREAMR 0x5555570274a0 <e1134> {e4cu} @dt=0x55555702dd40@(G/w6)\n    4 |       $display(\"foo0 %p -> %b\", foo0, |type(logic [$bits(foo0)-1:0])'({>>{foo0}}));\n      |                                                                        ^~\n                        ... See the manual at https://verilator.org/verilator_doc.html?v=5.040 for more assistance.\n- V3Ast.cpp:1378:     Dumping obj_dir/Vverilator_bug_macro_or_reduce_990_final.tree\n- V3StatsReport.cpp:233:statsReport:\n%Error: Internal Error: Aborting since under --debug\n%Error: export VERILATOR_ROOT=/usr/local/share/verilator\n%Error: ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg --lint-only foo.sv --debug\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec setarch --addr-no-randomize /usr/local/bin/verilator_bin_dbg --lint-only foo.sv --debug\n",
+    "module foo;\n   wire [5:0] bar;\n\n   initial begin\n      automatic reg [2:0] foo0 [1:0] = '{0, 0};\n      $display(\"foo0 %p -> %b\", foo0, |type(bar)'({>>{foo0}}));\n      $finish();\n   end\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

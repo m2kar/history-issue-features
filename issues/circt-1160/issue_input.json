@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1160,
+  "issue_url": "https://github.com/llvm/circt/pull/1160",
+  "title": "[FIRRTL] Lower Subaccess op",
+  "body": "As part of type lowering, FIRRTL SubaccessOp should be broken up into per-element reads fed into a mux tree.\r\nFix for : https://github.com/llvm/circt/issues/656\r\nContinuing the work from the open PR: https://github.com/llvm/circt/pull/748\r\n\r\nThis generates a mux tree for selecting the corresponding element from the flattened vector based on the index. \r\n\r\nSimple 1-D vector::\r\n```\r\n x = a[index] \r\n```\r\nis lowered to :: \r\n``` \r\nx = ( index == 3 ? a_3 : index == 2 ? a_2 : index == 1 ? a_1:a_0)\r\n```\r\n1-D vector of bundles\r\n```\r\n    input a: {wo: UInt<1>, valid: UInt<2>}[4]\r\n    output b: {wo: UInt<1>, valid: UInt<2>}\r\n    b.wo <= a[index].wo\r\n    b.valid <= a[index].valid   \r\n```\r\nis lowered to::\r\n```\r\n   b.wo = ( index == 3 ? a_3_wo : index == 2 ? a_2_wo : index == 1 ? a_1_wo:a_0_wo)\r\n   b.valid = ( index == 3 ? a_3_valid : index == 2 ? a_2_valid : index == 1 ? a_1_valid:a_0_valid)\r\n```\r\n2-D vector::\r\n```\r\n x = a[index1][index2] \r\n```\r\nis lowered to :: \r\n``` \r\nx = ( index1 == 0 && index2 ==1 ? a_0_1 : index1 == 1 && index2 == 0 ? a_1_0 : index1 == 1 && index2 == 1 ? a_1_1:a_0_0)\r\n```\r\n\r\nWrite to Subaccess::\r\n```\r\n a[index] = x\r\n```\r\nis lowered to ::\r\n```\r\nwire temp\r\ntemp = x\r\nwhen index == 0:\r\n  a_0 = temp\r\nwhen index == 1:\r\n  a_1 = temp\r\n``` \r\nYet to handle the expand semantics on subaccessop, : \r\n```python\r\ncircuit Foo:\r\n  module Foo:\r\n    input a: {wo: UInt<1>, valid: UInt<2>}\r\n    input def: {wo: UInt<1>, valid: UInt<2>}[4]\r\n    input sel: UInt<2>\r\n    output b: {wo: UInt<1>, valid: UInt<2>}[4]\r\n\r\n    b <= def\r\n    b[sel] <= a\r\n```\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-27",
+  "closed_at": "2021-07-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

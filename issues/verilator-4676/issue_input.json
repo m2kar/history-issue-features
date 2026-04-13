@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4676,
+  "issue_url": "https://github.com/verilator/verilator/pull/4676",
+  "title": "Fix no trace output when using SystemC with certain configuration",
+  "body": "I noticed that many regression tests about SystemC and tracing fail in my system -- the created dump file contains no signal dumps. After debugging, I found that it's exactly the case of #1445 and #1307.\r\n\r\nBefore SystemC 2.3.1, the only approach to add callbacks for end of simulation updates (to dump signals after they're changed) is by adding a trace file to the simulation context (what Verilator does currently). In 2.3.1 SystemC introduced the 'simulation phase callback' for trace files, but it need to be enabled with the `--enable-phase-callbacks` option. However its default option is different between Make and CMake (discussed in the previous issues), so users using different Linux distros may have different configs (e.g. ArchLinux build the package with CMake so it's enabled and Debian/Ubuntu uses Make and it's not).\r\n\r\nAnd the tricky point is that when it's enabled with `--enable-phase-callbacks=tracing`, the trace file are disabled. So these features are quite mutually exclusive...\r\n\r\nTo provide a universal way for tracing, this patch attempts to register a phase callback first. If it fails (proving that the feature has been disabled), it'll use the trace file instead. So we can handle both situations.\r\n\r\nI tried to run the tests built with SystemC 2.3.3 and 2.3.4 w/ and w/o the option and all of them work well. I also wanted to try 2.3.0 and 2.3.1 but it seems that it fails even with Verilator's master version (it says `Cannot add models to a trace file if 'dump' has already been called`) so I gave up... (they're old releases though but can try to fix it later)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-08",
+  "closed_at": "2023-11-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

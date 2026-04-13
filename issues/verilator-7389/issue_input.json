@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7389,
+  "issue_url": "https://github.com/verilator/verilator/pull/7389",
+  "title": "Internals: Clean up sampling. No functional change intended",
+  "body": "It is a pre-pull to PR that adds support for `until` expressions which I will publish soon.\r\nIt cleans up sampling of property expressions, which contain `AstPExpr`.\r\n### How it currently works on master?\r\nThe whole property expression is wrapped into `AstSampled` here: https://github.com/verilator/verilator/blob/e63c4f563ec48cc8baed33057b52b4fe057c64c3/src/V3AssertPre.cpp#L1089\r\nIt is not enough, because we enter into `propp()` child of an assert two times. First time we enter we remove that `AstSampled`: https://github.com/verilator/verilator/blob/7dcf58680700616ea705fe12d1f5df020635d518/src/V3Assert.cpp#L706\r\nbut we don't visit the whole subtree, because `m_underAssert` is not set at that time:\r\nhttps://github.com/verilator/verilator/blob/7dcf58680700616ea705fe12d1f5df020635d518/src/V3Assert.cpp#L748-L751\r\n(I don't know if setting `m_inSampled = false;` is needed here)\r\nWhen we enter the 2nd time we visit the whole subtree at that time and we handle other `AstSampled` nodes added in V3AssertProp and V3AssertPre.\r\n\r\nThis PR removes all other `AstSampled` nodes created for asserts and visits `propp()` only once. It also removes `noSample` method. I think we always need to sample all variables inside property expression except temporary variables created for loops, etc.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-09",
+  "closed_at": "2026-04-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

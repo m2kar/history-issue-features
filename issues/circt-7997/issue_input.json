@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7997,
+  "issue_url": "https://github.com/llvm/circt/pull/7997",
+  "title": "[RTG][Elaboration] Do not internalize primitive values",
+  "body": "* Refactor the pass to not internalize `ElaboratorValue` directly, but let it have a pointer to a storage which is internalized. This storage pointer can be used to directly store primitive values, thus avoiding internalization:\r\n    *  `index` type values\r\n    * `i1` type values\r\n    *  MLIR Attributes by storing their opaque pointer (because they are already internalized by MLIR)\r\n* Instead of the unique pointer trick, use a bump allocator in the internalization logic\r\n* I tested 3 possible implementation for the sets that store the internalized values:\r\n    * `DenseSet<StorageTy *>` with a custom MapInfo that does actual value comparison instead of comparing pointers: performs very well when all values internalized are unique (i.e., no equivalent object is already in the set, ever), but not very well when the object is equivalent to an already internalized one most of the time\r\n    * `FoldingSet<StorageTy>`: performs worse than the above in the first case, but considerably better when the object is already in the set, because it avoids unnecessary malloc+free\r\n    * The approach in this PR: combines the advantages of the above two, i.e., performs best in all cases, and is also the approach taken in MLIRs `StorageUniquer.cpp`\r\n* Improves performance of the example in https://github.com/llvm/circt/pull/7986 from ~5.4 sec to ~0.78 sec (~6.9x speedup)",
+  "labels": [
+    "RTG"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-16",
+  "closed_at": "2025-01-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

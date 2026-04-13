@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2479,
+  "issue_url": "https://github.com/verilator/verilator/issues/2479",
+  "title": "Xcelium: \"xmvlog: *E,NSEDGE (design.sv,5|14): Edge event 'edge' is not supported currently\" on --protect_lib output",
+  "body": "When compiling --protect_lib output with Cadence Xcelium the following error is encountered:\r\n\r\nxmvlog: *E,NSEDGE (design.sv,6|14): Edge event 'edge' is not supported currently.\r\n  always @(edge(clk), edge(resetn)) begin \r\n\r\nSuggest the following patch which should work for all simulators:\r\n\r\n```cpp\r\n--- a/src/V3ProtectLib.cpp\r\n+++ b/src/V3ProtectLib.cpp\r\n@@ -397,7 +397,7 @@ private:\r\n         handleInput(varp);\r\n         m_seqPortsp->addNodep(varp->cloneTree(false));\r\n         m_seqParamsp->addText(fl, varp->name() + \"\\n\");\r\n-        m_clkSensp->addText(fl, \"edge(\" + varp->name() + \")\");\r\n+        m_clkSensp->addText(fl, \"posedge \" + varp->name() + \" or negedge \" + varp->name());\r\n         m_cSeqParamsp->addText(fl, varp->dpiArgType(true, false) + \"\\n\");\r\n         m_cSeqClksp->addText(fl, cInputConnection(varp));\r\n     }\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: portability"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-24",
+  "closed_at": "2020-08-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

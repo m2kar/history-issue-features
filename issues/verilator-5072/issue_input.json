@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5072,
+  "issue_url": "https://github.com/verilator/verilator/issues/5072",
+  "title": "Avoid stack overflow in models by not  localising large variables",
+  "body": "I see there are some conversations going on about stack overflow with large models (#5071, #4799), so I just want to record some information here.\r\n\r\nIn my experience, stack overflows happens when V3Localize converts some huge array to a function local:\r\n\r\n```verilog\r\ninitial begin\r\n  bit [7:0] memoryImage [LARGE];  // A statically allocated variable\r\n  $readmem(\"test.bin\", memoryImage);\r\n  // ... copy memoryImage into the right SV memories ...\r\nend\r\n```\r\n\r\nV3Localize can figure it out that `memoryImage` is only used in one CFunc, and makes it local to that CFunc, but it's huge so we segfault in the prologue setting up the stack frame.\r\n\r\nWhile #5071 is very useful on Linux, it is not a portable solution. e.g. I think MacOS has a ~64M hard limit.\r\n\r\nOne alternative we could consider is to teach V3Localize to not localize huge variables, hence limiting the stack usage. The emitted C++ otherwise has a pretty shallow call stack, so this is likely to fix the most common problems. This of course doesn't fix the case when the user typed in large automatic variables, but that is the same case as the example code in #5071, which is more of a \"user error\" than a tool problem. \r\n\r\nI think this is unlikely to cause much performance degradation (in fact locals are always zeroed out at the moment - they really shouldn't have to be - so might even help a little).\r\n\r\nPersonally I don't have a hard feeling about which way to go, so feel free to discuss or close as desired.",
+  "labels": [
+    "resolution: fixed",
+    "area: performance"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-27",
+  "closed_at": "2024-04-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

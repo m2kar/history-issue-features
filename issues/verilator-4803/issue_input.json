@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4803,
+  "issue_url": "https://github.com/verilator/verilator/issues/4803",
+  "title": "`VARHIDDEN` warning (maybe) should not apply to non-static class fields",
+  "body": "It seems that the warning [VARHIDDEN](https://verilator.org/guide/latest/warnings.html#:~:text=of%20the%20error.-,VARHIDDEN,-Warns%20that%20a) does not work quite correctly with classes.\r\n\r\nThe description of the rule says\r\n\r\n> thus hiding the upper variable from being able to be used\r\n\r\nwhich is not entirely true for classes (more precisely, objects), where we can access the shaded **field** through `this`.\r\n\r\nMatching a field name and a parameter in a constructor is such a common pattern that some languages (e.g. [Dart](https://dart.dev/language/constructors#initializing-formal-parameters)) add syntactic sugar for it.\r\n\r\nExample:\r\n\r\n```systemverilog\r\nclass example;\r\n  bit my_var;\r\n\r\n  function new(bit my_var);\r\n    this.my_var = my_var;\r\n    my_var = this.my_var;\r\n  endfunction\r\nendclass\r\n```\r\n\r\nCommand:\r\n\r\n```bash\r\nverilator --binary -j 0 -Wall example.sv\r\n```\r\n\r\nOutput:\r\n\r\n```text\r\n%Warning-VARHIDDEN: example.sv:4:20: Declaration of signal hides declaration in upper scope: 'my_var'\r\n    4 |   function new(bit my_var);\r\n      |                    ^~~~~~\r\n                    example.sv:2:7: ... Location of original declaration\r\n    2 |   bit my_var;\r\n      |       ^~~~~~\r\n                    ... For warning description see https://verilator.org/warn/VARHIDDEN?v=5.016\r\n                    ... Use \"/* verilator lint_off VARHIDDEN */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\n---\r\n\r\n**Actually, a suggestion**: maybe don't show this warning for non-static fields, since they are reachable via `this`?\r\n\r\n---\r\n\r\n*Version*: `Verilator v5.020`",
+  "labels": [
+    "area: lint",
+    "resolution: wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-04",
+  "closed_at": "2024-01-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

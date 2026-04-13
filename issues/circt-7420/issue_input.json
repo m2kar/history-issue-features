@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7420,
+  "issue_url": "https://github.com/llvm/circt/pull/7420",
+  "title": "[FIRRTL][Dedup] Rework hashing for perf and bug fixes.",
+  "body": "Primary change is to only generate and populate mappings for sources of values, and not each value themselves.\r\n\r\nValues are identified using these base numberings plus an appropriate offset.\r\n\r\nThe main benefit of this is to greatly reduce the number of entries in the `indices` map.\r\nWhen handling operations with many block arguments (module-like's with many ports) or with many results (instances of those module-like's) this greatly reduces the pressure on the `indices` map.  For these designs, dedup now runs dramatically faster and uses significantly less memory.\r\n\r\nAlso separates location of the value impl, such that if a Value's impl is storage inline into an Operation or Block such that there is aliasing, the two are given different numbers (and especially the numbering isn't changed).\r\n\r\nOn a synthetic design containing a module with 2^20 ports and 256 instances of that module, this is the difference between completing in 20s and OOM'ing on my machine after running for 30 minutes.\r\n\r\nFunctional changes:\r\n\r\nFixes #7415.\r\nFixes #7416.\r\nAlso fixes deduping if block arg types are different (but unused).\r\n\r\nThis is done by hashing block count, and each block's numbering between as well as the types of its arguments before that block's operations.\r\n\r\nAdditionally fixes use of numberings (indices) before it was populated where attribute processing for inner symbol ports hashed using the block argument's numbering before it was populated.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-31",
+  "closed_at": "2024-08-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

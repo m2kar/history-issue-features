@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6680,
+  "issue_url": "https://github.com/verilator/verilator/issues/6680",
+  "title": "Fix `randomize local::` giving false outside error",
+  "body": "Hi,\n\nwhen trying our UVM environment, we run into issues when trying to randomize\nsome of our classes. I stripped down all the UVM stuff from it, so that the reproducer\nis self-contained. It goes like this:\n\n```\nclass dio_drive_pin_sequence #(type T_PIN_LIST);\n\n  rand T_PIN_LIST pin_no;\n\nendclass : dio_drive_pin_sequence\n\n\nclass dio_agent #(int P_PIN_COUNT, type T_PIN_LIST);\n\n  task set_pin(T_PIN_LIST pin_no);\n    dio_drive_pin_sequence#(T_PIN_LIST) seq;\n\n    seq = new();\n\n    // Set attributes\n    if (!seq.randomize() with {pin_no == local::pin_no;})\n      $error(\"Randomization failed.\");\n\n  endtask : set_pin\n\nendclass : dio_agent\n```\n\nWhat output from that test indicates it is wrong, and what is the correct or expected output?  (Or, please make test self-checking if possible.)\n\n```\n%Error: t_with_local.sv:16:42: Illegal 'local::' outside 'randomize() with' (IEEE 1800-2023 18.7.1)\n   16 |     if (!seq.randomize() with {pin_no == local::pin_no;})\n      |                                          ^~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.042 for more assistance.\n%Error: Exiting due to 1 error(s)\n```\n\nI expect verilator to compile this without error.\n\nWhat 'verilator' command line do we use to run your example?\n\n```\nverilator --cc t_with_local.sv\n```\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?  Did you try it with other simulators?\n\nI am using 5.042. I did not try latest master. With VCS I am able to analyze the file. The UVM agent\nthat contains this pattern simulates without problems.\n\nWhat OS and distribution are you using?\n\n```\nLinux runner4.tropic.dev.hq.sldev.cz 4.18.0-553.58.1.el8_10.x86_64 #1 SMP Thu Jun 12 14:27:07 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux\n```\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nYes, that would be appreciated. But I can't guarantee I will have time to deal with this.",
+  "labels": [
+    "area: lint",
+    "area: randomization"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-11",
+  "closed_at": "2026-03-20",
+  "code_blocks": [
+    "class dio_drive_pin_sequence #(type T_PIN_LIST);\n\n  rand T_PIN_LIST pin_no;\n\nendclass : dio_drive_pin_sequence\n\n\nclass dio_agent #(int P_PIN_COUNT, type T_PIN_LIST);\n\n  task set_pin(T_PIN_LIST pin_no);\n    dio_drive_pin_sequence#(T_PIN_LIST) seq;\n\n    seq = new();\n\n    // Set attributes\n    if (!seq.randomize() with {pin_no == local::pin_no;})\n      $error(\"Randomization failed.\");\n\n  endtask : set_pin\n\nendclass : dio_agent\n",
+    "%Error: t_with_local.sv:16:42: Illegal 'local::' outside 'randomize() with' (IEEE 1800-2023 18.7.1)\n   16 |     if (!seq.randomize() with {pin_no == local::pin_no;})\n      |                                          ^~~~~\n        ... See the manual at https://verilator.org/verilator_doc.html?v=5.042 for more assistance.\n%Error: Exiting due to 1 error(s)\n",
+    "verilator --cc t_with_local.sv\n",
+    "Linux runner4.tropic.dev.hq.sldev.cz 4.18.0-553.58.1.el8_10.x86_64 #1 SMP Thu Jun 12 14:27:07 EDT 2025 x86_64 x86_64 x86_64 GNU/Linux\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

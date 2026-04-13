@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2850,
+  "issue_url": "https://github.com/llvm/circt/issues/2850",
+  "title": "[FIRRTL][ExportVerilog] Don't Generate Unnecessary Wires for Unused Output Ports",
+  "body": "For situations where the output of a module is truly unused, we should either:\r\n1. Remove this port from the module\r\n2. Don't emit a dead wire for this port\r\n\r\nConsider the following FIRRTL input. Output `c` of module `Sub` is unused:\r\n\r\n```scala\r\ncircuit UnusedOutput:\r\n  module Sub:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n    output c: UInt<1>\r\n\r\n    b <= a\r\n    c <= not(a)\r\n\r\n  module UnusedOutput:\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    inst sub of Sub\r\n    sub.a <= a\r\n    b <= sub.b\r\n```\r\n\r\nCurrently, CIRCT will compile this to (`firtool UnusedOutput.fir -strip-debug-info`):\r\n\r\n```verilog\r\nmodule Sub(\r\n  input  a,\r\n  output b,\r\n         c);\r\n\r\n  assign b = a;\r\n  assign c = ~a;\r\nendmodule\r\n\r\nmodule UnusedOutput(\r\n  input  a,\r\n  output b);\r\n\r\n  wire _sub_c;\r\n\r\n  Sub sub (\r\n    .a (a),\r\n    .b (b),\r\n    .c (_sub_c)\r\n  );\r\nendmodule\r\n```\r\n\r\nThis includes the dead wire `_sub_c`.  It would be better to either remove the port, option (1):\r\n\r\n```verilog\r\nmodule Sub(\r\n  input  a,\r\n  output b);\r\n\r\n  assign b = a;\r\n  assign c = ~a;\r\nendmodule\r\n\r\nmodule UnusedOutput(\r\n  input  a,\r\n  output b);\r\n\r\n  Sub sub (\r\n    .a (a),\r\n    .b (b),\r\n  );\r\nendmodule\r\n```\r\n\r\nOr to just not connect the port of `sub` to anything, option (2):\r\n```verilog\r\nmodule Sub(\r\n  input  a,\r\n  output b,\r\n         c);\r\n\r\n  assign b = a;\r\n  assign c = ~a;\r\nendmodule\r\n\r\nmodule UnusedOutput(\r\n  input  a,\r\n  output b);\r\n\r\n  Sub sub (\r\n    .a (a),\r\n    .b (b),\r\n    .c (/* unused */)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe motivation for this change is to avoid lint warnings about unused wires.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-06",
+  "closed_at": "2022-04-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

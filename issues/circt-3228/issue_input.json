@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3228,
+  "issue_url": "https://github.com/llvm/circt/issues/3228",
+  "title": "[FIRRTL] IMCP Generates Duplicate Constants",
+  "body": "FIRRTL's inter-module constant propagation (IMCP) pass generates duplicate constants unnecessarily. These are naturally cleaned up by later common-subexpression elimination (CSE), but it seems cleaner to not do it this way.\r\n\r\nConsider:\r\n\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\"  {\r\n    firrtl.module private @Bar(out %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %a, %c1_ui1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %c1_ui1 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Foo(out %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n      %bar_a, %bar_b = firrtl.instance bar  @Bar(out a: !firrtl.uint<1>, out b: !firrtl.uint<1>)\r\n      firrtl.strictconnect %a, %bar_a : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %bar_a : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis produces (`circt-opt -firrtl-imconstprop`) two copies of `firrtl.constant 1`:\r\n```mlir\r\nmodule {\r\n  firrtl.circuit \"Foo\"  {\r\n    firrtl.module private @Bar(out %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %a, %c1_ui1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %c1_ui1 : !firrtl.uint<1>\r\n    }\r\n    firrtl.module @Foo(out %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>) {\r\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %c1_ui1_0 = firrtl.constant 1 : !firrtl.uint<1>\r\n      %bar_a, %bar_b = firrtl.instance bar  @Bar(out a: !firrtl.uint<1>, out b: !firrtl.uint<1>)\r\n      firrtl.strictconnect %a, %c1_ui1 : !firrtl.uint<1>\r\n      firrtl.strictconnect %b, %c1_ui1 : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThere may be a small performance improvement by caching known constants (either pre-existing or created) and using those instead of, assumedly, always creating a new constant. If the constant does not dominate the use, it would need to be moved (though I think constants are almost always declared at the top of each module).",
+  "labels": [
+    "good first issue",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-27",
+  "closed_at": "2022-06-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

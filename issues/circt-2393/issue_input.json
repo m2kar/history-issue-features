@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2393,
+  "issue_url": "https://github.com/llvm/circt/issues/2393",
+  "title": "[firtool] Run HWCleanup pass again after canonicalizer",
+  "body": "`./bin/firtool ../perf/regress/chipyard.TestHarness.RocketSmall1Medium1Big1_BoomMedium1Large1Mega1.top.v.hi.fir` now generates many like this (for example in always block of `TLMonitor` module):\r\n```sv\r\n    automatic logic _T_397 = _T_217 & ~(|a_first_counter);      // Edges.scala:229:28, :230:25, Monitor.scala:396:20\r\n\r\n    if (_T_397) // Monitor.scala:397:15\r\n      opcode <= io_in_a_bits_opcode;    // Monitor.scala:397:15\r\n    if (_T_397) // Monitor.scala:398:15\r\n      param <= io_in_a_bits_param;      // Monitor.scala:398:15\r\n    if (_T_397) // Monitor.scala:399:15\r\n      size <= io_in_a_bits_size;        // Monitor.scala:399:15\r\n    if (_T_397) // Monitor.scala:400:15\r\n      source <= io_in_a_bits_source;    // Monitor.scala:400:15\r\n    if (_T_397) // Monitor.scala:401:15\r\n      address <= io_in_a_bits_address;\r\n```\r\nWe expect these if statements are merged into one statement but they are not. This is because if statements are created by `PAssignOp` canonicalizer (note that  HWCleanup is executed before canonicalization).\r\n\r\nhttps://github.com/llvm/circt/blob/4e20f1ad18eda5b6d03f9f96e5f0fc08a15a12a6/lib/Dialect/SV/SVOps.cpp#L1272-L1274\r\n\r\nIf we run HWCleanup again after canonicalization, we can merge them into one if statement: \r\n```sv\r\nif (_T_217 & ~(|a_first_counter)) begin     // Edges.scala:229:28, :230:25, Monitor.scala:396:20, :401:15\r\n      opcode <= io_in_a_bits_opcode;    // Monitor.scala:397:15\r\n      param <= io_in_a_bits_param;      // Monitor.scala:398:15\r\n      size <= io_in_a_bits_size;        // Monitor.scala:399:15\r\n      source <= io_in_a_bits_source;    // Monitor.scala:400:15\r\n      address <= io_in_a_bits_address;  // Monitor.scala:401:15\r\n end\r\n```\r\n\r\nI think HWCleanup is cheaper enough compared to other passes, so I would like to suggest to add HWCleanup pass to the later pipeline. WDYT?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-26",
+  "closed_at": "2021-12-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

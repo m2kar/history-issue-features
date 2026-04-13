@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2335,
+  "issue_url": "https://github.com/llvm/circt/issues/2335",
+  "title": "[ExportVerilog] Invalid automatic variable emission of struct type",
+  "body": "```mlir\r\n; circt-opt %s -export-verilog\r\nhw.module @AggregateTemporay(%clock: i1, %foo: i1) {\r\n  %temp = sv.reg  : !hw.inout<!hw.struct<b: i1>>\r\n  sv.always posedge %clock  {\r\n    %0 = hw.bitcast %foo : (i1) -> !hw.struct<b: i1>\r\n    sv.passign %temp, %0 : !hw.struct<b: i1>\r\n    sv.passign %temp, %0 : !hw.struct<b: i1>\r\n  }\r\n}\r\n```\r\nwill generate something like this:\r\n```sv\r\nmodule AggregateTemporay(       // foo.mlir:1:1\r\n  input clock, foo);\r\n\r\n  struct packed {logic b; } temp;       // foo.mlir:2:11\r\n\r\n  always @(posedge clock) begin // foo.mlir:5:3\r\n    automatic logic struct packed {logic b; } _T = foo;       // foo.mlir:6:10\r\n\r\n    temp <= _T; // foo.mlir:7:5\r\n    temp <= _T; // foo.mlir:8:5\r\n  end // always @(posedge)\r\nendmodule\r\n```\r\n`automatic logic struct packed {logic b; } _T = foo;` is syntactically incorrect. \r\nWe have to emit `automatic struct packed {logic b; } _T = foo; `. ",
+  "labels": [
+    "bug",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-13",
+  "closed_at": "2021-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

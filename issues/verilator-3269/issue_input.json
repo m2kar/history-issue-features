@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3269,
+  "issue_url": "https://github.com/verilator/verilator/issues/3269",
+  "title": "Clock scheduling issue in a clock gating cell",
+  "body": "Hi,\r\n\r\nI got clock scheduling issue in one of our designs.\r\n\r\nWe have the clock gating cell RTL as:\r\n\r\n```\r\nmodule CGC;\r\n  (\r\n   input logic SE, EN, CK,\r\n   output Q\r\n   );\r\n   logic  en_ff /*verilator clock_enable*/; **<<<< had to add this \"comment\" to make it work**\r\n   logic  enable;\r\n  \r\n   assign      enable = EN | SE;\r\n   always_latch begin\r\n      if(!CK)\r\n        en_ff = enable;\r\n   end\r\n\r\n   assign Q = CK & en_ff;\r\n \r\nendmodule\r\n\r\n```\r\nthe cell controls clock for D flip-flop registers with enable input.\r\n\r\nI've found that such register with the CGC latches wrong value.\r\n\r\nif I replace the en_ff latch by falling edge flop - everything simulates fine. \r\nNot all such flop registers in our design fail, but just some.\r\nI've found workaround with  the /*verilator clock_enable*/ comment, but wondering why the tool propagates/recognizes gated clock correctly from FF as enable and not from the latch (although it recognizes the construct as a latch).\r\n\r\nIs there way to improve the clock recognition  algorithm, including latched enables too?\r\n\r\n(it is really confusing and time consuming to find such problems in some cases and not in other)\r\n",
+  "labels": [
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-05",
+  "closed_at": "2022-02-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

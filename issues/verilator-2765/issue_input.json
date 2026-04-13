@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2765,
+  "issue_url": "https://github.com/verilator/verilator/issues/2765",
+  "title": "generate for Can't find definition  in dotted task/function",
+  "body": "I am creating an instance of an interface inside a for generate loop. I cannot call the functions:\r\n\r\nHere is the interface\r\n\r\n```\r\ninterface ShiftStageIf #(parameter integer DATA_WIDTH, parameter integer META_WIDTH, parameter integer STAGE);\r\n    typedef struct packed  {\r\n        logic signed[2*DATA_WIDTH-1:0] data;\r\n        logic valid;\r\n        logic last;\r\n        logic [META_WIDTH-1:0] meta;\r\n    } data_t;\r\n    data_t d;\r\n\r\n    function automatic void init(input logic signed[DATA_WIDTH-1:0] data_in, input logic valid_in, input logic last_in, input logic [META_WIDTH-1:0] meta_in);\r\n    begin\r\n        d.data = 0;\r\n        d.data[$high(d.data): $size(data_in)] = data_in;\r\n        d.valid = valid_in;\r\n        d.last = last_in;\r\n        d.meta = meta_in;\r\n    end\r\n    endfunction\r\n\r\n    function automatic data_t doShift(input logic stall, input logic shift);\r\n        data_t retval;\r\n        if(stall == 1)\r\n            return d;\r\n\r\n        retval = d;\r\n        if(shift == 0)\r\n        begin\r\n            return retval;\r\n        end\r\n\r\n        retval.data = d.data[$high(d.data)] ? -1 : 0;\r\n        retval.data[$high(d.data)-1: STAGE] = d.data[$high(d.data)-STAGE-1:0];\r\n        return retval;\r\n    endfunction;\r\nendinterface\r\n\r\n```\r\n\r\nInside the code that is failing:\r\n\r\n```\r\nShiftStageIf #(.DATA_WIDTH(INPUT_WIDTH), .META_WIDTH(METADATA_WIDTH), .STAGE(0)) shiftArray[$high(shift_amount_in)+1:0]();\r\n\r\nalways_comb\r\n    shiftArray[SHIFT_WIDTH].init(data_in, valid_in, last_in, meta_in);\r\n\r\n\r\ngenerate for(genvar i = $high(shift_amount_in); i >= 0; --i)\r\nbegin\r\n    ShiftStageIf #(.DATA_WIDTH($size(data_in)), .META_WIDTH($size(meta_in)), .STAGE(i)) p1();\r\n\r\n    always_comb\r\n        p1.d = shiftArray[i+1].d;\r\n\r\n    always_ff @(posedge sample_clk_in)\r\n        shiftArray[i].d <= p1.doShift(stall, shift_d1.data[i]);\r\nend\r\nendgenerate\r\n```\r\n\r\n```\r\nverilator --version\r\nVerilator 4.106 2020-12-02 rev UNKNOWN_REV\r\n\r\n\r\n%Error: /home/hamilton/workspace/d4_decimator_top/logic/src/signal_selection/synth/shift_clip_scale_round_single_sv.sv:83:31: Can't find definition of 'p1' in dotted task/function: 'p1.doShift'\r\n   83 |         shiftArray[i].d <= p1.doShift(stall, shift_d1.data[i]);\r\n      |                               ^~~~~~~\r\n       shift_clip_scale_round_single_sv.sv:9:1: ... note: In file included from shift_clip_scale_round_single_sv.sv\r\n        ... Known scopes under 'doShift': clipRounder, scale_d1, shiftArray[0], shiftArray[1], shiftArray[2], shiftArray[3], shiftArray[4], shiftArray[5], shift_d1\r\n        ... Known scopes under 'doShift': clipRounder, scale_d1, shiftArray[0], shiftArray[1], shiftArray[2], shiftArray[3], shiftArray[4], shiftArray[5], shift_d1\r\n        ... Known scopes under 'doShift': clipRounder, scale_d1, shiftArray[0], shiftArray[1], shiftArray[2], shiftArray[3], shiftArray[4], shiftArray[5], shift_d1\r\n        ... Known scopes under 'doShift': clipRounder, scale_d1, shiftArray[0], shiftArray[1], shiftArray[2], shiftArray[3], shiftArray[4], shiftArray[5], shift_d1\r\n        ... Known scopes under 'doShift': clipRounder, scale_d1, shiftArray[0], shiftArray[1], shiftArray[2], shiftArray[3], shiftArray[4], shiftArray[5], shift_d1\r\n%Error: Exiting due to 1 error(s)\r\n\r\n```",
+  "labels": [
+    "area: elaboration",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-24",
+  "closed_at": "2026-03-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

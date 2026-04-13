@@ -1,0 +1,162 @@
+{
+  "tool": "circt",
+  "issue_number": 10028,
+  "title": "[FIRRTL] Infer Domains Use-before-def Error",
+  "features": [
+    {
+      "name": "multiple_instances_domain_cross_dependency",
+      "category": "general",
+      "description": "Code should include multiple module instances in the same parent where a clock or domain signal from one instance flows into another instance via internal wires, creating a cross-instance dependency that affects pass ordering.",
+      "snippet": "wire clk_mid;\nwire domain_sig;\nBar bar_inst (.clk(clk_mid));\nBaz baz_inst (.domain_out(domain_sig), .clk_out(clk_mid));",
+      "tags": [
+        "multiple_instances",
+        "cross_dependency",
+        "clock_domain",
+        "pass_ordering"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "output_port_domain_annotation",
+      "category": "general",
+      "description": "Code should include an output port carrying a domain or clocking annotation that is referenced by name to tag another port, establishing a dependency between the port declaration and its use as a domain qualifier.",
+      "snippet": "module Baz (\n  output ClockDomain B,\n  output clock domains [B] out\n);",
+      "tags": [
+        "domain_annotation",
+        "output_port",
+        "clocking",
+        "dependent_ports"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "internal_wire_domain_feedback",
+      "category": "general",
+      "description": "Code should include internal wires that connect instance output ports to other instance input ports in a cyclic manner, causing the domain inference pass to revisit or reorder definitions.",
+      "snippet": "wire w1, w2;\nassign w2 = w1;\nBar bar (.clk(w1));\nBaz baz (.out(w2));\nassign w2 = baz.out;",
+      "tags": [
+        "internal_wire",
+        "instance_connectivity",
+        "feedback",
+        "domain_inference"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "domain_declaration_inst_use_before_def",
+      "category": "control_flow",
+      "description": "Code should include a named domain declaration and multiple instantiations where source order places an instance whose inferred domain depends on a later instance, triggering a use-before-def error during a domain inference pass.",
+      "snippet": "domain ClockDomain;\n\nBar bar (.clk(net)); // inferred domain depends on baz.B\nBaz baz (.B(domain), .out(net));",
+      "tags": [
+        "domain_declaration",
+        "use_before_def",
+        "infer_domains",
+        "instance_ordering"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "clock domain declaration",
+      "category": "timing",
+      "description": "Code should include a named clock or power domain declaration that can be referenced by signals and ports",
+      "snippet": "clocking domain @ClockDomain;",
+      "tags": [
+        "domain",
+        "clocking",
+        "declaration"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "module instance with domain-annotated output port",
+      "category": "data_model",
+      "description": "Code should include a module instantiation where an output port carries a domain annotation referencing another port of the same instance",
+      "snippet": "Baz baz(\n  .B   (domain_out),\n  .out (baz_clk)  // belongs to domain of port B\n);",
+      "tags": [
+        "instance",
+        "domain_annotation",
+        "output_port"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "internal wire used to route clock between instances",
+      "category": "data_model",
+      "description": "Code should include internal wires that forward a clock signal from one module instance to another instance via continuous assignments",
+      "snippet": "wire clk_wire;\nwire clk_wire_0;\nassign clk_wire_0 = clk_wire;\nBar bar(.clk(clk_wire));\nassign clk_wire_0 = baz_out;",
+      "tags": [
+        "wire",
+        "clock",
+        "instance_connectivity",
+        "forwarding"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "multiple instances with inferred clock domain dependencies",
+      "category": "timing",
+      "description": "Code should include multiple module instances where source ordering differs from the inferred domain dependency ordering, causing a use-before-def condition during domain inference",
+      "snippet": "Bar bar(.clk(wire));\nBaz baz(\n  .B(domain),\n  .out(out)  // inferred domain exported by baz.B\n);",
+      "tags": [
+        "infer_domains",
+        "use_before_def",
+        "instance_ordering",
+        "clock_domain"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "continuous assignment between same-type internal signals",
+      "category": "data_model",
+      "description": "Code should include continuous assignments connecting internal wires of the same clock or domain type",
+      "snippet": "assign wire_0 = wire;",
+      "tags": [
+        "assign",
+        "wire",
+        "matching_connect"
+      ],
+      "source_bug_id": "circt-10028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10028",
+      "construct_complexity": 1,
+      "ub_type": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 9,
+    "features_after_dedup": 9
+  }
+}

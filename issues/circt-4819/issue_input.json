@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4819,
+  "issue_url": "https://github.com/llvm/circt/pull/4819",
+  "title": "[ExportVerilog] Avoid splitting wire decl and assign in expr inlining",
+  "body": "Currently the `lowerAlwaysInlineOperation` function will happily move ops right in front of their user, which is problematic if the user is an assign op. If the assign immediately follows its wire declaration, `ExportVerilog` would happily emit the expression inline. However, `lowerAlwaysInlineOperation` inserts operations in between the declaration and the assignment, such that the conservative inlining in `ExportVerilog` can no longer to its thing. This leads to unfortunate output Verilog:\r\n\r\n    wire foo;\r\n    assign foo = a + b;\r\n\r\nThe IR here probably initially looked like:\r\n\r\n    %0 = comb.add %a, %b\r\n    %foo = sv.wire\r\n    sv.assign %foo, %0\r\n\r\nBut `lowerAlwaysInlineOperation` would then pull the addition down:\r\n\r\n    %foo = sv.wire\r\n    %0 = comb.add %a, %b\r\n    sv.assign %foo, %0\r\n\r\nWhich can no longer be inlined at the declaration site.\r\n\r\nThis commit adds a small check to `lowerAlwaysInlineOperation` which repositions the insertion point of the moved operations to be before the associated wire in case the user is an assignment.",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-14",
+  "closed_at": "2023-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

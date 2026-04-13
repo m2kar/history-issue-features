@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4834,
+  "issue_url": "https://github.com/llvm/circt/issues/4834",
+  "title": "[FIRRTL] Inline + MarkDUT + MemTap crasher",
+  "body": "Inline+MarkDUTAnnotation already don't seem compatible, but FWIW we crash in LowerToHW on this input.\r\n\r\nInput:\r\n```firrtl\r\ncircuit Top : %[[\r\n  {\r\n    \"class\": \"sifive.enterprise.firrtl.MarkDUTAnnotation\",\r\n    \"target\":\"~Top|DUTModule\"\r\n  },\r\n  {\r\n    \"class\":\"firrtl.transforms.DontTouchAnnotation\",\r\n    \"target\":\"~Top|Top>memTap\"\r\n  },\r\n  {\r\n    \"class\":\"sifive.enterprise.grandcentral.MemTapAnnotation\",\r\n    \"source\":\"~Top|DUTModule>rf\",\r\n    \"sink\":[\r\n      \"~Top|Top>memTap[0]\",\r\n      \"~Top|Top>memTap[1]\",\r\n      \"~Top|Top>memTap[2]\",\r\n      \"~Top|Top>memTap[3]\",\r\n      \"~Top|Top>memTap[4]\",\r\n      \"~Top|Top>memTap[5]\",\r\n      \"~Top|Top>memTap[6]\",\r\n      \"~Top|Top>memTap[7]\"\r\n    ]\r\n  },\r\n  {\r\n    \"class\": \"firrtl.passes.InlineAnnotation\",\r\n    \"target\": \"~Top|DUTModule\"\r\n  }\r\n]]\r\n  module DUTModule :\r\n    input clock : Clock\r\n    input reset : Reset\r\n    output io : { flip addr : UInt<3>, flip dataIn : UInt<8>, flip wen : UInt<1>, dataOut : UInt<8>}\r\n\r\n    cmem rf : UInt<8> [8]\r\n    infer mport read = rf[io.addr], clock\r\n    io.dataOut <= read\r\n    when io.wen :\r\n      infer mport write = rf[io.addr], clock\r\n      write <= io.dataIn\r\n\r\n  module Top :\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output io : { flip addr : UInt<3>, flip dataIn : UInt<8>, flip wen : UInt<1>, dataOut : UInt<8>}\r\n\r\n    inst dut of DUTModule\r\n    dut.clock <= clock\r\n    dut.reset <= reset\r\n    wire memTap : UInt<8>[8]\r\n    memTap is invalid\r\n    io.dataOut <= dut.io.dataOut\r\n    dut.io.wen <= io.wen\r\n    dut.io.dataIn <= io.dataIn\r\n    dut.io.addr <= io.addr\r\n```\r\n\r\nThis is basically our `mem-taps.fir` lit test with the Inline annotation added.\r\n\r\nWith threading disabled, see the following error: `invalid element for hw.inout type '!firrtl.ref<uint<8>>'`, FWIW.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-03-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

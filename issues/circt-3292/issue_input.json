@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 3292,
+  "issue_url": "https://github.com/llvm/circt/pull/3292",
+  "title": "[ExportVerilog] Add an option to enforce wires for expressions with namehint",
+  "body": "This commit introduces a new lowering option to spill wires for expressions\r\nwith namehints. Previously, namehints are used only when they are\r\nspilled to temporary wires but in terms of debuggability, it would\r\nbe good to have an option to probe expressions with namehints.\r\nThis commit also includes PrettifyVerilog change not to clone operations with namehints.\r\n\r\nExample:\r\n```mlir\r\n hw.module @namehint(%a: i5, %b: i5) -> (c: i5) {\r\n    %0 = comb.add %a, %a {sv.namehint = \"v1\"} : i5\r\n    %1 = comb.add %b, %0 {sv.namehint = \"v2\"} : i5\r\n    hw.output %1 : i5\r\n  }\r\n```\r\n`circt-opt -lowering-options=spillWiresForNamehints`\r\n```verilog\r\nmodule namehint(\r\n  input  [4:0] a,\r\n               b,\r\n  output [4:0] c);\r\n\r\n  wire [4:0] v2;\r\n  wire [4:0] v1;\r\n\r\n  assign v1 = a + a;\r\n  assign v2 = b + v1;\r\n  assign c = v2;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-07",
+  "closed_at": "2022-06-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

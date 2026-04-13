@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5012,
+  "issue_url": "https://github.com/llvm/circt/pull/5012",
+  "title": "[FIRRTL] Add Enumerations to FIRRTL",
+  "body": "This is mostly a scratch pad while I work on this. I will be force pushing and moving things out of this PR as I go.  \r\n\r\nExample 1:\r\n```\r\ncircuit Executor:\r\n  module Executor:\r\n    input opcode : [#add, #sub, #mul]\r\n    input arg0: UInt<8>\r\n    input arg1 : UInt<8>\r\n    output result : UInt<8>\r\n    match opcode:\r\n      #add:\r\n        result <= add(arg0, arg1)\r\n      #sub:\r\n        result <= sub(arg0, arg1)\r\n      #mul:\r\n        result <= mul(arg0, arg1)\r\n```\r\n```verilog\r\nmodule Executor(\r\n  input  enum bit [1:0] {add, sub, mul} opcode,\r\n  input  [7:0]                          arg0,\r\n                                        arg1,\r\n  output [7:0]                          result\r\n);\r\n  assign result = opcode == add ? arg0 + arg1 : opcode == sub ? arg0 - arg1 : arg0 * arg1;\r\nendmodule\r\n```\r\n\r\nExample 2:\r\n```\r\ncircuit Test:\r\n  module Test:\r\n    input i : [#a: UInt<8>, #b: UInt<16>]\r\n    output o : UInt<16>\r\n    match i:\r\n      #a(v):\r\n        o <= v\r\n      #b(v):\r\n        o <= v\r\n```\r\n```verilog\r\nmodule Test(\r\n  input  struct packed {enum bit [0:0] {a, b} tag; union packed {logic [7:0] a; logic [15:0] b; } body; } i,\r\n  output [15:0]                                                                                           o\r\n);\r\n  assign o = i.tag == a ? {8'h0, i.body.a} : i.body.b;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-12",
+  "closed_at": "2023-04-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

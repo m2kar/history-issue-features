@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9507,
+  "issue_url": "https://github.com/llvm/circt/issues/9507",
+  "title": "[Handshake] Calling `handshake.instance` with a `memref`.",
+  "body": "Hello! I was wondering if any handshake expert can please help me on this question.\n\nI’m working on a tool that targets `handshake` as its backend. Currently it generates memories using `handshake.extmemory` like this\n\n```\nhandshake.func @f(%v0: i32, %ctrl : none, %extmem : memref<11 x i32>) -> (none) {\n  ... handshake.extmemory ... (%extmem : memref<11 x i32>) ...\n}\n```\n\nI’m trying to find a good way to test such output. One way I’ve attempted is to write a top-level handshake wrapper that calls the circuit above, and then hope that `hlstool` will \"link\" them correctly.\n\n```\nhandshake.func @top(%v0: i32, %ctrl : none) -> (none) attributes {argNames = [\"in0\", \"in1\"], resNames = [\"out0\"]} {\n  %extmem = memref.alloc() : memref<11 x i32>\n  %out = instance @f(%v0, %ctrl, %extmem) : (i32, none, memref<11 x i32>) -> (none)\n  return %out : none\n}\n```\n\nbut `hlstool` complains that\n```\nerror: 'handshake.instance' op incorrect number of operands for the referenced handshake function\n    %1 = instance @f(%v0, %ctrl, %extmem) : (i32, none, memref<11 x i32>) -> (none)\n```\nwhich I suspect is due to that `memref.alloc` doesn’t work in handshake, and `%extmem` gets lowered into multiple load/store ports.\n\nI was wondering:\n- Is there a way to make the `@top` function above work (i.e., allowing it to create a memory and call `@f` with it)?\n- If that doesn't work, what's the recommended way to test circuits like `@f` above? Should I just lower it to Verilog and then simulate the memory in, e.g., cocotb?\n\nThank you so much!",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-01-25",
+  "closed_at": null,
+  "code_blocks": [
+    "handshake.func @f(%v0: i32, %ctrl : none, %extmem : memref<11 x i32>) -> (none) {\n  ... handshake.extmemory ... (%extmem : memref<11 x i32>) ...\n}\n",
+    "handshake.func @top(%v0: i32, %ctrl : none) -> (none) attributes {argNames = [\"in0\", \"in1\"], resNames = [\"out0\"]} {\n  %extmem = memref.alloc() : memref<11 x i32>\n  %out = instance @f(%v0, %ctrl, %extmem) : (i32, none, memref<11 x i32>) -> (none)\n  return %out : none\n}\n",
+    "error: 'handshake.instance' op incorrect number of operands for the referenced handshake function\n    %1 = instance @f(%v0, %ctrl, %extmem) : (i32, none, memref<11 x i32>) -> (none)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

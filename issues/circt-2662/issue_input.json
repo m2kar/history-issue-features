@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2662,
+  "issue_url": "https://github.com/llvm/circt/pull/2662",
+  "title": "[SV][ExportVerilog] Add sv.case op",
+  "body": "This PR [adds a `sv.case`](https://github.com/llvm/circt/pull/2607#issuecomment-1039345071) for #2528 \r\n\r\nI also added a `CaseLikeOp` trait to eliminate duplicate code between `CaseZOp` and `CaseOp`. I'm not sure whether that's a good way.\r\n\r\nCons:\r\n1. I can't name `CaseLikeOp::print` because it will cause conflict on the generated code `using Op::print`:\r\n     ```cpp\r\n    class CaseZOp : public ::mlir::Op<CaseZOp, ::mlir::OpTrait::VariadicRegions, ::mlir::OpTrait::ZeroResult, \r\n    ::mlir::OpTrait::ZeroSuccessor, ::mlir::OpTrait::OneOperand, ::mlir::OpTrait::SingleBlock, ::mlir::OpTrait::NoTerminator, \r\n    ::mlir::OpTrait::NoRegionArguments, ::circt::sv::ProceduralRegion, ::circt::sv::ProceduralOp, ::circt::sv::CaseLikeOp> {\r\n    public:\r\n      using Op::Op;\r\n      using Op::print;\r\n    ...\r\n    ```\r\n2. I can't use `CaseLikeOp` as a base class for `CaseZOp` and `CaseOp` in `StmtEmitter::visitSV`. Now I'm using a template method + static_assert + is_base_of to avoid duplicate code, which is awkward.\r\n\r\nPros:\r\n1. It works.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-21",
+  "closed_at": "2022-03-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

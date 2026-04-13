@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4240,
+  "issue_url": "https://github.com/verilator/verilator/pull/4240",
+  "title": "Fix unpacked struct == and != operators (#4234)",
+  "body": "From issue #4234 .\r\n\r\n@wsnyder @kbieganski \r\nIf I understood correctly this is what you meant:\r\n\r\nIn generated file `Vtest2__024root.h`  in definition  of unpacked structure this is the added code:\r\n\r\nfor a testcase:\r\n\r\n```systemverilog\r\nmodule t;\r\n    typedef struct {\r\n        struct {\r\n            logic m0;\r\n            logic [3:0] m1;\r\n            logic m2;\r\n        } sub;\r\n    } struct_t;\r\n    struct_t s1;\r\n    struct_t s2;\r\n\r\n    assign {s1.sub.m0, s1.sub.m1, s1.sub.m2} = {1'b0, 4'h5, 1'b1};\r\n    assign {s2.sub.m0, s2.sub.m1, s2.sub.m2} = {1'b0, 4'h5, 1'b1};\r\n    \r\n    initial begin\r\n        if(s1 != s2) begin\r\n            $fatal();\r\n        end else begin\r\n            $finish();\r\n        end\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\n```diff\r\nstruct Vtest2___struct4 {\r\n    CData/*0:0*/ __PVT__m0;\r\n    CData/*3:0*/ __PVT__m1;\r\n    CData/*0:0*/ __PVT__m2;\r\n\r\n+    bool operator==(const Vtest2___struct4& rhs){\r\n+        return __PVT__m0 == rhs.__PVT__m0 &&\r\n+            __PVT__m1 == rhs.__PVT__m1 &&\r\n+            __PVT__m2 == rhs.__PVT__m2;\r\n+    }\r\n+    bool operator!=(const Vtest2___struct4& rhs){\r\n+        return !(*this == rhs);\r\n+    }\r\n};\r\n\r\nstruct Vtest2_t__DOT__struct_t__struct3 {\r\n    Vtest2___struct4 __PVT__sub;\r\n\r\n+    bool operator==(const Vtest2_t__DOT__struct_t__struct3& rhs){\r\n+        return __PVT__sub == rhs.__PVT__sub;\r\n+    }\r\n+    bool operator!=(const Vtest2_t__DOT__struct_t__struct3& rhs){\r\n+        return !(*this == rhs);\r\n+    }\r\n};\r\n\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-05-27",
+  "closed_at": "2023-05-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

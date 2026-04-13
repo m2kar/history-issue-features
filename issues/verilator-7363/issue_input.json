@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7363,
+  "issue_url": "https://github.com/verilator/verilator/pull/7363",
+  "title": "Fix virtual interface function calls binding to wrong instance",
+  "body": "\r\n## Summary\r\n\r\nThis patch fixes simulation hangs when calling interface functions through\r\nvirtual interfaces in designs with multiple interface instances.\r\n\r\nV3Scope maps interface function clones via `user2p` which is overwritten by\r\neach scope clone (last-one-wins). For direct hierarchical calls this is harmless\r\nbecause V3LinkDot re-resolves `taskp()` through the cell path. Virtual interface\r\nMethodCalls instead retain the `user2p` mapping, so inlining bakes in VarScope\r\nreferences from an arbitrary clone. Subsequent passes then fold affected\r\nexpressions to constants, causing simulation to hang.\r\n\r\nDiscovered while running the UVM testbench on cv32e40p (core-v-verif) https://github.com/openhwgroup/core-v-verif/pull/2724 .\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\ninterface my_if;\r\n  logic clk = 0;\r\n  bit   clk_active = 0;\r\n  initial begin\r\n    wait (clk_active);\r\n    forever #5 clk = ~clk;\r\n  end\r\n  function void start_clk();\r\n    clk_active = 1;\r\n  endfunction\r\nendinterface\r\n\r\nclass Driver;\r\n  virtual my_if vif;\r\n  task run();\r\n    #10;\r\n    vif.start_clk();\r\n  endtask\r\nendclass\r\n\r\nmodule t;\r\n  my_if intf();\r\n  my_if intf_unused();  // second instance triggers the bug\r\n  initial begin\r\n    automatic Driver d = new;\r\n    d.vif = intf;\r\n    d.run();\r\n    repeat (4) @(posedge intf.clk);\r\n    $write(\"*-* All Finished *-*\\n\");\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master (compiles without errors, simulation hangs indefinitely):\r\n\r\n```\r\n- Verilator: Walltime 0.004 s (elab=0.000, cvt=0.000, bld=0.004); cpu 0.001 s on 1 threads; allocated 24.375 MB\r\n        obj_vlt/t_interface_virtual_func_wait/Vt_interface_virtual_func_wait    > obj_vlt/t_interface_virtual_func_wait/vlt_sim.log\r\n==SUMMARY: Left 1  Passed 0  Failed 0  Running 1  Time 0:15\r\n(no output -- simulation never completes)\r\n```\r\n\r\n## Changes\r\n\r\n- `TaskStateVisitor::visit(AstNodeFTask*)`: force `noInline` for interface\r\n  functions when `hasVirtIfaces()`, preventing wrong-instance VarScope refs\r\n  from being baked in.\r\n- `TaskVisitor::visit(AstNodeFTask*)`: suppress false IMPURE warning for\r\n  interface functions (interface member access is not truly external).\r\n  Also fix \"recursvie\" typo in the original comment.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_interface_virtual_func_wait.{v,py}` -- virtual\r\n  interface calls interface function that enables a clock; verifies\r\n  simulation completes without hang.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-04-02",
+  "closed_at": "2026-04-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

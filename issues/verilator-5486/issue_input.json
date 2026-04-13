@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5486,
+  "issue_url": "https://github.com/verilator/verilator/issues/5486",
+  "title": "Fix Short Circuiting with Associative Arrays of Dynamic Arrays",
+  "body": "```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.029 devel rev v5.028-137-g811eab8fa\r\n```\r\n\r\nHello. It looks like #5484 wasn't completely fixed. The problem still exists for associative arrays of dynamic arrays.\r\n\r\n```systemverilog\r\n//tb.sv\r\nmodule tb;\r\n\r\nlogic [31:0] dict [int] [];\r\n\r\n// verilator lint_off WIDTHTRUNC\r\nfunction automatic logic f(int a);\r\n    int dict_size = dict.size;\r\n    logic next_exists = dict.next(a);\r\n\r\n    // incorrectly inserts element at `a`\r\n    logic next_nonempty = !next_exists || (dict[a].size != 0);\r\n    assert (dict_size == dict.size) else begin\r\n        $display(\"Assertion failed: dict_size mismatch\");\r\n        $display(\"Initial size: %0d, New size: %0d\", dict_size, dict.size);\r\n        $display(\"Dictionary contents:\");\r\n        foreach (dict[key]) begin\r\n            $display(\" Key: %0d, Value Size: %0d\", key, dict[key].size);\r\n        end\r\n        $error;\r\n    end\r\n\r\n    return next_nonempty;\r\nendfunction\r\n\r\ninitial begin\r\n    logic r = f(0);\r\nend\r\n\r\nendmodule\r\n```\r\n```\r\n// verilator.f\r\ntb.sv\r\n--binary\r\n--assert\r\n```\r\nOutput:\r\n```\r\nAssertion failed: dict_size mismatch\r\nInitial size: 0, New size: 1\r\nDictionary contents:\r\n Key: 0, Value: 0\r\n[0] %Error: tb.sv:20: Assertion failed\r\n```",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-24",
+  "closed_at": "2024-09-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

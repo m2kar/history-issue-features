@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5681,
+  "issue_url": "https://github.com/llvm/circt/issues/5681",
+  "title": "[FIRRTL][HW] Feature Request to emit FIRRTL Memories Inline",
+  "body": "FIRRTL memories that do not go through the `--repl-seq-mem` path to replace them with blackboxes always produce a wrapper module around the memory. However, this can result in poorer performance for Vivado tooling for designs which rely on Vivado optimizations to optimize certain memory-to-memory paths. \r\n\r\nFor more information, see the discussion here: https://matrix.to/#/!jSbgpvvpsPbLpsLZOC:matrix.org/$NRsJEcgzZH0ghUHWnRG00OIqkHOLIIutn9WShxiNK6E?via=matrix.org&via=gitter.im&via=austin-harris.com\r\n\r\nAdd an option that enables inline emission of memories.\r\n\r\n#### Example\r\n\r\nInput FIRRTL:\r\n```\r\nFIRRTL version 3.0.0\r\ncircuit Foo:\r\n  module Foo:\r\n    input r: {addr: UInt<3>, en: UInt<1>, clk: Clock, flip data: UInt<32>}\r\n    input w: {addr: UInt<3>, en: UInt<1>, clk: Clock, data: UInt<32>, mask: UInt<1>}\r\n\r\n    mem memory :\r\n      data-type => UInt<32>\r\n      depth => 8\r\n      read-latency => 1\r\n      write-latency => 1\r\n      reader => r\r\n      writer => w\r\n      read-under-write => undefined\r\n\r\n\r\n    connect memory.r, r\r\n    connect memory.w, w\r\n```\r\n\r\nCurrent output Verilog:\r\n\r\n```verilog\r\nmodule memory_8x32(\r\n  input  [2:0]  R0_addr,\r\n  input         R0_en,\r\n                R0_clk,\r\n  input  [2:0]  W0_addr,\r\n  input         W0_en,\r\n                W0_clk,\r\n  input  [31:0] W0_data,\r\n  output [31:0] R0_data\r\n);\r\n\r\n  reg [31:0] Memory[0:7];\r\n  reg        _GEN;\r\n  reg [2:0]  _GEN_0;\r\n  always @(posedge R0_clk) begin\r\n    _GEN <= R0_en;\r\n    _GEN_0 <= R0_addr;\r\n  end // always @(posedge)\r\n  always @(posedge W0_clk) begin\r\n    if (W0_en)\r\n      Memory[W0_addr] <= W0_data;\r\n  end // always @(posedge)\r\n  assign R0_data = _GEN ? Memory[_GEN_0] : 32'bx;\r\nendmodule\r\n\r\nmodule Foo(\r\n  input  [2:0]  r_addr,\r\n  input         r_en,\r\n                r_clk,\r\n  input  [2:0]  w_addr,\r\n  input         w_en,\r\n                w_clk,\r\n  input  [31:0] w_data,\r\n  input         w_mask,\r\n  output [31:0] r_data\r\n);\r\n\r\n  memory_8x32 memory_ext (\r\n    .R0_addr (r_addr),\r\n    .R0_en   (r_en),\r\n    .R0_clk  (r_clk),\r\n    .W0_addr (w_addr),\r\n    .W0_en   (w_en & w_mask),\r\n    .W0_clk  (w_clk),\r\n    .W0_data (w_data),\r\n    .R0_data (r_data)\r\n  );\r\nendmodule\r\n```\r\n\r\nDesired output Verilog:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  [2:0]  r_addr,\r\n  input         r_en,\r\n                r_clk,\r\n  input  [2:0]  w_addr,\r\n  input         w_en,\r\n                w_clk,\r\n  input  [31:0] w_data,\r\n  input         w_mask,\r\n  output [31:0] r_data\r\n);\r\n\r\n  reg [31:0] Memory[0:7];\r\n  reg        _GEN;\r\n  reg [2:0]  _GEN_0;\r\n  always @(posedge r_clk) begin\r\n    _GEN <= r_en;\r\n    _GEN_0 <= r_addr;\r\n  end // always @(posedge)\r\n  always @(posedge w_clk) begin\r\n    if (w_en)\r\n      Memory[w_addr] <= w_data;\r\n  end // always @(posedge)\r\n  assign r_data = _GEN ? Memory[_GEN_0] : 32'bx;\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "good first issue",
+    "FIRRTL",
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2023-07-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

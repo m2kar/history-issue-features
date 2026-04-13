@@ -1,0 +1,22 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5972,
+  "issue_url": "https://github.com/verilator/verilator/issues/5972",
+  "title": "Incorrect assignment behavior with `-fno-expand`",
+  "body": "The following Verilog code in `test.v` exhibits an issue:\n\n```verilog\n`timescale 1ns/1ps\n`define stop $stop\n`define checkd(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\nmodule out24_logic_simplify (\n    input  wire               clock_0,\n    input  wire               clock_1,\n    input  wire signed [28:28] in1,\n    output wire        [21:5] out24\n);\n    reg signed [21:8] reg_10;\n\n    initial begin\n        reg_10 = 0;\n    end\n\n    assign out24 = reg_10;\n\n    always @(negedge clock_1 or posedge clock_0) begin\n        if (clock_0) begin\n            reg_10 <= 0;\n        end else begin\n            reg_10[14:8] <= {1'b1, ~((in1[28:28] & ~(in1[28:28])))};  // Should assign 3\n        end\n    end\nendmodule\n\nmodule tb_out24_logic_print;\n\n    reg  clock_0;\n    reg  clock_1;\n    reg  signed [28:28] in1;\n    wire [21:5] out24;\n    bit cmp;\n\n    out24_logic_simplify dut (\n        .clock_0 (clock_0),\n        .clock_1 (clock_1),\n        .in1     (in1),\n        .out24   (out24)\n    );\n\n    initial begin\n        clock_0 = 0;\n        clock_1 = 1;\n        in1     = 1'b0;\n        cmp = out24 == 0;\n        `checkd(cmp, 1);\n        #2;\n        clock_1 = 0;\n        #2;\n        cmp = out24 == 1; // line 54\n        `checkd(cmp, 1);\n        cmp = out24 == 3;\n        `checkd(cmp, 1); // line 57\n        $finish;\n    end\nendmodule\n```\n\nThis issue can be reproduced by running (removing `-fno-expand` prevents the incorrect simulation result.):\n\n```bash\nverilator --binary -Wno-lint --timing -fno-expand test.v\n```\n\nVerilator then outputs the following error:\n\n```\n%Error: test.v:57:  got=0 exp=1\n%Error: test.v:57: Verilog $stop\nAborting...\nAborted (core dumped)\n```\n\nAs shown, the check at line 57 (`cmp = out24 == 3`) fails. However, based on the logic in `out24_logic_simplify`, when `reg_10[14:8] <= {1'b1, ~((in1[28:28] & ~(in1[28:28])))};` is triggered, `reg_10` should be updated such that `out24 == 3`. But from line 54, we can see that Verilator incorrectly gives a result of `1`. ",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-01",
+  "closed_at": "2025-05-05",
+  "code_blocks": [
+    "`timescale 1ns/1ps\n`define stop $stop\n`define checkd(gotv,expv) do if ((gotv) !== (expv)) begin $write(\"%%Error: %s:%0d:  got=%0d exp=%0d\\n\", `__FILE__,`__LINE__, (gotv), (expv)); `stop; end while(0);\n\nmodule out24_logic_simplify (\n    input  wire               clock_0,\n    input  wire               clock_1,\n    input  wire signed [28:28] in1,\n    output wire        [21:5] out24\n);\n    reg signed [21:8] reg_10;\n\n    initial begin\n        reg_10 = 0;\n    end\n\n    assign out24 = reg_10;\n\n    always @(negedge clock_1 or posedge clock_0) begin\n        if (clock_0) begin\n            reg_10 <= 0;\n        end else begin\n            reg_10[14:8] <= {1'b1, ~((in1[28:28] & ~(in1[28:28])))};  // Should assign 3\n        end\n    end\nendmodule\n\nmodule tb_out24_logic_print;\n\n    reg  clock_0;\n    reg  clock_1;\n    reg  signed [28:28] in1;\n    wire [21:5] out24;\n    bit cmp;\n\n    out24_logic_simplify dut (\n        .clock_0 (clock_0),\n        .clock_1 (clock_1),\n        .in1     (in1),\n        .out24   (out24)\n    );\n\n    initial begin\n        clock_0 = 0;\n        clock_1 = 1;\n        in1     = 1'b0;\n        cmp = out24 == 0;\n        `checkd(cmp, 1);\n        #2;\n        clock_1 = 0;\n        #2;\n        cmp = out24 == 1; // line 54\n        `checkd(cmp, 1);\n        cmp = out24 == 3;\n        `checkd(cmp, 1); // line 57\n        $finish;\n    end\nendmodule\n",
+    "verilator --binary -Wno-lint --timing -fno-expand test.v\n",
+    "%Error: test.v:57:  got=0 exp=1\n%Error: test.v:57: Verilog $stop\nAborting...\nAborted (core dumped)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

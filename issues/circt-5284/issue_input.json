@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5284,
+  "issue_url": "https://github.com/llvm/circt/issues/5284",
+  "title": "[DependenceAnalysis] Analysis indiscriminately gathers loop nests",
+  "body": "Within `MemoryDependenceAnalysis`, I think the affine analysis API is being misused given a certain type of input IR. Initially, the memory ops within a function are gathered:\r\n\r\nhttps://github.com/llvm/circt/blob/e5312a24e51a6027e936de00287c17f33380c797/lib/Analysis/DependenceAnalysis.cpp#L136-L140\r\n\r\nThis becomes a problem one step deeper in the call stack at `checkMemrefAccessDependence()`, because the memory ops `src` and `dst` have not been separated by the loop nesting they belong to.\r\nhttps://github.com/llvm/circt/blob/e5312a24e51a6027e936de00287c17f33380c797/lib/Analysis/DependenceAnalysis.cpp#L47-L48\r\n\r\nThe code gets confused because the other memory op in the dependence is not in the same nesting, and it throws the error I think being seen in #4814.\r\n\r\nThis becomes a problem as soon as there are nests of `affine.for` in parallel like such:\r\n```\r\naffine.for %arg2 = 0 to 270 {\r\n  affine.for %arg3 = 0 to 474 {\r\n    affine.for %arg4 = 0 to 7 {\r\n      ...\r\n}}}\r\naffine.for %arg2 = 0 to 270 {\r\n  affine.for %arg3 = 0 to 474 {\r\n    affine.for %arg4 = 0 to 7 {\r\n      ...\r\n}}}\r\n```",
+  "labels": [
+    "bug",
+    "Scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-26",
+  "closed_at": "2023-06-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

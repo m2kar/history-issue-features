@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2240,
+  "issue_url": "https://github.com/verilator/verilator/issues/2240",
+  "title": "uniqe case report assert error when running ",
+  "body": "when running verilator report Error below：\r\n\r\n![image](https://user-images.githubusercontent.com/43007864/78625488-c1dfa400-78be-11ea-9702-d2c519c1ba86.png)\r\n\r\nthere waw no assertion in code, I don't konw where the problem existed.\r\n\r\n\r\ncode is below：\r\n\r\n 54   enum logic [1:0] { IDLE, IRQ_PENDING, IRQ_DONE} exc_ctrl_cs;\r\n 55\r\n 56   logic irq_enable_ext;\r\n 57   logic [4:0] irq_id_q;\r\n 58   logic irq_sec_q;\r\n 59\r\n 60 if(PULP_SECURE)\r\n 61   assign irq_enable_ext =  ((u_IE_i | irq_sec_i) & current_priv_lvl_i == PRIV_LVL_U) | (m_IE_i & current_priv_lvl_i == PRIV_LVL_M);\r\n 62 else\r\n 63   assign irq_enable_ext =  m_IE_i;\r\n 64\r\n 65   assign irq_req_ctrl_o = exc_ctrl_cs == IRQ_PENDING;\r\n 66   assign irq_sec_ctrl_o = irq_sec_q;\r\n 67   assign irq_id_ctrl_o  = irq_id_q;\r\n 68\r\n 69   always_ff @(posedge clk, negedge rst_n)\r\n 70   begin\r\n 71     if (rst_n == 1'b0) begin\r\n 72\r\n 73       irq_id_q    <= '0;\r\n 74       irq_sec_q   <= 1'b0;\r\n 75       exc_ctrl_cs <= IDLE;\r\n 76\r\n 77     end else begin\r\n 78\r\n 79       unique case (exc_ctrl_cs)\r\n 80\r\n 81         IDLE:\r\n 82         begin\r\n 83           if(irq_enable_ext & irq_i) begin\r\n 84             exc_ctrl_cs <= IRQ_PENDING;\r\n 85             irq_id_q    <= irq_id_i;\r\n 86             irq_sec_q   <= irq_sec_i;\r\n 87           end\r\n 88         end\r\n 89\r\n 90         IRQ_PENDING:\r\n 91         begin\r\n 92           unique case(1'b1)\r\n 93             ctrl_ack_i:\r\n 94               exc_ctrl_cs <= IRQ_DONE;\r\n 95             ctrl_kill_i:\r\n 96               exc_ctrl_cs <= IDLE;\r\n 97             default:\r\n 98               exc_ctrl_cs <= IRQ_PENDING;\r\n 99           endcase\r\n100         end\r\n101\r\n102         IRQ_DONE:\r\n103         begin\r\n104           irq_sec_q   <= 1'b0;\r\n105           exc_ctrl_cs <= IDLE;\r\n106         end\r\n107\r\n108       endcase\r\n109\r\n110     end\r\n111   end\r\n",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2020-04-07",
+  "closed_at": "2020-04-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

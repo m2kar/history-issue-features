@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6023,
+  "issue_url": "https://github.com/verilator/verilator/issues/6023",
+  "title": "Bit width truncation due to signed int return type causes incorrect signal width interpretation",
+  "body": "Consider the following code `test.v`, which contains a signal with an extremely large bit-width (exceeding the range representable by a 32-bit `int`):\n\n```verilog\n`timescale 1ns/1ps\n\nmodule top (out0);\n  output wire [32'hFFFF_FFFF:1] out0;\n\n  assign out0 = 1;\n\n  initial begin\n    #10;\n    $display(\"out0: %b\", out0);\n    $finish; \n  end\n\nendmodule\n```\n\nWhen running the following commands:\n\n```sh\nverilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n```\n\nThe code compiles successfully (the excessively large bit-width seems to bypass Verilator’s width checks, such as `Width of bit range is huge; vector of over 1 billion bits:` or `Value too wide for 32-bits expected in this context 36'haffffffff`), and treats `out0` as a 3-bit signal. The output is:\n\n```\nout0: 001\n```\n\nSo it appears that somewhere in the code, a conversion from `uint32_t` to `int` occurs, which causes `32'hffff_ffff` to be interpreted as `-1`.\n\nI further looked into the source code and found the following problematic line:\n\nhttps://github.com/verilator/verilator/blob/f74c67da46a7c967f984f01e8b6c245f1ade07f5/src/V3Width.cpp#L949\n\nHere, the `width` value should ideally be of type `uint32_t`.\n\nAfter further investigation, it turns out that the cause is the following functions, which return `int` instead:\n\nhttps://github.com/verilator/verilator/blob/f74c67da46a7c967f984f01e8b6c245f1ade07f5/src/V3AstNodeOther.h#L2698-L2710\n\nA straightforward fix would be to change the return type of these functions to `uint32_t`. However, I’m not sure how extensive the impact would be on the rest of the codebase. If it's safe and has no side effects, I’d be happy to submit a PR to fix this.\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-05-19",
+  "closed_at": null,
+  "code_blocks": [
+    "`timescale 1ns/1ps\n\nmodule top (out0);\n  output wire [32'hFFFF_FFFF:1] out0;\n\n  assign out0 = 1;\n\n  initial begin\n    #10;\n    $display(\"out0: %b\", out0);\n    $finish; \n  end\n\nendmodule\n",
+    "verilator --binary -Wno-lint --timing test.v\n./obj_dir/Vtest\n",
+    "out0: 001\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

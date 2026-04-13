@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2838,
+  "issue_url": "https://github.com/verilator/verilator/issues/2838",
+  "title": "Error-TIMESCALEMOD on not-found-modules due to non-\"generate\"ed instances",
+  "body": "From https://github.com/cocotb/cocotb/issues/2471#issuecomment-799909496.\r\n\r\n## Summary\r\n\r\n`Error-TIMESCALEMOD` being reported when multiple Verilog sources are being compiled with the `--timescale` option set. None of the Verilog files have a timescale directive.\r\n\r\n## Tried\r\n\r\n* `--timescale-override`. Got the same error\r\n* adding timescale directives to each file. Got the same error\r\n* switching file order. Error changed to point to second file in list.\r\n* removing the `--timescale` option. Everything works.\r\n\r\nAlso noteworthy is that cocotb uses `--timescale` in it's regression with no issues. My best guess is because there is only one SV file in each test.\r\n\r\nFailing test is in https://github.com/jg-fossh/Goldschmidt_Integer_Divider/tree/main/sim. You can run it by installing cocotb `pip install cocotb` and issuing `make SIM=verilator`. The commands it uses are in the following output dump if you don't want to install and use cocotb.\r\n\r\n```\r\nverilator -cc --exe -Mdir sim_build -DCOCOTB_SIM=1 --top-module GID_TOP --vpi --public-flat-rw --prefix Vtop -o GID_TOP -LDFLAGS \"-Wl,-rpath,/home/kaleb/dev/cocotb/cocotb/libs -L/home/kaleb/dev/cocotb/cocotb/libs -lcocotbvpi_verilator\" --trace --trace-structs --timescale 1ns/1ps /home/kaleb/dev/Goldschmidt_Integer_Divider/sim/../source/Goldschmidt_Integer_Divider_2CPS.v ./GID_TOP.v /home/kaleb/dev/cocotb/cocotb/share/lib/verilator/verilator.cpp\r\n%Error-TIMESCALEMOD: /home/kaleb/dev/Goldschmidt_Integer_Divider/sim/../source/Goldschmidt_Integer_Divider_2CPS.v:368:8: Timescale missing on this module as other modules have it (IEEE 1800-2017 3.14.2.2)\r\n                     /home/kaleb/dev/Goldschmidt_Integer_Divider/sim/../source/Goldschmidt_Integer_Divider_2CPS.v:58:8: ... Location of module with timescale\r\n   58 | module Goldschmidt_Integer_Divider_2CPS #(\r\n      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n%Error: Exiting due to 1 error(s)\r\n        ... See the manual and https://verilator.org for more assistance.\r\n```\r\n\r\nKnown to affect v4.106 and current stable (v4.200).\r\nThis may be related https://github.com/verilator/verilator/issues/2763#issuecomment-792495487.",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-16",
+  "closed_at": "2021-03-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

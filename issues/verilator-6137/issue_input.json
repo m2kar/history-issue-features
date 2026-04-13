@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6137,
+  "issue_url": "https://github.com/verilator/verilator/pull/6137",
+  "title": "Safely support non-overlapping blocking/non-blocking assignments",
+  "body": "The manual for the BLKANDNBLK warning describes that it is safe to disable that error if the updated ranges are non-overlapping. This however was not true (see the added t_nba_mixed_update* tests).\r\n\r\nIn this patch we change V3Delayed to use the FlagUnique scheme for variables that have mixed blocking and non-blocking updates, which is in fact safe to use when the updated parts are non-overlapping.\r\n\r\nFurthermore, mixed assignments are safe as far as scheduling is concerned if either:\r\n- They are to independent parts (bits/members/etc) (with this patch)\r\n- Or if the blocking assignment is in clocked (or suspendable) logic.\r\nThe risk in scheduling is a race between the Post scheduled NBA commit, and blocking assignments in combinational logic, which might order incorrectly.\r\n\r\nThe second point highlights that we can handle stuff like this safely, which is sometimes used in testbenches:\r\n\r\n```systemverilog\r\nalways @(posedge clk) begin\r\n    if ($time == 0) a = 0;\r\nend\r\n\r\nalways @(posedge clk) begin\r\n    if ($time > 0) a <= 2;\r\nend\r\n````\r\n\r\nThe only dangerous case is:\r\n\r\n```systemverilog\r\nalways @(posedge clk) foo[idx] <= val;\r\nassign foo[0] = bar;\r\n```\r\n\r\nWhit this patch, this will still resolve fine at run-time if 'idx' is never zero, but might resolve incorrectly if 'idx' is zero.\r\n\r\nWith the above in mind, the BLKANDNBLK warning is now only issued if:\r\n- We can't prove that the assignments are to non-overlapping bits\r\n- And the blocking assignment is in combinational logic\r\nThese are the cases that genuinely require user attention to resolve.\r\n\r\nWith this patch, there are no more BLKANDNBLK warnings in the RTLMeter designs.\r\n\r\nFixes #6122.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-28",
+  "closed_at": "2025-06-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

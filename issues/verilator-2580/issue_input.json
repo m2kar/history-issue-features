@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2580,
+  "issue_url": "https://github.com/verilator/verilator/issues/2580",
+  "title": "Simulation failed on macOS",
+  "body": "Thanks for taking the time to report this.\r\n\r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nWhen using `sbt` and choosing `verilator` as a backend, the compile fails for lack of `Verilated::flushCall()`\r\n\r\n```\r\n/usr/bin/clang++  -I.  -MMD -I/opt/local/share/verilator/include -I/opt/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Qunused-arguments -Wno-parentheses-equality -Wno-sign-compare -Wno-uninitialized -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -Wno-undefined-bool-conversion -O1 -DTOP_TYPE=VSoC -DVL_USER_FINISH -include VSoC.h  -std=gnu++14 -Os -c -o VSoC__ALL.o VSoC__ALL.cpp\r\n/.../chisel-template/test_run_dir/Xim.SoC_Main8780741/SoC-harness.cpp:99:14: error: no member named 'flushCall' in 'Verilated'\r\n  Verilated::flushCall();\r\n  ~~~~~~~~~~~^\r\n1 error generated.\r\nmake: *** [SoC-harness.o] Error 1\r\nmake: *** Waiting for unfinished jobs....\r\n```\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nVerilator 4.100 2020-09-07 rev v4.040-74-g16fba5948\r\n\r\nHave not tried master yet\r\n\r\n> Would you be willing to try to fix Verilator yourself with assistance?\r\n\r\nOf course :-)\r\n\r\n\r\nEdit:\r\n\r\nA quick and dirty fix is appending the missing `flushCall` method from old versions to `include/verilated.h`\r\n\r\n```\r\nstatic void flushCall()  VL_MT_SAFE {\r\n        VerilatedLockGuard lock(m_mutex);\r\n        // if (s_flushCb) (*s_flushCb)();\r\n        fflush(stderr);\r\n        fflush(stdout);\r\n}\r\n```",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-10-04",
+  "closed_at": "2020-10-04",
+  "code_blocks": [
+    "/usr/bin/clang++  -I.  -MMD -I/opt/local/share/verilator/include -I/opt/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -faligned-new -fbracket-depth=4096 -fcf-protection=none -Qunused-arguments -Wno-parentheses-equality -Wno-sign-compare -Wno-uninitialized -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -Wno-undefined-bool-conversion -O1 -DTOP_TYPE=VSoC -DVL_USER_FINISH -include VSoC.h  -std=gnu++14 -Os -c -o VSoC__ALL.o VSoC__ALL.cpp\r\n/.../chisel-template/test_run_dir/Xim.SoC_Main8780741/SoC-harness.cpp:99:14: error: no member named 'flushCall' in 'Verilated'\r\n  Verilated::flushCall();\r\n  ~~~~~~~~~~~^\r\n1 error generated.\r\nmake: *** [SoC-harness.o] Error 1\r\nmake: *** Waiting for unfinished jobs....",
+    "static void flushCall()  VL_MT_SAFE {\r\n        VerilatedLockGuard lock(m_mutex);\r\n        // if (s_flushCb) (*s_flushCb)();\r\n        fflush(stderr);\r\n        fflush(stdout);\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

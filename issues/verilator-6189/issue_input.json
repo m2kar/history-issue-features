@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6189,
+  "issue_url": "https://github.com/verilator/verilator/issues/6189",
+  "title": "Fix VPI incorrect signal range order for last dimension",
+  "body": "Version:\nVerilator 5.036 2025-04-27 rev v5.036\n\nOS:\nAlmaLinux 8.10\n\nFor a signal:\n`logic[26:72][52:73][123:33][3:42] multidim_signal`\n\nwhen reading the ranges via VPI:\n```\nvpiHandle iter_h = vpi_iterate(vpiRange, vh);\nwhile (vpiHandle range_h = vpi_scan(iter_h)) {\n    vpi_get_value(vpi_handle(vpiLeftRange, range_h), &value);\n    left = value.value.integer;\n    vpi_get_value(vpi_handle(vpiRightRange, range_h), &value);\n    right = value.value.integer;\n    std::cout << \"Dim \" << i << \": [\" << left << \":\" << right << \"]\" << std::endl;\n}\n```\n\nThe last dimension is converted to descending order, i.e. `[42:3]` is read instead of `[3:42]` regardless of how the signal is defined in Verilog.\n\nThis only happens for the last dimension, the rest are read however they are defined.\n\nI'll upload an example in a second.\n",
+  "labels": [
+    "area: vpi/dpi/api"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-17",
+  "closed_at": "2025-07-20",
+  "code_blocks": [
+    "vpiHandle iter_h = vpi_iterate(vpiRange, vh);\nwhile (vpiHandle range_h = vpi_scan(iter_h)) {\n    vpi_get_value(vpi_handle(vpiLeftRange, range_h), &value);\n    left = value.value.integer;\n    vpi_get_value(vpi_handle(vpiRightRange, range_h), &value);\n    right = value.value.integer;\n    std::cout << \"Dim \" << i << \": [\" << left << \":\" << right << \"]\" << std::endl;\n}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

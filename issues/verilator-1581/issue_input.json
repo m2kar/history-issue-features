@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1581,
+  "issue_url": "https://github.com/verilator/verilator/issues/1581",
+  "title": "Ranges starting with zero result in unsigned/constant warning",
+  "body": "---\n\n\nAuthor Name: **Mitch Hayenga**\nOriginal Redmine Issue: 1581 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nTrying to use the inside operator with a range, had multiple functions fail on warnings and realized it was all that had ranges starting with zero.  Below is a minimal test case.  This was done with the Fedora 31 default verilator (distro released this week).\r\n\r\n```\r\n1 package test_pkg;\r\n  2 \r\n  3 function automatic logic testRangeWorks(input [7:0] byte_in);\r\n  4   return byte_in inside { 8'h00, [8'h01 : 8'h04] };\r\n  5 endfunction\r\n  6 \r\n  7 function automatic logic testRangeFails(input [7:0] byte_in);\r\n  8   return byte_in inside { [8'h00 : 8'h04] };\r\n  9 endfunction\r\n 10 \r\n 11 endpackage\r\n\n```\r\n\r\n```\r\n*$ verilator --version*\r\nVerilator 4.016 2019-06-16 rev UNKNOWN_REV\r\n\r\n*$ verilator --lint-only -sv test_pkg.sv* \r\n%Warning-UNSIGNED: test_pkg.sv:8: Comparison is constant due to unsigned arithmetic\r\n                    ... Use \"/* verilator lint_off UNSIGNED */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n%Error: Command Failed /usr/bin/verilator_bin --lint-only -sv test_pkg.sv\r\n\n```\r\n \n\n\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-02",
+  "closed_at": "2019-11-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5562,
+  "issue_url": "https://github.com/llvm/circt/issues/5562",
+  "title": "[FIRRTL][LowerToHW] An uninstantiated module can crash LowerToHW",
+  "body": "I came across the following failure. The problem occurs if a module which is not under the main module in the instance graph includes reference type ports:\r\n\r\n```mlir\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo() {}\r\n  firrtl.module @Bar(in %a: !firrtl.uint<1>, out %b: !firrtl.probe<uint<1>>) {\r\n    %0 = firrtl.ref.send %a : !firrtl.uint<1>\r\n    firrtl.ref.define %b, %0 : !firrtl.probe<uint<1>>\r\n  }\r\n}\r\n```\r\n\r\nThe failure trips an assert in `LowerToHW` [here](https://github.com/llvm/circt/blob/main/lib/Conversion/FIRRTLToHW/LowerToHW.cpp#L2337):\r\n\r\n```\r\nAssertion failed: ((!result || !isa<FIRRTLType>(result.getType())) && \"Lowering didn't turn a FIRRTL value into a non-FIRRTL value\"), function setLowering, file LowerToHW.cpp, line 2338.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-07-10",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

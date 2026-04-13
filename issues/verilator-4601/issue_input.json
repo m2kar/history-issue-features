@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4601,
+  "issue_url": "https://github.com/verilator/verilator/issues/4601",
+  "title": "Optimize compile time when many classes",
+  "body": "Compiling UVM without even using it takes very long. (UVM had many things commented out - it's not ready for use - see #1538).\r\n \r\nThis affects usability experience of UVM but doesn't directly block #1538.\r\n\r\nOn my system:\r\n\r\n```\r\n    1146user 452system 2:51elapsed  (13 minutes if was running on a Github Actions 2 core!)\r\n\r\n     237 classes before specialization\r\n     592 classes after specialization\r\n    3919 .cpp files\r\n    1184 .cpp _Slow files\r\n    1760 .cpp files if combine DepSet\r\n     592 .cpp files if no DepSet at all\r\n```\r\n\r\nCompiling all files as a single .cpp:\r\n\r\n```\r\n    all w/-O0 0m53s  (gcc only no linking)\r\n    all w/-Os 2m44s  (gcc only no linking)\r\n```\r\n\r\nSo we should be able to get under 1 minute wall time assuming 4+ CPUs.\r\n\r\nActions/ideas:\r\n\r\n- [ ] Improve V3Dead. I think most of the generated classes really aren't used, and could be not be generated. (#2227)\r\n- [ ] When a class is specalized through parameters, merge all of the specializations into a single .cpp file (which might then get split if too large).  This will also likely help runtime performance as there's likely a lot of shared code and opportunity for inlining.\r\n- [ ] Avoid making multiple __DepSet's that are small (e.g. one class has two each under 2KB)\r\n- [ ] Combine small .cpp files (measured similar to --output-split) into larger ones.  Would need to be careful that a small change doesn't require a lot of recompiles.  I likely won't get to this.\r\n- [ ] Through some fancy algorithm, disassociate .cpp files from modules, choosing the number of .cpp files by some algorithm based on a CPU count and output-split.  I likely won't get to this.\r\n\r\n",
+  "labels": [
+    "area: performance",
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-21",
+  "closed_at": "2026-03-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

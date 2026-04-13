@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 5670,
+  "issue_url": "https://github.com/verilator/verilator/pull/5670",
+  "title": "Support Associative Array's Basic Constrained Randomization (#5658)",
+  "body": "This patch addresses two main points:\r\n\r\n1. Refactoring the array class structure in verilated_random.h:\r\nThe previous implementation had separate classes for different types of arrays, but the `datap`, `emitType`, and similar functions were highly similar across these classes. This patch replaces them with a single `arrayTemplate `class to handle these common functionalities. Any type-specific differences are now encapsulated in the `record_arr` function. This change reduces code duplication, improves clarity, and makes the codebase easier to maintain.\r\n\r\n2. Adding and enabling support for constrained randomization of associative arrays:\r\nAfter this patch, Verilator can support basic constrained randomization for associative arrays. Here's what \"basic\" entails: \r\n-   Integral indices: \r\nTypes like `int, longint, shortint, byte, bit`, and `logic` are now supported. However, for indices larger than 64 bits, Verilator uses `VlWide()`, which is currently not supported. Thus, indices must remain within 64 bits for now. \r\n-   String indices: \r\nString indices are now supported by converting strings to their ASCII representation. During the verilate phase, the string-to-ASCII numbers are masked to ensure they fit within 64 bits. This approach may lead to potential conflicts (e.g., two masked strings mapping to the same number), but I believe this is unavoidable. To mitigate this, a dictionary is maintained during the simulate phase to detect conflicts. If a conflict occurs, Verilator will issue a warning advising the user to choose different strings.\r\n-   Class and user-defined type indices: \r\nAccording to the IEEE standard, `class `and` user-defined types` can also serve as indices. However, during testing, I encountered issues with how Verilator itself processes these indices. These issues need to be resolved in Verilator before constrained randomization for these cases can be supported.\r\n\r\nAlthough this patch focuses on basic support, I believe it already covers the majority of user cases. Therefore, I am submitting this PR to update the code and provide this initial functionality.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-12-11",
+  "closed_at": "2024-12-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9930,
+  "issue_url": "https://github.com/llvm/circt/issues/9930",
+  "title": "[RFC][FIRRTL] Add firrtl.declare op for cross-circuit linking placeholders",
+  "body": "## Motivation\n\nfirld currently uses `firrtl.extmodule` as a forward declaration placeholder for cross-circuit linking. But `firrtl.extmodule` represents a reference to an external Verilog module. Its identity is determined by `defname`, and it carries attributes like `parameters` and `convention` that are properties of the Verilog module, not the FIRRTL design.\n\nCircuit linking resolves references between FIRRTL modules, not Verilog modules. A placeholder only needs to say \"a FIRRTL module with this name and port signature will be provided by another circuit.\" Using `firrtl.extmodule` for this purpose conflates two unrelated concepts and forces the linker to work around the mismatch (e.g., exempting extmodules from symbol mangling, special-casing empty parameters).\n\n## Proposal\n\nAdd `firrtl.declare` to represent a forward declaration for cross-circuit linking:\n\n```mlir\nfirrtl.declare @Queue(\n  in %clock: !firrtl.clock,\n  in %reset: !firrtl.reset,\n  in %enq: !firrtl.bundle<valid: uint<1>, ready flip: uint<1>, bits: uint<8>>,\n  out %deq: !firrtl.bundle<valid: uint<1>, ready flip: uint<1>, bits: uint<8>>\n) {layers = [@Verification]}\n```\n\n## Design\n\n- Attributes: `sym_name`, `portDirections`, `portNames`, `portTypes`, `portLocations`, `layers`.\n- Interfaces: `FModuleLike`, `Symbol`.\n- Always public: the symbol name is the reference to the target module, so it must not be mangled.\n- Must be resolved and removed by firld. Other passes should reject it.\n\n## Resolution\n\nThe linker resolves `firrtl.declare @Foo` by symbol name collision with `firrtl.module @Foo` or `firrtl.extmodule @Foo` from another circuit. With `firrtl.declare` handling forward declarations, `firrtl.extmodule` no longer participates in linking. It remains purely an external Verilog module reference.\n\nThe existing extmodule-specific logic in the linker (mangling exemption, empty parameters workaround) can be removed.\n\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-13",
+  "closed_at": null,
+  "code_blocks": [
+    "firrtl.declare @Queue(\n  in %clock: !firrtl.clock,\n  in %reset: !firrtl.reset,\n  in %enq: !firrtl.bundle<valid: uint<1>, ready flip: uint<1>, bits: uint<8>>,\n  out %deq: !firrtl.bundle<valid: uint<1>, ready flip: uint<1>, bits: uint<8>>\n) {layers = [@Verification]}\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

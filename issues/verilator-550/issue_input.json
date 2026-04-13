@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 550,
+  "issue_url": "https://github.com/verilator/verilator/issues/550",
+  "title": "Memory corruption when parsing modules with triangle dependancy",
+  "body": "---\n\n\nAuthor Name: **Ted Campbell**\nOriginal Redmine Issue: 550 from https://www.veripool.org\nOriginal Date: 2012-08-15\n\n\n---\n\nThere is memory corruption when modules are instantiated with a triangle pattern. The error only occurs if C is instantiated before B. Disabling the destructor of VSymGraph resolves the issue, but of course introduces a memory leak. It isn't obvious to me where the correct fix would go.\r\n\r\nFails against 3.840 and master branch. Passes on 3.833.\r\n\r\n```\r\nA\r\n|\\\r\n| B\r\n|/\r\nC\r\n\n```\r\n\r\n```\r\n// A.v\r\nmodule A;\r\n     C c();\r\n     B b();\r\nendmodule\r\n\r\n// B.v\r\nmodule B;\r\n     C c();\r\nendmodule\r\n\r\n// C.v\r\nmodule C;\r\n     initial\r\n         $display( \"Hello World\" );\r\nendmodule\r\n\n```\r\n\r\n\r\n```\r\n> valgrind verilator_bin --lint-only A.v\r\n\r\n==2854== Invalid read of size 8\r\n==2854==    at 0x40667D: VSymEnt::nodep() const (V3SymTable.h:96)\r\n==2854==    by 0x44EA27: V3ParseImp::lexToken() (verilog.l:1130)\r\n==2854==    by 0x44EB5B: V3ParseImp::lexToBison() (verilog.l:1150)\r\n==2854==    by 0x40EBF3: yyparse() (verilog.c:7757)\r\n==2854==    by 0x429D18: V3ParseImp::bisonParse() (verilog.y:3283)\r\n==2854==    by 0x404BE6: V3ParseImp::lexFile(std::string const&) (V3ParseImp.cpp:156)\r\n==2854==    by 0x40539E: V3ParseImp::parseFile(FileLine*, std::string const&, bool, std::string const&) (V3ParseImp.cpp:143)\r\n==2854==    by 0x405417: V3Parse::parseFile(FileLine*, std::string const&, bool, std::string const&) (V3ParseImp.cpp:170)\r\n==2854==    by 0x5905F8: LinkCellsVisitor::visit(AstCell*, AstNUser*) (V3LinkCells.cpp:206)\r\n==2854==    by 0x4974AB: AstCell::accept(AstNVisitor&, AstNUser*) (V3AstNodes.h:1283)\r\n==2854==    by 0x48ECB4: AstNode::iterateAndNext(AstNVisitor&, AstNUser*) (V3Ast.cpp:768)\r\n==2854==    by 0x48EE0E: AstNode::iterateChildren(AstNVisitor&, AstNUser*) (V3Ast.cpp:748)\r\n==2854==  Address 0x5982300 is 48 bytes inside a block of size 88 free'd\r\n==2854==    at 0x4C26DCF: operator delete(void*) (vg_replace_malloc.c:387)\r\n==2854==    by 0x40A43C: VSymGraph::~VSymGraph() (V3SymTable.h:221)\r\n==2854==    by 0x40A4D1: V3ParseSym::~V3ParseSym() (V3ParseImp.h:200)\r\n==2854==    by 0x405A12: V3ParseImp::~V3ParseImp() (V3ParseImp.cpp:67)\r\n==2854==    by 0x405B12: V3Parse::~V3Parse() (V3ParseImp.cpp:166)\r\n==2854==    by 0x5907B9: LinkCellsVisitor::visit(AstCell*, AstNUser*) (V3LinkCells.cpp:214)\r\n==2854==    by 0x4974AB: AstCell::accept(AstNVisitor&, AstNUser*) (V3AstNodes.h:1283)\r\n==2854==    by 0x48ECB4: AstNode::iterateAndNext(AstNVisitor&, AstNUser*) (V3Ast.cpp:768)\r\n==2854==    by 0x48EE0E: AstNode::iterateChildren(AstNVisitor&, AstNUser*) (V3Ast.cpp:748)\r\n==2854==    by 0x58FA5E: LinkCellsVisitor::visit(AstNodeModule*, AstNUser*) (V3LinkCells.cpp:182)\r\n==2854==    by 0x47D189: AstNVisitor::visit(AstModule*, AstNUser*) (V3Ast__gen_visitor.h:119)\r\n==2854==    by 0x42BDD9: AstModule::accept(AstNVisitor&, AstNUser*) (V3AstNodes.h:1222)\r\n\n```\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: parser"
+  ],
+  "state": "closed",
+  "created_at": "2012-08-15",
+  "closed_at": "2012-09-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

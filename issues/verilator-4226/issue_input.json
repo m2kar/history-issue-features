@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4226,
+  "issue_url": "https://github.com/verilator/verilator/issues/4226",
+  "title": "Fix false multidriven warning on unpacked structures",
+  "body": "I think this should not result in multidriven warning.\r\nJust a linting warning, but still a bug.\r\n\r\n```verilog\r\nmodule test;\r\n    typedef struct {\r\n        logic val1;\r\n        logic val2;\r\n    } str_t;\r\n    str_t str;\r\n\r\n    always_comb begin\r\n        str.val1 = 1'b0;\r\n    end\r\n\r\n    always_comb begin\r\n        str.val2 = 1'b0;\r\n    end\r\nendmodule\r\n```\r\nResults in:\r\n\r\n```\r\n%Warning-MULTIDRIVEN: test.sv:13:9: Variable written to in always_comb also written by other process (IEEE 1800-2017 9.2.2.2): 'str'\r\n                                  : ... In instance test\r\n                      test.sv:13:9:\r\n   13 |         str.val2 = 1'b0;\r\n      |         ^~~\r\n                      test.sv:9:9: ... Location of other write\r\n    9 |         str.val1 = 1'b0;\r\n      |         ^~~\r\n                      ... For warning description see https://verilator.org/warn/MULTIDRIVEN?v=5.011\r\n                      ... Use \"/* verilator lint_off MULTIDRIVEN */\" and lint_on around source to disable this message.\r\n%Error: Exiting due to 1 warning(s)\r\n```\r\n\r\nIt does not happen if the struct is packed.\r\n\r\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\r\nVerilator 5.011 devel rev v5.010-30-g0606a29f1\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\nSure\r\n",
+  "labels": [
+    "area: lint",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2023-05-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

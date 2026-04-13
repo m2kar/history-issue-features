@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2846,
+  "issue_url": "https://github.com/verilator/verilator/issues/2846",
+  "title": "Support dynamic arrays in constant functions",
+  "body": "Hi, \r\n\r\nI have a use case similar, but not exactly the same as what was reported and fixed in #1315:\r\n\r\nThe following works (example from #1315):\r\n```\r\nmodule ex24\r\n (\r\n   input wire i_clk,\r\n   input wire i_rst_n\r\n );\r\n   parameter int SIZES [3:0] = '{1,2,3,4};\r\n   typedef int calc_sums_t [3:0];\r\n   function calc_sums_t calc_sums;\r\n     begin\r\n       int ii, sum = 0;\r\n       for (ii=0; ii<4; ii++) begin\r\n        sum = sum + SIZES[ii];\r\n        calc_sums[ii] = sum;\r\n       end\r\n     end\r\n   endfunction\r\n   parameter int SUMS[3:0] = calc_sums();\r\n endmodule\r\n```\r\nThe following does not:\r\n```\r\nmodule ex24\r\n (\r\n   input wire i_clk,\r\n   input wire i_rst_n\r\n );\r\n   parameter int SIZES [3:0] = '{1,2,3,4};\r\n   typedef int calc_sums_t [3:0];\r\n   function calc_sums_t calc_sums(int s[], int n);\r\n     begin\r\n       int ii, sum = 0;\r\n       for (ii=0; ii<n; ii++) begin\r\n        sum = sum + n[ii];\r\n        calc_sums[ii] = sum;\r\n       end\r\n     end\r\n   endfunction\r\n   parameter int SUMS[3:0] = calc_sums(SIZES, 4);\r\n endmodule\r\n```\r\nThe Error messages:\r\n```\r\n%Error: ex24.sv:37:40: Expecting expression to be constant, but variable isn't const: 'SIZES'\r\n                    : ... In instance ex24\r\n   37 |    parameter int SUMS[3:0] = calc_sums(SIZES, 4);\r\n      |                                        ^~~~~\r\n%Error: Internal Error: ex24.sv:37:40: ../V3Simulate.h:294: No value found for node.\r\n                                    : ... In instance our\r\n   37 |    parameter int SUMS[3:0] = calc_sums(SIZES, 4);\r\n      |                                        ^~~~~\r\n```\r\nIs this expected behavior? \r\n\r\nI am happy to help, if I can (I am not familiar with the codebase).\r\n\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: data-types",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-19",
+  "closed_at": "2023-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

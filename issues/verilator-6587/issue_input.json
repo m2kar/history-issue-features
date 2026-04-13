@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6587,
+  "issue_url": "https://github.com/verilator/verilator/issues/6587",
+  "title": "Regression in HIERPARAM means interface parameters cannot derive from other interface parameters anymore",
+  "body": "Top of tree (5.041 devel) regressed so now passing parameters from one interface to another is no longer supported. This is an essential feature and works in all other major tools. It also used to work in Verilator up until at least 5.038, I believe.\n\nParameters need to be derivable from other parameters, otherwise you end up needing to plumb redundant and possibly conflicting information around with every SV interface -- you would need to plumb both the interface and all of its parameter values as two separate pieces of information into every layer of the hierarchy and they wouldn't necessarily be kept identical if it was a manual process like that.\n\n```systemverilog\n\nmodule foobar #(\n    parameter int N = 2\n) (\n    input logic         clk,\n          AXIS_IF.slave s_axis[N-1:0]\n);\n\n  generate\n    genvar i;\n    for (i = 0; i < N; i++) begin : gen_loop\n      AXIS_IF #(\n          .DATA_W(s_axis[i].DATA_W)\n      ) axis_internal (\n          .clk(s_axis[i].clk)\n      );\n    end\n\n    // ...\n\n  endgenerate\n\nendmodule\n\n// Simplified AXI-stream interface\ninterface AXIS_IF #(\n    parameter int DATA_W = 128\n) (\n  input logic clk\n);\n  logic [DATA_W-1:0] tdata;\n\n  modport master(output tdata);\n\n  modport slave(input tdata);\n\nendinterface\n\n```\n",
+  "labels": [
+    "area: lint"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-23",
+  "closed_at": "2025-11-01",
+  "code_blocks": [
+    "\nmodule foobar #(\n    parameter int N = 2\n) (\n    input logic         clk,\n          AXIS_IF.slave s_axis[N-1:0]\n);\n\n  generate\n    genvar i;\n    for (i = 0; i < N; i++) begin : gen_loop\n      AXIS_IF #(\n          .DATA_W(s_axis[i].DATA_W)\n      ) axis_internal (\n          .clk(s_axis[i].clk)\n      );\n    end\n\n    // ...\n\n  endgenerate\n\nendmodule\n\n// Simplified AXI-stream interface\ninterface AXIS_IF #(\n    parameter int DATA_W = 128\n) (\n  input logic clk\n);\n  logic [DATA_W-1:0] tdata;\n\n  modport master(output tdata);\n\n  modport slave(input tdata);\n\nendinterface\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

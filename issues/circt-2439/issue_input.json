@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2439,
+  "issue_url": "https://github.com/llvm/circt/issues/2439",
+  "title": "[ExportVerilog] Remove temporary for aggregate outputs",
+  "body": "For the following fir,\r\n```scala\r\n module Bar:\r\n    input a: {clock: Clock, reset: UInt<1>},\r\n    output b: {clock: Clock, reset: UInt<1>}\r\n    b <= a\r\n```\r\nIn aggregate preservation mode, we currently emit this:\r\n```verilog\r\nmodule Bar(\t// foo.fir:2:10\r\n  input  struct packed {logic clock; logic reset; } a,\r\n  output struct packed {logic clock; logic reset; } b);\r\n\r\n  wire struct packed {logic clock; logic reset; } _b_output;\r\n\r\n  assign _b_output.clock = a.clock;\r\n  assign _b_output.reset = a.reset;\r\n  assign b = _b_output;\t// foo.fir:2:10\r\nendmodule\r\n```\r\n\r\nIt is better not to emit temporary `_b_output`, like:\r\n```verilog\r\nmodule Bar(\t// foo.fir:2:10\r\n  input  struct packed {logic clock; logic reset; } a,\r\n  output struct packed {logic clock; logic reset; } b);\r\n\r\n  assign b.clock = a.clock;\t// foo.fir:5:7\r\n  assign b.reset = a.reset;\t// foo.fir:5:7\r\nendmodule\r\n```",
+  "labels": [
+    "ExportVerilog",
+    "Verilog Quality"
+  ],
+  "state": "open",
+  "created_at": "2022-01-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

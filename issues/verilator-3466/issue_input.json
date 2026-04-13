@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3466,
+  "issue_url": "https://github.com/verilator/verilator/issues/3466",
+  "title": "Support inout inside SystemVerilog interface",
+  "body": "The following module verilates fine, works as expected:\n\n```verilog\nmodule InOutMod (input we, inout d);\n  assign d = we ? 1'b1 : 1'bz;\nendmodule\n```\n\nBut put that bad boy inside an interface and we've got a bad time:\n\n```verilog\ninterface InOutMod_if;\n  wire we;\n  wire d;\n\n  modport ctrl(output we, inout d);\n  modport prph(input we, inout d);\nendinterface\n\nmodule InOutMod(InOutMod_if.prph io_if);\n  assign io_if.d = io_if.we ? 1'b1 : 1'bz;\nendmodule\n\nmodule InOutModWrap(input we, inout d);\n  InOutMod_if io_if();\n  assign io_if.we = we;\n  assign io_if.d = d;\n  \n  InOutMod prph (.*);\nendmodule\n```\nAnd we get:\n```\nError-UNSUPPORTED: InOutMod.sv: Unsupported LHS tristate construct: VARXREF 'd'\n```\n\nWe can swap the wrapper, make the interface version the wrapper of the explicitly enumerated ports version, and everything is peachy (other than losing some coverage). Still, seems silly that moving an `inout` from the module declaration into a modport breaks what is ostensibly a working simulation.\n\nHappy to help with this if it seems feasible to fix without insane amounts of disruption. New to the verilator codebase so would appreciate pointers.\n",
+  "labels": [
+    "effort: days",
+    "status: ready",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2022-06-13",
+  "closed_at": "2026-03-04",
+  "code_blocks": [
+    "module InOutMod (input we, inout d);\n  assign d = we ? 1'b1 : 1'bz;\nendmodule\n",
+    "interface InOutMod_if;\n  wire we;\n  wire d;\n\n  modport ctrl(output we, inout d);\n  modport prph(input we, inout d);\nendinterface\n\nmodule InOutMod(InOutMod_if.prph io_if);\n  assign io_if.d = io_if.we ? 1'b1 : 1'bz;\nendmodule\n\nmodule InOutModWrap(input we, inout d);\n  InOutMod_if io_if();\n  assign io_if.we = we;\n  assign io_if.d = d;\n  \n  InOutMod prph (.*);\nendmodule\n",
+    "Error-UNSUPPORTED: InOutMod.sv: Unsupported LHS tristate construct: VARXREF 'd'\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

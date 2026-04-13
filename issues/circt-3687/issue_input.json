@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 3687,
+  "issue_url": "https://github.com/llvm/circt/issues/3687",
+  "title": "[Handshake] Remove StandardToHandshake-specific builders, cleanup",
+  "body": "Currently, multiple builder function of the `Handshake` dialect operations are tightly coupled with how the `StandardToHandshake` maintains intermediate state during its run. I attribute this to the fact that `StandardToHandshake` is rather \"old\" (CIRCT-relative) and could use some love with respect to some of the lessons we've learnt over the course of the project maturing.\r\n\r\n\r\n\r\n\r\nSome examples, with varying degrees of severity:\r\n- Ops which places assumptions on external state, and instead should have their builder take an extra argument:\r\n  - https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L232-L233 (should be a builder parameter)\r\n  - https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L742\r\n  - https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L835\r\n- Mux ops being built with invalid inputs, which only later are resolved https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L347-L348. I suspect this could be solved by use of the `BackedgeBuilder` in `StandardToHandshake`.\r\n- As above, but with `ControlMergeOp` https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L444-L445\r\n- A weird builder (why have those arguments if some of them are expected to be empty?) https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L924-L931\r\n- Memory ops aren't necessarily connected to LSQs, so this is a stale comment https://github.com/llvm/circt/blob/93112d40df2bd95058eae32566c13733f9fa7ea1/lib/Dialect/Handshake/HandshakeOps.cpp#L1410-L1411\r\n",
+  "labels": [
+    "Handshake"
+  ],
+  "state": "closed",
+  "created_at": "2022-08-09",
+  "closed_at": "2022-12-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

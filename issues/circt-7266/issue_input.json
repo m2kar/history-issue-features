@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7266,
+  "issue_url": "https://github.com/llvm/circt/issues/7266",
+  "title": "[Seq] invalid register opt leads to comb loop",
+  "body": "h/t @dtzSiFive \r\nThe first example from [3003](https://github.com/llvm/circt/issues/3003) results in a cycle that we spin infinitely on in HW,\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Test:\r\n  public module Test:\r\n    input clock : Clock\r\n    input reset : UInt<1>\r\n    output o : UInt<8>\r\n    wire w : UInt<8>\r\n    reg r : UInt<8>, clock with :\r\n      reset => (reset, mux(reset, UInt<8>(3), w))\r\n    w <= r\r\n    o <= r\r\n```\r\nBefore canonicalize in HW this is now:\r\n\r\n```mlir\r\nhw.module @Test(in %clock : !seq.clock, in %reset : i1, out o : i8) {\r\n  %c3_i8 = hw.constant 3 : i8\r\n  %w = hw.wire %r  : i8\r\n  %0 = comb.mux bin %reset, %c3_i8, %w : i8\r\n  %r = seq.firreg %r clock %clock reset sync %reset, %0 {firrtl.random_init_start = 0 : ui64} : i8\r\n  hw.output %r : i8\r\n}\r\n```\r\nWhich canonicalize quickly reduces the register to a combinational loop\r\n```mlir\r\nhw.module @Test(in %clock : !seq.clock, in %reset : i1, out o : i8) {\r\n  %c3_i8 = hw.constant 3 : i8\r\n  %0 = comb.mux bin %reset, %c3_i8, %0 : i8\r\n  hw.output %0 : i8\r\n}\r\n```\r\n\r\nThe register should not be optimized in this way.  We had a similar issue in the folder which was fixed (h/t @uenoku) https://github.com/llvm/circt/pull/7085.\r\n\r\nThe issue appears to be in this code:\r\nhttps://github.com/llvm/circt/blob/cc51aa5dd03ca451e0329c4a5552565b106c0c0f/lib/Dialect/Seq/SeqOps.cpp#L571-L582\r\n",
+  "labels": [
+    "bug",
+    "Seq"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-02",
+  "closed_at": "2024-07-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

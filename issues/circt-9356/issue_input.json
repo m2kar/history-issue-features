@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9356,
+  "issue_url": "https://github.com/llvm/circt/pull/9356",
+  "title": "[ArcRuntime] Add runtime library implementation for arcilator",
+  "body": "Tackle #8484 again: This PR adds a runtime library for arcilator which should provide common support functionality for both JIT and AOT compiled models. It doesn't do much at this point. The relevant functions for now are:\r\n- `allocInstance`: Allocates and initializes the state for an instance of a hardware model and the associated context for the runtime library.\r\n- `deleteInstance`: Tears it down again.\r\n- `onEval`: Housekeeping before each step of the model. At the moment just increases a counter.\r\n\r\nAmong other things, this should hopefully provide a more solid base for VCD tracing than the haphazard implementation in #8986.\r\n\r\nAn unfortunate amount of complexity comes from the various environments which the library has to interact with. Essentially, it has three interfaces:\r\n- The \"internal API\" interfacing with the compiled model. This is declared in `IRInterface.h`.\r\n- The interface to the arcilator tool for explicitly binding it to the MLIR Execution Engine. This is declared in `JITBind.h`.\r\n-  The \"public API\" to interface with the simulation executables of AOT compiled models. This is declared in `ArcRuntime.h` and needs to be shipped to users. It is deliberately kept in pure C to allow interfacing with non-C++ environments.\r\n\r\nThe whole linking strategy for the runtime library is a bit mad, but based on my previous experience it is the least likely to break variant I could come up with:\r\n- For Linux/macOS a static library gets built and shipped. This should not get in the way of the musl build and might provide some opportunities for LTO.\r\n- For Windows we build a dynamic library.  We _could_ provide a static library, but due to the way the Windows C runtime works, a static library built in Release mode cannot be linked against a Debug mode build and vice-versa. So we probably would have to provide both.\r\n- For JIT execution a variant of the library gets statically linked into the arcilator executable. Technically, the MLIR Execution Engine should be able to bind the exported symbols of the library to the IR without additional effort. However, form my experience this is error prone and relies on obscure linker behavior. So instead the symbols are deliberately _hidden_ from the Execution Engine and instead bound explicitly via function pointers.\r\n\r\nThis PR is the first of a series and only contains the runtime library itself. #9357 does the necessary changes on the MLIR side and #9358 makes it usable.",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-17",
+  "closed_at": "2026-01-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

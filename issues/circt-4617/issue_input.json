@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4617,
+  "issue_url": "https://github.com/llvm/circt/issues/4617",
+  "title": "[FIRRTL, Seq, SV] Restore LHS subaccess in aggregate preservation mode ",
+  "body": "Input:\r\n```verilog\r\ncircuit Example :\r\n  module Example :\r\n    input a: UInt<2>[4]\r\n    input clock: Clock\r\n    input sel: UInt<2>\r\n    input in: UInt<2>\r\n    input en: UInt<1>\r\n    output b: UInt<2>[4]\r\n    reg r: UInt<2>[4], clock\r\n    when en:\r\n      r[sel] <= in\r\n    b <= r\r\n```\r\n\r\nCurrent output: `-preserve-aggregate=1d-vec --disable-reg-randomization -preserve-public-types=false`\r\n```scala\r\n  always @(posedge clock) begin\r\n    if (en & sel == 2'h0)\r\n      r[2'h0] <= in;\r\n    if (en & sel == 2'h1)\r\n      r[2'h1] <= in;\r\n    if (en & sel == 2'h2)\r\n      r[2'h2] <= in;\r\n    if (en & (&sel))\r\n      r[2'h3] <= in;\r\n  end // always @(posedge)\r\n```\r\nIdeally we don't want to emit if-chains. \r\n```verilog\r\n  reg [3:0][1:0] r;\r\n  always @(posedge clock) begin\r\n    if (en)\r\n      r[sel] <= in;\r\n  end // always @(posedge)\r\n```\r\nThings to consider:\r\n1. out-of-bounds behavior\r\n2. Where is the right place to do this transform? We cannot do this at FIRRTL because of firreg lowering.Maybe in LowerSeqToSV or HWCleanUp would be right place. ",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-02-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

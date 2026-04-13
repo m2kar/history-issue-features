@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7075,
+  "issue_url": "https://github.com/verilator/verilator/pull/7075",
+  "title": "Fix missing logic normalization when using -fno-gate (#6952)",
+  "body": "**The Issue:**\r\nWhen compiling with `-O0` or `-fno-gate`, module-level var initializations evaluated via ternary operators were evaluating incorrectly as time-zero static initializations rather than continuous assignments.\r\n\r\n**Root Cause:**\r\nAs noted by @wsnyder in #6952, downstream scheduling relies on V3Gate to normalize these variables. However, src/Verilator.cpp was unconditionally bypassing V3Gate::gateAll() when `-fno-gate` was set. Because `GateInline::apply()` never ran, the AST retained AstInitialStatic nodes for these variables, causing the scheduler to incorrectly place them in the `__Slow` path.\r\n\r\n**The Fix:**\r\nModified the pipeline to ensure critical downstream normalizations run regardless of the gate optimization flag, while preserving `-O0` compile speed by bypassing heavy optimizations:\r\n\r\n`src/Verilator.cpp`: Removed the `if (v3Global.opt.fGate()`) block around `V3Gate::gateAll()`, ensuring the pass is always entered.\r\n\r\n`src/V3Gate.cpp`: Left` GateInline::apply(*graphp)` exposed so it always runs. Wrapped the subsequent, non-critical optimizations (GateDedupe, GateMergeAssignments, GateUnused) in an `if (v3Global.opt.fGate())` block.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-02-14",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

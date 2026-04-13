@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7251,
+  "issue_url": "https://github.com/verilator/verilator/issues/7251",
+  "title": "verilated.mk: Apple clang does not support -o flag in conjunction with PCH",
+  "body": "Using latest git verilator, on MacOS 26.3.1. When compiling some verilated sources I get:\n\n```\n/usr/bin/c++ -Os  -I.  -MMD -I/usr/local/include -I/usr/local/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0        Vtb__pch.h.fast.gch -c -o Vtb.o Vtb.cpp\nclang++: error: cannot specify -o when generating multiple output files\nmake[1]: *** [/usr/local/include/verilated.mk:283: Vtb.o] Error 1\n```\n\nProblematic lines are here in `verilated.mk`:\n\nhttps://github.com/verilator/verilator/blob/4b53f5f978f9a48d12c597d8cd66fec9606d8c9b/include/verilated.mk.in#L282-L286\n\nApple clang rejects the `-o` flag when PCH is used. Note that native GCC isn't available on MacOS and `gcc` is just symlinked to `clang`.\n\nSince this is just a `%.o: %.cpp` pattern the `-o` flag is unnecessary. As a workaround I've removed `-o -@` from lines 283 and 286 in that Makefile; if I do this then everything builds and simulates fine for me. However I'm not sure if this is an appropriate fix for all platforms.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-12",
+  "closed_at": "2026-03-26",
+  "code_blocks": [
+    "/usr/bin/c++ -Os  -I.  -MMD -I/usr/local/include -I/usr/local/include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=0 -DVM_TRACE=0 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=0 -DVM_TRACE_SAIF=0        Vtb__pch.h.fast.gch -c -o Vtb.o Vtb.cpp\nclang++: error: cannot specify -o when generating multiple output files\nmake[1]: *** [/usr/local/include/verilated.mk:283: Vtb.o] Error 1\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1795,
+  "issue_url": "https://github.com/llvm/circt/issues/1795",
+  "title": "[Simulator] Crash when initializing `llhd.sig` with non-constant value",
+  "body": "When trying to simulate a module such as the following, the simulator crashes without a meaningful error message or assertion (just telling you that a value not defined in this region is used or the reconcile conversion cast pass complaining that some op was already replaced). This is because in `LLHDToLLVM.cpp` the operations creating `%get` are recursively cloned into a init function created indirectly by the simulation engine, but it only considers `hw.array_create`, `hw.struct_create`, and operations without operands (stop condition of recursion).\r\n\r\nIt would be ideal to support any operation not just these three, or at least throw a meaningful error message for the user in `recursiveCloneInit`.\r\nAlso, wouldn't it be better to clone these operations in a separate function and let the LLVM inliner decide whether to inline it or not (because the operation chain might be a lot bigger than just a constant op, leading to a lot of duplicated code)?\r\n\r\n```mlir\r\nllhd.entity @root () -> () {\r\n    %0 = hw.constant 0 : i8\r\n    %index = hw.constant 1 : i1\r\n\r\n    %array = hw.array_create %0, %0 : i8\r\n    %get = hw.array_get %array[%index] : !hw.array<2xi8>\r\n\r\n    %getsig = llhd.sig \"get\" %get : i8  // Using %0 instead of %get works just fine; %get leads to a crash\r\n\r\n    %time = llhd.constant_time #llhd.time<1ns, 0d, 0e>\r\n    llhd.drv %getsig, %get after %time : !llhd.sig<i8>\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-15",
+  "closed_at": "2024-07-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

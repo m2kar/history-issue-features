@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4241,
+  "issue_url": "https://github.com/verilator/verilator/issues/4241",
+  "title": "Unpacked structure faulty comparison of sub structure",
+  "body": "Continuation of #4240 , but different issue.\r\n\r\n```systemverilog\r\nmodule t;\r\n    typedef struct {\r\n        struct {\r\n            logic m0;\r\n            logic [3:0] m1;\r\n            logic m2;\r\n        } sub;\r\n    } struct_t;\r\n    struct_t s1;\r\n    struct_t s2;\r\n\r\n    assign {s1.sub.m0, s1.sub.m1, s1.sub.m2} = {1'b0, 4'h5, 1'b1};\r\n    assign {s2.sub.m0, s2.sub.m1, s2.sub.m2} = {1'b0, 4'h5, 1'b1};\r\n    \r\n    initial begin\r\n        if(s1.sub != s2.sub) begin\r\n            $fatal();\r\n        end else begin\r\n            $finish();\r\n        end\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\nResults in:\r\n`verilator_bin  --build --main --binary --cc  test2.sv`\r\n\r\n```\r\nVtest2___024root__DepSet_hef21559d__0__Slow.cpp: In function ‘void Vtest2___024root___eval_initial__TOP(Vtest2___024root*)’:\r\nVtest2___024root__DepSet_hef21559d__0__Slow.cpp:22:26: error: no match for ‘operator&’ (operand types are ‘unsigned int’ and ‘Vtest2___struct4’)\r\n   22 |     if (VL_UNLIKELY(((1U & vlSelf->t__DOT__s1.__PVT__sub)\r\n      |                       ~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n      |                       |                       |\r\n      |                       unsigned int            Vtest2___struct4\r\n/tools/work/SoCMake-Ibex/deps/_deps/verisc/open/verilator-106965270/share/verilator/include/verilatedos.h:66:45: note: in definition of macro ‘VL_UNLIKELY’\r\n   66 | # define VL_UNLIKELY(x) __builtin_expect(!!(x), 0)  // Prefer over C++20 [[unlikely]]\r\n      |                                             ^\r\nVtest2___024root__DepSet_hef21559d__0__Slow.cpp:23:29: error: no match for ‘operator&’ (operand types are ‘unsigned int’ and ‘Vtest2___struct4’)\r\n   23 |                      != (1U & vlSelf->t__DOT__s2.__PVT__sub)))) {\r\n      |                          ~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n      |                          |                       |\r\n      |                          unsigned int            Vtest2___struct4\r\n/tools/work/SoCMake-Ibex/deps/_deps/verisc/open/verilator-106965270/share/verilator/include/verilatedos.h:66:45: note: in definition of macro ‘VL_UNLIKELY’\r\n```\r\n\r\nThe error is in 1U & struct, this bitwise should be removed in case of structure comparison.\r\nI am not sure why is it there in the first place?\r\n\r\nI can proceed to remove the bitwise & for the case of struct if that is what needs to be done?",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-27",
+  "closed_at": "2023-05-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

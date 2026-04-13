@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1250,
+  "issue_url": "https://github.com/verilator/verilator/issues/1250",
+  "title": "Nested interface reference not found due to inline optimization",
+  "body": "---\n\n\nAuthor Name: **Arjen Roodselaar**\nOriginal Redmine Issue: 1250 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nWhen a parent module instantiates an interface (or passes an interface from its parent) to a child module, nested interface references are not found if the child and parent modules do not use the same port name for the interface reference. The following is a somewhat minimal reproduction of the problem:\r\n\r\n```\r\n/* if1.sv */\r\ninterface if1;\r\n\r\nlogic s1;\r\n\r\nendinterface : if1\r\n\r\n/* if2.sv */\r\ninterface if2;\r\n\r\nif1 a;\r\nlogic s2;\r\n\r\nendinterface : if2;\r\n\r\n/* mod1.sv */\r\nmodule mod1\r\n\r\n(\r\n  if2 foo\r\n);\r\n\r\nlogic l1, l2;\r\n\r\nalways_comb @(*) begin\r\n  l1 = foo.a.s1;\r\n  l2 = foo.s2;\r\nend\r\n\r\nendmodule : mod1\r\n\r\n/* top.sv */\r\nmodule top;\r\n\r\nif2 if2_0;\r\n\r\nassign if2_0.a.s1 = 0;\r\nassign if2_0.s2 = 1;\r\n\r\nmod1 mod1_instance(\r\n  .foo (if2_0)\r\n);\r\n\r\nendmodule : top;\r\n\n```\r\n\r\nThis results in the following error:\r\n\r\n```\r\n%Error: mod1.sv:11: Can't find definition of 'foo' in dotted signal: foo.a.s1\r\n%Error:      Known scopes under 's1': <no cells found>\r\n%Error: Internal Error: mod1.sv:11: ../V3Const.cpp:1531: Not linked\r\n%Error: Command Failed /Users/arjen/dev/verilator/bin/verilator_bin -cc --trace --compiler clang -sv +1800-2012ext+sv -y . top.sv\r\n\n```\r\n\r\nCompilation succeeds if the offending line is commented out, or if all occurrences of \"foo\" in mod1 are replaced with if2_0. Please advice if this is expected and I am simply trying to do something that is not supported.\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2017-12-13",
+  "closed_at": "2018-01-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

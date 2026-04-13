@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5927,
+  "issue_url": "https://github.com/verilator/verilator/issues/5927",
+  "title": "Bad C++ (error: ‘vlSelf’ was not declared in this scope)",
+  "body": "Thanks for taking the time to report this.\n\nCan you attach an example that shows the issue?  (Must be openly licensed, completely self-contained and self-checking so can directly run what you provide. Ideally use test_regress format, see https://veripool.org/guide/latest/contributing.html?highlight=test_regress#reporting-bugs\n\n> Working on it, sadly in another big codebase top level test.\n\nWhat 'verilator' command line do we use to run your example?\n\n> `verilator --binary --timing --assert --autoflush -j 2 -sv -Wno-CASEINCOMPLETE -Wno-REALCVT -Wno-SELRANGE -Wno-TIMESCALEMOD -Wno-UNSIGNED -Wno-WIDTH -CFLAGS -O0 --unroll-count 4 -top XX_YY_test -o sim.exe <defines, incdirs, files>`\n\n\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n> Fails on today's master: `Verilator 5.035 devel rev v5.034-154-g6bb57e463`\n> Works on `Verilator 5.034 2025-02-24 rev v5.034`\n\nWhat OS and distribution are you using?\n\n> Ubuntu22.04\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nSure. \n\n(Please avoid attaching screenshots that show text - you can convert images to text using e.g. https://ocr.space)\n\n\nMy actual (somewhat obfuscated) message looks like this:\n\n```\n\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp:172:9: error: ‘vlSelf’ was not declared in this scope\n  172 |         vlSelf->__Vtask_XX_YY_test__DOT__uDUT__DOT__LongHierPath__unnamedblk1_1__DOT____Vrepeat0 = VL_RAND_RESET_I(32);\n      |         ^~~~~~\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp: In member function ‘VlCoroutine VXX_YY_test___024root::__VnoInFunc_XX_YY_test__DOT__UserCsrRead32_TOP(VXX_YY_test__Syms*, IData, IData&, IData)’:\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp:1416:9: error: ‘vlSelf’ was not declared in this scope\n 1416 |         vlSelf->__Vtask_XX_YY_test__DOT__uDUT__DOT__LongHierPath__unnamedblk1_4__DOT____Vrepeat3 = VL_RAND_RESET_I(32);\n      |         ^~~~~~\n\n\n```\n\nI noticed in 5.034 (working version for me) most of these vlCoroutine .cpp functions have *vlSelf as an arg, and it's missing for some reason in 5.035. I'm not sure where to even start on this, it's a part of Verilator's src I have never explored. \n\nThis could also be an obscure SV coding style issue on my end. Not all of these involve VL_RAND_RESET_I(32), and I didn't see a verilator knob for random reset values (I saw a runtime knob on the verialted exe, but we're not getting that far w/ bad .cpp).",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-09",
+  "closed_at": "2025-04-26",
+  "code_blocks": [
+    "\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp:172:9: error: ‘vlSelf’ was not declared in this scope\n  172 |         vlSelf->__Vtask_XX_YY_test__DOT__uDUT__DOT__LongHierPath__unnamedblk1_1__DOT____Vrepeat0 = VL_RAND_RESET_I(32);\n      |         ^~~~~~\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp: In member function ‘VlCoroutine VXX_YY_test___024root::__VnoInFunc_XX_YY_test__DOT__UserCsrRead32_TOP(VXX_YY_test__Syms*, IData, IData&, IData)’:\nVXX_YY_test___024root__DepSet_hc51b8287__0.cpp:1416:9: error: ‘vlSelf’ was not declared in this scope\n 1416 |         vlSelf->__Vtask_XX_YY_test__DOT__uDUT__DOT__LongHierPath__unnamedblk1_4__DOT____Vrepeat3 = VL_RAND_RESET_I(32);\n      |         ^~~~~~\n\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

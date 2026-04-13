@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1382,
+  "issue_url": "https://github.com/verilator/verilator/issues/1382",
+  "title": "Inconsistent LITENDIAN warnings on arrays",
+  "body": "---\n\n\nAuthor Name: **Al Grant**\nOriginal Redmine Issue: 1382 from https://www.veripool.org\n\n\n\n---\n\nThis is something that has come up before in #614 and #1202 but still doesn't seem quite right as of 4.008. In this code:\r\n```\r\nmodule endian;\r\n  logic e_big[3:0];\r\n  logic e_lit[0:3];\r\n  logic eu_big_big[3:0][3:0];\r\n  logic eu_lit_big[0:3][3:0];\r\n  logic eu_big_lit[3:0][0:3];\r\n  logic eu_lit_lit[0:3][0:3];\r\n  logic [3:0] epu_big_big[3:0];\r\n  logic [0:3] epu_lit_big[3:0];    // warn\r\n  logic [3:0] epu_big_lit[0:3];\r\n  logic [0:3] epu_lit_lit[0:3];    // warn\r\n  logic [3:0][3:0] ep_big_big;\r\n  logic [0:3][3:0] ep_lit_big;     // warn\r\n  logic [3:0][0:3] ep_big_lit;     // warn\r\n  logic [0:3][0:3] ep_lit_lit;     // warn\r\nendmodule\r\n\n```\r\nVerilator warns as shown. This is in accordance with the resolution to #614 which was to warn for ascending dimensions when packed but not when unpacked. But what's really the issue here is whether the dimension is of a bit vector or not, i.e. would define the bit indexes into a contiguous bit vector that ends up as a single C object. And that to me looks independent of whether it's packed or unpacked - it has much more to do with whether the dimension is the first dimension or not. It just happens that often in cases like\r\n```\r\nlogic [63:0] arr[0:3];\r\n\n```\r\nthe first dimension is a bit index and the second one isn't - so #644's rule that says to warn about packed but not unpacked turns out to do what we want. In cases like\r\n```\r\nlogic [3:0] arr[0:3];\r\n\n```\r\nit's less clear - perhaps Verilator would treat this as a 4x4 bit matrix and pack it into one word. But either way, whether it's packed or unpacked makes no difference. It's the order of the dimensions, and the overall size of the object as each dimension is applied, which determines whether objects might be packed into a bit vector.\r\n\r\nI'd suggest a different rule:\r\n* process dimensions left to right (ignoring any distinction between packed/unpacked i.e. before/after the name)\r\n* keep track of the accumulated size of the object as we multiply in the latest dimension\r\n* while the object is still packable into a bit vector (size < 64 maybe?) warn if the latest dimension is ascending\r\n\r\nThis also does the right thing for arrays of structures. It makes the warning much more dependent on how objects are or aren't represented as data, and much less on how they are syntactically expressed in the source.\n\n\n",
+  "labels": [
+    "area: lint",
+    "area: data-types",
+    "effort: hours",
+    "resolution: abandoned"
+  ],
+  "state": "closed",
+  "created_at": "2018-12-31",
+  "closed_at": "2020-11-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

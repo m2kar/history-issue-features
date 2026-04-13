@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2261,
+  "issue_url": "https://github.com/llvm/circt/pull/2261",
+  "title": "[RFC] Moore MIR dialect",
+  "body": "Currently, the [Moore](https://github.com/fabianschuiki/moore) frontend-compiler parses SystemVerilog, lowers the AST to Moore MIR, and then generates HW/Comb/LLHD code which it forwards to CIRCT.\r\n\r\nThis new Moore dialect aims to move the MIR into CIRCT to benefit from the CIRCT/MLIR infrastructure. In the long-run also the parser and AST can be implemented to have a complete SystemVerilog frontend natively in CIRCT.\r\n\r\nThe purpose of Moore MIR in the lowering chain is to make all the implicit things (e.g., type casts) in SystemVerilog explicit to ease further lowering to HW/Comb/LLHD.\r\n\r\nFor example, this MIR:\r\n\r\n```mlir\r\n%0 = moore.mir.constant 5 : !moore.rvalue<!moore.sv.int>\r\n%1 = moore.mir.vardecl \"varname\" = 3 : !moore.lvalue<!moore.sv.int>\r\nmoore.mir.assign %1, %0 : !moore.lvalue<!moore.sv.int>, !moore.rvalue<!moore.sv.int>\r\n```\r\nlowers to\r\n```mlir\r\n%c5_i32 = hw.constant 5 : i32\r\n%c3_i32 = hw.constant 3 : i32\r\n%0 = llhd.sig \"varname\" %c3_i32 : i32\r\n%1 = llhd.constant_time #llhd.time<0s, 0d, 1e>\r\nllhd.drv %0, %c5_i32 after %1 : !llhd.sig<i32>\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-30",
+  "closed_at": "2021-12-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

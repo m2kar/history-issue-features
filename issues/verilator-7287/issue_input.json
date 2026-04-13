@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7287,
+  "issue_url": "https://github.com/verilator/verilator/pull/7287",
+  "title": "Fix streaming with descending unpacked arrays and unpacked-to-queue",
+  "body": "## Summary\r\n\r\nThis patch fixes two bugs in streaming operator handling for unpacked arrays, exposed after 316fb02 removed UNSUPPORTED errors (A follow-up of #7282). Descending-range unpacked arrays produced reversed element order during streaming, and streaming any unpacked array into a queue produced an empty queue (size=0). IEEE 1800-2023 Section 11.4.14 specifies that unpacked arrays are streamed in foreach traversal order, which for descending `[3:0]` starts at index 3. \r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  logic [3:0][7:0] packed_din;\r\n  logic [7:0] unpacked_des_dout[3:0];\r\n  logic [7:0] unpacked_din[4];\r\n  logic [7:0] queue_dout[$];\r\n\r\n  always_comb begin\r\n    {>>{unpacked_des_dout}} = packed_din;  // Bug 1\r\n    {>>{queue_dout}} = unpacked_din;       // Bug 2\r\n  end\r\n\r\n  initial begin\r\n    packed_din = '{8'h76, 8'h54, 8'h32, 8'h10};\r\n    unpacked_din = '{8'h01, 8'h23, 8'h45, 8'h67};\r\n    #1;\r\n    // Bug 1: descending unpacked gets reversed order\r\n    $display(\"unpacked_des[3]=%h [0]=%h\", unpacked_des_dout[3], unpacked_des_dout[0]);\r\n    // Bug 2: queue is empty\r\n    $display(\"queue size=%0d\", queue_dout.size());\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n```\r\nunpacked_des[3]=10 [0]=76\r\nqueue size=0\r\n```\r\n\r\nExpected (Questa, correct per IEEE):\r\n```\r\nunpacked_des[3]=76 [0]=10\r\nqueue size=4\r\n```\r\n\r\n## Changes\r\n\r\n- `V3EmitCFunc.h`: For descending UnpackArrayDType targets, emit `VL_REVERSE_UNPACKED(dest)` after `VL_UNPACK`; for descending sources, emit `VL_PACK(..., VL_REVERSED_UNPACKED(src))`\r\n- `V3Const.cpp`: In LHS StreamR and StreamL handlers, route unpacked/queue/dynarray source to queue/dynarray dest through `CvtArrayToArray` instead of the broken `CvtPackedToArray(CvtArrayToPacked(...))` chain that produced width=0\r\n- `include/verilated_funcs.h`: Add `VL_REVERSE_UNPACKED`, `VL_REVERSED_UNPACKED` helpers for descending element reorder; add `VL_COPY_Q`/`VL_REVCOPY_Q` overloads accepting `VlUnpacked` source\r\n\r\n## Test\r\n\r\n- Modified `test_regress/t/t_stream_unpack_lhs.v` -- uncommented 5 checks that were disabled with TODO markers\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-19",
+  "closed_at": "2026-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

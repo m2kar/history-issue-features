@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1138,
+  "issue_url": "https://github.com/llvm/circt/issues/1138",
+  "title": "[FIRRTL] combinational loop detection",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    output a: UInt<11>\r\n    output b: UInt<11>\r\n    a <= b\r\n    b <= a\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  output [10:0] a, b);\r\n\r\n  wire [10:0] _a_output;\t// a_top_mod.fir:2:3\r\n  wire [10:0] _b_output;\t// a_top_mod.fir:2:3\r\n\r\n  wire [10:0] _T = _b_output;\t// a_top_mod.fir:5:7\r\n  assign _a_output = _T;\t// a_top_mod.fir:5:7\r\n  wire [10:0] _T_0 = _a_output;\t// a_top_mod.fir:6:7\r\n  assign _b_output = _T_0;\t// a_top_mod.fir:6:7\r\n  assign a = _T_0;\t// a_top_mod.fir:2:3\r\n  assign b = _T;\t// a_top_mod.fir:2:3\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Error message:\r\n\r\n```\r\nException in thread \"main\" firrtl.transforms.CheckCombLoops$CombLoopException: : [module top_mod] Combinational loop detected:\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-25",
+  "closed_at": "2021-08-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

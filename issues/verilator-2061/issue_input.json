@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2061,
+  "issue_url": "https://github.com/verilator/verilator/issues/2061",
+  "title": "Question: Correct usage of enumerated type methods",
+  "body": "---\n\n\nAuthor Name: **Tobias Rosenkranz**\nOriginal Redmine Message: 3180 from https://www.veripool.org\n\n\n\n---\n\nHello everyone,\n\nI have a problem with enumerated type methods. I always get an \n```<code class=\"text\">\nSignal is not driven: '__Venumtab_enum_next0'\n</code>\n``` warning when compiling my SystemVerilog code.\n\nIf I interpret https://github.com/verilator/verilator/blob/master/test_regress/t/t_enum_type_methods.v correctly, then verilator supports what I am tring to do and my code should work.\nIs this a bug or am I doing something wrong? Please help.\n\nShort example:\n\n- some_pkg.sv\n```<code class=\"text\">\npackage some_pkg;\n\n  /* Enum: some_state_t\n    *\n    */\n  typedef enum {\n     STATE_ONE,\n     STATE_TWO,\n     STATE_THREE,\n     STATE_FOUR,\n     STATE_FIVE,\n     STATE_SIX,\n     STATE_SEVEN,\n     STATE_EIGHT,\n     STATE_NINE,\n     STATE_TEN\n  } some_state_t;\nendpackage\n</code>\n```\n\n- some_module.sv\n```<code class=\"text\">\nmodule some_module\n  (\n     input                                   clk,\n     input                                   resetN,\n     input                                   InOne, InTwo,\n     output logic                            someOutput\n  );\n\n  import some_pkg::*;\n\n  some_state_t some_FSM;\n\n  always_ff @ (posedge clk or negedge resetN) begin\n     if(!resetN)\n       some_FSM <= some_FSM.first;\n     else begin\n       unique case (some_FSM)\n       STATE_ONE, STATE_TWO, STATE_THREE: begin\n         if(InOne & InTwo)\n           some_FSM <= some_FSM.next;\n         else if(InOne)\n           some_FSM <= some_FSM;\n         else\n           some_FSM <= some_FSM.first;\n       end\n       default: begin\n         some_FSM <= STATE_ONE;\n       end\n       endcase\n     end\n  end\n\n  always_comb begin\n     someOutput = (some_FSM == STATE_FOUR);\n  end\nendmodule\n</code>\n```\n\nI use the https://github.com/tymonx/logic package to as a configuration and make toolchain - but i checked that the commandline invokation works:\n```<code class=\"text\">\n/usr/local/bin/verilator_bin --cc --coverage --prefix some_module --exe -o some_module -Mdir . --top-module some_module -Wall -Wwarn-lint -Wwarn-style -DOVL_ASSERT_ON -I<repo_path>/rtl/configware/include -I<repo_path>/deps/logic/rtl/logic/include -I/usr/local/HDL/ovl/2.8.1 <repo_path>/build/verilator/libraries/some_module/some_module.vlt <repo_path>/rtl/configware/VerilatorTests/some_pkg.sv <repo_path>/rtl/configware/VerilatorTests/some_module.sv <repo_path>/build/verilator/coverage/run/some_module/some_module_main.cpp\n</code>\n```\n\nThanks in advance.\n\n\n\n\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2019-12-02",
+  "closed_at": "2019-12-02",
+  "code_blocks": [
+    "\n- some_module.sv\n",
+    "\nI use the https://github.com/tymonx/logic package to as a configuration and make toolchain - but i checked that the commandline invokation works:\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

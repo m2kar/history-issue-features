@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6664,
+  "issue_url": "https://github.com/verilator/verilator/pull/6664",
+  "title": "Fix long C++ compilation due to VerilatedScope constructors",
+  "body": "The Syms class can contain a very large number of VeriltedScope instances if `--vpi` is used, all of which need a call to the default constructor in the constructor of the Syms class. This can lead to very long compilation times, even without optimization on some compilers.\r\n\r\nTo avoid the constructor calls, hold VeriltedScope via pointers in the Syms class, and explicitly new and delete them in the Syms constructor/destructor. These explicit new/delte can then be automatically split up into sub functions when the Syms constructor/destructor become large.\r\n\r\nRegarding run-time performance, this should have no significant effect, most interactions are either during construction/destruction of the Syms object, or are via pointers already. The one place where we used to refer to VerilatedScope instances is when emitting an AstScopeName for things like $display %m. For those there will be an extra load instruction at run-time, which should not make a big difference.\r\n\r\nPatch 3 of 3 to fix long compile times of the Syms module in some scenarios.\r\n\r\n---\r\n\r\nFYI the alternative to using pointers (keeping them members) would be to make VerialtedScope trivially constructible/destructible (as I mentioned in #6395), which would make that class messier (e.g.: no member initializers), so I though this is simpler and just as good perf wise.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-08",
+  "closed_at": "2025-11-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

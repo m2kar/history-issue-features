@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1453,
+  "issue_url": "https://github.com/llvm/circt/issues/1453",
+  "title": "[FIRRTL] Lower Types Vector Lowering Bug",
+  "body": "Annotations on vectors aren't being handled correctly during FIRRTL's LowerTypes pass:\r\n\r\n- If the annotation is on the first element, everything is lowered correctly. \r\n- If the annotation is on an element after the first element, the annotation is lowered to both that element and the one before it.\r\n\r\n\r\nConsider the following circuit with the annotation `\"a\"` on the first element of a wire:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.module @Foo() {\r\n      %a = firrtl.wire  {annotations = [#firrtl.subAnno<fieldID = [1, 1], {a}>]} : !firrtl.vector<uint<1>, 4>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAfter types are lowered, this becomes:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.module @Foo() {\r\n      %a_0 = firrtl.wire  {annotations = [{a}]} : !firrtl.uint<1>\r\n      %a_1 = firrtl.wire  : !firrtl.uint<1>\r\n      %a_2 = firrtl.wire  : !firrtl.uint<1>\r\n      %a_3 = firrtl.wire  : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis looks great.\r\n\r\nNow if you annotate the second element:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.module @Foo() {\r\n      %a = firrtl.wire  {annotations = [#firrtl.subAnno<fieldID = [2, 2], {a}>]} : !firrtl.vector<uint<1>, 4>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nThis lowers to:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.module @Foo() {\r\n      %a_0 = firrtl.wire  {annotations = [#firrtl.subAnno<fieldID = [1, 1], {a}>]} : !firrtl.uint<1>\r\n      %a_1 = firrtl.wire  {annotations = [{a}]} : !firrtl.uint<1>\r\n      %a_2 = firrtl.wire  : !firrtl.uint<1>\r\n      %a_3 = firrtl.wire  : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n```\r\n\r\nAnd just so it's clear that only the element before is annotated, this is what happens for the third element:\r\n\r\n```mlir\r\nmodule  {\r\n  firrtl.circuit \"Foo\"   {\r\n    firrtl.module @Foo() {\r\n      %a_0 = firrtl.wire  : !firrtl.uint<1>\r\n      %a_1 = firrtl.wire  {annotations = [#firrtl.subAnno<fieldID = [1, 1], {a}>]} : !firrtl.uint<1>\r\n      %a_2 = firrtl.wire  {annotations = [{a}]} : !firrtl.uint<1>\r\n      %a_3 = firrtl.wire  : !firrtl.uint<1>\r\n    }\r\n  }\r\n}\r\n\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-20",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

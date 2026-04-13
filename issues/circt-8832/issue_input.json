@@ -1,0 +1,22 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8832,
+  "issue_url": "https://github.com/llvm/circt/issues/8832",
+  "title": "[LLHD] Dominance issue with local signal",
+  "body": "The following input produces a dominance issue in Mem2Reg:\n```mlir\n// circt-opt --llhd-mem2reg\nhw.module @Foo() {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i8 = hw.constant 0 : i8\n  %c0_i4 = hw.constant 0 : i4\n  %c0_i32 = hw.constant 0 : i32\n  %1 = hw.bitcast %c0_i8 : (i8) -> !hw.array<2xi4>\n  %a = llhd.sig %1 : !hw.array<2xi4>\n  %2 = llhd.prb %a : !hw.inout<array<2xi4>>\n  llhd.process {\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb1:  // pred: ^bb8\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb2(%3: i32):  // 3 preds: ^bb0, ^bb1, ^bb7\n    %false = hw.constant false\n    cf.cond_br %false, ^bb3, ^bb8\n  ^bb3:  // pred: ^bb2\n    %c0_i2 = hw.constant 0 : i2\n    %out = llhd.sig %c0_i4 : i4\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb4(%4: i32):  // 2 preds: ^bb3, ^bb5\n    cf.cond_br %false, ^bb5, ^bb6\n  ^bb5:  // pred: ^bb4\n    %5 = llhd.sig.extract %out from %c0_i2 : (!hw.inout<i4>) -> !hw.inout<i1>\n    llhd.drv %5, %false after %0 : !hw.inout<i1>\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb6:  // pred: ^bb4\n    cf.br ^bb7(%c0_i4 : i4)\n  ^bb7(%6: i4):  // pred: ^bb6\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb8:  // pred: ^bb2\n    llhd.wait (%c0_i4, %2 : i4, !hw.array<2xi4>), ^bb1\n  }\n  hw.output\n}\n```\nError:\n```\nbroken-dom-reduced-5.mlir:19:14: error: operand #0 does not dominate this use\n      %out = llhd.sig %c0_i4 : i4\n             ^\nbroken-dom-reduced-5.mlir:19:14: note: see current operation: %6 = \"llhd.prb\"(%10) : (!hw.inout<i4>) -> i4\nbroken-dom-reduced-5.mlir:19:14: note: operand defined here (op in the same region)\n```\n@mvpant You have been fixing a similar issue recently. Do you know what might be wrong here?",
+  "labels": [
+    "bug",
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-08",
+  "closed_at": "2025-08-22",
+  "code_blocks": [
+    "// circt-opt --llhd-mem2reg\nhw.module @Foo() {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i8 = hw.constant 0 : i8\n  %c0_i4 = hw.constant 0 : i4\n  %c0_i32 = hw.constant 0 : i32\n  %1 = hw.bitcast %c0_i8 : (i8) -> !hw.array<2xi4>\n  %a = llhd.sig %1 : !hw.array<2xi4>\n  %2 = llhd.prb %a : !hw.inout<array<2xi4>>\n  llhd.process {\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb1:  // pred: ^bb8\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb2(%3: i32):  // 3 preds: ^bb0, ^bb1, ^bb7\n    %false = hw.constant false\n    cf.cond_br %false, ^bb3, ^bb8\n  ^bb3:  // pred: ^bb2\n    %c0_i2 = hw.constant 0 : i2\n    %out = llhd.sig %c0_i4 : i4\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb4(%4: i32):  // 2 preds: ^bb3, ^bb5\n    cf.cond_br %false, ^bb5, ^bb6\n  ^bb5:  // pred: ^bb4\n    %5 = llhd.sig.extract %out from %c0_i2 : (!hw.inout<i4>) -> !hw.inout<i1>\n    llhd.drv %5, %false after %0 : !hw.inout<i1>\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb6:  // pred: ^bb4\n    cf.br ^bb7(%c0_i4 : i4)\n  ^bb7(%6: i4):  // pred: ^bb6\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb8:  // pred: ^bb2\n    llhd.wait (%c0_i4, %2 : i4, !hw.array<2xi4>), ^bb1\n  }\n  hw.output\n}\n",
+    "broken-dom-reduced-5.mlir:19:14: error: operand #0 does not dominate this use\n      %out = llhd.sig %c0_i4 : i4\n             ^\nbroken-dom-reduced-5.mlir:19:14: note: see current operation: %6 = \"llhd.prb\"(%10) : (!hw.inout<i4>) -> i4\nbroken-dom-reduced-5.mlir:19:14: note: operand defined here (op in the same region)\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

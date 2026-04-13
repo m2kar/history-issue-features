@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7274,
+  "issue_url": "https://github.com/llvm/circt/issues/7274",
+  "title": "[FIRRTL] FART: when annotated reset is under a when, always leads to uninitialized wires",
+  "body": "There is some logic when wiring the annotated reset to target registers, that we try to find a location to create a reset wire which dominates all use-sites. The problem is that there is no situation where this logic kicks in that won't later yield an unitialized signal error later on the pipeline.\r\n```firrtl\r\nFIRRTL version 4.0.0\r\ncircuit Foo: %[[\r\n  {\"class\":\"sifive.enterprise.firrtl.FullAsyncResetAnnotation\", \"target\":\"~Foo|Foo>n\"}\r\n]]\r\n  public module Foo:\r\n    input p : UInt<1>\r\n    input r : AsyncReset\r\n    input c : Clock\r\n    when p:\r\n      node n = r\r\n    reg reg : UInt<8>, c\r\n```\r\nyields\r\n```mlir\r\n// -----// IR Dump After InferResets (firrtl-infer-resets) //----- //\r\nfirrtl.circuit \"Foo\" {\r\n  firrtl.module @Foo(in %p: !firrtl.uint<1>, in %r: !firrtl.asyncreset, in %c: !firrtl.clock) attributes {convention = #firrtl<convention scalarized>} {\r\n    %n = firrtl.wire : !firrtl.asyncreset\r\n    firrtl.when %p : !firrtl.uint<1> {\r\n      %n_0 = firrtl.node %r {annotations = [{class = \"sifive.enterprise.firrtl.FullAsyncResetAnnotation\"}], name = \"n\"} : !firrtl.asyncreset\r\n      firrtl.matchingconnect %n, %n_0 : !firrtl.asyncreset\r\n    }\r\n    %c0_ui8 = firrtl.constant 0 : !firrtl.const.uint<8>\r\n    %reg = firrtl.regreset %c, %n, %c0_ui8 : !firrtl.clock, !firrtl.asyncreset, !firrtl.const.uint<8>, !firrtl.uint<8>\r\n  }\r\n}\r\n```\r\nA wire is created in the outmost scope, but only driven inside the WhenOp.\r\nDuring ExpandWhens, we hit the error:\r\n```\r\n./fart7.fir:10:7: error: sink \"n\" not fully initialized in \"Foo\"\r\n      node n = r\r\n```\r\nAs it stands, I don't think there is any way that the responsible logic can kick in and yield a circuit that will make it past ExpandWhens, making it rather useles.\r\n\r\nA potential solution might be to invalidate the wire, which we know expand whens will lower to `mux(p, n, DontCare) => n`, but this is not guaranteed to always be the case, as in the future we hope to treat invalid values as they described in the spec.  We could even optimize the DontCare to a time-varying signal.\r\n\r\nA better solution might be to add a static connect operation which is not affected by containing when operations (h/t @dtzSiFive ).\r\n\r\nThis is heavily related to https://github.com/llvm/circt/issues/7264.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-07-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9277,
+  "issue_url": "https://github.com/llvm/circt/issues/9277",
+  "title": "[FIRRTL] Missing Assertion Canonicalization",
+  "body": "Consider the following FIRRTL dialect MLIR:\n\n``` mlir\nmodule {\n  firrtl.circuit \"Foo\" {\n    firrtl.layer @A bind {\n      firrtl.layer @B bind {\n      }\n    }\n    firrtl.module @Foo(in %clk: !firrtl.clock, in %a: !firrtl.uint<1>, out %b: !firrtl.uint<1>, out %c: !firrtl.uint<1>, out %d: !firrtl.uint<1>, out %e: !firrtl.uint<0>, out %f: !firrtl.uint<4>, out %g: !firrtl.uint<1>, out %h: !firrtl.uint<1>, out %i: !firrtl.uint<1>) attributes {convention = #firrtl<convention scalarized>} {\n      %c0_ui0 = firrtl.constant 0 : !firrtl.uint<0>\n      %c0_ui4 = firrtl.constant 0 : !firrtl.uint<4>\n      %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n      %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\n      %c0_ui1_0 = firrtl.constant 0 : !firrtl.const.uint<1>\n      firrtl.matchingconnect %b, %c0_ui1 : !firrtl.uint<1>\n      firrtl.matchingconnect %g, %c0_ui1 : !firrtl.uint<1>\n      firrtl.matchingconnect %h, %c0_ui1 : !firrtl.uint<1>\n      firrtl.matchingconnect %i, %c0_ui1 : !firrtl.uint<1>\n      firrtl.layerblock @A {\n        firrtl.layerblock @A::@B {\n          %reg = firrtl.regreset %clk, %a, %c0_ui1_0 : !firrtl.clock, !firrtl.uint<1>, !firrtl.const.uint<1>, !firrtl.uint<1>\n          %_io_deq_T_26 = firrtl.eq %reg, %c0_ui1_0 : (!firrtl.uint<1>, !firrtl.const.uint<1>) -> !firrtl.uint<1>\n          %reg_1 = firrtl.regreset %clk, %a, %c0_ui1_0 : !firrtl.clock, !firrtl.uint<1>, !firrtl.const.uint<1>, !firrtl.uint<1>\n          %0 = firrtl.int.ltl.implication %reg_1, %_io_deq_T_26 : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n          firrtl.int.verif.assert %0, %c1_ui1 : !firrtl.uint<1>, !firrtl.uint<1>\n        }\n      }\n      firrtl.matchingconnect %c, %c0_ui1 : !firrtl.uint<1>\n      firrtl.matchingconnect %d, %c0_ui1 : !firrtl.uint<1>\n      firrtl.matchingconnect %e, %c0_ui0 : !firrtl.uint<0>\n      firrtl.matchingconnect %f, %c0_ui4 : !firrtl.uint<4>\n    }\n  }\n}\n```\n\nWhen compiled, this produced a vacuously true implication: `1'h0 |-> 1'h1`. (This is true in both the antecedent and the consequent.) This is the output:\n\n``` verilog\nmodule Foo_A_B();\t// reduced.mlir:18:9\n  wire _GEN = 1'h0;\t// reduced.mlir:23:11\n  assert property (disable iff (_GEN) _GEN |-> 1'h1);\t// reduced.mlir:22:16, :23:11\nendmodule\n```\n\nThe problem is likely due to CSE related to the use inside and outside the layer block.",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-02",
+  "closed_at": "2025-12-04",
+  "code_blocks": [
+    "\nWhen compiled, this produced a vacuously true implication: `1'h0 |-> 1'h1`. (This is true in both the antecedent and the consequent.) This is the output:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

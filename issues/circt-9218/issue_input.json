@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9218,
+  "issue_url": "https://github.com/llvm/circt/pull/9218",
+  "title": "[HWToLLVM][ArcToLLVM] Spill array values early",
+  "body": "Spill `hw.array` values on the stack at their definition site instead of their use sites to reduce the number of redundant alloca + store ops created. This should mitigate the negative effects of  #9172, fixing  #9211.\r\n\r\nThis PR adds the `HWToLLVMArraySpillCache` helper to the HWToLLVM conversion patterns. Certain operations on `!hw.array` typed values need to \"spill\" (i.e., copy into a buffer, usually stack allocated) their input arrays in order to access dynamically indexed elements. The cache is used to avoid spilling the array for each such user separately. Instead,operations that create an array value which needs spilling allocate a buffer that can be shared by the value's users. HW Dialect operations that inherently allocate a buffer for their output arrays (`AggregateConstantOp`,  `ArrayInjectOp`, `ArraySliceOp`) use the cache to associate their output value with a pointer to the buffer, so it does not need to be spilled again. Non-HW Dialect producers of HW array values (e.g., `arc.state_load`) need to be handled pre conversion. This is done by invoking `spillNonHWOps`.\r\n\r\nUse of the cache is optional and can be disabled by passing `spill-arrays-early=false` to `convert-hw-to-llvm` or using a `nullopt` value for the cache argument of `populateHWToLLVMConversionPatterns`. In fact, conversions passes that do not disable `allowPatternRollback` _must not_ use the cache since a buffer added to the cache once cannot be removed in case of a rollback. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-09",
+  "closed_at": "2025-11-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

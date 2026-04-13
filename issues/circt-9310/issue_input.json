@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9310,
+  "issue_url": "https://github.com/llvm/circt/issues/9310",
+  "title": "[arcilator] Why use a Mux to reset a register, instead of creating a CompRegOp with the reset signal and the reset value?",
+  "body": "This results in Arcilator being unable to perform effective reset grouping in the GroupResetAndEnable pass.\n\n```c\n      // Canonicalize registers.\n      if (auto reg = dyn_cast<seq::FirRegOp>(&op)) {\n        OpBuilder builder(reg);\n        Value next;\n        // Note: this register will have an sync reset regardless.\n        if (reg.hasReset())\n          next = comb::MuxOp::create(builder, reg.getLoc(), reg.getReset(),\n                                     reg.getResetValue(), reg.getNext(), false);\n        else\n          next = reg.getNext();\n\n        Value presetValue;\n        // Materialize initial value, assume zero initialization as default.\n        if (reg.getPreset() && !reg.getPreset()->isZero()) {\n          assert(hw::type_isa<IntegerType>(reg.getType()) &&\n                 \"cannot lower non integer preset\");\n          presetValue = circt::seq::createConstantInitialValue(\n              builder, reg.getLoc(),\n              IntegerAttr::get(reg.getType(), *reg.getPreset()));\n        }\n\n        Value compReg = seq::CompRegOp::create(\n            builder, reg.getLoc(), next.getType(), next, reg.getClk(),\n            reg.getNameAttr(), Value{}, Value{}, /*initialValue*/ presetValue,\n            reg.getInnerSymAttr());\n        reg.replaceAllUsesWith(compReg);\n        opsToDelete.push_back(reg);\n        continue;\n      }\n```",
+  "labels": [
+    "Arc"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-08",
+  "closed_at": "2025-12-17",
+  "code_blocks": [
+    "      // Canonicalize registers.\n      if (auto reg = dyn_cast<seq::FirRegOp>(&op)) {\n        OpBuilder builder(reg);\n        Value next;\n        // Note: this register will have an sync reset regardless.\n        if (reg.hasReset())\n          next = comb::MuxOp::create(builder, reg.getLoc(), reg.getReset(),\n                                     reg.getResetValue(), reg.getNext(), false);\n        else\n          next = reg.getNext();\n\n        Value presetValue;\n        // Materialize initial value, assume zero initialization as default.\n        if (reg.getPreset() && !reg.getPreset()->isZero()) {\n          assert(hw::type_isa<IntegerType>(reg.getType()) &&\n                 \"cannot lower non integer preset\");\n          presetValue = circt::seq::createConstantInitialValue(\n              builder, reg.getLoc(),\n              IntegerAttr::get(reg.getType(), *reg.getPreset()));\n        }\n\n        Value compReg = seq::CompRegOp::create(\n            builder, reg.getLoc(), next.getType(), next, reg.getClk(),\n            reg.getNameAttr(), Value{}, Value{}, /*initialValue*/ presetValue,\n            reg.getInnerSymAttr());\n        reg.replaceAllUsesWith(compReg);\n        opsToDelete.push_back(reg);\n        continue;\n      }\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

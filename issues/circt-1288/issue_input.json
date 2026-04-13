@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1288,
+  "issue_url": "https://github.com/llvm/circt/issues/1288",
+  "title": "[FIRRTL] (dshl, head) mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\n; seed: 759\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input inp_cb: UInt<60>\r\n    output _tmp66: UInt<91>\r\n    wire tmp12: SInt\r\n    wire _tmp13: UInt\r\n    wire tmp58: UInt\r\n    tmp12 <= shl(SInt(\"b-100101100101\"), 1)\r\n    _tmp13 <= dshl(inp_cb, tail(asUInt(tmp12), 11))\r\n    tmp58 <= pad(inp_cb, 41)\r\n    _tmp66 <= dshl(_tmp13, head(tmp58, 0))\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [59:0] inp_cb,\r\n  output [90:0] _tmp66);\r\n\r\n  assign _tmp66 = {24'h0, {1'h0, inp_cb, 6'h0} << 67'h0};\t// a_top_mod.fir:3:3, :10:15, :12:15\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [59:0] inp_cb,\r\n  output [90:0] _tmp66\r\n);\r\n  wire [65:0] _GEN_0 = {inp_cb, 6'h0};\r\n  wire [66:0] _GEN_1 = {{1'd0}, _GEN_0};\r\n  wire [59:0] _GEN_2 = {{1'd0}, _GEN_1[58:0]};\r\n  assign _tmp66 = {{31'd0}, _GEN_2};\r\nendmodule\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports formal mismatch:\r\n\r\n```\r\nERROR: Found 7 unproven $equiv cells in 'equiv_status -assert'.\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-16",
+  "closed_at": "2021-07-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

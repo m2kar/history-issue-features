@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2486,
+  "issue_url": "https://github.com/llvm/circt/issues/2486",
+  "title": "[ExportVerilog] CSE of Assert Action Block Temporaries trips VCS Lint",
+  "body": "Outlining of expressions from concurrent assertion action blocks is tripping a VCS lint error.  Something like the following seems to show the issue.  Here, an expression in the action block is shared between two statements.  This then gets CSE'd.\r\n\r\n```mlir\r\nhw.module @Foo(%clock: i1, %a: i1, %b: i1) -> (b: i1) {\r\n  %0 = comb.or %a, %b : i1\r\n  sv.assert.concurrent posedge %clock, %0 label \"hello\" message \"world\"(%a) : i1\r\n  hw.output %0 : i1\r\n}\r\n```\r\n\r\nThis produces (`firtool Baz.mlir`):\r\n```verilog\r\nmodule Foo(\t// Baz.mlir:1:1\r\n  input  clock, a, b,\r\n  output b_0);\r\n\r\n  wire _T = a | b;\t// Baz.mlir:2:8\r\n  hello: assert property (@(posedge clock) _T) else $error(\"world\", a);\t// Baz.mlir:3:3\r\n  assign b_0 = _T;\t// Baz.mlir:4:3\r\nendmodule\r\n```\r\n\r\nVCS then complains along the lines of \"non-sampled variable `_T` is used in the action block of assertion\".  I'm not sure if this is actually a problem.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-01-21",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

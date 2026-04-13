@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1429,
+  "issue_url": "https://github.com/llvm/circt/issues/1429",
+  "title": "[ExportVerilog] Binds of Temporaries are named strangely",
+  "body": "If a `BindOp` needs to be hooked up to a temporary, the name generation logic is going to generate something that doesn't exist in the circuit. The problematic area is in this logic: https://github.com/llvm/circt/blob/main/lib/Translation/ExportVerilog/ExportVerilog.cpp#L2802\r\n\r\nE.g, consider the following:\r\n\r\n```mlir\r\nmodule attributes {firrtl.mainModule = \"Foo\"}  {\r\n  hw.module @Bar(%a: i1) {\r\n    hw.output\r\n  }\r\n  sv.bind @__Bar__ {output_file = {directory = \"\", exclude_from_filelist = true, exclude_replicated_ops = true, name = \"bindings.sv\"}}\r\n  hw.module @Foo(%a: i1) -> (%b: i1) {\r\n    hw.instance \"Bar\" sym @__Bar__ @Bar(%0) {doNotPrint} : (i1) -> ()\r\n    %x = sv.wire  : !hw.inout<i1>\r\n    sv.connect %x, %a : i1\r\n    %0 = sv.read_inout %x : !hw.inout<i1>\r\n    %1 = sv.read_inout %x : !hw.inout<i1>\r\n    hw.output %1 : i1\r\n  }\r\n}\r\n\r\n```\r\n\r\nThis will produce Verilog that tries to bind to `Bar_Bar_a`.  I would expect to see the bind to `_T` or `x`:\r\n\r\n```verilog\r\nmodule Bar(\r\n  input a);\r\n\r\nendmodule\r\n\r\nmodule Foo(\r\n  input  a,\r\n  output b);\r\n\r\n  wire _T;      // Foo.mlir:10:10\r\n  wire x;       // Foo.mlir:8:10\r\n\r\n  // This instance is elsewhere emitted as a bind statement.\r\n  // Bar Bar (  // Foo.mlir:7:5\r\n  //   .a (_T)  // Foo.mlir:10:10\r\n  // );\r\n  assign x = a; // Foo.mlir:9:5\r\n  assign _T = x;        // Foo.mlir:10:10\r\n  assign b = x; // Foo.mlir:11:10, :12:5\r\nendmodule\r\n\r\n\r\n// ----- 8< ----- FILE \"bindings.sv\" ----- 8< -----\r\n\r\nbind Foo Bar Bar (\r\n  .a (Bar_Bar_a)\r\n);\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-07-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

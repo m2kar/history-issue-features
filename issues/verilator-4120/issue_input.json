@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4120,
+  "issue_url": "https://github.com/verilator/verilator/issues/4120",
+  "title": "Verilation issues with virtual tasks when inherting across packages",
+  "body": "When a class inherits from another class that sits in a different package and the inheriting class overrides a virtual task that does nothing in the base class but waits in the derived class a verilation issue can occur. The generated C++ returns a `VlCoroutine` in the derived class implementation but not in the base class for the overridden task leading to a C++ compile error.\r\n\r\nThis is seen in the following example code:\r\n\r\n```systemverilog\r\npackage test_pkg;\r\n\r\nclass base;\r\n  virtual task foo();\r\n  endtask\r\nendclass\r\n\r\nendpackage\r\n\r\nimport test_pkg::*;\r\n\r\nclass derived extends base;\r\n  int field;\r\n\r\n  virtual task foo();\r\n    wait (field == 0);\r\n  endtask\r\nendclass\r\n\r\nmodule test_virtual_task;\r\n  initial begin\r\n    derived derived_inst = new;\r\n    derived_inst.field = 1;\r\n    derived_inst.foo();\r\n  end\r\nendmodule\r\n\r\n```\r\n\r\nWhen built with (`class_bug.sv` contains the above example)\r\n\r\n```bash\r\nverilator --binary class_bug.sv\r\n```\r\nResulting in the following compile error:\r\n\r\n```\r\nIn file included from Vclass_bug__Syms.h:20,\r\n                 from Vclass_bug.cpp:5,\r\n                 from Vclass_bug__ALL.cpp:3:\r\nVclass_bug___024unit__03a__03aderived__Vclpkg.h:39:25: error: conflicting return type specified for ‘virtual VlCoroutine Vclass_bug___024unit__03a__03aderived::__VnoInFunc_foo(Vclass_bug__Syms*)’\r\n   39 |     virtual VlCoroutine __VnoInFunc_foo(Vclass_bug__Syms* __restrict vlSymsp);\r\n      |                         ^~~~~~~~~~~~~~~\r\nIn file included from Vclass_bug___024unit__03a__03aderived__Vclpkg.h:28,\r\n                 from Vclass_bug__Syms.h:20,\r\n                 from Vclass_bug.cpp:5,\r\n                 from Vclass_bug__ALL.cpp:3:\r\nVclass_bug_test_pkg__03a__03abase__Vclpkg.h:33:18: note: overridden function is ‘virtual void Vclass_bug_test_pkg__03a__03abase::__VnoInFunc_foo(Vclass_bug__Syms*)’\r\n   33 |     virtual void __VnoInFunc_foo(Vclass_bug__Syms* __restrict vlSymsp);\r\n      |                  ^~~~~~~~~~~~~~~\r\nmake: *** [/tools/verilator/latest/share/verilator/include/verilated.mk:239: Vclass_bug__ALL.o] Error 1\r\n```\r\n\r\nThis has been seen on the latest master (`Verilator 5.009 devel rev v5.008-130-g23f90b13f`)\r\n\r\nThe problem goes away when `base` and `derived` are in the same package.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-14",
+  "closed_at": "2023-05-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

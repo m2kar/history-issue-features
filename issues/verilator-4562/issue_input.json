@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4562,
+  "issue_url": "https://github.com/verilator/verilator/issues/4562",
+  "title": "Support library (e.g. UVM) includes",
+  "body": "This describes a proposal for handling standard libraries (e.g. UVM) as an extension of the discussion in #4501.  Comments wanted.\r\n\r\nWhile not strictly required, the expectation is to fix this before #1538.\r\n\r\nThe proposal is to add a `\"-l <library_name>\"` Verilator option.  This will find and parse library_name.v before any design files.\r\n\r\nInitially _library_name_ is uvm-2017 (corresponding to https://github.com/chipsalliance/uvm-verilator)\r\n\r\nAt this time I plan to search for _library_name.v_ only in (typically) VERILATOR_ROOT/include/vlib, that is a \"vlib\" directory underneath where verilator_std.sv is. In the future perhaps we add \"-L _library_search_directory_\" for alternative locations (to match GCC -L).\r\n\r\nTo speed up parsing, and avoid adding 200 files per library, I propose that the build process make a single file, e.g. uvm-2017.v, which will contain:\r\n\r\n1. Warning disables per #4501.\r\n2. Concatenated files from https://github.com/chipsalliance/uvm-verilator\r\n3. Perhaps in future additional `verilator_configure directives for DPI or other switches needed for the library to work.\r\n\r\nOne idea that I'm not sure I like is if an error in the library would print as a reference to the library and file that was concatenated inside the library. Then it would show the real filename, e.g.\r\n\r\n```\r\n%Error-FOOBAR: -luvm-2017/uvm/src/base/uvm_event.svh:7479:25: The message\r\n 7479 |                 m_event = e;\r\n      |                         ^\r\n                    /{the_path_to}/uvm-2017.v:7479:  ... note: In file included from 'uvm-2017.v'\r\n```\r\n\r\nAs opposed to\r\n\r\n```\r\n%Error-FOOBAR: /{the_path_to}/uvm-2017.v:7479:25: The message\r\n```\r\n\r\nThe latter is better in that the user can then more easily find the file, but it looses information about what original upstream module was involved.  Presumably errors in the library itself is rare, but misuse of a library function will cross reference to the library source, so my thinking is the \"correct\" filename is best for the user's editor to be able to see the definition.\r\n\r\nAnother alternative is to have a new idea of \"Originally from library\" or something (this would be Verilator specific as outside IEEE `line)\r\n\r\n```\r\n%Error-FOOBAR: /{the_path_to}/uvm-2017.v:7479:25: The message\r\n 7479 |                 m_event = e;\r\n      |                         ^\r\n                    -luvm-2017/uvm/src/base/uvm_event.svh:7479:25: ... note: Originally from library `-luvm-2017`\r\n```\r\n",
+  "labels": [
+    "area: usability",
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-14",
+  "closed_at": "2024-11-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

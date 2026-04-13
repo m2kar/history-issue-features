@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5116,
+  "issue_url": "https://github.com/verilator/verilator/issues/5116",
+  "title": "Fix virtual interface \"combinational region did not converge\" error",
+  "body": "Under some conditions I'm not quite sure about (but most likely involving interfaces and a class that drives the interface), a runtime error is erroneously triggered.\r\n\r\nTo reproduce, compile the following code with ``verilator --exe --build -j `nproc` --binary bug_ico.sv -o bug_ico`` (using the git master version):\r\n\r\n```systemverilog\r\ninterface INTF ();\r\n    logic field1;\r\n    logic field2;\r\nendinterface\r\n\r\nclass intf_driver_class_unused;\r\n    virtual INTF intf;\r\n\r\n    function new(virtual INTF intf);\r\n        this.intf = intf;\r\n    endfunction\r\n\r\n    function void unused_func1();\r\n        intf.field1 = '0;\r\n    endfunction\r\n\r\n    function void unused_func2();\r\n        intf.field2 = '0;\r\n    endfunction\r\nendclass\r\n\r\nmodule idma_backend_top ();\r\n    typedef struct packed {     \r\n        logic field1;\r\n        logic x;                                            \r\n    } s1;\r\n\r\n    typedef struct packed {                               \r\n        logic field2;\r\n        logic y;\r\n    } s2;\r\n\r\n    // Bug happens with and without initializations\r\n    s1 struct1 = '{1'b0, 1'b0};\r\n    s2 struct2 = '{1'b0, 1'b0};\r\n\r\n    assign intf.field1    = struct1.field1;\r\n    assign struct2.field2 = intf.field2;\r\n    assign struct1.x      = struct2.y;\r\n\r\n    INTF intf ();\r\n\r\n    // Doesn't change the outcome\r\n    // initial begin\r\n    //     intf.field1 = '0;\r\n    //     intf.field2 = '0;\r\n    // end\r\nendmodule\r\n```\r\n\r\n(Note that the class is not even used - in the original project where this occurred it did, but while compressing it (~5k lines post-preprocessing :-( ) down to this reproducible example I found out that the class didn't even need instantiating)\r\n\r\nThe following error will show:\r\n`%Error: bug_ico.sv:22: Input combinational region did not converge.`\r\n\r\nAdding `-CFLAGS -DVL_DEBUG=1` additionally prints out this line before the error message:\r\n`-V{t1,1}         'ico' region trigger index 1 is active: Internal 'ico' trigger - virtual interface: INTF`\r\n\r\nI would appreciate any insight into what exactly is going wrong here, happy to look into it as well at some point too though. I have a feeling it has something to do with some update trigger maybe being globally on the interface rather than the individual wires of the interface, or something like that. Though I have no idea why it needs that extra driver class.",
+  "labels": [
+    "area: scheduling",
+    "status: assigned"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-11",
+  "closed_at": "2026-04-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4416,
+  "issue_url": "https://github.com/verilator/verilator/issues/4416",
+  "title": "Multiple definition error after update to 5.014",
+  "body": "I have the following compiling error with 5.014:\r\n```\r\n/usr/bin/ld: CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__1__Slow.cpp.o: in function `aes_core___024root___eval_static__TOP__0(aes_core___024roo\r\nt*)':\r\naes_core___024root__DepSet_h4dea7a1b__1__Slow.cpp:(.text+0x25): multiple definition of `aes_core___024root___eval_static__TOP__0(aes_core___024root*)'; CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.di\r\nr/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp.o:aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp:(.text+0x8f80): first defined here\r\n/usr/bin/ld: CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__2__Slow.cpp.o: in function `aes_core___024root___eval_static__TOP__0(aes_core___024roo\r\nt*)':\r\naes_core___024root__DepSet_h4dea7a1b__2__Slow.cpp:(.text+0x0): multiple definition of `aes_core___024root___eval_static__TOP__0(aes_core___024root*)'; CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir\r\n/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp.o:aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp:(.text+0x8f80): first defined here\r\n/usr/bin/ld: CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__3__Slow.cpp.o: in function `aes_core___024root___eval_static__TOP__0(aes_core___024roo\r\nt*)':\r\naes_core___024root__DepSet_h4dea7a1b__3__Slow.cpp:(.text+0x0): multiple definition of `aes_core___024root___eval_static__TOP__0(aes_core___024root*)'; CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir\r\n/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp.o:aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp:(.text+0x8f80): first defined here\r\n/usr/bin/ld: CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__4__Slow.cpp.o: in function `aes_core___024root___eval_static__TOP__0(aes_core___024roo\r\nt*)':\r\naes_core___024root__DepSet_h4dea7a1b__4__Slow.cpp:(.text+0x0): multiple definition of `aes_core___024root___eval_static__TOP__0(aes_core___024root*)'; CMakeFiles/secworks-aes.dir/CMakeFiles/secworks-aes.dir\r\n/aes_core.dir/aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp.o:aes_core___024root__DepSet_h4dea7a1b__0__Slow.cpp:(.text+0x8f80): first defined here\r\n```\r\n\r\nAnd the same code compiles fine in 5.012.\r\n\r\nLooks it caused by code like this:\r\n```verilog\r\n`ifdef ASSIGNS\r\n    reg Z_f /* verilator public_flat_rw */ = 1'b0;\r\n    reg Z_v /* verilator public_flat_rw */ = 1'b0;\r\n    assign Z = Z_f ? Z_v : (A ^ B);\r\n`else\r\n    assign Z = (A ^ B);\r\n`endif\r\n```\r\nIt works without `ASSIGNS`, but causes the error above if its defined.\r\n\r\nHere is the minimal reproducible example: [example.zip](https://github.com/verilator/verilator/files/12321501/example.zip)\r\nThe example using [freepdk](https://github.com/mflowgen/freepdk-45nm/blob/d3be42a72ca6eabff54a4f3be50c16613f69f1b6/stdcells.lib) library converted to verilog and netlist generated from https://github.com/secworks/aes.\r\nIt will report the mentioned error if compiled with `-DASSIGNS` passed to `VERILATOR_ARGS`. And compiles fine without the define.",
+  "labels": [
+    "resolution: fixed",
+    "area: scheduling"
+  ],
+  "state": "closed",
+  "created_at": "2023-08-11",
+  "closed_at": "2023-08-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

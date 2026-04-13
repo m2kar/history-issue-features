@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4952,
+  "issue_url": "https://github.com/llvm/circt/pull/4952",
+  "title": "[FIRRTL] Add MemOp prefix attr, remove groupID attr",
+  "body": "Add an optional `prefix` string attribute to FIRRTL's `MemOp` that captures a string to be prepended to the name of any module generated for that memory. Remove the `groupID` attribute which was solving a similar issue. The `PrefixModules` now adds this `prefix` attribute to memories.\r\n\r\nIn a nutshell, `LowerToHW` takes memory ops and creates additional modules for them. We want those modules to carry the same prefices as the other modules in the hierarchy. In its current implementation, `LowerToHW` uses the `name` attribute of the memory to pick the module name. This is very brittle, since `LowerToHW` also only generates one module per memory configuration, and the name does not factor into that. As a result, memories in differently-prefixed modules may collapse to the same module, and that module's name would accidentally carry one or the other prefix, depending on which of the memory names was picked. The `groupID` attribute on `MemOp` was used to work around this by having `PrefixModules` assign different group IDs to memories in different prefix domains. Different IDs prevents `LowerToHW` from collapsing the memories to a single module. As a result, we would always get a distinct module for each prefix domain, but the way we get there is somewhat obscure. This commit makes the memories carry an explicit, optional module name prefix, and `LowerToHW` properly honors the prefix when generating the modules.\r\n\r\nThis is a preparatory change for a future `seq.firmem` op to be emitted from `LowerToHW`.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-04-06",
+  "closed_at": "2023-04-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

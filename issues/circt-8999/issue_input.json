@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8999,
+  "issue_url": "https://github.com/llvm/circt/pull/8999",
+  "title": "[LTL][ImportVerilog] Add support for $rose, $stable, $fell",
+  "body": "This commit adds support for lowering `$rose` `$stable` and `$fell` from assertion contexts into LTL.\r\nTo this end, this PR adds a new operation for look-back semantics, `ltl.PastOp`.\r\n\r\n* **New op**\r\n  * `ltl.past`: takes an integer and a delay, returning the sequence observed `$delay` cycles earlier.\r\n* **Assertion system call lowering**\r\n  * Added `Context::convertAssertionSystemCallArity1` to map single-argument system calls into LTL constructs:\r\n    * `$rose(x)` → `x ∧ ¬past(x,1)`\r\n    * `$fell(x)` → `¬x ∧ past(x,1)`\r\n    * `$stable(x)` → `(x ∧ past(x,1)) ∨ (¬x ∧ ¬past(x,1))`\r\n  * Integrated into `convertAssertionCallExpression` to dispatch on `$rose/$fell/$stable` from the AST.\r\n* **Conversion plumbing**\r\n  * Added entry point `convertAssertionCallExpression` to `Context`.\r\n  * Adjusted `Expressions.cpp` visitor to recognize these system calls and redirect them to the new assertion conversion path.\r\n* **Tests**\r\n  * Extended `builtins.sv` with assertions using `$rose`, `$fell`, `$stable`.\r\n  * CHECK lines verify correct lowering into `ltl.past`, `ltl.not`, `ltl.and`, `ltl.or` sequences.\r\n",
+  "labels": [
+    "Moore",
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-21",
+  "closed_at": "2025-09-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

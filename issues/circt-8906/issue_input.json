@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8906,
+  "issue_url": "https://github.com/llvm/circt/issues/8906",
+  "title": "[FIRRTL] Fix port insertion/deletion involving domain info",
+  "body": "#8843 only mostly works for doing correct insertion of ports with domain info. There are known and unknown bugs that need to be fixed.\n\nConsider:\n\n``` firrtl\nFIRRTL version 5.1.0\ncircuit Domains:\n  domain ClockDomain:\n\n  public module Domains:\n    input a : { b: String }\n    input a_b: Domain of ClockDomain\n    output b: UInt<5> domains [a_b]\n    invalidate b\n```\n\nThis fails after `LowerOpenAggs`:\n\n```\nFoo.fir:5:10: error: 'firrtl.module' op domain information for non-domain port 'b' must be an 'ArrayAttr'\n  public module Domains:\n         ^\nFoo.fir:5:10: note: see current operation: \n\"firrtl.module\"() <{annotations = [], convention = #firrtl<convention scalarized>, domainInfo = [[], @ClockDomain, 0 : ui32], layers = [], portAnnotations = [], portDirections = array<i1: false, false, true>, portLocations = [loc(\"Foo.fir\":6:11), loc(\"Foo.fir\":7:11), loc(\"Foo.fir\":8:12)], portNames = [\"a_b\", \"a_b\", \"b\"], portSymbols = [], portTypes = [!firrtl.string, !firrtl.domain, !firrtl.uint<5>], sym_name = \"Domains\"}> ({\n^bb0(%arg0: !firrtl.string, %arg1: !firrtl.domain, %arg2: !firrtl.uint<5>):\n  %0 = \"firrtl.invalidvalue\"() : () -> !firrtl.uint<5>\n  \"firrtl.matchingconnect\"(%arg2, %0) : (!firrtl.uint<5>, !firrtl.uint<5>) -> ()\n}) : () -> ()\n```\n\nThe domain info has a bare `IntegerAttr` when it should be an `ArrayAttr<IntegerAttr>` for the third port.\n\n- h/t @dtzSiFive for finding this.\n- h/t @uenoku for identifying other bugs here (that are not included in the issue).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-30",
+  "closed_at": "2025-09-02",
+  "code_blocks": [
+    "\nThis fails after `LowerOpenAggs`:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

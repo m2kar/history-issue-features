@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 6820,
+  "issue_url": "https://github.com/llvm/circt/issues/6820",
+  "title": "[FIRRTL][CheckCombLoops] Missing RWProbeOp support, crashes",
+  "body": "Example FIRRTL:\r\n```\r\nFIRRTL version 3.3.0\r\ncircuit Bar :\r\n  module Foo :\r\n    input clock : Clock\r\n    output clockProbe_bore : RWProbe<Clock>\r\n\r\n    define clockProbe_bore = rwprobe(clock)\r\n\r\n  module Bar :\r\n    input clock : Clock\r\n    output clockProbe : RWProbe<Clock>\r\n\r\n    inst foo of Foo\r\n    connect foo.clock, clock\r\n    define clockProbe = foo.clockProbe_bore\r\n\r\n    force(clock, UInt<1>(1), clockProbe, asClock(UInt<1>(0)))\r\n```\r\n\r\n`--parse-only`:\r\n```\r\nfirrtl.circuit \"Bar\" {\r\n  firrtl.module private @Foo(in %clock: !firrtl.clock sym @sym, out %clockProbe_bore: !firrtl.rwprobe<clock>) {\r\n    %0 = firrtl.ref.rwprobe <@Foo::@sym> : !firrtl.rwprobe<clock>\r\n    firrtl.ref.define %clockProbe_bore, %0 : !firrtl.rwprobe<clock>\r\n  }\r\n  firrtl.module @Bar(in %clock: !firrtl.clock, out %clockProbe: !firrtl.rwprobe<clock>) attributes {convention = #firrtl<convention scalarized>} {\r\n    %foo_clock, %foo_clockProbe_bore = firrtl.instance foo @Foo(in clock: !firrtl.clock, out clockProbe_bore: !firrtl.rwprobe<clock>)\r\n    firrtl.strictconnect %foo_clock, %clock : !firrtl.clock\r\n    firrtl.ref.define %clockProbe, %foo_clockProbe_bore : !firrtl.rwprobe<clock>\r\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\r\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\r\n    %0 = firrtl.asClock %c0_ui1 : (!firrtl.uint<1>) -> !firrtl.clock\r\n    firrtl.ref.force %clock, %c1_ui1, %clockProbe, %0 : !firrtl.clock, !firrtl.uint<1>, !firrtl.clock\r\n  }\r\n}\r\n```\r\n\r\nCrashes (or assert failure) when trying to resolve the force.\r\n\r\nFlagged in review: https://github.com/llvm/circt/pull/5647#discussion_r1362126296 .",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2024-03-13",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

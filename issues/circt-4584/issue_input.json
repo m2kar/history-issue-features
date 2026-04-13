@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4584,
+  "issue_url": "https://github.com/llvm/circt/issues/4584",
+  "title": "[FIRRTL] Raw Param Difference vs. SFC",
+  "body": "Currently, CIRCT will squash \"raw\" FIRRTL external module parameters into string parameters. This produces a difference with the SFC. Consider:\r\n\r\n```\r\ncircuit Foo:\r\n  extmodule Bar:\r\n    output a: UInt<1>\r\n    parameter foo = 'hello'\r\n    parameter bar = \"world\"\r\n\r\n  module Foo:\r\n    output a: UInt<1>\r\n\r\n    inst bar of Bar\r\n    a <= bar.a\r\n```\r\n\r\nThis compiles with CIRCT to:\r\n\r\n```verilog\r\nmodule Foo(\r\n  output a);\r\n\r\n  Bar #(\r\n    .foo(\"hello\"),\r\n    .bar(\"world\")\r\n  ) bar (\r\n    .a (a)\r\n  );\r\nendmodule\r\n```\r\n\r\nWith SFC, this produces:\r\n\r\n```verilog\r\nmodule Foo(\r\n  output  a\r\n);\r\n  wire  bar_a;\r\n  Bar #(.foo(hello), .bar(\"world\")) bar (\r\n    .a(bar_a)\r\n  );\r\n  assign a = bar_a;\r\nendmodule\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-24",
+  "closed_at": "2023-08-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

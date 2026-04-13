@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4355,
+  "issue_url": "https://github.com/verilator/verilator/issues/4355",
+  "title": "Unlinked task error from broken context in V3Width",
+  "body": "[This](https://github.com/verilator/verilator/files/12014691/t_class_dep.zip) test fails with:\r\n```\r\n%Error: Internal Error: t/t_class_dep.v:31:9: ../V3Task.cpp:206: Unlinked task\r\n                                            : ... In instance $unit.B\r\n-node: TASKREF 0xfa0b00 <e995> {e31aj} @dt=0xf87830@(w0)void  srandom -> UNLINKED\r\n   31 |    this.srandom(0);\r\n      |         ^~~~~~~\r\n```\r\n\r\nThis is because V3Width doesn't always visit nodes in hierarchical order. For instance, FTaskRef visitor [visits also the referred task](https://github.com/verilator/verilator/blob/23fe5c1b9386228afe80a42b95e91cde8462d1c4/src/V3Width.cpp#L5639), which can be defined in a different class or module. When such task is visited, the context variables like m_pkgp or m_classp point to wrong objects.\r\n\r\nAs a result, if the task contains a call to `this.srandom()` the definition of `srandom()` is inserted into a wrong class, which later causes linking problems.\r\n\r\nSimilar problem occurs [here](https://github.com/verilator/verilator/files/12014797/t_std_process_self.zip) with two different possible outcomes:\r\n1. Routines from std are not marked as isFromStd [here](https://github.com/verilator/verilator/blob/23fe5c1b9386228afe80a42b95e91cde8462d1c4/src/V3Width.cpp#L5318), because of wrong m_pkgp value, and so things like usage of process::self is not detected,\r\n2. Verilator crashes [here](https://github.com/verilator/verilator/blob/23fe5c1b9386228afe80a42b95e91cde8462d1c4/src/V3Width.cpp#L2639) as if the node was already widthed out of order.\r\n\r\nTested on the newest commit (https://github.com/verilator/verilator/commit/23fe5c1b9386228afe80a42b95e91cde8462d1c4) on Fedora with kernel 6.3.11.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2023-07-11",
+  "closed_at": "2023-11-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

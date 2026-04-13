@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 4038,
+  "issue_url": "https://github.com/verilator/verilator/issues/4038",
+  "title": "SVA: Controlling vacuous success",
+  "body": "\r\nWhat would you like added/supported?\r\n> SVA pass action block gets triggered even on vacuous success. While that's per LRM, it is one of the most annoying things and most commercial simulators (if not all) do \"$assertvacuousoff\" internally today (Wasn't the case in the early days of SVA). It basically makes the pass-action blocks useless without such \"feature\". \r\n\r\nConsider:\r\n```verilog\r\n\r\n    a1 : assert property (\r\n    @(posedge clk)\r\n    a |=> !a)\r\n    begin\r\n     $info (\"Pass\");\r\n    end \r\n    else\r\n      $error(\"Failed\");\r\n```\r\nIn all cycles when \"a\" is 0, the SVA label a1 passes vacuously. This leads to following print:\r\n\r\n\r\n```log\r\n[5.000 ns] -Info: test.sv:12: in TOP.m.a1: Pass\r\n[10.000 ns] -Info: test.sv:27: in TOP.m: a: 1\r\n 15.000 ns a is 1\r\n[15.000 ns] -Info: test.sv:12: in TOP.m.a1: Pass\r\n 25.000 ns a is 1\r\n[25.000 ns] -Info: test.sv:15: in TOP.m.a1: Error\r\n[30.000 ns] -Info: test.sv:31: in TOP.m: a: 0\r\n test.sv:33: Verilog $finish\r\n```\r\n\r\nThe above is from a controlled test to minimize the pass-action prints. In the above log, the first print Pass - is vacuous, second one is real success.\r\n\r\nNow, as a typical user, I want the real success to be printed, the vacuous ones to be turned-off. SVA has $assertvacuousoff/on, but that's not yet supported in Verilator. Also, even if that works, user needs to do it - instead users expect this from the tool these days as the default behaviour. Is this not too complex to add here please?\r\n\r\nMay we assist you in trying to fix this in Verilator yourself?\r\n\r\n> Yes, will attempt. \r\n",
+  "labels": [
+    "area: assertions",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2023-03-17",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

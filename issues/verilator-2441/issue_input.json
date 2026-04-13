@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2441,
+  "issue_url": "https://github.com/verilator/verilator/issues/2441",
+  "title": "WIDTH: propagation through arithmetic",
+  "body": "This is the first one towards #2433 \r\nI have seen this quite often and it is kind of common with parameters:\r\n```\r\nmodule t;\r\n\r\n  localparam logic[3:0] A = 4'h0;\r\n  localparam B = 46 + A;\r\n  localparam logic[12:0] C = 46 + A;\r\n\r\nendmodule\r\n```\r\nLeads to:\r\n```\r\n%Warning-WIDTH: t/t_issue-2433.v:4:21: Operator ADD expects 32 or 6 bits on the RHS, but RHS's VARREF 'A' generates 4 bits.\r\n                                     : ... In instance t\r\n    4 |   localparam B = 46 + A;\r\n      |                     ^\r\n                ... Use \"/* verilator lint_off WIDTH */\" and lint_on around source to disable this message.\r\n%Warning-WIDTH: t/t_issue-2433.v:5:33: Operator ADD expects 32 or 13 bits on the RHS, but RHS's VARREF 'A' generates 4 bits.\r\n                                     : ... In instance t\r\n    5 |   localparam logic[12:0] C = 46 + A;\r\n      |                                 ^\r\n```\r\nFor line 4:\r\n - (1800-2017 11.6.1) size of the add is max(size(46)=6, size(A)=4)=6\r\n - (1800-2017 11.8.2) propagate back size 6 to 46 and A.\r\n - (1800-2017 11.8.3) RHS=6, LHS/context=32 -> RHS=32\r\n\r\nI looked at `V3Width` before when I tried to solve #2070. It seems kind of in the same area (up- and down-propagating). It uses the min/max sizes (thats where the 32 comes from) and I believe there is an issue when back-propagating from assignment to the ADD.\r\nFor line 5 it should be the same, but only with context=13->RHS=13.\r\nEither way, my understanding from the spec is that both statements are actually okay, or am I missing something?\r\nThis removes the warning by the way:\r\n```\r\nmodule t;\r\n\r\n  localparam logic[3:0] A = 4'h0;\r\n  localparam B = 46 + 32'(A);\r\n  localparam logic[12:0] C = 46 + 13'(A);\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-20",
+  "closed_at": "2023-08-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

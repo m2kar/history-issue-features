@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 834,
+  "issue_url": "https://github.com/verilator/verilator/issues/834",
+  "title": "SIGSEGV writing to VerilatedVcd::m_wrBufp in 3.864",
+  "body": "---\n\n\nAuthor Name: **Geoff Barrett**\nOriginal Redmine Issue: 834 from https://www.veripool.org\nOriginal Date: 2014-10-31\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nSymptoms\r\n--------\r\n\r\nSeveral of our tests fail using the verilated component when writing out data to the trace file:\r\n\r\n==2893== Process terminating with default action of signal 11 (SIGSEGV): dumping core ==2893==  General Protection Fault\r\n==2893==    at 0x7EB1A7C: Vfpv8_top_m::traceChgThis__204(Vfpv8_top_m__Syms*, VerilatedVcd*, unsigned int) (Vfpv8_top_m__Trace__15.cpp:121)\r\n==2893==    by 0x7D5C965: Vfpv8_top_m::traceChgThis(Vfpv8_top_m__Syms*, VerilatedVcd*, unsigned int) (Vfpv8_top_m__Trace.cpp:693)\r\n==2893==    by 0x5A3C6A0: VerilatedVcd::dump(unsigned long) (verilated_vcd_c.cpp:581)\r\n...\r\n==2893==    by 0x423494: main (run.c:328)\r\n\r\nDiagnosis\r\n---------\r\n\r\nInvestigating this with valgrind suggests the verilator is writing past the end of its tracing output buffer m_wrBufP. There are several messages like this:\r\n\r\n==2893== Invalid write of size 1\r\n==2893==    at 0x7D5CCD0: VerilatedVcd::fullArray(unsigned int, unsigned int const*, int) (verilated_vcd_c.h:236)\r\n==2893==    by 0x7E93E50: Vfpv8_top_m::traceChgThis__202(Vfpv8_top_m__Syms*, VerilatedVcd*, unsigned int) (Vfpv8_top_m__Trace__14.cpp:388)\r\n==2893==    by 0x7D5C946: Vfpv8_top_m::traceChgThis(Vfpv8_top_m__Syms*, VerilatedVcd*, unsigned int) (Vfpv8_top_m__Trace.cpp:688)\r\n==2893==    by 0x5A3C6A0: VerilatedVcd::dump(unsigned long) (verilated_vcd_c.cpp:581)\r\n...\r\n==2893==    by 0x423494: main (run.c:328)\r\n\r\nThe VerilatedVcd tracing methods all assume that on entry there will be enough space left in the output buffer to write their content. Before returning to their caller, they call bufferCheck() to ensure there is 16K of buffer left for next time (flushing the buffer if there is not).\r\n\r\nThe problem arises when a method needs to write out more than 16K of data. The VerilatedVcd::fullArray method writes out each of its array elements but doesn't check between elements that there is room enough for the next one, only at the end. \r\n\r\nWorkaround\r\n----------\r\n\r\nIf I modify the following methods in include/verilated_vcd_c.h, increasing the insert size and also allowing a larger buffer (but this is less important):\r\n\r\n90,91c90,91\r\n<     inline static size_t bufferSize() { return 256*1024; }  // See below for slack calculation\r\n<     inline static size_t bufferInsertSize() { return 16*1024; }\r\n---\r\n>     inline static size_t bufferSize() { return 1024*1024; }  // See below for slack calculation\r\n>     inline static size_t bufferInsertSize() { return 160*1024; }\r\n\r\nand rebuild the verilated component, the failing cases all pass and the valgrind messages about the trace buffer disappear.\r\n\r\nNB: we have some very large packed structures in our design.\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2014-10-31",
+  "closed_at": "2014-11-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

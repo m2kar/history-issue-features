@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2857,
+  "issue_url": "https://github.com/llvm/circt/issues/2857",
+  "title": "[FIRRTL][InferResets] Incorrect field ID with zero length vectors",
+  "body": "InferResets uses `fieldRef`s to track specific reset element types in aggregates. There is a mismatch in that `fieldRef`s were not designed to track specific elements types in an aggregate type, but values of an aggregate value.  This is evident when looking at how InferRests uses fieldRefs for vectors: it references the first element of the array to represent the element type.  This is problematic when there is a bundle with a 0 length vector, and the `fieldRef` which is meant to target the element type of the vector ends up targeting the bundle element type after the vector:\r\n\r\n```scala\r\ncircuit Foo:\r\n  module Foo :\r\n    output out : { resets : Reset[0], flip data : UInt<3> }\r\n    out.resets is invalid\r\n```\r\n\r\n```\r\nreset.fir:4:16: error: 'firrtl.strictconnect' op requires all operands to have the same type\r\n    out.resets is invalid\r\n               ^\r\nreset.fir:4:16: note: see current operation: \"firrtl.strictconnect\"(%0, %1) : (!firrtl.vector<reset, 0>, !firrtl.vector<uint<1>, 0>) -> ()\r\n// -----// IR Dump After InferResets Failed //----- //\r\n\"firrtl.circuit\"() ({\r\n  \"firrtl.module\"() ({\r\n  ^bb0(%arg0: !firrtl.bundle<resets: vector<reset, 0>, data flip: uint<1>>):\r\n    %0 = \"firrtl.subfield\"(%arg0) {fieldIndex = 0 : i32} : (!firrtl.bundle<resets: vector<reset, 0>, data flip: uint<1>>) -> !firrtl.vector<reset, 0>\r\n    %1 = \"firrtl.invalidvalue\"() : () -> !firrtl.vector<uint<1>, 0>\r\n    \"firrtl.strictconnect\"(%0, %1) : (!firrtl.vector<reset, 0>, !firrtl.vector<uint<1>, 0>) -> ()\r\n  }) {annotations = [], portAnnotations = [], portDirections = true, portNames = [\"out\"], portSyms = [], portTypes = [!firrtl.bundle<resets: vector<reset, 0>, data flip: uint<1>>], sym_name = \"Foo\"} : () -> ()\r\n}) {annotations = [], name = \"Foo\"} : () -> ()\r\n```\r\n\r\nIn addition to failing to update the type of `resets`, causing a `firrtl.strictconnect` verifier error, it changes the type of the `data` field from `uint<3>` to `uint<1>`.\r\n\r\nHopefully this shows the numbering difference for the following bundle type: `out: { resets : Reset[0], flip data : UInt<3> }`\r\nField based numbering:\r\n- 0: `out`\r\n- 1: `out.resets`\r\n- 2: `out.data`\r\n\r\nType based numbering:\r\n- 0: `{ resets : Reset[0], flip data : UInt<3> }`\r\n- 1: `Reset[0]`\r\n- 2: `Reset`\r\n- 3: `UInt<3>`\r\n\r\nI think the way to solve this is to stop using the generic `fieldRef` utility and reimplement numbering scheme specifically to work with types.\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-07",
+  "closed_at": "2022-04-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

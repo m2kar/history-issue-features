@@ -1,0 +1,24 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2036,
+  "issue_url": "https://github.com/verilator/verilator/issues/2036",
+  "title": "Question: use enum from a sv module in c++ testbench using /*verilator_public*/",
+  "body": "---\n\n\nAuthor Name: **toby matthews**\nOriginal Redmine Message: 3021 from https://www.veripool.org\n\n\n\n---\n\nHello all,\n\nI would like to get some help to use typedef enums from a module. I found this: https://www.veripool.org/boards/2/topics/2064-Verilator-Using-enumerated-values- but there is no explanation on how to *actually* do it.\n\nin my file ram.sv i have these two lines:\n```<code>\n\ttypedef enum logic [2:0] {load_W, load_H, load_HU, load_B, load_BU } ram_sel_load_t /*verilator public*/;\n\ttypedef enum logic [1:0] {store_W,store_H, store_B } ram_sel_store_t /*verilator public*/;\n</code>\n```\n\nafter verilating, i get a file in the objdir that contains the enums - \"Vram___024unit.h\" of which the contents are\n```<code class=\"c\">\n...\nVL_MODULE(Vram___024unit) {\n  public:\n     \n     // TYPEDEFS\n     // That were declared public\n     enum ram_sel_load_t {\n\tload_W = 0U,\n\tload_H = 1U,\n\tload_HU = 2U,\n\tload_B = 3U,\n\tload_BU = 4U\n     };\n     \n     enum ram_sel_store_t {\n\tstore_W = 0U,\n\tstore_H = 1U,\n\tstore_B = 2U\n     };\n...\n</code>\n```\n\nbut the problem is that i have no idea how to use the enum values without including this \"Vram___024unit.h\" file to my testbench. I can do it like this:\n```<code class=\"c\">\n#include \"Vram___024unit.h\"\nint main(int argc, char** argv, char** env) {\n\t......\n        printf(\"---->%d   \\n\", Vram___024unit::ram_sel_load_t::load_HU);\n</code>\n```\n\nBut the unit file has a header that says this file is design internal, so i am not sure if this is the correct way of using it. \n\nI believe i should be able to access it from the Vram class (Vram.h) top module verilated header file which has this:\n```<code class=\"c\">\nVL_MODULE(Vram) {\n  public:\n     // CELLS\n     // Public to allow access to /*verilator_public*/ items;\n     // otherwise the application code can consider these internals.\n     Vram_ram*          \tram;\n     Vram___024unit*    \t__PVT____024unit;\n</code>\n```\n\nI cant seem to figure out how to get the enum value from the Vram top module class.\nI have tried various sort of permutations like this one below\n```<code>\nVram *TOP;\nTOP = new Vram;\nprintf(\"%d\", TOP->__PVT____024unit::ram_sel_load_t::load_HU);\n</code>\n``` (this does not work of course)\n\ncould anyone please show me the correct way of using the enum values? \n\n\n \n\n\n",
+  "labels": [
+    "resolution: answered",
+    "type: q and a"
+  ],
+  "state": "closed",
+  "created_at": "2019-07-07",
+  "closed_at": "2019-07-07",
+  "code_blocks": [
+    "\nafter verilating, i get a file in the objdir that contains the enums - \"Vram___024unit.h\" of which the contents are\n",
+    "\nbut the problem is that i have no idea how to use the enum values without including this \"Vram___024unit.h\" file to my testbench. I can do it like this:\n",
+    "\nBut the unit file has a header that says this file is design internal, so i am not sure if this is the correct way of using it. \n\nI believe i should be able to access it from the Vram class (Vram.h) top module verilated header file which has this:\n",
+    "\nI cant seem to figure out how to get the enum value from the Vram top module class.\nI have tried various sort of permutations like this one below\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

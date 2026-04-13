@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3334,
+  "issue_url": "https://github.com/verilator/verilator/issues/3334",
+  "title": "Installing Verilator configured with --enable-ccwarn breaks (some) production use cases",
+  "body": "\r\nSteps to reproduce:\r\n\r\n1. A gcc version subject to bug #69602\r\n     https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69602\r\nThis includes Debian Buster's gcc 8.3.0 and Debian Bullseye's gcc 10.2.1.\r\n\r\n2. A Verilator test bench containing C code that triggers the above bug. Commonly seen compiling networking code (on Linux) that includes the construct\r\n  `if (errno == EAGAIN || errno == EWOULDBLOCK)`\r\nIf you want a non-synthetic example, see https://github.com/BerkeleyLab/Bedrock in the badger/tests directory, where `make Vrtefi_blob` involves compiling ethernet_model.c in the Verilator context.\r\n\r\n3. Build a modern Verilator from source, install, and use it for a build of the form described above.  No problem.\r\n\r\n4. Rebuild and reinstall Verilator, this time with the --enable-ccwarn option provided to configure.  No warnings show up when compiling Verilator itself.  Good so far!  Try the above test case to exercise the resulting install.  Blam!\r\n```\r\ng++  -I. -Wall -Wextra -Wfloat-conversion -Wlogical-op -Werror -MMD -I/redacted/share/verilator/include -I/redacted/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow      -std=gnu++14 -Os -c -o ethernet_model.o ../ethernet_model.c\r\n../ethernet_model.c: In function ‘int ethernet_model(int, int, int*, int*, int)’:\r\n../ethernet_model.c:99:26: error: logical ‘and’ of equal expressions [-Werror=logical-op]\r\n    if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {\r\n        ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~\r\ncc1plus: all warnings being treated as errors\r\nmake[1]: *** [Vrtefi_blob.mk:66: ethernet_model.o] Error 1\r\nmake[1]: Leaving directory '/redacted/bedrock/badger/tests/obj_dir'\r\nmake: *** [Makefile:285: Vrtefi_blob] Error 2\r\n```\r\n\r\nFix (IMHO):  move -Wlogical-op from CFG_CXXFLAGS_WEXTRA to CFG_CXXFLAGS_SRC in configure.ac.  This doesn't change the compile options used for building verilator_bin itself: -Wlogical-op is still there if --enable-ccwarn is specified at configure-time.  But that gcc warning flag is no longer added to application build steps.  The resulting Verilator installation becomes actually useful for production!\r\n\r\nOtherwise, --enable-ccwarn should be marked as test-only, not for installation and general use.  Personally, I like the test-like-you-fly and fly-like-you-test approach to building code.  And the more checks the compiler can provide, the better. Hence the previous suggestion.\r\n",
+  "labels": [
+    "status: discussion"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-03",
+  "closed_at": "2022-03-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

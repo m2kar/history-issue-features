@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3210,
+  "issue_url": "https://github.com/verilator/verilator/issues/3210",
+  "title": "Set the L2-name scope from the C++ instantiation",
+  "body": "I have a module `mod` which I instantiate with the instance name `top` in a Verilog testbench module `main`.  When I display the module heirarchy/scope with `%m`, the output I expect from Verilog simulators is `main.top`.  And if I display the hierarchy in a submodule instance `foo`, then I expect `main.top.foo`.  (And similarly for the hierarchy in generated VCD files.)\r\n\r\nI am Verilating module `mod` and instantiating it in a C++ testbench, and I'd like for the model to behave as if it has the same instantiated hierarchy as the Verilog testbench.  I notice that the constructor for `VerilatedModule` takes an argument, which seems to be for specifying a scope.  If I omit the argument:\r\n```\r\nVmod* TOP = new Vmod;\r\n```\r\nthen I see output like `TOP.mod.foo` from `%m`.  If I provide an argument, it seems to only be providing the scope of the parent module, because this:\r\n```\r\nVmod* TOP = new Vmod (\"main\";\r\n```\r\nleads to output like `main.mod.foo`.\r\n\r\nI notice that there is a command-line flag `-l2-name` which can set the instance name.  When I provide `-l2-name top` and provide `\"main\"` as the constructor argument, then I get the hierarchy that I want: `main.top.foo`.\r\n\r\nIs this the only way to get the hierarchy/scope that I want?  Is there a way to do this where the C++ code specifies the name that it wants to use for the instantiation?  The same module can be instantiated in lots of different scopes, which should be allowed to provide different instantiation names.  It seems like Verilated modules hardcode the name of their instance, requiring that name to always be used.  For example, I see the following in the generated code:\r\n```\r\nVmod__Syms.cpp:    __Vscope_mod__fifo.configure(this, name(), \"mod.foo\", \"fifo\", -12, VerilatedScope::SCOPE_OTHER);\r\n...\r\nVmod__Trace__Slow.cpp:        tracep->declBit(c+26,\"mod foo CLK\", false,-1);\r\n```\r\n",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-18",
+  "closed_at": "2025-09-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

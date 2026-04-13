@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3562,
+  "issue_url": "https://github.com/verilator/verilator/issues/3562",
+  "title": "Optimize continuous assignment with delay `UNOPTFLAT`",
+  "body": "After #3363, we support continuous assignments like:\r\n```systemverilog\r\nassign #1 clk = ~clk;\r\n```\r\nSuch as assignment is converted into:\r\n```systemverilog\r\nalways_comb fork temp = #1 ~clk; join_none\r\nassign clk = temp;\r\n```\r\nWe disable `UNOPTFLAT` for `temp`, as otherwise Verilator complains about a cycle (even though this isn't a cycle within one time slot). We introduce `temp` so that we don't have to disable the warning for `clk`, as it could be involved in some other cycle.\r\n\r\nThis could be fixed by teaching `V3SchedAcyclic` about awaits, but that requires proper dataflow analysis to handle all the possible branching.",
+  "labels": [
+    "area: scheduling",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2022-08-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

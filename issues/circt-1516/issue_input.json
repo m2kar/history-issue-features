@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1516,
+  "issue_url": "https://github.com/llvm/circt/issues/1516",
+  "title": "[HW] Parameterized Modules, step #2: using expressions",
+  "body": "As a follow on to Issue #1489 (step 1), we need to start building the \"expression language\" for parameters (e.g. \"foo+42 * (bar&1)\".  Some basic requirements:\r\n\r\n - Parameters need to be refer to the declarations set up in step 1: #1489.\r\n - They need to be referrable from types (so we can have a bitvector whose width is \"n\").\r\n - We also have to keep parameters and values separate: parameters are a metaprogramming system, and while it is ok for the value domain to use parameters, it isn't ok for parameters to depend on values.\r\n - Parameters have a expanded/different type system (incl strings, etc) than comb logic does.\r\n\r\nBecause these have to be referenced from types, they must be attributes.  I think we should add something like the following two attributes:\r\n\r\n - `hw.param.ref \"someparam\" : whatevertype`: a reference to a named parameter in the current context.  I think that referring to them by name is fine.\r\n - `hw.param.binop \"add\" lhs, rhs : whatevertype`: we need a grammar of simple expression operators, we can learn from AffineExpr here.\r\n\r\nWe need to define what the operators are, but can start with some simple and obvious ones like add/sub/mul to get started.  We would also use IntegerAttr in the expression grammar.\r\n\r\nTo start using these, we should:\r\n\r\n1) take the recently added \"sv.localparam\" and change it (back, sorry my advice was bad in the PR review) to taking an attribute as an operand instead of taking an SSA value.  This operator because a way of forming a named parameter within a context, projecting it from the parameter domain (attributes) into the SSA value domain.\r\n\r\n2) add a new \"hw.param\" op which returns (e.g.) an integer SSA value and takes an attribute.  It is the same as `sv.localparam` but is for the \"anonymous\" usecase, where you want to just reference \"n\" on the right side of a comb.add or whatever.\r\n\r\n3) extend `hw.instance` to be able to specify parameters to parameterized modules, this is an attribute list.\r\n\r\nWe should then add ExportVerilog support for this whole stack.\r\n\r\nStep #&#x2060;3 will be to start setting up the parameterized type system.",
+  "labels": [
+    "HW"
+  ],
+  "state": "open",
+  "created_at": "2021-08-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2567,
+  "issue_url": "https://github.com/llvm/circt/issues/2567",
+  "title": "[HW][FIRRTL] Endian difference between struct and array",
+  "body": "As noted in https://github.com/llvm/circt/blob/main/docs/RationaleComb.md#bitcasts, we are using following endians for aggregate types:\r\n* Arrays: The high index of array starts at the MSB. Array's 0th element's LSB located at array LSB.\r\n* Structs: The first listed member's MSB corresponds to the struct's MSB. The last member in the list shares its LSB with the struct.\r\n\r\nFor example,\r\n```\r\n| MSB     [1]     LSB | MSB    [0]    LSB | 2 element array of 7 bit integer vectors (!hw.array<2xi7>)\r\n-------------------------------------------\r\n| MSB a LSB | MSB b[1] LSB | MSB b[0] LSB | struct (!hw.struct<a:i4, b:array<2xi5>>)\r\n-------------------------------------------  a: 4 bit integral\r\n                                             b: 2 element array of 5 bit integer vectors\r\n```\r\nI think this is following spec of struct and arrays in System Verilog directly.\r\nBut this representation is causing some weirdness especially in FIRRTL dialect. In FIRRTL dialect, \r\nfieldID is widely used as an abstraction to handle aggregates.  However, considering endians, \r\nsubindex[0] points at MSB but subaccess[0] points at LSB so we have to be very careful about using \r\nbitcasts because of opposite endian.\r\n\r\nMore specifically, for the following fir, \r\n```scala\r\ncircuit Foo:\r\n  module Foo:\r\n    input s0: UInt<1>,\r\n    input s1: UInt<1>,\r\n    output a: {e0: UInt<1>, e1: UInt<1>}\r\n    output b: UInt<1>[2]\r\n    a.e0 <= s0\r\n    a.e1 <= s1\r\n    b[0] <= s0\r\n    b[1] <= s1\r\n```\r\nThe following verilog is semantically correct output. We may want to regard  a and b same.\r\n```verilog\r\nmodule Foo(\t\r\n  input                                       s0, s1,\r\n  output struct packed {logic e0; logic e1; } a,\r\n  output [1:0]                                b);\r\n\r\n  assign a = {s0, s1};\t\r\n  assign b = {s1, s0};\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2022-02-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3445,
+  "issue_url": "https://github.com/verilator/verilator/issues/3445",
+  "title": "V3Const BitOpTree optimization is incorrect",
+  "body": "I've got 2 designs that trigger bug with BitOpTree optimization in V3Const.\r\n[test.zip](https://github.com/verilator/verilator/files/8772881/test.zip)\r\nThey are called `pack_struct_bug` and `pack_struct_2bug`.\r\n\r\nBoth of this designs use array of structs.\r\nThere is also `pack_struct_different_order` design that uses packed struct, but order of fields is different and bug is not triggered.\r\n`verilator --version : Verilator 4.223 devel rev v4.222-11-gf6035447`\r\n\r\nI'm running Debian Linux docker container for testing.\r\n\r\nMain issue here is that `ConstBitOpTreeVisitor` visitor going down expresion tree does not keep tract of previous nodes it had seen.\r\nPath like `AstAnd -> AstShiftR -> AstAnd -> AstArraySel` created fail as AstArraySel is not handled. This would make `AstArraySel` subtree as frozen node and information of `AstShiftR` before `AstArraySel` would be lost. This is a case in `pack_struct_bug`.\r\nIn `pack_starct_2bug`path is `AstAnd -> AstNot -> AstShiftR -> AstAnd -> AstArraySel`. In this case both `AstNot` and `AstShiftR` nodes are lost.\r\n\r\nI don't know best solution to this issue but I've came up with a fix. \r\nIt is rather crude as it may disable optimization in some cases that it's not needed.\r\n[BiOpFix.txt](https://github.com/verilator/verilator/files/8773009/BiOpFix.txt)\r\n\r\n[edit]\r\nI've tested how this affects speed of simulation. The way it's right now, simulation was 3 times slower.",
+  "labels": [
+    "status: ready",
+    "area: wrong runtime result"
+  ],
+  "state": "closed",
+  "created_at": "2022-05-25",
+  "closed_at": "2022-06-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

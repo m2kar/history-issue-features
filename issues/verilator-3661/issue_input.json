@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3661,
+  "issue_url": "https://github.com/verilator/verilator/pull/3661",
+  "title": "Use C++ user defined literals for typed constants",
+  "body": "I am trying to make the generated code a bit more readable (and well defined maybe).\r\n\r\nOne thing that we have tones of is casts around integer literals:\r\n`__Vdly__t__DOT__cyc = ((IData)(1U) + vlSelf->t__DOT__cyc);`\r\n\r\nAssuming that `IData` is 32-bit unsigned, `(IData)(1U)` is almost always pointless, as the type of an integer literal with suffix `U` is at least `unsigned int` (or a longer unsigned type if necessary to fit the value). I think this means that the cast is only really necessary on platforms where `unsigned int` is less than 32-bits wide, which is esoteric in itself, but more interestingly, we can use the C++ 11 user defined literal syntax to emit this instead:\r\n\r\n`__Vdly__t__DOT__cyc = (1_I + vlSelf->t__DOT__cyc);`\r\n\r\nSimilarly we can emit `1_Q` instead of `(QData)(1ULL)`, which I would argue is easier on the reader, especially if highly nested expressions where casting can add a lot of noise.\r\n\r\nThis is also somewhat safer I think, as constants now have a clear C++ type, this uncovered for example an issue of using `x = 0U` to set a `VlClassRef` to nullptr, which I had to fix up in emit at the moment (I don't think we know if an AstConst is supposed to represent a nullptr rather than an integer 0).\r\n\r\nThis also has the benefit of having to add fewer AstCCast nodes in V3Cast, and I have not noticed any detrimental effect on compilation speed of the output.\r\n\r\nDo you think this is a good thing and we should do it?\r\n\r\n---\r\n\r\nInstead of casting constants, emit them with _I or _Q suffixes, and use the user defined literal operators to create constants of type IData and QData respectively. The aim of this is to improve readability of the generated code.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-07",
+  "closed_at": "2022-10-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 1088,
+  "issue_url": "https://github.com/verilator/verilator/issues/1088",
+  "title": "Wide number with small value ",
+  "body": "---\n\n\nAuthor Name: **Mandy Xu**\nOriginal Redmine Issue: 1088 from https://www.veripool.org\n\nOriginal Assignee: Wilson Snyder (@wsnyder)\n\n---\n\nFollow up on thread: \r\nhttp://www.veripool.org/boards/3/topics/1886?r=2006#message-2006\r\n\r\nHi Wilson, thanks for the fix and sorry for bothering again -- more cases on this \"wide number with small value\"\r\n\r\nSo right now if it's a parameter/localparam [95:0], then there seems no problem, but if it's a reg, wire, or function, then we will get the same error about shifting over 32-bit number. I tried simplifying the cases and created the following small modules, test_funciton, test_reg, test_wire, and test_param -> test_param can pass. There may be other cases but these are the ones I could see verilator is complaining about right now. Test file containing these modules also attached. Again thanks so much for all the help!\r\n\r\nMandy\r\n\r\n     module test_function #()();\r\n        localparam [32:0] M = 4 ;\r\n        function [M:0] gen_matrix;\r\n            gen_matrix[0] = 1>> M;\r\n        endfunction\r\n     endmodule // test_function\r\n\r\n\r\n    module test_reg #(parameter[95:0] P = 1)(input clk);\r\n         reg [95: 0] lfsr = 0;            \r\n         always @(posedge clk) begin\r\n           // lfsr <= {^(lfsr & (1 >> P * 16)), lfsr[M-1:1]} ^ lfsr;\r\n            lfsr <= (1 >> P);\r\n         end\r\n    endmodule // test_reg\r\n\r\n      module test_wire #(parameter[95:0] P = 1)(input clk);\r\n         wire [95: 0] lfsr = 1 >> P;  \r\n      endmodule // test_wire\r\n\r\n      module test_param_pass #(parameter[95:0] P = 1)(input clk);\r\n         localparam [95: 0] lfsr = 1 >> P;  \r\n      endmodule // test_param\r\n\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2016-09-13",
+  "closed_at": "2016-11-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

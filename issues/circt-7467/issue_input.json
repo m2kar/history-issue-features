@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7467,
+  "issue_url": "https://github.com/llvm/circt/issues/7467",
+  "title": "[FIRRTL][Layers] ref.send is rejected but is always passive capture",
+  "body": "Consider:\r\n\r\n```firrtl\r\nFIRRTL version 4.0.0\r\n\r\ncircuit LayersProbe:\r\n  layer A, bind:\r\n\r\n  public module LayersProbe:\r\n    output o : { flip x : UInt<1> }\r\n    output q : Probe<{ x : UInt<1>}, A>\r\n\r\n    layerblock A :\r\n      define q = probe(o)\r\n```\r\n\r\nfirtool produces:\r\n\r\n```\r\nlayers-probe-test.fir:10:5: error: 'firrtl.layerblock' op captures an operand which is not a passive type\r\n    layerblock A :\r\n    ^\r\nlayers-probe-test.fir:10:5: note: see current operation:\r\n\"firrtl.layerblock\"() ({\r\n  %0 = \"firrtl.ref.send\"(%arg0) : (!firrtl.bundle<x flip: uint<1>>) -> !firrtl.probe<bundle<x: uint<1>>>\r\n  %1 = \"firrtl.ref.cast\"(%0) : (!firrtl.probe<bundle<x: uint<1>>>) -> !firrtl.probe<bundle<x: uint<1>>, @A>\r\n  \"firrtl.ref.define\"(%arg1, %1) : (!firrtl.probe<bundle<x: uint<1>>, @A>, !firrtl.probe<bundle<x: uint<1>>, @A>) -> ()\r\n}) {layerName = @A} : () -> ()\r\nlayers-probe-test.fir:7:12: note: operand is defined here\r\n    output o : { flip x : UInt<1> }\r\n           ^\r\nlayers-probe-test.fir:11:18: note: operand is used here\r\n      define q = probe(o)\r\n                 ^\r\n```",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-08",
+  "closed_at": "2024-08-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

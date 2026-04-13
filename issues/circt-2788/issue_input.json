@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2788,
+  "issue_url": "https://github.com/llvm/circt/issues/2788",
+  "title": "[FIRRTL] Extra wire before sensitivity list",
+  "body": "```scala\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock : Clock\r\n    input reset0 : UInt<1>\r\n    input reset1 : UInt<1>\r\n    output o : UInt<1>\r\n\r\n    node reset = asAsyncReset(or(reset0, reset1))\r\n    reg source_valid : UInt<1>, clock with :\r\n      reset => (reset, UInt<1>(\"h0\"))\r\n    source_valid <= UInt<1>(\"h1\")\r\n    o <= source_valid\r\n```\r\n\r\nThe extra wire `assign _GEN = _GEN_0;` should be removed.\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  clock, reset0, reset1,\r\n  output o);\r\n\r\n  wire _GEN;\r\n  wire reset;\r\n  reg  source_valid;\r\n\r\n  wire _GEN_0 = reset0 | reset1;\r\n  assign reset = _GEN_0;\r\n  `ifndef SYNTHESIS\r\n    `ifdef RANDOMIZE_REG_INIT\r\n      reg [31:0] _RANDOM;\r\n\r\n    `endif\r\n    initial begin\r\n      `INIT_RANDOM_PROLOG_\r\n      `ifdef RANDOMIZE_REG_INIT\r\n        _RANDOM = {`RANDOM};\r\n        source_valid = _RANDOM[0];\r\n      `endif\r\n    end // initial\r\n  `endif\r\n  assign _GEN = _GEN_0;\r\n  always @(posedge clock or posedge _GEN) begin\r\n    if (_GEN_0)\r\n      source_valid <= 1'h0;\r\n    else\r\n      source_valid <= 1'h1;\r\n  end // always @(posedge, posedge)\r\n  assign o = source_valid;\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-18",
+  "closed_at": "2022-03-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

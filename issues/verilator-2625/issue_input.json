@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2625,
+  "issue_url": "https://github.com/verilator/verilator/issues/2625",
+  "title": "Fix suppressing errors on unreachable (by parameter value) code",
+  "body": "I have some code that looks something like this:\r\n\r\n    if (AXIS_PCIE_DATA_WIDTH == 64) begin\r\n        // snip\r\n    end else begin\r\n        // snip\r\n        m_axis_cc_tdata_int[AXIS_PCIE_DATA_WIDTH-1:96] = shift_axi_rdata[AXIS_PCIE_DATA_WIDTH-1:96];\r\n    end\r\n\r\n(whole file at https://github.com/alexforencich/verilog-pcie/blob/master/rtl/pcie_us_axi_dma_rd.v)\r\n\r\nwhere `AXIS_PCIE_DATA_WIDTH` is a module parameter.  When `AXIS_PCIE_DATA_WIDTH` is set to 64, verilator reports errors:\r\n\r\n    %Error: ../../rtl/pcie_us_axi_master_rd.v:761:44: [63:96] Range extract has backward bit ordering, perhaps you wanted [96:63]\r\n                                                    : ... In instance pcie_us_axi_master.pcie_us_axi_master_rd_inst\r\n      761 |                         m_axis_cc_tdata_int[AXIS_PCIE_DATA_WIDTH-1:96] = shift_axi_rdata[AXIS_PCIE_DATA_WIDTH-1:96];\r\n          |                                            ^\r\n    %Error: ../../rtl/pcie_us_axi_master_rd.v:761:89: [63:96] Range extract has backward bit ordering, perhaps you wanted [96:63]\r\n                                                    : ... In instance pcie_us_axi_master.pcie_us_axi_master_rd_inst\r\n      761 |                         m_axis_cc_tdata_int[AXIS_PCIE_DATA_WIDTH-1:96] = shift_axi_rdata[AXIS_PCIE_DATA_WIDTH-1:96];\r\n          |   \r\n\r\nHowever, this code is unreachable with that parameter value, so this should not be an error.  The same module also has cases that trigger \"extracting X bits from only Y bit number\" from similarly unreachable lines.  ",
+  "labels": [
+    "area: lint",
+    "effort: hours",
+    "status: blocked"
+  ],
+  "state": "closed",
+  "created_at": "2020-11-04",
+  "closed_at": "2021-01-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

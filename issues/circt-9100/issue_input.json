@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9100,
+  "issue_url": "https://github.com/llvm/circt/pull/9100",
+  "title": "[MooreToCore] Lower `moore.real_constant` to `arith.constant`",
+  "body": "This commit introduces explicit support for `shortreal` literals in the Moore dialect and unifies the lowering and import handling of real constants. It ensures correct mapping between SystemVerilog `real`/`shortreal` and MLIR `f64`/`f32` types across all relevant conversions.\r\n\r\nChanges:\r\n\r\nDialect (MooreOps.td):\r\n- Added `ShortrealLiteralOp`:\r\n  - Accepts `F32Attr` and produces `RealF32`.\r\n  - Represents IEEE-754 single-precision (SystemVerilog `shortreal`).\r\n- Updated `RealLiteralOp`:\r\n  - Now explicitly uses `F64Attr` and produces `RealF64`.\r\n  - Simplified `assemblyFormat` by removing redundant result type.\r\n  - Clarified description to indicate IEEE-754 double precision.\r\n\r\nImportVerilog (Expressions.cpp):\r\n- Updated `materializeSVReal`:\r\n  - Emits `ShortrealLiteralOp` for `shortreal` values.\r\n  - Emits `RealLiteralOp` for `real` values.\r\n  - Uses appropriate `FloatAttr` construction and result type selection.\r\n\r\nMooreToCore Conversion (MooreToCore.cpp):\r\n- Added conversion patterns:\r\n  - `RealConstantOpConv` → lowers to `arith.constant` with `f64` type.\r\n  - `ShortrealConstantOpConv` → lowers to `arith.constant` with `f32` type.\r\n- Marked `arith::ArithDialect` as legal.\r\n- Extended `TypeConverter` to map:\r\n  - `moore::RealWidth::f32` → `mlir::Float32Type`\r\n  - `moore::RealWidth::f64` → `mlir::Float64Type`\r\n\r\nTests:\r\n- Updated `ImportVerilog` tests to expect `moore.shortreal_constant` and `moore.real_constant` without explicit result type suffixes.\r\n- Added `MooreToCore` tests verifying correct lowering:\r\n  - `moore.real_constant` → `arith.constant f64`\r\n  - `moore.shortreal_constant` → `arith.constant f32`\r\n",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-16",
+  "closed_at": "2025-10-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

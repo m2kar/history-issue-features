@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 4553,
+  "issue_url": "https://github.com/verilator/verilator/pull/4553",
+  "title": "Fix functions/tasks following class definition inside module",
+  "body": "The following example fails:\r\n\r\n``` SystemVerilog\r\nmodule t;\r\n    function void myfunc();\r\n    endfunction : myfunc\r\n\r\n    class Cls #(int A = 0);\r\n        function new();\r\n        endfunction : new\r\n\r\n        function void myfunc();\r\n        endfunction : myfunc\r\n    endclass\r\n\r\n    Cls #(100) cls;\r\n\r\n    // this block is following the definition of Cls\r\n    initial begin\r\n        cls = new; // Internal Error: Broken link in node \r\n        myfunc();  // Internal Error: Broken link in node \r\n    end\r\nendmodule\r\n```\r\n\r\nIt also causes segmentation fault if `--debug-check` is off.\r\n\r\n`V3LinkDot::linkDotPrimary` mistakenly link the two nodes (the 'new' and the 'myfunc' in the initial block) using the symbol table for class Cls, and it's because LinkDotResolveVisitor didn't restore the symbol table (m_ds.m_dotSymp) before finishing visiting AstClass nodes, so this can be simply fixed by restoring the variable before exiting the `visit(AstClass*)` function.\r\n\r\nI added a VL_GET_SAVED macro to access variables saved by VL_RESTORER. It seems to be simpler but I'm not sure if it's a good idea (perhaps it can also be used in other places?).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-10",
+  "closed_at": "2023-10-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

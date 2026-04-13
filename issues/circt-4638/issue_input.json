@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4638,
+  "issue_url": "https://github.com/llvm/circt/issues/4638",
+  "title": "[FIRRTL][HW?] Port Simplification Pass",
+  "body": "For certain designs within a separable compilation unit (without a fixed port-level interface), it can be beneficial to \"simplify\" the connections between them by removing ports when possible. I think this can be pretty easily handled by allowing for any \"U-turn\" connections to be removed.  \r\n\r\nE.g., consider the following. This is conceptually doing `qux.a <= baz.a`. However, it is being done in a roundabout way.\r\n\r\n```\r\ncircuit Foo:\r\n  extmodule Baz:\r\n    output a: UInt<1>\r\n\r\n  extmodule Qux:\r\n    input a: UInt<1>\r\n\r\n  module Bar:\r\n    output baz_a: UInt<1>\r\n    input qux_a: UInt<1>\r\n\r\n    inst baz of Baz\r\n    inst qux of Qux\r\n    baz_a <= baz.a\r\n    qux.a <= qux_a\r\n\r\n  module Foo:\r\n\r\n    inst bar of Bar\r\n    bar.qux_a <= bar.baz_a\r\n```\r\n\r\nCIRCT currently preserves the port-level interface to produce:\r\n\r\n```verilog\r\n// external module Baz\r\n\r\n// external module Qux\r\n\r\nmodule Bar(\r\n  input  qux_a,\r\n  output baz_a\r\n);\r\n\r\n  Baz baz (\r\n    .a (baz_a)\r\n  );\r\n  Qux qux (\r\n    .a (qux_a)\r\n  );\r\nendmodule\r\n\r\nmodule Foo();\r\n  wire _bar_baz_a;\r\n  Bar bar (\r\n    .qux_a (_bar_baz_a),\r\n    .baz_a (_bar_baz_a)\r\n  );\r\nendmodule\r\n```\r\n\r\nHowever, this could be simplified to:\r\n\r\n```verilog\r\n// external module Baz\r\n\r\n// external module Qux\r\n\r\nmodule Bar();\r\n  wire x;\r\n  Baz baz (\r\n    .a (x)\r\n  );\r\n  Qux qux (\r\n    .a (x)\r\n  );\r\nendmodule\r\n\r\nmodule Foo();\r\n  Bar bar ();\r\nendmodule\r\n```\r\n\r\nRoughly the cost model is \"a port costs 1 unit\" and no port is free. There is a similar approach that can be taken to convert real ports to ref type ports.\r\n\r\nThis may be beneficial to have on HW as opposed to just on FIRRTL.\r\n\r\nThis approach has problems because it fundamentally destroys design intent. It's also sketchy to rely on this for anything other than optimization within a hierarchy whose internals you do not care about.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-02-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5371,
+  "issue_url": "https://github.com/verilator/verilator/issues/5371",
+  "title": "Inability to code split inside for loop causes large output file",
+  "body": "Consider the following example:\r\n```sv\r\nmodule driver(\r\n    input logic clk,\r\n    output logic data\r\n);\r\n\r\ntask write_32(input logic [31:0] data);\r\n    for (int i = 0; i < 32; i = i + 1) begin\r\n        #1; data <= w_data[i]; @(posedge clk);\r\n    end\r\nendtask\r\n\r\ntask l1(input logic [31:0] data);\r\n    #1; drv.write_32(data); @(posedge clk);\r\n    #1; drv.write_32(data); @(posedge clk);\r\n    #1; drv.write_32(data); @(posedge clk);\r\n    #1; drv.write_32(data); @(posedge clk);\r\nendtask\r\n\r\ntask l2(input logic [31:0] data);\r\n    #1; l1(data + 0); @(posedge clk);\r\n    #1; l1(data + 1); @(posedge clk);\r\n    #1; l1(data + 2); @(posedge clk);\r\n    #1; l1(data + 3); @(posedge clk);\r\nendtask\r\n\r\ntask l3(input logic [31:0] data);\r\n    #1; l2(data + 0); @(posedge clk);\r\n    #1; l2(data + 1); @(posedge clk);\r\n    #1; l2(data + 2); @(posedge clk);\r\n    #1; l2(data + 3); @(posedge clk);\r\nendtask\r\n\r\ntask l4(input logic [31:0] data);\r\n    #1; l3(data + 0); @(posedge clk);\r\n    #1; l3(data + 1); @(posedge clk);\r\n    #1; l3(data + 2); @(posedge clk);\r\n    #1; l3(data + 3); @(posedge clk);\r\nendtask\r\n\r\nendmodule;\r\n\r\nmodule top();\r\n    wire clk, data;\r\n    driver drv(\r\n        .clk(clk),\r\n        .data(data)\r\n    );\r\n    \r\n    initial begin\r\n        for (int i = 0; i < 10; i = i + 1) begin\r\n            drv.l4(32'h12345678);\r\n        end\r\n    end\r\nendmodule\r\n```\r\n\r\nWhen attempting to verilate this code with Verilator on master ( ``verilator --trace --exe --build -j `nproc` --binary inline_performance.sv -o inline_performance``, it produces an almost 100k line-long .cpp file (`Vinline_performance___024root__DepSet_h5fbe98ea__0.cpp`), on which the C++ compiler then hangs indefinitely.\r\n\r\nNote that removing the for loop on line 50 allows Verilator to split up the file into multiple smaller chunks.\r\n\r\nIn this specific case, `--unroll-count 1` helps reduce the code size because the loop inside `write_32` no longer becomes unrolled, but in general this isn't a solution.\r\n\r\nI suppose there are two approaches for a fix:\r\n- Either, don't always automatically inline tasks (though I'm not sure if it is even currently possible to have such non-inlined tasks, but I do think this would be a cleaner solution in general...) or\r\n- Implement splitting up code inside a for loop\r\n",
+  "labels": [
+    "area: performance",
+    "status: ready"
+  ],
+  "state": "open",
+  "created_at": "2024-08-14",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 780,
+  "issue_url": "https://github.com/verilator/verilator/issues/780",
+  "title": "Preprocessor incorrectly parses define arguments",
+  "body": "---\n\n\nAuthor Name: **Derek Lockhart**\nOriginal Redmine Issue: 780 from https://www.veripool.org\nOriginal Date: 2014-06-06\nOriginal Assignee: Derek Lockhart \n\n---\n\nCalling define macros that take multiple arguments will be parsed incorrectly depending on the indentation.  The following code shows the error:\r\n\r\n```\r\n`define TESTA(cond, msg, arg1, arg2) \\\r\n  $display(\"HELLO %s %d %d\", msg, arg1, arg2 )\r\n\r\n`define TESTB(con, msg, arg1, arg2) \\\r\n  $display(\"HELLO %s %d %d\", msg, arg1, arg2 )\r\n\r\n\r\nmodule vc_RDFF_pf #( parameter W = 1, parameter RESET_VALUE = 0 ) \r\n(\r\n  input              clk,      // Clock input\r\n  input              reset_p,  // Sync reset input (sampled on rising edge)\r\n  input      [W-1:0] d_p,      // Data input (sampled on rising clk edge)\r\n  output reg [W-1:0] q_np      // Data output\r\n);\r\n\r\n  always @( posedge clk )\r\n  begin\r\n     q_np <= reset_p ? RESET_VALUE : d_p;\r\n\r\n     // PASSES\r\n     `TESTA( q_np,\r\n             \"some_msg\", d_p, RESET_VALUE);\r\n\r\n     // FAILS\r\n     `TESTA( q_np,\r\n              \"some_msg\", d_p, RESET_VALUE);\r\n\r\n     // PASSES\r\n     //`TESTB( q_np,\r\n     //         \"some_msg\", d_p, RESET_VALUE);\r\n  end \r\n\r\n\r\nendmodule\r\n\n```\r\n\r\nNote that the difference between the first call to TESTA and the second call to TESTA differ only by a single space on the second line. Also note that TESTB when called also passes, and differs to TESTA only by the name of the first variable, which is shorter by one character.  This is a very difficult bug to catch!  \r\n\r\nThis single space difference between the two calls to TESTA results in the following error:\r\n\r\n```\r\n%Error: TEST.v:29: Define passed too many arguments: TESTA\r\n%Error: TEST.v:31: Expecting ( to begin argument list for define reference `TESTA\r\n%Error: TEST.v:39: EOF in define argument list\r\n%Error: TEST.v:40: EOF in define argument list\r\n%Error: TEST.v:40: syntax error, unexpected $end\r\n%Error: Cannot continue\r\n\n```\r\n\r\nAdding printfs to V3PreProc.cpp to display refp->name() and refp->args() generates the following output:\r\n\r\n```\r\nline 553 refp->name():   TESTA\r\nline 553 refp->args() [0]  q_np\r\nline 553 refp->args() [1]             \"some_msg\"\r\nline 553 refp->args() [2]  d_p\r\nline 553 refp->args() [3]  RESET_VALUE\r\nline 553 refp->name():   TESTA\r\nline 553 refp->args() [0]  q_np\r\nline 553 refp->args() [1]              \"some_msg\"\r\nline 553 refp->args() [2]  d_p\r\nline 553 refp->args() [3]  RESET_VALUE\r\nFAIL!!!\r\nline 624 refp->name():   TESTA\r\nline 624 refp->args():     4\r\nline 624 numArgs:          2\r\n\n```\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "area: parser"
+  ],
+  "state": "closed",
+  "created_at": "2014-06-06",
+  "closed_at": "2014-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

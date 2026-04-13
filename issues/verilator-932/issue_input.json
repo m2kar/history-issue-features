@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 932,
+  "issue_url": "https://github.com/verilator/verilator/issues/932",
+  "title": "tracing configuration does not work",
+  "body": "---\n\n\nAuthor Name: **Frederic Requin**\nOriginal Redmine Issue: 932 from https://www.veripool.org\nOriginal Date: 2015-06-18\n\n\n---\n\nHello,\r\nbefore I was using /* verilator tracing_on/off */ around my modules to activate/deactivate tracing.\r\n\r\nStarting with verilator v3.866, this stopped working. Anyway, it was not a good solution because it introduced unwanted changes in the git repository.\r\n\r\nSo, I tried some experiments with `verilator_config and tracing_off -file. It worked with some files but not with all of them.\r\n\r\nBasically, the files found through search path can have the trace turned on or off, the files added to the project with `include cannot have their traces turned on or off.\r\n\r\nThe trace is globally on or off depending if the `verilator_config is located at the beginning or at the end of the testbench verilog file.\r\n\r\nTo summarize, the testbench file \"tb_verilator.v\" look like this:\r\n\r\n```\r\n`verilator_config\r\ntracing_off -file \"../../verilator/src/*.v\"\r\ntracing_off -file \"../../ip_dir1/src/file1.v\"\r\ntracing_off -file \"../../ip_dir1/src/file2.v\"\r\ntracing_off -file \"../../ip_dir1/src/file3.v\"\r\ntracing_off -file \"../../ip_dir2/src/file4.v\"\r\ntracing_off -file \"../../ip_dir2/src/file5.v\"\r\n`verilog\r\n\r\n`include \"../../ip_dir1/src/file1.v\"\r\n`include \"../../ip_dir1/src/file2.v\"\r\n`include \"../../ip_dir1/src/file3.v\"\r\n`include \"../../ip_dir2/src/file4.v\"\r\n`include \"../../ip_dir2/src/file5.v\"\r\n`include \"../../ip_dir2/src/file6.v\"\r\n\r\n/* verilator lint_off PINMISSING */\r\n`include \"../../altium/ProjectOutputs/tb_top.V\"\r\n/* verilator lint_on PINMISSING */\r\n\n```\r\nThe verilator command line is:\r\n\r\nverilator tb_verilator.v -top-module tb_top -cc -O3 -trace -I./../../verilator/src/ -CFLAGS -Wno-attributes\r\n\r\n(the folder \"../../verilator/src/\" contains the FPGA primitives in synthesisable verilog)\r\n\r\nYou would expect file6 and tb_top to be traced but in fact nothing is traced.\r\n\r\nIf I put the verilator_config block at the end of the file, everything but the FPGA primitives are traced.\r\n\r\n\r\nI started investigating the issue.\r\n\r\nWhat I noticed is that the search path is even added to the filenames found through `include, i.e. :\r\n\r\n\"../../verilator/src//../../ip_dir1/src/file1.v\"\r\n\r\nI fixed this problem by searching through the m_incDirFallbacks first (in V3Options::filepath)\r\n\r\nThis did not solve the tracing issue.\r\n\r\nI activated debug output in preprocOpen(), V3PreProcImp::getStateToken() case ps_INCNAME:, addIgnore() and applyIgnores() to see how tracing property was applied to the files.\r\n\r\nI also added a \"tracing_on\" keyword in the verilator_config block but I cannot make the tracing work reliably.\r\n\r\nBest regards,\r\n\r\nFrederic Requin\n\n\n",
+  "labels": [
+    "resolution: fixed",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2015-06-18",
+  "closed_at": "2015-08-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

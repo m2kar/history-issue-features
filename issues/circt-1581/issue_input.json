@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1581,
+  "issue_url": "https://github.com/llvm/circt/issues/1581",
+  "title": "[Comb] extract narrowing could be more clever with and/or operations",
+  "body": "With some recent patches, we are generating extract operations from `and` and `or` operations that have a constant RHS, we should know that we can forward through the LHS operand.\r\n\r\nConcretely, the `combine_icmp_compare_known_bits0` example in Comb/canonicalization.mlir compiles to:\r\n\r\n```\r\n hw.module @combine_icmp_compare_known_bits0(%thing: i4) -> (%a: i1) {\r\n    %c0_i3 = hw.constant 0 : i3\r\n    %c-3_i4 = hw.constant -3 : i4\r\n    %0 = comb.and %thing, %c-3_i4 : i4\r\n    %1 = comb.extract %0 from 2 : (i4) -> i2\r\n    %2 = comb.extract %0 from 0 : (i4) -> i1\r\n    %3 = comb.concat %1, %2 : (i2, i1) -> i3\r\n    %4 = comb.icmp eq %3, %c0_i3 : i3\r\n    hw.output %4 : i1\r\n  }\r\n```\r\n\r\nbut we should be able to eliminate the `and` operation, generating this instead:\r\n\r\n```\r\n hw.module @combine_icmp_compare_known_bits0(%thing: i4) -> (%a: i1) {\r\n    %c0_i3 = hw.constant 0 : i3\r\n    %c-3_i4 = hw.constant -3 : i4\r\n    %1 = comb.extract %thing from 2 : (i4) -> i2\r\n    %2 = comb.extract %thing from 0 : (i4) -> i1\r\n    %3 = comb.concat %1, %2 : (i2, i1) -> i3\r\n    %4 = comb.icmp eq %3, %c0_i3 : i3\r\n    hw.output %4 : i1\r\n  }\r\n```\r\n\r\nsince the and doesn't change the referenced bits.\r\n",
+  "labels": [
+    "Comb"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-16",
+  "closed_at": "2021-08-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

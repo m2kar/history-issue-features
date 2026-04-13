@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5793,
+  "issue_url": "https://github.com/llvm/circt/pull/5793",
+  "title": "[NFC][HW] Add container class for n-valued logic constants",
+  "body": "This PR adds RLELogic,  a run-length encoding container class for arbitrary sequences of  n-valued logic digits within the set of `0,1,X,Z,U,W,L,H,-`. It is a prerequisite for integrating the `hw.logic` type of #5622. As it is not currently used anywhere it should not cause any functional changes, yet.\r\n\r\nThe motivation behind RLELogic is to provide a somewhat efficient representation for non-integer constants in hardware designs, which generally will be of `logic` or `std_logic` type for SystemVerilog and VHDL respectively. These can usually be assumed to be short and/or contain long runs of the same digit repeatedly. Thus, RLELogic uses run-length encoding to reduce their size in memory. \r\nEach byte of the encoded buffer represents one of the nine possible digits in its lower nibble, while encoding a run-length from one to sixteen in the upper nibble. The run-length of the most significant encoded digit is implicitly assumed to be infinite. Thus, all values which are just one specific digit repeated over and over share the same encoding independent of their 'actual' length. Since an RLELogic value will generally be associated with a known width instance of the `hw.logic` type class, storing the width in RLELogic would be redundant. However, it contains a bit mask indicating all the digits contained in its value at least once. This allows to quickly check, e.g., whether the encoded value contains an 'unknown' digit or represents an integer.\r\n\r\nIn general RLELogic should _not_ be used to store integers. In fact, it should be avoided to encode an integer value as RLELogic whenever possible and APInt should be used instead. This is a major departure from my previous attempts of creating an unified APLogic container for both integer and non-integer values. While APLogic  _technically_ worked, its integration did not pan out as I had hoped, and it would not have been particularly efficient. Also, its implementation became _way_ too complex to be worthwhile. RLELogic should be a much cleaner solution, and likely more efficient in real-world scenarios.\r\n\r\nThere is currently only a limited number of operations implemented on RLELogic. I intend to add more when the general type infrastructure for `hw.logic` is in place.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-08-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

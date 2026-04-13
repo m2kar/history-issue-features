@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5957,
+  "issue_url": "https://github.com/verilator/verilator/issues/5957",
+  "title": "Verilator internal error when --trace is enabled",
+  "body": "Hello, I've recently run into the following:\nWhen Verilating with --trace (or --trace-fst) I encounter an Internal Error, however when I remove trace flags from the Verilator command line, verilation completes successfully.\n\nThe specific internal error:\n```\n- V3Expand.cpp:961:   expandAll: \n%Error: Internal Error: ../hal2/deps/pulp_axi/src/axi_dw_downsizer.sv:754:23: ../V3Expand.cpp:375: extending larger thing into smaller?\n-node: EXTEND 0x60001a655290 <e7257064> {l754ax} u1=0x1 @dt=0x600016b61440@(w32)\n```\n\nCan you attach an example that shows the issue?  \n\nThis is the specific line in the RTL.  \n\n```\n  754 |                 w_data[b + mst_port_offset - slv_port_offset]         = slv_req_i.w.data[8*b +: 8];\n      |                       ^\n                        ../hal2/deps/pulp_axi/src/axi_dw_converter.sv:101:1: ... note: In file included from 'axi_dw_converter.sv'\n                        dw_test.sv:47:1: ... note: In file included from 'dw_test.sv'\n```\nThe statement is inside an always_comb process where 'b' is an integer loop variable, mst_port_offset, and slv_port_offset are slices of a logic vector..\n\nWhat 'verilator' command line do we use to run your example?\n\n`/opt/verilator.20250424/bin/verilator_bin_dbg --binary --top dw_test -I../hal2/deps/pulp_axi/include -I../hal2/deps/pulp_axi/src -I../hal2/deps/pulp_platform/common_cells/include -I../hal2/deps/pulp_platform/common_cells/src ../hal2/deps/pulp_platform/common_cells/src/cf_math_pkg.sv ../hal2/deps/pulp_axi/src/axi_pkg.sv -Wno-WIDTH -Wno-UNSIGNED --trace-fst --debug dw_test.sv`\n\nWhat 'verilator --version' are you using?  Did you try it with the git master version?\n\n`Verilator 5.035 devel rev v5.034-175-g6ac2aa2d9`\n\nWhat OS and distribution are you using?\n\n`Darwin easyemachine.local 24.3.0 Darwin Kernel Version 24.3.0: Thu Jan  2 20:24:22 PST 2025; root:xnu-11215.81.4~3/RELEASE_ARM64_T6041 arm64`\n\nMay we assist you in trying to fix this in Verilator yourself?\n\nI realize this isn't the best bug report but I have yet to get sv-bugpoint working to get a minimal subset.\nUpdate: sv-bugpoint's minimized subset was essentially the same as the original set of RTL.  Will try and do something by hand....\n\nThanks.\n",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-24",
+  "closed_at": "2025-04-24",
+  "code_blocks": [
+    "- V3Expand.cpp:961:   expandAll: \n%Error: Internal Error: ../hal2/deps/pulp_axi/src/axi_dw_downsizer.sv:754:23: ../V3Expand.cpp:375: extending larger thing into smaller?\n-node: EXTEND 0x60001a655290 <e7257064> {l754ax} u1=0x1 @dt=0x600016b61440@(w32)\n",
+    "  754 |                 w_data[b + mst_port_offset - slv_port_offset]         = slv_req_i.w.data[8*b +: 8];\n      |                       ^\n                        ../hal2/deps/pulp_axi/src/axi_dw_converter.sv:101:1: ... note: In file included from 'axi_dw_converter.sv'\n                        dw_test.sv:47:1: ... note: In file included from 'dw_test.sv'\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 7082,
+  "issue_url": "https://github.com/llvm/circt/pull/7082",
+  "title": "[Moore] Introduce Mem2Reg to eliminate local variables",
+  "body": "## Please just view the `MooreOps.cpp` file to check the related implementation.\r\n### First\r\n```\r\nmodule Foo;\r\n  int x, y;\r\n  always_comb begin\r\n    int a;\r\n    a = x + 1;\r\n    y = a;\r\n  end\r\nendmodule\r\n```\r\n```cpp\r\n/home/phoenix/work/HDLBits/test01.sv:2:7: error: all variables: %0 = \"moore.variable\"() <{name = \"x\"}> : () -> !moore.i32\r\n  int x, y;\r\n      ^\r\n/home/phoenix/work/HDLBits/test01.sv:2:10: error: all variables: %1 = \"moore.variable\"() <{name = \"y\"}> : () -> !moore.i32\r\n  int x, y;\r\n         ^\r\n/home/phoenix/work/HDLBits/test01.sv:4:9: error: all variables: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    int a;\r\n        ^\r\n/home/phoenix/work/HDLBits/test01.sv:4:9: error: local varialbes: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    int a;\r\n        ^\r\n/home/phoenix/work/HDLBits/test01.sv:5:5: error: blocking assignments: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    a = x + 1;\r\n    ^\r\n/home/phoenix/work/HDLBits/test01.sv:6:5: error: blocking assignments: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    y = a;\r\n    ^\r\nmodule {\r\n  moore.module @Foo {\r\n    %x = moore.variable  : !moore.i32\r\n    %y = moore.variable  : !moore.i32\r\n    moore.procedure always_comb {\r\n      %a = moore.variable  : !moore.i32\r\n      %0 = moore.constant 1 : !moore.i32\r\n      %1 = moore.add %x, %0 : !moore.i32\r\n      moore.blocking_assign %a, %1 : !moore.i32\r\n      moore.blocking_assign %y, %a : !moore.i32\r\n    }\r\n  }\r\n}\r\n```\r\n----\r\n# Second\r\n```\r\nmodule Foo;\r\n  int x, y;\r\n  always_comb begin\r\n    int a;\r\n    a = x + 1;\r\n   // y = a;\r\n  end\r\nendmodule\r\n```\r\n``` cpp\r\n/home/phoenix/work/HDLBits/test01.sv:2:7: error: all variables: %0 = \"moore.variable\"() <{name = \"x\"}> : () -> !moore.i32\r\n  int x, y;\r\n      ^\r\n/home/phoenix/work/HDLBits/test01.sv:2:10: error: all variables: %1 = \"moore.variable\"() <{name = \"y\"}> : () -> !moore.i32\r\n  int x, y;\r\n         ^\r\n/home/phoenix/work/HDLBits/test01.sv:4:9: error: all variables: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    int a;\r\n        ^\r\n/home/phoenix/work/HDLBits/test01.sv:4:9: error: local varialbes: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    int a;\r\n        ^\r\n/home/phoenix/work/HDLBits/test01.sv:5:5: error: blocking assignments: %2 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    a = x + 1;\r\n    ^\r\n/home/phoenix/work/HDLBits/test01.sv:4:9: error: slot: %3 = \"moore.variable\"() <{name = \"a\"}> : () -> !moore.i32\r\n    int a;\r\n        ^\r\n/home/phoenix/work/HDLBits/test01.sv:2:7: error: all variables: %0 = \"moore.variable\"() <{name = \"x\"}> : () -> !moore.i32\r\n  int x, y;\r\n      ^\r\n/home/phoenix/work/HDLBits/test01.sv:2:10: error: all variables: %1 = \"moore.variable\"() <{name = \"y\"}> : () -> !moore.i32\r\n  int x, y;\r\n         ^\r\nmodule {\r\n  moore.module @Foo {\r\n    %x = moore.variable  : !moore.i32\r\n    %y = moore.variable  : !moore.i32\r\n    moore.procedure always_comb {\r\n      %0 = moore.constant 1 : !moore.i32\r\n      %1 = moore.add %x, %0 : !moore.i32\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "Moore"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-23",
+  "closed_at": "2024-06-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

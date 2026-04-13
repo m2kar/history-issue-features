@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3975,
+  "issue_url": "https://github.com/verilator/verilator/issues/3975",
+  "title": "Incrementation and decrementation doubles expression's side-effects",
+  "body": "AST for accessing value seems to get cloned for read and write access for pre/post incremenatation and decrementation operations. This results in any side-effects that could be present in the operand happening twice, first when reading the value and then when writing it.\r\n\r\nHere's a minimal example for reproducing this behavior:\r\n```systemverilog\r\nint i = 0;\r\n\r\nfunction int postincrement_i;\r\n    return i++;\r\nendfunction\r\n\r\nmodule t;\r\n    initial begin\r\n        int arr [1:0] = {0, 0};\r\n        arr[postincrement_i()]++;\r\n        $display(\"Value: %d\", i);\r\n    end\r\nendmodule\r\n```\r\n\r\nThe expected output is\r\n```\r\nValue:           1\r\n```\r\nbut instead we get\r\n```\r\nValue:           2\r\n```\r\n\r\nNote, I wrote a separate function `postincrement_i` because incrementing `i` directly in this context is yet another issue (which I'm already solving at the moment).\r\n\r\nI'm using the latest version of Verilator under Linux (Gentoo):\r\n```\r\nVerilator 5.007 devel rev v5.006-101-g47a7e7584\r\n``` ",
+  "labels": [
+    "status: ready"
+  ],
+  "state": "closed",
+  "created_at": "2023-02-22",
+  "closed_at": "2025-09-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

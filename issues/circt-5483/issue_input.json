@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5483,
+  "issue_url": "https://github.com/llvm/circt/issues/5483",
+  "title": "[ExportVerilog] Missing `hw.struct_explode` support?",
+  "body": "Running `circt-opt <file.mlir> --export-verilog` with `file.mlir` having the following content:\r\n```mlir\r\nmodule {\r\n  hw.module @EXPLODE(%0: i64, %1: i64) -> (arg1: i64, arg2: i64) {\r\n    %2 = hw.struct_create (%0, %1) : !hw.struct<arg1: i64, arg2: i64>\r\n    %arg1, %arg2 = hw.struct_explode %2 : !hw.struct<arg1: i64, arg2: i64>\r\n\r\n    hw.output %arg1, %arg2 : i64, i64\r\n  }\r\n}\r\n```\r\ntriggers the following assertion:\r\n```\r\ncirct-opt: circt/lib/Conversion/ExportVerilog/ExportVerilog.cpp:3295:\r\nvoid (anonymous namespace)::NameCollector::collectNames(mlir::Block &): \r\nAssertion `(!isExpr || isExpressionEmittedInline(&op, moduleEmitter.state.options))\r\n && \"If 'op' is a verilog expression, the expression must be inlinable. \" \r\n \"Otherwise, it is a bug of PrepareForEmission\"' failed.\r\n```\r\n\r\nThis seems to be strongly related to the `hw.struct_explode` operation, because replacing it with `hw.struct_extract` ops works just fine.\r\n\r\n(Yes, I know that in this case, the canonicalizer would optimize `hw.struct_create` and `hw.struct_explode` away. But this is the smallest example that I could come up with to reproduce the bug.)",
+  "labels": [
+    "bug",
+    "HW"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-26",
+  "closed_at": "2024-04-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

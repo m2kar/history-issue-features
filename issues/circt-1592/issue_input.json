@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1592,
+  "issue_url": "https://github.com/llvm/circt/issues/1592",
+  "title": "[FIRRTL] (unsupported Verilog construct) 2D wires in YoSyS",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock: Clock\r\n    input arst: AsyncReset\r\n    output fsm_170_next: UInt<4>\r\n    reg fsm_170_state: UInt, clock with: (reset => (arst, UInt(0)))\r\n    when eq(fsm_170_state, UInt<4>(0)) :\r\n      fsm_170_next <= UInt<4>(1)\r\n    else when eq(fsm_170_state, UInt<4>(1)) :\r\n      fsm_170_next <= UInt<4>(2)\r\n    else when eq(fsm_170_state, UInt<4>(2)) :\r\n      fsm_170_next <= UInt<4>(3)\r\n    else when eq(fsm_170_state, UInt<4>(3)) :\r\n      fsm_170_next <= UInt<4>(4)\r\n    else when eq(fsm_170_state, UInt<4>(4)) :\r\n      fsm_170_next <= UInt<4>(5)\r\n    else when eq(fsm_170_state, UInt<4>(5)) :\r\n      fsm_170_next <= UInt<4>(6)\r\n    else when eq(fsm_170_state, UInt<4>(6)) :\r\n      fsm_170_next <= UInt<4>(7)\r\n    else when eq(fsm_170_state, UInt<4>(7)) :\r\n      fsm_170_next <= UInt<4>(8)\r\n    else when eq(fsm_170_state, UInt<4>(8)) :\r\n      fsm_170_next <= UInt<4>(9)\r\n    else when eq(fsm_170_state, UInt<4>(9)) :\r\n      fsm_170_next <= UInt<4>(0)\r\n    else :\r\n      fsm_170_next <= fsm_170_state\r\n    fsm_170_state <= fsm_170_next\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\n...\r\n  always @(posedge clock or posedge arst) begin\t// a_top_mod.fir:7:5\r\n    if (arst)\t// a_top_mod.fir:7:5\r\n      fsm_170_state <= 4'h0;\t// a_top_mod.fir:7:5, :8:28\r\n    else\t// a_top_mod.fir:7:5\r\n      fsm_170_state <= _T;\t// a_top_mod.fir:29:20, :30:19\r\n  end // always @(posedge or posedge)\r\n...\r\n  wire [15:0][3:0] _T_0 = {{fsm_170_state}, {fsm_170_state}, {fsm_170_state}, {fsm_170_state}, {fsm_170_state}, {fsm_170_state}, {4'h0}, {4'h9}, {4'h8}, {4'h7}, {4'h6}, {4'h5}, {4'h4}, {4'h3}, {4'h2}, {4'h1}};\t// a_top_mod.fir:8:{10,28}, :9:23, :10:15, :11:23, :12:15, :13:23, :14:15, :15:23, :16:15, :17:23, :18:15, :19:23, :20:15, :21:23, :22:15, :23:23, :24:15, :25:23, :26:15, :29:20\r\n  assign _T = _T_0[fsm_170_state];\t// a_top_mod.fir:8:10, :29:20\r\n  assign fsm_170_next = _T;\t// a_top_mod.fir:3:10, :29:20\r\nendmodule\r\n\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 4b31223e, clang 11.0.1 -fPIC -Os)` reports this error (wire [15:0][3:0] _T_0 ... line):\r\n\r\n```\r\na_top_mod.fir.mfc.v:60: ERROR: syntax error, unexpected '[', expecting TOK_ID or '#'\r\n```",
+  "labels": [
+    "FIRRTL",
+    "ExportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-17",
+  "closed_at": "2023-11-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

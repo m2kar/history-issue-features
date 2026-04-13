@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 9483,
+  "issue_url": "https://github.com/llvm/circt/issues/9483",
+  "title": "[HW] hw-flatten-modules doesn't work with parameters",
+  "body": "```mlir\nhw.module private @parameters<p1: i42 = 17>(out out: i42) {\n  %result =  hw.param.value i42 = #hw.param.decl.ref<\"p1\">\n  hw.output %result: i42\n}\n\nhw.module @UseParameterized(out x: i42, out y: i42, out z: i42) {\n  %r0 = hw.instance \"inst1\" @parameters<p1: i42 = 4>() -> (out: i42)\n  %r1 = hw.instance \"inst2\" @parameters<p1: i42 = 11>() -> (out: i42)\n  %r2 = hw.instance \"inst3\" @parameters<p1: i42 = 17>() -> (out: i42)\n  hw.output %r0, %r1, %r2: i42, i42, i42\n}\n\n$ circt-opt -hw-flatten-modules bar.mlir -mlir-print-ir-after-all\n\n// -----// IR Dump After FlattenModules Failed (hw-flatten-modules) //----- //\n#loc = loc(\"bar.mlir\":6:33)\n#loc1 = loc(\"bar.mlir\":6:45)\n#loc2 = loc(\"bar.mlir\":6:57)\n\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<output x : i42, output y : i42, output z : i42>, parameters = [], result_locs = [#loc, #loc1, #loc2], sym_name = \"UseParameterized\"}> ({\n    %0 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    %1 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    %2 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    \"hw.output\"(%0, %1, %2) : (i42, i42, i42) -> ()\n  }) : () -> ()\n}) : () -> ()\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-01-20",
+  "closed_at": null,
+  "code_blocks": [
+    "hw.module private @parameters<p1: i42 = 17>(out out: i42) {\n  %result =  hw.param.value i42 = #hw.param.decl.ref<\"p1\">\n  hw.output %result: i42\n}\n\nhw.module @UseParameterized(out x: i42, out y: i42, out z: i42) {\n  %r0 = hw.instance \"inst1\" @parameters<p1: i42 = 4>() -> (out: i42)\n  %r1 = hw.instance \"inst2\" @parameters<p1: i42 = 11>() -> (out: i42)\n  %r2 = hw.instance \"inst3\" @parameters<p1: i42 = 17>() -> (out: i42)\n  hw.output %r0, %r1, %r2: i42, i42, i42\n}\n\n$ circt-opt -hw-flatten-modules bar.mlir -mlir-print-ir-after-all\n\n// -----// IR Dump After FlattenModules Failed (hw-flatten-modules) //----- //\n#loc = loc(\"bar.mlir\":6:33)\n#loc1 = loc(\"bar.mlir\":6:45)\n#loc2 = loc(\"bar.mlir\":6:57)\n\"builtin.module\"() ({\n  \"hw.module\"() <{module_type = !hw.modty<output x : i42, output y : i42, output z : i42>, parameters = [], result_locs = [#loc, #loc1, #loc2], sym_name = \"UseParameterized\"}> ({\n    %0 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    %1 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    %2 = \"hw.param.value\"() <{value = #hw.param.decl.ref<\"p1\"> : i42}> : () -> i42\n    \"hw.output\"(%0, %1, %2) : (i42, i42, i42) -> ()\n  }) : () -> ()\n}) : () -> ()\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

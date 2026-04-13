@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3610,
+  "issue_url": "https://github.com/verilator/verilator/issues/3610",
+  "title": "When dumping VCD files, calling trace() after open() causes segmentation fault.",
+  "body": "In the example, to dump the vcd file, one need:\r\n\r\n```cpp\r\ntopp->trace(tfp, 99); // Trace 99 levels of hierarchy\r\ntfp->open(\"obj_dir/t_trace_ena_cc/simx.vcd\");\r\n```\r\n\r\nHowever, if we reverse the two lines (_i.e._, call `open()` then `trace()`), the program crashes with an segmentation fault (when calling `dump()` later), which is hard to locate the reason.\r\n\r\n```cpp\r\ntfp->open(\"obj_dir/t_trace_ena_cc/simx.vcd\");\r\ntopp->trace(tfp, 99); // Trace 99 levels of hierarchy\r\n```\r\n\r\nI am not sure whether this behaviour is documented somewhere.\r\n\r\nA minimal reproducible example is:\r\n\r\n```verilog\r\nmodule Dummy(input clk);\r\nendmodule\r\n```\r\n\r\n```cpp\r\n#include \"VDummy.h\"\r\n#include <verilated.h>\r\n#include <verilated_vcd_c.h>\r\nusing namespace std;\r\n\r\nint main(int argc, char **argv) {\r\n        VerilatedContext ctx;\r\n        VerilatedVcdC tfp;\r\n        VDummy dut;\r\n        ctx.traceEverOn(true);\r\n        tfp.open(\"dump.vcd\"); // Error! shall put to the next line!\r\n        dut.trace(&tfp, 99); // Error!\r\n        tfp.dump(0);\r\n        tfp.close();\r\n        return 0;\r\n}\r\n```\r\n\r\n```bash\r\nverilator --cc --trace --build --exe main.cpp Dummy.sv\r\n./out_dir/VDummy\r\n```\r\n\r\nI think it would be easy to fix by checking `tfp->isOpen()` in `V3EmitC.cpp`.",
+  "labels": [
+    "resolution: fixed",
+    "area: tracing"
+  ],
+  "state": "closed",
+  "created_at": "2022-09-11",
+  "closed_at": "2022-09-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

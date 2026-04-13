@@ -1,0 +1,21 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5106,
+  "issue_url": "https://github.com/verilator/verilator/issues/5106",
+  "title": "compile error for --timing using clang 15.0.0",
+  "body": "\r\nApparently, in clang-15.0.0, the `<coroutine>` header file is part of the regular set of header files and is no longer in the `experimental` subdirectory.  Building a design using --timing, which requires the `<coroutine>` header fails.\r\n\r\nI am running on MacOS Sonoma version 14.4.1 using clang-15.0.0\r\n\r\nThe following code in `verilated_timing.h` always attempts to include `experimental/coroutine` instead of `coroutine` when versions of clang newer than 13.\r\n\r\n```\r\n// clang-format off\r\n// Some preprocessor magic to support both Clang and GCC coroutines with both libc++ and libstdc++\r\n#if defined _LIBCPP_VERSION  // libc++\r\n# if __clang_major__ > 13  // Clang > 13 warns that coroutine types in std::experimental are deprecated\r\n#  pragma clang diagnostic push\r\n#  pragma clang diagnostic ignored \"-Wdeprecated-experimental-coroutine\"\r\n# endif\r\n# include <experimental/coroutine>\r\n  namespace std {\r\n      using namespace experimental;  // Bring std::experimental into the std namespace\r\n  }\r\n#else\r\n# if defined __clang__ && defined __GLIBCXX__ && !defined __cpp_impl_coroutine\r\n#  define __cpp_impl_coroutine 1  // Clang doesn't define this, but it's needed for libstdc++\r\n# endif\r\n# include <coroutine>\r\n# if __clang_major__ < 14\r\n   namespace std {  // Bring coroutine library into std::experimental, as Clang < 14 expects it to be there\r\n       namespace experimental {\r\n           using namespace std;\r\n       }\r\n   }\r\n# endif\r\n#endif\r\n// clang-format on\r\n```",
+  "labels": [
+    "area: portability",
+    "resolution: duplicate"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-08",
+  "closed_at": "2024-05-10",
+  "code_blocks": [
+    "// clang-format off\r\n// Some preprocessor magic to support both Clang and GCC coroutines with both libc++ and libstdc++\r\n#if defined _LIBCPP_VERSION  // libc++\r\n# if __clang_major__ > 13  // Clang > 13 warns that coroutine types in std::experimental are deprecated\r\n#  pragma clang diagnostic push\r\n#  pragma clang diagnostic ignored \"-Wdeprecated-experimental-coroutine\"\r\n# endif\r\n# include <experimental/coroutine>\r\n  namespace std {\r\n      using namespace experimental;  // Bring std::experimental into the std namespace\r\n  }\r\n#else\r\n# if defined __clang__ && defined __GLIBCXX__ && !defined __cpp_impl_coroutine\r\n#  define __cpp_impl_coroutine 1  // Clang doesn't define this, but it's needed for libstdc++\r\n# endif\r\n# include <coroutine>\r\n# if __clang_major__ < 14\r\n   namespace std {  // Bring coroutine library into std::experimental, as Clang < 14 expects it to be there\r\n       namespace experimental {\r\n           using namespace std;\r\n       }\r\n   }\r\n# endif\r\n#endif\r\n// clang-format on"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

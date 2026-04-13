@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 7050,
+  "issue_url": "https://github.com/llvm/circt/issues/7050",
+  "title": "[Caylx] canonicalization results in invalid IR: ifOp w/empty else",
+  "body": "Verifier checks that else region is non-empty if present.\r\n\r\nCurrent patterns can fail this verification, for example when the else region contains some control op that removes itself (`emptyControl<OpTy>`) the containing block is now newly empty and fails verification.\r\n\r\nCaught by ` -DMLIR_ENABLE_EXPENSIVE_PATTERN_API_CHECKS=ON.`.\r\n\r\ncc #7047.\r\n\r\nThis can be observed with the following example from `test/Dialect/Calyx/canonicalization.mlir`:\r\n\r\n```mlir\r\nmodule attributes {calyx.entrypoint = \"main\"} {\r\n  calyx.component @main(%go: i1 {go}, %clk: i1 {clk}, %reset: i1 {reset}) -> (%done: i1 {done}) {\r\n    %r.in, %r.write_en, %r.clk, %r.reset, %r.out, %r.done = calyx.register @r : i1, i1, i1, i1, i1, i1\r\n    %eq.left, %eq.right, %eq.out = calyx.std_eq @eq : i1, i1, i1\r\n    %c1_1 = hw.constant 1 : i1\r\n    calyx.wires {\r\n      calyx.comb_group @Cond {\r\n        calyx.assign %eq.left =  %c1_1 : i1\r\n        calyx.assign %eq.right = %c1_1 : i1\r\n      }\r\n      calyx.group @A {\r\n        calyx.assign %r.in = %c1_1 : i1\r\n        calyx.assign %r.write_en = %c1_1 : i1\r\n        calyx.group_done %r.done : i1\r\n      }\r\n    }\r\n    calyx.control {\r\n      calyx.seq {\r\n        calyx.if %eq.out with @Cond {\r\n          calyx.seq {\r\n            calyx.enable @A\r\n          }\r\n        } else {\r\n          calyx.seq {\r\n            calyx.enable @A\r\n          }\r\n        }\r\n      }\r\n    }\r\n  }\r\n}\r\n```",
+  "labels": [
+    "bug",
+    "Calyx"
+  ],
+  "state": "open",
+  "created_at": "2024-05-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

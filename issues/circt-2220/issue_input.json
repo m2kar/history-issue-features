@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 2220,
+  "issue_url": "https://github.com/llvm/circt/issues/2220",
+  "title": "[ExportVerilog] Renamification isn't putting a `verilogName` attribute on renamed instances",
+  "body": "Passes that run after `ExportVerilog` can query incorrect names from the IR because names in the IR may not be updated.  We should be making sure that the IR after `ExportVerilog` matches whatever we emit or we need to add `verilogName` attributes to anything which is renamed.\r\n\r\n### Example Problem with `HWExportModuleHierarchy`\r\n\r\nConsider the following example for the `HWExportModuleHierarchy` pass (which runs after `ExportVerilog`).  This has two Verilog keyword collisions.  The innermost module is called \"module\" and the instance name of that module is also called \"module\":\r\n\r\n```mlir\r\nhw.module @module(%in: i1) -> (out: i1) {\r\n  hw.output %in : i1\r\n}\r\n\r\nhw.module @MainDesign(%in: i1) -> (out: i1) {\r\n  %0 = hw.instance \"module\" @module(in: %in: i1) -> (out: i1)\r\n  hw.output %0 : i1\r\n}\r\n\r\nhw.module @TestHarness() attributes {firrtl.moduleHierarchyFile = #hw.output_file<\"testharness_hier.json\", excludeFromFileList>} {\r\n  %0 = hw.constant 1 : i1\r\n  hw.instance \"main_design\" @MainDesign(in: %0: i1) -> (out: i1)\r\n}\r\n```\r\n\r\nThis produces the following Verilog with properly mangled names:\r\n\r\n```verilog\r\nmodule module_0(\t// Foo.mlir:1:1\r\n  input  in,\r\n  output out);\r\n\r\n  assign out = in;\t// Foo.mlir:2:3\r\nendmodule\r\n\r\nmodule MainDesign(\t// Foo.mlir:5:1\r\n  input  in,\r\n  output out);\r\n\r\n  module_0 module_0 (\t// Foo.mlir:6:8\r\n    .in  (in),\r\n    .out (out)\r\n  );\r\nendmodule\r\n\r\nmodule TestHarness();\t// Foo.mlir:10:1\r\n  wire main_design_out;\t// Foo.mlir:12:3\r\n\r\n  MainDesign main_design (\t// Foo.mlir:12:3\r\n    .in  (1'h1),\t// Foo.mlir:11:8\r\n    .out (main_design_out)\r\n  );\r\nendmodule\r\n```\r\n\r\nThe IR after `ExportVerilog` includes an updated name for the module, but not the instance:\r\n\r\n```mlir\r\n  hw.module @module(%in: i1) -> (out: i1) attributes {verilogName = \"module_0\"} {\r\n    hw.output %in : i1\r\n  }\r\n  hw.module @MainDesign(%in: i1) -> (out: i1) {\r\n    %module.out = hw.instance \"module\" @module(in: %in: i1) -> (out: i1)\r\n    hw.output %module.out : i1\r\n  }\r\n```\r\n\r\nThis then results in `HWExportModuleHierarchy` producing JSON which is not correct with respect to the emitted Verilog (the innermost \"instance_name\" should be \"module_0\":\r\n\r\n```json\r\n{\r\n  \"instance_name\": \"TestHarness\",\r\n  \"module_name\": \"TestHarness\",\r\n  \"instances\": [\r\n    {\r\n      \"instance_name\": \"main_design\",\r\n      \"module_name\": \"MainDesign\",\r\n      \"instances\": [\r\n        {\r\n          \"instance_name\": \"module\",\r\n          \"module_name\": \"module_0\",\r\n          \"instances\": []\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}\r\n```",
+  "labels": [
+    "ExportVerilog"
+  ],
+  "state": "open",
+  "created_at": "2021-11-19",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

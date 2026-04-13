@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5351,
+  "issue_url": "https://github.com/verilator/verilator/issues/5351",
+  "title": "`lint_off -match` includes Errors",
+  "body": "\r\n```\r\nUbuntu 22.04.4 LTS\r\nVerilator 5.027 devel rev v5.026-4-g833df6d9e\r\n```\r\n\r\nHello. I have been recently experimenting with `lint_off -match`, but I noticed that it suppresses errors, even though the documentation makes it seem like only warnings will be suppressed.\r\n\r\n> If -match is set, the linter warnings are matched against this (wildcard) string and are waived in case they match, provided with the rule and file also match.\r\n\r\nThis often leads to internal Verilator faults.\r\n\r\nShould `lint_off -match` never match `EC_FATAL`, `EC_FATALEXIT`, `EC_FATALSRC`, and `EC_ERROR`? I can do a PR for this if you think this is a good idea.\r\n\r\n## Example\r\n\r\n```bash\r\n# command\r\nverilator --lint-only bad.sv lint.vlt\r\n```\r\n\r\n```systemverilog\r\n// bad.sv\r\nmodule bad;\r\n    initial $readmemh(\"file.memh\", ENUMITEM);\r\nendmodule\r\n```\r\n```systemverilog\r\n// lint.vlt\r\n`verilator_config\r\nlint_off -file \"bad.sv\" -match \"*\"\r\n```\r\n\r\n```\r\n# Expected output:\r\n%Error: bad.sv:3:36: Can't find definition of variable: 'ENUMITEM'\r\n    3 |     initial $readmemh(\"file.memh\", ENUMITEM);\r\n      |                                    ^~~~~~~~\r\n%Error: Exiting due to 1 error(s)\r\n```\r\n\r\n```\r\n# Actual result:\r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n%Error: Command Failed ulimit -s unlimited 2>/dev/null; exec verilator_bin --lint-only bad.sv lint.vlt\r\n```\r\n",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-09",
+  "closed_at": "2024-08-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

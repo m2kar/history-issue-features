@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2760,
+  "issue_url": "https://github.com/verilator/verilator/issues/2760",
+  "title": "Standard library Map rises abort",
+  "body": "Hello, \r\n\r\nI am working with lowrisc-chip fork. I have been using verilator with this model for years. But now I am experiencing a weird bug. When I change my verilator version from 4.030 to 4.040 or above (I have tried with all of them) I am experiencing a weird abort when initializing some structures. The function that rises the abort is **memory_model_init** at [dpi_ram_behav](https://github.com/lowRISC/lowrisc-chip/blob/refresh-v0.6/src/test/cxx/common/dpi_ram_behav.cpp). \r\n\r\nI am using gcc and g++ version 10, but it also happens with version 9.\r\n\r\nI have used GDB to see the back trace, and what I get is: \r\n\r\nat 0x4C2318B: raise (raise.c:51)\r\nby 0x4C02858: abort (abort.c:79)\r\nby 0x4BA0675: ??? (in /lib/x86_64-linux-gnu/libgcc_s.so.1)\r\nby 0x11146E: memory_model_init (dpi_ram_behav.cpp:131)\r\n\r\nSpecifically I see that the destructor of a map rises the abort:\r\n/usr/include/c++/10/bits/stl_map.h\r\n\r\n```\r\n#if __cplusplus >= 201103L\r\n      /**\r\n       *  The dtor only erases the elements, and note that if the elements\r\n       *  themselves are pointers, the pointed-to memory is not touched in any\r\n       *  way.  Managing the pointer is the user's responsibility.\r\n       */\r\n      ~map() = default;\r\n#endif\r\n```\r\n\r\nAt first I thought that maybe the issue was related with thread safe functions, but after trying different thread flags (no-threads, threads 1, etc),  I was not able to avoid the error. I also thought that maybe c++11 support was the problem, but I was using std=c++11 with verilator v4.030\r\n",
+  "labels": [
+    "status: asked reporter"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-17",
+  "closed_at": "2021-01-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

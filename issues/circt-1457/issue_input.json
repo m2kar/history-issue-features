@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 1457,
+  "issue_url": "https://github.com/llvm/circt/pull/1457",
+  "title": "[FIRRTL] Define/fix subAnno Lowering",
+  "body": "Lowering of `subAnno` worked for the most part.  However, there was an off-by-one bug related to the behavior of `subAnno` using a width too causing annotations to smear out during lowering (see #1453).  (This normally doesn't cause actual bugs, but happens to crash `GrandCentralTaps`.)\r\n\r\nAdditionally, the behavior around `subAnno`s that crossed a subindex/subfield boundary wasn't well defined and had very weird behavior.  This changes this to do what I think makes sense: \r\n\r\n  - A `subAnno` of form `[x, x]` will target everything \"below\" field `x`.  For the case of `[0, 0]`, this means everything.\r\n  - A `subAnno` of form `[x, y]` will target everything from `x` to `y`.  If `x` or `y` are aggregates then it pulls in everything \"below\" them. If there is a `z` between `x` and `y` that includes things beyond `y`, then that is _not_ pulled in.  \r\n\r\nThere are a ton of tests that push towards exhaustiveness checking of this.\r\n\r\nNote: `subAnno`s crossing a subindex/subfield boundary isn't expected to actually happen (a Target cannot generate such a `subAnno`, but it could be canonicalized into one if such canonicalization existed).\r\n\r\nFixes #1453.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-21",
+  "closed_at": "2021-07-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

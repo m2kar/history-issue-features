@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2413,
+  "issue_url": "https://github.com/verilator/verilator/issues/2413",
+  "title": "Part select can have incorrect behaviour if LSB is multiplied by a power of 2",
+  "body": "Consider:\r\n\r\n```\r\n   reg [63:0] a;\r\n   reg [2:0]  b;\r\n   wire [7:0] c = a[b * 8 +: 8];\r\n```\r\n\r\nVerilator fails with:\r\n`%Warning-WIDTH: t/t_select_plus_mul_pow2.v:16:20: Bit extraction of var[63:0] requires 6 bit index, not 3 bits.`\r\n\r\nWith -Wno-WIDTH, the result of `c` is always the 8 least-significant bits of `a`, as you'd expect from the warning.\r\n\r\nThe problem seems to be in the constant folding that happens here:\r\nhttps://github.com/verilator/verilator/blob/master/src/V3WidthSel.cpp#L462\r\n\r\n`b * 8` gets converted to `b << 3`, which according to the Verilog spec should have a resulting size equal to `b` (3 bits).\r\nhttps://github.com/verilator/verilator/blob/master/src/V3Const.cpp#L881\r\n\r\nIt works as expected if you comment out the `replaceMulShift` optimization:\r\nhttps://github.com/verilator/verilator/blob/master/src/V3Const.cpp#L2325\r\n\r\nI'm using V4.034. Sample regression test attached:\r\n[t_select_plus_mul_pow2.tar.gz](https://github.com/verilator/verilator/files/4756415/t_select_plus_mul_pow2.tar.gz)\r\n",
+  "labels": [
+    "resolution: fixed",
+    "area: elaboration",
+    "effort: hours"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-10",
+  "closed_at": "2020-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

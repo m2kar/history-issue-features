@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 3698,
+  "issue_url": "https://github.com/verilator/verilator/pull/3698",
+  "title": "Support timing with more Clang and libc++ versions",
+  "body": "The previous version of this version check depended on libc++ version being synced with Clang's version. However, that is not always the case, e.g. the default Clang in MacOS Monterey introduces itself as Clang 14, but the `_LIBCPP_VERSION` define is set to 13000.\r\n\r\nAnother issue is that, on Clang >= 14, if you use coroutines via the `-fcoroutines-ts` flag, you have to include `<experimental/coroutine>`. Including `<coroutine>` results in compilation errors, because its contents are actually hidden behind an `ifdef` that [checks if we're using C++20](https://github.com/llvm/llvm-project/blob/329fda39c507e8740978d10458451dcdb21563be/libcxx/include/__coroutine/coroutine_handle.h#L23). And we're not, by default.\r\n\r\nSo it's better to just use `<experimental/coroutine>` (and `std::experimental::*`) for Clang with libc++, no matter what Clang's version is.\r\n\r\nNote that Clang >= 14 produces a warning that they'll remove `<experimental/coroutine>` in LLVM 15 (hence the disabled warning here), though that hasn't actually happened. I expect that it will happen eventually, so that will be something we'll have to deal with.\r\n\r\nTested on Ubuntu 20.04 with Clang 13, 14, and 15, and on MacOS Monterey with whatever the default version of Clang is (Clang 14 with an asterisk).\r\n\r\nFixes https://github.com/verilator/verilator/issues/3669\r\n\r\nSigned-off-by: Krzysztof Bieganski <kbieganski@antmicro.com>\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-20",
+  "closed_at": "2022-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

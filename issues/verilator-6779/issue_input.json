@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6779,
+  "issue_url": "https://github.com/verilator/verilator/issues/6779",
+  "title": "7 bit wide memory is stored as 8 bit array, but is not masked to 7 bit on read",
+  "body": "Run:\n\n    verilator --cc ram_8x7.sv\n\nThis generates code for R0_data below, but this read is not masked to the bitwidth of R0_data:\n\n```c++\n    vlSelfRef.R0_data = ((IData)(vlSelfRef.R0_en) ? \n                         vlSelfRef.ram_8x7__DOT__Memory\n                         [vlSelfRef.R0_addr] : 0U);\n```\n\n\nram_8x7.sv:\n\n```verilog\nmodule ram_8x7(\n  input  [2:0] R0_addr,\n  input        R0_en,\n               R0_clk,\n  output [6:0] R0_data,\n  input  [2:0] W0_addr,\n  input        W0_en,\n               W0_clk,\n  input  [6:0] W0_data\n);\n\n  reg [6:0] Memory[0:7];\n  always @(posedge W0_clk) begin\n    if (W0_en)\n      Memory[W0_addr] <= W0_data;\n  end // always @(posedge)\n  assign R0_data = R0_en ? Memory[R0_addr] : 7'bx;\nendmodule\n```\n\n\n    $ verilator --version\n    Verilator 5.032 2025-01-01 rev (Debian 5.032-1)\n\n\n",
+  "labels": [
+    "new"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-08",
+  "closed_at": "2025-12-08",
+  "code_blocks": [
+    "\n\nram_8x7.sv:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7293,
+  "issue_url": "https://github.com/verilator/verilator/pull/7293",
+  "title": "Fix local:: false error in randomize() with on parameterized class (#6680)",
+  "body": "## Summary\r\n\r\nThis patch fixes `local::` being falsely rejected inside `randomize() with`\r\nwhen the randomization target is a parameterized class. Fixes #6680.\r\n\r\nDuring the primary linking pass, `m_randSymp` cannot be set for parameterized\r\nclasses (because the class is not yet resolved -- that happens in V3Param).\r\nThe `local::` validity check only tested `m_randSymp`, missing the case where\r\nthe call context is correctly established via `m_randMethodCallp`.\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nclass item #(type T);\r\n  rand T value;\r\nendclass\r\n\r\nclass driver #(type T);\r\n  task run(T val);\r\n    item#(T) it;\r\n    it = new();\r\n    if (!it.randomize() with { value == local::val; })\r\n      $error(\"fail\");\r\n  endtask\r\nendclass\r\n```\r\n\r\nOn master:\r\n```\r\n%Error: t.sv:10:38: Illegal 'local::' outside 'randomize() with' (IEEE 1800-2023 18.7.1)\r\n   10 |     if (!it.randomize() with { value == local::val; })\r\n      |                                         ^~~~~\r\n```\r\n\r\n## Changes\r\n\r\n- `src/V3LinkDot.cpp` (`visit(AstClassOrPackageRef*)`): Add `m_randMethodCallp` as alternative indicator in `local::` validity check, allowing `local::` when inside a `randomize()` call on a parameterized class target\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_randomize_local_paramed.{v,py}` -- `local::` with parameterized class in `randomize() with`, single-param and multi-param variants\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-20",
+  "closed_at": "2026-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

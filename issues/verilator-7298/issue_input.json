@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7298,
+  "issue_url": "https://github.com/verilator/verilator/pull/7298",
+  "title": "Support ##0 cycle delays (#4263)",
+  "body": "## Summary\r\n\r\nThis patch adds support for `##0` cycle delays as defined in IEEE 1800-2023 14.11. Fixes #4263.\r\n\r\nPer the spec, `##0` is treated specially depending on context:\r\n- **Procedural**: if the default clocking event has not yet occurred in the current time step, suspend until it fires; otherwise continue without suspension.\r\n- **Synchronous drive RHS**: no effect, as if not present.\r\n- **Property/sequence**: zero-tick concatenation, removed as no-op.\r\n\r\n\r\n\r\n## Reproducer\r\n\r\n```systemverilog\r\nmodule t;\r\n  logic clk = 0;\r\n  always #5 clk = ~clk;\r\n  default clocking cb @(posedge clk);\r\n  endclocking\r\n  initial begin\r\n    ##0;\r\n    $display(\"time=%0t\", $time);  // expected: 5\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\nOn master:\r\n\r\n```\r\n%Error-UNSUPPORTED: Unsupported: ##0 delays\r\n```\r\n\r\n## Changes\r\n\r\n- `V3AssertPre.cpp` (`visit(AstCycleDly*)`): Replace `E_UNSUPPORTED` for `##0` with three-way dispatch: remove as no-op in synchronous drive (`m_inSynchDrive`) and property/sequence (`m_inPExpr`) contexts; for procedural context, transform to `if (!event.isTriggered()) @(event);` using the default clocking block's `VlEvent`.\r\n- `V3AssertPre.cpp` (`visit(AstNodeModule*)`): Add `m_defaultClkEvtVarp` state variable. Pre-create and cache the default clocking event var via `ensureEventp()` before `iterateChildren`, preventing an orphaned var after the clocking node is deleted during traversal.\r\n- `t_clocking_unsup2.py`: Changed from fail-expected to passing lint test since `##0` is now supported.\r\n\r\n## Test\r\n\r\n- Added `test_regress/t/t_clocking_zero_delay.{v,py}` -- covers all three `##0` contexts: procedural (wait-at-time-0, no-op-after-event, consecutive, mixed with `##1`), synchronous drive (comparative with/without `##0`), and property/sequence (one-cycle pulse with assertion action block).\r\n- Updated `test_regress/t/t_clocking_unsup2.py` -- no longer expects failure.\r\n- Removed `test_regress/t/t_clocking_unsup2.out` -- golden file for removed error.\r\n\r\n---\r\nDeveloped by PlanV GmbH, assisted with Claude Code.\r\n\r\nReviewed by YilouWang.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-03-20",
+  "closed_at": "2026-03-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

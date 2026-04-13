@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 6722,
+  "issue_url": "https://github.com/verilator/verilator/issues/6722",
+  "title": "X input values are not handled correctly in UDPs",
+  "body": "To reproduce:\n\n```verilog\nmodule t ();\n\n   wire true;\n   not1 a(true, '0);\n\n   wire false;\n   not1 b(false, '1);\n\n   initial begin\n      if (true != '1) $stop;\n      if (false != '0) $stop;\n      $finish;\n   end\n\nendmodule // t\n\nprimitive not1 (q, d);\n   output q;\n   input  d;\n   table\n      0 : 1;\n      1 : 0;\n      x : x;\n   endtable\nendprimitive // not1\n```\n\nAnd the test driver code:\n\n```python3\nimport vltest_bootstrap\ntest.scenarios('vlt_all')\ntest.compile()\ntest.execute()\ntest.passes()\n```\n\nThe expected result is that the `true` and `false` wires will be 1 and 0, respectively. However, they are both set to X (depending on the value of the `--x-assign` command-line argument).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-11-22",
+  "closed_at": "2025-11-23",
+  "code_blocks": [
+    "module t ();\n\n   wire true;\n   not1 a(true, '0);\n\n   wire false;\n   not1 b(false, '1);\n\n   initial begin\n      if (true != '1) $stop;\n      if (false != '0) $stop;\n      $finish;\n   end\n\nendmodule // t\n\nprimitive not1 (q, d);\n   output q;\n   input  d;\n   table\n      0 : 1;\n      1 : 0;\n      x : x;\n   endtable\nendprimitive // not1\n",
+    "import vltest_bootstrap\ntest.scenarios('vlt_all')\ntest.compile()\ntest.execute()\ntest.passes()\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

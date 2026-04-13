@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 7109,
+  "issue_url": "https://github.com/verilator/verilator/pull/7109",
+  "title": "Fix new <obj> shallow copy not preserving polymorphic runtime type (#7105)",
+  "body": "## Summary\r\n`new <handle>` (shallow copy constructor, IEEE 1800-2017 §8.7) now preserves the runtime type of the source object. Previously, copying through a base-class handle produced a base-class object (C++ object slicing), losing derived-class members and virtual dispatch.\r\n\r\n## Issue\r\nFixes #7105 \r\n\r\n## Changes\r\n- `include/verilated_types.h`: Added virtual `vlClone()` to `VlClass` base class; added `VlClassRef::vlClone(VlDeleter&)` that performs polymorphic copy via virtual dispatch and `dynamic_cast`\r\n- `src/V3EmitCHeaders.cpp` (`emitInternalMethodDecls`): Generate `vlClone()` override for each concrete (non-abstract, non-interface) class, returning `new ClassName(*this)`\r\n- `src/V3EmitCFunc.h` (`visit(AstNewCopy*)`): Changed emission from `VL_NEW(Type, *rhsp)` to `(rhsp).vlClone(vlSymsp->__Vm_deleter)` for runtime-polymorphic copying\r\n\r\n## Test\r\n- Added `test_regress/t/t_class_new_copy_polymorphism.{v,py}` — tests copy through base handle to Derived, GrandChild, and Base objects; verifies virtual dispatch and independent copy semantics\r\n\r\n---\r\nWritten by Claude Code and PlanV GmbH.\r\n\r\nReviewed by YilouWang.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-02-20",
+  "closed_at": "2026-02-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

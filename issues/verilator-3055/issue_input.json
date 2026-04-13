@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 3055,
+  "issue_url": "https://github.com/verilator/verilator/issues/3055",
+  "title": "'parameter type' data type bit width changes unexpectedly",
+  "body": "Not sure how to describe this issue shortly, so here is the long story:\r\n\r\n> Can you attach an example that shows the issue?  (Must be openly licensed, ideally in test_regress format.)\r\n\r\nThe bug occurred while messing around with [cva6](https://github.com/openhwgroup/cva6). As this is a rather large code base, I extracted only the relevant files and created a small [repo](https://github.com/7FM/verilator_bug_showcase).\r\nTo reproduce the bug simply run `make && ./sim_build/top/Vtop -t test.vcd`. Then, open the created `test.vcd` with gtkwave and load the save file `gtkwaveSignals.gtkw`.\r\nWith a working verilator version it should look something like this:\r\n![image](https://user-images.githubusercontent.com/41307817/124022994-caedf100-d9ed-11eb-82ce-06f2111a8227.png)\r\nNote that all `aux` signals have a width of 68, also the testbench prints out: `rdata_o: 0xdeadbeeff457f00e`.\r\nIn contrast to that on newer verilator versions it looks like this:\r\n![image](https://user-images.githubusercontent.com/41307817/124024224-34223400-d9ef-11eb-9a24-08ed93282a4d.png)\r\nNow some `aux` signals still have the expected width of 68 while others have a width of 98 (also the bit width for `id` changes).\r\nAlso, the testbench prints out: `rdata_o: 0x6f56df77f`.\r\n\r\nThe aux signal is packed in a struct which is defined in `axi_node_arbiter.sv` as `axi_meta_t` and passed to the instance `i_arb_inp` of the module `stream_arbiter.sv` as `parameter type DATA_T`. This type is also passed to its submodule `i_arb` of `stream_arbiter_flushable.sv` where things start to go wrong and the datatype width changes unexpectedly.\r\n\r\n> What 'verilator --version' are you using?  Did you try it with the git master version?\r\n\r\nWell I have tried severals (git bisect). Initially I have started with the v4.014 tag as good/working commit and at the time of writing the latest master commit (https://github.com/verilator/verilator/commit/708abe0dd1aa699da2c2cd44ca8f7f5ed1090f7d) as bad commit.\r\nThe result of my bisect attempt is as follows:\r\n- Last good commit: fd354922262d7b988035557c204789a9908bca49\r\n- First bad commit: 8814111724dfe597c0255d4837e18a88df44c03c\r\n\r\n\r\n> Would you be willing to try to fix Verilator yourself with assistance?\r\n\r\nNot sure if I am capable in doing so, but I am willing to assist/help where I can.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-30",
+  "closed_at": "2021-07-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

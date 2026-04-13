@@ -1,0 +1,20 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8426,
+  "issue_url": "https://github.com/llvm/circt/issues/8426",
+  "title": "[firrtl] Improve LowerLayer Optimizations",
+  "body": "In https://github.com/llvm/circt/pull/8405, I introduced changes where an operand captured from outside a layer block will cause the operand to be replaced with an XMR to _a node_ driven by the operand's value with a prefix of `_layer_probe`.\n\nThis is sub-optimal as it leaves dead code in the design. However, it was empirically necessary to allow for heavier optimization of circuits. E.g., the following circuit is a reduction of circuit that proved problematic:\n\n``` mlir\nfirrtl.circuit \"Foo\" {\n  firrtl.layer @A bind {}\n  firrtl.module @Foo(\n    in %clk: !firrtl.clock,\n    in %a: !firrtl.uint<1>,\n    in %b: !firrtl.uint<8>,\n    out %c: !firrtl.uint<8>\n  ) {\n    %c1_ui1 = firrtl.constant 1 : !firrtl.uint<1>\n    %reg = firrtl.reg %clk : !firrtl.clock, !firrtl.uint<8>\n    %x = firrtl.wire : !firrtl.uint<1>\n    %0 = firrtl.or %a, %x : (!firrtl.uint<1>, !firrtl.uint<1>) -> !firrtl.uint<1>\n    %1 = firrtl.mux(%0, %b, %reg) : (!firrtl.uint<1>, !firrtl.uint<8>, !firrtl.uint<8>) -> !firrtl.uint<8>\n    %2 = firrtl.not %a : (!firrtl.uint<1>) -> !firrtl.uint<1>\n    firrtl.matchingconnect %x, %2 : !firrtl.uint<1>\n    firrtl.matchingconnect %reg, %1 : !firrtl.uint<8>\n    firrtl.matchingconnect %c, %reg : !firrtl.uint<8>\n    firrtl.layerblock @A {\n      firrtl.assert %clk, %x, %c1_ui1, \"\" : !firrtl.clock, !firrtl.uint<1>, !firrtl.uint<1>\n    }\n  }\n}\n```\n\nWithout this dead node, I would get Verilog that looked like:\n\n```verilog\n reg  [7:0] reg_0;\n  wire       x = ~a;\n  always @(posedge clk) begin\n    if (a | x)\n      reg_0 <= b;\n```\n\nThe `if` condition is `a | ~a`. However, introducing a symbol on the wire `%x` will block later optimizations.\n\nFigure out a way to untangle this and remove the `_layer_probe` nodes. This may be able to be handled with improved optimizations in the FIRRTL pipeline.",
+  "labels": [
+    "Verilog Quality"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-17",
+  "closed_at": "2025-05-08",
+  "code_blocks": [
+    "\nWithout this dead node, I would get Verilog that looked like:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

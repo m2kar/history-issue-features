@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 6542,
+  "issue_url": "https://github.com/verilator/verilator/pull/6542",
+  "title": "Fix busted assignment",
+  "body": "I'm seeing incorrect sim results on a struct which is assigned partially in an always_comb and partially via a port map.\r\n\r\nThe problem appears to be that `what_d` is assigned from bit 0 of some trace / temp var:\r\n```\r\n    1:2: ASSIGNW 0x5555572a3ae0 <e3467#> {f39aq} @dt=0x55555726aa80@(G/w1)\r\n    1:2:1: SEL 0x555557268180 <e3464#> {f39bd} @dt=0x55555726aa80@(G/w1) widthConst=1\r\n    1:2:1:1: VARREF 0x555557267110 <e3458#> {f33ao} @dt=0x5555572abec0@(G/w34)  __VdfgTraceDriver_haf325e27_0_0 [RV] <- VAR 0x55555734eb40 <e3445#> {f33ao} @dt=0x5555572abec0@(G/w34)  __VdfgTraceDriver_haf325e27_0_0 [INTERNAL] MODULETEMP\r\n    1:2:1:2: CONST 0x5555573645a0 <e3459#> {f39bd} @dt=0x5555572ab8c0@(G/w32)  32'h0\r\n```\r\n\r\nbut the only time that trace / temp var is assigned we do so starting at bit 1:\r\n\r\n```\r\n    1:2: ASSIGNW 0x5555572a3cc0 <e3507#> {f37ay} @dt=0x555557268000@(G/w33)\r\n    1:2:1: VARREF 0x555557267ad0 <e3504#> {f37ba} @dt=0x555557268000@(G/w33)  __VdfgRegularize_hc866feca_0_0 [RV] <- VAR 0x55555734ec60 <e3448#> {f37ba} @dt=0x555557268000@(G/w33)  __VdfgRegularize_hc866feca_0_0 MODULETEMP\r\n    1:2:2: SEL 0x555557268780 <e3505#> {f37ay} @dt=0x555557268000@(G/w33) widthConst=33\r\n    1:2:2:1: VARREF 0x555557267a00 <e3496#> {f37ay} @dt=0x5555572abec0@(G/w34)  __VdfgTraceDriver_haf325e27_0_0 [LV] => VAR 0x55555734eb40 <e3445#> {f33ao} @dt=0x5555572abec0@(G/w34)  __VdfgTraceDriver_haf325e27_0_0 [INTERNAL] MODULETEMP\r\n    1:2:2:2: CONST 0x555557364780 <e3497#> {f37ay} @dt=0x5555572ab8c0@(G/w32)  32'h1\r\n```\r\n\r\nSo far I've been unable to capture this without referencing the VCD.  However, it definitely also impacts sim behavior as some failing tests of ours are how I got here in the first place.\r\n\r\nI'm just getting started trying to figure out what's going on here, but since I see `dfg` again, cc @gezalore who might find it more immediately obvious.\r\n\r\nNote, you can run `t/t_struct_split_assign.py -DSPLIT_VAR` to see the correct behavior / VCD.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-08",
+  "closed_at": "2025-10-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

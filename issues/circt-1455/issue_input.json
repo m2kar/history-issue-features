@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1455,
+  "issue_url": "https://github.com/llvm/circt/issues/1455",
+  "title": "[FIRRTL] unnecessary _Temp wires",
+  "body": "FIRTOOL produces a lot of unnecessary _T-emporal wires.\r\n\r\nThe following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module top_mod :\r\n    input clock : Clock\r\n    input foo : UInt<16>\r\n    output baz0 : UInt<16>\r\n    output baz1 : UInt<16>\r\n    reg bar : UInt<16>, clock\r\n    bar <= foo\r\n    baz0 <= bar\r\n    baz1 <= bar\r\n```\r\n\r\nCompiled with `firtool` produces this Verilog:\r\n\r\n```verilog\r\n...\r\nmodule top_mod(\r\n  input         clock,\r\n  input  [15:0] foo,\r\n  output [15:0] baz0, baz1);\r\n\r\n  reg [15:0] bar;\t// examples/reassign.fir:7:5\r\n  ...\r\n\r\n  always @(posedge clock)\t// examples/reassign.fir:8:9\r\n    bar <= foo;\t// examples/reassign.fir:8:9\r\n  wire [15:0] _T = bar;\t// examples/reassign.fir:2:10\r\n  assign baz0 = _T;\t// examples/reassign.fir:2:10\r\n  assign baz1 = _T;\t// examples/reassign.fir:2:10\r\nendmodule\r\n```\r\n\r\nExpected ouput:\r\n\r\n```verilog\r\n...\r\nmodule top_mod(\r\n  input         clock,\r\n  input  [15:0] foo,\r\n  output [15:0] baz0, baz1);\r\n\r\n  reg [15:0] bar;\t// examples/reassign.fir:7:5\r\n  ...\r\n\r\n  always @(posedge clock)\t// examples/reassign.fir:8:9\r\n    bar <= foo;\t// examples/reassign.fir:8:9\r\n  assign baz0 = bar;\t// examples/reassign.fir:2:10\r\n  assign baz1 = bar;\t// examples/reassign.fir:2:10\r\nendmodule\r\n```",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-07-20",
+  "closed_at": "2021-08-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

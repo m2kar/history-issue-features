@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5023,
+  "issue_url": "https://github.com/verilator/verilator/issues/5023",
+  "title": "Unexpected behavior for wrong pattern assignments",
+  "body": "Hello,\r\nWhat I want to describe is not actually a bug, but a possible improvement of user experience.\r\nSometimes during debugging or refactoring user may use wrong pattern assignments for dynamic or associative array, and in this case it would really help if some error is raised. However, Verilator behaves quite ambiguously in that cases.\r\n\r\n**Case 1 - wrong pattern to dynamic array**\r\n\r\n```verilog\r\nmodule test;\r\n  initial begin\r\n    int arr[] = '{\"foo\": 5, \"bar\": 10};\r\n    $display(\"%p\", arr);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nUnexpectedly it works well - keys `foo`/`bar` are simply ignored. So you can miss that flaw in your code. I admit that errors from other simulators are not clear, but they present at least:\r\n\r\n```\r\nError-[IAP] Illegal assignment pattern\r\n/path/to/test.sv, 3\r\ntb, \"'{\"foo\":5, \"bar\":10}\"\r\n  Assignment pattern is illegal due to: Assignment Pattern is incomplete, all \r\n  fields must be assigned.\r\n```\r\n\r\n```\r\n    int arr[] = '{\"foo\": 5, \"bar\": 10};\r\n                      |\r\nxmelab: *E,APBIDX (../test.sv,3|22): Array assignment pattern - index out of range [SystemVerilog].\r\n```\r\n\r\n**Case 2 - wrong pattern to associative array**\r\n\r\n```verilog\r\nmodule test;\r\n  initial begin\r\n    int dict[string] = '{5, 10};\r\n    $display(\"%p\", dict);\r\n    $finish();\r\n  end\r\nendmodule\r\n```\r\n\r\nHere I simply got: \r\n\r\n```\r\n$ verilator --binary test.sv && ./obj_dir/Vtest\r\n%Error: Verilator internal fault, sorry. Suggest trying --debug --gdbbt\r\n```\r\n\r\nIt is not possible to find out the exact reason of fault when you have changed a lot of lines, even with suggested `--debug --gdbbt`. Some error message would be a great help, like other simulators do:\r\n\r\n```\r\nxmvlog: *E,APAANP (/path/to/test.sv,3|25): Assignment pattern - positional associative array items are not allowed [SystemVerilog].\r\n    int dict[string] = '{5, 10};\r\n```\r\n```\r\nError-[IAP] Illegal assignment pattern\r\n/path/to/test.sv, 3\r\n\"'{5, 10}\"\r\n  Assignment pattern is illegal due to: Associative array literal is expected.\r\n```\r\n\r\nI understand that it is impossible to predict every single way user can wrongly write their code, but these cases are not so rare.\r\n\r\nVerilator version: Verilator 5.023 devel rev v5.020-202-g1c79df863\r\nOS: Ubuntu 22.04.4 LTS",
+  "labels": [
+    "area: lint",
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-27",
+  "closed_at": "2024-03-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

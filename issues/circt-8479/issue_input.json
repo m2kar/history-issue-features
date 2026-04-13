@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 8479,
+  "issue_url": "https://github.com/llvm/circt/pull/8479",
+  "title": "[LLHD] Improve Deseq pass performance",
+  "body": "The current implementation of the LLHD Deseq pass scales very poorly as the number of SSA values in a process increases. For one, the pass uses a crufty data flow analysis to eagerly analyse how the triggers of a process influence drive conditions and drive values. Furthermore, the pass also eagerly tracks *every* computation done on i1 values in its canonical form.\r\n\r\nWhile trying the Deseq pass on a few Verilog inputs, I noticed that even a fairly benign multi-port register file would cause the pass to grind to a halt. This commit adds that register file as a test case to `deseq.mlir`. The register file uses a long chain of control flow operations, which causes the DNFs in the Deseq pass to grow beyond 25 distinct input terms, requiring MBs of memory during brute-force DNF minimization steps.\r\n\r\nThis commit makes the Deseq pass a lot more conservative. It no longer tracks operations on the process triggers as a boolean expression in disjunctive normal form with an unbounded number of terms. Instead, the pass now uses a truth table to capture these expressions, and limits the truth table to tracking the process triggers plus an opaque \"unknown\" term to represent other logic terms. This causes all operations that do not affect the triggers to be effectively absorbed in that \"unknown\" term. The resulting truth table has at most 5 terms -- past and present value of each trigger, plus the unknown term -- which requires no more than 32 bits to represent as an APInt.\r\n\r\nThe value tables are also made more efficient. These are used to track the different values and the conditions under which they may be driven to a signal. The conditions are now tracked as compact truth tables as well, and the value itself may be an \"unknown\" value in case two distinct values may be driven onto a signal without the choice depending on a process trigger.\r\n\r\nFurthermore, this commit replaces the original iterative data flow analysis to compute the DNFs and value tables with a depth-first traversal through the IR. This DFS computes the truth tables and value tables as they are needed, which is significantly less work than gratuitously computing them upfront.\r\n\r\nAs a result, this commit removes a significant scaling hurdle from the Deseq pass and makes it work a lot quicker on larger inputs. It is more conservative now since the pass no longer tracks drive values and drive conditions precisely, but only to the degree necessary to detect the clocking and reset scheme. This is sufficient in practice, though.\r\n\r\nNote that the pass currently uses recursion for its DFS. We may want to change this in the future. Converting the recursion to a worklist-based approach is doable but extremely annoying to implement.",
+  "labels": [
+    "LLHD"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-13",
+  "closed_at": "2025-06-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 9113,
+  "issue_url": "https://github.com/llvm/circt/pull/9113",
+  "title": "[ImportVerilog] Harden SVReal materialization",
+  "body": "This patch makes real literal conversion safer and clearer, and adds tests.\r\n\r\n- **Direct lowering for AST real literals**\r\n  - `RvalueExprVisitor::visit(RealLiteral)` now emits a `moore.real_constant` via an MLIR `FloatAttr` (f64) directly, avoiding the older `materializeSVReal` path.\r\n\r\n- **Safer constant folding for reals**\r\n  - Reworked `Context::materializeSVReal(...)`:\r\n    - Verifies the AST type is floating before proceeding.\r\n    - **Coerces** `slang::ConstantValue` to the expected kind (`real`/`shortreal`) using Slang conversions.\r\n    - Avoids calling `.real()` / `.shortReal()` unless the corresponding `is*()` predicate holds.\r\n    - Emits `moore.real_literal` / `moore.shortreal_literal` with the correct MLIR float type (`f64`/`f32`).\r\n\r\n- **`RealLiteral` module** in `basic.sv`\r\n  - Checks emission of `moore.real_constant 5.000000e-01`\r\n  - Verifies implicit conversion to `shortreal` via a `moore.conversion` from `!moore.f64` → `!moore.f32`\r\n  - Confirms variable initializations for both `real` and `shortreal`.",
+  "labels": [
+    "ImportVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-19",
+  "closed_at": "2025-10-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

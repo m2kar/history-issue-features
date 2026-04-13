@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 5510,
+  "issue_url": "https://github.com/llvm/circt/pull/5510",
+  "title": "[LowerFIRRTLToHW] Create less wires with instance ports",
+  "body": "When we lower input ports on instances, if there are zero or multiple writers to the input port, we create a wire and use that as the operand to the new instance operation.  There was a change to this code to use `hw::WireOps`, which have their input value as an operand.  Since `hw::WireOp`'s cannot have multiple writers, the code is now \"the last writer wins\".  The wire's input is updated  when processing connect-like operations - we will replace the previous writer to the wire.\r\n\r\nWe already have a helper in this code to gracefully handle this situation called `createBackedge`.  A backedge is a placeholder for a value which will be determined later.  We can use a backedge as an operand to the lowered instance op, and when we find the connect operation driving a value to the old instance port, replace the backedge with the driven value.\r\n\r\nThe backedge helper in this pass gracefully handles undriven backedges and combinational loops of backedges; if a backedge has not been replaced by the end of the module body, it will be replaced with an undriven wire.\r\n\r\nAn assert had to be removed which prevented a backedge from being updated multiple times. Regular connect ops were updated to support backedges, instead of just strict connects.\r\n\r\nThis change is NFC in the FIRRTL pipeline, where the corner cases of combinational loops and undriven ports are illegal. This better supports the two illegal cases of undriven inputs and combinational loops. In the future we should replace all usages of `createTmpHWWireOp` with the backedge helpers.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-28",
+  "closed_at": "2023-06-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

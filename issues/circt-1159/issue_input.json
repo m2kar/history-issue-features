@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1159,
+  "issue_url": "https://github.com/llvm/circt/issues/1159",
+  "title": "[FIRRTL] remove unused modules",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module mod0 :\r\n    input inp: UInt<11>\r\n    output out: UInt<11>\r\n    out <= inp\r\n  module top_mod :\r\n    input inp: UInt<11>\r\n    output out: UInt<11>\r\n    out <= inp\r\n```\r\n\r\nCompiled with `firtool a_top_mod.fir --lower-to-hw --expand-whens --infer-widths --lowering-options=noAlwaysFF --verilog -o=a_top_mod_new.v` produces this Verilog:\r\n\r\n```verilog\r\nmodule mod0(\r\n  input  [10:0] inp,\r\n  output [10:0] out);\r\n\r\n  assign out = inp;\t// a_top_mod.fir:2:3\r\nendmodule\r\n\r\nmodule top_mod(\r\n  input  [10:0] inp,\r\n  output [10:0] out);\r\n\r\n  assign out = inp;\t// a_top_mod.fir:6:3\r\nendmodule\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input  [10:0] inp,\r\n  output [10:0] out\r\n);\r\n  assign out = inp;\r\nendmodule\r\n```\r\n\r\n`mod0` should be removed from the output because it is not instantiated inside `top_mod`\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-26",
+  "closed_at": "2023-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

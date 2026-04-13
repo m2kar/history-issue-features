@@ -1,0 +1,19 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5135,
+  "issue_url": "https://github.com/verilator/verilator/issues/5135",
+  "title": "`$fatal` leads to coredump and should not be affected by `+verilator+error+limit`",
+  "body": "```sv\r\nmodule m;\r\n  always #1 $display($time);\r\n\r\n  final $display(\"final\");\r\n\r\n  initial begin\r\n    #3;\r\n    $fatal(\"Timeout\");\r\n  end\r\nendmodule\r\n```\r\nCompilation & running:\r\n```\r\nverilator --binary -j 0 -MAKEFLAGS '--silent' --quiet m.sv && obj_dir/Vm +verilator+quiet\r\n```\r\nOutput:\r\n```\r\n                   1\r\n                   2\r\n[3] %Fatal: m.sv:8: Assertion failed in TOP.m\r\n%Error: m.sv:8: Verilog $stop\r\nAborting...\r\nAborted (core dumped)\r\n```\r\n\r\nv5.024-56-g5f85c8942 5f85c8942 on ArchLinux\r\n\r\nProblems:\r\n- According to LRM 20.10 `$fatal` implicitly calls `$finish`, which should execute the `final` block.\r\n- It leads to coredump somehow\r\n\r\nOther observations:\r\n- Verilator allows `+verilator+error+limit+`, this also overrides `$fatal`. Is this intended? IMHO `+verilator+error+limit+` is great for continuing the simulation a bit to see the context. However `$fatal` should override error limit.\r\n- Also `$error` does not execute the `final` block. `final` should be executed at the end of the simulation. How would you interpret *the end of simulation*?\r\n",
+  "labels": [
+    "resolution: duplicate",
+    "type: feature-IEEE"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-24",
+  "closed_at": "2025-04-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 4899,
+  "issue_url": "https://github.com/llvm/circt/issues/4899",
+  "title": "[MSFT] Assertion triggered if printing `msft.module` during pattern rewrite debugging",
+  "body": "Triggered by #4898, but i'd expect it to be reproduceable by other passes.\r\n\r\nRunning (... after #4898 lands):\r\n```mlir\r\n// RUN: circt-opt --lower-hwarith-to-hw %s\r\nmsft.module @AddInts {} (%a: ui32, %b: ui32) -> (c: ui33) {\r\n  %0 = hwarith.add %a, %b : (ui32, ui32) -> ui33\r\n  msft.output %0 : ui33\r\n}\r\n```\r\nfinishes successfully. However, Doing the same thing with `--debug` (enabling the pattern rewriter debugging infra, which will print operations in their intermediate states), a crash occurs:\r\n```\r\n//===-------------------------------------------===//\r\nLegalizing operation : 'msft.module'(0x4c4e4b0) {\r\n  * Fold {\r\nImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ConstantLike<Empty>)\r\nImplicitTypeIDRegistry::lookupOrInsert(mlir::DialectFoldInterface)\r\n  } -> FAILURE : unable to fold\r\n\r\n  * Pattern : 'msft.module -> ()' {\r\nTrying to match \"(anonymous namespace)::TypeConversionPattern\"\r\n    ** Insert  : 'msft.module'(0x4c656c0)\r\n    ** Replace : 'msft.module'(0x4c4e4b0)\r\n\"(anonymous namespace)::TypeConversionPattern\" result 1\r\n\r\n    //===-------------------------------------------===//\r\n    Legalizing operation : 'msft.module'(0x4c656c0) {\r\n    } -> SUCCESS : operation marked legal by the target\r\n    //===-------------------------------------------===//\r\n  } -> SUCCESS : pattern applied successfully\r\n// *** IR Dump After Pattern Application ***\r\nmlir-asm-printer: Verifying operation: builtin.module\r\ncirct-opt: /home/mortbopet/Work/circt/llvm/mlir/lib/IR/Region.cpp:46: mlir::Region *mlir::Region::getParentRegion(): Assertion `container && \"region is not attached to a container\"' failed.\r\n```\r\n\r\nI suspect that this might be an issue with the `msft.module` builder.",
+  "labels": [
+    "msft"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-28",
+  "closed_at": "2023-04-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

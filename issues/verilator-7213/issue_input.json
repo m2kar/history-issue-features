@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 7213,
+  "issue_url": "https://github.com/verilator/verilator/issues/7213",
+  "title": "Fix code executing after $finish",
+  "body": "Fix UVM tests/20sequences/07start_item_seq and others which have code that is currently mis-executing after a $finish statement has executed earlier.\n\nShort of treating everything like a process disable, which has performance concerns, or using exceptions which \"just no\", my plan is to add a finish check after every function call that might call $finish (determined recursively).  @gezalore for awareness in case hits what you are working on or otherwise have ideas.\n\nFor speed reasons I don't expect to treat stop similarly, since stops are more common and usually on assertion paths which will never execute.\n\n<details>\n<summary>Example</summary>\n```\nmodule t;\n\n  class job;\n    virtual function void check();\n      $display(\"%m\");\n    endfunction\n  endclass\n\n  job j;\n  bit did_finish;\n  bit did_more;\n\n  class cls;\n    job q[$];\n    virtual function void push();\n      job newj;\n      newj = new;\n      q.push_back(newj);\n    endfunction\n    virtual function void work();\n      if (0 == q.size()) begin\n        did_finish = 1;\n        $finish;\n      end\n      did_more = 1;\n      j = q.pop_front();\n      j.check();\n    endfunction\n  endclass\n\n  initial begin\n    cls c;\n    c = new;\n    c.push();\n    c.push();\n    c.work();\n    j.check();\n    c.work();\n    j.check();\n\n    c.work();  // Should $finish\n    j.check();  // Should not be called\n    $display(\"** UVM TEST FAILED **\");\n  end\n\n  final begin\n    if (!did_finish) $stop;\n    else if (did_more) $stop;\n    else $display(\"-*- All Finished -*-\");\n  end\n\nendmodule\n```\n</details>\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2026-03-07",
+  "closed_at": null,
+  "code_blocks": [
+    "module t;\n\n  class job;\n    virtual function void check();\n      $display(\"%m\");\n    endfunction\n  endclass\n\n  job j;\n  bit did_finish;\n  bit did_more;\n\n  class cls;\n    job q[$];\n    virtual function void push();\n      job newj;\n      newj = new;\n      q.push_back(newj);\n    endfunction\n    virtual function void work();\n      if (0 == q.size()) begin\n        did_finish = 1;\n        $finish;\n      end\n      did_more = 1;\n      j = q.pop_front();\n      j.check();\n    endfunction\n  endclass\n\n  initial begin\n    cls c;\n    c = new;\n    c.push();\n    c.push();\n    c.work();\n    j.check();\n    c.work();\n    j.check();\n\n    c.work();  // Should $finish\n    j.check();  // Should not be called\n    $display(\"** UVM TEST FAILED **\");\n  end\n\n  final begin\n    if (!did_finish) $stop;\n    else if (did_more) $stop;\n    else $display(\"-*- All Finished -*-\");\n  end\n\nendmodule\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

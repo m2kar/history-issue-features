@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 885,
+  "issue_url": "https://github.com/llvm/circt/pull/885",
+  "title": "[firrtl] Add expands whens pass",
+  "body": "This ports the expand whens pass from the Scala FIRRTL compiler.  This\r\npass handles last connect semantics, and replaces all When operations\r\nwith equivalent statements. For example:\r\n```firrtl\r\nmodule MyModule :\r\n  input en: UInt<1>\r\n  input a: UInt\r\n  input b: UInt\r\n  wire w: UInt\r\n  when en :\r\n    w <= a\r\n  else :\r\n    w <= b\r\n```\r\nis expanded to:\r\n```firrtl\r\nmodule MyModule :\r\n  input en: UInt<1>\r\n  input a: UInt\r\n  input b: UInt\r\n  wire w: UInt\r\n  w  <= mux(en, a, b)\r\n```\r\n\r\nThis pass does not perform initialization coverage checking, where the\r\nSFC pass does.  This means that we will not print an error for the\r\nfollowing case:\r\n```firrtl\r\nmodule MyModule :\r\n  input en: UInt<1>\r\n  input a: UInt\r\n  wire w: UInt\r\n  when en :\r\n    w <= a\r\n```\r\nIn this situation, the pass unconditionally connects `a` to `w`. This\r\ncheck should either be relaxed for MFC, or implemented as a verifier\r\ncheck.\r\n\r\nThis pass does not consolidate attaches.",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2021-04-04",
+  "closed_at": "2021-04-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

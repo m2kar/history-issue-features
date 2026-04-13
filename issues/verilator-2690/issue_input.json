@@ -1,0 +1,20 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2690,
+  "issue_url": "https://github.com/verilator/verilator/issues/2690",
+  "title": "Fix error on output real becoming integer",
+  "body": "Thanks for taking the time to report this.\r\n\r\nWhat would you like added/supported?\r\nI have seen big EDA simulators support this concept where a wire gets turned into a real value through the verilog hierarchy. This is specifically to support behavioural models inside netlists extracted from the analog schematic entry tool. The netlist will itself connect up modules with wires.  \r\n\r\nCan you attach an example that runs on other simulators?  (Must be openly licensed, ideally in test_regress format.)\r\nI am not sure that this runs on other simulators, but it shows the concept:\r\n\r\n    // DESCRIPTION: Verilator: Verilog Test module\r\n    //\r\n    // This file ONLY is placed into the Public Domain, for any use,\r\n    // without warranty, 2020 by Peter Monsson.\r\n    // SPDX-License-Identifier: CC0-1.0\r\n    \r\n    module t (/*AUTOARG*/\r\n       // Inputs\r\n       clk\r\n       );\r\n    \r\n       input clk;\r\n       integer cyc; initial cyc=1;\r\n    \r\n       wire    gain = 1'b0;\r\n       real    in;\r\n       always_comb in = (cyc-4) * 1.0;\r\n       wire    cmp;\r\n       \r\n       adc_netlist netlist(clk, in, gain, cmp);\r\n       \r\n       always @ (posedge clk) begin\r\n          if (cyc!=0) begin\r\n             cyc <= cyc + 1;\r\n             $display(\"cyc=%0d cmp=%d\", cyc, cmp);\r\n             if (cyc==10) begin\r\n                $write(\"*-* All Finished *-*\\n\");\r\n                $finish;\r\n             end\r\n          end\r\n       end\r\n    \r\n    endmodule\r\n    \r\n    // Analog Frontend ADC example\r\n    // input, PGA, comparator. \r\n    \r\n    module adc_netlist(clk, in, gain, cmp);\r\n       input clk;\r\n       input in;\r\n       input gain;\r\n       output cmp;\r\n       \r\n       // real in; //Fails in verilator without this, but not in Big EDA simulator\r\n       \r\n       wire pga_out; //TODO: convert to real or support real \r\n       // can also be an array of wire in analog netlist: wire [1:0]\r\n       pga_model pga0(in, gain, pga_out);\r\n       comparator_model cmp0(clk, pga_out, cmp);\r\n       \r\n    endmodule\r\n    \r\n    module pga_model(in, gain, out);\r\n       input in;\r\n       input gain;\r\n       output out;\r\n    \r\n       real in;\r\n       real out;\r\n       \r\n       always_comb begin\r\n          out = in * 3.0;\r\n       end\r\n       \r\n    endmodule\r\n    \r\n    module comparator_model(clk, in, cmp);\r\n       input clk;\r\n       input in;\r\n       output cmp;\r\n    \r\n       real in;\r\n       \r\n       reg cmp;\r\n       \r\n       always_ff @(posedge clk) begin\r\n          cmp <= in > 0.0;\r\n       end\r\n       \r\n    endmodule\r\n    \r\n\r\nMay we assist you in trying to fix this yourself?\r\n\r\nSure, but I have no idea where to start. I am also not sure how long this would take. Finally, is this something that you would like to see supported? I don't know if this is even valid according to the spec.",
+  "labels": [
+    "area: lint",
+    "resolution: fixed",
+    "area: data-types"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-11",
+  "closed_at": "2020-12-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

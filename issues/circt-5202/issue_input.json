@@ -1,0 +1,19 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 5202,
+  "issue_url": "https://github.com/llvm/circt/issues/5202",
+  "title": "[FIRRTL] Incorrect Register Parsing",
+  "body": "The FIRRTL parser uses the reset initial value being the reset as a shorthand for \"this is a reset-less register\". However, it only narrowly means that if the reset signal is `UInt<1>(0)`. Consider the following:\r\n\r\n```\r\ncircuit Foo :\r\n  module Foo :\r\n    input clock: Clock\r\n    input a: UInt<1>\r\n    output b: UInt<1>\r\n\r\n    reg r: UInt<1>, clock with: (reset => (UInt<1>(1), r))\r\n\r\n    r <= a\r\n    b <= r\r\n```\r\n\r\nThis register never exits an indeterminate state and can be optimized to some constant. CIRCT currently thinks this is a reset-less register:\r\n\r\n```verilog\r\nmodule Foo(\r\n  input  clock,\r\n         a,\r\n  output b\r\n);\r\n\r\n  reg r;\r\n  always @(posedge clock)\r\n    r <= a;\r\n  assign b = r;\r\nendmodule\r\n```\r\n\r\nSFC will produce:\r\n```verilog\r\nmodule Foo(\r\n  input   clock,\r\n  input   a,\r\n  output  b\r\n);\r\n  assign b = 1'h0;\r\nendmodule\r\n```\r\n\r\nNote: this code is impossible to emit from Chisel due to limitations of how it works.",
+  "labels": [
+    "bug",
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2023-05-15",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

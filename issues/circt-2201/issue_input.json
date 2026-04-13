@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 2201,
+  "issue_url": "https://github.com/llvm/circt/pull/2201",
+  "title": "[HW] Fix IndexBitWidthConstraint when the size is 1",
+  "body": "Currently `array_get ` doesn't work well when the length of array is 1. For example,\r\n```mlir\r\nhw.module @array1(%arr: !hw.array<1xi1>) -> (o1: !hw.array<1xi1>) {\r\n    %false = hw.constant false\r\n    %0 = hw.array_get %arr[%false] : !hw.array<1xi1>\r\n    hw.output %arr : !hw.array<1xi1>\r\n  }\r\n```\r\nwill produce \r\n```\r\nfoo.mlir:3:28: error: use of value '%idx' expects different type than prior uses: 'i0' vs 'i1'\r\n  %val = hw.array_get %arr[%idx] : !hw.array<1xi1>\r\n                           ^\r\nfoo.mlir:2:3: note: prior use here\r\n  %idx = hw.constant 0 : i1\r\n```\r\nThis is because `IndexBitWidthConstraint` asserts that the width of index is equal to `llvm::Log2_64_Ceil(length)` which is equal to 0 when length is 1. This PR modifies to use `length == 1? 1 : llvm::Log2_64_Ceil(length)`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-17",
+  "closed_at": "2021-11-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "verilator",
+  "type": "pull_request",
+  "issue_number": 2974,
+  "issue_url": "https://github.com/verilator/verilator/pull/2974",
+  "title": "Rework Ast hashing to be stable",
+  "body": "Note: this depends on #2967, which is the first of the 2 patches, so ignore that. If you prefer we can combine these 2 PRs, but this second one is more likely to cause issues, so might be good to keep them separate I'm happy to rework #2967 based on feedback. This PR is marked as Draft only beacuse of this dependency, otherwise it's good to go.\r\n\r\nRegarding the hashing, it is all stable now, working towards #2958. \r\n\r\nThe commit message says:\r\n```\r\nEliminated reliance on pointer values in AstNode hashes in order to make\r\nthem stable. This requires moving the sameHash functions into a visitor,\r\nas nodes pointed to via members (and not child nodes) need to be hashed\r\nthemselves.\r\n\r\nThe hashes are now stable (as far as I could test them), and the impact\r\non verilation time is small enough not to be reliably measurable.\r\n ```\r\n\r\nRegarding performance. The test suite (`time make test`), with 100% ccache hit rate, before this change:\r\n```\r\nmake test  4190.18s user 1716.78s system 1492% cpu 6:35.84 total\r\n```\r\nWith this change:\r\n```\r\nmake test  4151.96s user 1707.60s system 1483% cpu 6:35.00 total\r\n```\r\nOutput on my large design is identical, and `perf` shows nothing reliably measurable in the profile related to the hashing, so that's all good as far as I can see.\r\n\r\nYou will notice I removed `V3DupFinder::sameHash`. This was only used in V3Gate, but this caused a problem, as V3Gate computes hashes of AstActive nodes via this `sameHash` function which contain the assignments V3Gate is modifying, but computing the hash of the AstActive now requires computing the hash of its contents, and V3Hasher then caches the hash of the assignments as well. A deduped signal on the RHS of such assignments is then replaced, which would have to invalidate the cached hash, otherwise it misses transitive dedup opportunities (which t_dedupe_clk_gate finds). It's a lot simpler just not to use `V3DupFinser::sameHash`, as it's only supposed to be a speedier `AstNode::sameTree`, but now hashing itself requires a traversal in most cases, and `AstNode::sameTree` can discriminate non-same trees quickly, it only needs to do a full traversal for   trees that are indeed identical, in which case the hashes should have been identical as well, so they wouldn't have helped. Also profiling shows this has no performance impact.\r\n\r\nWe could optimize a bit further by setting the `hashDtype` and `hashChildren` flags to false in more cases, but the hashing is already not performance critical.\r\n\r\nExt tests are passing.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-20",
+  "closed_at": "2021-05-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

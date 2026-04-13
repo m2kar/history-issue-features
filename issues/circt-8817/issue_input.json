@@ -1,0 +1,21 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 8817,
+  "issue_url": "https://github.com/llvm/circt/issues/8817",
+  "title": "[FIRRTL] Support special substitutions in assert intrinsics",
+  "body": "The following seems like it should work, but it doesn't:\n\n``` firrtl\nFIRRTL version 5.1.0\ncircuit Foo1 :\n  public module Foo1 :\n    input clock : Clock\n    input reset : UInt<1>\n    input a : UInt<1>\n\n    node _T = eq(reset, UInt<1>(0h0))\n    intrinsic(circt_chisel_ifelsefatal<format = \"Assertion failed: In {{HierarchicalModuleName}}, a = %d\\n\", label = \"chisel3_builtin\">, clock, a, _T, a)\n    node _T_1 = eq(reset, UInt<1>(0h0))\n    when _T_1 :\n      printf(clock, UInt<1>(0h1), \"In {{HierarchicalModuleName}}, a = %d\", a) : printf\n```\n\nThis compiles to:\n\n``` verilog\nmodule Foo1(\n  input clock,\n        reset,\n        a\n);\n\n  `ifndef SYNTHESIS\n    always @(posedge clock) begin\n      if (~reset & ~a) begin\n        if (`ASSERT_VERBOSE_COND_)\n          $error(\"Assertion failed: In {{HierarchicalModuleName}}, a = %d\\n\", a);\n        if (`STOP_COND_)\n          $fatal;\n      end\n      if ((`PRINTF_COND_) & ~reset)\n        $fwrite(32'h80000002, \"In %m, a = %d\", a);\n    end // always @(posedge)\n  `endif // not def SYNTHESIS\nendmodule\n```\n\nIt seems like you should be able to use any special substitution in an assert intrinsic. However, this doesn't do the replacement.\n\nThis was created from the example here: https://github.com/chipsalliance/chisel/issues/5001#issuecomment-3146901413",
+  "labels": [
+    "enhancement",
+    "FIRRTL"
+  ],
+  "state": "closed",
+  "created_at": "2025-08-03",
+  "closed_at": "2026-03-21",
+  "code_blocks": [
+    "\nThis compiles to:\n\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

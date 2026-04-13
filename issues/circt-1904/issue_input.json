@@ -1,0 +1,18 @@
+{
+  "tool": "circt",
+  "type": "issue",
+  "issue_number": 1904,
+  "issue_url": "https://github.com/llvm/circt/issues/1904",
+  "title": "[FIRRTL] error in dead code mismatch",
+  "body": "The following FIRRTL program\r\n\r\n```python\r\ncircuit top_mod :\r\n  module mod_0 :\r\n    input clock0: Clock\r\n    input reset: Reset\r\n  module top_mod :\r\n    input clock0: Clock\r\n    input reset: UInt<1>\r\n```\r\n\r\nCompiled with `firtool   --lower-to-hw --infer-widths --imconstprop --lowering-options=disallowPackedArrays,emittedLineLength=8192 --mlir-timing --verilog -o=$VFILE2` produces this error:\r\n\r\n```mlir\r\na_top_mod.fir:2:10: error: 'firrtl.module' op contains an abstract reset type after InferResets\r\n  module mod_0 :\r\n         ^\r\na_top_mod.fir:2:10: note: see current operation: \"firrtl.module\"() ( {\r\n^bb0(%arg0: !firrtl.clock, %arg1: !firrtl.reset):  // no predecessors\r\n}) {annotations = [], portAnnotations = [[], []], portDirections = 0 : i2, portNames = [\"clock0\", \"reset\"], sym_name = \"mod_0\", type = (!firrtl.clock, !firrtl.reset) -> ()} : () -> ()\r\n```\r\n\r\nCompiled with `firrtl-1.5-SNAPSHOT` produces this Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input   clock0,\r\n  input   reset\r\n);\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "FIRRTL"
+  ],
+  "state": "open",
+  "created_at": "2021-09-29",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 2924,
+  "issue_url": "https://github.com/verilator/verilator/issues/2924",
+  "title": "Correct interpretation of VerilatedVcdC->dump() ???",
+  "body": "In my `simulation_driver.cpp` file I am simulating my input i.e. clock `i_clk` using this for loop: \r\n\r\n```\r\n\tfor(tc = 0; tc < (1 << 22); tc++){\r\n\r\n\t\ttb->i_clk = 0;\r\n\t\ttb->eval();\r\n\t\t\r\n\t\ttf->dump(tc);\r\n\t\t\r\n\t\ttb->i_clk = 1;\r\n\t\ttb->eval();\r\n\t\t\r\n\t\ttc = tc + 2;\r\n\t\ttf->dump(tc);\r\n\r\n\t}\r\n```\r\n\r\nFor loop in the first paragraph sets `i_clk() = 0` and because of a change I immediately evaluate the model as well. \r\n\r\nIn the second paragraph I use `tf->dump(tc)`. This is poorly documented inside `/usr/share/verilator/include/verilated_vcd_c.h` where there is only one comment saying:\r\n\r\n```\r\n   /// Write one cycle of dump data\r\n```\r\n\r\nSo I assume it should write `tc` cycle (only one cycle) of data in the `tf`.\r\n\r\nThen the third paragraph sets `i_clk() = 1` and because of a change I immediately evaluate the model as well. \r\n\r\nFourth paragraph then increments `tc` by `2` and again uses `tf->dump(tc)` that I assume will write twice as more cycles of data to the file `tf` than it did before. \r\n\r\nBut it looks like my interpretation of `tf->dump()`is COMPLETELY wrong, because the state when `i_clk = 0` is twice as long as `i_clk = 1` and I expected it to be vice versa. Please take a look at the image.\r\n\r\n![Screenshot_2021-05-05_21-38-38](https://user-images.githubusercontent.com/8915807/117199286-4ebe9f00-adea-11eb-8e61-453fc559899c.png)\r\n\r\nWhy is my result quite the oposite of what I expected? What is the correct interpretation of `tf->dump()`? ",
+  "labels": [
+    "resolution: answered"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-05",
+  "closed_at": "2021-05-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "verilator",
+  "type": "issue",
+  "issue_number": 5552,
+  "issue_url": "https://github.com/verilator/verilator/issues/5552",
+  "title": "struct literal internal error",
+  "body": "@wsnyder we're running into a problem with this commit causing a lot of internal errors when we build:\r\n```\r\ncommit 2fc94557a09f2d91d9f4b14752090af5cef9dea7 (HEAD -> master)\r\nAuthor: Wilson Snyder <wsnyder@wsnyder.org>\r\nDate:   Fri Oct 11 22:37:48 2024 -0400\r\n\r\n    Fix error on enums with x/z using .name(), and internal refactoring\r\n```\r\n\r\nI haven't been able to reproduce in a `test_regress` test yet but am still working on it.  What I know so far is that `WidthVisitor::visit(AstPin*)` is failing on:\r\n```\r\n                    patternp->childDTypep(setDtp);\r\n```\r\nwith:\r\n```\r\n%Error: Internal Error: foo.sv:129:47: ../V3Ast.cpp:418: Adding to non-empty, non-list op1\r\n                                                                                          : ... note: In instance 'bar.baz'\r\n-node: PATTERN 0x55555abd3a40 <e129620> {ez129bv} @dt=0@\r\n  129 |         .struct_param(Some_pkg::struct_t'{\r\n```\r\n\r\nI've tried to reproduce with a struct literal assignment to a parameter but no luck so far with that.  When I look at one of our failing cases with the debugger I find that we're trying to set this data type:\r\n```\r\n$4 = (AstNode *) 0x55555b143c20\r\n(rr) p AstNode::dumpGdb(newp)                                                                                                                                                                                                                                                                                                                                                                                                           \r\nThis=REFDTYPE 0x55555b143c20 back=0 headtail=this\r\n  Fileline = qux.sv:29:27: \r\n  REFDTYPE 0x55555b143c20 <e305108#> {dp29bb} @dt=0x55555719ee00@(w97)  struct_t refdt=0x55555719ee00(w97) -> typedef=0x555557266ff0 -> STRUCTDTYPE 0x55555719ee00 <e305107#> {x8an} @dt=this@(w97)  Some_pkg::struct_t [PACKED]\r\n```\r\nbut we already have this `m_op1p`:\r\n```\r\n$6 = (AstNode *) 0x55555abe5ef0\r\n(rr) p AstNode::dumpGdb(m_op1p)\r\nThis=REFDTYPE 0x55555abe5ef0 back=0x55555abd3a40 headtail=this\r\n  Fileline = foo.sv:129:34: \r\n  REFDTYPE 0x55555abe5ef0 <e129618> {ez129bi} @dt=0@  struct_t -> typedef=0x555557266ff0 -> STRUCTDTYPE 0x55555719ee00 <e305107#> {x8an} @dt=this@(w97)  Some_pkg::struct_t [PACKED]\r\n```\r\nI don't know if this is enough information to do anything with but I wanted to bounce this off of you while I continue to try to make a reproducer in case you can see what's going on here.",
+  "labels": [
+    "resolution: fixed"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-23",
+  "closed_at": "2024-10-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

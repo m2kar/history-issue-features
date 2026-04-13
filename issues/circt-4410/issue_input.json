@@ -1,0 +1,16 @@
+{
+  "tool": "circt",
+  "type": "pull_request",
+  "issue_number": 4410,
+  "issue_url": "https://github.com/llvm/circt/pull/4410",
+  "title": "[IMDCE] Improve liveness propagation of input ports",
+  "body": "Previously when an instance result was marked as alive, the liveness was propagate to its module port. This is unnecessary when the port is input port. \r\n\r\nFor the example below, it was unable to remove module `Bar` because instance result `Bar.a` is marked as alive.  \r\n```\r\ncircuit Foo :\r\n  module Bar: \r\n    input a: UInt<1>\r\n  module Foo :\r\n    input a : UInt<1>\r\n    output b : UInt<2>\r\n    inst bar of Bar\r\n    bar.a <= a\r\n    b <= bar.a\r\n```\r\n\r\nw/ PR:\r\n```verilog\r\nmodule Foo(\r\n  input  a,\r\n  output b);\r\n\r\n  assign b = a;\r\nendmodule\r\n```\r\n\r\nw/o PR:\r\n```verilog\r\nmodule Bar(\r\n  input a);\r\n\r\nendmodule\r\n\r\nmodule Foo(\r\n  input  a,\r\n  output b);\r\n\r\n  Bar bar (\r\n    .a (a)\r\n  );\r\n  assign b = a;\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-06",
+  "closed_at": "2022-12-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}
