@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2653,
+  "title": "Race in similar codes gives different results",
+  "features": [
+    {
+      "name": "xor assignment with clock as operand",
+      "category": "data_model",
+      "description": "Code should include a continuous assignment where a combinational output is computed from a registered signal XOR'ed with the clock signal directly",
+      "snippet": "reg internal;\nassign out = internal ^ clk;\nalways @ (posedge clk) internal <= in;",
+      "tags": ["xor", "clock_operand", "continuous_assignment", "race_condition"],
+      "source_bug_id": "2653",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2653",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "registered signal used in clock-edge condition",
+      "category": "timing",
+      "description": "Code should include a registered signal that is both updated on a clock edge and used in a conditional expression within the same or another clocked always block",
+      "snippet": "reg internal;\nalways @ (posedge clk) internal <= in;\nalways @ (posedge clk) if (internal) $stop;",
+      "tags": ["registered_signal", "clock_edge", "conditional_check", "race_condition"],
+      "source_bug_id": "2653",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2653",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "stop assertion in clocked always block with cycle condition",
+      "category": "control_flow",
+      "description": "Code should include a clocked always block with assertion checks using $stop that depend on cycle counter conditions",
+      "snippet": "integer cyc = 0;\nalways @ (posedge clk) cyc <= cyc + 1;\nalways @ (posedge clk) if (cyc == 2) if (out != 1'b1) $stop;",
+      "tags": ["assertion", "stop", "cycle_counter", "clocked_block"],
+      "source_bug_id": "2653",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2653",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

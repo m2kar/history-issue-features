@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 4542,
+  "title": "Warn on scheduling of non-inlined tasks/functions",
+  "features": [
+    {
+      "name": "recursive task with state modification",
+      "category": "control_flow",
+      "description": "Code should include a task that recursively calls itself and modifies a state variable within the recursive call chain",
+      "snippet": "task foo(logic recurse);\n    if (recurse) foo(0);\n    else bar = ~bar;\nendtask",
+      "tags": [
+        "recursive_task",
+        "task",
+        "recursion",
+        "side_effect"
+      ],
+      "source_bug_id": "4542",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4542",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "task recursion controlled by parameter",
+      "category": "control_flow",
+      "description": "Code should include a task with a parameter that controls whether to recurse, passing a different value on recursive call",
+      "snippet": "task foo(logic recurse);\n    if (recurse) foo(0);\nendtask\nfoo(1);",
+      "tags": [
+        "task",
+        "recursion",
+        "parameter_controlled"
+      ],
+      "source_bug_id": "4542",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4542",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational signal depending on state modified by recursive task",
+      "category": "data_model",
+      "description": "Code should include a combinational signal assignment that depends on a variable which is modified as a side effect of a recursive task call",
+      "snippet": "logic bar, qux;\nassign qux = $c(\"1\") & bar;",
+      "tags": [
+        "combinational_assignment",
+        "signal_dependency",
+        "side_effect"
+      ],
+      "source_bug_id": "4542",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4542",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

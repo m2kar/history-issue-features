@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 5220,
+  "title": "C++ compile errors: operands to ‘?:’ have different types, base operand of ‘->’ is not a pointer, etc.",
+  "features": [
+    {
+      "name": "queue of class handles indexed dynamically",
+      "category": "data_model",
+      "description": "Code should include a queue of class handles (typedef with [$]) declared as a dynamic array indexed by a variable derived from a foreach loop over an enum array",
+      "snippet": "class z_txn_class;\n  rand logic [2:0] req_opcode;\nendclass\nmodule m;\n  typedef z_txn_class z_txn_q_t[$];\n  channel_t ch;\n  z_txn_q_t z_txn_qs[ch.num()];\n  z_txn_class z_txn[ch.num()];\n  foreach (CH_ALL[i]) begin\n    z_txn[i] = z_txn_qs[i].pop_front();\n  end\nendmodule",
+      "tags": [
+        "queue",
+        "class_handle",
+        "dynamic_indexing",
+        "foreach",
+        "enum_array"
+      ],
+      "source_bug_id": "5220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5220",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "queue size method call in ternary expression",
+      "category": "control_flow",
+      "description": "Code should include a queue size() method call where the queue reference is the result of a ternary operator with mismatched branch types (queue vs scalar)",
+      "snippet": "function automatic logic f(int i);\n  return (condition ? q[i] : scalar_val).size();\nendfunction",
+      "tags": [
+        "queue",
+        "ternary",
+        "size_method",
+        "type_mismatch"
+      ],
+      "source_bug_id": "5220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5220",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "class with rand members used in queue",
+      "category": "data_model",
+      "description": "Code should include a class with randomizable members used as queue element type, where objects are created dynamically and pushed into queues indexed by enum-derived indices",
+      "snippet": "class z_txn_class;\n  rand txn_type_t req_txn_type;\n  rand cid_t cid;\n  rand logic [2:0] req_opcode;\nendclass\nz_txn_class z_txn;\nz_txn = new;\nz_txn_qs[i].push_back(z_txn);",
+      "tags": [
+        "class",
+        "rand",
+        "queue",
+        "dynamic_objects"
+      ],
+      "source_bug_id": "5220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5220",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ]
+}

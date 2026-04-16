@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 5935,
+  "title": "always_comb is always called, even in case no change in sensitivity list",
+  "features": [
+    {
+      "name": "always_comb triggered by always_ff assigned variables",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block that reads variables (state, next) assigned via non-blocking assignment in an always_ff block, where a counter (i) stops incrementing after reaching a threshold",
+      "snippet": "typedef enum bit[10:0] { stateReset, delayAfterReset, sendQPIWriteCmd } StateMachine;\nStateMachine state, next;\nint i;\nalways_ff @(posedge clk) begin\n  if (i < 5) i++;\n  state <= next;\nend\nalways_comb begin\n  if (i == 5) $display(\"i is 5\");\n  case (state)\n    stateReset: next = delayAfterReset;\n    delayAfterReset: next = sendQPIWriteCmd;\n  endcase\nend",
+      "tags": [
+        "always_comb",
+        "always_ff",
+        "sensitivity_list",
+        "nonblocking_assignment",
+        "state_machine"
+      ],
+      "source_bug_id": "5935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5935",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb with case statement and enum state",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block with a case statement that assigns to variables also used in an always_ff block, where the case expression involves an enum-typed state variable",
+      "snippet": "typedef enum bit[10:0] { stateReset, delayAfterReset, sendQPIWriteCmd } StateMachine;\nStateMachine state, next;\nalways_ff @(posedge clk) state <= next;\nalways_comb begin\n  case (state)\n    stateReset: next = delayAfterReset;\n    delayAfterReset: next = sendQPIWriteCmd;\n  endcase\nend",
+      "tags": [
+        "always_comb",
+        "case_statement",
+        "enum",
+        "state_machine",
+        "combinational_logic"
+      ],
+      "source_bug_id": "5935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5935",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "shared variable between always_ff and always_comb",
+      "category": "control_flow",
+      "description": "Code should include variables that are read in always_comb and assigned in always_ff, where the always_ff counter stops modifying the shared variables at a threshold, causing always_comb to re-evaluate improperly",
+      "snippet": "int i;\nlogic [10:0] state, next;\nalways_ff @(posedge clk) begin\n  if (i < 5) i++;\n  state <= next;\nend\nalways_comb begin\n  if (i == 5) $display(\"done\");\n  next = state + 1;\nend",
+      "tags": [
+        "always_comb",
+        "always_ff",
+        "shared_variable",
+        "counter",
+        "sensitivity"
+      ],
+      "source_bug_id": "5935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5935",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

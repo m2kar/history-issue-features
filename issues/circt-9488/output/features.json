@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 9488,
+  "title": "[FIRRTL] Domain inference should consider control dependencies",
+  "features": [
+    {
+      "name": "ternary conditional assign with cross-domain select signal",
+      "category": "control_flow",
+      "description": "Code should include a continuous conditional assignment where the select/condition signal originates from a different clock domain than the output and data signals, testing whether the compiler correctly infers domain dependencies introduced by control flow",
+      "snippet": "// c is from ClockDomain A; x, y, z are from ClockDomain B\n// The control dependency on c means z implicitly depends on A\nlogic c;\nlogic x, y, z;\nassign z = c ? x : y;",
+      "tags": ["conditional_assign", "ternary", "cross_domain", "clock_domain", "control_dependency", "domain_inference"],
+      "source_bug_id": "circt-9488",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9488",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mux with mismatched clock domain on select vs data",
+      "category": "data_model",
+      "description": "Code should include a multiplexer-style assignment where the select input belongs to a different clock domain annotation than the data inputs and output, so that domain inference must propagate control-flow dependencies across domain boundaries",
+      "snippet": "// Domain A drives select; Domain B drives data and output\n// Tool should detect that output z inherits a dependency on Domain A\nlogic [0:0] sel_domA;\nlogic [7:0] data_domB_0, data_domB_1;\nlogic [7:0] out_domB;\nassign out_domB = sel_domA ? data_domB_1 : data_domB_0;",
+      "tags": ["mux", "clock_domain", "domain_inference", "control_dependency", "conditional_assign"],
+      "source_bug_id": "circt-9488",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9488",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

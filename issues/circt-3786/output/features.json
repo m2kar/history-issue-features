@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 3786,
+  "title": "ExportVerilog spills without outputting storage",
+  "features": [
+    {
+      "name": "read_inout from indexed logic storage in concat assignment",
+      "category": "data_model",
+      "description": "Code should include sv.logic storage with array indexing and read_inout operations whose results are used directly as operands in comb.concat, then assigned via sv.bpassign to sv.reg",
+      "snippet": "sv.logic _RANDOM : !hw.inout<uarray<5xi32>>;\nsv.array_index_inout %_RANDOM[%c0_i32] : !hw.inout<uarray<5xi32>>, i32;\nsv.read_inout %elem : !hw.inout<i32>;\ncomb.extract %read from 0 : (i32) -> i2;\ncomb.concat %extracted : i2, i4, i32, i10;\nsv.bpassign %reg, %concat : i32",
+      "tags": [
+        "sv_logic",
+        "array_index_inout",
+        "read_inout",
+        "comb_extract",
+        "comb_concat",
+        "bpassign"
+      ],
+      "source_bug_id": "3786",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3786",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register init with multiple random extracts concatenation",
+      "category": "data_model",
+      "description": "Code should include multiple sv.read_inout operations from indexed sv.logic storage feeding into comb.extract, then feeding into comb.concat for register initialization via sv.bpassign",
+      "snippet": "sv.logic _RANDOM : !hw.inout<uarray<5xi32>>;\n%r = sv.reg : !hw.inout<i32>;\n%v0 = sv.array_index_inout %_RANDOM[%c0_i32];\n%v1 = sv.read_inout %v0;\n%e0 = comb.extract %v1 from 0 : (i32) -> i2;\n%v2 = sv.array_index_inout %_RANDOM[%c1_i32];\n%v3 = sv.read_inout %v2;\n%e1 = comb.extract %v3 from 2 : (i32) -> i4;\n%cat = comb.concat %e0, %e1 : i2, i4;\nsv.bpassign %r, %cat : i32",
+      "tags": [
+        "sv_logic",
+        "read_inout",
+        "comb_extract",
+        "comb_concat",
+        "register_init"
+      ],
+      "source_bug_id": "3786",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3786",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "indexed logic array uarray storage type",
+      "category": "data_model",
+      "description": "Code should include sv.logic with uarray type used as indexed storage for random value initialization with ifdef RANDOMIZE_REG_INIT",
+      "snippet": "sv.logic _RANDOM : !hw.inout<uarray<5xi32>>;\nsv.array_index_inout %_RANDOM[%idx] : !hw.inout<uarray<5xi32>>, i32;\nsv.bpassign %elem, %val : i32;\nsv.read_inout %elem : !hw.inout<i32>",
+      "tags": [
+        "sv_logic",
+        "uarray",
+        "array_index_inout",
+        "random_storage"
+      ],
+      "source_bug_id": "3786",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3786",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

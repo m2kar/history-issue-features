@@ -1,0 +1,76 @@
+{
+  "tool": "verilator",
+  "issue_number": 4918,
+  "title": "[Vpi] Fix missing scopes 1",
+  "features": [
+    {
+      "name": "verilator public_on attribute with module hierarchy",
+      "category": "data_model",
+      "description": "Code should include the verilator public_on directive applied to a design with multi-level module hierarchy where an intermediate module only contains submodule instantiations",
+      "snippet": "/* verilator public_on */\nmodule wrapper;\n  sub_module my_sub ();\nendmodule",
+      "tags": [
+        "verilator_public",
+        "vpi",
+        "scope_hierarchy",
+        "module_instantiation"
+      ],
+      "source_bug_id": "4918",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4918",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "wrapper module with no public wires instantiating submodule",
+      "category": "data_model",
+      "description": "Code should include a wrapper module that has no public wires of its own but instantiates a submodule with public wires",
+      "snippet": "module sub_wrapper;\n  sub my_sub ();\nendmodule\n\nmodule sub;\n  wire [7:0] redundant;\nendmodule",
+      "tags": [
+        "module_hierarchy",
+        "no_public_wires",
+        "submodule_instantiation"
+      ],
+      "source_bug_id": "4918",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4918",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional generate with module instantiation in scope hierarchy",
+      "category": "control_flow",
+      "description": "Code should include a conditional generate block that instantiates a module which itself instantiates another submodule, creating a scope chain",
+      "snippet": "generate\n  if (ENABLE) begin : gen_scope\n    wrapper inst ();\n  end\nendgenerate",
+      "tags": [
+        "conditional_generate",
+        "module_instantiation",
+        "scope_chain"
+      ],
+      "source_bug_id": "4918",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4918",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-level module hierarchy with internal scope traversal",
+      "category": "data_model",
+      "description": "Code should include a three-level module hierarchy where the middle level has no public wires, to test VPI scope traversal through intermediate scopes",
+      "snippet": "module top;\n  middle_layer inst ();\nendmodule\n\nmodule middle_layer;\n  bottom_layer leaf ();\nendmodule",
+      "tags": [
+        "multi_level_hierarchy",
+        "vpi_scope",
+        "internal_scope"
+      ],
+      "source_bug_id": "4918",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4918",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

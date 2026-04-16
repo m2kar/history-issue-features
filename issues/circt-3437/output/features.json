@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 3437,
+  "title": "[PrepareForEmission] Temporaries are not spilled in a procedural region",
+  "features": [
+    {
+      "name": "sv_initial procedural block with complex combinational expression",
+      "category": "timing",
+      "description": "Code should include an sv.initial procedural block containing a complex combinational expression using comb.or with many operands",
+      "snippet": "sv.initial {\n  %state_read = sv.read_inout %state : !hw.inout<i2>\n  %read = comb.extract %state_read from 0 : (i2) -> i1\n  %lhs = comb.or %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read : i1\n  %rhs = comb.or %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read : i1\n  %out = comb.concat %lhs, %rhs : i1, i1\n  sv.passign %state, %out : i2\n}",
+      "tags": ["sv_initial", "procedural_block", "comb_or", "complex_expression"],
+      "source_bug_id": "circt-3437",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3437",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sv.reg used in sv.initial with multiple reads",
+      "category": "data_model",
+      "description": "Code should include an sv.reg that is read multiple times within an sv.initial procedural block",
+      "snippet": "%state = sv.reg : !hw.inout<i2>\nsv.initial {\n  %state_read = sv.read_inout %state : !hw.inout<i2>\n  %read = comb.extract %state_read from 0 : (i2) -> i1\n  %lhs = comb.or %read, %read, %read, %read, %read, %read, %read, %read : i1\n}",
+      "tags": ["sv_reg", "sv_initial", "multiple_reads", "inout"],
+      "source_bug_id": "circt-3437",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3437",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "comb.concat used in procedural assignment",
+      "category": "data_model",
+      "description": "Code should include a comb.concat operation whose result is used in an sv.passign within a procedural region",
+      "snippet": "sv.initial {\n  %out = comb.concat %lhs, %rhs : i1, i1\n  sv.passign %state, %out : i2\n}",
+      "tags": ["comb_concat", "sv_passign", "procedural_assignment"],
+      "source_bug_id": "circt-3437",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3437",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "temporal variable requiring spilling in procedural region",
+      "category": "control_flow",
+      "description": "Code should include a pattern where multiple comb.or operations feed into comb.concat and then sv.passign, requiring temporaries to be spilled for correct Verilog emission",
+      "snippet": "%lhs = comb.or %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read : i1\n%rhs = comb.or %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read, %read : i1\n%out = comb.concat %lhs, %rhs : i1, i1\nsv.passign %state, %out : i2",
+      "tags": ["temporal_spilling", "comb_or", "comb_concat", "procedural_region"],
+      "source_bug_id": "circt-3437",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3437",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

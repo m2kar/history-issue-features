@@ -1,0 +1,43 @@
+{
+  "tool": "verilator",
+  "issue_number": 2898,
+  "title": "V3Premit goes into infinite loop on always read-and-write",
+  "features": [
+    {
+      "name": "always block with self-read-write hazard",
+      "category": "control_flow",
+      "description": "Code should include an always @(*) procedural block that first assigns to a variable and then reads from that same variable for array/bit indexing within a subsequent assignment",
+      "snippet": "typedef struct packed { logic [3-1:0] car_en; } car_liquid_rpv_s;\ntypedef struct packed { car_liquid_rpv_s liquid_rpv; } car_rpv_s;\ntypedef struct packed { logic car_enable; car_rpv_s car_rpv; logic [2-1:0] car_sn; } car_pv_s;\ntypedef struct packed { car_pv_s car_pv; } car_sch_ctxt_s;\ncar_sch_ctxt_s car_action_pv_ctxt;\nalways @(*) begin\n    car_action_pv_ctxt.car_pv.car_rpv.liquid_rpv.car_en[car_action_pv_ctxt.car_pv.car_sn] = 1'b0;\nend",
+      "tags": [
+        "always_comb",
+        "read_write_hazard",
+        "struct_access",
+        "array_index"
+      ],
+      "source_bug_id": "2898",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2898",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "struct member array indexed by same struct variable field",
+      "category": "data_model",
+      "description": "Code should include a packed struct with a bit-vector field that is indexed by another field of the same struct variable being assigned in an always block",
+      "snippet": "logic [3-1:0] car_en;\nlogic [2-1:0] car_sn;\nalways @(*) begin\n    var.car_en[var.car_sn] = 1'b0;\nend",
+      "tags": [
+        "struct",
+        "packed",
+        "array_index",
+        "self_reference"
+      ],
+      "source_bug_id": "2898",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2898",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

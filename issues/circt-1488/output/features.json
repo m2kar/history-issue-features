@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 1488,
+  "title": "[FIRRTL] imconstprop mismatch",
+  "features": [
+    {
+      "name": "output port read back in combinational XOR assignment",
+      "category": "data_model",
+      "description": "Code should include a module where one output port is driven by an input and then the same output port is used as an operand in the combinational XOR expression that drives a second output port",
+      "snippet": "module Bar(\n  input  a, b,\n  output c, d\n);\n  assign c = b;\n  assign d = a ^ c;\nendmodule",
+      "tags": ["output_port", "xor", "combinational", "intra_module_read", "constant_propagation"],
+      "source_bug_id": "circt-1488",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1488",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "intermediate wire holding XOR of input and output port",
+      "category": "data_model",
+      "description": "Code should include an intermediate wire assigned the XOR of a primary input and a combinational output port, with the intermediate wire then forwarded to a second output port",
+      "snippet": "module Bar(\n  input  a, b,\n  output c, d\n);\n  wire _c;\n  assign c = b;\n  assign _c = a ^ c;\n  assign d = _c;\nendmodule",
+      "tags": ["intermediate_wire", "xor", "output_port", "combinational", "two_outputs"],
+      "source_bug_id": "circt-1488",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1488",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical module instantiation with fully mirrored I/O ports",
+      "category": "general",
+      "description": "Code should include a top-level module that instantiates a submodule and directly connects every submodule port to a matching top-level port with no additional logic",
+      "snippet": "module top_mod(\n  input  a, b,\n  output c, d\n);\n  Bar bar (\n    .a (a),\n    .b (b),\n    .c (c),\n    .d (d)\n  );\nendmodule",
+      "tags": ["module_instantiation", "hierarchical", "port_connection", "pass_through"],
+      "source_bug_id": "circt-1488",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1488",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

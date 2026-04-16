@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 5150,
+  "title": "Submodule port var not updated when module is not inlined",
+  "features": [
+    {
+      "name": "output port with no_inline_module pragma",
+      "category": "timing",
+      "description": "Code should include a submodule with output port that uses verilator no_inline_module pragma to prevent inlining",
+      "snippet": "module sub(output logic val);\n   /* verilator no_inline_module */\nendmodule",
+      "tags": ["output_port", "no_inline_module", "module_instantiation"],
+      "source_bug_id": "5150",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5150",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "port aliasing via instantiation connection",
+      "category": "data_model",
+      "description": "Code should include an output port connected to parent signal through instantiation where aliasing between parent signal and port variable must occur",
+      "snippet": "logic val = 0;\nsub dut(.val(val));\ninitial val = 1;",
+      "tags": ["port_aliasing", "output_port", "module_instantiation", "signal_assignment"],
+      "source_bug_id": "5150",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5150",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cross-module signal assertion in non-inlined module",
+      "category": "control_flow",
+      "description": "Code should include an assertion checking a submodule port value where the parent signal is assigned before the assertion and module inlining is disabled",
+      "snippet": "logic val = 0;\nsub dut(.val(val));\ninitial begin\n   val = 1;\n   assert(dut.val == 1);\nend",
+      "tags": ["cross_module_reference", "assertion", "signal_propagation", "no_inline_module"],
+      "source_bug_id": "5150",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5150",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "submodule port variable aliasing in stl_sequent phase",
+      "category": "timing",
+      "description": "Code should include alias assignment generated in stl_sequent phase that fails to propagate parent signal changes to non-inlined submodule port",
+      "snippet": "t__DOT__val = vlSymsp->TOP__t__DOT__dut.val;",
+      "tags": ["alias_assignment", "stl_sequent", "port_aliasing", "late_optimization"],
+      "source_bug_id": "5150",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5150",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

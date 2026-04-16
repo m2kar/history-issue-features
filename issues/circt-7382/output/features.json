@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 7382,
+  "title": "[ImportVerilog] Add HierarchicalNames.cpp to support hierarchical names.",
+  "features": [
+    {
+      "name": "downward hierarchical name reference from parent to child instance",
+      "category": "general",
+      "description": "Code should include a downward hierarchical name reference where a parent module reads a variable from an instantiated child module using the dot-separated path syntax (instance.variable)",
+      "snippet": "module SubA;\n  int a;\nendmodule\n\nmodule Top;\n  int x;\n  SubA subA();\n  assign x = subA.a;\nendmodule",
+      "tags": ["hierarchical_name", "downward_reference", "module_instance", "cross_module"],
+      "source_bug_id": "circt-7382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7382",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "upward hierarchical name reference from child to parent module",
+      "category": "general",
+      "description": "Code should include an upward hierarchical name reference where a child module reads a variable from its parent module using the absolute hierarchical path (TopModule.variable)",
+      "snippet": "module Top;\n  int x;\n  SubA subA();\nendmodule\n\nmodule SubA;\n  int a;\n  assign a = Top.x;\nendmodule",
+      "tags": ["hierarchical_name", "upward_reference", "cross_module", "absolute_path"],
+      "source_bug_id": "circt-7382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7382",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "sibling hierarchical name reference between unrelated modules",
+      "category": "general",
+      "description": "Code should include hierarchical name references between two sibling modules at the same hierarchy level that mutually reference each other's variables via absolute module paths",
+      "snippet": "module A;\n  int a = B.b;\nendmodule\n\nmodule B;\n  int b = A.a;\nendmodule",
+      "tags": ["hierarchical_name", "sibling_reference", "cross_module", "circular_dependency"],
+      "source_bug_id": "circt-7382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7382",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "hierarchical name reference into multiply-instantiated module",
+      "category": "general",
+      "description": "Code should include hierarchical name references targeting variables inside a module type that is instantiated more than once, accessing different instance paths of the same module definition",
+      "snippet": "module SubC;\n  int a, b;\nendmodule\n\nmodule Bar;\n  SubC subC1();\n  SubC subC2();\n  int u = subC1.a;\n  assign subC2.b = u;\nendmodule",
+      "tags": ["hierarchical_name", "multiple_instances", "same_module_type", "cross_instance"],
+      "source_bug_id": "circt-7382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7382",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

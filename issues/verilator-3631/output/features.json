@@ -1,0 +1,60 @@
+{
+  "tool": "verilator",
+  "issue_number": 3631,
+  "title": "warning not disabled despite /* verilator lint_off MULTIDRIVEN */ and /* verilator lint_on MULTIDRIVEN */ around the code",
+  "features": [
+    {
+      "name": "lint_off MULTIDRIVEN around generate block driving signal",
+      "category": "preprocess",
+      "description": "Code should include /* verilator lint_off MULTIDRIVEN */ and /* verilator lint_on MULTIDRIVEN */ directives placed around signal assignments inside a generate loop, where the signal is also driven by another always_ff block outside the generate",
+      "snippet": "genvar i;\nalways_ff @(posedge clk) begin o_q[0] <= !o_q[0]; end\ngenerate for (i=1; i<W_CNT; i++) begin : gen\n/* verilator lint_off MULTIDRIVEN */\n    always_ff @(negedge o_q[i-1]) begin o_q[i] <= !o_q[i]; end\n/* verilator lint_on MULTIDRIVEN */\nend endgenerate",
+      "tags": [
+        "lint_off",
+        "multidriven",
+        "generate"
+      ],
+      "source_bug_id": "3631",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3631",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "self-referential unpacked array element in always_ff",
+      "category": "control_flow",
+      "description": "Code should include an always_ff block with a self-referential assignment to an unpacked array element using logical NOT: signal <= !signal",
+      "snippet": "logic [W_CNT-1:0] o_q;\nalways_ff @(posedge clk) begin o_q[0] <= !o_q[0]; end",
+      "tags": [
+        "always_ff",
+        "unpacked_array",
+        "self_reference",
+        "circular_logic"
+      ],
+      "source_bug_id": "3631",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3631",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unpacked array driven by multiple always_ff blocks with async reset",
+      "category": "data_model",
+      "description": "Code should include an unpacked array signal driven by multiple always_ff blocks with different clocking (one posedge, one negedge) and asynchronous reset logic",
+      "snippet": "output logic [W_CNT-1:0] o_q;\nalways_ff @(posedge clk or negedge rst) begin if (!rst) o_q[0] <= 1'b1; else o_q[0] <= !o_q[0]; end\nalways_ff @(negedge o_q[i-1] or negedge rst) begin if (!rst) o_q[i] <= 1'b0; else o_q[i] <= !o_q[i]; end",
+      "tags": [
+        "unpacked_array",
+        "multidriven",
+        "async_reset",
+        "different_clocking"
+      ],
+      "source_bug_id": "3631",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3631",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

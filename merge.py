@@ -19,13 +19,17 @@ LEGACY_POOL = Path("/edazz/FeatureFuzz-SV/data/feature_pool.json")
 
 # ── 收集 ──
 
-def collect_features() -> tuple[list[dict], dict]:
+def collect_features(repo_filter: str | None = None) -> tuple[list[dict], dict]:
     """遍历 issues/*/output/features.json, 收集所有 features."""
     all_features = []
     stats = {"issues_total": 0, "issues_with_features": 0, "issues_skipped": 0}
 
     issues_dir = ROOT / "issues"
     for issue_dir in sorted(issues_dir.iterdir()):
+        if not issue_dir.is_dir():
+            continue
+        if repo_filter and not issue_dir.name.startswith(f"{repo_filter}-"):
+            continue
         output = issue_dir / "output" / "features.json"
         if not output.is_file():
             continue
@@ -253,33 +257,14 @@ def format_output(features: list[dict]) -> list[dict]:
     return output
 
 
-def build_dataset(output_features: list[dict], graph: dict) -> dict:
-    """构建完整的 EDAzz feature_dataset.json."""
-    by_id = {}
-    by_category = defaultdict(list)
-    by_source = defaultdict(list)
-
-    for idx, feat in enumerate(output_features):
-        fid = feat["feature_id"]
-        by_id[fid] = idx
-        by_category[feat["category"]].append(fid)
-        by_source[feat["source"]].append(fid)
-
-    source_counts = {src: len(ids) for src, ids in by_source.items()}
-
+def build_dataset(output_features: list[dict], graph: dict,
+                   source_label: str = "history_v2") -> dict:
+    """构建 EDAzz per-source feature dataset (与 spec_features.json 同格式)."""
     return {
-        "schema_version": 1,
+        "source": source_label,
+        "total_features": len(output_features),
         "features": output_features,
-        "feature_index": {
-            "by_id": by_id,
-            "by_category": dict(by_category),
-            "by_source": dict(by_source),
-        },
         "feature_graph": graph,
-        "source_summary": {
-            "total_features": len(output_features),
-            "by_source": source_counts,
-        },
         "build_info": {
             "built_at": datetime.now(timezone.utc).replace(microsecond=0)
                         .isoformat().replace("+00:00", "Z"),
@@ -291,14 +276,12 @@ def build_dataset(output_features: list[dict], graph: dict) -> dict:
 
 # ── 主流程 ──
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output", help="Output path")
-    parser.add_argument("--stats", action="store_true", help="Print stats only")
-    args = parser.parse_args()
+EDAZZ_HISTORY_DIR = Path("/edazz/EDAzz/data/feature_sources/history")
 
+
+def _merge_repo(repo: str, args):
     # 1. 收集
-    raw_features, stats = collect_features()
+    raw_features, stats = collect_features(repo_filter=repo)
     print(f"Collected: {len(raw_features)} features from {stats['issues_with_features']} issues")
     print(f"  (skipped: {stats['issues_skipped']}, no output: "
           f"{stats['issues_total'] - stats['issues_with_features'] - stats['issues_skipped']})")
@@ -325,12 +308,10 @@ def main():
 
     # 5. 统计
     cat_dist = Counter(f.get("category", "?") for f in deduped)
-    tool_dist = Counter(f.get("tool", "?") for f in deduped)
     complexity_dist = Counter(f.get("construct_complexity", 0) for f in deduped)
     ub_count = sum(1 for f in deduped if f.get("ub_type"))
 
     print(f"\nCategory distribution: {dict(cat_dist)}")
-    print(f"Tool distribution: {dict(tool_dist)}")
     print(f"Complexity distribution: {dict(sorted(complexity_dist.items()))}")
     print(f"UB features: {ub_count}")
 
@@ -346,24 +327,37 @@ def main():
     # 7. 格式化输出
     output_features = format_output(deduped)
 
-    # 8. 构建完整 dataset
-    dataset = build_dataset(output_features, graph)
+    # 8. 构建 dataset (per-source 格式)
+    dataset = build_dataset(output_features, graph, source_label=f"history_v2_{repo}")
 
-    # 9. 写入
-    output_path = args.output or str(ROOT / "output" / "merged_history_v2_features.json")
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(output_path).write_text(json.dumps(dataset, indent=2, ensure_ascii=False) + "\n")
-    print(f"\nOutput: {output_path} ({len(output_features)} features)")
+    # 9. 写入本地
+    local_path = ROOT / "output" / f"{repo}_features.json"
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    local_path.write_text(json.dumps(dataset, indent=2, ensure_ascii=False) + "\n")
+    print(f"\nLocal output: {local_path} ({len(output_features)} features)")
 
-    # 10. 验证 (可选)
-    try:
-        import sys
-        sys.path.insert(0, "/edazz/EDAzz")
-        from tools.contracts import validate_feature_dataset
-        validate_feature_dataset(dataset)
-        print("EDAzz validation: PASSED")
-    except Exception as e:
-        print(f"EDAzz validation: FAILED - {e}")
+    # 10. 复制到 EDAzz
+    edazz_path = EDAZZ_HISTORY_DIR / f"{repo}_features.json"
+    EDAZZ_HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    edazz_path.write_text(json.dumps(dataset, indent=2, ensure_ascii=False) + "\n")
+    print(f"Copied to: {edazz_path}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", help="Output path")
+    parser.add_argument("--repo", choices=["verilator", "circt"],
+                        help="Only merge specific repo")
+    parser.add_argument("--stats", action="store_true", help="Print stats only")
+    args = parser.parse_args()
+
+    repos = [args.repo] if args.repo else ["verilator", "circt"]
+
+    for repo in repos:
+        print(f"\n{'='*60}")
+        print(f"  Merging: {repo}")
+        print(f"{'='*60}")
+        _merge_repo(repo, args)
 
 
 if __name__ == "__main__":

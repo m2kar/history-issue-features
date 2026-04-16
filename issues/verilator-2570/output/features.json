@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2570,
+  "title": "Error-BLKLOOPINIT for unroll count > 8192",
+  "features": [
+    {
+      "name": "delayed non-blocking assignment to array element inside for loop",
+      "category": "control_flow",
+      "description": "Code should include a for loop that performs a delayed non-blocking assignment (using #delay syntax) to an array element in each iteration, triggering BLKLOOPINIT unsupported error",
+      "snippet": "logic [31:0] memory [0:255];\ninteger i;\ntask xMemoryAll;\n  begin\n    for (i = 0; i < 256; i = i + 1) begin\n      memory[i] <= #1 {32{1'bx}};\n    end\n  end\nendtask",
+      "tags": ["for_loop", "non_blocking_assignment", "delayed_assignment", "array", "task", "blkloopinit"],
+      "source_bug_id": "2570",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2570",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "for loop with iteration count at or above default unroll threshold",
+      "category": "control_flow",
+      "description": "Code should include a for loop whose iteration count is exactly at or above 8192 (the default --unroll-count threshold) combined with a non-blocking delayed assignment to an array, causing BLKLOOPINIT to persist even when --unroll-count is adjusted",
+      "snippet": "logic [20:0] memory [0:8191];\ninteger i;\ntask flushAll;\n  begin\n    for (i = 0; i < 8192; i = i + 1) begin\n      memory[i] <= #0.005 {21{1'bx}};\n    end\n  end\nendtask",
+      "tags": ["for_loop", "unroll_count", "large_loop", "non_blocking_assignment", "array", "blkloopinit"],
+      "source_bug_id": "2570",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2570",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "replication expression as RHS of delayed array assignment in loop",
+      "category": "data_model",
+      "description": "Code should include a for loop assigning a replication expression (e.g. {N{1'bx}}) to each element of an unpacked array using a delayed non-blocking assignment operator",
+      "snippet": "logic [21:0] mem [0:63];\ninteger i;\nfor (i = 0; i < 64; i = i + 1) begin\n  mem[i] <= #1 {22{1'bx}};\nend",
+      "tags": ["replication_expression", "non_blocking_assignment", "delayed_assignment", "array", "for_loop"],
+      "source_bug_id": "2570",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2570",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

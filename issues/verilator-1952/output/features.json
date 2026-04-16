@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 1952,
+  "title": "Question: verilator unpacked dimension signal dependency without circular logic error",
+  "features": [
+    {
+      "name": "unpacked array access via loop index with self-reference",
+      "category": "data_model",
+      "description": "Code should include an unpacked array accessed through a for-loop index where an element at index i references the same array at a smaller index (i-1 or earlier)",
+      "snippet": "logic foo [NUM_FOO-1:0];\nalways_comb begin\n  for(int i = 0; i < NUM_FOO; i++) begin\n    foo[i] = foo[i-1];\n  end\nend",
+      "tags": ["unpacked_array", "for_loop", "always_comb", "circular_logic"],
+      "source_bug_id": "1952",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1952",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "two-dimensional unpacked array for selection",
+      "category": "data_model",
+      "description": "Code should include a two-dimensional unpacked array used as a select/mux signal with first dimension as bit vector",
+      "snippet": "logic [NUM_FOO-2:0] select [NUM_FOO-1:0];\nlogic foo [NUM_FOO-1:0];",
+      "tags": ["unpacked_array", "two_dimensional", "select"],
+      "source_bug_id": "1952",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1952",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "generate loop wrapping always_comb to avoid circular dependency",
+      "category": "control_flow",
+      "description": "Code should include a generate-for loop wrapping an always_comb block to work around false circular logic detection on unpacked arrays",
+      "snippet": "generate\n  for(genvar i = 0; i < NUM_FOO; i++) begin\n     always_comb begin\n       foo[i] = foo[i-1];\n     end\n  end\nendgenerate",
+      "tags": ["generate_for", "always_comb", "unpacked_array", "workaround"],
+      "source_bug_id": "1952",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1952",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

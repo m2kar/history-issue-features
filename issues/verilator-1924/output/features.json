@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 1924,
+  "title": "Question: Related to BLKANDNBLK error while linting",
+  "features": [
+    {
+      "name": "struct type imported from external package",
+      "category": "data_model",
+      "description": "Code should include a struct type definition in a package that is imported into a module where the struct variable is declared and used",
+      "snippet": "package pkg; typedef struct { logic a; logic b; } my_struct_t; endpackage\nimport pkg::my_struct_t;\nmodule top(output my_struct_t s);\nendmodule",
+      "tags": [
+        "struct",
+        "package",
+        "import",
+        "typedef"
+      ],
+      "source_bug_id": "1924",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1924",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "blocking assignment via assign to struct member",
+      "category": "control_flow",
+      "description": "Code should include a continuous assignment (assign) to a struct member where the struct type is defined in an external package",
+      "snippet": "assign s.a = 1'b1;",
+      "tags": [
+        "assign",
+        "blocking_assignment",
+        "struct_member"
+      ],
+      "source_bug_id": "1924",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1924",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non-blocking assignment in always_ff to struct member",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment to a struct member inside an always_ff block, where the struct type is imported from an external package",
+      "snippet": "always_ff @(posedge clk) s.b <= 1'b0;",
+      "tags": [
+        "always_ff",
+        "non_blocking_assignment",
+        "struct_member"
+      ],
+      "source_bug_id": "1924",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1924",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mixed blocking and non-blocking assignments to different struct members",
+      "category": "control_flow",
+      "description": "Code should include blocking assignment via assign and non-blocking assignment in always_ff to different members of the same struct variable, triggering BLKANDNBLK error incorrectly when struct is from external package",
+      "snippet": "package pkg; typedef struct { logic a; logic b; } my_struct_t; endpackage\nimport pkg::my_struct_t;\nmodule top(input clk, output my_struct_t s);\nassign s.a = 1'b1;\nalways_ff @(posedge clk) s.b <= 1'b0;\nendmodule",
+      "tags": [
+        "struct",
+        "blocking_assignment",
+        "non_blocking_assignment",
+        "mixed_assignments",
+        "struct_members"
+      ],
+      "source_bug_id": "1924",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1924",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

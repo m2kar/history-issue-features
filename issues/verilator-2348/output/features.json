@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 2348,
+  "title": "question about BLKANDNBLK",
+  "features": [
+    {
+      "name": "nonblocking assignment to same signal in multiple always blocks",
+      "category": "data_model",
+      "description": "Code should include a signal assigned with non-blocking assignment (<=) in two different always blocks, where one block is clocked (posedge clock) and another is combinational (edge-sensitive to a data signal)",
+      "snippet": "reg [7:0] q;\nreg d, clock, aclr;\nalways @(posedge aclr or posedge clock) begin\n  if (aclr) q <= 0;\nend\nalways @(d) begin\n  q <= d;\nend",
+      "tags": [
+        "nonblocking_assignment",
+        "multiple_always_blocks",
+        "blkandnblk"
+      ],
+      "source_bug_id": "2348",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2348",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameter-controlled for loop affecting nonblocking assignment",
+      "category": "control_flow",
+      "description": "Code should include a for loop controlled by a parameter where the loop iteration count affects whether a non-blocking assignment to a signal will execute",
+      "snippet": "parameter lpm_delay = 0;\nreg [7:0] q;\ninteger i;\nalways @(posedge aclr or posedge clock) begin\n  if (aclr) begin\n    for (i = 0; i <= lpm_delay; i = i + 1)\n      q <= 0;\n  end\nend",
+      "tags": [
+        "for_loop",
+        "parameter",
+        "nonblocking_assignment",
+        "control_flow"
+      ],
+      "source_bug_id": "2348",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2348",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional nonblocking assignment inside always block",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment to a signal that is conditionally executed based on a parameter value inside an always block",
+      "snippet": "parameter lpm_delay = 0;\nreg [7:0] q;\nreg d;\nalways @(d) begin\n  if (lpm_delay == 0)\n    q <= d;\nend",
+      "tags": [
+        "conditional_assignment",
+        "nonblocking_assignment",
+        "parameter"
+      ],
+      "source_bug_id": "2348",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2348",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

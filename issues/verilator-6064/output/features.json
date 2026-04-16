@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6064,
+  "title": "Duplication of nodes in V3DfgPeephole",
+  "features": [
+    {
+      "name": "chained ternary operators with wire assignments",
+      "category": "control_flow",
+      "description": "Code should include 14 or more levels of chained ternary conditional operators where each result wire feeds into the next ternary expression",
+      "snippet": "wire [31:0] result_1 = cond[0] ? 32'h2000 : result_0;\nwire [31:0] result_2 = cond[1] ? 32'h1000 : result_1;\nwire [31:0] result_3 = cond[2] ? 32'h800 : result_2;\nwire [31:0] result_final = cond[13] ? 32'h1 : result_13;",
+      "tags": ["ternary_operator", "chained_wires", "conditional_assignment"],
+      "source_bug_id": "6064",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6064",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "generate for-loop with bit-slice concatenation assignment",
+      "category": "control_flow",
+      "description": "Code should include a generate for-loop using genvar that performs bit-slice concatenation assignments to an unpacked array wire",
+      "snippet": "parameter SIZE = 32;\nwire [SIZE-1:0] result_concat;\ngenerate\n  for (genvar i = 0; i < SIZE - 4; i+=4) begin\n    assign result_concat[i+3:i] = {result_final[i+1:i], result_final[i+3:i+2]};\n  end\nendgenerate",
+      "tags": ["generate_block", "for_loop", "genvar", "bit_slice", "concat_assignment"],
+      "source_bug_id": "6064",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6064",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "unpacked array indexed by genvar in continuous assignment RHS",
+      "category": "data_model",
+      "description": "Code should include an unpacked array (reg or wire) with size greater than 24 elements, indexed by a genvar variable in a ternary expression within a chain of assignments",
+      "snippet": "reg cond[30:0];\nwire [31:0] result_1 = cond[0] ? 32'h2000 : result_0;\nwire [31:0] result_final = cond[13] ? 32'h1 : result_13;",
+      "tags": ["unpacked_array", "genvar_index", "ternary_index"],
+      "source_bug_id": "6064",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6064",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

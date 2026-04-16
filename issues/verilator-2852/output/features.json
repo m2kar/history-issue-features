@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 2852,
+  "title": "what's the possible reason for the hang at time 0 in cosim mode?",
+  "features": [
+    {
+      "name": "recursive evaluation cycle at time 0 between initial and combinational logic",
+      "category": "timing",
+      "description": "Code should include an initial block that triggers a combinational logic evaluation which recursively re-enters initial evaluation, creating an infinite loop at time 0 without reporting DIDNOTCONVERGE error",
+      "snippet": "import \"DPI\" function void dpi_func();\nlogic [7:0] a, b;\nassign b = a;\ninitial dpi_func();",
+      "tags": ["evaluation_order", "recursive_evaluation", "time_0", "initial_block", "combinational_logic"],
+      "source_bug_id": "2852",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2852",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "eval_settle called from within initial evaluation loop",
+      "category": "control_flow",
+      "description": "Code should include an evaluation sequence where _eval_settle is invoked from within _eval_initial_loop, causing recursive combinational logic evaluation at time 0",
+      "snippet": "initial begin\n  $display(\"initial\");\nend\nalways @(*) begin\n  $display(\"combo\");\nend",
+      "tags": ["eval_settle", "eval_initial_loop", "control_flow", "recursive", "time_0"],
+      "source_bug_id": "2852",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2852",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "tool": "verilator",
+  "issue_number": 5080,
+  "title": "A specific pattern is verilated into an infinite loop when optimizations are enabled",
+  "features": [
+    {
+      "name": "always block triggered by inout signal",
+      "category": "timing",
+      "description": "Code should include an always block with sensitivity list containing an inout signal, which is not a standard input-driven trigger",
+      "snippet": "inout inoutSignal;\nalways @(inoutSignal) begin\n  if (cond1) begin\n    if (cond2) begin\n      testTask;\n    end\n  end\nend",
+      "tags": [
+        "always_block",
+        "inout_signal",
+        "sensitivity_list"
+      ],
+      "source_bug_id": "5080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5080",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "infinite_loop"
+    },
+    {
+      "name": "task with delay called in nested conditionals",
+      "category": "timing",
+      "description": "Code should include a task containing a timing delay (#1) that is called from within two levels of nested if statements inside an always block",
+      "snippet": "task testTask;\n  begin\n    #1;\n  end\nendtask\n\nalways @(inoutSignal) begin\n  if (cond1) begin\n    if (cond2) begin\n      testTask;\n    end\n  end\nend",
+      "tags": [
+        "task",
+        "delay",
+        "nested_conditionals",
+        "always_block"
+      ],
+      "source_bug_id": "5080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5080",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "infinite_loop"
+    },
+    {
+      "name": "nested conditional task call with inout trigger",
+      "category": "control_flow",
+      "description": "Code should include an always block triggered by inout signal, with two nested if conditionals leading to a task call, where the task contains a delay statement",
+      "snippet": "inout inoutSignal;\nreg cond1;\nreg cond2;\ntask testTask; #1; endtask\nalways @(inoutSignal) if (cond1) if (cond2) testTask;",
+      "tags": [
+        "inout",
+        "always",
+        "nested_if",
+        "task_call",
+        "delay"
+      ],
+      "source_bug_id": "5080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5080",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "infinite_loop"
+    }
+  ]
+}

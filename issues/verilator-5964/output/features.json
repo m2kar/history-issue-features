@@ -1,0 +1,58 @@
+{
+  "tool": "verilator",
+  "issue_number": 5964,
+  "title": "When the length of a SystemVerilog array parameter (A[B]) is another parameter(B), verilator always use default value of B",
+  "features": [
+    {
+      "name": "unpacked array parameter sized by another parameter",
+      "category": "data_model",
+      "description": "Code should include an unpacked array parameter where the array size is defined by another parameter (e.g., parameter int ARRAY_SIZE = 4; parameter logic [7:0] ARR[ARRAY_SIZE];)",
+      "snippet": "parameter int ARRAY_SIZE = 4;\nparameter logic [7:0] ARR[ARRAY_SIZE];",
+      "tags": [
+        "parameter",
+        "unpacked_array",
+        "array_size_from_param"
+      ],
+      "source_bug_id": "5964",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameter override at instantiation with smaller value",
+      "category": "data_model",
+      "description": "Code should include a module instantiation that overrides a parameter to a value smaller than its default, where that parameter determines array size",
+      "snippet": "module dut #(parameter int ARRAY_SIZE = 4) (); localparam logic [7:0] arr[ARRAY_SIZE]; endmodule\nlocalparam int P = 2;\ndut #(.ARRAY_SIZE(P)) u_dut;",
+      "tags": [
+        "parameter_override",
+        "instantiation",
+        "parameter_propagation"
+      ],
+      "source_bug_id": "5964",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "assignment pattern with fewer elements than unpacked array parameter size",
+      "category": "data_model",
+      "description": "Code should include an assignment pattern that provides fewer elements than the declared unpacked array parameter size, triggering size mismatch",
+      "snippet": "parameter int ARRAY_SIZE = 4;\nlogic [7:0] arr[ARRAY_SIZE];\ninitial arr = '{8'h00, 8'h01};",
+      "tags": [
+        "assignment_pattern",
+        "unpacked_array",
+        "size_mismatch"
+      ],
+      "source_bug_id": "5964",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

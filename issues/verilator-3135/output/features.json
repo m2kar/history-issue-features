@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 3135,
+  "title": "Verilog parameters with division cause width lint warnings",
+  "features": [
+    {
+      "name": "parameter division causing width inference mismatch",
+      "category": "data_model",
+      "description": "Code should include a localparam defined as division of another parameter, where the result's width is larger than needed",
+      "snippet": "localparam CLOCK_FREQ = 25_000_000;\nlocalparam CLOCK_COUNT = CLOCK_FREQ / 60;",
+      "tags": [
+        "parameter",
+        "division",
+        "width_inference"
+      ],
+      "source_bug_id": "3135",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3135",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "clog2 of parameter with division",
+      "category": "data_model",
+      "description": "Code should include $clog2 applied to a parameter computed via division, where width calculation may be incorrect",
+      "snippet": "localparam CLOCK_FREQ = 25_000_000;\nlocalparam CLOCK_COUNT = CLOCK_FREQ / 60;\nlocalparam WIDTH = $clog2(CLOCK_COUNT);",
+      "tags": [
+        "parameter",
+        "clog2",
+        "division",
+        "width_calculation"
+      ],
+      "source_bug_id": "3135",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3135",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "comparison between undersized reg and division-based parameter",
+      "category": "data_model",
+      "description": "Code should include a comparison between a register with width derived from $clog2 and a parameter defined via division",
+      "snippet": "localparam CLOCK_FREQ = 25_000_000;\nlocalparam CLOCK_COUNT = CLOCK_FREQ / 60;\nlocalparam WIDTH = $clog2(CLOCK_COUNT);\nreg [WIDTH-1:0] r_counter;\nif (r_counter == CLOCK_COUNT-1)",
+      "tags": [
+        "comparison",
+        "parameter",
+        "division",
+        "width_mismatch"
+      ],
+      "source_bug_id": "3135",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3135",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "workaround using part-select to narrow parameter width",
+      "category": "data_model",
+      "description": "Code should include a workaround where a parameter width is explicitly narrowed using part-select after division",
+      "snippet": "localparam CLOCK_FREQ = 25_000_000;\nlocalparam CLOCK_COUNT_ = CLOCK_FREQ / 60;\nlocalparam WIDTH = $clog2(CLOCK_COUNT_);\nlocalparam CLOCK_COUNT = CLOCK_COUNT_[WIDTH-1:0];",
+      "tags": [
+        "parameter",
+        "part_select",
+        "workaround",
+        "division"
+      ],
+      "source_bug_id": "3135",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3135",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 4445,
+  "title": "Fix x-assign unique when index out-of-range of an unpacked struct array",
+  "features": [
+    {
+      "name": "unpacked struct array with ternary conditional indexing",
+      "category": "data_model",
+      "description": "Code should include an unpacked struct array accessed via ternary conditional where index may exceed array bounds, used with --x-assign unique",
+      "snippet": "typedef struct { logic a; } Data_t;\nlocalparam int SIZE = 20;\nreg[$clog2(SIZE)-1 : 0] ptr;\nData_t buffer[SIZE];\nout <= (ptr <= (SIZE - 1)) ? buffer[ptr].a : random_val;",
+      "tags": [
+        "unpacked_array",
+        "struct",
+        "ternary",
+        "conditional_index",
+        "x-assign"
+      ],
+      "source_bug_id": "4445",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4445",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "struct member access in ternary true branch",
+      "category": "data_model",
+      "description": "Code should include a struct member access placed outside a ternary operator where the true branch is an unpacked array element, causing type mismatch between struct and scalar in false branch",
+      "snippet": "Data_t buffer[SIZE];\nreg[$clog2(SIZE)-1 : 0] ptr;\n// Incorrect: .a applied outside ternary\n// out <= (ptr <= (SIZE-1)) ? buffer[ptr] : random_val;  // types mismatch\n// Correct: .a should be inside ternary\nout <= (ptr <= (SIZE-1)) ? buffer[ptr].a : random_val;",
+      "tags": [
+        "struct_member",
+        "ternary",
+        "type_mismatch",
+        "unpacked_array"
+      ],
+      "source_bug_id": "4445",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4445",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "pointer width exceeding array size",
+      "category": "data_model",
+      "description": "Code should include a pointer/index with bit width based on $clog2 of array size, which can represent values equal to or exceeding the array size when used as index",
+      "snippet": "localparam int SIZE = 20;\nreg[$clog2(SIZE)-1 : 0] ptr;  // 5 bits, range 0-31, can exceed SIZE-1 (19)\nData_t buffer[SIZE];",
+      "tags": [
+        "index_width",
+        "clog2",
+        "out_of_bounds",
+        "unpacked_array"
+      ],
+      "source_bug_id": "4445",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4445",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ]
+}

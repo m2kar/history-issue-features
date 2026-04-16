@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 6591,
+  "title": "Immediately disabling `fork` from a branch doesn't always work",
+  "features": [
+    {
+      "name": "fork with immediate disable from branch",
+      "category": "control_flow",
+      "description": "Code should include a fork block with multiple branches where one branch immediately executes a disable fork statement (without any delay) targeting the parent fork block",
+      "snippet": "fork : fork_blk\n  begin\n    disable fork_blk;\n    $stop;\n  end\n  begin\n    if ($time != 0) $stop;\n    #1 $stop;\n  end\njoin_none",
+      "tags": [
+        "fork",
+        "disable",
+        "fork_block",
+        "immediate_disable",
+        "join_none"
+      ],
+      "source_bug_id": "6591",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6591",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "disable fork block targeting parent fork",
+      "category": "control_flow",
+      "description": "Code should include a disable statement that references a parent fork block label, where the disable executes at time 0 before other fork branches can register",
+      "snippet": "fork : fork_blk\n  begin\n    disable fork_blk;\n  end\n  begin\n    #1;\n  end\njoin_none",
+      "tags": [
+        "disable",
+        "fork_label",
+        "time_zero",
+        "killqueue"
+      ],
+      "source_bug_id": "6591",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6591",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fork join_none with competing disable and delay branches",
+      "category": "control_flow",
+      "description": "Code should include a fork join_none construct where one branch immediately disables the fork and another branch has a delay, creating a race condition in branch registration",
+      "snippet": "fork\n  begin\n    disable fork_blk;\n    $stop;\n  end\n  begin\n    #1;\n    $stop;\n  end\njoin_none",
+      "tags": [
+        "fork",
+        "join_none",
+        "race_condition",
+        "disable_timing"
+      ],
+      "source_bug_id": "6591",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6591",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

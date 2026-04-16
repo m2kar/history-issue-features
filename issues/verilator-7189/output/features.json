@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 7189,
+  "title": "Fix V3SplitAs issue",
+  "features": [
+    {
+      "name": "conditional interface member assignment with lifted function call",
+      "category": "control_flow",
+      "description": "Code should include a conditional assignment to an interface member variable where the condition uses a function call that gets expression-lifted to an internal temporary variable",
+      "snippet": "interface intf;\n  logic blargh;\nendinterface\n\nfunction automatic logic ident_func(logic a);\n  return a;\nendfunction\n\nmodule top(intf intf_a);\n  always_comb begin\n    if (ident_func(1'b1))\n      intf_a.blargh = 1'b0;\n  end\nendmodule",
+      "tags": ["interface", "function_call", "expression_lift", "conditional_assignment"],
+      "source_bug_id": "7189",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7189",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface variable in conditional expression",
+      "category": "data_model",
+      "description": "Code should include an interface member variable used in a conditional context with a function call, triggering expression lifting optimization",
+      "snippet": "interface intf;\n  logic data;\nendinterface\n\nfunction automatic logic ident_func(logic a);\n  return a;\nendfunction\n\nmodule top(intf intf_a, intf intf_b);\n  always_comb begin\n    if (ident_func(intf_b.data))\n      intf_a.data = 1'b0;\n  end\nendmodule",
+      "tags": ["interface", "function_call", "conditional", "expression_lift"],
+      "source_bug_id": "7189",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7189",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

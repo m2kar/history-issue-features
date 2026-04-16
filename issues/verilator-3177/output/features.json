@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 3177,
+  "title": "split_var not working as expected",
+  "features": [
+    {
+      "name": "packed struct with split_var attribute causing false circular logic",
+      "category": "data_model",
+      "description": "Code should include a packed struct with the split_var attribute applied, where a struct member is assigned to an intermediate signal and that signal is used to compute another struct member",
+      "snippet": "typedef struct packed { logic loop; logic bad_insn_addr; } err_bits_t;\nerr_bits_t err_bits /*verilator split_var*/;\nlogic non_insn_addr_software_err;\nassign err_bits.loop = loop_err;\nassign err_bits.bad_insn_addr = imem_addr_err & ~non_insn_addr_software_err;\nassign non_insn_addr_software_err = err_bits.loop;",
+      "tags": ["packed_struct", "split_var", "circular_logic", "intermediate_signal"],
+      "source_bug_id": "3177",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3177",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "packed struct reduction via unary operator",
+      "category": "data_model",
+      "description": "Code should include a packed struct used in a reduction operation (OR reduction) as a single operand",
+      "snippet": "err_bits_t err_bits;\nassign any_err_o = |err_bits;",
+      "tags": ["packed_struct", "reduction", "unary_operator"],
+      "source_bug_id": "3177",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3177",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "feedback path from struct member to intermediate signal and back",
+      "category": "control_flow",
+      "description": "Code should include a signal assigned from a struct member that is subsequently used to compute a different struct member, creating a data dependency",
+      "snippet": "logic non_insn_addr_software_err;\nassign err_bits.bad_insn_addr = imem_addr_err & ~non_insn_addr_software_err;\nassign non_insn_addr_software_err = err_bits.loop;",
+      "tags": ["feedback", "struct_member", "intermediate_signal", "data_dependency"],
+      "source_bug_id": "3177",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3177",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

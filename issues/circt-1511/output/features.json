@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 1511,
+  "title": "[FIRRTL] (code dump) type/value width mismatch materializing constant",
+  "features": [
+    {
+      "name": "xor of width-inferred signed zero constant with fixed-width signed operand",
+      "category": "data_model",
+      "description": "Code should include a bitwise XOR between a width-unspecified (inferred-width) signed zero constant and a fixed-width signed operand, triggering width inference and constant propagation interactions",
+      "snippet": "logic signed [25:0] inp_bb;\nlogic [25:0] tmp61;\n// FIRRTL equivalent: tmp61 <= xor(SInt(0), inp_bb)\n// SInt(0) has no explicit width; width inference must resolve it\nassign tmp61 = $signed(inp_bb) ^ $signed(26'sh0);",
+      "tags": ["xor", "signed", "width_inference", "constant_propagation", "type_mismatch"],
+      "source_bug_id": "circt-1511",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1511",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "unsigned register assigned from signed XOR result with mixed types",
+      "category": "data_model",
+      "description": "Code should include an unsigned register receiving assignment from a signed XOR expression where operand types are mismatched (SInt result assigned to UInt register), combined with width inference",
+      "snippet": "logic [25:0] tmp61;\nlogic signed [25:0] inp_bb;\n// Unsigned reg gets signed XOR: UInt<26> <= xor(SInt(0), SInt<26>)\nalways_ff @(posedge clock)\n  tmp61 <= inp_bb ^ 26'sh0;",
+      "tags": ["signed_unsigned_mismatch", "register", "xor", "assignment", "width_inference"],
+      "source_bug_id": "circt-1511",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1511",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "register with async reset and typed reset value",
+      "category": "timing",
+      "description": "Code should include a register with an asynchronous reset signal where the reset value is an explicitly typed constant matching the register width",
+      "snippet": "logic [25:0] tmp61;\n// FIRRTL: reg tmp61: UInt<26>, clock with: (reset => (arst, UInt<26>(0)))\nalways_ff @(posedge clock or posedge arst)\n  if (arst)\n    tmp61 <= 26'd0;\n  else\n    tmp61 <= tmp61;",
+      "tags": ["async_reset", "register", "typed_constant", "reset_value", "always_ff"],
+      "source_bug_id": "circt-1511",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1511",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "width-unspecified signed constant in bitwise operation requiring width inference",
+      "category": "data_model",
+      "description": "Code should include a signed integer constant declared without explicit bit-width used in a bitwise operation alongside a fixed-width operand, exercising width inference for the constant",
+      "snippet": "// FIRRTL: xor(SInt(0), inp_bb) where SInt(0) has no width\n// SV analog: operand whose width must be inferred from context\nlogic signed [25:0] inp_bb;\nlogic signed [25:0] result;\nassign result = inp_bb ^ $signed({26{1'b0}});",
+      "tags": ["width_inference", "signed_constant", "bitwise_xor", "inferred_width"],
+      "source_bug_id": "circt-1511",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1511",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "tool": "verilator",
+  "issue_number": 6740,
+  "title": "Regression in constraints",
+  "features": [
+    {
+      "name": "class_inheritance_rand_member_base_handle",
+      "category": "data_model",
+      "description": "Code should include a rand member variable accessed through a base class handle in an inheritance chain, where the derived class is assigned to the base class handle.",
+      "snippet": "class Base; rand RandomValue v = new; endclass\nclass Foo extends Base; endclass\nFoo d = new; Base b = d;",
+      "tags": [
+        "class",
+        "inheritance",
+        "rand",
+        "base-handle"
+      ],
+      "source_bug_id": "verilator-6740",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6740",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "rand_mode_disable_on_member_via_base_handle",
+      "category": "data_model",
+      "description": "Code should include calling rand_mode(0) on a rand member accessed through a base class handle, disabling randomization on that member variable.",
+      "snippet": "task disable_val(); value.rand_mode(0); endtask\nb.v.disable_val();",
+      "tags": [
+        "rand_mode",
+        "member-access",
+        "base-handle"
+      ],
+      "source_bug_id": "verilator-6740",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6740",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "constraint_with_inheritance_and_rand_mode_disable",
+      "category": "data_model",
+      "description": "Code should include a class with a constraint on a rand variable, where rand_mode is disabled on that variable through a base class handle, then randomize() is called.",
+      "snippet": "class RandomValue; rand int value; constraint small_int_c { value < 10; } endclass\nb.v.disable_val();\nb.v.value = 11;\nbit'(b.randomize());",
+      "tags": [
+        "constraint",
+        "inheritance",
+        "rand_mode",
+        "randomize"
+      ],
+      "source_bug_id": "verilator-6740",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6740",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "constraint_evaluation_after_rand_mode_disable",
+      "category": "data_model",
+      "description": "Code should include a constraint being evaluated after rand_mode has been disabled on the constrained variable, triggering constraint resolution in the AST visitor.",
+      "snippet": "constraint small_int_c { value < 10; }\nb.v.disable_val();\nb.v.value = 11;\nb.randomize();",
+      "tags": [
+        "constraint-evaluation",
+        "rand_mode",
+        "ast-visitor"
+      ],
+      "source_bug_id": "verilator-6740",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6740",
+      "construct_complexity": 4,
+      "ub_type": null
+    }
+  ]
+}

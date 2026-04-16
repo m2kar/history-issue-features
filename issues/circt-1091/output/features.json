@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 1091,
+  "title": "[FIRRTL] infer width (cat)",
+  "features": [
+    {
+      "name": "concatenation of sized and unsized integer literals assigned to explicit-width port",
+      "category": "data_model",
+      "description": "Code should include a bitwise concatenation of two integer literals where one literal carries no explicit width (width must be inferred from its value) and the result is assigned to a port whose declared width is at least as wide as the inferred concatenation width",
+      "snippet": "output logic [24:0] tmp53;\nlogic [20:0] a = 21'h1ebaa2;\nlogic [2:0]  b = 3'h2;\nassign tmp53 = {a, b};",
+      "tags": ["concatenation", "width_inference", "integer_literal", "implicit_width", "assignment"],
+      "source_bug_id": "circt-1091",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1091",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "FIRRTL cat with unwidthed literal producing over-estimated result width",
+      "category": "data_model",
+      "description": "Code should include a FIRRTL-style concatenation where one operand is an unsigned integer literal without an explicit bit-width declaration, forcing width inference from the literal's numeric value, and the inferred concatenation width is compared against a narrower destination port width",
+      "snippet": "// FIRRTL construct mapped to SV\n// UInt(\"h1ebaa2\") needs 21 bits (value < 2^21)\n// cat(UInt(\"h1ebaa2\"), UInt<3>(\"h2\")) should be 24 bits\noutput logic [24:0] tmp53;\nassign tmp53 = {21'h1ebaa2, 3'h2};  // 24-bit source fits in 25-bit dest",
+      "tags": ["firrtl", "cat", "width_inference", "unwidthed_literal", "concatenation", "port_connection"],
+      "source_bug_id": "circt-1091",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1091",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "constant folding of concatenated literals into a single sized constant",
+      "category": "data_model",
+      "description": "Code should include an output port assigned the concatenation of two compile-time constant literals of known widths, where the tool is expected to constant-fold the expression into a single sized literal",
+      "snippet": "output logic [24:0] w;\nassign w = {21'h1ebaa2, 3'h2};\n// expected after constant folding: 25'hf5d512",
+      "tags": ["constant_folding", "concatenation", "literal", "output_port", "assign"],
+      "source_bug_id": "circt-1091",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1091",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9489,
+  "title": "[slang] Testing error when switching to slang master branch",
+  "features": [
+    {
+      "name": "constant index bit-select on multi-bit wire as ref port connection",
+      "category": "data_model",
+      "description": "Code should include a multi-bit wire net where a constant index bit-select is used as an output/ref port connection in a module instantiation, particularly with an index value >= 2 on a net wider than 2 bits",
+      "snippet": "wire [2:0] z3;\nwire [1:0] w3;\nlogic x3, y3;\n// Bit-selects at indices 0, 1, and 2 all used as ref/output port connections\n// Index 2 should produce extract_ref, not dyn_extract\nMultiPorts p3(\n  .a0(x3), .a1(y3),\n  .v0(z3[2]),\n  .v2(z3[0]),\n  .c0(w3[1]),\n  .v1(z3[1]),\n  .c1(w3[0])\n);",
+      "tags": ["bit_select", "wire", "net", "port_connection", "constant_index", "extract_ref", "slang_import"],
+      "source_bug_id": "circt-9489",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9489",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple bit-selects on same net in single module instantiation",
+      "category": "data_model",
+      "description": "Code should include a module instantiation that connects multiple distinct constant-index bit-selects of the same multi-bit net to different output ports of the same instance",
+      "snippet": "wire [2:0] z;\nMultiPorts inst(\n  .out0(z[0]),\n  .out1(z[1]),\n  .out2(z[2])\n);",
+      "tags": ["bit_select", "wire", "net", "module_instantiation", "multiple_ports", "same_net"],
+      "source_bug_id": "circt-9489",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9489",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module with output ref ports accepting net bit-selects",
+      "category": "data_model",
+      "description": "Code should include a module definition whose output ports are connected by the caller using constant-index bit-selects of wider wire nets, causing the importer to generate static extract_ref operations",
+      "snippet": "module MultiPorts(\n  input  logic a0, a1,\n  input  logic v0,\n  output logic v1,\n  output logic v2,\n  input  logic c0,\n  output logic c1\n);\n  assign v1 = v0;\n  assign v2 = a0;\n  assign c1 = a1 & c0;\nendmodule",
+      "tags": ["module", "output_port", "port_connection", "bit_select", "ref_port", "slang_import"],
+      "source_bug_id": "circt-9489",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9489",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

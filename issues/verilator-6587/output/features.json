@@ -1,0 +1,25 @@
+{
+  "tool": "verilator",
+  "issue_number": 6587,
+  "title": "Regression in HIERPARAM means interface parameters cannot derive from other interface parameters anymore",
+  "features": [
+    {
+      "name": "hierarchical parameter reference from interface array member",
+      "category": "data_model",
+      "description": "Code should include an interface parameter that is assigned via a hierarchical reference to another interface member's parameter (s_axis[i].PARAM)",
+      "snippet": "interface AXIS_IF #(\n    parameter int DATA_W = 128\n) (input logic clk);\n  logic [DATA_W-1:0] tdata;\nendinterface\n\nmodule foobar #(\n    parameter int N = 2\n) (\n    input logic clk,\n    AXIS_IF.slave s_axis[N-1:0]\n);\n  generate\n    genvar i;\n    for (i = 0; i < N; i++) begin : gen_loop\n      AXIS_IF #(\n          .DATA_W(s_axis[i].DATA_W)\n      ) axis_internal (.clk(s_axis[i].clk));\n    end\n  endgenerate\nendmodule",
+      "tags": [
+        "interface",
+        "hierarchical_param",
+        "parameter_derivation",
+        "generate_loop"
+      ],
+      "source_bug_id": "6587",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6587",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

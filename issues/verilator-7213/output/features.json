@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7213,
+  "title": "Fix code executing after $finish",
+  "features": [
+    {
+      "name": "$finish in virtual function with subsequent call",
+      "category": "control_flow",
+      "description": "Code should include a virtual function that contains a $finish statement, called from another location with code following the call that should not execute",
+      "snippet": "class cls;\n  virtual function void work();\n    $finish;\n  endfunction\nendclass\ncls c;\ninitial begin\n  c.work();\n  $display(\"should not reach\");\nend",
+      "tags": ["virtual_function", "finish", "control_flow", "class"],
+      "source_bug_id": "verilator-7213",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7213",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "$finish in virtual function with queue-based conditional",
+      "category": "control_flow",
+      "description": "Code should include a virtual function with $finish triggered by a queue size check, called from a method that then continues executing additional code",
+      "snippet": "class cls;\n  job q[$];\n  virtual function void work();\n    if (q.size() == 0) $finish;\n    did_more = 1;\n    j = q.pop_front();\n  endfunction\nendclass",
+      "tags": ["virtual_function", "finish", "queue", "conditional", "class"],
+      "source_bug_id": "verilator-7213",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7213",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "virtual function call chain with $finish and subsequent method invocation",
+      "category": "control_flow",
+      "description": "Code should include a sequence where a virtual function containing $finish is called, followed by a call to another virtual function that should not execute",
+      "snippet": "class job;\n  virtual function void check();\n    $display(\"%m\");\n  endfunction\nendclass\nclass cls;\n  virtual function void work();\n    $finish;\n  endfunction\nendclass\ninitial begin\n  c.work();\n  j.check();\nend",
+      "tags": ["virtual_function", "finish", "method_call_chain", "class"],
+      "source_bug_id": "verilator-7213",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7213",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

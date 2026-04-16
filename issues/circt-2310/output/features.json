@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 2310,
+  "title": "[SV] Spilling Out of Procedural Region can produce Xs with disallowLocalVariables",
+  "features": [
+    {
+      "name": "wire declared outside initial block but used inside before assignment",
+      "category": "control_flow",
+      "description": "Code should include a wire declared outside an initial procedural block that is used inside the initial block in an assignment before the wire has been computed, causing the assignment to receive an undefined value.",
+      "snippet": "wire _T_0; reg [31:0] _T; initial begin `INIT_RANDOM_PROLOG_ _T = `RANDOM; r = _T_0; _T_0 = _T[0]; end",
+      "tags": ["wire", "initial_block", "procedural_region", "evaluation_order"],
+      "source_bug_id": "circt-2310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2310",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register assignment from bit select of randomly initialized register in initial",
+      "category": "data_model",
+      "description": "Code should include a register assigned from a bit select of a 32-bit register that is randomly initialized within an initial procedural block, which when combined with a wire spilled out of the procedural region causes the bit select to be undefined at assignment time.",
+      "snippet": "reg r; reg [31:0] _T; wire _T_0; initial begin _T = `RANDOM; r = _T_0; end",
+      "tags": ["register", "bit_select", "random_init", "initial_block"],
+      "source_bug_id": "circt-2310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2310",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ifdef RANDOMIZE_REG_INIT wrapping procedural random register assignment",
+      "category": "preprocess",
+      "description": "Code should include an `ifdef RANDOMIZE_REG_INIT` guard that conditionally assigns a randomly initialized 32-bit register value to a smaller register via a bit select, where the bit select wire is incorrectly spilled outside the procedural initialization region.",
+      "snippet": "`ifdef RANDOMIZE_REG_INIT reg [31:0] _T; wire _T_0; initial begin _T = `RANDOM; r = _T_0; end `endif",
+      "tags": ["ifdef", "randomize_reg_init", "procedural_assign", "bit_select"],
+      "source_bug_id": "circt-2310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2310",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

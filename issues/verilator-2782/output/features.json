@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2782,
+  "title": "Maybe fake BLOCKINIT error with large loop body",
+  "features": [
+    {
+      "name": "for loop with non-blocking assignment to unpacked array element",
+      "category": "control_flow",
+      "description": "Code should include a for loop with an integer index variable that performs non-blocking assignments to unpacked array elements",
+      "snippet": "reg [31:0] bank [15:0];\nalways @(posedge clk) begin\n  integer i;\n  for (i=0;i<16;i=i+1) bank[i] <= 32'd0;\nend",
+      "tags": ["for_loop", "non_blocking_assignment", "unpacked_array"],
+      "source_bug_id": "2782",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2782",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "large for loop body with multiple array assignments",
+      "category": "control_flow",
+      "description": "Code should include a for loop containing multiple non-blocking assignments to different unpacked array elements, where the loop body contains many statements",
+      "snippet": "reg [31:0] bank0 [15:0];\nreg [31:0] bank1 [15:0];\nreg [31:0] bank2 [15:0];\nreg [31:0] bank3 [15:0];\nalways @(posedge clk) begin\n  integer i;\n  for (i=0;i<16;i=i+1) begin\n    bank0[i] <= 32'd0;\n    bank1[i] <= 32'd0;\n    bank2[i] <= 32'd0;\n    bank3[i] <= 32'd0;\n  end\nend",
+      "tags": ["for_loop", "multiple_array_assignments", "large_loop_body"],
+      "source_bug_id": "2782",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2782",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "nested case statement inside for loop with array assignments",
+      "category": "control_flow",
+      "description": "Code should include a for loop containing nested case statements where array elements are assigned via non-blocking assignments, combined with additional statements that increase loop body size",
+      "snippet": "reg [31:0] bank0 [15:0];\nreg [31:0] bank1 [15:0];\nreg [3:0] ld_vld;\nalways @(posedge clk) begin\n  integer i;\n  for (i=0;i<16;i=i+1) begin\n    case (opcode)\n      4'd0: begin\n        bank0[i] <= 32'd0;\n        bank1[i] <= 32'd0;\n        case (mode)\n          2'd0: ld_vld <= 4'b0001;\n          2'd1: ld_vld <= 4'b0010;\n          2'd2: ld_vld <= 4'b0100;\n          2'd3: ld_vld <= 4'b1000;\n        endcase\n      end\n    endcase\n  end\nend",
+      "tags": ["for_loop", "nested_case", "unpacked_array", "non_blocking_assignment"],
+      "source_bug_id": "2782",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2782",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

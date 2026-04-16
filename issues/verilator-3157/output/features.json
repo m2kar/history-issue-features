@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 3157,
+  "title": "Spurious warning about \"circular logic\" in a full adder chain",
+  "features": [
+    {
+      "name": "generate for loop with array carry chain",
+      "category": "control_flow",
+      "description": "Code should include a generate for loop creating cascaded full adder instances where a carry signal array has each element assigned based on the previous element",
+      "snippet": "logic [3:0] carries;\ngenerate for (genvar i = 0; i < 4; i++) begin : genblk\n  wire [1:0] sum_local;\n  assign sum_local = {1'b0, carries[i]} + {1'b0, a[i]} + {1'b0, b[i]};\n  assign sum[i] = sum_local[0];\n  assign carries[i+1] = sum_local[1];\nend endgenerate",
+      "tags": ["generate_for", "array_access", "carry_chain", "unoptflat"],
+      "source_bug_id": "3157",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3157",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "array index access in generate block",
+      "category": "data_model",
+      "description": "Code should include an array variable accessed by generate block index that triggers incorrect circular logic detection",
+      "snippet": "logic [7:0] data [4];\ngenerate for (genvar i = 1; i < 4; i++) begin : g\n  assign data[i] = data[i-1] + 1;\nend endgenerate",
+      "tags": ["array", "generate_for", "index_access", "unoptflat"],
+      "source_bug_id": "3157",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3157",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

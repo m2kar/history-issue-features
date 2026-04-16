@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 5541,
+  "title": "Support VPI inout/tristates",
+  "features": [
+    {
+      "name": "inout port with conditional tristate driving",
+      "category": "data_model",
+      "description": "Code should include an inout wire port driven by a conditional expression that assigns high-Z value when not actively driving",
+      "snippet": "inout wire [7:0] io_port;\nreg [7:0] data_out;\nassign io_port = direction ? data_out : 8'hzz;",
+      "tags": ["inout", "tristate", "highz", "conditional_assign"],
+      "source_bug_id": "5541",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5541",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "VPI read of actively-driven inout port",
+      "category": "general",
+      "description": "Code should include a testbench using VPI vpi_get_value to read an inout port that is being actively driven by the model (not high-Z)",
+      "snippet": "vpiHandle io_portHandle = vpi_handle_by_name((char *)\"io_port\", NULL);\ns_vpi_value inout_val;\ninout_val.format = vpiVectorVal;\ninout_val.value.vector = new s_vpi_vecval[1];\nvpi_get_value(io_portHandle, &inout_val);",
+      "tags": ["vpi", "inout", "vpi_get_value", "read"],
+      "source_bug_id": "5541",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5541",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "VPI write to inout port while model drives it",
+      "category": "general",
+      "description": "Code should include a testbench using VPI vpi_put_value to write an inout port while the simulation model also drives that port",
+      "snippet": "vpiHandle io_portHandle = vpi_handle_by_name((char *)\"io_port\", NULL);\nt_vpi_value bbVal;\nbbVal.format = vpiVectorVal;\nbbVal.value.vector = new s_vpi_vecval[1];\nbbVal.value.vector->aval = 0xBB;\nvpi_put_value(io_portHandle, &bbVal, NULL, vpiNoDelay);",
+      "tags": ["vpi", "inout", "vpi_put_value", "write"],
+      "source_bug_id": "5541",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5541",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

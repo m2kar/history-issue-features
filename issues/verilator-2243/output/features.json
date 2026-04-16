@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 2243,
+  "title": "Code in always_ff behaves incorrectly",
+  "features": [
+    {
+      "name": "always_ff with asynchronous active-low reset",
+      "category": "general",
+      "description": "Code should include an always_ff block with a dual-edge sensitivity list combining posedge clock and negedge active-low reset, where non-blocking assignments are guarded by an active-low reset condition using bitwise NOT",
+      "snippet": "logic clk, rst_n;\nlogic [2:0] CS;\nparameter IDLE = 3'd0;\nalways_ff @(posedge clk, negedge rst_n) begin\n  if (~rst_n)\n    CS <= IDLE;\n  else\n    CS <= CS + 1;\nend",
+      "tags": ["always_ff", "async_reset", "active_low_reset", "negedge", "non_blocking_assignment"],
+      "source_bug_id": "2243",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2243",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "FSM current-state register updated from next-state in always_ff",
+      "category": "control_flow",
+      "description": "Code should include an always_ff block that implements an FSM where the current-state register (CS) is non-blockingly assigned from a separate combinational next-state variable (NS) on each clock edge",
+      "snippet": "typedef enum logic [1:0] {IDLE, ACTIVE, DONE} state_t;\nstate_t CS, NS;\nlogic clk, rst_n;\nalways_ff @(posedge clk, negedge rst_n) begin\n  if (~rst_n)\n    CS <= IDLE;\n  else\n    CS <= NS;\nend\nalways_comb begin\n  case (CS)\n    IDLE:   NS = ACTIVE;\n    ACTIVE: NS = DONE;\n    default: NS = IDLE;\n  endcase\nend",
+      "tags": ["fsm", "always_ff", "non_blocking_assignment", "current_state", "next_state", "enum"],
+      "source_bug_id": "2243",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2243",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple non-blocking assignments to independent registers in single always_ff",
+      "category": "general",
+      "description": "Code should include an always_ff block that issues multiple non-blocking assignments to several independent registers under the same clock edge, including a state register and data pipeline registers",
+      "snippet": "logic clk, rst_n;\nlogic [2:0] CS, NS;\nlogic [31:0] addr_Q, addr_i;\nlogic req_Q, enable_pipe, clear_pipe;\nalways_ff @(posedge clk, negedge rst_n) begin\n  if (~rst_n) begin\n    CS    <= '0;\n    addr_Q <= '0;\n    req_Q  <= '0;\n  end else begin\n    CS <= NS;\n    if (enable_pipe) begin\n      req_Q  <= 1'b1;\n      addr_Q <= addr_i;\n    end else if (clear_pipe)\n      req_Q <= '0;\n  end\nend",
+      "tags": ["always_ff", "non_blocking_assignment", "multiple_registers", "async_reset", "conditional_update"],
+      "source_bug_id": "2243",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2243",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional non-blocking assignment with nested if-else in always_ff",
+      "category": "control_flow",
+      "description": "Code should include an always_ff block containing nested if-else branches each with a non-blocking assignment to the same register, testing that only the taken branch updates the flop value",
+      "snippet": "logic clk, rst_n, enable_pipe, clear_pipe;\nlogic req_Q;\nalways_ff @(posedge clk, negedge rst_n) begin\n  if (~rst_n)\n    req_Q <= '0;\n  else begin\n    if (enable_pipe)\n      req_Q <= 1'b1;\n    else if (clear_pipe)\n      req_Q <= '0;\n  end\nend",
+      "tags": ["always_ff", "nested_if_else", "non_blocking_assignment", "conditional", "async_reset"],
+      "source_bug_id": "2243",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2243",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

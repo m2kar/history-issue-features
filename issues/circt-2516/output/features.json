@@ -1,0 +1,78 @@
+{
+  "tool": "circt",
+  "issue_number": 2516,
+  "title": "[FIRRTL] (mem) mismatch",
+  "features": [
+    {
+      "name": "dual_port_memory_instantiation_with_asymmetric_address_widths",
+      "category": "data_model",
+      "description": "Code should include a memory module instantiation where the memory depth is 10 (4-bit address) but external ports use 10-bit addresses, with reader and writer ports using different address signal sources",
+      "snippet": "module tmp53_ext(\n  input [3:0] R0_addr, R0_en, R0_clk,\n  input [3:0] W0_addr, W0_en, W0_clk,\n  input [19:0] W0_data, W0_mask,\n  output [19:0] R0_data);\n  reg [19:0] Memory[0:9];\n  wire _T = W0_en & W0_mask;\n  always @(posedge W0_clk) if (_T) Memory[W0_addr] <= W0_data;\n  assign R0_data = R0_en ? Memory[R0_addr] : 20'bx;\nendmodule\n\nmodule top_mod(\n  input [9:0] raddr, waddr;\n  tmp53_ext tmp53 (\n    .R0_addr(waddr[3:0]), .R0_en(1'h0),\n    .W0_addr(raddr[3:0]), .W0_en(1'h1),\n    .W0_data(wdata), .W0_mask(1'h1));\nendmodule",
+      "tags": [
+        "memory",
+        "dual_port",
+        "instantiation",
+        "asymmetric_address"
+      ],
+      "source_bug_id": "2516",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2516",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory_conditional_read_with_x_resolution",
+      "category": "data_model",
+      "description": "Code should include a conditional read assignment where memory data output resolves to X when read enable is deasserted",
+      "snippet": "input [3:0] R0_addr;\ninput R0_en;\noutput [19:0] R0_data;\nreg [19:0] Memory[0:9];\nassign R0_data = R0_en ? Memory[R0_addr] : 20'bx;",
+      "tags": [
+        "memory",
+        "read",
+        "conditional_assign",
+        "x_resolution"
+      ],
+      "source_bug_id": "2516",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2516",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory_synchronous_write_with_enable_and_mask",
+      "category": "data_model",
+      "description": "Code should include a synchronous memory write using an always block with clock edge, write enable, and mask signals combined to conditionally store data",
+      "snippet": "input W0_clk, W0_en, W0_mask;\ninput [3:0] W0_addr;\ninput [19:0] W0_data;\nreg [19:0] Memory[0:9];\nwire _T = W0_en & W0_mask;\nalways @(posedge W0_clk) if (_T) Memory[W0_addr] <= W0_data;",
+      "tags": [
+        "memory",
+        "write",
+        "synchronous",
+        "enable_mask"
+      ],
+      "source_bug_id": "2516",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2516",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "reg_array_memory_declaration",
+      "category": "data_model",
+      "description": "Code should include a reg array declaration used as memory storage with data width and depth specified",
+      "snippet": "reg [19:0] Memory[0:9];",
+      "tags": [
+        "memory",
+        "reg_array",
+        "declaration"
+      ],
+      "source_bug_id": "2516",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2516",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

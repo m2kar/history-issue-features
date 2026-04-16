@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6446,
+  "title": "Error: Illegal assignment of constant to unpacked array",
+  "features": [
+    {
+      "name": "parameter unpacked array access in generate continuous assignment",
+      "category": "data_model",
+      "description": "Code should include a parameter unpacked array accessed via index variables within a generate block, used in a continuous assignment comparison",
+      "snippet": "parameter type ID_T = logic[1:0];\nparameter ID_T STAGE_IDS[3:0][1:0];\ngenerate\n  for (genvar j=0; j<4; j++)\n    for (genvar k=0; k<2; k++)\n      assign match[j*2+k] = in_id == STAGE_IDS[j][k];\nendgenerate",
+      "tags": ["parameter", "unpacked_array", "generate", "continuous_assignment", "comparison"],
+      "source_bug_id": "6446",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6446",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "localparam unpacked array initialized by function return",
+      "category": "data_model",
+      "description": "Code should include a localparam unpacked array that is initialized by calling a function which returns an unpacked array type",
+      "snippet": "function automatic logic[3:0] ids_t[2:0][1:0] gen_stage_ids();\n  for (int unsigned st=0; st<3; st++)\n    for (int unsigned id=0; id<2; id++)\n      gen_stage_ids[st][id] = SRC_ID + st * 2 + id;\nendfunction\nlocalparam logic[3:0] STAGE_IDS[2:0][1:0] = gen_stage_ids();",
+      "tags": ["localparam", "unpacked_array", "function_return", "initialization"],
+      "source_bug_id": "6446",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6446",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "nested generate loops accessing parameter unpacked array",
+      "category": "control_flow",
+      "description": "Code should include nested generate loops accessing a parameter unpacked array with computed indices involving subtraction and multiplication",
+      "snippet": "parameter int unsigned N_STAGES = 4;\nparameter int unsigned N_STAGE_IDS = 2;\ngenerate\n  for (genvar i=1; i<N_STAGES; i++)\n    for (genvar j=i; j<N_STAGES; j++)\n      for (genvar k=0; k<N_STAGE_IDS; k++)\n        assign match_id[(j-i)*N_STAGE_IDS+k] = out_id[i-1]==STAGE_IDS[j][k];\nendgenerate",
+      "tags": ["generate", "nested_loops", "parameter_unpacked_array", "computed_index"],
+      "source_bug_id": "6446",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6446",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

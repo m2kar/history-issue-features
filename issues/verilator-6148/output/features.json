@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6148,
+  "title": "Support member-level triggers for virtual interfaces (#5116)",
+  "features": [
+    {
+      "name": "continuous assignment to virtual interface member",
+      "category": "control_flow",
+      "description": "Code should include a continuous assignment statement that drives a virtual interface member, such as 'assign vif.a = b;' where vif is a virtual interface handle",
+      "snippet": "interface intf(input clk);\n  logic a;\nendinterface\n\nmodule top;\n  intf intf_i(.clk(clk));\n  virtual intf vif;\n  initial vif = intf_i;\n  assign vif.a = 1'b0; // Illegal per IEEE - virtual interface members cannot be driven via continuous assignment\nendmodule",
+      "tags": ["virtual_interface", "continuous_assignment", "illegal"],
+      "source_bug_id": "6148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb with virtual interface member access",
+      "category": "timing",
+      "description": "Code should include an always_comb block that references a virtual interface member in the sensitivity list or body, where the member is accessed through a runtime-bound virtual interface handle",
+      "snippet": "interface intf(input clk);\n  logic [7:0] data;\nendinterface\n\nmodule top;\n  intf intf_i(.clk(clk));\n  virtual intf vif;\n  logic [7:0] out;\n  initial vif = intf_i;\n  always_comb out = vif.data; // Virtual interface members are handles, not compile-time known signals\nendmodule",
+      "tags": ["virtual_interface", "always_comb", "sensitivity_list"],
+      "source_bug_id": "6148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "virtual interface with per-member trigger",
+      "category": "data_model",
+      "description": "Code should include a virtual interface declaration where members can be individually triggered, enabling fine-grained scheduling of combinational logic when specific members are written",
+      "snippet": "interface intf(input clk);\n  logic [7:0] data;\n  logic valid;\nendinterface\n\nmodule top;\n  intf intf_i(.clk(clk));\n  virtual intf vif;\n  initial vif = intf_i;\n  // Per-member triggers allow scheduling only combinational logic dependent on vif.data\nendmodule",
+      "tags": ["virtual_interface", "member_trigger", "scheduling"],
+      "source_bug_id": "6148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

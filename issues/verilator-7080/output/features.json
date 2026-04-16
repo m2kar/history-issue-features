@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7080,
+  "title": "%Error: Function Argument expects a CLASSREFDTYPE 'axi_ax_beat', got CLASSREFDTYPE 'axi_ax_beat__A30_I2_U5'  PLUS Verilator internal fault",
+  "features": [
+    {
+      "name": "parameterized class typedef with nested type access via scope operator",
+      "category": "data_model",
+      "description": "Code should include a parameterized class typedef that uses :: operator to access a type member from another parameterized class typedef",
+      "snippet": "class axi_driver #(\n    parameter int unsigned AW = 32,\n    parameter int unsigned IW = 8,\n    parameter int unsigned UW = 1\n  );\n    typedef axi_ax_beat #(.AW(AW), .IW(IW), .UW(UW)) ax_beat_t;\n  endclass\n  class axi_rand_slave #(\n    parameter int AW = 32\n  );\n    typedef axi_driver #(.AW(AW)) axi_driver_t;\n    typedef axi_driver_t::ax_beat_t ax_beat_t;\n  endclass",
+      "tags": ["parameterized_class", "typedef", "scope_resolution", "nested_type"],
+      "source_bug_id": "7080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7080",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "task output argument with typedef parameterized type",
+      "category": "control_flow",
+      "description": "Code should include a task with an output argument typed to a typedef of a parameterized class type, called with an automatic variable",
+      "snippet": "task recv_ar (\n    output ax_beat_t beat\n  );\n  endtask\n  task recv_ars();\n    forever begin\n      automatic ax_beat_t ar_beat;\n      drv.recv_ar(ar_beat);\n    end\n  endtask",
+      "tags": ["task", "output_argument", "parameterized_type", "automatic_variable"],
+      "source_bug_id": "7080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7080",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "parameterized class typedef chain instantiation",
+      "category": "data_model",
+      "description": "Code should include a parameterized class that typedefs another parameterized class and instantiates it with localparam values",
+      "snippet": "class axi_rand_slave #(\n    parameter int AW = 32,\n    parameter int IW = 8,\n    parameter int UW = 1\n  );\n    typedef axi_driver #(.AW(AW), .IW(IW), .UW(UW)) axi_driver_t;\n    typedef axi_driver_t::ax_beat_t ax_beat_t;\n    axi_driver_t drv;\n  endclass",
+      "tags": ["parameterized_class", "typedef_chain", "instantiation", "localparam"],
+      "source_bug_id": "7080",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7080",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

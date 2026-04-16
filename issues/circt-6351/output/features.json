@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 6351,
+  "title": "[FIRRTL] Sometimes `cmem` unexpectedly generates no wmask port",
+  "features": [
+    {
+      "name": "cmem with mixed sub-field and whole-entry writes",
+      "category": "data_model",
+      "description": "Code should include a memory array with struct-type elements where one write access targets a sub-field of the memory element and another write access targets the entire memory element, causing the memory instance to be generated without write mask ports",
+      "snippet": "module data_8x3(input [2:0] W0_addr, input W0_en, input W0_clk, input [2:0] W0_data, input [2:0] W0_mask, input [2:0] W1_addr, input W1_en, input W1_clk, input [2:0] W1_data, input [2:0] W1_mask); reg [2:0] Memory[0:7]; always @(posedge W0_clk) begin if (W0_en & W0_mask[0]) Memory[W0_addr][32'h0 +: 1] <= W0_data[0]; if (W0_en & W0_mask[1]) Memory[W0_addr][32'h1 +: 1] <= W0_data[1]; if (W0_en & W0_mask[2]) Memory[W0_addr][32'h2 +: 1] <= W0_data[2]; end endmodule",
+      "tags": [
+        "cmem",
+        "memory",
+        "struct_field",
+        "write_mask",
+        "mixed_access"
+      ],
+      "source_bug_id": "circt-6351",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6351",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cmem sub-field write using infer mport",
+      "category": "data_model",
+      "description": "Code should include a memory write access pattern where an infer mport accesses only a sub-field of a memory element (e.g., memory[addr].s1) rather than the entire element",
+      "snippet": "byte unsigned mem [8]; always @(posedge clk) begin if (wen) mem[addr].s1 <= wdata; end",
+      "tags": [
+        "cmem",
+        "memory",
+        "sub_field",
+        "infer_mport",
+        "partial_write"
+      ],
+      "source_bug_id": "circt-6351",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6351",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cmem whole-entry write using infer mport",
+      "category": "data_model",
+      "description": "Code should include a memory write access pattern where an infer mport writes to the entire memory element (all sub-fields at once) rather than individual sub-fields",
+      "snippet": "byte unsigned mem [8]; always @(posedge clk) begin if (wen) mem[addr] <= wdata; end",
+      "tags": [
+        "cmem",
+        "memory",
+        "whole_entry",
+        "infer_mport",
+        "full_write"
+      ],
+      "source_bug_id": "circt-6351",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6351",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "tool": "verilator",
+  "issue_number": 5961,
+  "title": "Result missmatched with vcs",
+  "features": [
+    {
+      "name": "feedback loop between clocked and combinational always blocks",
+      "category": "control_flow",
+      "description": "Code should include a feedback loop where a combinational always block reads a register updated by a clocked always block, and the combinational block's output feeds back to that register",
+      "snippet": "logic [7:0] left_idx_cnt;\nlogic [7:0] left_idx_cnt_d;\nalways @(posedge clk or negedge rstn) begin\n    if(!rstn) left_idx_cnt_d <= 'h40;\n    else left_idx_cnt_d <= left_idx_cnt;\nend\nalways @* begin\n    left_idx_cnt = left_idx_cnt_d - idx_mask_cnt;\nend",
+      "tags": [
+        "feedback_loop",
+        "combinational",
+        "clocked",
+        "cross_block"
+      ],
+      "source_bug_id": "5961",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5961",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "async reset clocked register with initial value",
+      "category": "control_flow",
+      "description": "Code should include a register with asynchronous reset and an explicit initial value assigned within the same always block",
+      "snippet": "always @(posedge clk or negedge rstn) begin\n    if(!rstn) left_idx_cnt_d <= 'h40;\n    else left_idx_cnt_d <= left_idx_cnt;\nend",
+      "tags": [
+        "async_reset",
+        "clocked_always",
+        "initial_value",
+        "register"
+      ],
+      "source_bug_id": "5961",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5961",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "wire arithmetic assignment in combinational logic",
+      "category": "data_model",
+      "description": "Code should include a wire that receives an arithmetic subtraction result from a combinational expression involving registers",
+      "snippet": "wire [7:0] start_to_boundary_cnt = cnt - idx_mask_head;",
+      "tags": [
+        "wire",
+        "arithmetic",
+        "subtraction",
+        "combinational"
+      ],
+      "source_bug_id": "5961",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5961",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational always block with conditional branching",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block with if-else branching that assigns values based on register comparisons",
+      "snippet": "always @* begin\n    if(cnt <= 6) begin\n        idx_mask_head = 8;\n        left_idx_cnt = 10;\n        idx_mask_cnt = 6;\n    end else begin\n        idx_mask_head = 0;\n        left_idx_cnt = left_idx_cnt_d - idx_mask_cnt;\n    end\nend",
+      "tags": [
+        "combinational",
+        "always_at_star",
+        "conditional",
+        "branching"
+      ],
+      "source_bug_id": "5961",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5961",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 9386,
+  "title": "[LLHD] Add support for IntegerType to SROA",
+  "features": [
+    {
+      "name": "packed array signal declaration",
+      "category": "data_model",
+      "description": "Code should include a packed multi-dimensional array signal declaration where all dimensions are packed (bit-contiguous), creating an IntegerType representation when lowered through circt-verilog into LLHD",
+      "snippet": "logic [3:0][7:0] packed_sig;\nassign packed_sig = '0;",
+      "tags": ["packed_array", "multi_dimensional", "integer_type", "llhd", "sroa"],
+      "source_bug_id": "circt-9386",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9386",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "bit-select on packed array signal",
+      "category": "data_model",
+      "description": "Code should include a static bit-select (single-bit or part-select) on a packed array signal, exercising partial use of the signal and triggering SROA's SigExtractOp path for IntegerType",
+      "snippet": "logic [31:0] packed_vec;\nlogic [7:0]  slice;\nassign slice = packed_vec[15:8];",
+      "tags": ["packed_array", "bit_select", "part_select", "sig_extract", "sroa"],
+      "source_bug_id": "circt-9386",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9386",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "multi-bit static part-select on packed signal",
+      "category": "data_model",
+      "description": "Code should include a multi-bit static part-select on a packed integer signal, where the slice width is greater than one bit, requiring bit-blasting through SROA's IntegerType destructuring pass",
+      "snippet": "logic [15:0] bus;\nlogic [3:0]  nibble;\nassign nibble = bus[7:4];",
+      "tags": ["part_select", "static_index", "packed_signal", "bit_blast", "integer_type"],
+      "source_bug_id": "circt-9386",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9386",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "packed array with probe and drive operations",
+      "category": "data_model",
+      "description": "Code should include a packed array signal that is both read (probed) and written (driven) without any partial access, so that SROA should NOT destructure it — only signals with partial users warrant bit-blasting",
+      "snippet": "logic [7:0] byte_sig;\nlogic [7:0] out_sig;\nalways_ff @(posedge clk)\n  out_sig <= byte_sig;",
+      "tags": ["packed_array", "probe", "drive", "sroa", "no_partial_use"],
+      "source_bug_id": "circt-9386",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9386",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

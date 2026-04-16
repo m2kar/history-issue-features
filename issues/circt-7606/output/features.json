@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 7606,
+  "title": "[Seq] Add a pass to implement firreg randomization",
+  "features": [
+    {
+      "name": "init_random_prolog before random macro ordering",
+      "category": "data_model",
+      "description": "Code should include an initial block where `INIT_RANDOM_PROLOG_` macro appears before `RANDOM` macro calls used for register initialization",
+      "snippet": "initial begin\n  `INIT_RANDOM_PROLOG_\n  automatic logic [31:0] _GEN = `RANDOM;\n  r = _GEN[17:0];\nend",
+      "tags": ["init_random_prolog", "random_macro", "initial_block", "ordering"],
+      "source_bug_id": "7606",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7606",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "firreg random initialization with compreg",
+      "category": "data_model",
+      "description": "Code should include a register with async reset using RANDOM macro for initialization in an initial block before the always_ff block",
+      "snippet": "reg [17:0] r;\ninitial begin\n  `INIT_RANDOM_PROLOG_\n  automatic logic [31:0] _GEN = `RANDOM;\n  r = _GEN[17:0];\nend\nalways_ff @(posedge clk) begin\n  if (rst)\n    r <= 18'h0;\n  else\n    r <= i;\nend",
+      "tags": ["firreg", "compreg", "async_reset", "random_initialization"],
+      "source_bug_id": "7606",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7606",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "automatic logic random variable assignment",
+      "category": "data_model",
+      "description": "Code should include automatic logic variables assigned from RANDOM macro used to initialize registers through bit slicing",
+      "snippet": "automatic logic [31:0] _GEN = `RANDOM;\nautomatic logic [31:0] _GEN_0 = `RANDOM;\nr0 = _GEN[17:0];\nr1 = {_GEN[31:18], _GEN_0[3:0]};",
+      "tags": ["automatic_logic", "random_macro", "bit_slice", "register_init"],
+      "source_bug_id": "7606",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/7606",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

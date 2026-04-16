@@ -1,0 +1,60 @@
+{
+  "tool": "verilator",
+  "issue_number": 7323,
+  "title": "Fix virtual interface member trigger convergence (#5116)",
+  "features": [
+    {
+      "name": "virtual interface with logic member in class",
+      "category": "data_model",
+      "description": "Code should include a class that has a virtual interface member with a logic vector sub-member, where the class task writes to that virtual interface member",
+      "snippet": "interface INTF();\n    logic [7:0] data;\nendinterface\n\nclass Writer;\n    virtual INTF vif;\n    function new(virtual INTF vif);\n        this.vif = vif;\n    endfunction\n    task write_data(logic [7:0] d);\n        vif.data = d;\n    endtask\nendclass",
+      "tags": [
+        "virtual_interface",
+        "class_member",
+        "logic_member",
+        "interface_trigger"
+      ],
+      "source_bug_id": "7323",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7323",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "didnotconverge"
+    },
+    {
+      "name": "cross-interface assign with virtual interface access",
+      "category": "timing",
+      "description": "Code should include assign statements connecting interface member data to top-level wires, combined with virtual interface assignments and writes in an initial block with timing delays",
+      "snippet": "logic [7:0] data;\nINTF intf_read();\nINTF intf_write();\nassign intf_read.data = data;\nassign data = intf_write.data;\nvirtual INTF vif_read, vif_write;\ninitial begin\n    vif_write = intf_write;\n    vif_read = intf_read;\n    vif_write.data = 8'hA5;\n    #1ns;\n    writer.write_data(8'hB7);\nend",
+      "tags": [
+        "assign_statement",
+        "virtual_interface",
+        "combinational_convergence",
+        "timing_control"
+      ],
+      "source_bug_id": "7323",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7323",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "didnotconverge"
+    },
+    {
+      "name": "virtual interface member write causing combinational loop",
+      "category": "timing",
+      "description": "Code should include a virtual interface member write inside a task, where the interface member is connected to a combinational signal via assign statements that would cause a convergence loop",
+      "snippet": "interface INTF();\n    logic [7:0] data;\nendinterface\n\nclass Writer;\n    virtual INTF vif;\n    task write_data(logic [7:0] d);\n        vif.data = d;\n    endtask\nendclass",
+      "tags": [
+        "virtual_interface_write",
+        "combinational_loop",
+        "didnotconverge"
+      ],
+      "source_bug_id": "7323",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7323",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "didnotconverge"
+    }
+  ]
+}

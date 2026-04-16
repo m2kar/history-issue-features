@@ -1,0 +1,76 @@
+{
+  "tool": "verilator",
+  "issue_number": 7018,
+  "title": "Modport item not found with -fno-inline in --hierarchical child compilations",
+  "features": [
+    {
+      "name": "interface with modport definitions",
+      "category": "data_model",
+      "description": "Code should include an interface with multiple modport definitions, each declaring different signal directions",
+      "snippet": "interface simple_if (input clk);\n  logic [7:0] data;\n  modport sender  (input clk, output data);\n  modport receiver(input clk, input  data);\nendinterface",
+      "tags": [
+        "interface",
+        "modport",
+        "signal_direction"
+      ],
+      "source_bug_id": "7018",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7018",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hier_block attribute on module",
+      "category": "control_flow",
+      "description": "Code should include a module marked with verilator hier_block attribute for hierarchical compilation",
+      "snippet": "module sub(\n  input wire clk,\n  input wire [7:0] in,\n  output wire [7:0] out\n); /*verilator hier_block*/\n  simple_if in_if (.clk(clk));\n  inner i_inner(.in(in_if), .out(out_if));\nendmodule",
+      "tags": [
+        "hier_block",
+        "verilator_attribute",
+        "hierarchical"
+      ],
+      "source_bug_id": "7018",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7018",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface connection via modport-typed port",
+      "category": "data_model",
+      "description": "Code should include module ports typed to specific modports, connecting interface instances through modport interfaces",
+      "snippet": "module inner(\n  simple_if.receiver in,\n  simple_if.sender   out\n);\n  assign out.data = in.data + 8'd1;\nendmodule",
+      "tags": [
+        "interface",
+        "modport",
+        "port_connection"
+      ],
+      "source_bug_id": "7018",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7018",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical mode with non-inline flag",
+      "category": "timing",
+      "description": "Code should include a compilation setup using both --hierarchical flag and -fno-inline optimization flag for hierarchical builds",
+      "snippet": "verilator --cc --hierarchical -fno-inline repro.v",
+      "tags": [
+        "hierarchical",
+        "no_inline",
+        "modport",
+        "child_compilation"
+      ],
+      "source_bug_id": "7018",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7018",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

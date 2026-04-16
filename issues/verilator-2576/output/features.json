@@ -1,0 +1,58 @@
+{
+  "tool": "verilator",
+  "issue_number": 2576,
+  "title": "Multiple assigns to same signal misordered",
+  "features": [
+    {
+      "name": "multiple assignments to same signal in always @(*) block",
+      "category": "control_flow",
+      "description": "Code should include an always @(*) block with two or more assignments to the same signal",
+      "snippet": "always @(*) begin\n    dpp[1] = 0;\n    dpp[1] = dpp[0] & mask;\nend",
+      "tags": [
+        "combinational",
+        "multiple_assignment",
+        "statement_order"
+      ],
+      "source_bug_id": "2576",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2576",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cross-block signal dependency with unpacked array",
+      "category": "data_model",
+      "description": "Code should include an unpacked array where one element is assigned in one always @(*) block and a different element is assigned in another always @(*) block referencing the first",
+      "snippet": "logic dpp[1:0];\nalways @(*) dpp[0] = d0;\nalways @(*) dpp[1] = dpp[0] & mask;",
+      "tags": [
+        "unpacked_array",
+        "cross_block_dependency",
+        "combinational"
+      ],
+      "source_bug_id": "2576",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2576",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sequentially assigned signal used in clocked block",
+      "category": "data_model",
+      "description": "Code should include a signal assigned in a clocked always block that is used by a combinational always block containing multiple assignments to another signal",
+      "snippet": "logic d0;\nalways @(posedge clk) d0 <= ~d0;\nalways @(*) begin\n    dpp[0] = d0;\n    dpp[1] = 0;\n    dpp[1] = dpp[0] & mask;\nend",
+      "tags": [
+        "sequential_logic",
+        "combinational_logic",
+        "signal_dependency"
+      ],
+      "source_bug_id": "2576",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2576",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

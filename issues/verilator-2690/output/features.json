@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 2690,
+  "title": "Fix error on output real becoming integer",
+  "features": [
+    {
+      "name": "real signal connected to implicit logic port",
+      "category": "data_model",
+      "description": "Code should include a real-valued signal passed to a module input port that lacks an explicit type declaration (defaulting to 1-bit logic)",
+      "snippet": "module child(in);\n  input in;\n  // real in; // without explicit real, passing real causes error\nendmodule\n\nmodule parent;\n  real r;\n  child c(r);\nendmodule",
+      "tags": [
+        "real",
+        "implicit_port",
+        "type_mismatch"
+      ],
+      "source_bug_id": "2690",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2690",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "real signal through untyped module hierarchy",
+      "category": "data_model",
+      "description": "Code should include a real signal flowing through module hierarchy where intermediate module ports have no explicit type declaration",
+      "snippet": "module adc_netlist(clk, in, gain, cmp);\n  input clk, in, gain;\n  output cmp;\n  // missing: real in;\n  wire pga_out;\n  pga_model pga0(in, gain, pga_out);\nendmodule",
+      "tags": [
+        "real",
+        "hierarchy",
+        "implicit_port",
+        "type_propagation"
+      ],
+      "source_bug_id": "2690",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2690",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ]
+}

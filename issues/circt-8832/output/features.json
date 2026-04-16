@@ -1,0 +1,67 @@
+{
+  "tool": "circt",
+  "issue_number": 8832,
+  "title": "[LLHD] Dominance issue with local signal",
+  "features": [
+    {
+      "name": "signal_extract_in_cyclic_ctrl_flow",
+      "category": "control_flow",
+      "description": "Code should include a signal created via llhd.sig in one basic block and extracted via llhd.sig.extract in another basic block that is reachable through cyclic control flow, where the Mem2Reg pass fails to properly handle SSA dominance across the cycle.",
+      "snippet": "hw.module @Foo() {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i4 = hw.constant 0 : i4\n  %c0_i32 = hw.constant 0 : i32\n  llhd.process {\n    cf.br ^bb2(%c0_i32 : i32)\n  ^bb3:\n    %out = llhd.sig %c0_i4 : i4\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb4(%4: i32):\n    cf.cond_br %false, ^bb5, ^bb6\n  ^bb5:\n    %c0_i2 = hw.constant 0 : i2\n    %5 = llhd.sig.extract %out from %c0_i2 : (!hw.inout<i4>) -> !hw.inout<i1>\n    llhd.drv %5, %false after %0 : !hw.inout<i1>\n    cf.br ^bb4(%c0_i32 : i32)\n  ^bb6:\n    cf.br ^bb2(%c0_i32 : i32)\n  }\n}",
+      "tags": [
+        "llhd",
+        "signal",
+        "extract",
+        "cyclic-control-flow",
+        "dominance",
+        "mem2reg",
+        "ssa"
+      ],
+      "source_bug_id": "circt-8832",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8832",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "llhd_process_cyclic_ctrl_flow_with_signal_ops",
+      "category": "control_flow",
+      "description": "Code should include an llhd.process region with multiple basic blocks forming cyclic control flow, containing llhd.sig, llhd.sig.extract, llhd.drv, and llhd.prb operations where signal definitions do not dominate all uses across backedge paths.",
+      "snippet": "hw.module @Foo() {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i4 = hw.constant 0 : i4\n  %false = hw.constant false\n  llhd.process {\n    cf.br ^bb2\n  ^bb2:\n    cf.cond_br %false, ^bb3, ^bb8\n  ^bb3:\n    %out = llhd.sig %c0_i4 : i4\n    cf.br ^bb4\n  ^bb4:\n    cf.cond_br %false, ^bb5, ^bb6\n  ^bb5:\n    %5 = llhd.sig.extract %out from %c0_i2 : (!hw.inout<i4>) -> !hw.inout<i1>\n    llhd.drv %5, %false after %0 : !hw.inout<i1>\n    cf.br ^bb4\n  ^bb8:\n    llhd.wait (%c0_i4, %2 : i4), ^bb1\n  }\n}",
+      "tags": [
+        "llhd",
+        "process",
+        "cyclic-control-flow",
+        "signal",
+        "dominance",
+        "mem2reg",
+        "wait",
+        "drive"
+      ],
+      "source_bug_id": "circt-8832",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8832",
+      "construct_complexity": 5,
+      "ub_type": null
+    },
+    {
+      "name": "signal_extract_with_index_in_loop",
+      "category": "control_flow",
+      "description": "Code should include llhd.sig.extract operation using a dynamic index to extract a portion of a signal, where the extracted signal is driven after a time delay in a loop body that cycles back to the loop header via control flow branches.",
+      "snippet": "hw.module @Foo() {\n  %0 = llhd.constant_time <0ns, 0d, 1e>\n  %c0_i2 = hw.constant 0 : i2\n  %c0_i4 = hw.constant 0 : i4\n  %false = hw.constant false\n  llhd.process {\n    cf.br ^bb4\n  ^bb3:\n    %out = llhd.sig %c0_i4 : i4\n    cf.br ^bb4\n  ^bb4:\n    cf.cond_br %false, ^bb5, ^bb6\n  ^bb5:\n    %5 = llhd.sig.extract %out from %c0_i2 : (!hw.inout<i4>) -> !hw.inout<i1>\n    llhd.drv %5, %false after %0 : !hw.inout<i1>\n    cf.br ^bb4\n  }\n}",
+      "tags": [
+        "llhd",
+        "sig-extract",
+        "dynamic-index",
+        "drive",
+        "loop",
+        "control-flow"
+      ],
+      "source_bug_id": "circt-8832",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8832",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

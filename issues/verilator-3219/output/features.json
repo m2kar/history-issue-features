@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 3219,
+  "title": "Help: Fix UNOPTFLAT in a case statement?",
+  "features": [
+    {
+      "name": "always_comb case-based byte rotation",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block with a case statement that permutes byte lanes based on a 2-bit offset derived from address bits, creating a circular dependency flagged as UNOPTFLAT",
+      "snippet": "logic [1:0] offset;\nlogic [31:0] a_by_4, a_plus_1;\nalways_comb begin\n  case(offset)\n    2'd0: rd = {rd3, rd2, rd1, rd0};\n    2'd1: rd = {rd0, rd3, rd2, rd1};\n    2'd2: rd = {rd1, rd0, rd3, rd2};\n    2'd3: rd = {rd2, rd1, rd0, rd3};\n  endcase\nend",
+      "tags": ["always_comb", "case", "byte_rotation", "unoptflat", "circular_logic"],
+      "source_bug_id": "verilator-3219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3219",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational case statement with multiple sequential assignments",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block where a case statement assigns multiple signals (a0, a1, a2, a3) based on an offset derived from address bits",
+      "snippet": "logic [31:0] a0, a1, a2, a3;\nlogic [1:0] offset;\nalways_comb begin\n  case(offset)\n    2'd0: begin a0 = a_by_4; a1 = a_by_4; a2 = a_by_4; a3 = a_by_4; end\n    2'd1: begin a0 = a_plus_1; a1 = a_by_4; a2 = a_by_4; a3 = a_by_4; end\n    2'd2: begin a0 = a_plus_1; a1 = a_plus_1; a2 = a_by_4; a3 = a_by_4; end\n    2'd3: begin a0 = a_plus_1; a1 = a_plus_1; a2 = a_plus_1; a3 = a_by_4; end\n  endcase\nend",
+      "tags": ["always_comb", "case", "multiple_assignments", "address_based_selection"],
+      "source_bug_id": "verilator-3219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3219",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

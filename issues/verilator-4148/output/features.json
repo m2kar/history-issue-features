@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 4148,
+  "title": "SIGSEGV after calling SystemVerilog task from C function",
+  "features": [
+    {
+      "name": "dpi-c export task with procedural timing control",
+      "category": "data_model",
+      "description": "Code should include an exported DPI-C task that uses procedural timing control (@(negedge clock)) inside the task body",
+      "snippet": "export \"DPI-C\" task tb_sv_wait;\ntask automatic tb_sv_wait(input int n);\n    repeat(n) @(negedge clk);\nendtask",
+      "tags": [
+        "dpi-c",
+        "export",
+        "task",
+        "timing_control",
+        "coroutine"
+      ],
+      "source_bug_id": "4148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "dpi-c import task calling exported sv task",
+      "category": "data_model",
+      "description": "Code should include a DPI-C import function that calls an exported DPI-C SV task which uses timing control",
+      "snippet": "import \"DPI-C\" context task tb_c_wait();\nint tb_c_wait() {\n    tb_sv_wait(10);\n    return 0;\n}",
+      "tags": [
+        "dpi-c",
+        "import",
+        "call_export",
+        "interop"
+      ],
+      "source_bug_id": "4148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "dpi-c callback return type mismatch with coroutine",
+      "category": "data_model",
+      "description": "Code should include a DPI exported task that uses timing control, where the callback typedef returns void but the actual implementation returns coroutine type",
+      "snippet": "export \"DPI-C\" task tb_sv_wait;\ntask automatic tb_sv_wait(input int n);\n    @(negedge clk);\nendtask\n// DPI callback typedef: typedef void (*VTOP__Vcb_tb_sv_wait_t)();",
+      "tags": [
+        "dpi-c",
+        "coroutine",
+        "return_type_mismatch",
+        "callback"
+      ],
+      "source_bug_id": "4148",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4148",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ]
+}

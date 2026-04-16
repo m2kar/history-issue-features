@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 7054,
+  "title": "Fix constraint_mode()/rand_mode() in constructor not disabling constraints (#7050)",
+  "features": [
+    {
+      "name": "constraint_mode() passed as function argument",
+      "category": "sva_property",
+      "description": "Code should include passing constraint_mode() method call return value as a function argument",
+      "snippet": "class C; constraint c { value > 0; }; function int foo(int x); return x; endfunction\nfunction new(); foo(constraint_mode(1)); endfunction\nendclass",
+      "tags": ["constraint_mode", "function_argument", "randomization"],
+      "source_bug_id": "7050",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7054",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "rand_mode() passed as function argument",
+      "category": "sva_property",
+      "description": "Code should include passing rand_mode() method call return value as a function argument",
+      "snippet": "class C; rand int value; function int foo(int x); return x; endfunction\nfunction new(); foo(rand_mode(1)); endfunction\nendclass",
+      "tags": ["rand_mode", "function_argument", "randomization"],
+      "source_bug_id": "7050",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7054",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "nested randomization method calls in function arguments",
+      "category": "sva_property",
+      "description": "Code should include nested calls to randomization methods (constraint_mode, rand_mode, randomize) passed as function arguments within a class",
+      "snippet": "class C; rand int x; constraint c { x < 10; };\nfunction int bar(int v); return v; endfunction\nfunction int foo(int v); return bar(v); endfunction\nfunction new(); void'(foo(constraint_mode(1))); endfunction\nendclass",
+      "tags": ["nested_call", "randomization_method", "function_argument"],
+      "source_bug_id": "7050",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7054",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "constraint_mode query in expression context",
+      "category": "sva_property",
+      "description": "Code should include constraint_mode() used in a query expression context, checking its return value",
+      "snippet": "class C; constraint c { value > 0; };\nfunction int query(); return constraint_mode(1); endfunction\nfunction new(); if (query() == 0) $display(\"disabled\"); endfunction\nendclass",
+      "tags": ["constraint_mode", "query_expression", "randomization"],
+      "source_bug_id": "7050",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7054",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

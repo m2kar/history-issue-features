@@ -1,0 +1,78 @@
+{
+  "tool": "circt",
+  "issue_number": 8164,
+  "title": "[firtool] Memories are compiled with randomization logic, but not macros",
+  "features": [
+    {
+      "name": "memory module initialization with external macro dependencies",
+      "category": "data_model",
+      "description": "Code should include a memory module with an initial block that uses randomization macros (INIT_RANDOM_PROLOG_, RANDOMIZE_MEM_INIT) but does not define them locally",
+      "snippet": "module memory_16x32(input clk, input [3:0] waddr, input [31:0] wdata, input wen);\n  reg [31:0] Memory[0:15];\n  initial begin\n    `INIT_RANDOM_PROLOG_\n    `ifdef RANDOMIZE_MEM_INIT\n      for (logic [4:0] i = 5'h0; i < 5'h10; i += 5'h1) begin\n        _RANDOM_MEM = `RANDOM;\n        Memory[i[3:0]] = _RANDOM_MEM;\n      end\n    `endif\n  end\nendmodule",
+      "tags": [
+        "memory",
+        "initial_block",
+        "randomization_macros",
+        "unresolved_macros"
+      ],
+      "source_bug_id": "circt-8164",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8164",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional memory initialization with RANDOMIZE_MEM_INIT",
+      "category": "preprocess",
+      "description": "Code should include a memory initialization block guarded by RANDOMIZE_MEM_INIT preprocessing directive inside an initial block",
+      "snippet": "reg [31:0] _RANDOM_MEM;\ninitial begin\n  `ifdef RANDOMIZE_MEM_INIT\n    for (logic [4:0] i = 5'h0; i < 5'h10; i += 5'h1) begin\n      _RANDOM_MEM = `RANDOM;\n      Memory[i[3:0]] = _RANDOM_MEM;\n    end\n  `endif\nend",
+      "tags": [
+        "preprocessor",
+        "conditional_init",
+        "memory_init",
+        "ifdef"
+      ],
+      "source_bug_id": "circt-8164",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8164",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "INIT_RANDOM_PROLOG_ macro usage in module scope",
+      "category": "preprocess",
+      "description": "Code should include a module-level initial block that references INIT_RANDOM_PROLOG_ macro without local definition",
+      "snippet": "`ifdef ENABLE_INITIAL_MEM_\n  reg [31:0] _RANDOM_MEM;\n  initial begin\n    `INIT_RANDOM_PROLOG_\n    `ifdef RANDOMIZE_MEM_INIT\n      Memory[0] = `RANDOM;\n    `endif\n  end\n`endif",
+      "tags": [
+        "macro_usage",
+        "initial_block",
+        "macro_undefined"
+      ],
+      "source_bug_id": "circt-8164",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8164",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory initialization loop with RANDOM macro",
+      "category": "data_model",
+      "description": "Code should include a for loop inside an initial block that assigns random values to consecutive memory locations using the RANDOM macro",
+      "snippet": "for (logic [4:0] i = 5'h0; i < 5'h10; i += 5'h1) begin\n  _RANDOM_MEM = `RANDOM;\n  Memory[i[3:0]] = _RANDOM_MEM;\nend",
+      "tags": [
+        "memory",
+        "for_loop_init",
+        "random_assignment",
+        "sequential_access"
+      ],
+      "source_bug_id": "circt-8164",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8164",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

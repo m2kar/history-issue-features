@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9140,
+  "title": "InferWidths Pass Fails on Solvable Width Constraints with Circular Dependencies.",
+  "features": [
+    {
+      "name": "register with self-referential width constraint via tail+add",
+      "category": "timing",
+      "description": "Code should include a register connected to an expression that uses the register itself via tail and addition operations, creating a circular width constraint that is mathematically solvable",
+      "snippet": "module test;\n  logic [3:0] in;\n  logic clock;\n  logic [7:0] out;\n  logic [7:0] x;\n  always_ff @(posedge clock) x <= in + {x[7:1]};\n  assign out = x;\nendmodule",
+      "tags": ["width_inference", "circular_constraint", "reg", "shift"],
+      "source_bug_id": "circt-9140",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9140",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "chained width constraints via mul-shr-tail chain",
+      "category": "timing",
+      "description": "Code should include a chain of width constraints where a register feeds through multiplication, shift-right, and tail operations back to the source variable, creating circular dependencies that are solvable",
+      "snippet": "module test;\n  logic [3:0] in;\n  logic clock;\n  logic [7:0] out;\n  logic [7:0] x1;\n  logic [7:0] x2;\n  logic [7:0] x3;\n  always_ff @(posedge clock) x1 <= in * in * x2;\n  assign x3 = x1 >> 2;\n  assign x2 = {x3[7:2], 2'b0};\n  assign out = x1;\nendmodule",
+      "tags": ["width_inference", "constraint_chain", "circular_dependency", "arithmetic"],
+      "source_bug_id": "circt-9140",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9140",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "width inference with self-referencing register feedback",
+      "category": "timing",
+      "description": "Code should include a register whose width is constrained by an expression containing the same register with a shift operation, creating a width lower bound through feedback",
+      "snippet": "logic [7:0] x;\nalways_ff @(posedge clk) x <= {x[6:0], 1'b0} ^ 8'h1;",
+      "tags": ["width_inference", "feedback", "shift", "reg"],
+      "source_bug_id": "circt-9140",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9140",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

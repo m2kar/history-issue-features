@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 6207,
+  "title": "verilator does not check consistency between declaration and implementation of methods",
+  "features": [
+    {
+      "name": "pure virtual function overridden by non-pure virtual with missing body",
+      "category": "data_model",
+      "description": "Code should include a virtual class with a pure virtual function declaration, and a derived class that overrides it with a non-pure virtual function but provides no implementation body",
+      "snippet": "virtual class uvm_object_wrapper;\n  pure virtual function string get_type_name();\nendclass\nclass uvm_object_registry extends uvm_object_wrapper;\n  virtual function string get_type_name();\n  endfunction\nendclass",
+      "tags": ["virtual_class", "pure_virtual", "method_override", "missing_body"],
+      "source_bug_id": "6207",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6207",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "extern function declaration with separate implementation",
+      "category": "control_flow",
+      "description": "Code should include a class with an extern function declaration and a separate out-of-class implementation",
+      "snippet": "class uvm_phase extends uvm_object;\n  extern function int get_phase_type();\nendclass\nfunction int uvm_phase::get_phase_type();\nendfunction",
+      "tags": ["extern_function", "declaration_implementation_split"],
+      "source_bug_id": "6207",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6207",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "ref parameter in class method",
+      "category": "data_model",
+      "description": "Code should include a class method with a ref parameter for output iteration",
+      "snippet": "class uvm_component;\n  extern function int get_first_child(ref string name);\nendclass\nfunction int uvm_component::get_first_child(ref string name);\n  return m_children.first(name);\nendfunction",
+      "tags": ["ref_parameter", "class_method", "iteration"],
+      "source_bug_id": "6207",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6207",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "accessing protected member across package boundary",
+      "category": "data_model",
+      "description": "Code should include access to a protected bit array member (m_predecessors/m_successors) from a different package context",
+      "snippet": "function void uvm_phase::add(uvm_phase phase, int with_phase=null, int after_phase=null,\n                             uvm_phase before_phase=null, int start_with_phase=null, int end_with_phase=null);\n  if (before_phase != null) begin\n    foreach (before_phase.m_predecessors[pred]) begin\n      pred.m_successors[begin_node] = 1;\n    end\n  end\nendfunction",
+      "tags": ["protected_member", "cross_package_access", "bit_array"],
+      "source_bug_id": "6207",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6207",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "extern function declaration with void return but class method called in expression",
+      "category": "control_flow",
+      "description": "Code should include an extern function declaration with void return type that is called in an expression context expecting a return value",
+      "snippet": "class uvm_component;\n  extern function int get_child(string name);\nendclass\nfunction int uvm_component::get_child(string name);\n  if (m_children.exists(name))\n    return m_children[name];\nendfunction",
+      "tags": ["extern_function", "return_type_mismatch", "method_call"],
+      "source_bug_id": "6207",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6207",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

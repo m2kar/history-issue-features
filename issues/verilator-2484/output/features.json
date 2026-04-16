@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2484,
+  "title": "Module parameters of different bit-width get conflated",
+  "features": [
+    {
+      "name": "untyped parameter bit-width introspection with $bits",
+      "category": "data_model",
+      "description": "Code should include a module with an untyped parameter whose bit-width is inspected via $bits() inside the module body, verifying that the parameter width reflects the literal width supplied at instantiation",
+      "snippet": "module socket #(addr)();\n  initial\n    $display(\"bits %0d, addr %b\", $bits(addr), addr);\nendmodule",
+      "tags": ["parameter", "untyped_parameter", "bits", "introspection", "display"],
+      "source_bug_id": "2484",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2484",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple instances with same numeric value but distinct parameter bit-widths",
+      "category": "data_model",
+      "description": "Code should include multiple instantiations of the same parameterized module where two instances use the same numeric parameter value but different bit-widths (e.g., 3'b010 and 2'b10), expecting them to be treated as distinct instances",
+      "snippet": "module bus(input clk);\n  socket #(3'b010) s1();\n  socket #(2'b10) s2();\n  always_ff @(posedge clk) $finish;\nendmodule\n\nmodule socket #(addr)();\n  initial\n    $display(\"bits %0d\", $bits(addr));\nendmodule",
+      "tags": ["parameter", "bit_width", "instantiation", "elaboration", "conflation"],
+      "source_bug_id": "2484",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2484",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized module instantiation with zero-value literals of different widths",
+      "category": "data_model",
+      "description": "Code should include parameterized module instantiation with zero-value literals of different bit-widths (e.g., 3'b000 and 2'b00) so that distinct instances with distinct parameter widths are created, verifiable via $bits()",
+      "snippet": "module top(input clk);\n  socket #(3'b000) s0();\n  socket #(2'b00) s1();\n  always_ff @(posedge clk) $finish;\nendmodule\n\nmodule socket #(addr)();\n  initial\n    $display(\"bits %0d, addr %b\", $bits(addr), addr);\nendmodule",
+      "tags": ["parameter", "bit_width", "zero_literal", "instantiation", "bits"],
+      "source_bug_id": "2484",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2484",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

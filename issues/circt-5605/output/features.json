@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 5605,
+  "title": "[ExportVerilog] Prepare for Emission Assertion Failure",
+  "features": [
+    {
+      "name": "system_sampled feeding multiple concurrent assertions",
+      "category": "control_flow",
+      "description": "Code should include an sv.system.sampled operation whose result is used by multiple sv.assert.concurrent operations",
+      "snippet": "sv.system.sampled %concat : i37\nsv.assert.concurrent posedge %clock, %reset label \"a\" message \"foo\"(%1) : i37\nsv.assert.concurrent posedge %clock, %reset label \"b\" message \"bar\"(%1) : i37",
+      "tags": ["sv_system_sampled", "sv_assert_concurrent", "multiple_use"],
+      "source_bug_id": "circt-5605",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/5605",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "concat result used by system_sampled",
+      "category": "data_model",
+      "description": "Code should include a comb.concat operation whose result is used as the operand to sv.system.sampled",
+      "snippet": "%concat = comb.concat %foo, %bar : i25, i12\n%1 = sv.system.sampled %concat : i37",
+      "tags": ["comb_concat", "sv_system_sampled", "operand"],
+      "source_bug_id": "circt-5605",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/5605",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "wire spilling requirement for multi-use expression",
+      "category": "data_model",
+      "description": "Code should include an expression that after duplication becomes used by multiple operations, requiring wire spilling but not being spilled",
+      "snippet": "comb.concat %a, %b : i25, i12\nsv.system.sampled %1 : i37\nsv.assert.concurrent posedge %clock, %reset label \"a\" message \"x\"(%2) : i37\nsv.assert.concurrent posedge %clock, %reset label \"b\" message \"y\"(%2) : i37",
+      "tags": ["wire_spilling", "multi_use", "prepare_for_emission"],
+      "source_bug_id": "circt-5605",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/5605",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

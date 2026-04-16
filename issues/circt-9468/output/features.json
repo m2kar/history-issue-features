@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9468,
+  "title": "[FIRRTL] LowerClasses creates duplicate symbols for external modules with the same defname",
+  "features": [
+    {
+      "name": "multiple parameterized extmodule declarations sharing the same defname",
+      "category": "data_model",
+      "description": "Code should include two or more external module declarations that map to the same underlying hardware module name (defname) but are specialized with different parameter values, so that a lowering pass must deduplicate class creation by defname",
+      "snippet": "firrtl.extmodule @Bar_1<WIDTH: ui32 = 1>(\n  in a: !firrtl.integer,\n  in b: !firrtl.uint<1>\n) attributes {defname = \"Bar\"}\nfirrtl.extmodule @Bar_2<WIDTH: ui32 = 2>(\n  in a: !firrtl.integer,\n  in b: !firrtl.uint<2>\n) attributes {defname = \"Bar\"}",
+      "tags": ["extmodule", "defname", "parameters", "deduplication", "firrtl", "lower_classes"],
+      "source_bug_id": "circt-9468",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9468",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "property-typed port on external module instantiated multiple times",
+      "category": "data_model",
+      "description": "Code should include an external module with a property-typed input port (firrtl.integer) that is instantiated more than once, with property assignments made to each instance's property port",
+      "snippet": "firrtl.extmodule @Bar_1<WIDTH: ui32 = 1>(\n  in a: !firrtl.integer,\n  in b: !firrtl.uint<1>\n) attributes {defname = \"Bar\"}\nfirrtl.module @Foo() {\n  %bar_1_a, %bar_1_b = firrtl.instance bar_1 @Bar_1(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<1>\n  )\n  %0 = firrtl.integer 0\n  firrtl.propassign %bar_1_a, %0 : !firrtl.integer\n}",
+      "tags": ["extmodule", "property_port", "firrtl_integer", "propassign", "firrtl"],
+      "source_bug_id": "circt-9468",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9468",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "two differently-parametrized extmodule instances with shared defname inside one parent module",
+      "category": "general",
+      "description": "Code should include a parent module that instantiates two differently-parametrized external modules which share the same defname, and assigns the same integer property value to both property ports",
+      "snippet": "firrtl.module @Foo() {\n  %bar_1_a, %bar_1_b = firrtl.instance bar_1 @Bar_1(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<1>\n  )\n  %bar_2_a, %bar_2_b = firrtl.instance bar_2 @Bar_2(\n    in a: !firrtl.integer,\n    in b: !firrtl.uint<2>\n  )\n  %0 = firrtl.integer 0\n  firrtl.propassign %bar_1_a, %0 : !firrtl.integer\n  firrtl.propassign %bar_2_a, %0 : !firrtl.integer\n}",
+      "tags": ["extmodule", "instance", "defname", "property_assignment", "firrtl", "parametric"],
+      "source_bug_id": "circt-9468",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9468",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

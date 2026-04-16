@@ -1,0 +1,79 @@
+{
+  "tool": "verilator",
+  "issue_number": 7271,
+  "title": "Fix soft constraint relaxation dropping compatible constraints",
+  "features": [
+    {
+      "name": "class with multiple rand variables and constraints",
+      "category": "data_model",
+      "description": "Code should include a class with multiple rand bit variables and mixed hard/soft constraints where soft constraints have different priority levels",
+      "snippet": "class C;\n  rand bit [7:0] a, b;\n  constraint c_hard { a < 200; b < 200; }\n  constraint c_s0 { soft b > 100; }\n  constraint c_s1 { soft a == 30; }\n  constraint c_s2 { soft a == 80; }\nendclass",
+      "tags": [
+        "class",
+        "rand",
+        "hard_constraint",
+        "soft_constraint",
+        "constraint_priority"
+      ],
+      "source_bug_id": "7271",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7271",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "soft constraint conflict on same variable with different priority",
+      "category": "data_model",
+      "description": "Code should include two soft constraints on the same variable with conflicting values, where one has higher priority than the other",
+      "snippet": "constraint c_s1 { soft a == 30; }\nconstraint c_s2 { soft a == 80; }",
+      "tags": [
+        "soft_constraint",
+        "conflict",
+        "same_variable",
+        "priority"
+      ],
+      "source_bug_id": "7271",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7271",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "compatible soft constraint on different variable preserved",
+      "category": "data_model",
+      "description": "Code should include a soft constraint on a different variable that is compatible with the highest priority constraint but would be incorrectly dropped by a buggy relaxation algorithm",
+      "snippet": "constraint c_s0 { soft b > 100; }",
+      "tags": [
+        "soft_constraint",
+        "compatible",
+        "different_variable",
+        "preservation"
+      ],
+      "source_bug_id": "7271",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7271",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "randomize with constraint checking",
+      "category": "control_flow",
+      "description": "Code should include randomization call on an object with mixed hard and soft constraints to trigger constraint relaxation behavior",
+      "snippet": "C obj = new;\nif (!obj.randomize()) $stop;",
+      "tags": [
+        "randomize",
+        "constraint_relaxation",
+        "soft_constraint"
+      ],
+      "source_bug_id": "7271",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7271",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

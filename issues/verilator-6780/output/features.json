@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 6780,
+  "title": "Fix reordering of function body inlined on RHS of <= NBA",
+  "features": [
+    {
+      "name": "NBA RHS with function containing assignments",
+      "category": "timing",
+      "construct_complexity": 3,
+      "description": "Code should include a non-blocking assignment (NBA, <=) where the RHS is a function call, and the function body contains assignments that may be reordered by the simulation scheduler. This triggers reordering bugs when the compiler incorrectly applies NBA semantics to internal function statements.",
+      "snippet": "int q;\nalways @(posedge clk) q <= get(enable, 5'(cyc));",
+      "tags": [
+        "nba",
+        "function_call",
+        "reordering",
+        "inlined_function"
+      ],
+      "source_bug_id": "verilator-6780",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6780",
+      "ub_type": null
+    },
+    {
+      "name": "NBA with ternary operator RHS containing function call",
+      "category": "timing",
+      "construct_complexity": 3,
+      "description": "Code should include a non-blocking assignment with a ternary operator on RHS where one branch is a function call. The function may be inlined and its body subject to incorrect statement reordering.",
+      "snippet": "always @(posedge clk) q <= cyc == 0 ? 0 : get(enable, 5'(cyc));",
+      "tags": [
+        "nba",
+        "ternary",
+        "function_call",
+        "reordering",
+        "inlined_function"
+      ],
+      "source_bug_id": "verilator-6780",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6780",
+      "ub_type": null
+    },
+    {
+      "name": "Function body with assignment in control flow",
+      "category": "control_flow",
+      "construct_complexity": 3,
+      "description": "Code should include a function with assignments inside conditional branches that could be incorrectly reordered when the function is inlined into an NBA context. The assignments modify local variables or array elements.",
+      "snippet": "function automatic int get(logic en, logic [4:0] idx);\n  if (en) begin\n    int tmp;\n    idx = ~idx;\n    tmp = array[~idx];\n    return tmp;\n  end\nendfunction",
+      "tags": [
+        "function",
+        "assignment",
+        "inlined",
+        "nba_context",
+        "control_flow"
+      ],
+      "source_bug_id": "verilator-6780",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6780",
+      "ub_type": null
+    },
+    {
+      "name": "NBA scheduling with post-increment array access in function",
+      "category": "timing",
+      "construct_complexity": 4,
+      "description": "Code should include an NBA where the RHS function accesses an array with index manipulation. When inlined, array writes inside the function body may be incorrectly scheduled as NBAs, causing incorrect value capture.",
+      "snippet": "idx = ~idx;\ntmp = array[~idx];",
+      "tags": [
+        "nba",
+        "array_access",
+        "index_manipulation",
+        "inlined_function",
+        "reordering"
+      ],
+      "source_bug_id": "verilator-6780",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6780",
+      "ub_type": null
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "tool": "circt",
+  "issue_number": 3028,
+  "title": "[SV] Miss-complication by reordering side-effect ops",
+  "features": [
+    {
+      "name": "blocking assignment with interleaved read and write",
+      "category": "control_flow",
+      "description": "Code should include a register with multiple blocking assignments where a read operation is interleaved between the first assignment and a second assignment, where reordering would cause incorrect semantics",
+      "snippet": "sv.reg : !hw.inout<i8>\nsv.bpassign %reg, %a : i8\n%y = sv.read_inout %reg : !hw.inout<i8>\nsv.bpassign %reg, %b : i8",
+      "tags": [
+        "sv_reg",
+        "blocking_assignment",
+        "read_write_reordering",
+        "side_effect_order"
+      ],
+      "source_bug_id": "3028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3028",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "read after blocking assignment before subsequent write",
+      "category": "data_model",
+      "description": "Code should include a register that is assigned, then read to capture its value, then assigned again - the ordering of these operations must be preserved for correct output",
+      "snippet": "sv.bpassign %reg, %a : i8\n%v = sv.read_inout %reg : !hw.inout<i8>\nsv.bpassign %reg, %b : i8\nsv.fwrite %fd, \"%d\"(%v) : i8",
+      "tags": [
+        "sv_reg",
+        "blocking_assignment",
+        "read_capture",
+        "operation_ordering"
+      ],
+      "source_bug_id": "3028",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3028",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

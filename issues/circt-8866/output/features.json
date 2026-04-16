@@ -1,0 +1,61 @@
+{
+  "tool": "circt",
+  "issue_number": 8866,
+  "title": "[Comb] Avoid infinite loops by not canonicalizing recursive ops",
+  "features": [
+    {
+      "name": "self_referential_comb_add",
+      "category": "control_flow",
+      "description": "Code should include a comb.add operation where the result variable is used as its own operand, creating a self-referential cyclic dependency. This recursive pattern cannot be safely folded or canonicalized without causing infinite loops in the CIRCT canonicalizer.",
+      "snippet": "%1 = comb.add %1, %c1_i32 : i32",
+      "tags": [
+        "comb",
+        "recursive",
+        "canonicalizer",
+        "infinite-loop",
+        "self-reference"
+      ],
+      "source_bug_id": "circt-8866",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8866",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "recursive_comb_and_prevents_folding",
+      "category": "control_flow",
+      "description": "Code should include a comb.and (or similar binary combinational op) that references its own output as an input operand, forming a trivial self-recursion. The CIRCT canonicalizer must detect such trivially recursive ops and skip folding to avoid infinite loops.",
+      "snippet": "%0 = comb.and %0, %c0 : i1",
+      "tags": [
+        "comb",
+        "recursive",
+        "canonicalizer",
+        "folding",
+        "infinite-loop"
+      ],
+      "source_bug_id": "circt-8866",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8866",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "loopy_combinational_dataflow_process",
+      "category": "control_flow",
+      "description": "Code should include SystemVerilog combinational process or dataflow logic where a value is computed and fed back to itself through combinational operations. Such loopy dataflow describes cyclic computations that cannot be reduced by canonicalization.",
+      "snippet": "always_comb begin\n  data = data + 1'b1;\nend",
+      "tags": [
+        "comb",
+        "cyclic",
+        "dataflow",
+        "process",
+        "systemverilog"
+      ],
+      "source_bug_id": "circt-8866",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8866",
+      "construct_complexity": 4,
+      "ub_type": null
+    }
+  ]
+}

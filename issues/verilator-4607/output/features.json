@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 4607,
+  "title": "Internal error and invalid lifetime errors with clocking blocks & repeat loops",
+  "features": [
+    {
+      "name": "clocking block event sync in repeat loop inside fork",
+      "category": "timing",
+      "description": "Code should include a clocking block event synchronization (@cb) inside a repeat loop that is within a fork...join_any block",
+      "snippet": "fork\n    begin\n        repeat(5) begin\n            @cb;\n        end\n    join_any\ndisable fork;",
+      "tags": [
+        "clocking_block",
+        "repeat",
+        "fork",
+        "timing_event"
+      ],
+      "source_bug_id": "4607",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4607",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "clocking block input read inside repeat loop in fork",
+      "category": "timing",
+      "description": "Code should include reading a clocking block input signal (cb.y) inside a repeat loop within a forked process",
+      "snippet": "fork\n    begin\n        repeat(5) begin\n            x = cb.y;\n        end\n    join_any\ndisable fork;",
+      "tags": [
+        "clocking_block",
+        "input_read",
+        "repeat",
+        "fork"
+      ],
+      "source_bug_id": "4607",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4607",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "clocking block output assignment with timing delay inside repeat in fork",
+      "category": "timing",
+      "description": "Code should include a clocking block output assignment with timing delay (#1ns) inside a repeat loop within a fork...join_any block",
+      "snippet": "default clocking cb @(posedge clk);\n    output #1ns x;\nendclocking\nfork\n    begin\n        repeat(5) begin\n            cb.x <= ~cb.y;\n        end\n    end\njoin_any\ndisable fork;",
+      "tags": [
+        "clocking_block",
+        "output_assignment",
+        "timing_delay",
+        "repeat",
+        "fork"
+      ],
+      "source_bug_id": "4607",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4607",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "lifetime_error"
+    }
+  ]
+}

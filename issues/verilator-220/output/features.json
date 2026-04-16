@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 220,
+  "title": "Latch issue with clock gating signal",
+  "features": [
+    {
+      "name": "latch inference with clock-gated always block",
+      "category": "data_model",
+      "description": "Code should include a latch inferred from an always block with sensitivity list @(clk or d) using a level-sensitive if condition (clk == 1'b0) without else branch",
+      "snippet": "always @(clk or d)\n    if (clk == 1'b0)\n        qin <= d;",
+      "tags": [
+        "latch",
+        "inference",
+        "level_sensitive",
+        "clock_gating"
+      ],
+      "source_bug_id": "220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "verilator clock_enable attribute on signal",
+      "category": "preprocess",
+      "description": "Code should include a wire declaration with the verilator clock_enable attribute applied to signals used in clock gating logic",
+      "snippet": "wire [127:0] ff_en_vld /* verilator clock_enable */ ;",
+      "tags": [
+        "verilator_attribute",
+        "clock_enable",
+        "clock_gating"
+      ],
+      "source_bug_id": "220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "gated clock assignment with concatenation and AND",
+      "category": "timing",
+      "description": "Code should include a gated clock assignment using replication {N{clk}} ANDed with an enable signal",
+      "snippet": "assign gclk_vld = {128{clk}} & ff_en_vld;",
+      "tags": [
+        "gated_clock",
+        "concatenation",
+        "clock_gating",
+        "assign"
+      ],
+      "source_bug_id": "220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "flip-flop using gated clock",
+      "category": "timing",
+      "description": "Code should include a flip-flop module instantiation that uses a gated clock signal (gclk_vld) instead of the original clock",
+      "snippet": "ffq #(1) ff_entry_dvld_0 (.clk(gclk_vld[0]), .d(dvld[0]), .q(entry_vld[0]));",
+      "tags": [
+        "flip_flop",
+        "gated_clock",
+        "instantiation",
+        "parameterized"
+      ],
+      "source_bug_id": "220",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

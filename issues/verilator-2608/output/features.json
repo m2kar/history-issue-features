@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 2608,
+  "title": "OverWidthError: Testbench C set input 'm_axi_awid' to value that overflows what the signal's width can fit",
+  "features": [
+    {
+      "name": "narrow_signal_assignment_from_wider_c_type",
+      "category": "data_model",
+      "description": "Code should include explicit width matching when assigning from C++ integer types to narrower SystemVerilog signals in testbench DPI calls. C++ uint8_t is 8 bits but the target signal may be only 4 bits, causing OverWidthError.",
+      "snippet": "uint8_t awid = 1;\n Top->m_axi_awid = awid; // overflows if signal is 4 bits\n // correct: use (uint8_t)(awid & 0xF) or match C type width to SV signal width",
+      "tags": [
+        "testbench",
+        "width-mismatch",
+        "overflow",
+        "dpi",
+        "assignment"
+      ],
+      "source_bug_id": "verilator-2608",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2608",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "testbench_c_to_sv_signal_width_contract",
+      "category": "data_model",
+      "description": "Code should include width validation when setting SystemVerilog DUT inputs from C testbench. The C type width must equal or be masked to fit the SV signal width to avoid OverWidthError.",
+      "snippet": "Top->m_axi_awid = awid & 0xF; // mask to fit signal width",
+      "tags": [
+        "testbench",
+        "width-mask",
+        "dpi",
+        "overflow-prevention"
+      ],
+      "source_bug_id": "verilator-2608",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2608",
+      "construct_complexity": 1,
+      "ub_type": null
+    }
+  ]
+}

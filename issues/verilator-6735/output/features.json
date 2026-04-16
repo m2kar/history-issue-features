@@ -1,0 +1,95 @@
+{
+  "tool": "verilator",
+  "issue_number": 6735,
+  "title": "Internal fault when cross-class calling with DPI",
+  "features": [
+    {
+      "name": "dpi_c_import_in_package",
+      "category": "general",
+      "description": "Code should include a DPI-C context function import statement inside a SystemVerilog package",
+      "snippet": "package pkg;\nimport \"DPI-C\" context function chandle dpi_func(input int a);\nendpackage",
+      "tags": [
+        "dpi",
+        "package",
+        "import"
+      ],
+      "source_bug_id": "6735",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6735",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "chandle_type_definition",
+      "category": "data_model",
+      "description": "Code should include a typedef using chandle type for opaque handle representation",
+      "snippet": "typedef chandle PyObject;",
+      "tags": [
+        "chandle",
+        "typedef",
+        "handle"
+      ],
+      "source_bug_id": "6735",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6735",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "dpi_wrapper_function_in_package",
+      "category": "general",
+      "description": "Code should include a package-level function that wraps and calls a DPI-imported function, returning a chandle type",
+      "snippet": "function chandle dpi_wrap(input int a);\nreturn dpi_func(a);\nendfunction",
+      "tags": [
+        "dpi",
+        "function",
+        "wrapper",
+        "chandle"
+      ],
+      "source_bug_id": "6735",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6735",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "class_constructor_chained_call",
+      "category": "control_flow",
+      "description": "Code should include a class method where a DPI wrapper function result is passed directly as an argument to a class constructor",
+      "snippet": "function py_object get_item(int idx);\npy_object ret = new(dpi_wrap(idx));\nreturn ret;\nendfunction",
+      "tags": [
+        "class",
+        "constructor",
+        "dpi",
+        "chained_call"
+      ],
+      "source_bug_id": "6735",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6735",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "cross_class_dpi_invocation",
+      "category": "control_flow",
+      "description": "Code should include a class method that calls a package DPI function and passes the result to a different class constructor",
+      "snippet": "class py_tuple;\nfunction py_object get_item(int idx);\nreturn new(pkg_dpi_func(idx));\nendfunction\nendclass",
+      "tags": [
+        "class",
+        "dpi",
+        "cross_class",
+        "constructor_call"
+      ],
+      "source_bug_id": "6735",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6735",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

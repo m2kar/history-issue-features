@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 3476,
+  "title": "Fix #3470 of incorrect bit op tree optimization",
+  "features": [
+    {
+      "name": "reduction on cast truncated expression",
+      "category": "data_model",
+      "description": "Code should include a reduction operation (REDXOR, REDAND, REDOR) applied to a cast expression where the cast truncates a wider signal to narrower type, causing the optimizer to incorrectly ignore the truncation effect",
+      "snippet": "logic [38:0] data;\nlogic result = ^$signed(data[31:0]);",
+      "tags": ["reduction", "cast", "truncation", "bit_optimization"],
+      "source_bug_id": "3476",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/3476",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit_op_tree_merge_reduction_different_widths",
+      "category": "control_flow",
+      "description": "Code should include multiple reduction operations on the same wider variable operating on different bit ranges, where optimization incorrectly merges them by ignoring width-changing casts",
+      "snippet": "logic [38:0] data;\nlogic [31:0] lo = data[31:0];\nlogic [6:0] hi = data[38:32];\nlogic r = ^lo ^ ^hi;",
+      "tags": ["reduction", "bit_range", "width_mismatch", "bit_optimization"],
+      "source_bug_id": "3476",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/3476",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cast_ignored_in_bit_tree_optimization",
+      "category": "data_model",
+      "description": "Code should include a sign-cast or type-cast applied to a signal before a reduction operation, where Verilator's bit op tree optimization incorrectly ignores the cast and treats the reduction as operating on the uncast wider type",
+      "snippet": "logic [63:0] wide;\nlogic [31:0] narrow = wide;\nlogic r = ^narrow;",
+      "tags": ["cast", "reduction", "bit_optimization", "type_conversion"],
+      "source_bug_id": "3476",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/3476",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

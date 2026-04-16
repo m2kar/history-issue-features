@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 505,
+  "title": "%Error: ...: Expecting expression to be constant, but can't determine constant for FUNCREF",
+  "features": [
+    {
+      "name": "localparam assignment from function with while loop",
+      "category": "data_model",
+      "description": "Code should include a localparam assigned from a function call where the function contains a while loop",
+      "snippet": "localparam integer NUM_LFSR = num_lfsr(DATA_WIDTH);\nfunction integer num_lfsr;\n  input integer data_width;\n  integer result;\n  begin\n    result = 1;\n    while ((data_width + result - 1) / result > 36) result = result * 2;\n    num_lfsr = result;\n  end\nendfunction",
+      "tags": [
+        "localparam",
+        "function_call",
+        "while_loop",
+        "constant_eval"
+      ],
+      "source_bug_id": "505",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/505",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "function referencing localparam used in localparam context",
+      "category": "data_model",
+      "description": "Code should include a function that references a localparam variable, where the function is called in a localparam assignment context",
+      "snippet": "localparam MAX_LFSR_WIDTH = 36;\nfunction integer num_lfsr;\n  input integer data_width;\n  begin\n    while (data_width > MAX_LFSR_WIDTH) num_lfsr = num_lfsr * 2;\n  end\nendfunction\nlocalparam integer NUM = num_lfsr(64);",
+      "tags": [
+        "localparam",
+        "function_reference",
+        "constant_eval"
+      ],
+      "source_bug_id": "505",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/505",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ]
+}

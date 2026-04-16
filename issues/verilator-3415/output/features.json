@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 3415,
+  "title": "Many string operations cause compile time hang",
+  "features": [
+    {
+      "name": "chained string concatenation in function",
+      "category": "data_model",
+      "description": "Code should include a function with repeated string concatenation assignments using the {} operator where each concatenation appends to a variable assigned within the same function",
+      "snippet": "function [7:0] str_cat;\n  input [7:0] in;\n  reg [7:0] o;\n  begin\n    o = in;\n    o = { o, 8'h00 };\n    o = { o, 8'h01 };\n    o = { o, 8'h02 };\n    str_cat = o;\n  end\nendfunction",
+      "tags": [
+        "string",
+        "concatenation",
+        "function",
+        "assignment"
+      ],
+      "source_bug_id": "3415",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3415",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "function return assigned via function name",
+      "category": "control_flow",
+      "description": "Code should include a function where the return value is assigned by assigning to the function name itself within a begin/end block",
+      "snippet": "function [15:0] concat_func;\n  input [7:0] a;\n  reg [15:0] o;\n  begin\n    o = {a, a};\n    concat_func = o;\n  end\nendfunction",
+      "tags": [
+        "function",
+        "return_assignment",
+        "old_style"
+      ],
+      "source_bug_id": "3415",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3415",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "nested string function calls for incremental building",
+      "category": "control_flow",
+      "description": "Code should include a string building function that calls another helper function to continue building the string result",
+      "snippet": "function [31:0] build_str;\n  input [15:0] in;\n  reg [31:0] o;\n  begin\n    o = {in, 16'h0000};\n    o = helper_func(o);\n    build_str = o;\n  end\nendfunction\n\nfunction [31:0] helper_func;\n  input [31:0] data;\n  begin\n    helper_func = {data, 8'h00};\n  end\nendfunction",
+      "tags": [
+        "function",
+        "nested_call",
+        "string_building"
+      ],
+      "source_bug_id": "3415",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3415",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    }
+  ]
+}

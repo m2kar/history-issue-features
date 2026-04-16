@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 3055,
+  "title": "'parameter type' data type bit width changes unexpectedly",
+  "features": [
+    {
+      "name": "parameterized struct type passed through module hierarchy",
+      "category": "data_model",
+      "description": "Code should include a struct type passed as a parameter type through multiple levels of module instantiation",
+      "snippet": "struct packed { logic [67:0] data; } axi_meta_t;\nmodule inner #(parameter type DATA_T) (input DATA_T d);\nmodule mid #(parameter type DATA_T) (input DATA_T d);\nmodule outer #(parameter type DATA_T) (input DATA_T d);\nmid #(.DATA_T(axi_meta_t)) m1(.d(d));\nouter #(.DATA_T(axi_meta_t)) m2(.d(d));",
+      "tags": ["parameter_type", "struct", "module_instantiation", "type_propagation"],
+      "source_bug_id": "3055",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3055",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameter type used in module port",
+      "category": "data_model",
+      "description": "Code should include a parameterized type used as a module port direction or signal",
+      "snippet": "module m #(parameter type DATA_T) (input DATA_T a, output DATA_T b);\nstruct packed { logic [67:0] data; } my_struct;\nm #(.DATA_T(my_struct)) inst(.a(s), .b(t));",
+      "tags": ["parameter_type", "module_port", "type_parameter"],
+      "source_bug_id": "3055",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3055",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized struct width calculation",
+      "category": "data_model",
+      "description": "Code should include a packed struct used as a type parameter where the struct width must be correctly computed",
+      "snippet": "struct packed { logic [67:0] addr; logic [7:0] strb; } meta_t;\nbyte unsigned q[$];\nmeta_t tmp;\ninitial tmp = {q[0], q[1]};",
+      "tags": ["packed_struct", "bit_width", "type_parameter"],
+      "source_bug_id": "3055",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3055",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

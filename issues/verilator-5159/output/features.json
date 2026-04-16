@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 5159,
+  "title": "[DFG optimization pass] Internal error on out-of-range slice",
+  "features": [
+    {
+      "name": "out_of_range_bit_slice_on_packed_struct_member",
+      "category": "data_model",
+      "description": "Code should include a bit-slice operation on a packed struct member where the slice indices exceed the member's actual width, causing Verilator's DFG optimization to fail internally",
+      "snippet": "package top_pkg;\n  parameter integer AW = 12;\n  typedef struct packed {logic [AW-1:0] addr;} ctx_t;\nendpackage\n\nmodule top\n  import top_pkg::*;\n#(parameter integer AW2 = 32);\n  logic [AW2-1:0] addr;\n  ctx_t ctx;\n  always_comb addr = ctx.addr[AW2-1:1];\nendmodule",
+      "tags": [
+        "bit_slice",
+        "out_of_range",
+        "packed_struct",
+        "dfg_optimization"
+      ],
+      "source_bug_id": "5159",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5159",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "bit_slice_with_variable_range_exceeding_width",
+      "category": "data_model",
+      "description": "Code should include a bit-slice selection where the slice range (MSB:LSB) is larger than the source signal width, triggering a selection index out of range warning and internal error",
+      "snippet": "logic [11:0] signal_12bit;\nlogic [31:0] result;\nassign result = signal_12bit[31:1];",
+      "tags": [
+        "bit_slice",
+        "out_of_range",
+        "width_mismatch"
+      ],
+      "source_bug_id": "5159",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5159",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

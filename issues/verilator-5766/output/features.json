@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 5766,
+  "title": "Fix Unexpected Waveform when using always_comb and always_ff",
+  "features": [
+    {
+      "name": "cross_domain_feedback_signal_combinational_to_sequential",
+      "category": "data_model",
+      "description": "Code should include a signal assigned in always_comb (blocking) that is read in always_ff (non-blocking), creating feedback between combinational and sequential timing domains",
+      "snippet": "always_comb begin\n  data_n = data_q;\n  if (in_valid) data_n = in_data;\nend\n\nalways_ff @(posedge clk) begin\n  data_q <= data_n;\nend",
+      "tags": ["always_comb", "always_ff", "cross_domain", "blocking_assignment", "nonblocking_assignment"],
+      "source_bug_id": "5766",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5766",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional_latch_pattern_in_always_comb",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block where a signal is assigned a default value that is conditionally overridden, creating a latch-like behavior",
+      "snippet": "always_comb begin\n  data_n = data_q;  // latch previous value\n  out_valid = 0;\n  if (in_valid) begin\n    data_n = in_data;\n    out_valid = 1;\n  end\nend",
+      "tags": ["always_comb", "conditional_assignment", "latch_pattern"],
+      "source_bug_id": "5766",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5766",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational_output_from_cross_domain_signal",
+      "category": "data_model",
+      "description": "Code should include a combinational output assign that directly reads a signal which is also used in a sequential block, where the signal's update semantics differ between simulation tools",
+      "snippet": "assign out_data_prev = data_n;  // out_data_prev reflects immediate always_comb updates",
+      "tags": ["assign", "combinational_output", "cross_domain_signal"],
+      "source_bug_id": "5766",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5766",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

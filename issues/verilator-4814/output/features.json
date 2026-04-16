@@ -1,0 +1,65 @@
+{
+  "tool": "verilator",
+  "issue_number": 4814,
+  "title": "inconsistent results on signed operations",
+  "features": [
+    {
+      "name": "signed_division_in_unsigned_context",
+      "category": "data_model",
+      "description": "Code should include a signed division $signed(a) / $signed(b) nested inside an unsigned context like bitwise AND with unsigned operand, where the context overrides explicit signedness",
+      "snippet": "wire [31:0] x1 = 32'hffffffff & ($signed(32'hffff_8000) / $signed(32'hffff_ff80));\nwire [31:0] x2 = ($signed(32'hffff_8000) / $signed(32'hffff_ff80));",
+      "tags": [
+        "signed",
+        "unsigned",
+        "context",
+        "division",
+        "bitwise_and"
+      ],
+      "source_bug_id": "4814",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4814",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary_operator_as_unsigned_context",
+      "category": "control_flow",
+      "description": "Code should include a ternary operator where one branch uses $signed() division and the result type is unsigned, causing the signed division to be evaluated as unsigned",
+      "snippet": "wire [63:0] div_data = $signed(in1) / $signed(in2);\nwire [63:0] result = in2 == 64'h0 ? 64'hFFFFFFFFFFFFFFFF : div_data;",
+      "tags": [
+        "ternary",
+        "signed",
+        "unsigned",
+        "context",
+        "division"
+      ],
+      "source_bug_id": "4814",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4814",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "intermediate_wire_vs_inline_signed_expression",
+      "category": "control_flow",
+      "description": "Code should include the same signed division expression used both as an intermediate wire assignment and inline in a ternary expression, producing different results due to context sign propagation",
+      "snippet": "wire [63:0] div_data = $signed(in1) / $signed(in2);\nwire [63:0] result1 = in2 == 64'h0 ? 64'hFFFFFFFFFFFFFFFF : div_data;\nwire [63:0] result2 = in2 == 64'h0 ? 64'hFFFFFFFFFFFFFFFF : $signed(in1) / $signed(in2);",
+      "tags": [
+        "wire",
+        "signed",
+        "division",
+        "inline",
+        "ternary",
+        "context"
+      ],
+      "source_bug_id": "4814",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4814",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

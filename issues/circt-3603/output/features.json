@@ -1,0 +1,61 @@
+{
+  "tool": "circt",
+  "issue_number": 3603,
+  "title": "[ExportVerilog] `isExpressionEmittedInlineIntoProceduralDeclaration`  incorrectly inlines assignments",
+  "features": [
+    {
+      "name": "blocking assignment to procedural register followed by read in same procedural block",
+      "category": "control_flow",
+      "description": "Code should include a procedural always block with blocking assignments to registers followed by read operations that read those same registers within the same procedural block",
+      "snippet": "always @(posedge clk) begin\nreg [3:0] r1, r2;\nr1 = a;\nr2 = a;\n$display(\"%h\", r1 + r2);\nend",
+      "tags": [
+        "procedural_block",
+        "blocking_assignment",
+        "register_read",
+        "same_block"
+      ],
+      "source_bug_id": "circt-3603",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3603",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational operation result from procedural register reads used in procedural context",
+      "category": "data_model",
+      "description": "Code should include a combinational operation (add, extract) applied to values read from procedural registers, where the result is used within the same procedural block where the registers are assigned",
+      "snippet": "reg [3:0] r1, r2;\nr1 = a;\nr2 = a;\nwire [3:0] sum = r1 + r2;\nreg [1:0] extracted = sum[2:1];",
+      "tags": [
+        "combinational_operation",
+        "procedural_register",
+        "extract",
+        "add"
+      ],
+      "source_bug_id": "circt-3603",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3603",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "expression inlined as procedural variable initialization using procedural register reads",
+      "category": "control_flow",
+      "description": "Code should include an expression using values read from procedural registers being inlined as an automatic variable initialization within a procedural block where those registers are also assigned",
+      "snippet": "always @(posedge b) begin\nreg [3:0] _GEN, _GEN_0;\n_GEN = a;\n_GEN_0 = a;\nautomatic logic [3:0] _GEN_2 = _GEN + _GEN_0;\nend",
+      "tags": [
+        "expression_inlining",
+        "procedural_variable",
+        "automatic",
+        "initialization"
+      ],
+      "source_bug_id": "circt-3603",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/3603",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

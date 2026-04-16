@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 2782,
+  "title": "[FIRRTL][IMCP]  Should not be propagating invalid values through wires/regs/module ports",
+  "features": [
+    {
+      "name": "register with async reset assigned from invalid module output",
+      "category": "data_model",
+      "description": "Code should include a register with asynchronous reset that is assigned from an invalid module output port, where the invalid value propagates through the register to an output",
+      "snippet": "module Bar(output [7:0] b); endmodule\nmodule Foo(input clock, input reset, output [7:0] b);\n  reg [7:0] r;\n  Bar bar();\n  always @(posedge clock) if (reset) r <= 8'h4; else r <= 8'h0;\n  assign b = r;\nendmodule",
+      "tags": ["firrtl", "invalid_propagation", "register", "async_reset", "module_instantiation"],
+      "source_bug_id": "2782",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2782",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "invalid output port on sub-module",
+      "category": "data_model",
+      "description": "Code should include a submodule that has an output port which is invalid (no driver), causing invalid value propagation when instantiated",
+      "snippet": "module Bar(output [7:0] b); endmodule\nmodule Foo(output [7:0] b);\n  Bar bar();\n  assign b = 8'h0;\nendmodule",
+      "tags": ["firrtl", "invalid_port", "module_instantiation", "no_driver"],
+      "source_bug_id": "2782",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2782",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register chain with reset and invalid input propagation",
+      "category": "data_model",
+      "description": "Code should include a chain of register assignments where an invalid source value feeds through a register with reset, potentially causing incorrect invalid propagation",
+      "snippet": "reg [7:0] r1, r2;\nalways @(posedge clock) begin\n  if (reset) r1 <= 8'h4;\n  else r1 <= 8'h0;\n  r2 <= r1;\nend",
+      "tags": ["register_chain", "invalid_propagation", "async_reset", "firrtl"],
+      "source_bug_id": "2782",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2782",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

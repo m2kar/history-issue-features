@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7372,
+  "title": "Fix wait(0) causing caller to still continue",
+  "features": [
+    {
+      "name": "wait(0) statement inside task",
+      "category": "timing",
+      "description": "Code should include a wait statement with constant 0 condition placed inside a task body",
+      "snippet": "task my_task(); wait (0); endtask",
+      "tags": ["wait", "task", "timing"],
+      "source_bug_id": "7372",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7372",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested task calls with wait in inner task",
+      "category": "control_flow",
+      "description": "Code should include an outer task that calls an inner task, where the inner task contains a wait(0) statement that should block the outer task's execution",
+      "snippet": "task outer_task(); inner_task(); endtask\ntask inner_task(); wait (0); endtask",
+      "tags": ["task", "nested_call", "wait", "blocking"],
+      "source_bug_id": "7372",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7372",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fork-join with task containing wait(0)",
+      "category": "timing",
+      "description": "Code should include a fork-join block that spawns a thread calling a task which contains wait(0), where #0 delays are used before and after the task call",
+      "snippet": "fork\n  begin #0; some_task(); #0; end\njoin",
+      "tags": ["fork", "join", "task", "wait", "timing"],
+      "source_bug_id": "7372",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7372",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

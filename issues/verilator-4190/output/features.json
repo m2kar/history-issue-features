@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 4190,
+  "title": "Incorrect release of forced assignment",
+  "features": [
+    {
+      "name": "force_release_with_mixed_assignment_types",
+      "category": "control_flow",
+      "description": "Code should include force and release statements on signals that also have both assign (continuous) and always_comb (procedural) assignments",
+      "snippet": "logic [31:0] lhs1, lhs2, rhs;\nalways_comb lhs1 = rhs;\nassign lhs2 = rhs;\nalways @(negedge clk) begin\n  if (cond) force lhs1 = 'hdeadbeef;\n  else release lhs1;\nend",
+      "tags": [
+        "force",
+        "release",
+        "assign",
+        "always_comb",
+        "mixed_assignments"
+      ],
+      "source_bug_id": "4190",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4190",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "adjacent_force_release_signals",
+      "category": "data_model",
+      "description": "Code should include two adjacent signal declarations with force/release applied where declaration order affects correctness",
+      "snippet": "logic [31:0] lhs1, lhs2;\nlogic cond = 0;\nassign lhs2 = rhs;\nalways @(negedge clk) begin\n  if (cond) begin force lhs1 = 'h1; force lhs2 = 'h2; end\n  else begin release lhs1; release lhs2; end\nend",
+      "tags": [
+        "force",
+        "release",
+        "adjacent_declarations",
+        "declaration_order"
+      ],
+      "source_bug_id": "4190",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4190",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "force_release_in_clock_edge_block",
+      "category": "timing",
+      "description": "Code should include force and release statements inside a clock edge (negedge or posedge) procedural block",
+      "snippet": "logic [31:0] sig;\nlogic clk;\nalways @(negedge clk) begin\n  if (cond) force sig = 'hdeadbeef;\n  else release sig;\nend",
+      "tags": [
+        "force",
+        "release",
+        "clock_edge",
+        "procedural",
+        "negedge"
+      ],
+      "source_bug_id": "4190",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4190",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

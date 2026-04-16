@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 4152,
+  "title": "Signals updated at wrong times when using verilator.",
+  "features": [
+    {
+      "name": "async_reset_flop_with_sync_enable",
+      "category": "control_flow",
+      "description": "Code should include an always block with asynchronous reset and synchronous enable signal that controls when data is captured on clock edge",
+      "snippet": "always @(posedge hclk or negedge hreset_n) if (!hreset_n) foo <= {32{1'b0}}; else if (foo_we) foo <= nxt_foo;",
+      "tags": [
+        "async_reset",
+        "flop",
+        "sync_enable",
+        "clocked"
+      ],
+      "source_bug_id": "4152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4152",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational_next_state_case_statement",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block computing next state via case statement over state machine with multiple states including default with 'x' assignment",
+      "snippet": "always @(...) case(bar_state_i) `BAR_STATE_1: begin nxt_foo = 32'hFFFFFFFF; foo_we = ready; end default: begin nxt_foo = {32{1'bx}}; foo_we = 1'bx; endcase",
+      "tags": [
+        "combinational",
+        "case",
+        "state_machine",
+        "next_state",
+        "default_x"
+      ],
+      "source_bug_id": "4152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4152",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "feedback_loop_combinational_to_sequential",
+      "category": "timing",
+      "description": "Code should include a feedback pattern where combinational logic computes next value (nxt_foo) that feeds a clocked register (foo), creating timing dependency between enable signal and data update",
+      "snippet": "wire [31:0] nxt_foo; assign nxt_foo = some_logic; always @(posedge clk) if (en) foo <= nxt_foo;",
+      "tags": [
+        "feedback",
+        "combinational",
+        "sequential",
+        "timing",
+        "enable"
+      ],
+      "source_bug_id": "4152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4152",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

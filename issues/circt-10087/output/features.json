@@ -1,0 +1,100 @@
+{
+  "tool": "circt",
+  "issue_number": 10087,
+  "title": "[arcilator] Failed to legalize 'sim.clocked_terminate' and dangling macro references",
+  "features": [
+    {
+      "name": "sv.macro.decl with sv.macro.ref.expr outside always block",
+      "category": "preprocess",
+      "description": "Code should include a SystemVerilog macro declaration (`sv.macro.decl`) referenced by a macro expression (`sv.macro.ref.expr`) that is consumed outside of an `sv.always` block, such as by a `sim.clocked_terminate` operation.",
+      "snippet": "  sv.macro.decl @STOP_COND_\n  %STOP_COND_ = sv.macro.ref.expr @STOP_COND_() : () -> i1\n  %1 = comb.and bin %STOP_COND_, %cond : i1\n  sim.clocked_terminate %clock, %1, success, verbose\n",
+      "tags": [
+        "sv.macro.decl",
+        "sv.macro.ref.expr",
+        "sim.clocked_terminate",
+        "macro",
+        "outside-always"
+      ],
+      "source_bug_id": "circt-10087",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10087",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "dangling macro reference after StripSV pass",
+      "category": "preprocess",
+      "description": "Code should include a macro reference expression that remains after the StripSV pass removes the corresponding `sv.macro.decl`, resulting in a dangling reference and undefined symbol error.",
+      "snippet": "  sv.macro.decl @STOP_COND_\n  // StripSV removes sv.macro.decl but leaves:\n  %STOP_COND_ = sv.macro.ref.expr @STOP_COND_() : () -> i1\n",
+      "tags": [
+        "StripSV",
+        "sv.macro.decl",
+        "sv.macro.ref.expr",
+        "dangling-reference",
+        "undefined-symbol"
+      ],
+      "source_bug_id": "circt-10087",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10087",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "sim.clocked_terminate with condition operand",
+      "category": "general",
+      "description": "Code should include a `sim.clocked_terminate` operation in MLIR that takes a clock value and a boolean condition operand, representing a missing lowering target in arcilator.",
+      "snippet": "sim.clocked_terminate %clock, %cond, success, verbose",
+      "tags": [
+        "sim.clocked_terminate",
+        "arcilator",
+        "missing_lowering",
+        "mlir"
+      ],
+      "source_bug_id": "circt-10087",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10087",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "SystemVerilog stop() statement",
+      "category": "control_flow",
+      "description": "Code should include a SystemVerilog `stop()` statement that triggers simulation termination when executed, which may lower to a `sim.clocked_terminate` operation in hardware compilers.",
+      "snippet": "always @(posedge clock)\n  if (cond)\n    stop();",
+      "tags": [
+        "stop",
+        "simulation_termination",
+        "assert",
+        "sv"
+      ],
+      "source_bug_id": "circt-10087",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10087",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "SystemVerilog assert() with clocked termination",
+      "category": "control_flow",
+      "description": "Code should include a SystemVerilog `assert()` statement evaluated on a clock edge that can lower to a clocked simulation termination construct in a hardware compiler.",
+      "snippet": "always @(posedge clock)\n  assert(cond) else stop();",
+      "tags": [
+        "assert",
+        "stop",
+        "simulation_termination",
+        "clocked",
+        "sv"
+      ],
+      "source_bug_id": "circt-10087",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10087",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

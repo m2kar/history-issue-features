@@ -1,0 +1,62 @@
+{
+  "tool": "circt",
+  "issue_number": 9573,
+  "title": "[Comb] Assertion failure in Canonicalizer with extractConcatToConcatExtract pattern",
+  "features": [
+    {
+      "name": "multi_bit_output_with_mixed_assignment_types",
+      "category": "control_flow",
+      "description": "Code should include a multi-bit output signal (4+ bits) with both continuous assignments and procedural assignments targeting different bits of the same signal",
+      "snippet": "module test_module(\n  input  logic [1:0] in,\n  output logic [3:0] out\n);\n  assign out[0] = in[0] ^ in[1];\n  assign out[3] = 1'h0;\n  always @* begin\n    out[1] = in[0] & in[1];\n    out[2] = in[0] | in[1];\n  end\nendmodule",
+      "tags": [
+        "output_port",
+        "continuous_assign",
+        "procedural_assign",
+        "bit_select",
+        "mixed_assignment"
+      ],
+      "source_bug_id": "9573",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9573",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "combinational_extract_from_concat",
+      "category": "data_model",
+      "description": "Code should include extract operations on concatenated values where canonicalization patterns may be applied in rapid succession causing use-after-replacement",
+      "snippet": "wire [3:0] combined = {out[3], out[2], out[1], out[0]};\nwire bit0 = combined[0];",
+      "tags": [
+        "extract",
+        "concat",
+        "canonicalization",
+        "comb_dialect"
+      ],
+      "source_bug_id": "9573",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9573",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "implicit_sensitivity_list_always_block",
+      "category": "timing",
+      "description": "Code should include a combinational always block with implicit sensitivity list (@*) containing multiple concurrent bit-select assignments",
+      "snippet": "always @* begin\n  out[1] = in[0] & in[1];\n  out[2] = in[0] | in[1];\nend",
+      "tags": [
+        "always_block",
+        "implicit_sensitivity",
+        "bit_select",
+        "combinational"
+      ],
+      "source_bug_id": "9573",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9573",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ]
+}

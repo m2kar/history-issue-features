@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 4242,
+  "title": "Non-equivalent library generation",
+  "features": [
+    {
+      "name": "combinatorial_always_with_explicit_sensitivity_list",
+      "category": "control_flow",
+      "description": "Code should include a combinatorial always block using an explicit sensitivity list with 'or' instead of the wildcard @*",
+      "snippet": "always @(sig1 or sig2) begin\n  result = sig1 & sig2;\nend",
+      "tags": [
+        "combinatorial",
+        "sensitivity_list",
+        "explicit",
+        "or_list"
+      ],
+      "source_bug_id": "4242",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4242",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "signal_misinterpreted_as_clock_in_sensitivity",
+      "category": "timing",
+      "description": "Code should include a data signal appearing in a sensitivity list that Verilator incorrectly infers as a clock source",
+      "snippet": "logic [31:0] data_sig;\nalways @(posedge data_sig or negedge data_sig) begin\n  seq_result <= data_sig;\nend",
+      "tags": [
+        "clock_inference",
+        "sensitivity_list",
+        "misinterpretation",
+        "data_as_clock"
+      ],
+      "source_bug_id": "4242",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4242",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dual_always_wrapper_combo_seq_selection",
+      "category": "data_model",
+      "description": "Code should include generated wrapper with both combinatorial always @* and sequential always @(posedge/negedge) blocks that select between seq and combo results based on sequence numbers",
+      "snippet": "always @* begin\n  last_combo_seqnum = func_combo(handle, combo_val);\nend\nalways @(posedge sig or negedge sig) begin\n  last_seq_seqnum <= func_seq(handle, sig, tmp);\n  result_seq <= tmp;\nend\nalways @* begin\n  result = (last_seq_seqnum > last_combo_seqnum) ? result_seq : combo_val;\nend",
+      "tags": [
+        "dual_always",
+        "wrapper",
+        "combo_seq_selection",
+        "sequence_number"
+      ],
+      "source_bug_id": "4242",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4242",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "output_selection_between_combo_and_seq_results",
+      "category": "data_model",
+      "description": "Code should include a multiplexer selecting between sequential and combinatorial results based on sequence number comparison where seq result being newer forces output to seq value",
+      "snippet": "wire [31:0] combo_result;\nwire [31:0] seq_result;\nwire [31:0] final = (seq_seqnum > combo_seqnum) ? seq_result : combo_result;",
+      "tags": [
+        "multiplexer",
+        "combo_seq_selection",
+        "sequence_number_compare"
+      ],
+      "source_bug_id": "4242",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4242",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

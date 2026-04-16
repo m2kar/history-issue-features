@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 4419,
+  "title": "[ExportVerilog]  CIRCT may generate wrong RTL codes for if/else mux chain.",
+  "features": [
+    {
+      "name": "priority encoder chain with indexed register write",
+      "category": "control_flow",
+      "description": "Code should include an if-else-if chain inside clocked always block where multiple conditions write to the same register via dynamic index",
+      "snippet": "always @(posedge clock) begin\n  if (cond0) r[idx] <= val1;\n  else if (cond1) r[idx] <= val2;\n  else if (cond2) r[idx] <= val3;\n  else r[idx] <= val4;\nend",
+      "tags": ["priority_encoder", "indexed_register", "if_else_chain", "clocked_logic"],
+      "source_bug_id": "4419",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4419",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dynamic array index in procedural block",
+      "category": "data_model",
+      "description": "Code should include a register array accessed via a dynamic index variable in a clocked always block",
+      "snippet": "reg [W-1:0] r[N];\nalways @(posedge clock) begin\n  if (en) r[idx] <= data;\nend",
+      "tags": ["register_array", "dynamic_index", "procedural_block", "indexed_access"],
+      "source_bug_id": "4419",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4419",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "flattened ternary replacing priority if-else",
+      "category": "control_flow",
+      "description": "Code should include a ternary expression used as replacement for priority if-else chain in combinational logic",
+      "snippet": "wire [W-1:0] _GEN = sel ? val1 : val2;\nr <= idx == 2'h0 ? _GEN : r;",
+      "tags": ["ternary_operator", "priority_chain", "flattened_mux", "wrong_optimization"],
+      "source_bug_id": "4419",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4419",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "chisel-style when-otherwise priority chain",
+      "category": "control_flow",
+      "description": "Code should include multiple when blocks with otherwise branches writing to the same indexed register element",
+      "snippet": "val r = Reg(Vec(4, UInt(2.W)));\nwhen(v0) { r(idx) := 1.U } .otherwise { r(idx) := 2.U }\nwhen(v1) { r(idx) := 1.U } .otherwise { r(idx) := 2.U }\nwhen(v2) { r(idx) := 1.U } .otherwise { r(idx) := 2.U }\nwhen(v3) { r(idx) := 1.U } .otherwise { r(idx) := 2.U }",
+      "tags": ["chisel_when", "priority_chain", "indexed_write", "mux_behavior"],
+      "source_bug_id": "4419",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4419",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

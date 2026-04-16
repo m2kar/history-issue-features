@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 4169,
+  "title": "Fix marking overridden methods as coroutines (#4120)",
+  "features": [
+    {
+      "name": "virtual method override with coroutine in derived class",
+      "category": "timing",
+      "description": "Code should include a class hierarchy where a derived class overrides a virtual method from a base class, and the overriding method is a coroutine (uses await or fork)",
+      "snippet": "class Base;\n  virtual task automatic run();\nendclass\nclass Derived extends Base;\n  task automatic run();\n    #10;\n  endtask\nendclass",
+      "tags": ["class", "virtual_method", "override", "coroutine", "task"],
+      "source_bug_id": "4169",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4169",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "non-virtual overriding method treated as virtual",
+      "category": "timing",
+      "description": "Code should include a derived class that overrides a base class virtual method without explicitly declaring the override as virtual, where the overriding method is a coroutine",
+      "snippet": "class Base;\n  virtual function void process();\nendclass\nclass Derived extends Base;\n  function void process();\n    wait(1);\n  endfunction\nendclass",
+      "tags": ["class", "inheritance", "method_override", "coroutine", "non_virtual_override"],
+      "source_bug_id": "4169",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4169",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "base class virtual task overridden by fork block",
+      "category": "timing",
+      "description": "Code should include a base class with a virtual task that is overridden by a derived class task containing a fork-join block",
+      "snippet": "class Base;\n  virtual task automatic dut();\nendclass\nclass Derived extends Base;\n  task automatic dut();\n    fork\n      #5;\n    join\n  endtask\nendclass",
+      "tags": ["class", "virtual_task", "fork", "coroutine", "override"],
+      "source_bug_id": "4169",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/4169",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

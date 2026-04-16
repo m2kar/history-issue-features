@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 2656,
+  "title": "Identically named interfaces across hierarchy confuses Verilator",
+  "features": [
+    {
+      "name": "interface with modport definition",
+      "category": "data_model",
+      "description": "Code should include an interface definition with a modport that has input and output signals",
+      "snippet": "interface a_if ();\n    logic req;\n    logic ack;\n    modport i (\n        input req,\n        output ack\n    );\nendinterface",
+      "tags": [
+        "interface",
+        "modport",
+        "definition"
+      ],
+      "source_bug_id": "2656",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2656",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "disconnected interface instance inside module",
+      "category": "data_model",
+      "description": "Code should include a module that declares an interface instance internally but does not connect it to the module's interface ports",
+      "snippet": "module m1 (\n    input wire clk,\n    a_if.i foo_if\n);\n    a_if bar_if();\n    always_ff @(posedge clk) bar_if.ack <= ~bar_if.req;\nendmodule",
+      "tags": [
+        "interface",
+        "disconnected_instance",
+        "internal_interface"
+      ],
+      "source_bug_id": "2656",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2656",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface pass through module hierarchy",
+      "category": "control_flow",
+      "description": "Code should include a module that passes an interface from its input port to a submodule instance",
+      "snippet": "module m2 (\n    input wire clk,\n    a_if.i bar_if\n);\n    m1 u_m1 ( .clk (clk), .foo_if (bar_if) );\nendmodule",
+      "tags": [
+        "interface",
+        "hierarchy",
+        "passthrough",
+        "module_instantiation"
+      ],
+      "source_bug_id": "2656",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2656",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "identically named interfaces across hierarchy",
+      "category": "data_model",
+      "description": "Code should include interface instances with identical names at different hierarchy levels that should be independent but are confused by the tool",
+      "snippet": "module top ();\n    a_if dut_if();\n    m2 u_dut ( .clk (clk), .bar_if (dut_if) );\nendmodule\n\nmodule m1 (a_if.i foo_if);\n    a_if bar_if();\nendmodule",
+      "tags": [
+        "interface",
+        "naming_conflict",
+        "hierarchy",
+        "name_collision"
+      ],
+      "source_bug_id": "2656",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2656",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

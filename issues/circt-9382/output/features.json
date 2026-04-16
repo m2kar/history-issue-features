@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9382,
+  "title": "[HW] Implement HW Dialect IMDCE",
+  "features": [
+    {
+      "name": "unused register with synchronous reset in module",
+      "category": "data_model",
+      "description": "Code should include a register declared and updated in an always block with synchronous reset but never connected to any module output or downstream logic, creating dead sequential state",
+      "snippet": "module Foo(\n  input clock,\n  input reset\n);\n  reg r;\n  always @(posedge clock) begin\n    if (reset)\n      r <= 1'h1;\n    else\n      r <= 1'h0;\n  end\nendmodule",
+      "tags": ["register", "dead_code", "synchronous_reset", "always_block", "dce"],
+      "source_bug_id": "9382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9382",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always posedge block driving only dead registers",
+      "category": "control_flow",
+      "description": "Code should include an always @(posedge clock) block whose body exclusively drives registers that are never read or connected to any output port, making the entire always block dead code",
+      "snippet": "reg dead_r;\nalways @(posedge clock) begin\n  if (reset)\n    dead_r <= 1'b1;\n  else\n    dead_r <= 1'b0;\nend",
+      "tags": ["always_block", "posedge", "dead_register", "sequential_logic", "dce"],
+      "source_bug_id": "9382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9382",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module with no output-driving logic and only dead internal state",
+      "category": "general",
+      "description": "Code should include a module that has clock and reset inputs but contains no output ports and all internal registers are dead, representing a fully dead module that a compiler should be able to eliminate",
+      "snippet": "module DeadMod(\n  input clock,\n  input reset\n);\n  reg r1;\n  reg r2;\n  always @(posedge clock) begin\n    if (reset) begin\n      r1 <= 1'b0;\n      r2 <= 1'b0;\n    end else begin\n      r1 <= ~r1;\n      r2 <= r1;\n    end\n  end\nendmodule",
+      "tags": ["module", "dead_state", "no_output", "sequential_logic", "imdce"],
+      "source_bug_id": "9382",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9382",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

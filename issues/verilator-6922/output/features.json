@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6922,
+  "title": "Clone typedef in captureTypedefContext.",
+  "features": [
+    {
+      "name": "parameterized interface with typedef using bits on local signal",
+      "category": "data_model",
+      "description": "Code should include a parameterized interface with a width parameter, containing a logic signal whose width depends on the parameter, and a typedef that uses $bits(type(...)) on that signal",
+      "snippet": "interface ifc #(parameter int width)(input logic [width-1:0] b);\n  logic [width-1:0] a;\n  typedef logic[$bits(type(a))-1:0] type_t;\nendinterface",
+      "tags": ["parameterized_interface", "typedef", "bits", "width_calculation"],
+      "source_bug_id": "6920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6920",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple interface instances with different parameter values",
+      "category": "data_model",
+      "description": "Code should include multiple instances of the same parameterized interface, each with a different width parameter value",
+      "snippet": "interface ifc #(parameter int width)(input logic [width-1:0] b);\n  logic [width-1:0] a;\nendinterface\n\nmodule top;\n  logic [15:0] x;\n  ifc #(.width(16)) i1(x);\n  logic [7:0] y;\n  ifc #(.width(8)) i2(y);\nendmodule",
+      "tags": ["parameterized_interface", "multiple_instances", "parameter_override"],
+      "source_bug_id": "6920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6920",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "type cast of typedef applied to width-parameterized signal",
+      "category": "data_model",
+      "description": "Code should include a type cast using a typedef inside a parameterized interface, applied to a signal whose width depends on the interface parameter",
+      "snippet": "interface ifc #(parameter int width)(input logic [width-1:0] b);\n  logic [width-1:0] a;\n  typedef logic[$bits(type(a))-1:0] type_t;\n  always_comb a = type_t'(b);\nendinterface",
+      "tags": ["type_cast", "typedef", "parameterized_interface", "width_calculation"],
+      "source_bug_id": "6920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6920",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

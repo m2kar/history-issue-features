@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 913,
+  "title": "[FIRRTL] (dshr, reg, add) mismatch",
+  "features": [
+    {
+      "name": "dshr shift amount from addition result on reg feedback",
+      "category": "data_model",
+      "description": "Code should include a dynamic shift right operation where the shift amount is derived from an addition result that is fed back through a wire to update a register",
+      "snippet": "logic [10:0] tmp4;\nlogic [10:0] tmp29;\nlogic state_11;\nlogic next_11;\nwire [1:0] add_result = {1'b0, state_11} + 2'b1;\nassign next_11 = add_result[0];\nalways @(posedge clock) state_11 <= next_11;\nassign tmp29 = $signed(tmp4) >>> $signed({10'b0, next_11});",
+      "tags": ["dshr", "dynamic_shift", "addition", "reg_feedback", "shift_amount"],
+      "source_bug_id": "circt-913",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/913",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "signed shift with zero_extended shift amount from single bit wire",
+      "category": "data_model",
+      "description": "Code should include a signed dynamic shift right operation where the shift amount is constructed by zero-extending a single-bit wire to match the operand width",
+      "snippet": "logic [10:0] tmp4;\nlogic [10:0] tmp29;\nlogic _T;\nassign tmp29 = $signed(tmp4) >>> $signed({10'b0, _T});",
+      "tags": ["dshr", "signed_shift", "zero_extension", "shift_amount_width"],
+      "source_bug_id": "circt-913",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/913",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "counter pattern with addition and single bit feedback",
+      "category": "control_flow",
+      "description": "Code should include a counter implementation where a single-bit register is updated via a wire that computes the next state from addition, creating a modulo-2 counter",
+      "snippet": "logic state_11;\nlogic next_11;\nwire [1:0] _T_2 = {1'b0, state_11} + 2'b1;\nassign next_11 = _T_2[0];\nalways @(posedge clock) state_11 <= next_11;",
+      "tags": ["counter", "addition", "reg_feedback", "single_bit", "state_update"],
+      "source_bug_id": "circt-913",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/913",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

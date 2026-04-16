@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9927,
+  "title": "[ImportVerilog] Fix moore.conversion legalization failure on interface ports",
+  "features": [
+    {
+      "name": "interface port on module (non-modport interface type)",
+      "category": "data_model",
+      "description": "Code should include a module that declares an interface-typed port (not a modport), so the port expects a raw interface reference rather than a flattened value",
+      "snippet": "interface Bus;\n  logic [7:0] data;\n  logic valid;\nendinterface\n\nmodule consumer(Bus b);\n  logic [7:0] r;\n  always_comb r = b.data;\nendmodule\n\nmodule top;\n  Bus b();\n  consumer c(.b(b));\nendmodule",
+      "tags": ["interface", "interface_port", "ref_type", "port_connection"],
+      "source_bug_id": "circt-9927",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9927",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "interface with input direction signals passed to interface port",
+      "category": "data_model",
+      "description": "Code should include an interface that contains signals used as inputs, and a module that accepts that interface as a port, triggering port flattening where input signals must retain their reference type",
+      "snippet": "interface Ctrl;\n  logic req;\n  logic ack;\nendinterface\n\nmodule driver(Ctrl.master c);\n  assign c.req = 1'b1;\nendmodule\n\nmodule receiver(Ctrl c);\n  logic r;\n  always_comb r = c.req;\nendmodule\n\nmodule top;\n  Ctrl c();\n  driver  d(.c(c));\n  receiver rx(.c(c));\nendmodule",
+      "tags": ["interface", "modport", "interface_port", "input_signal", "port_flattening"],
+      "source_bug_id": "circt-9927",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9927",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "interface instantiation connected to interface-typed module port",
+      "category": "data_model",
+      "description": "Code should include an interface instance that is connected directly to another module's interface-typed port (not through a modport), where the interface contains at least one input signal",
+      "snippet": "interface MyIf;\n  input logic sel;\n  logic [3:0] addr;\nendinterface\n\nmodule sub(MyIf ifc);\n  logic out;\n  assign out = ifc.sel & ifc.addr[0];\nendmodule\n\nmodule top;\n  MyIf ifc();\n  sub s(.ifc(ifc));\nendmodule",
+      "tags": ["interface", "interface_instantiation", "interface_port", "input_signal", "ref_type"],
+      "source_bug_id": "circt-9927",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9927",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

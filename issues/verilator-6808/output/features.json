@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6808,
+  "title": "Fix resolution of specialized typedefs (#6754)",
+  "features": [
+    {
+      "name": "parameterized class typedef as module type parameter",
+      "category": "data_model",
+      "description": "Code should include a parameterized class containing a typedef member, accessed via scope resolution operator with empty parameterization and used as a module type parameter",
+      "snippet": "class pipeline_class #(\n    parameter int XLEN = 32\n);\n  typedef struct packed {logic [XLEN-1:0] pc;} if_id_t;\nendclass\n\nmodule pipe_reg #(\n    parameter type T = logic\n) ();\nendmodule\n\nmodule fred;\n  pipe_reg #(pipeline_class #()::if_id_t) if_id_reg ();\nendmodule",
+      "tags": ["parameterized_class", "typedef", "type_parameter", "scope_resolution"],
+      "source_bug_id": "6808",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6808",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "specialized class typedef as interface type parameter",
+      "category": "data_model",
+      "description": "Code should include a parameterized class with a typedef struct member, specialized with type parameter, and used as an interface type parameter",
+      "snippet": "class B #(parameter int WIDTH=32);\n    typedef struct packed { logic [WIDTH-1:0] data; } pld_t;\nendclass\n\ninterface A #(parameter type PLD_T = logic);\n    PLD_T pld;\nendinterface\n\nmodule t;\n    A #(B#(64)::pld_t) w_A_Bpld ();\nendmodule",
+      "tags": ["parameterized_class", "typedef_struct", "interface_parameter", "type_specialization"],
+      "source_bug_id": "6808",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6808",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "class_or_package_ref as child of ref_dtype",
+      "category": "control_flow",
+      "description": "Code should include a ClassOrPackageRef that is a child of a RefDType, where the RefDType references a typedef inside a specialized parameterized class",
+      "snippet": "class C #(\n    parameter int W = 8\n);\n    typedef logic [W-1:0] word_t;\nendclass\n\ntypedef C #()::word_t my_word_t;",
+      "tags": ["class_or_package_ref", "ref_dtype", "specialized_class", "nested_typedef"],
+      "source_bug_id": "6808",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6808",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

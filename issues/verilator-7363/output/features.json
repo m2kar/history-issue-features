@@ -1,0 +1,57 @@
+{
+  "tool": "verilator",
+  "issue_number": 7363,
+  "title": "Fix virtual interface function calls binding to wrong instance",
+  "features": [
+    {
+      "name": "virtual interface calling interface function with state change",
+      "category": "control_flow",
+      "description": "Code should include a virtual interface declared in a class calling an interface function that modifies internal interface state",
+      "snippet": "interface my_if;\n  bit clk_active = 0;\n  function void start_clk();\n    clk_active = 1;\n  endfunction\nendinterface\n\nclass Driver;\n  virtual my_if vif;\n  task run();\n    vif.start_clk();\n  endtask\nendclass",
+      "tags": [
+        "virtual_interface",
+        "interface_function",
+        "class_member"
+      ],
+      "source_bug_id": "7363",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7363",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple interface instances with unused instance",
+      "category": "data_model",
+      "description": "Code should include two instances of the same interface where one instance is unused, triggering user2p overwriting bug",
+      "snippet": "interface my_if;\n  bit clk_active = 0;\n  function void start_clk();\n    clk_active = 1;\n  endfunction\nendinterface\n\nmodule t;\n  my_if intf();\n  my_if intf_unused();\nendmodule",
+      "tags": [
+        "multiple_interface_instances",
+        "unused_interface_instance"
+      ],
+      "source_bug_id": "7363",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7363",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "virtual interface assignment from module",
+      "category": "data_model",
+      "description": "Code should include a virtual interface variable in a class being assigned from a module-level interface instance",
+      "snippet": "interface my_if;\n  bit clk_active = 0;\nendinterface\n\nclass Driver;\n  virtual my_if vif;\nendclass\n\nmodule t;\n  my_if intf();\n  initial begin\n    automatic Driver d = new;\n    d.vif = intf;\n  end\nendmodule",
+      "tags": [
+        "virtual_interface",
+        "interface_assignment",
+        "class"
+      ],
+      "source_bug_id": "7363",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7363",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

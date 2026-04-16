@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9310,
+  "title": "[arcilator] Why use a Mux to reset a register, instead of creating a CompRegOp with the reset signal and the reset value?",
+  "features": [
+    {
+      "name": "register with synchronous reset signal",
+      "category": "data_model",
+      "description": "Code should include a clocked register that has an explicit synchronous reset signal and reset value, where the reset drives the next-value selection",
+      "snippet": "logic [7:0] reg_out;\nlogic [7:0] next_val;\nlogic reset, clk;\n\nalways_ff @(posedge clk) begin\n  if (reset)\n    reg_out <= 8'h00;\n  else\n    reg_out <= next_val;\nend",
+      "tags": ["register", "synchronous_reset", "always_ff", "firrtl", "arcilator"],
+      "source_bug_id": "9310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9310",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register with non-zero preset initial value",
+      "category": "data_model",
+      "description": "Code should include a clocked register declared with a non-zero initial preset value that must be materialized at simulation start",
+      "snippet": "logic [7:0] reg_preset = 8'hAB;\nlogic [7:0] next_val;\nlogic clk;\n\nalways_ff @(posedge clk) begin\n  reg_preset <= next_val;\nend",
+      "tags": ["register", "preset", "initial_value", "firrtl", "arcilator"],
+      "source_bug_id": "9310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9310",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mux replacing register reset port during lowering",
+      "category": "control_flow",
+      "description": "Code should include a multiplexer selecting between a reset value and a next value based on a reset condition, as a substitute for a native register reset port",
+      "snippet": "logic [7:0] reg_out;\nlogic [7:0] next_val;\nlogic [7:0] reset_val;\nlogic reset, clk;\n\n// Mux inlined into next-value instead of using reset port\nwire [7:0] muxed_next = reset ? reset_val : next_val;\n\nalways_ff @(posedge clk) begin\n  reg_out <= muxed_next;\nend",
+      "tags": ["mux", "register", "reset", "lowering", "arcilator", "always_ff"],
+      "source_bug_id": "9310",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9310",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

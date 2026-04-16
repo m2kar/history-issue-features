@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 2737,
+  "title": "--coverage option causes incorrect simulation result",
+  "features": [
+    {
+      "name": "coverage option with cpp-to-inputport assignment",
+      "category": "data_model",
+      "description": "Code should include Verilog code that is driven by C++ code writing to input ports while the coverage option is enabled",
+      "snippet": "input di;\nalways @(posedge clk) if (dtb[1] & di) vo0b <= 1'b1;",
+      "tags": ["coverage", "cpp_assignment", "input_port", "simulation"],
+      "source_bug_id": "2737",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2737",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "intermediate wire used in sequential always block condition",
+      "category": "data_model",
+      "description": "Code should include a wire that holds a computed expression which is then used in an if condition inside a sequential always block",
+      "snippet": "wire dt0w = dtb[1] & di;\nalways @(posedge clk) if (!resetn) vo0wb <= 1'b0; else if (dt0w) vo0wb <= 1'b1;",
+      "tags": ["wire", "sequential_logic", "always_block", "if_condition"],
+      "source_bug_id": "2737",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2737",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "equivalent direct expression vs wire expression",
+      "category": "control_flow",
+      "description": "Code should include two equivalent signal paths where one uses a direct expression in the always condition and the other uses an intermediate wire",
+      "snippet": "// direct: always @(posedge clk) if (dtb[1] & di) vo0b <= 1'b1;\n// wire: wire dt0w = dtb[1] & di; always @(posedge clk) if (dt0w) vo0wb <= 1'b1;",
+      "tags": ["equivalence", "wire_vs_expression", "always_block"],
+      "source_bug_id": "2737",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2737",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "rotating register with bit selection",
+      "category": "data_model",
+      "description": "Code should include a rotating shift register using bit selection to track state across clock cycles",
+      "snippet": "reg [3:0] dtb;\nassign dt = dtb[1];\nalways @(posedge clk or negedge resetn) if (!resetn) dtb <= 4'b1; else dtb <= {dtb[2:0], dtb[3]};",
+      "tags": ["shift_register", "bit_select", "rotating", "sequential_logic"],
+      "source_bug_id": "2737",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2737",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

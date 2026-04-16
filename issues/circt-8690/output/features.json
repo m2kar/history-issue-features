@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 8690,
+  "title": "[Canonicalize] Non-terminating canonicalization",
+  "features": [
+    {
+      "name": "self-referential mux with constant-false selector",
+      "category": "control_flow",
+      "description": "Code should include a mux/conditional assignment where the selector is a constant false and the false-branch operand is the assigned signal itself, creating a cyclic combinational definition",
+      "snippet": "logic [63:0] sig;\nlogic [63:0] other_val;\nassign sig = 1'b0 ? other_val : sig;",
+      "tags": ["mux", "self_reference", "constant_condition", "combinational_loop", "canonicalize"],
+      "source_bug_id": "8690",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8690",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "chained self-referential mux with constant condition",
+      "category": "control_flow",
+      "description": "Code should include two chained conditional assignments where the second mux feeds back to itself via the false branch while the first mux feeds into the true branch of the second, both selecting on constant-false",
+      "snippet": "logic [63:0] a, b, src;\nassign a = 1'b0 ? src : '0;\nassign b = 1'b0 ? a : b;",
+      "tags": ["mux", "chained", "self_reference", "constant_condition", "combinational_feedback"],
+      "source_bug_id": "8690",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8690",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "self-referential mux on narrow type with constant-false selector",
+      "category": "control_flow",
+      "description": "Code should include a 1-bit or narrow mux where the false branch is the signal itself and the selector is a constant zero, exercising canonicalization on narrow integer types",
+      "snippet": "logic [7:0] sig;\nlogic [7:0] inp;\nassign sig = 1'b0 ? inp : sig;",
+      "tags": ["mux", "self_reference", "constant_condition", "narrow_type", "canonicalize"],
+      "source_bug_id": "8690",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8690",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

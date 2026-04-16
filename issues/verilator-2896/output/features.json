@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 2896,
+  "title": "Circular logic warning on same bus, but no actual circular logic was used",
+  "features": [
+    {
+      "name": "ripple carry chain with intermediate carry bus across modules",
+      "category": "data_model",
+      "description": "Code should include a chain of full adder module instantiations connected by an intermediate carry-out signal bus where lower bits feed inputs and higher bits capture outputs",
+      "snippet": "module fa4 (input logic [3:0] a, b, input logic ci, output logic [3:0] s, output logic co);\n  logic [2:0] c;\n  fa f1 (.a(a[0]), .b(b[0]), .ci(ci),   .s(s[0]), .co(c[0]));\n  fa f2 (.a(a[1]), .b(b[1]), .ci(c[0]), .s(s[1]), .co(c[1]));\n  fa f3 (.a(a[2]), .b(b[2]), .ci(c[1]), .s(s[2]), .co(c[2]));\n  fa f4 (.a(a[3]), .b(b[3]), .ci(c[2]), .s(s[3]), .co(co));\nendmodule",
+      "tags": [
+        "ripple_carry",
+        "intermediate_bus",
+        "module_instantiation_chain",
+        "false_circular_warning"
+      ],
+      "source_bug_id": "2896",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2896",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "false_positive_warning"
+    },
+    {
+      "name": "unpacked logic vector used across module boundaries",
+      "category": "data_model",
+      "description": "Code should include an unpacked logic vector that is partially used as input to one module instantiation and partially written as output from another module instantiation",
+      "snippet": "logic [2:0] c;\nfa f2 (.ci(c[0]), .co(c[1]));",
+      "tags": [
+        "unpacked_vector",
+        "module_boundary",
+        "partial_input_output"
+      ],
+      "source_bug_id": "2896",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2896",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "false_positive_warning"
+    }
+  ]
+}

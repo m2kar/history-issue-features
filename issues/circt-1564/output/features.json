@@ -1,0 +1,60 @@
+{
+  "tool": "circt",
+  "issue_number": 1564,
+  "title": "[ExportVerilog] multi-used readinout ops cause extraneous temporaries",
+  "features": [
+    {
+      "name": "multiple read_inout from same reg used in different operations",
+      "category": "control_flow",
+      "description": "Code should include multiple sv.read_inout operations on the same sv.reg used in different operation contexts (e.g., array construction and arithmetic)",
+      "snippet": "sv.reg %r : !hw.inout<i3>\n%a = sv.read_inout %r : !hw.inout<i3>\n%b = sv.read_inout %r : !hw.inout<i3>\n%arr = hw.array_create %a, %b : i3\n%sum = comb.add %a, %b : i3",
+      "tags": [
+        "read_inout",
+        "sv_reg",
+        "multiple_use",
+        "redundant_temps"
+      ],
+      "source_bug_id": "circt-1564",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1564",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "four read_inout results fed into hw.array_create",
+      "category": "data_model",
+      "description": "Code should include four sv.read_inout operations whose results are all used as elements in an hw.array_create",
+      "snippet": "%r1 = sv.reg : !hw.inout<i3>\n%r2 = sv.reg : !hw.inout<i3>\n%r3 = sv.reg : !hw.inout<i3>\n%r4 = sv.reg : !hw.inout<i3>\n%v1 = sv.read_inout %r1 : !hw.inout<i3>\n%v2 = sv.read_inout %r2 : !hw.inout<i3>\n%v3 = sv.read_inout %r3 : !hw.inout<i3>\n%v4 = sv.read_inout %r4 : !hw.inout<i3>\n%arr = hw.array_create %v1, %v2, %v3, %v4 : i3",
+      "tags": [
+        "read_inout",
+        "hw_array_create",
+        "array_creation"
+      ],
+      "source_bug_id": "circt-1564",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1564",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "read_inout results used in both array indexing and arithmetic",
+      "category": "control_flow",
+      "description": "Code should include sv.read_inout results that are used both in hw.array_get indexing and comb arithmetic operations",
+      "snippet": "%r = sv.reg : !hw.inout<i3>\n%v = sv.read_inout %r : !hw.inout<i3>\n%arr = hw.array_create %v, %v, %v, %v : i3\n%idx = hw.array_get %arr[%idx_var] : !hw.array<4xi3>\n%sum = comb.add %v, %v : i3",
+      "tags": [
+        "read_inout",
+        "array_get",
+        "comb_add",
+        "multi_context_use"
+      ],
+      "source_bug_id": "circt-1564",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1564",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

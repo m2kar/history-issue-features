@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7335,
+  "title": "Bug: no latch inferred detection if buried in some hierarchy",
+  "features": [
+    {
+      "name": "latch inference from incomplete if in combinational always block",
+      "category": "data_model",
+      "description": "Code should include a combinational always block with an if statement that does not have an else branch, causing a signal to not be assigned in all control paths",
+      "snippet": "always @(sel)\n    if ((sel == 1))\n        ready = 1;",
+      "tags": ["latch", "combinational", "always", "incomplete_assignment", "if"],
+      "source_bug_id": "7335",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7335",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "latch inference in submodule instantiation",
+      "category": "data_model",
+      "description": "Code should include a submodule that contains combinational logic with incomplete assignment, instantiated in a parent module, where latch inference should be detected but is missed",
+      "snippet": "module leaf(input sel, output logic ready);\n    always @(sel)\n        if ((sel == 1))\n            ready = 1;\nendmodule\n\nmodule t;\n    leaf d(.sel(i.sel), .ready(i.ready));\nendmodule",
+      "tags": ["latch", "module_hierarchy", "submodule", "instantiation"],
+      "source_bug_id": "7335",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7335",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface connected to module output with latch inference",
+      "category": "data_model",
+      "description": "Code should include an interface connected to a module output signal that has incomplete assignment in combinational logic, where latch inference is expected but not reported",
+      "snippet": "interface iface(input clk);\n    logic sel;\n    logic ready;\nendinterface\n\nmodule t;\n    logic clk;\n    iface i(.clk(clk));\n    leaf d(.sel(i.sel), .ready(i.ready));\nendmodule",
+      "tags": ["interface", "module_output", "latch", "hierarchy"],
+      "source_bug_id": "7335",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7335",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

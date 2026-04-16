@@ -1,0 +1,61 @@
+{
+  "tool": "verilator",
+  "issue_number": 4373,
+  "title": "BLKANDBLK error on SV queue",
+  "features": [
+    {
+      "name": "queue pop_front as nonblocking assignment rvalue",
+      "category": "data_model",
+      "description": "Code should include a queue pop_front() method call used as the rvalue of a non-blocking assignment (<=) inside an always_ff block",
+      "snippet": "bit [31:0] q [$];\nlogic [31:0] r;\nalways_ff @(posedge clk) if (q.size() > 0) r <= q.pop_front();",
+      "tags": [
+        "queue",
+        "pop_front",
+        "nonblocking",
+        "always_ff"
+      ],
+      "source_bug_id": "4373",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4373",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "blkanbl"
+    },
+    {
+      "name": "queue push_back in function context",
+      "category": "control_flow",
+      "description": "Code should include a queue push_back() method call inside a function definition, where the function is intended for DPI export",
+      "snippet": "bit [31:0] q [$];\nfunction void grpc_server_push(input bit [31:0] value);\n  q.push_back(value);\nendfunction",
+      "tags": [
+        "queue",
+        "push_back",
+        "function",
+        "dpi"
+      ],
+      "source_bug_id": "4373",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4373",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "blkanbl"
+    },
+    {
+      "name": "queue blocking and nonblocking access to same queue variable",
+      "category": "data_model",
+      "description": "Code should include the pattern of a queue variable that is written via push_back in a function and read via pop_front rvalue in an always_ff non-blocking assignment",
+      "snippet": "bit [31:0] q [$];\nfunction void push(input bit [31:0] v); q.push_back(v); endfunction\nlogic [31:0] r;\nalways_ff @(posedge clk) if (q.size() > 0) r <= q.pop_front();",
+      "tags": [
+        "queue",
+        "push_back",
+        "pop_front",
+        "blkanbl_conflict"
+      ],
+      "source_bug_id": "4373",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4373",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "blkanbl"
+    }
+  ]
+}

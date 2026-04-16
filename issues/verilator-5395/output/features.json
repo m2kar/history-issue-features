@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 5395,
+  "title": "Unsupported Union Randomization",
+  "features": [
+    {
+      "name": "rand union with rand struct member",
+      "category": "data_model",
+      "description": "Code should include a rand union containing a packed struct with rand bit fields, where the union is a class member randomized via randomize()",
+      "snippet": "typedef struct packed { rand bit [3:0] a; rand bit [11:0] b; } PackedStruct;\ntypedef union packed { PackedStruct s; bit [15:0] raw_bits; } PackedUnion;\nclass StructInUnionTest; rand PackedUnion my_union; endclass",
+      "tags": ["rand", "union", "packed_struct", "randomization"],
+      "source_bug_id": "5395",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5395",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested rand union in rand union",
+      "category": "data_model",
+      "description": "Code should include a rand union containing another rand union, where the outer union is a class member randomized via randomize()",
+      "snippet": "typedef union packed { bit [15:0] raw_bits; } InnerPackedUnion;\ntypedef union packed { InnerPackedUnion u1; bit [15:0] raw_data; } OuterPackedUnion;\nclass UnionInUnionTest; rand OuterPackedUnion my_outer_union; endclass",
+      "tags": ["rand", "nested_union", "packed_union", "randomization"],
+      "source_bug_id": "5395",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5395",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "union randomized via class randomize method",
+      "category": "control_flow",
+      "description": "Code should include a class with a rand union member that is randomized using the randomize() method call",
+      "snippet": "class UnionTest; rand PackedUnion my_union; function new(); my_union.raw_bits = 12'b0; endfunction endclass\ninitial begin test = new(); void'(test.randomize()); end",
+      "tags": ["randomize", "rand", "union", "class_member"],
+      "source_bug_id": "5395",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5395",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

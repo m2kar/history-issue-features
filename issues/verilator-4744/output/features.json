@@ -1,0 +1,43 @@
+{
+  "tool": "verilator",
+  "issue_number": 4744,
+  "title": "`reg` does not delay for a cycle",
+  "features": [
+    {
+      "name": "clock_gate_enable_from_register_chain",
+      "category": "timing",
+      "description": "Code should include a clock gate module where the gated clock enable is derived from an OR of registers that are themselves clocked by the gated clock output",
+      "snippet": "module ClockGate(input io_E, input io_CK, output io_Q);\n  assign io_Q = io_CK & io_E;\nendmodule\n\nreg valid, valid_1, valid_2;\nwire clock_1;\n\nClockGate clkg(.io_E(valid | valid_1 | valid_2), .io_CK(clock), .io_Q(clock_1));",
+      "tags": [
+        "clock_gate",
+        "feedback",
+        "enable_signal",
+        "register_chain"
+      ],
+      "source_bug_id": "4744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4744",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi_stage_pipeline_gated_clock",
+      "category": "timing",
+      "description": "Code should include a multi-stage pipeline where registers are clocked by a gated clock and one stage's output directly affects the gate enable",
+      "snippet": "always @(posedge clock) valid <= io_in_valid;\nalways @(posedge clock_1) valid_1 <= valid;\nalways @(posedge clock_1) valid_2 <= valid_1;\nassign io_out_valid = valid_2;",
+      "tags": [
+        "pipeline",
+        "gated_clock",
+        "nonblocking_assignment",
+        "multi_stage"
+      ],
+      "source_bug_id": "4744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4744",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

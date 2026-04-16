@@ -1,0 +1,115 @@
+{
+  "tool": "verilator",
+  "issue_number": 6936,
+  "title": "Interface localparam dependencies and arbitrary nesting",
+  "features": [
+    {
+      "name": "struct_parameter_in_interface",
+      "category": "data_model",
+      "description": "Code should include an interface with a parameter typed as a packed struct containing int unsigned fields",
+      "snippet": "typedef struct packed { int unsigned Capacity; int unsigned LineSize; } cfg_t;\ninterface simple_cache_types_if #(parameter sc::cfg_t cfg = 0);",
+      "tags": [
+        "interface",
+        "parameter",
+        "struct",
+        "packed"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "localparam_from_struct_field_division",
+      "category": "data_model",
+      "description": "Code should include a localparam calculated by dividing one struct field by another struct field",
+      "snippet": "localparam int SC_NUM_LINES = cfg.Capacity / cfg.LineSize;",
+      "tags": [
+        "localparam",
+        "struct",
+        "division",
+        "parameter_dependency"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "typedef_array_size_from_struct_fields",
+      "category": "data_model",
+      "description": "Code should include a typedef using a struct field division expression as the array size",
+      "snippet": "typedef logic [(cfg.Capacity / cfg.LineSize)-1:0] sc_num_lines_t;",
+      "tags": [
+        "typedef",
+        "array",
+        "struct",
+        "parameter_expression"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface_instance_with_struct_parameter",
+      "category": "data_model",
+      "description": "Code should include an interface instance created by passing a struct parameter to another interface",
+      "snippet": "interface simple_cache_if #(parameter sc::cfg_t cfg = 0);\n  simple_cache_types_if #(cfg) types();\nendinterface",
+      "tags": [
+        "interface",
+        "instance",
+        "parameter",
+        "struct"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical_interface_localparam_access",
+      "category": "data_model",
+      "description": "Code should include a module accessing a localparam through a nested interface hierarchical path (io.types.SC_NUM_LINES)",
+      "snippet": "module simple_cache #(parameter sc::cfg_t cfg=0) (simple_cache_if io);\n  localparam int SC_NUM_LINES = io.types.SC_NUM_LINES;\nendmodule",
+      "tags": [
+        "hierarchical_reference",
+        "interface",
+        "localparam",
+        "access"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "localparam_in_timing_context",
+      "category": "timing",
+      "description": "Code should include a localparam accessed inside an initial block with a timing delay before evaluation",
+      "snippet": "initial begin\n  #1;\n  $display(\"SC_NUM_LINES = %d\", SC_NUM_LINES);\nend",
+      "tags": [
+        "localparam",
+        "timing",
+        "initial",
+        "delay"
+      ],
+      "source_bug_id": "6936",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6936",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

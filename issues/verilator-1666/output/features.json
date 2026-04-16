@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 1666,
+  "title": "Question: Asynchronous Reset",
+  "features": [
+    {
+      "name": "async reset with combinational-derived reset signal",
+      "category": "timing",
+      "description": "Code should include an always block with asynchronous reset where the reset signal is derived from combinational logic rather than being a primary input",
+      "snippet": "always @(posedge HCLK or posedge asynHrst_d)\n    if(asynHrst_d)\n        hImstart_q <= 1'b0;\n    else\n        hImstart_q <= hImstart_d;\n\nassign asynHrst_d = |{\n    ~HRESETn,\n    aImstart_q[1]\n};",
+      "tags": ["async_reset", "combinational_reset", "sensitivity_list"],
+      "source_bug_id": "1666",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1666",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-clock domain design with async reset",
+      "category": "timing",
+      "description": "Code should include a design with two clock domains (ACLK and HCLK) where one domain has an asynchronous reset that depends on signals from the other domain",
+      "snippet": "always @(posedge ACLK)\n    aImstart_q <= aImstart_d;\n\nalways @(posedge HCLK or posedge asynHrst_d)\n    if(asynHrst_d)\n        hImstart_q <= 1'b0;\n    else\n        hImstart_q <= hImstart_d;\n\nassign asynHrst_d = |{\n    ~HRESETn,\n    aImstart_q[1]\n};",
+      "tags": ["multi_clock", "async_reset", "clock_domain_crossing"],
+      "source_bug_id": "1666",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1666",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

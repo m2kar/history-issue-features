@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7186,
+  "title": "Performance: auto-insert memory prefetch hints for FF-driven array reads",
+  "features": [
+    {
+      "name": "large unpacked array with FF-driven address read",
+      "category": "data_model",
+      "description": "Code should include a large unpacked array (exceeding L3 cache, e.g., >4MB) indexed by a flip-flop register, where both the FF update and array read occur in the same always @(posedge clk) block",
+      "snippet": "reg [31:0] mem [0:4194303];\nreg [31:0] addr_q;\nalways @(posedge clk) begin\n    addr_q <= (query ^ (query >> 16)) & 22'h3FFFFF;\n    result <= mem[addr_q];\nend",
+      "tags": ["unpacked_array", "ff_driven_address", "prefetch", "performance"],
+      "source_bug_id": "7186",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7186",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "registered address computation with hash function in clocked block",
+      "category": "control_flow",
+      "description": "Code should include an always @(posedge clk) block where a register address is computed using bitwise operations (e.g., XOR, shift, mask) and then used to index a memory array in the same cycle",
+      "snippet": "reg [31:0] addr_q;\nalways @(posedge clk) begin\n    addr_q <= (query ^ (query >> 16)) & 22'h3FFFFF;\n    result <= mem[addr_q];\nend",
+      "tags": ["ff_address_computation", "hash_pattern", "clocked_block", "array_index"],
+      "source_bug_id": "7186",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7186",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "pipelined memory access pattern with cross-cycle address",
+      "category": "timing",
+      "description": "Code should include a pipelined memory access pattern where the address is registered in one cycle and used to access memory in the next cycle, suitable for prefetch optimization",
+      "snippet": "reg [31:0] mem [0:4194303];\nreg [31:0] addr_q;\nalways @(posedge clk) begin\n    addr_q <= hash_func(query);\n    result <= mem[addr_q];\nend",
+      "tags": ["pipelined_access", "cross_cycle", "memory_latency", "prefetch"],
+      "source_bug_id": "7186",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7186",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

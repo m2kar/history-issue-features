@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 4590,
+  "title": "[PrettifyVerilog] Don't sink expressions if their values might be changed in procedural regions",
+  "features": [
+    {
+      "name": "wire expression with concat replication using registers modified in always_comb",
+      "category": "preprocess",
+      "description": "Code should include a wire continuous assignment with concatenation replication expression that uses registers also assigned with blocking assignments inside an always_comb block",
+      "snippet": "reg [1:0] a;\nwire [2:0] w = {{2{a[0]}}, a[0]} + {{2{a[1]}}, a[1]};\nalways_comb begin\n  if (sel) a = 2'b0;\n  else a = 2'b1;\nend",
+      "tags": ["wire", "concat_replication", "always_comb", "blocking_assignment", "expression_sinking"],
+      "source_bug_id": "4590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/4590",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb with blocking assignments to registers used in wire expressions",
+      "category": "control_flow",
+      "description": "Code should include an always_comb procedural block with blocking assignments to registers that are also used in expressions within wire continuous assignments",
+      "snippet": "reg [1:0] reg_a;\nwire [2:0] wire_expr = {reg_a, 1'b0};\nalways_comb begin\n  reg_a = 2'b0;\nend",
+      "tags": ["always_comb", "blocking_assignment", "register", "wire_dependency"],
+      "source_bug_id": "4590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/4590",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "expression sinking on wire with procedural region side effects",
+      "category": "preprocess",
+      "description": "Code should include a wire expression containing operations whose operands are modified by blocking assignments in a procedural region, triggering incorrect expression sinking optimization",
+      "snippet": "reg [1:0] x;\nwire [3:0] y = {x, x};\nalways_comb x = sel ? 2'b01 : 2'b10;",
+      "tags": ["expression_sinking", "side_effects", "blocking_assignment", "prettify_verilog"],
+      "source_bug_id": "4590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/4590",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

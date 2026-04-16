@@ -1,0 +1,39 @@
+{
+  "tool": "verilator",
+  "issue_number": 6476,
+  "title": "Asyncronous reset not being triggered",
+  "features": [
+    {
+      "name": "async_reset_ff_no_initial_edge",
+      "category": "timing",
+      "description": "Code should include a flip-flop with asynchronous reset where the reset is driven by an internal flip-flop output and the reset signal does not toggle at time 0",
+      "snippet": "module top(output logic q, input logic clk, rst_n);\n  logic internal_rst;\n  always_ff @(posedge clk or negedge rst_n)\n    if (!rst_n) internal_rst <= 1'b0;\n    else internal_rst <= 1'b1;\n  always_ff @(posedge clk or negedge internal_rst)\n    if (!internal_rst) q <= 1'b0;\n    else q <= 1'b1;\nendmodule",
+      "tags": ["async_reset", "flip_flop", "reset_controller", "edge_detection"],
+      "source_bug_id": "6476",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6476",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sync_deassert_async_assert_reset_controller",
+      "category": "control_flow",
+      "description": "Code should include a reset controller that asynchronously asserts its output but synchronously deasserts it, creating a scenario where the reset signal only transitions once during simulation",
+      "snippet": "logic rst_out;\nalways_ff @(posedge clk or negedge ext_rst) begin\n  if (!ext_rst) rst_out <= 1'b0;\n  else rst_out <= 1'b1;\nend",
+      "tags": ["reset_controller", "async_assert", "sync_deassert", "reset_tree"],
+      "source_bug_id": "6476",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6476",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2,
+    "note": "No code blocks in issue body; features derived from design description (external async reset -> reset controller (async assert/sync deassert) -> flip-flop with async reset)"
+  }
+}

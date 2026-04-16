@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 5277,
+  "title": "Disambiguate variable references under `with` clauses of `randomize()` methods",
+  "features": [
+    {
+      "name": "randomize with constraint referencing outer scope via local::",
+      "category": "data_model",
+      "description": "Code should include a randomize() method call with a with constraint that references class members using local:: scope resolution to disambiguate outer class fields",
+      "snippet": "class Foo;\n  rand int field1;\n  function int rand_another_instance(Foo foo);\n    return foo.randomize() with { field1 == local::field1; };\n  endfunction\nendclass",
+      "tags": [
+        "randomize",
+        "with_constraint",
+        "local_scope",
+        "class_method"
+      ],
+      "source_bug_id": "5277",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/5277",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "randomize with constraint on derived class instance",
+      "category": "data_model",
+      "description": "Code should include a randomize() method call with a with constraint on a derived class instance where both base and derived classes have rand members with the same name",
+      "snippet": "class Bar;\n  rand int field1;\nendclass\nclass Baz extends Bar; endclass\nclass Foo extends Bar;\n  function int randomize_baz(Baz baz);\n    return baz.randomize() with { field1 == local::field1; };\n  endfunction\nendclass",
+      "tags": [
+        "randomize",
+        "with_constraint",
+        "class_inheritance",
+        "extends",
+        "rand_member"
+      ],
+      "source_bug_id": "5277",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/5277",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "randomize with constraint comparing same field from inner and outer scope",
+      "category": "data_model",
+      "description": "Code should include a randomize() with constraint where a field from the randomized object is compared to the same named field from the outer scope using local:: disambiguation",
+      "snippet": "baz.randomize() with { field1 == local::field1; }",
+      "tags": [
+        "randomize",
+        "with_constraint",
+        "field_comparison",
+        "local_scope",
+        "disambiguation"
+      ],
+      "source_bug_id": "5277",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/5277",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

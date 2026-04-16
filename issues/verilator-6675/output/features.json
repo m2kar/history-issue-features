@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 6675,
+  "title": "Fix `free` collision",
+  "features": [
+    {
+      "name": "reserved_c_function_name_as_signal",
+      "category": "general",
+      "description": "Code should include a signal or port declared with a C standard library function name such as free, malloc, printf, exit, or similar. This causes namespace collision when Verilator generates C++ code that calls the stdlib function with the same name as the signal.",
+      "snippet": "module t #(parameter WIDTH = 8) (input wire free, input clk);\n  reg [WIDTH-1:0] data;\n  always @(posedge clk) data <= data + 1;\nendmodule",
+      "tags": [
+        "signal",
+        "naming",
+        "reserved_words",
+        "name_collision",
+        "public_signal"
+      ],
+      "source_bug_id": "verilator-6675",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6675",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "public_signal_name_collision_cpp_namespace",
+      "category": "general",
+      "description": "Code should include public signals that expose SystemVerilog names into the C++ namespace. Public signals can collide with internal C++ functions or macros used by the Verilator runtime.",
+      "snippet": "module collision_test (input wire free, output logic result);\n  assign result = free;\nendmodule",
+      "tags": [
+        "public",
+        "signal",
+        "namespace_collision",
+        "interface",
+        "cpp_exposure"
+      ],
+      "source_bug_id": "verilator-6675",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6675",
+      "construct_complexity": 1,
+      "ub_type": null
+    },
+    {
+      "name": "dtor_cleanup_macro_name_collision",
+      "category": "general",
+      "description": "Code should include constructs that trigger Verilator's VL_DO_DANGLING cleanup macro with C stdlib functions. The macro pattern VL_DO_DANGLING(free(const_cast<char*>(vlNamep)), vlNamep) can collide with signal names in the design.",
+      "snippet": "// Test module that triggers destructor cleanup\nmodule top;\n  wire free;  // Signal named 'free' collides with C stdlib\nendmodule",
+      "tags": [
+        "destructor",
+        "cleanup",
+        "macro",
+        "free",
+        "codegen",
+        "vl_do_dangling"
+      ],
+      "source_bug_id": "verilator-6675",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6675",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ]
+}

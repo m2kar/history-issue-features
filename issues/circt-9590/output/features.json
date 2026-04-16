@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9590,
+  "title": "[circt-verilog] add error message for multiple driver targetting same bits",
+  "features": [
+    {
+      "name": "mixed procedural and continuous drivers to same output signal",
+      "category": "control_flow",
+      "description": "Code should include a signal that receives both a non-blocking procedural assignment inside a clocked always block and a continuous assign statement, creating multiple conflicting drivers to the same variable",
+      "snippet": "module top(input logic clk, output logic q);\n  logic d;\n  always @(negedge clk) begin\n    q <= d;\n  end\n  assign q = d;\nendmodule",
+      "tags": ["multiple_drivers", "nonblocking_assign", "continuous_assign", "output_port", "conflicting_drivers"],
+      "source_bug_id": "9590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9590",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "self-referential continuous assignment creating combinational loop",
+      "category": "general",
+      "description": "Code should include a continuous assign statement where a signal is assigned to itself, creating a zero-delay combinational feedback loop",
+      "snippet": "logic q;\nassign q = q;",
+      "tags": ["continuous_assign", "combinational_loop", "self_reference", "feedback"],
+      "source_bug_id": "9590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9590",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "non-blocking assignment to output port in clocked always block combined with self-assign",
+      "category": "control_flow",
+      "description": "Code should include a clocked always block performing a non-blocking assignment to an output logic port, where the same output port is also driven by a continuous self-assignment, triggering the Sig2Reg promotion pass to hang or crash",
+      "snippet": "module top(input logic clk, output logic q);\n  logic d;\n  always @(negedge clk)\n    q <= d;\n  assign q = q;\nendmodule",
+      "tags": ["nonblocking_assign", "output_port", "continuous_assign", "self_assign", "sig2reg", "clocked_always"],
+      "source_bug_id": "9590",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9590",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

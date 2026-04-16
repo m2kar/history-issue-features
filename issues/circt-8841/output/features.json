@@ -1,0 +1,61 @@
+{
+  "tool": "circt",
+  "issue_number": 8841,
+  "title": "[ImportVerilog] Fix Bug in Packed Array Lvalue",
+  "features": [
+    {
+      "name": "packed_array_concatenation_lvalue",
+      "category": "data_model",
+      "description": "Code should include a concatenation lvalue where elements are multi-dimensional packed arrays, such as {a, b} = x where a and b are logic [7:0][63:0]. This triggers a bug in CIRCT ImportVerilog where packed array lvalues in concatenations are mishandled, causing the assignment to be dropped.",
+      "snippet": "logic [7:0][63:0] a, b;\nalways_comb {a, b} = x;",
+      "tags": [
+        "packed_array",
+        "concatenation",
+        "lvalue",
+        "always_comb",
+        "importverilog"
+      ],
+      "source_bug_id": "circt-8841",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8841",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "nested_packed_array_assignment",
+      "category": "data_model",
+      "description": "Code should include assignment between nested packed arrays where a flat packed bit vector (e.g., logic [1023:0]) is assigned to a concatenation of nested packed arrays (e.g., two logic [7:0][63:0] variables). This exercises the packed array wire/reg type coercion in lvalue positions.",
+      "snippet": "module m(input logic [1023:0] x);\nlogic [7:0][63:0] a, b;\nalways_comb {a, b} = x;\nendmodule",
+      "tags": [
+        "packed_array",
+        "nested",
+        "assignment",
+        "bit_vector",
+        "concatenation"
+      ],
+      "source_bug_id": "circt-8841",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8841",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "always_comb_concatenation_assignment",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block with a concatenation assignment where the right-hand side is a packed array or logic vector. The bug manifests when ImportVerilog processes always_comb with concatenation lvalues containing packed array variables.",
+      "snippet": "always_comb {a, b} = x;",
+      "tags": [
+        "always_comb",
+        "concatenation",
+        "assignment",
+        "procedural",
+        "importverilog"
+      ],
+      "source_bug_id": "circt-8841",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/8841",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ]
+}

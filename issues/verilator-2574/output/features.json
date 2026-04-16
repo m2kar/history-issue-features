@@ -1,0 +1,46 @@
+{
+  "tool": "verilator",
+  "issue_number": 2574,
+  "title": "BLKANDNBLK not reported on arrays so assignment statement does not take effect.",
+  "features": [
+    {
+      "name": "combinatorial_array_read_with_nonblocking_write_same_element",
+      "category": "timing",
+      "description": "Code should include an array element read inside a combinatorial always @(*) block, where the same array element is written with non-blocking assignment (<=) in a sequential always @(posedge) block. This triggers Verilator BLKANDNBLK false positive causing the combinatorial assignment to be silently deleted.",
+      "snippet": "logic pp[1:0];\nalways @(*) begin\n    pp[0] = en;\n    en_pp = pp[1];\nend\nalways @(posedge clk) begin\n    pp[1] <= pp[0];\nend",
+      "tags": [
+        "array",
+        "nonblocking",
+        "combinational",
+        "blocking-read",
+        "BLKANDNBLK",
+        "scheduling",
+        "verilator"
+      ],
+      "source_bug_id": "verilator-2574",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2574",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "combinational_block_reading_array_written_by_sequential_block",
+      "category": "data_model",
+      "description": "Code should include a combinatorial always block reading an array element that is also assigned in a sequential always block, where the read is used to drive an output signal. Verilator may incorrectly schedule this as a delete-domain assignment.",
+      "snippet": "logic en_pp;\nlogic pp[1:0];\nalways @(*) en_pp = pp[1];\nalways @(posedge clk) pp[1] <= pp[0];",
+      "tags": [
+        "array",
+        "combinational",
+        "sequential",
+        "cross-block-dependency",
+        "delete-domain",
+        "verilator"
+      ],
+      "source_bug_id": "verilator-2574",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2574",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

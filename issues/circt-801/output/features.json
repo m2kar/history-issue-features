@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 801,
+  "title": "[comb] Canonicalize away comb.extract from comb.concat",
+  "features": [
+    {
+      "name": "part-select extraction from concatenation result",
+      "category": "data_model",
+      "description": "Code should include a part-select (bit extraction) applied to the result of a concatenation, where all extracted bits originate from a single concatenated operand, creating a redundant intermediate extraction",
+      "snippet": "wire [127:0] bus;\nwire [22:0] extracted = bus[22:0];\nwire [23:0] concat_result = {1'h0, extracted};\nwire [3:0] final_bits = concat_result[3:0];",
+      "tags": ["part_select", "concatenation", "bit_extraction", "canonicalization"],
+      "source_bug_id": "801",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/801",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "zero-extension concatenation with low-bit part-select",
+      "category": "data_model",
+      "description": "Code should include a zero-extension concatenation of the form {1'b0, src[N-1:0]} followed by a part-select that extracts only bits within the src operand range, producing a redundant intermediate wire",
+      "snippet": "wire [22:0] src;\nwire [23:0] zero_ext = {1'h0, src};\nwire [3:0] low_bits = zero_ext[3:0];",
+      "tags": ["zero_extension", "concatenation", "part_select", "redundant_wire"],
+      "source_bug_id": "801",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/801",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary chain using individual bits of concatenation result",
+      "category": "control_flow",
+      "description": "Code should include a cascaded ternary conditional expression that selects values based on individual bit positions of a concatenation result, where each condition tests a single bit extracted from the concat",
+      "snippet": "wire [127:0] bus;\nwire [22:0] tmp = bus[22:0];\nwire [23:0] cat = {1'h0, tmp};\nwire [4:0] sel = cat[3] ? 5'h14 :\n                  cat[2] ? 5'h15 :\n                  cat[1] ? 5'h16 : 5'h17;",
+      "tags": ["ternary_chain", "bit_select", "concatenation", "mux"],
+      "source_bug_id": "801",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/801",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "redundant intermediate wire for part-select of input bus",
+      "category": "data_model",
+      "description": "Code should include an intermediate wire declaration that is solely a part-select of a module input bus, followed by use of that wire in further expressions, producing a pattern that can be simplified by direct substitution",
+      "snippet": "wire [127:0] io_in_data;\nwire [22:0] _T = io_in_data[22:0];\nwire [23:0] _T2 = {1'h0, _T};\nwire use = _T2[1];",
+      "tags": ["intermediate_wire", "part_select", "input_bus", "substitution"],
+      "source_bug_id": "801",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/801",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

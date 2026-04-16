@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 3105,
+  "title": "Optimize redundant Vtemp assignments",
+  "features": [
+    {
+      "name": "zero_padding_concatenation_with_slice_assignment",
+      "category": "data_model",
+      "description": "Code should include a concatenation of a zero literal with a part-select, assigned to a variable of smaller width than the concatenation",
+      "snippet": "logic [9:0] shift0;\nlogic [1023:0] din;\nshift0 = {100'd0, din[1023-100:0]};",
+      "tags": ["concatenation", "zero_padding", "part_select", "assignment"],
+      "source_bug_id": "3105",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3105",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multiple_similar_zero_padding_concatenations",
+      "category": "data_model",
+      "description": "Code should include multiple zero-padding concatenations with different padding widths in the same always block, all assigned to smaller-width variables",
+      "snippet": "logic [9:0] shift0;\nlogic [9:0] shift1;\nlogic [1023:0] din;\nalways @(posedge clk) begin\n    shift0 = {100'd0, din[1023-100:0]};\n    shift1 = {200'd0, din[1023-200:0]};\nend",
+      "tags": ["concatenation", "zero_padding", "multiple_assignments", "always_block"],
+      "source_bug_id": "3105",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3105",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "bitwise_and_of_truncated_concatenation_results",
+      "category": "control_flow",
+      "description": "Code should include a bitwise AND operation between two variables that were assigned from wide zero-padded concatenations",
+      "snippet": "logic [9:0] shift0;\nlogic [9:0] shift1;\nlogic [9:0] dout;\nshift0 = {100'd0, din[1023-100:0]};\nshift1 = {200'd0, din[1023-200:0]};\ndout = shift0 & shift1;",
+      "tags": ["bitwise_and", "concatenation", "assignment"],
+      "source_bug_id": "3105",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3105",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

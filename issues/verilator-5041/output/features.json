@@ -1,0 +1,39 @@
+{
+  "tool": "verilator",
+  "issue_number": 5041,
+  "title": "Verilator not handling hierarchical signal references correctly",
+  "features": [
+    {
+      "name": "hierarchical reference through nested if-generate blocks",
+      "category": "control_flow",
+      "description": "Code should include a hierarchical dotted reference that traverses through multiple if-generate BEGIN labels to reach a module instance signal, such as DUT.A.B.C.D where A and C are if-generate blocks",
+      "snippet": "module dut;\n  if (1) begin : A\n    b b_inst();\n  end\nendmodule\nmodule b;\n  if (1) begin : C\n    d d_inst();\n  end\nendmodule\nmodule d;\n  logic sig;\nendmodule\nmodule tb;\n  initial $display(\"%v\", dut.A.b_inst.C.d_inst.sig);\nendmodule",
+      "tags": ["hierarchical_reference", "if_generate", "begin_label", "dotted_reference"],
+      "source_bug_id": "5041",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5041",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical path through if-generate to cell",
+      "category": "control_flow",
+      "description": "Code should include a scenario where a hierarchical reference finds a BEGIN statement instead of a CELL when traversing through if-generate blocks, causing Verilator to report that a variable does not exist",
+      "snippet": "module top;\n  if (1) begin : gen_a\n    child child_inst();\n  end\nendmodule\nmodule child;\n  if (1) begin : gen_b\n    leaf leaf_inst();\n  end\nendmodule\nmodule leaf;\n  wire [7:0] data;\nendmodule\nmodule tb;\n  wire [7:0] x = top.gen_a.child_inst.gen_b.leaf_inst.data;\nendmodule",
+      "tags": ["hierarchical_reference", "if_generate", "begin_vs_cell", "traversal"],
+      "source_bug_id": "5041",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5041",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2,
+    "notes": "No code blocks in original issue; features synthesized from detailed hierarchical path description"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2537,
+  "title": "clang-10 complains: warning: bitwise negation of a boolean expression; did you mean logical negation?",
+  "features": [
+    {
+      "name": "bitwise NOT on chained OR of equality comparisons",
+      "category": "general",
+      "description": "Code should include a bitwise NOT operator (~) applied to the result of multiple OR-ed equality comparisons, producing a 1-bit boolean result that Verilator incorrectly translates to C++ using ~ instead of !",
+      "snippet": "logic [7:0] val;\nlogic result;\nassign result = ~((val == 8'd1) | (val == 8'd2) | (val == 8'd3) |\n                  (val == 8'd4) | (val == 8'd5) | (val == 8'd6) |\n                  (val == 8'd7) | (val == 8'd8));",
+      "tags": ["bitwise_not", "equality_comparison", "boolean_expression", "or_chain", "negation"],
+      "source_bug_id": "2537",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2537",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "bitwise NOT on 1-bit equality result used in conditional",
+      "category": "control_flow",
+      "description": "Code should include a bitwise NOT (~) applied to an equality comparison result used directly in an if-condition, where the single-bit boolean result causes Verilator to emit ~ rather than ! in generated C++",
+      "snippet": "logic [7:0] val;\nlogic [3:0] out;\nalways_comb begin\n  if (~(val == 8'd5))\n    out = 4'd1;\n  else\n    out = 4'd0;\nend",
+      "tags": ["bitwise_not", "equality_comparison", "if_condition", "1bit_result", "boolean_expression"],
+      "source_bug_id": "2537",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2537",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    },
+    {
+      "name": "2D packed array element in chained equality comparisons",
+      "category": "data_model",
+      "description": "Code should include a two-dimensional packed array whose element is accessed by constant indices and compared to multiple integer constants using OR-chained equality checks",
+      "snippet": "logic [1:0][7:0] arr [2];\nlogic result;\nassign result = (arr[0][0] == 8'd1) | (arr[0][0] == 8'd2) |\n                (arr[0][0] == 8'd3) | (arr[0][0] == 8'd4);",
+      "tags": ["packed_array", "2d_array", "equality_comparison", "or_chain", "constant_index"],
+      "source_bug_id": "2537",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2537",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "cpp_compile_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "tool": "verilator",
+  "issue_number": 5320,
+  "title": "Cannot assign signals in interface that defines a clocking, even if clocking never used",
+  "features": [
+    {
+      "name": "interface signal with unused clocking block input reference",
+      "category": "data_model",
+      "description": "Code should include an interface signal that is referenced as an input in a clocking block, where the clocking block is never used in the design",
+      "snippet": "interface Axi5Lite(input logic aclk, input logic aresetn); logic arvalid; clocking transmitter_clocking @(posedge(aclk)); input arvalid; endclocking endinterface",
+      "tags": [
+        "interface",
+        "clocking_block",
+        "signal_reference"
+      ],
+      "source_bug_id": "5320",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5320",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non-blocking assignment to signal with clocking block input declaration",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment to an interface signal that is declared as an input in an unused clocking block, causing Verilator to incorrectly warn about blocked and non-blocking assignments to the same variable",
+      "snippet": "logic arvalid; // interface signal\nclocking transmitter_clocking @(posedge(aclk)); input arvalid; endclocking\n// Later in module:\ninterface_inst.arvalid <= 1'b1; // Non-blocking assignment",
+      "tags": [
+        "non_blocking_assignment",
+        "clocking_block",
+        "interface_signal"
+      ],
+      "source_bug_id": "5320",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5320",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface with output signal in clocking block",
+      "category": "data_model",
+      "description": "Code should include an interface with a signal declared as output in a clocking block, which Verilator may incorrectly treat as a blocking assignment",
+      "snippet": "interface Ifc(input clk); logic sig; clocking cb @(posedge clk); output sig; endclocking endinterface",
+      "tags": [
+        "interface",
+        "clocking_block",
+        "output_signal"
+      ],
+      "source_bug_id": "5320",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5320",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

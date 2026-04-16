@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 9331,
+  "title": "[FIRRTL] Don't Create Trivially Empty Layer Blocks in LowerLayers",
+  "features": [
+    {
+      "name": "empty module from outer-only layerblock lowering",
+      "category": "general",
+      "description": "Code should include an empty module declaration produced when an outer layerblock contains only an inner nested layerblock, resulting in a module with no ports and no body statements",
+      "snippet": "module Foo_A();\nendmodule",
+      "tags": ["empty_module", "layerblock", "bind", "layer_lowering"],
+      "source_bug_id": "circt-9331",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9331",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bind instantiation of zero-port empty module",
+      "category": "general",
+      "description": "Code should include a bind statement that instantiates a module with zero ports and no internal logic into a target module, where the bound module is entirely empty",
+      "snippet": "module Foo_A();\nendmodule\n\nmodule Foo(\n  input a\n);\nendmodule\n\nbind Foo Foo_A a_0 ();",
+      "tags": ["bind", "empty_module", "zero_port", "instantiation"],
+      "source_bug_id": "circt-9331",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9331",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical cross-module reference inside bind-instantiated module",
+      "category": "general",
+      "description": "Code should include a wire inside a bind-instantiated module that references a signal from the target module using a hierarchical path, such as accessing the parent module's input directly",
+      "snippet": "module Foo(\n  input a\n);\nendmodule\n\nmodule Foo_A_B();\n  wire b = Foo.a;\nendmodule\n\nbind Foo Foo_A_B a_b ();",
+      "tags": ["bind", "hierarchical_reference", "cross_module", "wire"],
+      "source_bug_id": "circt-9331",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9331",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested layer bind files with include guard chaining",
+      "category": "general",
+      "description": "Code should include two separate bind include files where the inner layer file uses an ifndef guard and also includes the outer layer's bind file, creating a chained include-guard dependency between nested layer bind constructs",
+      "snippet": "`ifndef layers_Foo_A\n  `define layers_Foo_A\n  bind Foo Foo_A a_0 ();\n`endif // not def layers_Foo_A\n\n// In a separate file:\n`ifndef layers_Foo_A_B\n  `define layers_Foo_A_B\n  `include \"layers-Foo-A.sv\"\n  bind Foo Foo_A_B a_b ();\n`endif // not def layers_Foo_A_B",
+      "tags": ["bind", "include_guard", "ifndef", "layer_nesting", "conditional_compilation"],
+      "source_bug_id": "circt-9331",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9331",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

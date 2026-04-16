@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 9376,
+  "title": "Memory leak in HW to SystemC conversion",
+  "features": [
+    {
+      "name": "sv.reg nested inside hw.module for HW-to-SystemC conversion",
+      "category": "data_model",
+      "description": "Code should include an sv.reg operation nested inside an hw.module where the sv.reg is not legalizable by the --convert-hw-to-systemc pass, causing the conversion pattern to abort after partially allocating target ops",
+      "snippet": "\"hw.module\"() <{module_type = !hw.modty<>, parameters = [], sym_name = \"Bar\"}> ({\n  %0 = \"hw.constant\"() <{value = false}> : () -> i1\n  %1 = \"sv.reg\"(%0) <{name = \"reg\"}> : (i1) -> !hw.inout<i1>\n  \"hw.output\"() : () -> ()\n}) : () -> ()",
+      "tags": ["sv_reg", "hw_module", "hw_to_systemc", "conversion_failure", "illegal_op"],
+      "source_bug_id": "circt-9376",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9376",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "hw.constant driving sv.reg with hw.inout result type",
+      "category": "data_model",
+      "description": "Code should include an hw.constant value feeding an sv.reg operand where the register result has type !hw.inout<i1>, exercising the inout register initialization pattern inside an hw.module",
+      "snippet": "%0 = \"hw.constant\"() <{value = false}> : () -> i1\n%1 = \"sv.reg\"(%0) <{name = \"reg\"}> : (i1) -> !hw.inout<i1>",
+      "tags": ["hw_constant", "sv_reg", "hw_inout", "register_init", "i1"],
+      "source_bug_id": "circt-9376",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9376",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

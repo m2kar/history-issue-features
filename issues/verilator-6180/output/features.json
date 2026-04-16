@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 6180,
+  "title": "Support IEEE Std 1800-2017, section 27.5, Conditional generate constructs",
+  "features": [
+    {
+      "name": "nested if-else-if generate with named begin:end block",
+      "category": "control_flow",
+      "description": "Code should include nested if-else-if generate constructs using if (condition) begin : name ... end else if (condition) begin : name ... end else ; pattern",
+      "snippet": "parameter p = 1, q = 0;\nwire a = 0, b = 0, c = 0;\nif (p == 1)\n  if (q == 0)\n  begin : u1\n    reg foo;\n    and g1(a, b, c);\n  end\n  else if (q == 2)\n  begin : u1\n    reg foo;\n    or g1(a, b, c);\n  end\n  else ;\nelse if (p == 2)\n  case (q) 0, 1, 2: begin : u1 xor g1(a, b, c); end default: begin : u1 xnor g1(a, b, c); endcase",
+      "tags": [
+        "generate",
+        "if-else-if",
+        "nested_generate",
+        "named_begin"
+      ],
+      "source_bug_id": "6180",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6180",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "case statement inside generate block with named begin:end",
+      "category": "control_flow",
+      "description": "Code should include a case statement inside a generate block using case (expr) values: begin : name ... end default: begin : name ... endcase pattern",
+      "snippet": "parameter p = 2, q = 1;\nwire a = 0, b = 0, c = 0;\nif (p == 2)\n  case (q)\n    0, 1, 2:\n    begin : u1\n      xor g1(a, b, c);\n    end\n    default:\n    begin : u1\n      xnor g1(a, b, c);\n    end\n  endcase",
+      "tags": [
+        "generate",
+        "case_inside_generate",
+        "named_begin"
+      ],
+      "source_bug_id": "6180",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6180",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical reference to generate instance with dot notation",
+      "category": "control_flow",
+      "description": "Code should include a hierarchical reference to an instance inside a generate construct using dotted path like test.u1.foo",
+      "snippet": "module top;\n  parameter p = 1, q = 0;\n  wire a = 0, b = 0, c = 0;\n  if (p == 1)\n    if (q == 0)\n    begin : u1\n      reg foo;\n      and g1(a, b, c);\n    end\n  bit clk;\n  initial forever #(10ns/2) clk = ~clk;\n  initial begin repeat(8) @(posedge clk); test.u1.foo <= 0; repeat(8) @(posedge clk); $finish; end\nendmodule",
+      "tags": [
+        "hierarchical_reference",
+        "generate_instance",
+        "dot_notation"
+      ],
+      "source_bug_id": "6180",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6180",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

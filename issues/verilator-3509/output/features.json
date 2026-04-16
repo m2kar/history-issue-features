@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 3509,
+  "title": "Wire tie-off causing bad logic optimization",
+  "features": [
+    {
+      "name": "tied_off_bit_in_concatenation",
+      "category": "data_model",
+      "description": "Code should include a concatenation where an upper bit is tied to a constant zero, followed by bit-slice operations on the result",
+      "snippet": "logic [2:0] wire_0;\nlogic [3:0] wire_1;\nassign wire_1 = {1'h0, wire_0};",
+      "tags": [
+        "concatenation",
+        "tied_off",
+        "bit_slice"
+      ],
+      "source_bug_id": "3509",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3509",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit_slice_constant_comparison",
+      "category": "control_flow",
+      "description": "Code should include a bit-slice taken from a concatenation with a tied-off upper bit, compared against a constant value",
+      "snippet": "logic [2:0] wire_0;\nlogic [3:0] wire_1;\nwire [1:0] slice = wire_1[3:2];\nwire cmp = slice == 2'h2;",
+      "tags": [
+        "bit_slice",
+        "constant_comparison",
+        "tied_off"
+      ],
+      "source_bug_id": "3509",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3509",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "compound_bit_slice_condition",
+      "category": "control_flow",
+      "description": "Code should include a compound condition combining two bit-slice comparisons where one slice spans a tied-off bit",
+      "snippet": "logic [2:0] wire_0;\nlogic [3:0] wire_1;\nassign wire_1 = {1'h0, wire_0};\nassign wire_2 = wire_1[3:2] == 2'h2 & wire_1[1:0] != 2'h3;",
+      "tags": [
+        "compound_condition",
+        "bit_slice",
+        "tied_off",
+        "optimization"
+      ],
+      "source_bug_id": "3509",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3509",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9311,
+  "title": "[LTL] Make ltl.delay clocking explicit (add %clock and <edge> operands)",
+  "features": [
+    {
+      "name": "SVA sequence delay with explicit posedge clock",
+      "category": "sva_property",
+      "description": "Code should include an SVA sequence that uses a fixed delay operator (##N) combined with an explicit posedge clock edge to match the LTL clocked delay semantic",
+      "snippet": "logic clk, a, b;\nsequence seq_clocked_delay;\n  @(posedge clk) a ##2 b;\nendsequence\nproperty p;\n  @(posedge clk) a |-> ##2 b;\nendproperty\nassert property (p);",
+      "tags": ["sva", "sequence", "delay", "posedge", "ltl", "clocked"],
+      "source_bug_id": "circt-9311",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9311",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "SVA sequence delay range with explicit negedge clock",
+      "category": "sva_property",
+      "description": "Code should include an SVA sequence with a variable-length delay range (##[min:max]) clocked on negedge, exercising the LTL delay-with-length variant that requires same-clock merging rules",
+      "snippet": "logic clk, req, ack;\nproperty p_delay_range;\n  @(negedge clk) req |-> ##[1:4] ack;\nendproperty\nassert property (p_delay_range);",
+      "tags": ["sva", "sequence", "delay_range", "negedge", "ltl", "clocked"],
+      "source_bug_id": "circt-9311",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9311",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "SVA consecutive delay merge with identical clock edge",
+      "category": "sva_property",
+      "description": "Code should include adjacent SVA delay sequences sharing the same clock edge so that the tool can fold or merge them, matching the canonicalization rule that two ltl.delay ops with the same clock+edge can be combined",
+      "snippet": "logic clk, a, b, c;\nproperty p_merge;\n  @(posedge clk) a ##1 b ##1 c;\nendproperty\nassert property (p_merge);",
+      "tags": ["sva", "sequence", "delay", "canonicalization", "ltl", "fold", "clock_edge"],
+      "source_bug_id": "circt-9311",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9311",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

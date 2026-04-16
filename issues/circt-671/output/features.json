@@ -1,0 +1,63 @@
+{
+  "tool": "circt",
+  "issue_number": 671,
+  "title": "[FIRRTL] (rem / mux) mismatch",
+  "features": [
+    {
+      "name": "signed remainder with sign-extended operands",
+      "category": "data_model",
+      "description": "Code should include a signed remainder operation where the dividend is sign-extended from a smaller bit width",
+      "snippet": "logic signed [10:0] tmp13;\nlogic signed [23:0] _T = $signed({{13{tmp13[10]}}, tmp13}) % -24'sh67D666;\nlogic signed [10:0] tmp18 = _T[10:0];",
+      "tags": [
+        "signed",
+        "remainder",
+        "sign_extension",
+        "modulo"
+      ],
+      "source_bug_id": "671",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/671",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mux with tail-of-unsigned-conversion condition",
+      "category": "data_model",
+      "description": "Code should include a ternary operator where the condition is derived from tail() applied to an unsigned conversion of a signed value",
+      "snippet": "logic [10:0] tmp18;\nlogic [25:0] tmp28 = tmp18[0] ? tmp25 : _tmp24;\n// Bug: condition should be bits [10:0] of tail result, not single bit",
+      "tags": [
+        "mux",
+        "ternary",
+        "tail",
+        "unsigned_cast",
+        "condition"
+      ],
+      "source_bug_id": "671",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/671",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unsigned conversion of signed value with tail bit reduction",
+      "category": "data_model",
+      "description": "Code should include a conversion from signed to unsigned followed by dropping high-order bits using tail",
+      "snippet": "logic signed [10:0] tmp18;\nlogic unsigned [10:0] _u = tmp18;\nlogic unsigned [0:0] _t = _u >> 10;\n// tail(asUInt(tmp18), 10) should yield bits [10:0], not bit 0",
+      "tags": [
+        "unsigned_cast",
+        "signed",
+        "tail",
+        "bit_reduction",
+        "width_mismatch"
+      ],
+      "source_bug_id": "671",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/671",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

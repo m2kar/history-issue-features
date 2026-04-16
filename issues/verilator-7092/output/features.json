@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7092,
+  "title": "Forceable signals have incorrect value immediately after using vpi_put_value with vpiNoDelay",
+  "features": [
+    {
+      "name": "vable signal attribute creates internal force tracking signals",
+      "category": "data_model",
+      "description": "Code should include a signal declared with the /*verilator forceable*/ attribute which creates __VforceRd, __VforceEn, and __VforceVal internal tracking signals",
+      "snippet": "reg onebit /*verilator public_flat_rw @(posedge clk) */ /*verilator forceable*/;",
+      "tags": ["forceable", "vpi", "attribute", "internal_signal"],
+      "source_bug_id": "7092",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7092",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "vpi_put_value with vpiNoDelay on forceable signal",
+      "category": "general",
+      "description": "Code should include using vpi_put_value with vpiNoDelay to write a value to a forceable signal, then reading the value without calling eval",
+      "snippet": "vpi_put_value(handle, &new_value, NULL, vpiNoDelay);\n// Immediately read without eval\nvpi_get_value(handle, &read_value);",
+      "tags": ["vpi", "vpi_put_value", "nodelay", "putable_signal"],
+      "source_bug_id": "7092",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7092",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "immediate value read after vpiNoDelay put on forceable signal",
+      "category": "data_model",
+      "description": "Code should include reading a forceable signal value immediately after vpi_put_value with vpiNoDelay, expecting the new value to be visible without calling eval",
+      "snippet": "byte unsigned onebit /*verilator public_flat_rw @(posedge clk) */ /*verilator forceable*/;\ninitial begin\n  vpi_put_value(onebit_h, 1, NULL, vpiNoDelay);\n  // BUG: onebit still reads as 0 here on Verilator\nend",
+      "tags": ["vable_signal", "immediate_read", "vpiNoDelay", "timing"],
+      "source_bug_id": "7092",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7092",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

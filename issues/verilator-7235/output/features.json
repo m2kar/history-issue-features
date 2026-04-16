@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 7235,
+  "title": "Fix enum range constraints missing for rand variables in sub-objects (#7230)",
+  "features": [
+    {
+      "name": "enum typed rand variable in top-level class",
+      "category": "data_model",
+      "description": "Code should include a class with a rand enum-typed variable and randomize() call - this is the correct baseline behavior",
+      "snippet": "typedef enum {RED=0, GREEN=1, BLUE=2} color_e;\nclass Outer;\n  rand color_e color;\n  function void test(); this.randomize(); endfunction\nendclass",
+      "tags": [
+        "enum",
+        "rand",
+        "randomize",
+        "class"
+      ],
+      "source_bug_id": "7235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7235",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "enum typed rand variable in rand sub-object (one-level nesting)",
+      "category": "data_model",
+      "description": "Code should include a class with a rand sub-object containing an enum-typed rand variable, accessed via randomize() - triggers missing enum constraint bug",
+      "snippet": "typedef enum {RED=0, GREEN=1, BLUE=2} color_e;\nclass Inner;\n  rand color_e color;\nendclass\nclass Outer;\n  rand Inner inner;\nendclass\nOuter obj = new;\nobj.randomize();",
+      "tags": [
+        "enum",
+        "rand",
+        "sub_object",
+        "randomize",
+        "class"
+      ],
+      "source_bug_id": "7235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7235",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "enum typed rand variable in two-level nested sub-objects",
+      "category": "data_model",
+      "description": "Code should include a class with two-level nested rand sub-objects where the innermost contains an enum-typed rand variable",
+      "snippet": "typedef enum {A=0, B=2, C=4} state_e;\nclass Inner;\n  rand state_e state;\nendclass\nclass Mid;\n  rand Inner inner;\nendclass\nclass Outer;\n  rand Mid mid;\nendclass\nOuter obj = new;\nobj.randomize();",
+      "tags": [
+        "enum",
+        "rand",
+        "nested_sub_object",
+        "randomize",
+        "class"
+      ],
+      "source_bug_id": "7235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7235",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

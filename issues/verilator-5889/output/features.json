@@ -1,0 +1,76 @@
+{
+  "tool": "verilator",
+  "issue_number": 5889,
+  "title": "Fix mis-reported circular logic",
+  "features": [
+    {
+      "name": "cascaded output carry chain with ternary operator",
+      "category": "data_model",
+      "description": "Code should include a 2-bit output vector where bit[1] is assigned using a ternary operator that selects between a constant and input based on bit[0], creating a cascaded carry-like structure",
+      "snippet": "output [1:0] CO;\nassign CO[0] = S[0] ? CI : DI[0];\nassign CO[1] = S[1] ? CO[0] : DI[1];",
+      "tags": [
+        "output",
+        "cascade",
+        "ternary",
+        "carry_chain"
+      ],
+      "source_bug_id": "5889",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5889",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "ternary operator with constant zero condition",
+      "category": "data_model",
+      "description": "Code should include a ternary operator with a constant zero condition that selects between two operands",
+      "snippet": "assign CO[0] = 1'b0 ? CI : DI[0];",
+      "tags": [
+        "ternary",
+        "constant_condition",
+        "conditional_operator"
+      ],
+      "source_bug_id": "5889",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5889",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "module output port fed into sibling output computation",
+      "category": "data_model",
+      "description": "Code should include a module where one output bit is used in the computation of another output bit, creating a cross-bit dependency pattern",
+      "snippet": "output [1:0] CO;\nassign CO[1] = S[1] ? CO[0] : DI[1];",
+      "tags": [
+        "output",
+        "cross_dependency",
+        "bit_slice"
+      ],
+      "source_bug_id": "5889",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5889",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "module instantiation with unconnected output ports",
+      "category": "control_flow",
+      "description": "Code should include a module instantiation where an output port is left unconnected (empty parentheses)",
+      "snippet": "CARRY2 CARRY2 (\n  .CO(),\n  .CI(ci),\n  .DI({const0,const0}),\n  .S({const0,const0})\n);",
+      "tags": [
+        "instantiation",
+        "unconnected_port",
+        "output_port"
+      ],
+      "source_bug_id": "5889",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5889",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

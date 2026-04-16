@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 10125,
+  "title": "[Synth] FunctionalReduction could introduce SSA-cycle",
+  "features": [
+    {
+      "name": "chained AND with shared operand reuse",
+      "category": "data_model",
+      "description": "Code should include two chained combinational AND operations where one primary input appears as an operand in both the first AND and the second AND, with the output of the first AND also feeding the second AND, creating a shared-operand dependency chain",
+      "snippet": "logic n0, n1;\nassign n0 = a & b;\nassign n1 = n0 & a;\nassign out0 = n1;",
+      "tags": ["combinational_logic", "and_gate", "shared_operand", "cse", "functional_reduction"],
+      "source_bug_id": "circt-10125",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10125",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "semantically equivalent subexpressions in combinational chain",
+      "category": "data_model",
+      "description": "Code should include a combinational logic chain where two intermediate signals are semantically equivalent (produce the same boolean result for all inputs) yet one is used as an operand by the other, exercising CSE or functional-reduction optimizations that may incorrectly introduce cycles",
+      "snippet": "logic p, q, r;\n// p = a & b,  q = p & a\n// p and q are equivalent when a=1 (degenerate case)\n// but q depends on p, so replacing p with q creates a cycle\nassign p = a & b;\nassign q = p & a;\nassign r = q;",
+      "tags": ["semantic_equivalence", "cse", "functional_reduction", "cycle_detection", "combinational_logic"],
+      "source_bug_id": "circt-10125",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/10125",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

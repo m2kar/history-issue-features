@@ -1,0 +1,97 @@
+{
+  "tool": "verilator",
+  "issue_number": 5949,
+  "title": "nested systemverilog interface",
+  "features": [
+    {
+      "name": "nested interface instantiation (5 levels deep)",
+      "category": "data_model",
+      "description": "Code should include nested interface instantiation where one interface contains an instance of another interface, repeated across 5 levels of nesting",
+      "snippet": "interface ift5(input clk);\n    reg [31:0] cnt=0;\nendinterface\n\ninterface ift4(input clk);\n    ift5 tif5(.clk(clk));\nendinterface\n\ninterface ift3(input clk);\n    ift4 tif4(.clk(clk));\nendinterface\n\ninterface ift2(input clk);\n    ift3 tif3(.clk(clk));\nendinterface\n\ninterface ift1(input clk);\n    ift2 tif2(.clk(clk));\nendinterface",
+      "tags": [
+        "interface",
+        "nested_interface",
+        "instantiation",
+        "hierarchical"
+      ],
+      "source_bug_id": "5949",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5949",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "hierarchical interface member access through nested interfaces",
+      "category": "data_model",
+      "description": "Code should include hierarchical access to interface members through multiple levels of nested interfaces (accessing tif1.tif2.tif3.tif4.tif5.cnt pattern)",
+      "snippet": "assign led=tif1.tif2.tif3.tif4.tif5.cnt[31];",
+      "tags": [
+        "interface",
+        "hierarchical_access",
+        "nested_interface",
+        "member_access"
+      ],
+      "source_bug_id": "5949",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5949",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "passing sub-interface via hierarchical path to module",
+      "category": "data_model",
+      "description": "Code should include a module that receives a sub-interface port where the actual argument is a hierarchical path into a nested interface (e.g., .tif3(tif1.tif2.tif3))",
+      "snippet": "module m1(ift1 tif1,input clk);\nm3 m3(.tif3(tif1.tif2.tif3),.clk(clk));\nendmodule",
+      "tags": [
+        "interface",
+        "hierarchical",
+        "module_port",
+        "sub_interface"
+      ],
+      "source_bug_id": "5949",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5949",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "accessing deeply nested interface members in always block",
+      "category": "control_flow",
+      "description": "Code should include an always block that accesses interface members through multiple levels of nested interfaces (e.g., tif3.tif4.tif5.cnt in posedge block)",
+      "snippet": "module m3(ift3 tif3,input clk);\nalways @(posedge tif3.clk) begin\n    tif3.tif4.tif5.cnt<=tif3.tif4.tif5.cnt+1'b1;\nend\nendmodule",
+      "tags": [
+        "interface",
+        "always_block",
+        "nested_interface",
+        "hierarchical_access"
+      ],
+      "source_bug_id": "5949",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5949",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "module port of interface type with sub-interface access",
+      "category": "data_model",
+      "description": "Code should include a module that takes an interface port and accesses a sub-interface through that port (e.g., tif2.tif3.tif4.tif5.cnt in always block)",
+      "snippet": "module m2(ift2 tif2,input clk);\nalways @(posedge tif2.clk) begin\n    tif2.tif3.tif4.tif5.cnt<=tif2.tif3.tif4.tif5.cnt+1'b1;\nend\nendmodule",
+      "tags": [
+        "interface",
+        "module_port",
+        "sub_interface",
+        "hierarchical_access"
+      ],
+      "source_bug_id": "5949",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5949",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

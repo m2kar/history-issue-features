@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 7399,
+  "title": "[ExportVerilog] Comb ExtractOp assertion \"should be handled by isExpressionUnableToInline\" failed",
+  "features": [
+    {
+      "name": "sv_casez_with_bpassign_to_reg_in_alwaysff",
+      "category": "control_flow",
+      "description": "Code should include an sv.case casez statement with sv.bpassign assignments to an sv.reg inside an sv.alwaysff block, where the registered value feeds into a comb.extract operation",
+      "snippet": "sv.reg @res_reg : !hw.inout<i17>\nsv.alwaysff(posedge %clk) {\n  sv.case casez %sel : i3\n  case b000: { sv.bpassign %res_reg, %c1 : i17 }\n  default: { sv.bpassign %res_reg, %c2 : i17 }\n  %v = sv.read_inout %res_reg : !hw.inout<i17>\n  %e = comb.extract %v from 0 : (i17) -> i8\n  sv.passign %res_reg, %e : i8\n}",
+      "tags": ["sv_casez", "sv_bpassign", "sv_reg", "sv_alwaysff", "comb_extract"],
+      "source_bug_id": "7399",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7399",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "comb_extract_from_comb_xor_result",
+      "category": "data_model",
+      "description": "Code should include a comb.extract operation applied to the result of a comb.xor operation, where the xor operands include an sv.read_inout from an sv.reg assigned via sv.casez",
+      "snippet": "%xor_result = comb.xor %dummy, %read_reg : i32\n%extracted = comb.extract %xor_result from 3 : (i32) -> i17",
+      "tags": ["comb_extract", "comb_xor", "sv_read_inout", "sv_reg"],
+      "source_bug_id": "7399",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7399",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "disallowLocalVariables_lowering_option",
+      "category": "preprocess",
+      "description": "Code should include a hw.module with circt.loweringOptions attribute set to disallowLocalVariables, containing an sv.alwaysff block with sv.case casez that assigns to sv.reg",
+      "snippet": "hw.module @m(%clk : i1, %sel : i3) attributes {circt.loweringOptions = \"disallowLocalVariables\"} {\n  sv.alwaysff(posedge %clk) {\n    sv.case casez %sel : i3 case b000: { sv.bpassign %r, %c : i32 }\n  }\n}",
+      "tags": ["circt_lowering_options", "disallowLocalVariables", "hw_module"],
+      "source_bug_id": "7399",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7399",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 5099,
+  "title": "Incorrect CSE in multi-drive conflict scenario",
+  "features": [
+    {
+      "name": "multi-driven wire with CSE opportunity",
+      "category": "data_model",
+      "description": "Code should include a wire that is multiply driven by multiple module instances, where the wire shares a subexpression with another signal eligible for CSE optimization",
+      "snippet": "module Bug(output wire conflicting, output wire regular);\n  assign conflicting = a & b;\n  assign regular = a & b & c;\nendmodule\n\nmodule Top;\n  wire conflict;\n  Bug inst1(a[0], b[0], c[0], conflict, regular[0]);\n  Bug inst2(a[1], b[1], c[1], conflict, regular[1]);\nendmodule",
+      "tags": [
+        "multi_driver",
+        "cse",
+        "wire_conflict",
+        "module_instantiation"
+      ],
+      "source_bug_id": "5099",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5099",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "shared wire between module instances",
+      "category": "control_flow",
+      "description": "Code should include multiple module instances that drive the same wire output, creating a multi-driver conflict scenario",
+      "snippet": "wire conflict;\nBug inst1(a[0], b[0], c[0], conflict, regular[0]);\nBug inst2(a[1], b[1], c[1], conflict, regular[1]);",
+      "tags": [
+        "shared_wire",
+        "multi_instance",
+        "driver_conflict"
+      ],
+      "source_bug_id": "5099",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5099",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

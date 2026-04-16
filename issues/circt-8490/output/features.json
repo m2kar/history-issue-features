@@ -1,0 +1,75 @@
+{
+  "tool": "circt",
+  "issue_number": 8490,
+  "title": "[Seq.FIFO] Incorrect FIFO state machine?",
+  "features": [
+    {
+      "name": "FIFO with small depth and zero read latency",
+      "category": "data_model",
+      "description": "Code should include a FIFO module instantiation with depth=2 and rd_latency=0 parameters",
+      "snippet": "fifo_mem[0:1];\nreg [1:0] fifo_count;\nreg fifo_rd_addr;\nreg fifo_wr_addr;",
+      "tags": [
+        "fifo",
+        "depth_2",
+        "zero_latency"
+      ],
+      "source_bug_id": "circt-8490",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8490",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "Concurrent push and pop pointer updates in always_ff",
+      "category": "control_flow",
+      "description": "Code should include an always_ff block where read and write pointers update based on non-empty and non-full conditions respectively, causing both to advance when FIFO has one element",
+      "snippet": "always_ff @(posedge clk) begin\n  fifo_rd_addr <= _GEN ? fifo_rd_addr - 1'h1 : fifo_rd_addr;\n  fifo_wr_addr <= _GEN_0 ? fifo_wr_addr - 1'h1 : fifo_wr_addr;\nend",
+      "tags": [
+        "always_ff",
+        "pointer_update",
+        "concurrent_push_pop"
+      ],
+      "source_bug_id": "circt-8490",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8490",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "Circular buffer with decrement wrap-around addressing",
+      "category": "data_model",
+      "description": "Code should include a circular buffer memory where read/write addresses use subtraction wrap-around instead of proper modulo increment for wrap-around",
+      "snippet": "reg [31:0] fifo_mem[0:1];\nfifo_mem[fifo_wr_addr] <= push_in;\nassign pop_out = fifo_mem[fifo_rd_addr];",
+      "tags": [
+        "circular_buffer",
+        "wrap_around",
+        "decrement_addressing"
+      ],
+      "source_bug_id": "circt-8490",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8490",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "FIFO count-based condition for pointer advancement",
+      "category": "control_flow",
+      "description": "Code should include pointer update conditions derived from fifo_count that evaluate non-empty and non-full status rather than explicit push/pop enable signals",
+      "snippet": "assign _GEN = |fifo_count;\nassign _GEN_0 = fifo_count != 2'h2;\nfifo_rd_addr <= _GEN ? fifo_rd_addr - 1'h1 : fifo_rd_addr;",
+      "tags": [
+        "fifo_count",
+        "derived_condition",
+        "pointer_advancement"
+      ],
+      "source_bug_id": "circt-8490",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8490",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "tool": "verilator",
+  "issue_number": 4536,
+  "title": "Shift when using streaming operator on 32 bit signal",
+  "features": [
+    {
+      "name": "streaming operator with bit-wise reversal on 32-bit signal",
+      "category": "data_model",
+      "description": "Code should include a streaming operator with bit-wise reversal ({<<4{...}}) applied to a 32-bit signal",
+      "snippet": "logic [31:0] buffer;\nlogic [31:0] buffer_lsbf;\nalways_comb buffer_lsbf = {<<4{buffer}};",
+      "tags": [
+        "streaming_operator",
+        "bit_reverse",
+        "32bit_signal"
+      ],
+      "source_bug_id": "4536",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4536",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "case statement in always_comb with streaming assignment",
+      "category": "control_flow",
+      "description": "Code should include a case statement inside an always_comb block that assigns to a signal using a streaming operator",
+      "snippet": "logic [1:0] nlanes;\nlogic [31:0] buffer_lsbf;\nalways_comb begin\n    case (nlanes)\n        2'b11: buffer_lsbf = {<<4{buffer}};\n        default: buffer_lsbf = {<<{buffer}};\n    endcase\nend",
+      "tags": [
+        "case_statement",
+        "always_comb",
+        "streaming_operator"
+      ],
+      "source_bug_id": "4536",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4536",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sequential buffer update with streaming operator read",
+      "category": "control_flow",
+      "description": "Code should include a sequential always_ff block updating a signal that is read via a streaming operator in a combinatorial block",
+      "snippet": "logic [31:0] buffer;\nlogic [31:0] buffer_next;\nalways_ff @(posedge clk or negedge rstn) begin\n    if (~rstn) buffer <= 0;\n    else buffer <= buffer_next;\nend\nalways_comb buffer_next = {buffer[27:0], i[3:0]};",
+      "tags": [
+        "always_ff",
+        "sequential_logic",
+        "streaming_operator"
+      ],
+      "source_bug_id": "4536",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4536",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary assignment from streaming result",
+      "category": "data_model",
+      "description": "Code should include a ternary operator selecting between a streaming-operator result and a regular signal",
+      "snippet": "logic [31:0] buffer_lsbf;\nlogic [31:0] buffer;\nlogic lsbf;\nlogic [31:0] o;\nassign o = lsbf ? buffer_lsbf : buffer;",
+      "tags": [
+        "ternary_operator",
+        "streaming_operator",
+        "assignment"
+      ],
+      "source_bug_id": "4536",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4536",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

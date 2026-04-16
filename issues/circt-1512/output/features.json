@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 1512,
+  "title": "[FIRRTL] (core dump) ShiftAmt <= BitWidth && \"Invalid shift amount\"",
+  "features": [
+    {
+      "name": "dynamic left shift with bit-extracted shift amount from wide value",
+      "category": "data_model",
+      "description": "Code should include a dynamic left shift where the shift amount is derived from high-bit extraction (head/part-select) of a wide expression, causing the shift result width to grow exponentially",
+      "snippet": "logic [66:0] wide_val;\nlogic [66:0] inp;\nlogic [4:0]  shift_amt;\nlogic [50:0] shifted;\nassign wide_val  = inp ^ 67'(14'sd42);\nassign shift_amt = wide_val[66:62];\nassign shifted   = 20'd42 << shift_amt;",
+      "tags": ["dynamic_shift", "bit_extraction", "wide_operand", "shift_amount", "xor"],
+      "source_bug_id": "1512",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1512",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "xor reduction on result of dynamic left shift",
+      "category": "data_model",
+      "description": "Code should include an XOR reduction applied to the result of a dynamic left shift, where the shifted value is wide and the shift amount is an expression",
+      "snippet": "logic [4:0]  shift_amt;\nlogic [50:0] shifted;\nlogic        reduced;\nassign shifted = 20'd42 << shift_amt;\nassign reduced = ^shifted;",
+      "tags": ["xor_reduction", "dynamic_shift", "wide_operand", "reduction_operator"],
+      "source_bug_id": "1512",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1512",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "bit extraction from wide xor with sign-extended constant",
+      "category": "data_model",
+      "description": "Code should include a part-select of the high bits of a wide XOR expression where one operand is a sign-extended narrow constant cast to a wider unsigned type",
+      "snippet": "logic [66:0] inp_cb;\nlogic [66:0] tmp;\nlogic [4:0]  head5;\nassign tmp   = inp_cb ^ {{53{1'b0}}, 14'sd42};\nassign head5 = tmp[66:62];",
+      "tags": ["bit_extraction", "part_select", "xor", "sign_extension", "type_cast", "wide_operand"],
+      "source_bug_id": "1512",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1512",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "fsm register with async reset and xor-reduction condition",
+      "category": "control_flow",
+      "description": "Code should include an FSM state register with asynchronous reset where the next-state logic depends on an XOR reduction of a computed signal",
+      "snippet": "logic [3:0] fsm_state, fsm_next;\nlogic       xorr_result;\nalways_ff @(posedge clk or posedge arst)\n  if (arst) fsm_state <= 4'd0;\n  else      fsm_state <= fsm_next;\nalways_comb\n  if (fsm_state == 4'd10)\n    fsm_next = xorr_result ? 4'd0 : fsm_state;\n  else\n    fsm_next = fsm_state;",
+      "tags": ["fsm", "async_reset", "xor_reduction", "state_register", "conditional"],
+      "source_bug_id": "1512",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1512",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

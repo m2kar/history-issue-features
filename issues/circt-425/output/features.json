@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 425,
+  "title": "[FIRRTL] Convert register clock, reset, and init to passive during parsing",
+  "features": [
+    {
+      "name": "register clocked by output-forwarded wire",
+      "category": "data_model",
+      "description": "Code should include a register whose clock input is a wire that is also assigned to an output port, modeling a clock signal that passes through the module as both a forwarded output and a register clock",
+      "snippet": "module Foo(\n  input  clkIn, a,\n  output clkOut, b);\n\n  wire _T;\n  reg  r;\n\n  assign _T = clkIn;\n  wire _T_0 = _T;\n  always @(posedge _T_0)\n    r <= a;\n  assign clkOut = _T_0;\n  assign b = r;\nendmodule",
+      "tags": ["register", "clock_forwarding", "output_clock", "wire_alias", "posedge"],
+      "source_bug_id": "circt-425",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/425",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multi-hop wire alias for clock signal",
+      "category": "general",
+      "description": "Code should include a clock signal forwarded through two or more intermediate wire assignments before being used as a register clock edge trigger",
+      "snippet": "input clkIn;\nwire w1;\nwire w2 = w1;\nreg r;\nassign w1 = clkIn;\nalways @(posedge w2)\n  r <= 1'b1;",
+      "tags": ["wire_alias", "clock", "posedge", "register", "indirection"],
+      "source_bug_id": "circt-425",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/425",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "output port driven by and used as clock source",
+      "category": "general",
+      "description": "Code should include a module where an output clock port is both driven from an input clock and used (via a wire) as the clock for a local register",
+      "snippet": "module ClkPassThru(\n  input  clk_in,\n  input  d,\n  output clk_out,\n  output q);\n\n  wire clk_int;\n  reg  r;\n\n  assign clk_int = clk_in;\n  assign clk_out  = clk_int;\n  always @(posedge clk_int)\n    r <= d;\n  assign q = r;\nendmodule",
+      "tags": ["output_clock", "clock_passthrough", "register", "posedge"],
+      "source_bug_id": "circt-425",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/425",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

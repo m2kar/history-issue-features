@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 4183,
+  "title": "`release` statements affect combo logic incorrectly",
+  "features": [
+    {
+      "name": "release statement conflicting with always_comb assignment",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block that continuously assigns to a variable, and a clocked always block that releases the same variable, causing the release to incorrectly interfere with the always_comb logic",
+      "snippet": "logic [31:0] lhs1, rhs;\nalways_comb lhs1 = rhs;\nalways @(negedge clk) release lhs1;",
+      "tags": [
+        "always_comb",
+        "release",
+        "combo_logic",
+        "clocked_release"
+      ],
+      "source_bug_id": "4183",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4183",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "release statement conflicting with assign statement",
+      "category": "control_flow",
+      "description": "Code should include a continuous assignment driving a variable and a clocked always block that releases the same variable, where the release incorrectly interferes with the assign",
+      "snippet": "logic [31:0] lhs2, rhs;\nassign lhs2 = rhs;\nalways @(negedge clk) release lhs2;",
+      "tags": [
+        "assign",
+        "release",
+        "continuous_assignment",
+        "clocked_release"
+      ],
+      "source_bug_id": "4183",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4183",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combo logic driven by multiple sources with release",
+      "category": "data_model",
+      "description": "Code should include variables driven by both always_comb and assign statements, with release statements applied in a clocked always block, causing oscillation in the driven signals",
+      "snippet": "logic [31:0] lhs1, lhs2, rhs;\nalways_comb lhs1 = rhs;\nassign lhs2 = rhs;\nalways @(posedge clk) rhs = '1;\nalways @(negedge clk) begin release lhs1; release lhs2; end",
+      "tags": [
+        "always_comb",
+        "assign",
+        "release",
+        "multiple_drivers",
+        "oscillation"
+      ],
+      "source_bug_id": "4183",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4183",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

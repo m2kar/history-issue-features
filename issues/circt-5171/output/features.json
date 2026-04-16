@@ -1,0 +1,42 @@
+{
+  "tool": "circt",
+  "issue_number": 5171,
+  "title": "[ExportVerilog] Option to disable always comb fusion",
+  "features": [
+    {
+      "name": "multiple always_comb blocks with cross-block reg dependency",
+      "category": "control_flow",
+      "description": "Code should include two separate always_comb procedural blocks where one block reads a reg variable that the other block assigns, demonstrating how cross-block dependencies get incorrectly fused",
+      "snippet": "reg [7:0] a;\nreg [7:0] _GEN_0;\nalways_comb begin\n  _GEN_0 = a;\nend\nalways_comb begin\n  if (S[0]) _GEN_0 = I;\nend",
+      "tags": [
+        "always_comb",
+        "fusion",
+        "cross_block_dependency",
+        "reg"
+      ],
+      "source_bug_id": "5171",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/5171",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb with read_before_write ordering",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block where a variable is referenced in an expression before being assigned within the same procedural block, simulating the semantic error caused by incorrect fusion",
+      "snippet": "reg [7:0] _GEN_0;\nalways_comb begin\n  if (S[1]) _GEN_0 = 8'h0;\n  else _GEN_0 = _GEN_0;\n  _GEN_0 = a;\n  if (S[0]) _GEN_0 = I;\nend",
+      "tags": [
+        "always_comb",
+        "read_before_write",
+        "semantic_error"
+      ],
+      "source_bug_id": "5171",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/5171",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

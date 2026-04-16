@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 4084,
+  "title": "[ExportVerilog] Spill variable assigned but not declared",
+  "features": [
+    {
+      "name": "multiple large concat operations feeding into OR in initial block",
+      "category": "data_model",
+      "description": "Code should include multiple comb.concat operations with 12 operands each, whose results are combined via bitwise OR, with the OR result assigned in an initial block",
+      "snippet": "wire [11:0] a = {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\nwire [11:0] b = {k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1};\nwire [11:0] c = {k2, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1};\nwire [11:0] result = a | b | c;",
+      "tags": ["concat", "bitwise_or", "initial_block", "wire"],
+      "source_bug_id": "circt-4084",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4084",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "temp variable spill pattern with undeclared variable reference",
+      "category": "control_flow",
+      "description": "Code should include an initial block with automatic logic temporary variables where a spilled variable is used in an assignment without being declared first",
+      "snippet": "initial begin\n  automatic logic [11:0] _GEN = {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\n  automatic logic [11:0] _GEN_0 = {k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1};\n  _GEN_2 = {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\n  r <= _GEN_2 | _GEN_0;\nend",
+      "tags": ["automatic", "temp_variable", "spill", "undeclared", "initial_block"],
+      "source_bug_id": "circt-4084",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4084",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register with procedural assignment in initial block",
+      "category": "control_flow",
+      "description": "Code should include a procedural assignment to a register within an initial block, combined with temporary variable expressions",
+      "snippet": "reg [11:0] r;\ninitial begin\n  automatic logic [11:0] _T = {k1, k0, k1, k0, k1, k0, k1, k0, k1, k0, k1, k0};\n  r <= _T;\nend",
+      "tags": ["reg", "procedural_assignment", "initial_block", "automatic"],
+      "source_bug_id": "circt-4084",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4084",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

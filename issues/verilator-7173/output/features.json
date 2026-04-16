@@ -1,0 +1,42 @@
+{
+  "tool": "verilator",
+  "issue_number": 7173,
+  "title": "Internal Error V3Scope.cpp:359 for recursive constant function in $unit scope",
+  "features": [
+    {
+      "name": "recursive_constant_function_at_unit_scope",
+      "category": "data_model",
+      "description": "Code should include a recursive function defined at $unit scope (file scope outside any module) where the function calls itself within its own body",
+      "snippet": "function automatic integer gate_depth;\n  input integer way;\n  integer d1, d2, sc, n1, n2;\n  begin\n    if (way <= 1) gate_depth = 0;\n    else if (way <= 4) gate_depth = 1;\n    else begin\n      sc = $clog2(way);\n      n1 = 1 << (sc - 1);\n      n2 = way - n1;\n      d1 = gate_depth(n1);\n      d2 = gate_depth(n2);\n      gate_depth = ((d1 > d2) ? d1 : d2) + 1;\n    end\n  end\nendfunction",
+      "tags": [
+        "recursive_function",
+        "unit_scope",
+        "constant_function"
+      ],
+      "source_bug_id": "7173",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7173",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "constant_evaluation_of_unit_scope_recursive_function",
+      "category": "timing",
+      "description": "Code should include a recursive function at $unit scope being evaluated in a constant expression context such as localparam",
+      "snippet": "function automatic integer gate_depth;\n  input integer way;\n  begin\n    if (way <= 1) gate_depth = 0;\n    else gate_depth = 1 + gate_depth(way / 2);\n  end\nendfunction\n\nmodule t;\n  localparam D = gate_depth(8);\nendmodule",
+      "tags": [
+        "recursive_function",
+        "localparam",
+        "unit_scope",
+        "constant_evaluation"
+      ],
+      "source_bug_id": "7173",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7173",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

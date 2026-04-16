@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2275,
+  "title": "Verilator -G affects all module's parameters",
+  "features": [
+    {
+      "name": "generate for loop instantiating parameterized submodule",
+      "category": "control_flow",
+      "description": "Code should include a generate for loop that instantiates a parameterized submodule, where the generate loop bounds depend on a parameter that could conflict with a global parameter override",
+      "snippet": "module gray_counter_N #(parameter WIDTH = 4) (input clock, input reset, input count, output [WIDTH-1:0] q);\n  genvar i;\n  generate\n    for (i = 0; i < WIDTH; i = i + 1) begin : bits\n      gray_counter_bit #(.BIT_idx(i)) bit_inst (.clk(clock), .rst(reset), .in(count), .out(q[i]));\n    end\n  endgenerate\nendmodule",
+      "tags": ["generate", "for_loop", "parameterized_instantiation", "genvar"],
+      "source_bug_id": "verilator-2275",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2275",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "verilator -G parameter override with module hierarchy",
+      "category": "general",
+      "description": "Code should include multiple levels of module hierarchy with parameters, where a Verilator -G command-line parameter override could affect nested module parameters incorrectly",
+      "snippet": "module wrapper #(parameter WIDTH = 4) (input clk, input rst, output [WIDTH-1:0] q);\n  gray_counter_N #(.WIDTH(WIDTH)) cnt (.clock(clk), .reset(rst), .count(1'b1), .q(q));\nendmodule\n// When run with: verilator -GWIDTH=1 -Gdepth=1",
+      "tags": ["verilator_option", "-G", "parameter_override", "hierarchy"],
+      "source_bug_id": "verilator-2275",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2275",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "structural gray counter with bit-level submodules",
+      "category": "data_model",
+      "description": "Code should include a gray counter implemented structurally with separate submodule instances for first bit, intermediate bits, and last bit, interconnected using generate statements",
+      "snippet": "module gray_counter_wrapper (input clk, input rst, output [7:0] q_structural);\n  gray_counter_first #(.PREV(1'b0)) g0 (.clk(clk), .rst(rst), .q(q_structural[0]));\n  gray_counter_N #(.BIT(1)) g1 (.clk(clk), .rst(rst), .q(q_structural[1]));\n  gray_counter_last #(.BIT(7), .PREV(q_structural[6])) g7 (.clk(clk), .rst(rst), .q(q_structural[7]));\nendmodule",
+      "tags": ["gray_counter", "structural_model", "bit_slice", "generate"],
+      "source_bug_id": "verilator-2275",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2275",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

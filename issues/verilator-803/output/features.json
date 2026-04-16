@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 803,
+  "title": "Writing to one structure element clobbers another",
+  "features": [
+    {
+      "name": "nonblocking assignment with shift index exceeding 32 bits",
+      "category": "control_flow",
+      "description": "Code should include a nonblocking assignment to an unpacked array element where the bit-select index is computed via a right shift operation that can produce a value exceeding 31 bits",
+      "snippet": "logic [7:0] arr[16];\nlogic [31:0] idx;\ninitial idx = 32'd611;\nalways_ff @(posedge clk) arr[idx >> 5] <= arr[idx >> 5] | (1 << idx);",
+      "tags": ["nonblocking_assignment", "unpacked_array", "shift_overflow"],
+      "source_bug_id": "803",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/803",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit select assignment with large shift index",
+      "category": "data_model",
+      "description": "Code should include an unpacked array of multi-bit elements where a bit select assignment uses a computed index that exceeds the bit width of the shifted value",
+      "snippet": "logic [31:0] pending_stores[2][1024];\nlogic [31:0] index;\ninitial index = 32'd611;\nalways_ff @(posedge clk) pending_stores[0][index >> 5][index] <= 1'b1;",
+      "tags": ["bit_select", "unpacked_array", "large_index", "shift"],
+      "source_bug_id": "803",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/803",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

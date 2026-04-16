@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 6694,
+  "title": "Interface scope and array dereference issues",
+  "features": [
+    {
+      "name": "interface with parameter definition",
+      "category": "data_model",
+      "description": "Code should include an interface definition with a parameter, such as an interface with a PARAM integer parameter and a logic signal inside",
+      "snippet": "interface test_if #(\n    parameter PARAM = 0\n) ();\n    logic sig;\n    modport p (output sig);\nendinterface",
+      "tags": ["interface", "parameter", "definition"],
+      "source_bug_id": "6694",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6694",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface array as module port",
+      "category": "data_model",
+      "description": "Code should include an interface array passed as a module port, where a parameterized interface array is declared in module port list",
+      "snippet": "module test_mod(\n    test_if.p p,\n    test_if.p pa[2]\n);",
+      "tags": ["interface", "array", "port"],
+      "source_bug_id": "6694",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6694",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface array access without index dereference",
+      "category": "control_flow",
+      "description": "Code should include accessing interface array without index, where the array name is used directly with member access instead of using array indexing first",
+      "snippet": "localparam t1ap1 = pa.PARAM;\nwire t1sp1 = pa.sig;",
+      "tags": ["interface", "array", "dereference", "missing_index"],
+      "source_bug_id": "6694",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6694",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cross_module_interface_parameter_access",
+      "category": "control_flow",
+      "description": "Code should include accessing interface array from outer scope where t1a is declared in top module but accessed from a submodule via t1a.PARAM syntax without proper instantiation context",
+      "snippet": "module top();\n    test_if t1a[2]();\nendmodule\n\nmodule test_mod(test_if.p pa);\n    localparam t1ap4 = t1a.PARAM;\nendmodule",
+      "tags": ["interface", "scope", "cross_module", "parameter"],
+      "source_bug_id": "6694",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6694",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface array instantiation with index",
+      "category": "data_model",
+      "description": "Code should include proper interface array instantiation and correct indexed access to interface array elements for both parameters and signals",
+      "snippet": "test_if t1a[2]();\nlocalparam t1ap2 = t1a[0].PARAM;\nwire t1as2 = t1a[0].sig;",
+      "tags": ["interface", "array", "instantiation", "indexed_access"],
+      "source_bug_id": "6694",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6694",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

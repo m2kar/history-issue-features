@@ -1,0 +1,79 @@
+{
+  "tool": "verilator",
+  "issue_number": 5966,
+  "title": "Add UNDRIVEN check on 2-D and unpacked arrays",
+  "features": [
+    {
+      "name": "2d unpacked array with parameter-sized first dimension",
+      "category": "data_model",
+      "description": "Code should include a 2-D unpacked array declaration where the packed dimension size is a module parameter expression like C_NOI/2",
+      "snippet": "word32_u_t [C_NOI/2-1:0] input_add_a[C_ALVLS];",
+      "tags": [
+        "2d_array",
+        "unpacked_array",
+        "parameter_sized",
+        "generate"
+      ],
+      "source_bug_id": "5966",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5966",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "missing_warning"
+    },
+    {
+      "name": "generate localparam computed from genvar",
+      "category": "control_flow",
+      "description": "Code should include a generate loop with a localparam that is computed from the genvar, causing the parameter value to change per loop iteration",
+      "snippet": "for (genvar lvl = 0; lvl < C_ALVLS; lvl++) begin: add_levels\n  localparam int C_NUM_ADDERS = C_NOI/2 >> lvl;",
+      "tags": [
+        "generate_loop",
+        "localparam",
+        "genvar",
+        "parameter_computed"
+      ],
+      "source_bug_id": "5966",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5966",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "missing_warning"
+    },
+    {
+      "name": "conditional generate with lvl-dependent array index",
+      "category": "control_flow",
+      "description": "Code should include a generate for-loop with conditional branches (if-else) that assign to array indices based on the loop level variable, creating partial drives of unpacked arrays",
+      "snippet": "for (genvar i = 0; i < C_NUM_ADDERS; i++) begin: signals\n  if (lvl == 0) begin: add_assign_pairs_lvl0\n    assign input_add_a[0][i] = operand_a[i];\n  end else begin: add_assign_pairs_lvl1\n    assign input_add_a[lvl][i] = result_add[lvl-1][i*2];",
+      "tags": [
+        "generate",
+        "conditional",
+        "array_partial_drive",
+        "unpacked_array"
+      ],
+      "source_bug_id": "5966",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5966",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "missing_warning"
+    },
+    {
+      "name": "unpacked array slice assignment in generate",
+      "category": "data_model",
+      "description": "Code should include an unpacked array assignment where only a slice of the array is driven, leaving other elements potentially undriven",
+      "snippet": "word32_u_t [C_NOI/2-1:0] arr[C_ALVLS];\nassign arr[lvl][i] = val;",
+      "tags": [
+        "unpacked_array",
+        "partial_drive",
+        "undriven",
+        "generate"
+      ],
+      "source_bug_id": "5966",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5966",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "missing_warning"
+    }
+  ]
+}

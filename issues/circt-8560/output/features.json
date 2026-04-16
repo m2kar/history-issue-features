@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 8560,
+  "title": "Probed constants moved out of layerblocks",
+  "features": [
+    {
+      "name": "ref_cast of constant inside layerblock driving output probe",
+      "category": "data_model",
+      "description": "Code should include a ref.cast operation applied to a constant inside a layerblock, where the layer-scoped reference drives an output probe via ref.define",
+      "snippet": "firrtl.circuit \"Example\" {\n  firrtl.layer @Verification bind {\n  }\n  firrtl.module @Example(out %p: !firrtl.probe<uint<1>, @Verification>) {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    firrtl.layerblock @Verification {\n      %1 = firrtl.ref.cast %c0_ui1 : (!firrtl.uint<1>) -> !firrtl.probe<uint<1>, @Verification>\n      firrtl.ref.define %p, %1 : !firrtl.probe<uint<1>, @Verification>\n    }\n  }\n}",
+      "tags": ["layerblock", "ref_cast", "constant", "ref_define", "probe", "layer_scoping"],
+      "source_bug_id": "8560",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8560",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dont_touch_annotation preserving node inside layerblock",
+      "category": "data_model",
+      "description": "Code should include a DontTouchAnnotation on a node inside a layerblock containing a constant, which prevents the canonicalizer from hoisting the constant and removing the ref.cast context",
+      "snippet": "firrtl.circuit \"Example\" {\n  firrtl.layer @Verification bind {\n  }\n  firrtl.module @Example(out %p: !firrtl.probe<uint<1>, @Verification>) {\n    %c0_ui1 = firrtl.constant 0 : !firrtl.uint<1>\n    %0 = firrtl.node sym @sym %c0_ui1 : !firrtl.uint<1>\n    firrtl.layerblock @Verification {\n      %1 = firrtl.ref.cast %0 : (!firrtl.uint<1>) -> !firrtl.probe<uint<1>, @Verification>\n      firrtl.ref.define %p, %1 : !firrtl.probe<uint<1>, @Verification>\n    }\n  }\n}",
+      "tags": ["dont_touch", "layerblock", "node", "ref_cast", "layer_scoping", "canonicalization"],
+      "source_bug_id": "8560",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8560",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 5,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

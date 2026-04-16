@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 8519,
+  "title": "[firtool] Duplicate include directives for `layers-*.sv` files after dedup",
+  "features": [
+    {
+      "name": "duplicate layer include directives after module dedup",
+      "category": "preprocess",
+      "description": "Code should include multiple `include directives for the same child layer file when a parent module has multiple deduplicated instances of a child module with a layer block",
+      "snippet": "`ifndef layers_Foo_Verification\n  `define layers_Foo_Verification\n  `include \"layers-Bar-Verification.sv\"\n  `include \"layers-Bar-Verification.sv\"\n`endif // not def layers_Foo_Verification",
+      "tags": ["layer_include", "dedup", "duplicate_include"],
+      "source_bug_id": "8519",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8519",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module with multiple instances of child with layer block",
+      "category": "data_model",
+      "description": "Code should include a parent module that instantiates multiple instances of a child module, where the child module contains a layer block like verification or printf",
+      "snippet": "module Bar();\n  always @(posedge clock) begin\n    if (~reset) $fwrite(32'h80000002, \"foo\\n\");\n  end\nendmodule\n\nmodule Foo();\n  Bar a (.clock(clock), .reset(reset));\n  Bar b (.clock(clock), .reset(reset));\nendmodule",
+      "tags": ["module_instantiation", "layer_block", "multiple_instances"],
+      "source_bug_id": "8519",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8519",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "layer file with ifndef guard and bind directive",
+      "category": "preprocess",
+      "description": "Code should include a layer file that uses ifndef guards, define directives, and bind to attach verification logic to a module",
+      "snippet": "`ifndef layers_Bar_Verification\n  `define layers_Bar_Verification\n  bind Bar Bar_Verification verification ();\n`endif // not def layers_Bar_Verification",
+      "tags": ["layer_file", "ifdef_guard", "bind_directive", "preprocessor"],
+      "source_bug_id": "8519",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/8519",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

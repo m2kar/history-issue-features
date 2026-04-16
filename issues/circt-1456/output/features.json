@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 1456,
+  "title": "[FIRRTL] `automatic logic` in Verilog2001 output",
+  "features": [
+    {
+      "name": "automatic logic variable declaration in initial block",
+      "category": "data_model",
+      "description": "Code should include an `automatic logic` variable declaration inside an `initial begin` block, using the SystemVerilog automatic lifetime qualifier combined with the logic data type",
+      "snippet": "reg [15:0] bar;\ninitial begin\n  automatic logic [31:0] _T_0;\n  _T_0 = $random;\n  bar = _T_0[15:0];\nend",
+      "tags": ["automatic", "logic", "initial_block", "variable_declaration", "lifetime_qualifier"],
+      "source_bug_id": "circt-1456",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1456",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "synthesis guard around register randomization initial block with automatic variable",
+      "category": "preprocess",
+      "description": "Code should include a `ifndef SYNTHESIS` conditional compilation guard wrapping an `initial begin` block that declares an `automatic logic` variable used for register randomization under `ifdef RANDOMIZE_REG_INIT`",
+      "snippet": "`ifndef SYNTHESIS\n  initial begin\n    automatic logic [31:0] _T;\n    `ifdef RANDOMIZE_REG_INIT\n      _T = $random;\n      bar = _T[15:0];\n    `endif\n  end\n`endif",
+      "tags": ["synthesis_guard", "initial_block", "automatic", "logic", "randomize_reg_init", "conditional_compilation"],
+      "source_bug_id": "circt-1456",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1456",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register with multiple outputs through shared intermediate wire",
+      "category": "data_model",
+      "description": "Code should include a register whose value is assigned to an intermediate wire, then that wire continuously drives multiple output ports via separate assign statements",
+      "snippet": "reg [15:0] bar;\nalways @(posedge clock)\n  bar <= foo;\nwire [15:0] _T = bar;\nassign baz0 = _T;\nassign baz1 = _T;",
+      "tags": ["register", "wire", "multiple_outputs", "assign", "fanout", "clock"],
+      "source_bug_id": "circt-1456",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1456",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

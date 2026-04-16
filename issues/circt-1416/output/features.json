@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 1416,
+  "title": "[HW][ExportVerilog] Better Bits Inlining",
+  "features": [
+    {
+      "name": "single-bit part-select assigned to output port",
+      "category": "data_model",
+      "description": "Code should include a single-bit part-select from a wider input signal directly assigned to a 1-bit output port without an intermediate wire",
+      "snippet": "module SingleBitExtract(\n  input  [3:0] a,\n  output       b,\n  output       c\n);\n  assign b = a[2];\n  assign c = a[3];\nendmodule",
+      "tags": ["part_select", "bit_extract", "output_assign", "single_bit"],
+      "source_bug_id": "circt-1416",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1416",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "range part-select assigned to output port",
+      "category": "data_model",
+      "description": "Code should include a contiguous range part-select from a wider input signal directly assigned to a multi-bit output port without an intermediate wire",
+      "snippet": "module RangeBitExtract(\n  input  [3:0] a,\n  output [2:0] c,\n  output [1:0] d,\n  output [1:0] e\n);\n  assign c = a[3:1];\n  assign d = a[3:2];\n  assign e = a[1:0];\nendmodule",
+      "tags": ["part_select", "range_select", "bit_extract", "output_assign"],
+      "source_bug_id": "circt-1416",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1416",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple outputs sharing the same bit-range extraction",
+      "category": "data_model",
+      "description": "Code should include multiple output ports each assigned the same bit-range part-select from one input, exercising whether the emitter inlines the expression or introduces a shared intermediate wire",
+      "snippet": "module SharedBitExtract(\n  input  [3:0] a,\n  output [1:0] f,\n  output [1:0] j,\n  output [1:0] s\n);\n  assign f = a[3:2];\n  assign j = a[3:2];\n  assign s = a[3:2];\nendmodule",
+      "tags": ["part_select", "bit_extract", "cse", "multi_output", "output_assign"],
+      "source_bug_id": "circt-1416",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1416",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested bit extraction flattened to single part-select",
+      "category": "data_model",
+      "description": "Code should include nested bit-extraction operations such as bits-of-bits or bits-of-head/tail that can be folded into a single contiguous part-select on the original signal",
+      "snippet": "module NestedBitExtract(\n  input  [3:0] a,\n  output [1:0] f,\n  output [1:0] g\n);\n  // f = bits(bits(a,3,1),2,1) => a[3:2]\n  assign f = a[3:1][2:1];\n  // g = bits(head(a,3),1,0) => a[2:1]\n  assign g = a[3:1][1:0];\nendmodule",
+      "tags": ["part_select", "nested_extract", "bit_fold", "output_assign"],
+      "source_bug_id": "circt-1416",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1416",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

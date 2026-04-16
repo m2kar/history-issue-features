@@ -1,0 +1,93 @@
+{
+  "tool": "verilator",
+  "issue_number": 219,
+  "title": "Issue related to clock gating signal with latch",
+  "features": [
+    {
+      "name": "latch with incomplete sensitivity list for clock gating",
+      "category": "timing",
+      "description": "Code should include a latch module with sensitivity list containing only clk and d (without explicit wildcard), used in clock gating feedback path",
+      "snippet": "module llq (clk, d, q);\n  parameter WD = 8;\n  input clk;\n  input [WD-1:0] d;\n  output [WD-1:0] q;\n  reg [WD-1:0] qin;\n  always @(clk or d)\n    if (clk == 1'b0)\n      qin <= d;\n  assign q = qin;\nendmodule",
+      "tags": [
+        "latch",
+        "sensitivity_list",
+        "clock_gating"
+      ],
+      "source_bug_id": "219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/219",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "verilator clock_enable annotation on gated clock wire",
+      "category": "timing",
+      "description": "Code should include a wire with /* verilator clock_enable */ annotation that is itself a gated clock (result of clock AND enable signal)",
+      "snippet": "wire [127:0] gclk_vld /* verilator clock_enable */;\nassign gclk_vld = {128{clk}} & ff_en_vld;",
+      "tags": [
+        "clock_enable",
+        "gated_clock",
+        "annotation"
+      ],
+      "source_bug_id": "219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/219",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "clock gating via assign with replication operator",
+      "category": "timing",
+      "description": "Code should include a clock gating assignment using replication operator to create wide AND of clock and enable",
+      "snippet": "assign gclk_vld = {128{clk}} & ff_en_vld;",
+      "tags": [
+        "clock_gating",
+        "replication_operator",
+        "assign"
+      ],
+      "source_bug_id": "219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/219",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "feedback path from gated clock through latch to enable signal",
+      "category": "timing",
+      "description": "Code should include a gated clock used to clock a latch whose output is used to create the enable signal that gates that same clock",
+      "snippet": "llq #(128) dp_ff_en_vld (.clk(clk), .d(flop_en_vld), .q(ff_en_vld));\nassign gclk_vld = {128{clk}} & ff_en_vld;\nffq #(1) ff_entry_dvld_0 (.clk(gclk_vld[0]), .d(dvld[0]), .q(entry_vld[0]));",
+      "tags": [
+        "feedback",
+        "clock_gating",
+        "latch",
+        "gated_clock"
+      ],
+      "source_bug_id": "219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/219",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "flop with gated clock and vector data input",
+      "category": "data_model",
+      "description": "Code should include a flip-flop module with gated clock and vector data input where data is extracted from sliced vector",
+      "snippet": "module ffq (clk, d, q);\n  parameter WD = 8;\n  input clk;\n  input [WD-1:0] d;\n  output [WD-1:0] q;\n  reg [WD-1:0] qin;\n  always @(posedge clk)\n    qin <= d;\n  assign q = qin;\nendmodule\n// Usage: ffq #(1) ff_entry_dvld_0 (.clk(gclk_vld[0]), .d(dvld[0]), .q(entry_vld[0]));",
+      "tags": [
+        "flip_flop",
+        "gated_clock",
+        "vector_slice"
+      ],
+      "source_bug_id": "219",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/219",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

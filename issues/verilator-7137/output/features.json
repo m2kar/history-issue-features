@@ -1,0 +1,110 @@
+{
+  "tool": "verilator",
+  "issue_number": 7137,
+  "title": "NBA region DIDNOTCONVERGE with two virtual interface instances of the same type",
+  "features": [
+    {
+      "name": "class with virtual interface member variable",
+      "category": "data_model",
+      "description": "Code should include a class that declares a virtual interface as a member variable",
+      "snippet": "class source_driver;\n    virtual stream_if vif;\n    function new(virtual stream_if vif);\n        this.vif = vif;\n    endfunction\nendclass",
+      "tags": [
+        "class",
+        "virtual_interface",
+        "member_variable"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "two class instances with virtual refs to same interface type",
+      "category": "data_model",
+      "description": "Code should include two class instances holding virtual references to different instances of the same interface type",
+      "snippet": "stream_if a (.clk(clk));\nstream_if b (.clk(clk));\nsource_driver src;\nsink_driver snk;\ninitial begin\n    src = new(a);\n    snk = new(b);\nend",
+      "tags": [
+        "virtual_interface",
+        "multiple_instances",
+        "same_interface_type"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "interface with clocking block",
+      "category": "timing",
+      "description": "Code should include an interface that defines a clocking block with input and output signals",
+      "snippet": "interface stream_if (input logic clk);\n    logic valid, ready;\n    logic [7:0] data;\n    clocking cb @(posedge clk);\n        default input #1step output #0;\n        output valid, data;\n        input ready;\n    endclocking\nendinterface",
+      "tags": [
+        "interface",
+        "clocking_block"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "always_ff with combinational output path via assign",
+      "category": "timing",
+      "description": "Code should include an always_ff block driving signals where a combinational assign depends on the registered outputs",
+      "snippet": "always_ff @(posedge clk) begin\n    if (s_ready) begin\n        m_valid <= s_valid;\n        m_data <= s_data;\n    end\nend\nassign s_ready = !m_valid || m_ready;",
+      "tags": [
+        "always_ff",
+        "combinational_path",
+        "assign",
+        "NBA"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "NBA through virtual interface clocking block in class task",
+      "category": "control_flow",
+      "description": "Code should include a class task performing non-blocking assignments through a virtual interface clocking block",
+      "snippet": "task run();\n    vif.cb.valid <= 1'b0;\n    vif.cb.data <= '0;\n    @(vif.cb);\n    vif.cb.valid <= 1'b1;\n    vif.cb.data <= 8'hAB;\nendtask",
+      "tags": [
+        "class_task",
+        "NBA",
+        "virtual_interface",
+        "clocking_block"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "fork_join_any with class tasks using virtual interfaces",
+      "category": "control_flow",
+      "description": "Code should include fork-join_any launching class tasks that use virtual interface references",
+      "snippet": "fork\n    src.run();\n    snk.run();\njoin_any",
+      "tags": [
+        "fork_join_any",
+        "class_task",
+        "virtual_interface"
+      ],
+      "source_bug_id": "7137",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7137",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

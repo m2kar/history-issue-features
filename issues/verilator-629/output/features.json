@@ -1,0 +1,39 @@
+{
+  "tool": "verilator",
+  "issue_number": 629,
+  "title": "Non-vector timing loop warning",
+  "features": [
+    {
+      "name": "function return value used in same always block that assigns function argument",
+      "category": "timing",
+      "description": "Code should include a combinational always block with a function that reads a signal, where the function return value is used to conditionally assign to the same signal read by the function, creating a false timing loop warning",
+      "snippet": "logic sig_c_1;\nlogic sig_c_2;\nfunction logic get_c1();\n  return sig_c_2;\nendfunction\nalways @* begin\n  if (get_c1())\n    sig_c_2 = 1'b0;\n  else\n    sig_c_2 = 1'b1;\n  sig_c_1 = get_c1();\nend",
+      "tags": ["timing_loop", "function", "always_block", "false_positive"],
+      "source_bug_id": "629",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/629",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested conditionals in always block with cross-signal dependency",
+      "category": "control_flow",
+      "description": "Code should include nested if statements inside an always block where a signal derived from one branch is tested in another branch, creating an apparent feedback loop that triggers a false positive warning",
+      "snippet": "logic a;\nlogic b;\nfunction logic get_a();\n  return b;\nendfunction\nalways @* begin\n  if (get_a())\n    if (1'b1)\n      b = 1'b0;\n    else\n      b = 1'b1;\nend",
+      "tags": ["nested_if", "always_block", "cross_signal", "timing_loop"],
+      "source_bug_id": "629",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/629",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2,
+    "notes": "No code block in issue JSON - snippet constructed from description"
+  }
+}

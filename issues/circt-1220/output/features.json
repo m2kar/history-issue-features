@@ -1,0 +1,98 @@
+{
+  "tool": "circt",
+  "issue_number": 1220,
+  "title": "[FIRRTL] quality of emitted verilog",
+  "features": [
+    {
+      "name": "reduction on 65-bit signal",
+      "category": "data_model",
+      "description": "Code should include an AND reduction operation on a 65-bit signed signal producing a 1-bit result",
+      "snippet": "wire result;\ninput [64:0] inp_p; // 65-bit signal\nassign result = &inp_p;",
+      "tags": [
+        "reduction",
+        "large_bit_width",
+        "signed",
+        "65bit"
+      ],
+      "source_bug_id": "1220",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "xorr reduction in fsm condition",
+      "category": "control_flow",
+      "description": "Code should include an FSM with async reset where next state is computed using XOR reduction of a signal in a when condition",
+      "snippet": "reg state: UInt<1>, clock with: (reset => (arst, 1'b0));\nwire x = xorr(inp_bb); // XOR reduction\nwire next = state ? 1'b0 : (x ? ~state : state);",
+      "tags": [
+        "fsm",
+        "xorr",
+        "reduction",
+        "async_reset",
+        "state_machine"
+      ],
+      "source_bug_id": "1220",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1220",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested aggregate array indexing with large bitwidths",
+      "category": "data_model",
+      "description": "Code should include deeply nested aggregate types with array indexing and bit fields exceeding 64 bits (e.g., 65-bit, 56-bit, 57-bit)",
+      "snippet": "struct inner { logic [7:0] o; logic [64:0] p; logic [25:0] ab; }\nstruct mid { inner f[1][5]; }\ninput mid d[5];\nwire [64:0] val = d[4][0].f.p;",
+      "tags": [
+        "nested_aggregate",
+        "array_index",
+        "large_bitwidth",
+        "struct"
+      ],
+      "source_bug_id": "1220",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1220",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "pad of aggregate field to larger bitwidth",
+      "category": "data_model",
+      "description": "Code should include a pad operation on a large aggregate field (56-bit) to an even larger width (40 bits beyond original)",
+      "snippet": "logic [55:0] db; // 56-bit\nlogic [95:0] result;\nassign result = {db[55], db}; // pad 56-bit to 57-bit",
+      "tags": [
+        "pad",
+        "sign_extension",
+        "large_bitwidth",
+        "aggregate"
+      ],
+      "source_bug_id": "1220",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1220",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "async reset register with state feedback",
+      "category": "timing",
+      "description": "Code should include a register with async reset feeding back into combinational logic that computes the next state",
+      "snippet": "reg state: UInt<1>, clock with: (reset => (arst, 1'b0));\nwire next_state;\nalways @(posedge clock or posedge arst)\n  if (arst) state <= 1'b0;\n  else state <= next_state;\nassign next_state = state ? 1'b0 : some_expr;",
+      "tags": [
+        "async_reset",
+        "register",
+        "state_feedback",
+        "fsm"
+      ],
+      "source_bug_id": "1220",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1220",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

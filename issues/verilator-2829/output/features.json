@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 2829,
+  "title": "Constant folding regression since v4.110",
+  "features": [
+    {
+      "name": "case item with nested if checking external input signals",
+      "category": "control_flow",
+      "description": "Code should include a case statement item containing a nested if statement that checks input signals coming from other modules (e.g., CDC synchronizer outputs)",
+      "snippet": "case (state_q)\n  3'b001: begin\n    req_pwrup_d = 1'b1;\n    if (ack_pwrup_i && !req_pwrdn_i) begin\n      req_pwrup_d = 1'b0;\n      state_d = 3'b000;\n    end\n  end\nendcase",
+      "tags": [
+        "case",
+        "nested_if",
+        "cdc_signals",
+        "input_signals"
+      ],
+      "source_bug_id": "2829",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2829",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "state-based case with bitwise shift conditions",
+      "category": "control_flow",
+      "description": "Code should include a case statement that checks state signals using bitwise operations and shifts (e.g., state_q >> 3U) to determine which branch to take",
+      "snippet": "if ((1U & (~ (state_q >> 3U)))) begin\n  if ((4U & state_q)) begin\n    if ((1U & (~ (state_q >> 1U)))) begin\n      if ((1U & (~ state_q))) begin\n        // branch logic\n      end\n    end\n  end\nend",
+      "tags": [
+        "case",
+        "bitwise_shift",
+        "state_comparison"
+      ],
+      "source_bug_id": "2829",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2829",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational signal assignment dependent on cross-module inputs",
+      "category": "data_model",
+      "description": "Code should include a combinational signal assignment (req_pwrup_d) that is conditionally set based on input signals from other modules, where the signal is first set to a default value and then conditionally updated",
+      "snippet": "logic req_pwrup_d;\nlogic ack_pwrup_i;\nlogic req_pwrdn_i;\nalways_comb begin\n  req_pwrup_d = 1'b1;\n  if (ack_pwrup_i && !req_pwrdn_i)\n    req_pwrup_d = 1'b0;\nend",
+      "tags": [
+        "combinational_logic",
+        "cross_module_inputs",
+        "conditional_assignment"
+      ],
+      "source_bug_id": "2829",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2829",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

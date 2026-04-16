@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 5615,
+  "title": "Invalid result of Combinational Circuit",
+  "features": [
+    {
+      "name": "combinational always block with case statement on opcode input",
+      "category": "control_flow",
+      "description": "Code should include a combinational always @(*) block with a case statement that decodes an opcode input signal to generate control outputs",
+      "snippet": "always @(*) begin\n    case (opcode)\n        7'b0110011: begin branch = 1'b0; end\n        default: begin branch = 1'bz; end\n    endcase\nend",
+      "tags": [
+        "combinational",
+        "always_block",
+        "case",
+        "opcode_decode"
+      ],
+      "source_bug_id": "5615",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5615",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "high-impedance assignment to reg in combinational always block",
+      "category": "data_model",
+      "description": "Code should include an output reg signal assigned 1'bz (high-impedance) inside a combinational always @(*) default case block",
+      "snippet": "output reg branch;\nalways @(*) begin\n    case (opcode)\n        default: branch = 1'bz;\n    endcase\nend",
+      "tags": [
+        "high_impedance",
+        "reg_assignment",
+        "combinational",
+        "z_value"
+      ],
+      "source_bug_id": "5615",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5615",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple reg signals with high-impedance default assignment",
+      "category": "data_model",
+      "description": "Code should include multiple output reg signals assigned 1'bz in the default case of a combinational always block, where signals should be actively driven based on input",
+      "snippet": "output reg [1:0] ALUOp;\noutput reg memWrite;\noutput reg ALUSrc;\nalways @(*) begin\n    case (opcode)\n        default: begin ALUOp = 2'bzz; memWrite = 1'bz; ALUSrc = 1'bz; end\n    endcase\nend",
+      "tags": [
+        "multiple_regs",
+        "high_impedance",
+        "combinational_default"
+      ],
+      "source_bug_id": "5615",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5615",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "verilator x-assign unique with undefined case branches",
+      "category": "general",
+      "description": "Code should include a combinational always @(*) block with case statement having unhandled opcode values that default to z assignment, used with Verilator --x-assign unique compilation",
+      "snippet": "always @(*) begin\n    case (opcode)\n        default: branch = 1'bz;\n    endcase\nend",
+      "tags": [
+        "x_assign_unique",
+        "verilator_option",
+        "case_unhandled"
+      ],
+      "source_bug_id": "5615",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5615",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

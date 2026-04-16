@@ -1,0 +1,95 @@
+{
+  "tool": "verilator",
+  "issue_number": 7068,
+  "title": "Fix DIDNOTCONVERGE in event triggering change (#6932 effect)",
+  "features": [
+    {
+      "name": "combinational wire from clocked registers in same always block",
+      "category": "data_model",
+      "description": "Code should include a combinational wire that is derived from register values, where those registers are also assigned via non-blocking assignments inside the same clocked always block that uses the wire in a conditional",
+      "snippet": "wire [w-1:0] guess2 = acc2 + bit2 + ((acc << bitl) << 1);\nalways @(posedge clk or posedge reset) begin\n  if (reset) begin acc <= 0; acc2 <= 0; end\n  else if (guess2 <= x) begin acc <= guess; acc2 <= guess2; end\nend",
+      "tags": [
+        "combinational_wire",
+        "clocked_always",
+        "nonblocking_assignment",
+        "register_dependency"
+      ],
+      "source_bug_id": "7068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7068",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "parameter-driven localparam in width specification",
+      "category": "data_model",
+      "description": "Code should include a localparam that is computed from a parameter and used in wire width specifications",
+      "snippet": "parameter ss = 5;\nlocalparam w = 1 << ss;\nreg [w-1:0] acc2;\nwire [w/2-1:0] bbit = 1 << bitl;\nwire [w-1:0] bit2 = 1 << (bitl << 1);",
+      "tags": [
+        "parameter",
+        "localparam",
+        "width_specification",
+        "shift"
+      ],
+      "source_bug_id": "7068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "async reset with multiple nonblocking assignments in clocked always",
+      "category": "timing",
+      "description": "Code should include a clocked always block with asynchronous reset that performs multiple non-blocking assignments to registers",
+      "snippet": "always @(posedge clk or posedge reset)\n  if (reset) begin\n    acc = 0;\n    acc2 = 0;\n    bitl = w / 2 - 1;\n  end\n  else begin\n    if (guess2 <= x) begin\n      acc <= guess;\n      acc2 <= guess2;\n    end\n    bitl <= bitl - 1;\n  end",
+      "tags": [
+        "async_reset",
+        "nonblocking_assignment",
+        "clocked_always",
+        "multiple_assignments"
+      ],
+      "source_bug_id": "7068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "variable shift in combinational expression",
+      "category": "data_model",
+      "description": "Code should include a combinational wire computed using shift operators where the shift amount is a register value",
+      "snippet": "wire [w-1:0] guess2 = acc2 + bit2 + ((acc << bitl) << 1);\nwire [w-1:0] bit2 = 1 << (bitl << 1);",
+      "tags": [
+        "variable_shift",
+        "combinational_wire",
+        "shift_operator"
+      ],
+      "source_bug_id": "7068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "synthesis attribute on procedural block",
+      "category": "general",
+      "description": "Code should include a synthesis attribute applied to a clocked always block",
+      "snippet": "(* ivl_synthesis_on *)\nalways @(posedge clk or posedge reset)\n  if (reset) begin end\n  else begin end",
+      "tags": [
+        "synthesis_attribute",
+        "always_block",
+        "ivl_synthesis_on"
+      ],
+      "source_bug_id": "7068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

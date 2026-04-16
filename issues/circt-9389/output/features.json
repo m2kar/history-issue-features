@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9389,
+  "title": "[HW] `hw-flatten-modules` can't find an module that exists",
+  "features": [
+    {
+      "name": "hw.module private with comb logic body",
+      "category": "general",
+      "description": "Code should include a hw.module marked private containing combinational logic operations (comb.xor, comb.and) with i1 ports, representing a private sub-module that may be referenced by instantiation",
+      "snippet": "hw.module private @HalfAdder(in %a: i1, in %b: i1, out s: i1, out co: i1) {\n  %0 = comb.xor %a, %b : i1\n  %1 = comb.and %a, %b : i1\n  hw.output %0, %1 : i1, i1\n}",
+      "tags": ["hw_module", "private_visibility", "comb_logic", "circt_dialect"],
+      "source_bug_id": "circt-9389",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9389",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "hw.instance referencing private module",
+      "category": "general",
+      "description": "Code should include a hw.instance operation that instantiates a privately-scoped hw.module by symbol reference, passing i1 operands and binding named result ports",
+      "snippet": "%s_1, %c_2 = hw.instance \"h2\" @HalfAdder(a: %p2_1: i1, b: %p3_0: i1) -> (s: i1, co: i1)",
+      "tags": ["hw_instance", "private_visibility", "module_reference", "symbol_lookup"],
+      "source_bug_id": "circt-9389",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9389",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "verif.formal and hw.module private coexistence in same compilation unit",
+      "category": "general",
+      "description": "Code should include both verif.formal operations and hw.module private definitions in the same MLIR file, such that running the hw-flatten-modules pass after lower-contracts triggers a module-not-found error for the private module",
+      "snippet": "// verif.formal block referencing hw.module instances\n// hw.module private @HalfAdder(...) { ... }\n// hw.module @BoothMul(...) {\n//   hw.instance \"h\" @HalfAdder(...)\n// }",
+      "tags": ["verif_formal", "hw_module", "private_visibility", "hw_flatten_modules", "pass_pipeline"],
+      "source_bug_id": "circt-9389",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9389",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

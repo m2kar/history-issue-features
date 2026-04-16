@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 7677,
+  "title": "[FIRRTL] SFCCompat: can select different values for a single invalid value",
+  "features": [
+    {
+      "name": "shared invalid wire as async reset value",
+      "category": "data_model",
+      "description": "Code should include a register with async reset where the reset value comes from a wire that is marked invalid/undefined, and that same invalid wire is used as reset value for multiple registers",
+      "snippet": "module top(input clk, input rst, input [7:0] data);\nreg [7:0] r1, r2;\nwire [7:0] inv = 'x;\nalways @(posedge clk or posedge rst) begin\n  if (rst) r1 <= inv;\n  else r1 <= data;\nend\nalways @(posedge clk or posedge rst) begin\n  if (rst) r2 <= inv;\n  else r2 <= data;\nend\nendmodule",
+      "tags": ["invalid_value", "async_reset", "register", "shared_reset"],
+      "source_bug_id": "circt-7677",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7677",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "x-valued reset causing reset optimization",
+      "category": "data_model",
+      "description": "Code should include registers with reset values assigned to undefined/x values where synthesis tools may incorrectly optimize away the reset logic due to the x value",
+      "snippet": "reg [7:0] reg0, reg1;\nalways @(posedge c or posedge r) begin\n  if (r) reg0 <= 8'bx;\n  else reg0 <= i0;\n  if (r) reg1 <= 8'bx;\n  else reg1 <= i1;\nend",
+      "tags": ["x_value_reset", "reset_optimization", "undefined_reset"],
+      "source_bug_id": "circt-7677",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7677",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "tool": "circt",
+  "issue_number": 813,
+  "title": "[MLIR] CSE pass: ThisEntry && \"Scope imbalance!\"' (core dump)",
+  "features": [
+    {
+      "name": "multi_port_memory_multiple_readers_writers",
+      "category": "data_model",
+      "description": "Code should include a memory declaration with 3 read ports and 2 write ports where each port has a distinct address expression source (wire, input, constant)",
+      "snippet": "module top(input clock, input [10:0] inp_d, input [17:0] inp_g, input [2:0] inp_h, input inp_b, input inp_i);\n  mem tmp33:\n    data-type => UInt<5>\n    depth => 12\n    read-latency => 2\n    write-latency => 1\n    read-under-write => undefined\n    reader => r0\n    reader => r1\n    reader => r2\n    writer => w0\n    writer => w1;\n  wire _tmp22: SInt<20>;\n  wire tmp32: SInt<32>;\n  assign _tmp22 = $signed(inp_b) * $signed(19'b0);\n  assign tmp32 = 32'sb1 << 5;\n  assign tmp33.r0.addr = 7'b0;\n  assign tmp33.r1.addr = _tmp22;\n  assign tmp33.r2.addr = inp_d;\nendmodule",
+      "tags": [
+        "multi_port_memory",
+        "read_port",
+        "write_port",
+        "wire_address"
+      ],
+      "source_bug_id": "circt-813",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/813",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "complex_expression_memory_port_addresses",
+      "category": "data_model",
+      "description": "Code should include memory port addresses derived from complex expressions (multiplication results, shift operations) rather than simple registers or literals",
+      "snippet": "wire [19:0] _tmp22;\nwire [31:0] tmp32;\nassign _tmp22 = inp_b * 20'b0;\nassign tmp32 = 32'sb1 << 5;\nmem m1 (input clk, input [4:0] raddr0, input [4:0] raddr1, input [4:0] waddr);\n  // address from expression, not register\nendmodule",
+      "tags": [
+        "memory_address_expression",
+        "multiplication",
+        "shift"
+      ],
+      "source_bug_id": "circt-813",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/813",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "diverse_width_integer_operations",
+      "category": "data_model",
+      "description": "Code should include operations on integers of widely varying bit widths (1-bit to 32-bit) including sign conversion and arithmetic in the same expression chain",
+      "snippet": "logic signed [7:0] a;\nlogic signed [0:0] b;\nlogic signed [31:0] c;\nwire [19:0] r = a * b;\nwire [31:0] result = c << (a + b);",
+      "tags": [
+        "integer_width",
+        "sign_conversion",
+        "arithmetic_operations"
+      ],
+      "source_bug_id": "circt-813",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/813",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ]
+}

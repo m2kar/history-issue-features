@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 5068,
+  "title": "Verilator finds a latch where there is no one",
+  "features": [
+    {
+      "name": "parameter-based bit indexing in conditional expression",
+      "category": "data_model",
+      "description": "Code should include a conditional expression that indexes a signal using a parameter as the bit position, e.g., A[param-1] ? -A : A",
+      "snippet": "A2 = A[A_width-1] ? -A : A;",
+      "tags": [
+        "parameter",
+        "bit_indexing",
+        "conditional_expression"
+      ],
+      "source_bug_id": "5068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unary minus on vector operand",
+      "category": "data_model",
+      "description": "Code should include a unary minus operator applied to a multi-bit vector operand within a conditional expression",
+      "snippet": "A2 = A[A_width-1] ? -A : A;",
+      "tags": [
+        "unary_minus",
+        "vector",
+        "conditional_expression"
+      ],
+      "source_bug_id": "5068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational always with edge-style sensitivity list and if-else",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block using edge-style (@(...) or) sensitivity list with an if-else that assigns signals in only one branch",
+      "snippet": "always @(A or B or TC) begin\n  if (TC == 1'b0)\n    PRODUCT = A * B;\n  else begin\n    A2 = A[A_width-1] ? -A : A;\n    B2 = B[B_width-1] ? -B : B;\n    PRODUCT2 = A2 * B2;\n    PRODUCT = (A[A_width-1]^B[B_width-1]) ? -PRODUCT2 : PRODUCT2;\n  end\nend",
+      "tags": [
+        "always_block",
+        "sensitivity_list",
+        "if_else",
+        "combinational"
+      ],
+      "source_bug_id": "5068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5068",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "signal assigned only in else branch of combinational always",
+      "category": "control_flow",
+      "description": "Code should include a signal that is assigned only within an else branch of a combinational always block, where the signal is used only within that same branch",
+      "snippet": "reg [A_width-1:0] A2;\nalways @(A or B or TC) begin\n  if (TC == 1'b0) PRODUCT = A * B;\n  else A2 = A[A_width-1] ? -A : A;\nend",
+      "tags": [
+        "signal_assignment",
+        "else_branch",
+        "combinational",
+        "latch_false_positive"
+      ],
+      "source_bug_id": "5068",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5068",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

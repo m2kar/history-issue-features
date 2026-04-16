@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 2133,
+  "title": "[FIRRTL] Handle RegReset as index to SubAccess",
+  "features": [
+    {
+      "name": "reset register used as dynamic array index",
+      "category": "data_model",
+      "description": "Code should include a register with async reset whose value is used as the index operand of a dynamic (variable-index) array access, exercising reset inference through the index path of a SubAccess-equivalent construct",
+      "snippet": "logic [2:0] idx;\nlogic [7:0] vec [0:7];\nlogic [7:0] out;\nalways_ff @(posedge clk or posedge arst)\n  if (arst) idx <= 3'b0;\n  else      idx <= idx + 1;\nassign out = vec[idx];",
+      "tags": ["register", "async_reset", "dynamic_index", "array_access", "reset_inference"],
+      "source_bug_id": "circt-2133",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2133",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "sync reset register as dynamic vector index",
+      "category": "data_model",
+      "description": "Code should include a register with synchronous reset whose post-reset value is used as the index into a packed or unpacked vector, so that reset-type inference must propagate through the index operand of the access",
+      "snippet": "logic [1:0] sel;\nlogic [3:0] data [0:3];\nlogic [3:0] result;\nalways_ff @(posedge clk)\n  if (srst) sel <= 2'b0;\n  else      sel <= sel + 1;\nassign result = data[sel];",
+      "tags": ["register", "sync_reset", "dynamic_index", "vector_access", "reset_inference"],
+      "source_bug_id": "circt-2133",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2133",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "variable-index unpacked array read (SubAccess equivalent)",
+      "category": "data_model",
+      "description": "Code should include a dynamic (variable) index read from an unpacked array where the index is a register rather than a constant, equivalent to FIRRTL SubAccess with a non-literal index operand",
+      "snippet": "logic [7:0] mem [0:15];\nlogic [3:0] addr;\nlogic [7:0] rdata;\nalways_ff @(posedge clk)\n  rdata <= mem[addr];",
+      "tags": ["unpacked_array", "dynamic_index", "register", "subaccess", "variable_index"],
+      "source_bug_id": "circt-2133",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2133",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

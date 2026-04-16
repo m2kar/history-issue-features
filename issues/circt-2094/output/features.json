@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 2094,
+  "title": "[FIRRTL/LowerToHW] Make use of unused generated random bits",
+  "features": [
+    {
+      "name": "random initialization with partial bit slicing",
+      "category": "data_model",
+      "description": "Code should include a register initialization block that assigns multiple narrower fields from a single random value using bit-select and part-select, rather than issuing a separate random invocation per field",
+      "snippet": "logic [31:0] _rand;\nlogic [3:0]  req_fn;\nlogic        req_dw;\n`ifdef RANDOMIZE_REG_INIT\n  _rand   = `RANDOM;\n  req_fn  = _rand[3:0];\n  req_dw  = _rand[4];   // reuse bit 4 instead of a second `RANDOM\n`endif",
+      "tags": ["random_init", "bit_slice", "register_initialization", "firrtl_lowering", "macro"],
+      "source_bug_id": "circt-2094",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2094",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "redundant random macro invocations for adjacent register fields",
+      "category": "data_model",
+      "description": "Code should include two back-to-back RANDOM macro invocations that initialize different fields of logically adjacent registers, where the second invocation uses only a low-index bit that could instead be taken from the first invocation's already-generated bits",
+      "snippet": "logic [31:0] _T_18, _T_19;\nlogic [3:0]  req_fn;\nlogic        req_dw;\n`ifdef RANDOMIZE_REG_INIT\n  _T_18  = `RANDOM;\n  req_fn = _T_18[3:0];\n  _T_19  = `RANDOM;    // unnecessary: bit 4 of _T_18 is available\n  req_dw = _T_19[0];\n`endif",
+      "tags": ["random_init", "redundant_random", "register_initialization", "firrtl_lowering", "optimization"],
+      "source_bug_id": "circt-2094",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/2094",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "tool": "verilator",
+  "issue_number": 7342,
+  "title": "Fix wait() hang when interface has always @* with process calls and VIF function access",
+  "features": [
+    {
+      "name": "interface initial block with wait on internal variable",
+      "category": "timing",
+      "description": "Code should include an interface with an initial block that contains a wait() statement waiting on a variable defined within the interface",
+      "snippet": "interface my_if();\n  bit clk_active = 0;\n  initial wait (clk_active);\nendinterface",
+      "tags": [
+        "interface",
+        "initial",
+        "wait",
+        "internal_variable"
+      ],
+      "source_bug_id": "7342",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7342",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "interface always @* block with process::self call",
+      "category": "general",
+      "description": "Code should include an interface with a combinational always @* block that calls process::self() to get the current process handle",
+      "snippet": "always @* begin\n  if (condition) begin\n    automatic process p = process::self();\n    $stop;\n  end\nend",
+      "tags": [
+        "interface",
+        "always_at_star",
+        "process_self",
+        "combinational"
+      ],
+      "source_bug_id": "7342",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7342",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "virtual interface function writing to interface member variable",
+      "category": "data_model",
+      "description": "Code should include a class with a virtual interface member where a task calls a function through the virtual interface that writes to an interface member variable",
+      "snippet": "class Driver;\n  virtual my_if vif;\n  task run();\n    vif.set_period(5ns);\n    vif.start_clk();\n  endtask\nendclass",
+      "tags": [
+        "class",
+        "virtual_interface",
+        "vif_function_call",
+        "task"
+      ],
+      "source_bug_id": "7342",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7342",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "interface function writing to interface variable",
+      "category": "data_model",
+      "description": "Code should include an interface function that writes to a member variable of the same interface",
+      "snippet": "function void start_clk();\n  if (clk_period) clk_active = 1;\nendfunction",
+      "tags": [
+        "interface",
+        "function",
+        "member_write"
+      ],
+      "source_bug_id": "7342",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7342",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "wait on variable driven via VIF function call in interface with combo block",
+      "category": "timing",
+      "description": "Code should include an interface with both an always @* block using process::self and an initial block with wait(), where the waited variable is written through a virtual interface function call from a class",
+      "snippet": "interface my_if();\n  bit clk_active = 0;\n  realtime clk_period;\n  initial wait (clk_active);\n  always @* begin\n    if (clk_period == 0.0) automatic process p = process::self();\n  end\n  function void start_clk();\n    if (clk_period) clk_active = 1;\n  endfunction\nendinterface",
+      "tags": [
+        "wait",
+        "vif_call",
+        "always_at_star",
+        "process_self",
+        "interface"
+      ],
+      "source_bug_id": "7342",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7342",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    }
+  ]
+}

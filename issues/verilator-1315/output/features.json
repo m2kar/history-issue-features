@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 1315,
+  "title": "Using an array in a function called from a parameter",
+  "features": [
+    {
+      "name": "parameter initialized via function call returning unpacked array",
+      "category": "data_model",
+      "description": "Code should include a module-level parameter whose value is initialized by calling a function that returns an unpacked array typedef, triggering constant-function evaluation in the elaboration phase",
+      "snippet": "typedef int calc_sums_t [3:0];\nfunction calc_sums_t calc_sums;\n  int ii, sum = 0;\n  for (ii = 0; ii < 4; ii++)\n    calc_sums[ii] = ii * 2;\nendfunction\nparameter int SUMS[3:0] = calc_sums();",
+      "tags": ["parameter", "function_call", "unpacked_array", "typedef", "constant_evaluation"],
+      "source_bug_id": "1315",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1315",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "function body accessing module parameter array via index",
+      "category": "data_model",
+      "description": "Code should include a function that reads a module-level unpacked array parameter element by index inside a for loop, where that function is later invoked in a constant context",
+      "snippet": "parameter int SIZES[3:0] = '{1, 2, 3, 4};\ntypedef int result_t [3:0];\nfunction result_t compute;\n  int ii;\n  for (ii = 0; ii < 4; ii++)\n    compute[ii] = SIZES[ii] + 1;\nendfunction\nparameter int OUT[3:0] = compute();",
+      "tags": ["parameter", "unpacked_array", "array_index", "for_loop", "constant_function"],
+      "source_bug_id": "1315",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1315",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "bit-select assignment on function return array element",
+      "category": "data_model",
+      "description": "Code should include an assignment to a specific bit range of an indexed element of a function's return variable, where the function return type is an unpacked integer array",
+      "snippet": "typedef int arr_t [3:0];\nfunction arr_t build;\n  int ii;\n  for (ii = 0; ii < 4; ii++)\n    build[ii][31:0] = ii;\nendfunction",
+      "tags": ["bit_select", "array_index", "function_return", "unpacked_array", "assignment"],
+      "source_bug_id": "1315",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1315",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "unpacked array parameter with positional array literal",
+      "category": "data_model",
+      "description": "Code should include a module-level parameter declared as an unpacked integer array and initialized with a positional array literal using the '{...} syntax",
+      "snippet": "parameter int SIZES[3:0] = '{1, 2, 3, 4};",
+      "tags": ["parameter", "unpacked_array", "array_literal", "positional_assignment"],
+      "source_bug_id": "1315",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1315",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "typedef for unpacked array used as function return type",
+      "category": "data_model",
+      "description": "Code should include a typedef that defines an unpacked array of integers and is then used as the return type of a function, with the function name used as an implicit return variable inside the body",
+      "snippet": "typedef int calc_t [3:0];\nfunction calc_t my_func;\n  calc_t result;\n  my_func[0] = 10;\n  my_func[1] = 20;\nendfunction",
+      "tags": ["typedef", "unpacked_array", "function_return_type", "implicit_return_variable"],
+      "source_bug_id": "1315",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1315",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 7324,
+  "title": "Fix static initialization order for packages with class hierarchies",
+  "features": [
+    {
+      "name": "cross-package static class method with side effects",
+      "category": "data_model",
+      "description": "Code should include a static class method that modifies a package-level variable, where the class is defined in one package and called during static initialization of another package that imports the first package",
+      "snippet": "package pkg_a;\n  int g_state = 0;\n  class svc_t;\n    local static svc_t inst;\n    static function svc_t get();\n      if (inst == null) begin inst = new(); g_state = 1; end\n      return inst;\n    endfunction\n  endclass\nendpackage\n\npackage pkg_b;\n  import pkg_a::*;\n  class comp_c;\n    function new(); svc_t s = pkg_a::svc_t::get(); endfunction\n  endclass\n  comp_c obj = new();\nendpackage",
+      "tags": ["package", "import", "class", "static_method", "side_effect", "static_init"],
+      "source_bug_id": "7324",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7324",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "package import triggers static initialization order",
+      "category": "control_flow",
+      "description": "Code should include two packages where one imports the other with wildcard import, and the importing package has static initialization that triggers a static method in the imported package",
+      "snippet": "package pkg_a;\n  int g_state = 0;\n  class svc_t;\n    static function svc_t get();\n      g_state = 1;\n      return inst;\n    endfunction\n  endclass\nendpackage\n\npackage pkg_b;\n  import pkg_a::*;\n  class comp_c;\n    function new(); svc_t s = pkg_a::svc_t::get(); endfunction\n  endclass\n  comp_c obj = new();\nendpackage",
+      "tags": ["package", "import", "wildcard_import", "static_init", "initialization_order"],
+      "source_bug_id": "7324",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7324",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 3043,
+  "title": "\"Internal Error\" when set some signals public_flat_rw",
+  "features": [
+    {
+      "name": "public_flat_rw metacomment on signal in concatenation context",
+      "category": "preprocess",
+      "description": "Code should include a signal with /*verilator public_flat_rw*/ metacomment that is part of a concatenation used to drive a large unpacked array",
+      "snippet": "input wire [1:0] i_status /*verilator public_flat_rw*/,\ninput wire [488:0] i_data,\nwire [489:0] combined = {i_status, i_data};",
+      "tags": ["public_flat_rw", "metacomment", "concatenation"],
+      "source_bug_id": "3043",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3043",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "large unpacked array with packed dimension",
+      "category": "data_model",
+      "description": "Code should include an unpacked array of regs where the packed dimension exceeds 256 bits, used in clocked always block assignments",
+      "snippet": "reg [490:0] signal_ff[2];\nalways @(posedge i_clk) begin\n    signal_ff[1] <= signal_ff[0];\nend",
+      "tags": ["unpacked_array", "large_packed_dimension", "clocked_assignment"],
+      "source_bug_id": "3043",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3043",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "unpacked array element read from clocked always block",
+      "category": "timing",
+      "description": "Code should include an unpacked array element assigned in a clocked always block that is read in a separate combinational always block",
+      "snippet": "reg [BUS_WIDTH-1:0] signal_ff[2];\nalways @(*) signal_ff[0] = i_signal;\nalways @(posedge i_clk) signal_ff[1] <= signal_ff[0];",
+      "tags": ["unpacked_array", "clocked_assignment", "cross_block_dependency"],
+      "source_bug_id": "3043",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3043",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "tool": "circt",
+  "issue_number": 4274,
+  "title": "Memory with write masks results in array of memories of mask width",
+  "features": [
+    {
+      "name": "memory with byte-enable write mask",
+      "category": "data_model",
+      "description": "Code should include a memory declaration that uses a byte-enable mask for partial word writes, where each bit of the mask controls writing to a corresponding byte lane",
+      "snippet": "module tb;\nreg [63:0] mem [0:1023];\nreg [7:0] wdata;\nreg [7:0] wmask;\nalways @(posedge clk) if (wmask[0]) mem[addr][7:0] <= wdata[7:0];\nendmodule",
+      "tags": [
+        "memory",
+        "byte_enable",
+        "write_mask",
+        "masked_write"
+      ],
+      "source_bug_id": "circt-4274",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4274",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unpacked array representing masked memory",
+      "category": "data_model",
+      "description": "Code should include a memory modeled as an unpacked array of smaller chunks (e.g., byte array representing a larger word width) which should instead be a single memory with mask ports",
+      "snippet": "reg [7:0] mem [0:1023]; // 8-bit wide memory cells\nwire [7:0] read_data = mem[read_addr];",
+      "tags": [
+        "unpacked_array",
+        "memory",
+        "byte_array"
+      ],
+      "source_bug_id": "circt-4274",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4274",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "syncreadmem with vector element type",
+      "category": "data_model",
+      "description": "Code should include a synchronous read memory declaration with vector or array element type intended for byte-enable support",
+      "snippet": "SyncReadMem #(words, Vec$(bits/8), UInt<8>) mem;",
+      "tags": [
+        "syncreadmem",
+        "vector",
+        "memory",
+        "byte_enable"
+      ],
+      "source_bug_id": "circt-4274",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4274",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional write to memory byte lane",
+      "category": "control_flow",
+      "description": "Code should include conditional writes to individual byte lanes of a memory word using a byte mask signal",
+      "snippet": "for (int i = 0; i < 8; i++)\n  if (wmask[i]) mem[addr][i*8+:8] <= wdata[i*8+:8];",
+      "tags": [
+        "conditional_write",
+        "byte_lane",
+        "memory_write",
+        "mask"
+      ],
+      "source_bug_id": "circt-4274",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/4274",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

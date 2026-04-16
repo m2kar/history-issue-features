@@ -1,0 +1,77 @@
+{
+  "tool": "circt",
+  "issue_number": 9597,
+  "title": "[Arc] Complete inout support for arcilator path (Fixes #9574)",
+  "features": [
+    {
+      "name": "inout wire port with combinational read",
+      "category": "data_model",
+      "description": "Code should include a module with an inout wire port that is read inside an always_comb block to drive an output",
+      "snippet": "module InoutCombRead(\n  inout wire c,\n  output logic q_comb\n);\n  always_comb q_comb = c;\nendmodule",
+      "tags": ["inout", "wire", "always_comb", "port"],
+      "source_bug_id": "9597",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9597",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "inout wire driven by continuous assign",
+      "category": "data_model",
+      "description": "Code should include a module where an inout wire port is driven by a continuous assign statement from an internal logic signal",
+      "snippet": "module InoutAssignDrive(\n  inout wire c,\n  input logic c_drv\n);\n  assign c = c_drv;\nendmodule",
+      "tags": ["inout", "wire", "assign", "continuous_assignment"],
+      "source_bug_id": "9597",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9597",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "inout wire sampled in sequential always_ff block",
+      "category": "timing",
+      "description": "Code should include a module where an inout wire port is sampled into a flip-flop register on a positive clock edge inside an always_ff block",
+      "snippet": "module InoutFFSample(\n  inout wire c,\n  input logic clk,\n  output logic q_ff\n);\n  always_ff @(posedge clk)\n    q_ff <= c;\nendmodule",
+      "tags": ["inout", "wire", "always_ff", "flip_flop", "posedge", "sequential"],
+      "source_bug_id": "9597",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9597",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "inout wire combinational feedback through inversion",
+      "category": "control_flow",
+      "description": "Code should include a module where an inout wire port feeds a combinational always_comb block that computes the bitwise NOT of the inout value into a next-state logic variable",
+      "snippet": "module InoutFeedback(\n  inout wire c\n);\n  logic c_next;\n  always_comb c_next = ~c;\nendmodule",
+      "tags": ["inout", "wire", "always_comb", "feedback", "bitwise_not"],
+      "source_bug_id": "9597",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9597",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "inout wire port combined read and write in same module",
+      "category": "data_model",
+      "description": "Code should include a module with a single inout wire port that is both read (combinationally and sequentially) and driven via assign in the same module, creating a bidirectional signal path",
+      "snippet": "module InoutReadWrite(\n  inout wire c,\n  input logic clk,\n  output logic q_comb,\n  output logic q_ff,\n  output logic c_drv\n);\n  logic c_next;\n  assign c = c_drv;\n  always_comb c_next = ~c;\n  always_comb q_comb = c;\n  always_ff @(posedge clk) begin\n    q_ff <= c;\n    c_drv <= c_next;\n  end\nendmodule",
+      "tags": ["inout", "wire", "bidirectional", "read_write", "always_ff", "always_comb", "assign"],
+      "source_bug_id": "9597",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9597",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 7,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

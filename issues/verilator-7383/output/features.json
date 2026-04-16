@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 7383,
+  "title": "Fix subclass with rand_mode(0) getting randomized (#7376)",
+  "features": [
+    {
+      "name": "class inheritance with rand member and rand_mode",
+      "category": "data_model",
+      "description": "Code should include a class that extends a base class, contains a rand member variable, and uses rand_mode() to control randomization",
+      "snippet": "class inner extends base_obj;\n  rand logic [31:0] value;\n  constraint c { value < 100; }\n  function void set_rand_mode(bit mode);\n    value.rand_mode(mode);\n    c.constraint_mode(mode);\n  endfunction\nendclass",
+      "tags": [
+        "class",
+        "extends",
+        "rand",
+        "rand_mode",
+        "constraint"
+      ],
+      "source_bug_id": "7383",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7383",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested random class member in parent class",
+      "category": "data_model",
+      "description": "Code should include a parent class with a rand member that is itself a class instance with random properties",
+      "snippet": "class outer extends base_obj;\n  rand inner fld;\n  function void build();\n    fld = new;\n  endfunction\nendclass",
+      "tags": [
+        "class",
+        "rand",
+        "nested_class",
+        "member"
+      ],
+      "source_bug_id": "7383",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7383",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "rand_mode(0) on sub-object member during parent randomization",
+      "category": "control_flow",
+      "description": "Code should include calling rand_mode(0) on a nested class member before calling randomize() on the parent object",
+      "snippet": "o.fld.set_rand_mode(0);\npre_val = o.fld.value;\nvoid'(o.randomize());\nassert(o.fld.value == pre_val);",
+      "tags": [
+        "rand_mode",
+        "randomize",
+        "class_hierarchy",
+        "assert"
+      ],
+      "source_bug_id": "7383",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7383",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

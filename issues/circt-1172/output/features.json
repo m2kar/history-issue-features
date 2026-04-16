@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 1172,
+  "title": "Check initialization of all memory ports",
+  "features": [
+    {
+      "name": "memory write data port driven by conditional expression with undefined enable",
+      "category": "data_model",
+      "description": "Code should include a memory write data port driven by a conditional expression where the enable condition can be false/undefined, causing the data to default to 'x'",
+      "snippet": "module MemTest;\n  wire [41:0] indata;\n  wire inpred;\n  wire [41:0] write_data;\n  assign write_data = inpred ? indata : 42'bx;\n  wire [3:0] addr;\n  wire en;\n  wire clk;\n  wire [41:0] rdata;\n  FIRRTLMem_2_2_0_42_12_1_1_0 mem (.wo_data_0(write_data), .wo_addr_0(addr), .wo_en_0(en), .wo_clock_0(clk), .ro_data_0(rdata));\nendmodule",
+      "tags": ["memory", "write_port", "uninitialized_data", "conditional_expression"],
+      "source_bug_id": "1172",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1172",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiport memory with read_write port and conditional write",
+      "category": "data_model",
+      "description": "Code should include a memory module with read, write, and readwrite ports where the write port data uses a conditional that can yield undefined",
+      "snippet": "module MemSimple(input clock1, input clock2, input inpred, input [41:0] indata, output [41:0] result, output result2);\n  wire [41:0] _M_ro_data_0, _M_ro_data_1;\n  wire [3:0] _M_read_addr = 4'h0;\n  wire [3:0] _M_rw_addr = 4'h0;\n  wire [3:0] _M_write_addr = 4'h0;\n  wire [41:0] write_data = inpred ? indata : 42'bx;\n  FIRRTLMem_2_2_0_42_12_1_1_0 _M(\n    .ro_data_0(_M_ro_data_0), .ro_data_1(_M_ro_data_1),\n    .wo_data_0(write_data), .wo_addr_0(_M_write_addr),\n    .wo_en_0(1'b1), .wo_clock_0(clock1)\n  );\n  assign result = _M_ro_data_0;\n  assign result2 = _M_ro_data_1;\nendmodule",
+      "tags": ["memory", "multiport", "readwrite_port", "conditional_write_data"],
+      "source_bug_id": "1172",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/1172",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

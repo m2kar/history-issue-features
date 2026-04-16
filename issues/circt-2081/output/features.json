@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 2081,
+  "title": "[FIRRTL] Add inner names to declarations",
+  "features": [
+    {
+      "name": "wire with packed struct aggregate type",
+      "category": "data_model",
+      "description": "Code should include a wire declaration whose type is a packed struct (aggregate bundle), analogous to a FIRRTL bundle that would be split into scalar fields during type lowering",
+      "snippet": "typedef struct packed {\n  logic       a;\n  logic [1:0] b;\n} bundle_t;\n\nwire bundle_t x;\nassign x.a = 1'b0;\nassign x.b = 2'd3;",
+      "tags": ["wire", "struct", "aggregate", "packed", "bundle", "type_lowering"],
+      "source_bug_id": "circt-2081",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2081",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "hierarchical reference to named wire declaration",
+      "category": "general",
+      "description": "Code should include a wire declaration with a user-visible name referenced via a hierarchical path from another scope, mirroring inner_sym usage in FIRRTL that requires the symbol to survive lowering passes",
+      "snippet": "module sub;\n  wire w;\nendmodule\n\nmodule top;\n  sub sub_inst ();\n  wire tap;\n  assign tap = top.sub_inst.w;\nendmodule",
+      "tags": ["hierarchical_reference", "wire", "inner_sym", "cross_module"],
+      "source_bug_id": "circt-2081",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2081",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "aggregate wire split into scalar fields under hierarchical reference",
+      "category": "data_model",
+      "description": "Code should include a wire of struct type that is also the target of a hierarchical reference, creating a situation where type flattening into scalar wires conflicts with the need to preserve the original symbol name",
+      "snippet": "typedef struct packed {\n  logic       a;\n  logic [1:0] b;\n} bundle_t;\n\nmodule sub;\n  wire bundle_t x;\nendmodule\n\nmodule top;\n  sub sub_inst ();\n  wire        tap_a;\n  wire [1:0]  tap_b;\n  assign tap_a = top.sub_inst.x.a;\n  assign tap_b = top.sub_inst.x.b;\nendmodule",
+      "tags": ["wire", "struct", "aggregate", "hierarchical_reference", "type_lowering", "inner_sym"],
+      "source_bug_id": "circt-2081",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2081",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "reg with aggregate type and symbolic name",
+      "category": "data_model",
+      "description": "Code should include a register declared with an aggregate (struct) type alongside an explicit instance name, mirroring FIRRTL RegOp with inner_sym where type lowering must decide how to preserve the register's identity across field splitting",
+      "snippet": "typedef struct packed {\n  logic [3:0] hi;\n  logic [3:0] lo;\n} pair_t;\n\nalways_ff @(posedge clk or posedge rst) begin\n  if (rst)\n    reg_pair <= '0;\n  else\n    reg_pair <= next_pair;\nend\n\npair_t reg_pair;",
+      "tags": ["register", "struct", "aggregate", "inner_sym", "always_ff"],
+      "source_bug_id": "circt-2081",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/2081",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

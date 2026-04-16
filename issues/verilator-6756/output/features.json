@@ -1,0 +1,31 @@
+{
+  "tool": "verilator",
+  "issue_number": 6756,
+  "title": "V3Randomize creates invalid assignment",
+  "features": [
+    {
+      "name": "class_inline_randomize_with_rand_mode_control",
+      "category": "data_model",
+      "description": "Code should include a class with rand members, randomize() call with inline constraints using 'with', and variable randomization mode control. The randomize() method on a class instance with inline constraints can trigger V3Randomize to incorrectly place a read-only reference on the LHS of an assignment when the access mode is not properly checked.",
+      "snippet": "class Bar; rand int x; constraint c { x inside {1,2,3}; } endclass\nBar bar; initial randomize(bar) with { x > 0; };",
+      "tags": ["randomization", "class", "inline-constraint", "rand-mode", "access-mode"],
+      "source_bug_id": "verilator-6756",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6756",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "member_access_randmode_internal_var",
+      "category": "data_model",
+      "description": "Code should include member selection on a class instance accessing internal randomization state (__Vrandmode). Verilator internally generates member selection nodes for rand_mode control, and when this access is used in assignment context with ignored access parameter, it produces invalid AST with read references on assignment LHS.",
+      "snippet": "class Foo; rand int y; endclass\nFoo f; // Access via f.__Vrandmode pattern\ninitial f.randomize();",
+      "tags": ["randomization", "class", "member-access", "randmode", "internal-ast"],
+      "source_bug_id": "verilator-6756",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6756",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

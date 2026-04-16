@@ -1,0 +1,202 @@
+{
+  "tool": "verilator",
+  "issue_number": 6744,
+  "title": "Fix dfg-break-cycles hang in caliptra",
+  "features": [
+    {
+      "name": "gray_code_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal assigned to a gray-code style expression referencing its own bits with a shift, creating a combinational cycle. Example: wire [N-1:0] sig = input ^ {sig[N-2:0], 1'b0};",
+      "snippet": "wire [2:0] GRAY_SEL = rand_a[2:0] ^ {GRAY_SEL[1:0], 1'b0};",
+      "tags": [
+        "combinational_cycle",
+        "gray_code",
+        "self_reference",
+        "shift"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "combinational_cycle_partial_select",
+      "category": "data_model",
+      "description": "Code should include a signal whose lower bits drive its own higher bits via partial select assignments, creating a combinational cycle.",
+      "snippet": "wire [2:0] SEL; assign SEL[0] = input; assign SEL[1] = SEL[0]; assign SEL[2] = SEL[1];",
+      "tags": [
+        "combinational_cycle",
+        "partial_select",
+        "chain"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "right_shift_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal assigned to an expression combining input bits with a right-shift of itself, creating a combinational cycle. Example: wire [N-1:0] sig = input ^ (sig >> 1);",
+      "snippet": "wire [2:0] SHIFT = rand_a[2:0] ^ (SHIFT >> 1);",
+      "tags": [
+        "combinational_cycle",
+        "right_shift",
+        "self_reference"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "left_shift_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal assigned to an expression combining input bits with a left-shift of itself, creating a combinational cycle. Example: wire [N-1:0] sig = input ^ (sig << 1);",
+      "snippet": "wire [2:0] SHIFT = rand_a[2:0] ^ (SHIFT << 1);",
+      "tags": [
+        "combinational_cycle",
+        "left_shift",
+        "self_reference"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "array_self_reference_chain",
+      "category": "data_model",
+      "description": "Code should include an array element assigned from another array element with cyclic references, creating a combinational cycle through array indexing.",
+      "snippet": "wire [2:0] array_3 [2]; assign array_3[0] = rand_a[2:0] ^ array_3[1] >> 1; assign array_3[1] = array_3[0];",
+      "tags": [
+        "combinational_cycle",
+        "array",
+        "self_reference"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "variable_width_concat_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal driving a wider wire via concat that references the signal's own bits, creating a partial select cycle.",
+      "snippet": "wire [1:0] VAR_B; assign VAR_A = {rand_a[0], VAR_B[0]}; assign VAR_B = (VAR_A >> 1) ^ 2'(VAR_B[1]);",
+      "tags": [
+        "combinational_cycle",
+        "concat",
+        "partial_select"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "bitwise_xor_chain",
+      "category": "data_model",
+      "description": "Code should include a signal assigned to bitwise XOR of input with a shifted portion of itself, creating a combinational cycle.",
+      "snippet": "wire [2:0] NOT = ~(rand_a[2:0] ^ 3'(NOT[2:1]));",
+      "tags": [
+        "combinational_cycle",
+        "bitwise",
+        "xor",
+        "shift"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "replicate_with_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal using replication operator with self-reference to create a combinational cycle.",
+      "snippet": "wire [3:0] REPLICATE_1 = rand_a[3:0] ^ ({2{REPLICATE_1[3:2]}} >> 2);",
+      "tags": [
+        "combinational_cycle",
+        "replication",
+        "self_reference",
+        "shift"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "zero_extension_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal using zero extension where bits reference the signal itself, creating a combinational cycle.",
+      "snippet": "wire [7:0] ZX; assign ZX[0] = rand_a[3]; assign ZX[3:1] = 3'(ZX[0]); assign ZX[4] = ZX[1];",
+      "tags": [
+        "combinational_cycle",
+        "zero_extension",
+        "partial_select"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "variable_shift_with_self_reference",
+      "category": "data_model",
+      "description": "Code should include a signal using a variable shift amount with self-reference, creating a combinational cycle.",
+      "snippet": "wire [1:0] SHIFTR_VARIABLE = rand_a[1:0] ^ ({1'b0, SHIFTR_VARIABLE[1]} >> rand_b[0]);",
+      "tags": [
+        "combinational_cycle",
+        "variable_shift",
+        "self_reference"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "addition_chain_with_cycle",
+      "category": "data_model",
+      "description": "Code should include a chain of additions where signals drive each other cyclically, creating a combinational cycle.",
+      "snippet": "wire [7:0] ADD_A, ADD_B, ADD_C; assign ADD_C = rand_b[7:0] + ADD_B; assign ADD_B = (ADD_A << 4) + rand_a[7:0]; assign ADD_A = {ADD_C[7], 7'd0};",
+      "tags": [
+        "combinational_cycle",
+        "addition",
+        "chain"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "concat_rhs_cycle",
+      "category": "data_model",
+      "description": "Code should include a wire where the left side of a concat references the signal itself via right-hand side cycle.",
+      "snippet": "wire [1:0] CONCAT_RHS; assign CONCAT_RHS[0] = rand_a[0]; assign CONCAT_RHS[1] = CONCAT_RHS[0];",
+      "tags": [
+        "combinational_cycle",
+        "concat",
+        "partial_assign"
+      ],
+      "source_bug_id": "verilator-6744",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6744",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 9370,
+  "title": "Segmentation fault in Handshake buffer insertion",
+  "features": [
+    {
+      "name": "handshake control_merge with unconsumed index result",
+      "category": "data_model",
+      "description": "Code should include a handshake.control_merge operation producing a multi-value result (none, index) where the index result has no downstream users, exposing the pass's failure to guard against zero-user results during buffer insertion",
+      "snippet": "\"handshake.func\"()<{function_type=(none,none)->(none)}>({\n  ^bb0(%arg0:none,%arg1:none):\n    %0:2 = \"handshake.control_merge\"(%arg0,%arg1):(none,none)->(none,index)\n    \"handshake.return\"(%0#0):(none)->()\n}){argNames=[\"arg0\",\"arg1\"],resNames=[\"out0\"],sym_name=\"f\"}:()->()",
+      "tags": ["handshake", "control_merge", "multi_result", "unconsumed_result", "buffer_insertion"],
+      "source_bug_id": "circt-9370",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9370",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "handshake func with partial multi-output op consumption",
+      "category": "control_flow",
+      "description": "Code should include a handshake.func where a multi-result operation (such as control_merge returning (none, index)) has only a subset of its results forwarded to handshake.return, leaving remaining results with no users when the cycles buffer strategy runs",
+      "snippet": "\"handshake.func\"()<{function_type=(none,none,none)->(none,none)}>({\n  ^bb0(%arg0:none,%arg1:none,%arg2:none):\n    %0:2 = \"handshake.control_merge\"(%arg0,%arg1):(none,none)->(none,index)\n    \"handshake.return\"(%0#0,%arg2):(none,none)->()\n}){argNames=[\"arg0\",\"arg1\",\"arg2\"],resNames=[\"out0\",\"out1\"],sym_name=\"main\"}:()->()",
+      "tags": ["handshake", "func", "control_merge", "partial_result_use", "cycles_strategy"],
+      "source_bug_id": "circt-9370",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9370",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

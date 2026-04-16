@@ -1,0 +1,61 @@
+{
+  "tool": "verilator",
+  "issue_number": 2474,
+  "title": "Parameter Underflow causes: More than a 8k bit replication is probably wrong: 4294967295",
+  "features": [
+    {
+      "name": "replication count from parameter underflow",
+      "category": "data_model",
+      "description": "Code should include a replication operator where the count expression is derived from a parameter subtraction that underflows when the parameter equals zero",
+      "snippet": "parameter bits = 0;\nparameter val = 1'b1;\nwire [15:0] data = {(bits-1){val}};",
+      "tags": [
+        "parameter",
+        "replication",
+        "underflow",
+        "subtraction"
+      ],
+      "source_bug_id": "2474",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2474",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "dead code branch with underflowing replication",
+      "category": "control_flow",
+      "description": "Code should include a conditional if-else where the condition is true for zero, making the else branch dead code that contains a replication with an underflowing count",
+      "snippet": "if (bits == 0) result = 16'd0;\nelse result = {{(17-bits){1'b0}},{(bits-1){1'b1}}};",
+      "tags": [
+        "conditional",
+        "replication",
+        "dead_code",
+        "parameter_underflow"
+      ],
+      "source_bug_id": "2474",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2474",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "concatenation with large replication count",
+      "category": "data_model",
+      "description": "Code should include a concatenation containing a replication with a count that evaluates to a very large value (2^32-1) due to unsigned interpretation of -1",
+      "snippet": "{{17{1'b0}},{(bits-1){1'b1}}}",
+      "tags": [
+        "concatenation",
+        "replication",
+        "large_count",
+        "width_concat"
+      ],
+      "source_bug_id": "2474",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2474",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ]
+}

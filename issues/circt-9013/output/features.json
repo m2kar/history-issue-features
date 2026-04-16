@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9013,
+  "title": "[circt-opt] Segmentation fault during XOR op building",
+  "features": [
+    {
+      "name": "comb xnor with hw.constant true in llhd.process",
+      "category": "data_model",
+      "description": "Code should include a comb.xor or comb.xnor operation with hw.constant true operand inside an llhd.process block",
+      "snippet": "hw.module @top(in %clk : i1, in %rstn : i1) {\n  %true = hw.constant true\n  %0:2 = llhd.process -> i1, i1 {\n    cf.br ^bb1(%clk, %rstn, %false, %false : i1, i1, i1, i1)\n  ^bb1(%1: i1, %2: i1, %3: i1, %4: i1):\n    llhd.wait yield (%3, %4 : i1, i1), (%clk, %rstn : i1, i1), ^bb2(%1, %2 : i1, i1)\n  ^bb2(%5: i1, %6: i1):\n    %7 = comb.xor bin %5, %true : i1\n    cf.cond_br %7, ^bb1(%clk, %rstn, %false, %true : i1, i1, i1, i1), ^bb1(%clk, %rstn, %false, %false : i1, i1, i1, i1)\n  }\n  hw.output\n}",
+      "tags": ["comb", "xor", "hw.constant", "llhd.process", "async_reset"],
+      "source_bug_id": "circt-9013",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9013",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "async reset always block with constant assignment",
+      "category": "timing",
+      "description": "Code should include a module with always block敏感列表包含or negedge rstn and a register assigned a constant value inside",
+      "snippet": "module top (input clk, input rstn);\n    reg r1;\n    always @(posedge clk or negedge rstn) begin\n        r1 = 0;\n    end\nendmodule",
+      "tags": ["async_reset", "always_block", "reg_assignment", "constant"],
+      "source_bug_id": "circt-9013",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9013",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "comb xor with hw constant operand",
+      "category": "data_model",
+      "description": "Code should include comb.xor operation where one operand is hw.constant true and the operation result type is i1",
+      "snippet": "%true = hw.constant true\n%7 = comb.xor bin %5, %true : i1",
+      "tags": ["comb", "xor", "hw.constant", "i1", "binary_operator"],
+      "source_bug_id": "circt-9013",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9013",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

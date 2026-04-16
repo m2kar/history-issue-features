@@ -1,0 +1,61 @@
+{
+  "tool": "verilator",
+  "issue_number": 4000,
+  "title": "Incorrect results for reverse for loop",
+  "features": [
+    {
+      "name": "for loop with reverse array indexing and same-loop assignment",
+      "category": "control_flow",
+      "description": "Code should include a for loop in a combinational always block where an array element is assigned using reverse indexing (arr[row-1-i]) while also being assigned in the same loop iteration",
+      "snippet": "integer i;\nalways @(*) begin\n\tfor (i=0; i<row+1; i=i+1) begin\n\t\tseg_chunk_num[i] = seg_chunk_num_pre[i];\n\t\tseg_chunk_num_flip[i] = seg_chunk_num[row-1-i];\n\tend\nend",
+      "tags": [
+        "for_loop",
+        "reverse_index",
+        "array",
+        "combinational"
+      ],
+      "source_bug_id": "4000",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4000",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "2D unpacked array in for loop with reverse access",
+      "category": "data_model",
+      "description": "Code should include a 2D unpacked array where one array is assigned from another array using reverse indexing within a for loop",
+      "snippet": "reg [row:0][col:0] seg_chunk_num;\nreg [row:0][col:0] seg_chunk_num_flip;\ninteger i;\nfor (i=0; i<row+1; i=i+1)\n\tseg_chunk_num_flip[i] = seg_chunk_num[row-1-i];",
+      "tags": [
+        "2d_array",
+        "unpacked_array",
+        "reverse_access",
+        "for_loop"
+      ],
+      "source_bug_id": "4000",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4000",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "same variable read and written with different indices in loop",
+      "category": "control_flow",
+      "description": "Code should include a for loop where the same array variable is both written (arr[i] = ...) and read (... = arr[row-1-i]) in the same iteration",
+      "snippet": "seg_chunk_num[i] = seg_chunk_num_pre[i];\nseg_chunk_num_flip[i] = seg_chunk_num[row-1-i];",
+      "tags": [
+        "self_read_write",
+        "aliasing",
+        "for_loop",
+        "index_dependency"
+      ],
+      "source_bug_id": "4000",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4000",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

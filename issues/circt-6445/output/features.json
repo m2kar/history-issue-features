@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 6445,
+  "title": "[Dedup][FIRRTL] SRAM modules not deduped when using memory macro replacement",
+  "features": [
+    {
+      "name": "identical module instances with memory primitive instantiation",
+      "category": "data_model",
+      "description": "Code should include two or more module instances that both instantiate the same memory primitive module with identical port connections",
+      "snippet": "module Foo(mem m1, mem_1 m2);\nendmodule\nmodule mem(input [3:0] RW0_addr, input RW0_clk, input RW0_wmode, input [7:0] RW0_wdata, output [7:0] RW0_rdata);\n  mem_ext mem_ext(.RW0_addr(RW0_addr), .RW0_clk(RW0_clk), .RW0_wmode(RW0_wmode), .RW0_wdata(RW0_wdata), .RW0_rdata(RW0_rdata));\nendmodule",
+      "tags": ["module_instantiation", "memory_primitive", "deduplication"],
+      "source_bug_id": "circt-6445",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6445",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "synchronous read-write memory interface ports",
+      "category": "data_model",
+      "description": "Code should include a module with synchronous read-write memory ports using the RW0_* naming convention (RW0_addr, RW0_clk, RW0_wmode, RW0_wdata, RW0_rdata)",
+      "snippet": "input [3:0] RW0_addr,\ninput RW0_clk,\ninput RW0_wmode,\ninput [7:0] RW0_wdata,\noutput [7:0] RW0_rdata",
+      "tags": ["memory_interface", "synchronous_read_write", "port_declaration"],
+      "source_bug_id": "circt-6445",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6445",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory macro replacement with external memory module",
+      "category": "general",
+      "description": "Code should include a wrapper module around an external memory primitive (mem_ext) created by memory macro replacement, where multiple wrappers should be deduplicated",
+      "snippet": "module mem(input [3:0] RW0_addr, input RW0_clk, input RW0_wmode, input [7:0] RW0_wdata, output [7:0] RW0_rdata);\n  mem_ext mem_ext(.RW0_addr(RW0_addr), .RW0_clk(RW0_clk), .RW0_wmode(RW0_wmode), .RW0_wdata(RW0_wdata), .RW0_rdata(RW0_rdata));\n  assign mem_ext.RW0_en = 1'h1;\nendmodule",
+      "tags": ["memory_macro_replacement", "external_module", "wrapper_module"],
+      "source_bug_id": "circt-6445",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/6445",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 6497,
+  "title": "Fix error on resized lvalues with warning suppressed",
+  "features": [
+    {
+      "name": "virtual task output arg width mismatch with resize",
+      "category": "data_model",
+      "description": "Code should include a virtual task call where an output argument has a 64-bit type but is connected to a 32-bit variable, requiring width expansion",
+      "snippet": "virtual class x_reg;\n  extern virtual task read(output int status, output bit unsigned [63:0] value, input int path);\nendclass\nint unsigned rdata;\nn_doorbell.read(status, rdata, 0);",
+      "tags": ["virtual_task", "output_argument", "width_mismatch", "resize"],
+      "source_bug_id": "6497",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6497",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "virtual task method call on class instance",
+      "category": "control_flow",
+      "description": "Code should include calling a virtual task method on a class instance accessed through a nested class hierarchy with dynamic dispatch",
+      "snippet": "class r_block_p_s_reg;\n  rand r_reg_p_s_reg_n_doorbell n_doorbell;\nendclass\nclass r_top_s_reg;\n  rand r_block_p_s_reg p_s[16];\nendclass\n// Calling virtual task on n_doorbell through p_s array\nm_env.r_reg_model.p_s[p].n_doorbell.read(status, rdata, 0);",
+      "tags": ["virtual_task_call", "class_hierarchy", "dynamic_dispatch", "rand"],
+      "source_bug_id": "6497",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6497",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "resizelvalue with WIDTHEXPAND warning suppressed",
+      "category": "data_model",
+      "description": "Code should include a width expansion scenario that generates a RESIZELVALUE node when WIDTHEXPAND warnings are suppressed",
+      "snippet": "bit unsigned [63:0] value;\nint unsigned rdata;\n// When WIDTHEXPAND warning suppressed, RESIZELVALUE not properly handled\nvalue = rdata;",
+      "tags": ["resizelvalue", "width_expand", "warning_suppress", "width_conversion"],
+      "source_bug_id": "6497",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6497",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

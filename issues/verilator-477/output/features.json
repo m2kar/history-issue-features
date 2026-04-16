@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 477,
+  "title": "incorrect %Error: Selection index out of range",
+  "features": [
+    {
+      "name": "defparam override of module instantiation parameters",
+      "category": "data_model",
+      "description": "Code should include defparam statements that override module parameters at instantiation with different values for each instance",
+      "snippet": "submod u1(.rst_n(rst_n), .clk(clk), .rst_n_ext(rst1));\ndefparam u1.STAGES = 5;\ndefparam u1.NUM_OUT = 4;",
+      "tags": ["defparam", "parameter_override", "instantiation"],
+      "source_bug_id": "477",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/477",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit slice selection with parameter-computed range",
+      "category": "data_model",
+      "description": "Code should include a bit slice selection where both start and end indices are computed from module parameters",
+      "snippet": "reg[STAGES+NUM_OUT-2:0] rst_reg;\nassign rst_n_ext = rst_reg[STAGES+NUM_OUT-2:STAGES-1];",
+      "tags": ["bit_slice", "parameter_computed_range", "selection"],
+      "source_bug_id": "477",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/477",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "generate loop with genvar using parameter-computed bounds",
+      "category": "control_flow",
+      "description": "Code should include a generate loop using genvar where loop bounds are computed from module parameters",
+      "snippet": "genvar i;\nfor (i=0; i<STAGES+NUM_OUT-1; i=i+1)\nbegin\n  always @(posedge clk or negedge rst_n)\n  begin\n    if (~rst_n) rst_reg[i] <= 1'b0;\n    else if (i < STAGES) rst_reg[i] <= rst_reg[i-1];\n    else rst_reg[i] <= rst_reg[STAGES-2];\n  end\nend",
+      "tags": ["generate_loop", "genvar", "parameter_computed_bounds"],
+      "source_bug_id": "477",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/477",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple module instances with different defparam overrides",
+      "category": "data_model",
+      "description": "Code should include multiple instances of the same module where each instance has different defparam overrides for the same parameters",
+      "snippet": "submod u1(.rst_n(rst_n), .clk(clk), .rst_n_ext(rst1));\ndefparam u1.STAGES = 5;\ndefparam u1.NUM_OUT = 4;\nsubmod u2(.rst_n(rst_n), .clk(clk), .rst_n_ext(rst2));\ndefparam u2.STAGES = 5;",
+      "tags": ["multiple_instances", "defparam", "parameter_override"],
+      "source_bug_id": "477",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/477",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

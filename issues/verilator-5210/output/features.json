@@ -1,0 +1,43 @@
+{
+  "tool": "verilator",
+  "issue_number": 5210,
+  "title": "Non-blocking assignments in `initial` blocks treated as blocking",
+  "features": [
+    {
+      "name": "non-blocking assignment after posedge clock in initial block",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment (<=) following a @(posedge clk) delay statement inside an initial block",
+      "snippet": "initial begin\n    d <= 0;\n    @(posedge clk);\n    d <= 1;  // Should schedule after clock edge\nend",
+      "tags": [
+        "non-blocking_assignment",
+        "initial_block",
+        "clocking_event",
+        "posedge"
+      ],
+      "source_bug_id": "5210",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5210",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non-blocking assignment in task called from initial block",
+      "category": "control_flow",
+      "description": "Code should include a task containing a non-blocking assignment that is called from an initial block with @(posedge clk) delays",
+      "snippet": "task set_data;\n    input [7:0] val;\n    begin\n        @(posedge clk);\n        d <= val;\n    end\nendtask\n\ninitial begin\n    set_data(1);\n    @(posedge clk);\n    set_data(2);\nend",
+      "tags": [
+        "non-blocking_assignment",
+        "task",
+        "initial_block",
+        "clocking_event"
+      ],
+      "source_bug_id": "5210",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5210",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

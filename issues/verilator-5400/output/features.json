@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 5400,
+  "title": "Simulation fails with error \"Active region did not converge\"",
+  "features": [
+    {
+      "name": "multi_instance shared addr memory access",
+      "category": "data_model",
+      "description": "Code should include two or more instances of a memory-backed module that share the same address signal but have independent byte-enable or column-select signals for writing to different portions of the same memory array",
+      "snippet": "reg [31:0] mem [0:511];\nwire [7:0] d_in_0, d_in_1;\nreg csb_col0, csb_col1;\nassign d_in_0 = wdata[7:0];\nassign d_in_1 = wdata[15:8];\nassign csb_col0 = !wmask[0];\nassign csb_col1 = !wmask[1];\nsram_top1 I1 (.addr(addr), .d_in(d_in_0), .csb(csb_col0));\nsram_top1 I2 (.addr(addr), .d_in(d_in_1), .csb(csb_col1));",
+      "tags": [
+        "multi_instance",
+        "shared_addr",
+        "memory_array",
+        "byte_enable"
+      ],
+      "source_bug_id": "5400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5400",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory read fed back to write data combinational path",
+      "category": "data_model",
+      "description": "Code should include a combinational assignment where write data is sourced directly from a memory array read using the same address that controls writes, creating a read-write feedback path",
+      "snippet": "reg [31:0] mem [0:511];\nwire [31:0] wdata;\nassign wdata = mem[addr];\nalways @(posedge clk_i) mem[addr] <= wdata;",
+      "tags": [
+        "memory_array",
+        "combinational_feedback",
+        "read_write_conflict"
+      ],
+      "source_bug_id": "5400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5400",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "column select signal from write mask bit",
+      "category": "control_flow",
+      "description": "Code should include a column-select or chip-select signal derived from an inverted bit of a write mask, used to gate write operations in a memory interface",
+      "snippet": "reg [3:0] wmask;\nreg csb_col0, csb_col1;\nassign csb_col0 = !wmask[0];\nassign csb_col1 = !wmask[1];",
+      "tags": [
+        "write_mask",
+        "column_select",
+        "chip_select"
+      ],
+      "source_bug_id": "5400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5400",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

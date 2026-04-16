@@ -1,0 +1,59 @@
+{
+  "tool": "verilator",
+  "issue_number": 6800,
+  "title": "Fix member-selected variable must have randmode",
+  "features": [
+    {
+      "name": "constraint accessing local rand member property",
+      "category": "sva_property",
+      "description": "Code should include a class with a local rand member of a user-defined class type, where the member's property is accessed in a constraint expression",
+      "snippet": "class inner;\n  rand int value;\nendclass\n\nclass outer;\n  local rand inner _dummy;\n  rand int data;\n  constraint c {_dummy.value == data;}\nendclass",
+      "tags": [
+        "constraint",
+        "local_rand_member",
+        "class_property_access"
+      ],
+      "source_bug_id": "6800",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6800",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "local rand member with virtual base class",
+      "category": "data_model",
+      "description": "Code should include a class with a local rand member whose type extends a virtual class and has rand_mode() override",
+      "snippet": "virtual class base;\nendclass\n\nclass derived extends base;\n  rand int value;\n  virtual function bit get_rand_mode();\n    return bit'(value.rand_mode());\n  endfunction\nendclass\n\nclass outer;\n  local rand derived _dummy;\nendclass",
+      "tags": [
+        "local_rand",
+        "virtual_class",
+        "rand_mode_override"
+      ],
+      "source_bug_id": "6800",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6800",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "constraint accessing member through object hierarchy",
+      "category": "sva_property",
+      "description": "Code should include a constraint that accesses a property of a class member that extends a virtual class, where the member has local rand visibility",
+      "snippet": "virtual class base;\nendclass\n\nclass child extends base;\n  rand int x;\nendclass\n\nclass top;\n  local rand child obj;\n  rand int y;\n  constraint access_chain {obj.x == y;}\nendclass",
+      "tags": [
+        "constraint",
+        "member_access",
+        "virtual_inheritance",
+        "local_rand"
+      ],
+      "source_bug_id": "6800",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6800",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

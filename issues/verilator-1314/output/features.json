@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 1314,
+  "title": "Bad scaling, if there are nasty forests of generate statements",
+  "features": [
+    {
+      "name": "multi-branch if-generate with single active leaf",
+      "category": "general",
+      "description": "Code should include a generate if-else chain with several mutually exclusive branches, each instantiating a different submodule, where exactly one branch is active based on a parameter value",
+      "snippet": "parameter int SEL = 0;\ngenerate\n  if (SEL == 0)      sub_a inst_a();\n  else if (SEL == 1) sub_b inst_b();\n  else if (SEL == 2) sub_c inst_c();\n  else               sub_d inst_d();\nendgenerate",
+      "tags": ["generate", "if_generate", "module_instantiation", "parameter", "conditional_elaboration"],
+      "source_bug_id": "1314",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1314",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "case-generate with many branches, one active",
+      "category": "general",
+      "description": "Code should include a case-generate block with four or more case items, each instantiating a distinct submodule, controlled by a parameter that selects exactly one branch at elaboration time",
+      "snippet": "parameter int SEL = 2;\ngenerate\n  case (SEL)\n    0: sub0 i0();\n    1: sub1 i1();\n    2: sub2 i2();\n    3: sub3 i3();\n    default: sub4 i4();\n  endcase\nendgenerate",
+      "tags": ["generate", "case_generate", "module_instantiation", "parameter", "elaboration"],
+      "source_bug_id": "1314",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1314",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "multi-level non-recursive module hierarchy with generate at every level",
+      "category": "general",
+      "description": "Code should include a non-recursive multi-level module hierarchy where each level uses an if-generate block with multiple branches so that unreachable generate paths multiply exponentially across levels",
+      "snippet": "// Level 2 module: two generate branches\nmodule level2 #(parameter int D = 0)();\n  generate\n    if (D == 0) leaf l0();\n    else        leaf l1();\n  endgenerate\nendmodule\n// Level 1 module: two generate branches, each instantiates level2\nmodule level1 #(parameter int D = 0)();\n  generate\n    if (D == 0) level2 #(0) n0();\n    else        level2 #(1) n1();\n  endgenerate\nendmodule",
+      "tags": ["generate", "if_generate", "module_hierarchy", "elaboration", "performance", "non_recursive"],
+      "source_bug_id": "1314",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1314",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "generate block with submodule instantiation inside inactive branch",
+      "category": "general",
+      "description": "Code should include a generate if-else where the inactive branch references a module that itself contains further generate blocks, exercising dead-branch elaboration depth",
+      "snippet": "parameter int EN = 1;\nmodule dead_sub();\n  generate\n    if (1) logic x;\n    else   logic y;\n  endgenerate\nendmodule\ngenerate\n  if (EN) logic active_sig;\n  else    dead_sub ds();\nendgenerate",
+      "tags": ["generate", "if_generate", "inactive_branch", "nested_generate", "elaboration"],
+      "source_bug_id": "1314",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1314",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

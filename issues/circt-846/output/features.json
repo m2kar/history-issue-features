@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 846,
+  "title": "Respect Procedural/Non-procedural Regions when Unwinding Inlined, Long Line Expressions",
+  "features": [
+    {
+      "name": "long_named_wire_in_procedural_block",
+      "category": "data_model",
+      "description": "Code should include a wire with a very long identifier name (exceeding typical line length limits) that is read and used within an always_ff procedural block via sv.passign",
+      "snippet": "sv.wire @longnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa : !rtl.inout<i1>\n%0 = sv.read_inout %longnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa : !rtl.inout<i1>\nsv.alwaysff(posedge %clock) {\n  sv.passign %regValue, %data : i1\n}",
+      "tags": ["sv.wire", "sv.alwaysff", "sv.passign", "long_identifier", "procedural_region"],
+      "source_bug_id": "846",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/846",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "procedural_region_uninlining_expression_emission",
+      "category": "control_flow",
+      "description": "Code should include an expression emission scenario where a value defined in a non-procedural region gets used in a procedural region and requires uninlining due to line length",
+      "snippet": "sv.alwaysff(posedge %clock) {\n  %read = sv.read_inout %wire_long_name_aaa... : !rtl.inout<i1>\n  sv.passign %reg[%idx], %read : i1\n}",
+      "tags": ["expression_emission", "procedural_region", "uninline", "sv.alwaysff", "sv.read_inout"],
+      "source_bug_id": "846",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/846",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "automatic_logic_temporary_in_procedural_block",
+      "category": "data_model",
+      "description": "Code should include an always_ff block that references wire values which need to be extracted to automatic logic temporaries due to long line unwinding",
+      "snippet": "sv.alwaysff(posedge %clock) {\n  %w = sv.wire : !rtl.inout<i1>\n  %r = sv.reg : !rtl.inout<uarray<1xi1>>\n  %idx = sv.array_index_inout %r[%0] : !rtl.inout<uarray<1xi1>>, i1\n  sv.passign %idx, %data : i1\n}",
+      "tags": ["automatic_logic", "temporary", "sv.alwaysff", "sv.wire", "sv.reg", "procedural"],
+      "source_bug_id": "846",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/846",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

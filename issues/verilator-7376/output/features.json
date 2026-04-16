@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7376,
+  "title": "Fix subclass with rand_mode(0) getting randomized",
+  "features": [
+    {
+      "name": "rand_mode(0) on subclass field",
+      "category": "data_model",
+      "description": "Code should include a rand variable inside a subclass that has rand_mode(0) called on it via a method, where the parent class containing the subclass instance calls randomize()",
+      "snippet": "class child extends parent; rand int x; function void set_rand_mode(bit mode); x.rand_mode(mode); endfunction endclass\nclass parent; child c; function new; c = new; endfunction endclass\ntask t; parent p = new; p.c.set_rand_mode(0); p.randomize(); endtask",
+      "tags": ["rand_mode", "subclass", "randomization"],
+      "source_bug_id": "7376",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7376",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "constraint_mode inside set_rand_mode",
+      "category": "data_model",
+      "description": "Code should include a set_rand_mode function that calls both rand_mode() and constraint_mode() on the same variable to disable randomization and constraints together",
+      "snippet": "class c; rand int x; constraint cst { x < 10; } function void set_rand_mode(bit mode); x.rand_mode(mode); cst.constraint_mode(mode); endfunction endclass",
+      "tags": ["constraint_mode", "rand_mode", "randomization"],
+      "source_bug_id": "7376",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7376",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "class inheritance with rand members",
+      "category": "data_model",
+      "description": "Code should include a class inheritance hierarchy where the parent class contains rand members of a subclass type, and those members are randomized via the parent class randomize() call",
+      "snippet": "class parent; endclass\nclass child extends parent; rand int x; endclass\nclass top; child c; function new; c = new; endfunction endclass\ntop t; t = new; t.randomize();",
+      "tags": ["class_inheritance", "rand", "randomization"],
+      "source_bug_id": "7376",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7376",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

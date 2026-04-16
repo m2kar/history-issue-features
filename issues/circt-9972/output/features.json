@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 9972,
+  "title": "[ExportVerilog] Invalid XMR path for inner symbols defined in generate case op.",
+  "features": [
+    {
+      "name": "instance with inner symbol in generate case block",
+      "category": "data_model",
+      "description": "Code should include an hw.instance with an inner symbol (sym attribute) defined inside a generate case block",
+      "snippet": "sv.generate \"foo_case\": {\n  sv.generate.case #hw.param.decl.ref<\"NUM\"> : i64 [\n    case (0, \"case0\") {\n      hw.instance \"test\" sym @sym @Foo(x: %x: i1) -> ()\n    }\n  ]\n}",
+      "tags": ["instance", "inner_symbol", "generate_case", "hw_instance"],
+      "source_bug_id": "circt-9972",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9972",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierpath referencing inner symbol from generate case",
+      "category": "data_model",
+      "description": "Code should include a hierpath that references an inner symbol defined inside a generate case block, used in XMR operations",
+      "snippet": "hw.hierpath @hier [@Case1::@sym, @Foo::@sym]\nhw.module @Bar () {\n  %true = hw.constant true\n  sv.initial {\n    %0 = sv.xmr.ref @hier : !hw.inout<i1>\n    sv.force %0, %true : i1\n  }\n}",
+      "tags": ["hierpath", "inner_symbol", "xmr", "generate_case", "sv_xmr_ref"],
+      "source_bug_id": "circt-9972",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9972",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sv_force with xmr to instance in generate case",
+      "category": "control_flow",
+      "description": "Code should include an sv.force operation using an XMR reference to an instance inside a generate case block via a hierpath",
+      "snippet": "hw.hierpath @hier [@Case1::@sym, @Foo::@sym]\nsv.initial {\n  %0 = sv.xmr.ref @hier : !hw.inout<i1>\n  sv.force %0, %true : i1\n}",
+      "tags": ["sv_force", "xmr", "generate_case", "sv_initial"],
+      "source_bug_id": "circt-9972",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9972",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "generate case with named begin block and instance",
+      "category": "control_flow",
+      "description": "Code should include a generate case statement wrapped in a named begin block, containing an hw.instance with an inner symbol",
+      "snippet": "sv.generate \"foo_case\": {\n  sv.generate.case #hw.param.decl.ref<\"NUM\"> : i64 [\n    case (0, \"case0\") {\n      hw.instance \"test\" sym @sym @Foo(x: %x: i1) -> ()\n    }\n  ]\n}",
+      "tags": ["generate", "generate_case", "named_begin", "instance", "inner_symbol"],
+      "source_bug_id": "circt-9972",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9972",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

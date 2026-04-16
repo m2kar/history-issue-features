@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 4935,
+  "title": "Fix hang when using --trace with -O0",
+  "features": [
+    {
+      "name": "module instantiation with register in posedge block",
+      "category": "control_flow",
+      "description": "Code should include a module instantiation where the child module contains a register assigned in an always @(posedge clock) block",
+      "snippet": "module CPU(input wire clock, cpu_reset); reg reset_r; always @(posedge clock) begin reset_r <= cpu_reset; end endmodule",
+      "tags": ["module_instantiation", "register", "posedge_clock"],
+      "source_bug_id": "4935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4935",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "wire assigned from register in port expression",
+      "category": "data_model",
+      "description": "Code should include a wire assigned from a register in a parent module, connected to a child module port through a combinational OR expression",
+      "snippet": "wire _cpu_reset_chain_io_q = sync_0; CPU cpu(.cpu_reset(_cpu_reset_chain_io_q | reset));",
+      "tags": ["wire_assignment", "combinational_expression", "module_port", "or_expression"],
+      "source_bug_id": "4935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4935",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "multi-stage register pipeline with reset",
+      "category": "control_flow",
+      "description": "Code should include a chain of three or more registers where each is assigned from the previous one in an always @(posedge clock) block with reset assignment",
+      "snippet": "reg sync_0, sync_1, sync_2; always @(posedge clock) begin sync_0 <= sync_1; sync_1 <= sync_2; sync_2 <= reset; end",
+      "tags": ["register_pipeline", "sequential_logic", "reset_chain"],
+      "source_bug_id": "4935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4935",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "trace compilation with -O0 optimization",
+      "category": "preprocess",
+      "description": "Code should include a design that when compiled with tracing enabled (--trace) and -O0 flag triggers a hang",
+      "snippet": "// verilator --trace -O0 design.sv",
+      "tags": ["trace", "optimization_level", "-O0"],
+      "source_bug_id": "4935",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4935",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "hang"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

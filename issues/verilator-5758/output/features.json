@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 5758,
+  "title": "No VPI access to interface members when using --public-depth instead of --public-flat-rw",
+  "features": [
+    {
+      "name": "systemverilog interface with signal members",
+      "category": "data_model",
+      "description": "Code should include a SystemVerilog interface declaration with signal members (e.g., tdata, tvalid, tready) inside the interface body",
+      "snippet": "interface axi_stream_if;\n  logic [31:0] tdata;\n  logic tvalid;\n  logic tready;\nendinterface",
+      "tags": ["interface", "signal_member", "systemverilog"],
+      "source_bug_id": "5758",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5758",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "vpi access to interface member signals",
+      "category": "general",
+      "description": "Code should include a DUT that instantiates a SystemVerilog interface, where VPI code attempts to access interface member signals (e.g., dut.s_axis_if.tdata)",
+      "snippet": "module dut(input clk,axi_stream_if s_axis_if);\n  always @(posedge clk) s_axis_if.tvalid <= 1'b0;\nendmodule\n// VPI access: s_axis_if.tdata",
+      "tags": ["vpi", "interface_access", "dpi"],
+      "source_bug_id": "5758",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5758",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "public_depth flag for signal visibility",
+      "category": "preprocess",
+      "description": "Code should include a signal accessed via VPI under --public-depth compilation, where the signal is at depth N in the DUT hierarchy (depth 1 for top-level interface signals)",
+      "snippet": "// verilator --public-depth 1\ninterface axi_stream_if;\n  logic [31:0] tdata;\nendinterface\nmodule top;\n  axi_stream_if s_axis_if();\nendmodule",
+      "tags": ["public_depth", "compilation_flag", "vpi_visibility"],
+      "source_bug_id": "5758",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5758",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

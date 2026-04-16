@@ -1,0 +1,44 @@
+{
+  "tool": "verilator",
+  "issue_number": 2625,
+  "title": "Fix suppressing errors on unreachable (by parameter value) code",
+  "features": [
+    {
+      "name": "unreachable code with backward part-select range",
+      "category": "data_model",
+      "description": "Code should include a parameter-dependent conditional where an unreachable branch contains a variable part-select with backward range ordering (e.g., signal[PARAM-1:96] which becomes [63:96] when PARAM=64)",
+      "snippet": "parameter int AXIS_PCIE_DATA_WIDTH = 64;\nlogic [255:0] m_axis_cc_tdata_int;\nlogic [255:0] shift_axi_rdata;\nif (AXIS_PCIE_DATA_WIDTH == 64) begin\nend else begin\n    m_axis_cc_tdata_int[AXIS_PCIE_DATA_WIDTH-1:96] = shift_axi_rdata[AXIS_PCIE_DATA_WIDTH-1:96];\nend",
+      "tags": [
+        "parameter",
+        "conditional",
+        "unreachable",
+        "part_select",
+        "backward_range"
+      ],
+      "source_bug_id": "2625",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2625",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "variable part-select with parameter-based start index",
+      "category": "data_model",
+      "description": "Code should include a variable part-select using a parameter expression as the start index where the resulting range may have backward ordering for certain parameter values",
+      "snippet": "logic [255:0] signal;\nparameter int WIDTH = 64;\nsignal[WIDTH-1:96] = other_signal[WIDTH-1:96];",
+      "tags": [
+        "part_select",
+        "parameter",
+        "variable_range",
+        "backward_range"
+      ],
+      "source_bug_id": "2625",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2625",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

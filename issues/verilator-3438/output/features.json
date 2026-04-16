@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 3438,
+  "title": "How to address - \"Unsupported: Timing control statement in this location\"",
+  "features": [
+    {
+      "name": "interface_task_posedge_timing",
+      "category": "timing",
+      "description": "Code should include an interface with a task that contains @(posedge clk) timing control statements",
+      "snippet": "interface x_bus #(ADDR_WIDTH=32) (input wire clk);\nlogic [ADDR_WIDTH-1:0] address;\ntask write_reg(input string name, input integer addr, input integer value);\nbegin\n  @(posedge clk);\n  address = ADDR_WIDTH'(addr);\nend\nendtask\nendinterface",
+      "tags": ["interface", "task", "timing_control", "posedge"],
+      "source_bug_id": "3438",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3438",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multiple_posedge_in_task",
+      "category": "timing",
+      "description": "Code should include a task containing multiple @(posedge clk) timing control statements",
+      "snippet": "task write_reg(input string name, input integer addr, input integer value);\ninteger timeout = 256;\nbegin\n  @(posedge clk);\n  timeout = 256;\n  write = 1;\n  while (!write_done) begin\n    @(posedge clk);\n    if (timeout > 0) timeout = timeout - 1;\n    else break;\n  end\nend\nendtask",
+      "tags": ["task", "timing_control", "multiple_timing_controls"],
+      "source_bug_id": "3438",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3438",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "timing_control_in_while_loop_task",
+      "category": "timing",
+      "description": "Code should include a task with a while loop that contains @(posedge clk) timing control",
+      "snippet": "task write_reg(input string name, input integer addr, input integer value);\nwhile (!write_done) begin\n  @(posedge clk);\n  write = 0;\nend\nendtask",
+      "tags": ["task", "timing_control", "while_loop"],
+      "source_bug_id": "3438",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3438",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "interface_modport_task",
+      "category": "data_model",
+      "description": "Code should include an interface with modport declarations and a task with timing controls",
+      "snippet": "interface x_bus #(ADDR_WIDTH=32) (input wire clk);\nlogic [ADDR_WIDTH-1:0] address;\nmodport slave (input address, output read_data);\nmodport master (input read_data, output address);\ntask write_reg(input string name, input integer addr, input integer value);\nbegin\n  @(posedge clk);\nend\nendtask\nendinterface",
+      "tags": ["interface", "modport", "task", "timing_control"],
+      "source_bug_id": "3438",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3438",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

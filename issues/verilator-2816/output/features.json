@@ -1,0 +1,80 @@
+{
+  "tool": "verilator",
+  "issue_number": 2816,
+  "title": "mixed blocking and non-blocking assignment on dfferent slices of vector",
+  "features": [
+    {
+      "name": "vector slice declaration starting at non-zero bit",
+      "category": "data_model",
+      "description": "Code should include a reg/variable declaration with a slice range that starts at a non-zero bit position (e.g., [15:1] instead of [14:0])",
+      "snippet": "reg [15:1] valu_en_ex;",
+      "tags": [
+        "vector",
+        "slice",
+        "declaration",
+        "non_standard_range"
+      ],
+      "source_bug_id": "2816",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2816",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mixed blocking and non-blocking assignment on different vector slices",
+      "category": "control_flow",
+      "description": "Code should include a blocking assignment to one slice of a vector and a non-blocking assignment to a different slice of the same vector",
+      "snippet": "reg [15:1] valu_en_ex;\nalways @(*) valu_en_ex[1] = pp_en_ex1 & !first_go_stall_ex1;\nalways @(posedge clk) valu_en_ex[i] <= valu_en_ex[i-1];",
+      "tags": [
+        "mixed_assignment",
+        "blocking",
+        "non_blocking",
+        "slice",
+        "vector"
+      ],
+      "source_bug_id": "2816",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2816",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "for generate with multiple always blocks",
+      "category": "control_flow",
+      "description": "Code should include a for-generate loop that creates multiple always blocks, which may trigger false-positive conflict detection in some tools",
+      "snippet": "genvar i;\ngenerate\nfor (i=2;i<=15;i=i+1) begin: T1\n  always @(posedge clk) begin\n    valu_en_ex[i] <= valu_en_ex[i-1];\n  end\n  always @(posedge clk) begin\n    if (valu_en_ex[i-1]) t0_ex[i] <= t0_ex[i-1];\n  end\nend\nendgenerate",
+      "tags": [
+        "generate",
+        "for_loop",
+        "always_block",
+        "multiple_blocks"
+      ],
+      "source_bug_id": "2816",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2816",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "array of registers in generate",
+      "category": "data_model",
+      "description": "Code should include a two-dimensional array of registers declared inside a generate block",
+      "snippet": "genvar i;\nreg [1:0] t0_ex [15:1];",
+      "tags": [
+        "array",
+        "register",
+        "generate",
+        "two_dimensional"
+      ],
+      "source_bug_id": "2816",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2816",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 4850,
+  "title": "_vl_insert_WI writes are unsafe (clobbers other state if '+:' index extends beyond range)",
+  "features": [
+    {
+      "name": "bit_select_assignment_to_small_vector",
+      "category": "data_model",
+      "description": "Code should include a bit select assignment (e.g., [3:0] = ...) on a signal with width 4 bits or less",
+      "snippet": "logic [3:0] d_bytes;\nd_bytes[3:0] = d_bytes_next;",
+      "tags": ["bit_select", "small_vector", "state_variable"],
+      "source_bug_id": "4850",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4850",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unpacked_array_queue_assignment_8bit_threshold",
+      "category": "data_model",
+      "description": "Code should include an unpacked array or queue assigned from a signal where the signal width is 8 bits or less, causing Verilator to use CData (8-bit) instead of SData (16-bit) representation",
+      "snippet": "logic [3:0] d_bytes;\nlogic [3:0] d_bytes_next;\nd_bytes <= d_bytes_next;",
+      "tags": ["unpacked_array", "queue", "small_width", "CData"],
+      "source_bug_id": "4850",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4850",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register_feeding_bit_select_with_wide_index",
+      "category": "control_flow",
+      "description": "Code should include a register variable that feeds a bit select assignment where the select index is derived from another signal of the same or larger width",
+      "snippet": "logic [3:0] d_bytes;\nlogic [3:0] idx;\nd_bytes[idx+:4] = val;",
+      "tags": ["register", "bit_select", "wide_index", "non_blocking"],
+      "source_bug_id": "4850",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4850",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non_blocking_assignment_small_width_state",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment to a state variable where the variable width is 4 bits or less and is used in always_ff with a reset condition",
+      "snippet": "logic [3:0] d_bytes = '0;\nalways_ff @(posedge clk) begin\n  if (reset) d_bytes <= '0;\n  else d_bytes <= d_bytes_next;\nend",
+      "tags": ["non_blocking", "small_width", "state_variable", "reset"],
+      "source_bug_id": "4850",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4850",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

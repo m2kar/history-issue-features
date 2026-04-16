@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 7297,
+  "title": "UNOPTFLAT loop break selects wrong stable state, causing permanent simulation deadlock",
+  "features": [
+    {
+      "name": "bistable combinational loop with complementary signals",
+      "category": "timing",
+      "description": "Code should include a pair of combinational assignments where one signal is the inverse of another, and the second signal depends on the first through additional logic, creating two valid stable states",
+      "snippet": "assign a = !b;\nassign b = expr && a;",
+      "tags": ["combinational_loop", "bistable", "stable_state"],
+      "source_bug_id": "7297",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7297",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "deadlock"
+    },
+    {
+      "name": "id_ready and apu_stall bistable loop",
+      "category": "timing",
+      "description": "Code should include a pair of signals id_ready and apu_stall where id_ready = !apu_stall and apu_stall depends on apu_rvalid and id_ready, forming a bistable loop",
+      "snippet": "assign apu_stall = apu_active_q && !(apu_rvalid && id_ready);\nassign id_ready = !apu_stall;",
+      "tags": ["combinational_loop", "bistable", "inverse_pair"],
+      "source_bug_id": "7297",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7297",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "deadlock"
+    },
+    {
+      "name": "combinational loop output gating FSM state update",
+      "category": "control_flow",
+      "description": "Code should include a combinational loop whose output signal gates a state machine transition condition, where the wrong stable state selection causes the FSM to never complete",
+      "snippet": "assign done = apu_rvalid && id_ready;\nalways_ff @(posedge clk) if (done) apu_active_q <= 0;",
+      "tags": ["combinational_loop", "fsm", "state_update", "gating"],
+      "source_bug_id": "7297",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7297",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "deadlock"
+    },
+    {
+      "name": "UNOPTFLAT combinational loop with previous-cycle register state",
+      "category": "timing",
+      "description": "Code should include a combinational loop where the loop-breaking condition depends on a register output from the previous clock cycle, creating a bistable that can resolve to wrong state",
+      "snippet": "assign apu_rvalid = apu_active_q && (cnt_q == '0);\nassign apu_stall = apu_active_q && !(apu_rvalid && id_ready);\nassign id_ready = !apu_stall;",
+      "tags": ["combinational_loop", "unoptflat", "sequential_dependency"],
+      "source_bug_id": "7297",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7297",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "deadlock"
+    },
+    {
+      "name": "counter-based FSM with done from combinational logic",
+      "category": "control_flow",
+      "description": "Code should include a counter that counts down over multiple cycles and a done signal that depends on both the counter terminal count and a combinational loop signal",
+      "snippet": "logic [4:0] cnt_q;\nassign apu_rvalid = apu_active_q && (cnt_q == '0);\nassign done = apu_rvalid && id_ready;\nalways_ff @(posedge clk) if (apu_active_q && cnt_q > 0) cnt_q <= cnt_q - 1;",
+      "tags": ["counter", "fsm", "done_signal", "combinational_loop"],
+      "source_bug_id": "7297",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7297",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "deadlock"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

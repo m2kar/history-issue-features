@@ -1,0 +1,61 @@
+{
+  "tool": "verilator",
+  "issue_number": 2346,
+  "title": "signal SIGSEGV: invalid address in final block",
+  "features": [
+    {
+      "name": "large automatic array in function called from final block",
+      "category": "data_model",
+      "description": "Code should include an automatic function containing a large unpacked array (exceeding 2^18 elements) that is invoked from a final block",
+      "snippet": "typedef bit [127:0] row_t;\nfunction automatic void foo();\n  row_t ary [2**19];\n  $writememh(\"somefile\", ary, 0);\nendfunction\nfinal foo();",
+      "tags": [
+        "automatic_function",
+        "large_array",
+        "final_block",
+        "unpacked_array"
+      ],
+      "source_bug_id": "2346",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2346",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "automatic function with large typedef-based unpacked array",
+      "category": "data_model",
+      "description": "Code should include an automatic function with a large unpacked array using a typedef of multi-bit type, where the array size is 2^19 or larger",
+      "snippet": "typedef bit [127:0] row_t;\nfunction automatic void foo();\n  row_t ary [2**19];\nendfunction",
+      "tags": [
+        "automatic_function",
+        "typedef_array",
+        "large_array",
+        "unpacked_array"
+      ],
+      "source_bug_id": "2346",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2346",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "writememh with large automatic array from final context",
+      "category": "general",
+      "description": "Code should include a $writememh system task operating on a large unpacked array that resides in an automatic function called from a final block",
+      "snippet": "function automatic void foo();\n  bit [127:0] ary [2**19];\n  $writememh(\"somefile\", ary, 0);\nendfunction\nfinal foo();",
+      "tags": [
+        "writememh",
+        "automatic_function",
+        "large_array",
+        "final_block"
+      ],
+      "source_bug_id": "2346",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2346",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ]
+}

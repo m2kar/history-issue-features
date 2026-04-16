@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 7272,
+  "title": "Fix rand_mode(0) on sub-object members not preventing solver write-back",
+  "features": [
+    {
+      "name": "class with rand member of class type and constraint",
+      "category": "data_model",
+      "description": "Code should include a class with a rand member that is another class type, where the inner class member has a constraint",
+      "snippet": "class Inner;\n  rand bit [7:0] val;\n  constraint c { val inside {[8'd10:8'd50]}; }\nendclass\n\nclass Outer;\n  rand Inner nested;\nendclass",
+      "tags": [
+        "class",
+        "rand",
+        "constraint",
+        "nested",
+        "class_member"
+      ],
+      "source_bug_id": "7272",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7272",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "rand_mode_disable on nested random object member",
+      "category": "control_flow",
+      "description": "Code should include calling rand_mode(0) on a member of a nested random object to disable randomization for that specific member",
+      "snippet": "void'(obj.nested.val.rand_mode(0));",
+      "tags": [
+        "rand_mode",
+        "nested",
+        "member_access",
+        "randomization_control"
+      ],
+      "source_bug_id": "7272",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7272",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "solver write_back after rand_mode_disable on nested member",
+      "category": "control_flow",
+      "description": "Code should include a constraint solver attempting write-back to a nested member variable after rand_mode(0) was called on it, expecting the manually set value to be preserved",
+      "snippet": "obj.nested.val = 42;\nif (!obj.randomize()) $stop;\nif (obj.nested.val != 42) $stop;",
+      "tags": [
+        "solver",
+        "write_back",
+        "rand_mode",
+        "nested",
+        "value_preservation"
+      ],
+      "source_bug_id": "7272",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7272",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

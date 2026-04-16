@@ -1,0 +1,45 @@
+{
+  "tool": "verilator",
+  "issue_number": 881,
+  "title": "Incorrect inlining of continuous assignment",
+  "features": [
+    {
+      "name": "continuous assignment inlined into always block with ordering dependency",
+      "category": "control_flow",
+      "description": "Code should include a continuous assignment assigning a wire to another wire, and an always @(*) block that assigns to the source wire before reading the destination wire, creating an ordering dependency that changes simulation semantics when inlined",
+      "snippet": "wire a_w;\nwire [7:0] a_r;\nassign a_w = a_r;\nalways @(*) begin\n  a_r = 0;\n  b_r = a_w;\n  a_r = c_q_r;\nend",
+      "tags": [
+        "continuous_assignment",
+        "always_block",
+        "blocking_assignment",
+        "inlining",
+        "ordering_dependency"
+      ],
+      "source_bug_id": "881",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/881",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "self-referential wire via continuous assignment read in always block",
+      "category": "control_flow",
+      "description": "Code should include a wire driven by continuous assignment that is read within an always block where the source wire is also assigned blocking before the read",
+      "snippet": "wire a_w;\nwire a_r;\nassign a_w = a_r;\nalways @(*) begin\n  a_r = 1'b0;\n  b_r = a_w;\nend",
+      "tags": [
+        "continuous_assignment",
+        "wire",
+        "always_block",
+        "self_reference",
+        "blocking_assignment"
+      ],
+      "source_bug_id": "881",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/881",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

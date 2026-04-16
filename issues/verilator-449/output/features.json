@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 449,
+  "title": "Using public accessor tasks/functions to read and write registers causes BLKANDNBLK error",
+  "features": [
+    {
+      "name": "nonblocking_assignment_with_exported_write_task",
+      "category": "timing",
+      "description": "Code should include a register variable that is the target of a non-blocking assignment and has an exported DPI-C or public verilator task writing to it",
+      "snippet": "logic [7:0] reg_var;\nalways @(posedge clk) reg_var <= 8'h00;\nexport \"DPI-C\" task write_reg = task write_reg(input logic [7:0] val); reg_var = val; endtask",
+      "tags": ["nonblocking_assignment", "exported_task", "dpi_c", "public_verilator"],
+      "source_bug_id": "449",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/449",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "nonblocking_assignment_with_exported_read_function",
+      "category": "timing",
+      "description": "Code should include a register variable that is the target of a non-blocking assignment and has an exported DPI-C or public verilator function reading it",
+      "snippet": "logic [7:0] reg_var;\nalways @(posedge clk) reg_var <= 8'h00;\nexport \"DPI-C\" function read_reg = function logic [7:0] read_reg(); return reg_var; endfunction",
+      "tags": ["nonblocking_assignment", "exported_function", "dpi_c", "public_verilator"],
+      "source_bug_id": "449",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/449",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "dual_exported_accessor_for_nonblocking_register",
+      "category": "timing",
+      "description": "Code should include a register variable subject to non-blocking assignment that has both an exported write task and exported read function accessing it, which triggers BLKANDNBLK error",
+      "snippet": "logic [7:0] reg_var;\nalways @(posedge clk) reg_var <= 8'h42;\nexport \"DPI-C\" task write_reg = task write_reg(input logic [7:0] val); reg_var = val; endtask\nexport \"DPI-C\" function read_reg = function logic [7:0] read_reg(); return reg_var; endfunction",
+      "tags": ["nonblocking_assignment", "exported_task", "exported_function", "blkandnblk", "scheduling"],
+      "source_bug_id": "449",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/449",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

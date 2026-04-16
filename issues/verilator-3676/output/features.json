@@ -1,0 +1,96 @@
+{
+  "tool": "verilator",
+  "issue_number": 3676,
+  "title": "V3DfgDfgToAst should have removed undriven sources on v5 master",
+  "features": [
+    {
+      "name": "2D unpacked array with parameter-driven sizing",
+      "category": "data_model",
+      "description": "Code should include a 2D unpacked wire array where both dimensions use localparam computed from a module parameter",
+      "snippet": "localparam levels_lp = $clog2(width_p);\nlocalparam aligned_width_lp = 1 << $clog2(width_p);\nwire [levels_lp:0][aligned_width_lp-1:0] addr;",
+      "tags": [
+        "unpacked_array",
+        "localparam",
+        "2D_array",
+        "parameter"
+      ],
+      "source_bug_id": "3676",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3676",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "nested for-generate loops with genvar",
+      "category": "control_flow",
+      "description": "Code should include nested for-generate loops using genvar iterators, where outer loop bounds depend on localparam",
+      "snippet": "genvar level;\ngenvar segment;\nfor (level = 1; level < levels_lp+1; level=level+1)\n  begin : rof\n    for (segment = 0; segment < segments_lp; segment=segment+1)\n      begin : rof1",
+      "tags": [
+        "for_generate",
+        "genvar",
+        "nested",
+        "localparam_dependency"
+      ],
+      "source_bug_id": "3676",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3676",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "conditional generate inside for-generate",
+      "category": "control_flow",
+      "description": "Code should include an if-generate statement nested inside a for-generate loop with genvar",
+      "snippet": "if (level == 1)\n  assign addr[level][(segment*segment_slot_lp)+:segment_width_lp] = { vs[0] };\nelse\n  begin : fi\n    assign addr[level][(segment*segment_slot_lp)+:segment_width_lp]\n    = { vs[0], addr[level-1][...] };\n  end",
+      "tags": [
+        "if_generate",
+        "for_generate",
+        "nested_generate"
+      ],
+      "source_bug_id": "3676",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3676",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "undriven elements in unpacked array with generate",
+      "category": "data_model",
+      "description": "Code should include a multi-dimensional unpacked array where some elements remain undriven due to generate loop bounds",
+      "snippet": "wire [levels_lp:0][aligned_width_lp-1:0] v;\nassign v[0] = i << (aligned_width_lp - width_p);\n// Some v[level] elements unassigned based on segment_slot_lp",
+      "tags": [
+        "unpacked_array",
+        "undriven",
+        "generate",
+        "partial_drive"
+      ],
+      "source_bug_id": "3676",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3676",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "bit slicing with dynamic slice width",
+      "category": "data_model",
+      "description": "Code should include variable slice width assignment using +: syntax where width is a localparam",
+      "snippet": "localparam segment_width_lp = level;\nassign addr[level][(segment*segment_slot_lp)+:segment_width_lp] = ...;",
+      "tags": [
+        "bit_slice",
+        "variable_width",
+        "plus_colon",
+        "localparam"
+      ],
+      "source_bug_id": "3676",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/3676",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

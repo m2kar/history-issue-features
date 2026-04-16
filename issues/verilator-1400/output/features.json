@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 1400,
+  "title": "Bug: verilator sometimes fails to detect electrical short",
+  "features": [
+    {
+      "name": "electrical short via concatenation with submodule output",
+      "category": "data_model",
+      "description": "Code should include a signal driven by both direct assignment and via concatenation from a submodule output, creating an electrical short that Verilator should detect but misses",
+      "snippet": "logic [63:0] sig;\nsubmodule u_sub (.out({sig, 1'b0}));\nassign sig = 64'h0;",
+      "tags": ["electrical_short", "concatenation", "submodule", "multiple_drivers"],
+      "source_bug_id": "1400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1400",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "wide concatenation assignment bypasses short detection",
+      "category": "data_model",
+      "description": "Code should include concatenation on the left-hand side of assignment where the concatenated signal has multiple drivers, causing Verilator to fail to detect the electrical short",
+      "snippet": "logic [31:0] a;\nlogic [31:0] b;\nassign {a, b} = 64'h0;\nassign a = 32'h1;",
+      "tags": ["electrical_short", "concatenation", "lhand_concat", "multiple_drivers"],
+      "source_bug_id": "1400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1400",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "submodule output exceeding 32 bits used in assignment",
+      "category": "data_model",
+      "description": "Code should include a submodule with an output width greater than 32 bits where the output is assigned to a signal, combined with direct driving of that signal creating an electrical short",
+      "snippet": "logic [63:0] data;\nsubmod #(.WIDTH(64)) u (.out(data));\nassign data = 64'h0;",
+      "tags": ["submodule", "wide_output", "electrical_short", "parameterized_width"],
+      "source_bug_id": "1400",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1400",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

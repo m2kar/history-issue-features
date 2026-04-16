@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 9700,
+  "title": "[FIRRTL] Dedup: accidentally processes modules before referenced classes",
+  "features": [
+    {
+      "name": "firrtl wire with class type reference",
+      "category": "data_model",
+      "description": "Code should include a FIRRTL wire whose type is a class reference (firrtl.class), so the wire is typed as an object handle to a named class",
+      "snippet": "firrtl.module private @Foo() {\n  %w = firrtl.wire : !firrtl.class<@MyClass()>\n}",
+      "tags": ["firrtl", "wire", "class_type", "object_reference", "dedup"],
+      "source_bug_id": "9700",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9700",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "two private firrtl modules with wires referencing distinct public classes",
+      "category": "data_model",
+      "description": "Code should include two structurally identical private FIRRTL modules that each contain a wire typed as a distinct public class, making the modules appear hash-equal while actually referencing different non-deduplicable classes",
+      "snippet": "firrtl.module private @Foo() {\n  %w = firrtl.wire : !firrtl.class<@Spam()>\n}\nfirrtl.module private @Bar() {\n  %w = firrtl.wire : !firrtl.class<@Eggs()>\n}\nfirrtl.class @Spam() {}\nfirrtl.class @Eggs() {}",
+      "tags": ["firrtl", "dedup", "class_type", "private_module", "public_class", "wire"],
+      "source_bug_id": "9700",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9700",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "firrtl circuit triggering dedup across modules with distinct public class wire types",
+      "category": "general",
+      "description": "Code should include a FIRRTL circuit where a top-level module instantiates two private modules whose only structural difference is a wire typed as distinct public classes, so the firrtl-dedup pass processes the parent modules before their class references are resolved in the dedup map",
+      "snippet": "firrtl.circuit \"Top\" {\n  firrtl.module @Top() {\n    firrtl.instance foo @Foo()\n    firrtl.instance bar @Bar()\n  }\n  firrtl.module private @Foo() {\n    %w = firrtl.wire : !firrtl.class<@Spam()>\n  }\n  firrtl.module private @Bar() {\n    %w = firrtl.wire : !firrtl.class<@Eggs()>\n  }\n  firrtl.class @Spam() {}\n  firrtl.class @Eggs() {}\n}",
+      "tags": ["firrtl", "dedup", "class_type", "public_class", "instance_graph", "post_order"],
+      "source_bug_id": "9700",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/9700",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

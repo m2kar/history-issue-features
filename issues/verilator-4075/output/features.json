@@ -1,0 +1,62 @@
+{
+  "tool": "verilator",
+  "issue_number": 4075,
+  "title": "Incorrect values in trace from variable written with blocking assignment in process with various timing controls",
+  "features": [
+    {
+      "name": "blocking assignment with mixed timing controls in clocked process",
+      "category": "control_flow",
+      "description": "Code should include a blocking assignment to a logic signal inside an always block that uses both event control @(posedge clk) and blocking delay (#1 or #10) as timing controls",
+      "snippet": "always @(posedge clk) begin\n  ready = 1'b0;\n  #10;\n  ready = 1'b1;\nend",
+      "tags": [
+        "blocking_assignment",
+        "timing_control",
+        "event_control",
+        "delay"
+      ],
+      "source_bug_id": "4075",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4075",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "forever loop with blocking assignments and timing controls",
+      "category": "control_flow",
+      "description": "Code should include a forever loop where blocking assignments to logic variables are interleaved with timing controls like @(posedge clk) and for-loop delays",
+      "snippet": "forever begin\n  ready = 1'b0;\n  for (int i = 0; i < 10; ++i)\n    @(posedge clk);\n  ready = 1'b1;\n  @(posedge clk);\n  #1;\nend",
+      "tags": [
+        "forever_loop",
+        "blocking_assignment",
+        "timing_control",
+        "for_loop"
+      ],
+      "source_bug_id": "4075",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4075",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "trace of blocking-assigned variable with post-clock #1 delay",
+      "category": "data_model",
+      "description": "Code should include a logic variable assigned via blocking assignment after @(posedge clk); #1; sequence, with FST tracing enabled",
+      "snippet": "logic ready;\nalways @(posedge clk) begin\n  @(posedge clk);\n  #1;\n  ready = 1'b1;\nend",
+      "tags": [
+        "trace",
+        "blocking_assignment",
+        "timing_control",
+        "delay",
+        "fst"
+      ],
+      "source_bug_id": "4075",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4075",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 7992,
+  "title": "[FIRRTL] IMDCE: not removing all dead instances",
+  "features": [
+    {
+      "name": "dead hierarchical instance with unused output",
+      "category": "general",
+      "description": "Code should include a module instantiation where the instantiated module itself contains sub-instances (hierarchical), and the top-level instance's output port is entirely unused, making the instance a dead code candidate for elimination",
+      "snippet": "module PassThrough(\n  input  in,\n  output out\n);\n  assign out = in;\nendmodule\n\nmodule Child(\n  input  in,\n  output out\n);\n  PassThrough output_chain (.in(in), .out(out));\nendmodule\n\nmodule Foo(\n  input  in,\n  output out\n);\n  // dead: output is unused\n  Child m (.in(in), .out());\n  // live: output is used\n  Child m2 (.in(in), .out(out));\nendmodule",
+      "tags": ["dead_code_elimination", "hierarchical_instantiation", "unused_output", "imdce"],
+      "source_bug_id": "circt-7992",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7992",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mixed-liveness instances of same module",
+      "category": "general",
+      "description": "Code should include two instances of the same module where one instance has its output connected to a used signal and the other instance's output is unconnected, creating a mixed-liveness scenario for dead code elimination",
+      "snippet": "module Child(\n  input  in,\n  output out\n);\n  assign out = in;\nendmodule\n\nmodule Foo(\n  input  in,\n  output out\n);\n  Child dead_inst (.in(in), .out());\n  Child live_inst (.in(in), .out(out));\nendmodule",
+      "tags": ["dead_code_elimination", "mixed_liveness", "module_instance", "unused_port"],
+      "source_bug_id": "circt-7992",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7992",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dead leaf instance versus dead hierarchical instance elimination",
+      "category": "general",
+      "description": "Code should include two dead instances — one of a leaf module (no sub-instances) and one of a hierarchical module (contains sub-instances) — both with unused outputs, to expose differential behavior in dead-instance elimination",
+      "snippet": "module Leaf(\n  input  in,\n  output out\n);\n  assign out = in;\nendmodule\n\nmodule Hier(\n  input  in,\n  output out\n);\n  Leaf sub (.in(in), .out(out));\nendmodule\n\nmodule Top(\n  input in\n);\n  // both outputs unused: dead\n  Leaf   dead_leaf (.in(in), .out());\n  Hier   dead_hier (.in(in), .out());\nendmodule",
+      "tags": ["dead_code_elimination", "hierarchical_instantiation", "leaf_module", "imdce", "unused_output"],
+      "source_bug_id": "circt-7992",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7992",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

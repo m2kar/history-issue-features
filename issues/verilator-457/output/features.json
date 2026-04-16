@@ -1,0 +1,58 @@
+{
+  "tool": "verilator",
+  "issue_number": 457,
+  "title": "Problem with simple clock gating",
+  "features": [
+    {
+      "name": "NBA with intra-assignment delay in clocked always block",
+      "category": "timing",
+      "description": "Code should include a non-blocking assignment with intra-assignment delay (#N) inside a clocked always block, where the delayed assignment causes the RHS value to be visible only after the current delta cycle",
+      "snippet": "always @ (posedge clk) en_reg <= #1 en;",
+      "tags": [
+        "nba",
+        "intra_assignment_delay",
+        "clocked_always"
+      ],
+      "source_bug_id": "457",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/457",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "clock gating with registered enable",
+      "category": "timing",
+      "description": "Code should include a clock gating circuit where the enable signal is registered with a delay before being ANDed with the clock signal, causing the gated clock to lag behind the original",
+      "snippet": "assign gated_clk = (in_clk & en_reg);\nalways @ (posedge in_clk) en_reg <= #1 en;",
+      "tags": [
+        "clock_gate",
+        "registered_enable",
+        "and_gate"
+      ],
+      "source_bug_id": "457",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/457",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "gated clock used in separate always block sensitivity",
+      "category": "control_flow",
+      "description": "Code should include a clock gating design where the gated clock is used as the clock signal in a separate module's always block, creating timing dependency across module boundaries",
+      "snippet": "module clockgate(output out_clk, input in_clk, en);\nwire en_reg;\nassign out_clk = in_clk & en_reg;\nalways @(posedge in_clk) en_reg <= #1 en;\nendmodule\n\nmodule test(output results, input dclk, test_sig);\nreg results;\nalways @(posedge dclk) results <= test_sig ? 1'b1 : 1'b0;\nendmodule",
+      "tags": [
+        "gated_clock",
+        "cross_module_clock",
+        "timing_dependency"
+      ],
+      "source_bug_id": "457",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/457",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

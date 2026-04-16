@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 5568,
+  "title": "Fix can't locate scope error in interface task (#5462)",
+  "features": [
+    {
+      "name": "delayed assignment in static interface task",
+      "category": "timing",
+      "description": "Code should include a delayed (non-blocking) assignment inside a static interface task where the right-hand side uses a concatenation with a function input parameter",
+      "snippet": "interface iface #(parameter DWIDTH = 32)();\n  localparam TOTAL_PACKED_WIDTH = DWIDTH + 1;\n  logic [DWIDTH - 1:0] data;\n  task static unpack(input logic [TOTAL_PACKED_WIDTH-1:0] packed_in);\n    logic sop_nc;\n    {data, sop_nc} <= packed_in;\n  endtask\nendinterface",
+      "tags": ["interface", "task", "delayed_assignment", "static_task", "concatenation"],
+      "source_bug_id": "5568",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/5568",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "interface task with modport import and delayed assignment",
+      "category": "data_model",
+      "description": "Code should include an interface with a modport that imports a task, where the imported task uses a delayed assignment with concatenation on a parameter-sized input",
+      "snippet": "interface iface #(parameter DWIDTH = 32)();\n  localparam TOTAL_PACKED_WIDTH = DWIDTH + 1;\n  modport Tx(output data, import unpack);\n  logic [DWIDTH - 1:0] data;\n  task static unpack(input logic [TOTAL_PACKED_WIDTH-1:0] packed_in);\n    logic sop_nc;\n    {data, sop_nc} <= packed_in;\n  endtask\nendinterface",
+      "tags": ["interface", "modport", "task_import", "delayed_assignment", "parameter"],
+      "source_bug_id": "5568",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/5568",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

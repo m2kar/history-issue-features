@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 1409,
+  "title": "Incorrect Result of Cascading Module Using Generate Statement",
+  "features": [
+    {
+      "name": "local wire array for cascading carry in generate block",
+      "category": "data_model",
+      "description": "Code should include a generate block containing a local wire array declaration that is used to connect module instantiation outputs to inputs across loop iterations",
+      "snippet": "generate begin: L\nwire car[31:0];\nfull_adder #(.width_p(1)) x0(.opA_i(0),.opB_i(opA_i[0]),.opC_i(acc_r[0]),.res_o(acc_n[0]),.car_o(car[0]));\nfor(genvar i=1; i<32; ++i) begin: S\nfull_adder #(.width_p(1)) x(.opA_i(car[i-1]),.opB_i(opA_i[i]),.opC_i(acc_r[i]),.res_o(acc_n[i]),.car_o(car[i]));\nend\nendgenerate",
+      "tags": ["generate_for", "local_wire", "carry_chain", "cascaded_modules"],
+      "source_bug_id": "1409",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1409",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cascaded module instantiation with carry chaining via genvar loop",
+      "category": "control_flow",
+      "description": "Code should include a for loop using genvar that instantiates modules where each instance's input port receives the output port of the previous iteration",
+      "snippet": "for(genvar i=1; i<32; ++i) begin: S\nfull_adder #(.width_p(1)) x(.opA_i(car[i-1]),.opB_i(opA_i[i]),.opC_i(acc_r[i]),.res_o(acc_n[i]),.car_o(car[i]));\nend",
+      "tags": ["genvar_loop", "module_instantiation", "carry_chaining", "output_to_input"],
+      "source_bug_id": "1409",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1409",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ripple carry adder using generate cascaded full adders",
+      "category": "data_model",
+      "description": "Code should include a ripple carry adder structure where each full adder stage takes carry output from the previous stage as its carry input, built using generate statements",
+      "snippet": "generate begin: FULL_ADDER_STRING\nwire car[31:0];\nfull_adder #(.width_p(1)) x0(.opA_i(0),.opC_i(acc_r[0]),.car_o(car[0]));\nfor(genvar i=1; i<32; ++i) begin: STRING\nfull_adder #(.width_p(1)) x(.opA_i(car[i-1]),.opC_i(acc_r[i]),.car_o(car[i]));\nend\nendgenerate",
+      "tags": ["ripple_carry", "generate_cascade", "full_adder", "carry_propagation"],
+      "source_bug_id": "1409",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/1409",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

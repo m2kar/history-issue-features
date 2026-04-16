@@ -1,0 +1,76 @@
+{
+  "tool": "verilator",
+  "issue_number": 4209,
+  "title": "Different results when `-fno-split` is given due to blocking assignment",
+  "features": [
+    {
+      "name": "blocking assignment to reg in sequential always block",
+      "category": "control_flow",
+      "description": "Code should include a blocking assignment (=) to a reg variable inside a sequential always block (@posedge clock)",
+      "snippet": "always @(posedge clk) begin if ((-wire1)) reg0 <= wire1; else reg1 = wire0; end",
+      "tags": [
+        "blocking_assignment",
+        "sequential_logic",
+        "clocked_always"
+      ],
+      "source_bug_id": "4209",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4209",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mixed blocking and nonblocking assignments in same always block",
+      "category": "control_flow",
+      "description": "Code should include both blocking (=) and non-blocking (<=) assignments to regs inside the same sequential always block",
+      "snippet": "always @(posedge clk) begin if (wire0[1]) reg4 <= (~&wire2); if ((wire2 * wire2)) reg3 <= $unsigned(wire2); else reg3 <= reg4; end",
+      "tags": [
+        "blocking_assignment",
+        "nonblocking_assignment",
+        "mixed_assignment",
+        "sequential_logic"
+      ],
+      "source_bug_id": "4209",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4209",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple clocked always blocks with inter-block reg dependencies",
+      "category": "control_flow",
+      "description": "Code should include multiple always @(posedge clk) blocks where one block reads a reg written by another block in the same clock cycle",
+      "snippet": "always @(posedge clk) begin if ((-wire1)) reg0 <= wire1; else reg1 = wire0; end\nalways @(posedge clk) begin reg2 <= {reg0}; end",
+      "tags": [
+        "multiple_always_blocks",
+        "inter_block_dependency",
+        "sequential_logic"
+      ],
+      "source_bug_id": "4209",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4209",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "concatenation with mixed reg and wire types",
+      "category": "data_model",
+      "description": "Code should include a concatenation operator combining reg variables and wire expressions",
+      "snippet": "assign wire2 = {reg2, wire3, reg0, reg1};",
+      "tags": [
+        "concatenation",
+        "mixed_types",
+        "combinational_logic"
+      ],
+      "source_bug_id": "4209",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4209",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

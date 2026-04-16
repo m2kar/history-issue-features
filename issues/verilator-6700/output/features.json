@@ -1,0 +1,67 @@
+{
+  "tool": "verilator",
+  "issue_number": 6700,
+  "title": "Fix randomizer calling delete on node with backlink",
+  "features": [
+    {
+      "name": "local_rand_member_in_constraint",
+      "category": "data_model",
+      "description": "Code should include a class with a local rand member of user-defined type that is referenced in a constraint expression, causing cross-reference backlinks in the AST during randomization.",
+      "snippet": "class reg_R extends uvm_pkg::uvm_reg; rand int value; local rand uvm_pkg::uvm_reg_field _dummy; constraint _dummy_is_reg {_dummy.value == value;} endclass",
+      "tags": ["local", "rand", "constraint", "cross-reference", "uvm"],
+      "source_bug_id": "verilator-6700",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6700",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "virtual_function_rand_mode_call",
+      "category": "data_model",
+      "description": "Code should include a virtual function that calls rand_mode() method on a rand variable of user-defined type, triggering backlink issues during AST node deletion in randomization pass.",
+      "snippet": "virtual class uvm_sequencer_param_base #(type REQ = int, type RSP = int); virtual function void send_request(uvm_sequence_item t); REQ param_t; if (0 == param_t.randomize()) begin end endfunction endclass",
+      "tags": ["virtual", "function", "rand_mode", "randomize", "parameterized"],
+      "source_bug_id": "verilator-6700",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6700",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "rand_field_typed_as_uvm_object",
+      "category": "data_model",
+      "description": "Code should include a class extending uvm_sequence_item with a rand field typed as uvm_object base class, used in a context that triggers randomization backlink issues.",
+      "snippet": "class uvm_reg_item extends uvm_sequence_item; rand uvm_object extension; endclass",
+      "tags": ["rand", "uvm_object", "inheritance", "sequence_item"],
+      "source_bug_id": "verilator-6700",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6700",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "extern_virtual_function_rand_mode",
+      "category": "data_model",
+      "description": "Code should include an extern virtual function that calls rand_mode() on a rand member, with implementation outside class body, triggering AST backlink issues during randomization.",
+      "snippet": "class uvm_reg_field extends uvm_object; rand int value; extern virtual function bit get_rand_mode(); endclass function bit uvm_reg_field::get_rand_mode(); return bit'(value.rand_mode()); endfunction",
+      "tags": ["extern", "virtual", "function", "rand_mode"],
+      "source_bug_id": "verilator-6700",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6700",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "constraint_cross_reference_different_rand_types",
+      "category": "data_model",
+      "description": "Code should include a constraint that cross-references a local rand member with a regular rand member using dot notation, creating AST backlinks that are not properly cleaned before node deletion.",
+      "snippet": "constraint _dummy_is_reg {_dummy.value == value;}",
+      "tags": ["constraint", "cross-reference", "dot", "local", "rand"],
+      "source_bug_id": "verilator-6700",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6700",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

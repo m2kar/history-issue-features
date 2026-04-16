@@ -1,0 +1,75 @@
+{
+  "tool": "verilator",
+  "issue_number": 6152,
+  "title": "Fix coverage + wide ternary bug",
+  "features": [
+    {
+      "name": "wide ternary returning concatenation",
+      "category": "data_model",
+      "description": "Code should include a ternary operator that returns a concatenation of signals spanning multiple bit widths (e.g., 1+32+128 bits)",
+      "snippet": "logic [127:0] a, b, c, d, e, f;\nlogic cond;\nwire [160:0] result = cond ? {a, b, c} : {d, e, f};",
+      "tags": [
+        "ternary",
+        "concatenation",
+        "wide"
+      ],
+      "source_bug_id": "6152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6152",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non-blocking assignment with concatenation LHS",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment where the left-hand side is a concatenation of signals from interface members",
+      "snippet": "interface intf();\nlogic foo;\nlogic [31:0] bar;\nlogic [127:0] baz;\nendinterface\n\nintf intf_sel();\nalways @(posedge clk) begin\n{intf_sel.foo, intf_sel.bar, intf_sel.baz} <= cond ? {a, b, c} : {d, e, f};\nend",
+      "tags": [
+        "non-blocking_assignment",
+        "concatenation",
+        "interface"
+      ],
+      "source_bug_id": "6152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6152",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "interface with mixed-width signal members",
+      "category": "data_model",
+      "description": "Code should include an interface with signal members of varying bit widths spanning 1, 32, and 128 bits",
+      "snippet": "interface intf();\nlogic foo;\nlogic [31:0] bar;\nlogic [127:0] baz;\nendinterface",
+      "tags": [
+        "interface",
+        "mixed_width",
+        "signals"
+      ],
+      "source_bug_id": "6152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6152",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "array of interface instances with conditional selection",
+      "category": "data_model",
+      "description": "Code should include an array of interface instances selected via ternary operator based on a condition",
+      "snippet": "interface intf();\nlogic [31:0] bar;\nendinterface\n\nintf intfs [2] ();\nwire [31:0] result = cyc[0] ? intfs[1].bar : intfs[0].bar;",
+      "tags": [
+        "interface",
+        "array",
+        "ternary_selection"
+      ],
+      "source_bug_id": "6152",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/6152",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

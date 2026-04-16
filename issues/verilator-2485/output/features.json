@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2485,
+  "title": "Unsupported: The structure name is the same as the variable name",
+  "features": [
+    {
+      "name": "packed union member with name identical to its typedef type",
+      "category": "data_model",
+      "description": "Code should include a packed union where at least one member's identifier is exactly the same as the typedef name used as its type (e.g., `t1 t1;`), causing the parser to see the member name as a TYPE-IDENTIFIER token",
+      "snippet": "typedef struct packed {\n  logic [1:0] b1;\n  logic [1:0] b2;\n} t1;\ntypedef struct packed {\n  logic [31:0] a;\n  logic [31:0] b;\n} t2;\ntypedef union packed {\n  t1 t1;\n  t2 t2;\n} t3;",
+      "tags": ["packed_union", "typedef", "member_name_collision", "parser", "struct"],
+      "source_bug_id": "2485",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2485",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "nested dot access through union member whose name equals its type",
+      "category": "data_model",
+      "description": "Code should include a hierarchical member access expression where an intermediate field name is the same as its typedef type name, such as `bus.t2.a` where `t2` is both the type and the member name of a packed union",
+      "snippet": "typedef struct packed {\n  logic [31:0] a;\n  logic [31:0] b;\n} t2;\ntypedef union packed {\n  t2 t2;\n} myunion;\nmodule m (\n  input myunion bus,\n  output logic [31:0] out\n);\n  always_comb out = bus.t2.a;\nendmodule",
+      "tags": ["packed_union", "member_access", "dot_notation", "name_collision", "typedef"],
+      "source_bug_id": "2485",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2485",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "packed union with heterogeneous packed struct members",
+      "category": "data_model",
+      "description": "Code should include a packed union that aggregates two or more distinct packed struct typedefs as its members, allowing bit-level reinterpretation through different struct views",
+      "snippet": "typedef struct packed {\n  logic [1:0] b1;\n  logic [1:0] b2;\n} t1;\ntypedef struct packed {\n  logic [31:0] a;\n  logic [31:0] b;\n} t2;\ntypedef union packed {\n  t1 view1;\n  t2 view2;\n} myunion;",
+      "tags": ["packed_union", "packed_struct", "typedef", "reinterpretation", "heterogeneous"],
+      "source_bug_id": "2485",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2485",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

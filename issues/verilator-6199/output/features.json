@@ -1,0 +1,58 @@
+{
+  "tool": "verilator",
+  "issue_number": 6199,
+  "title": "Incorrect handling of `x` in if blocks (`if (x) else` ) ?",
+  "features": [
+    {
+      "name": "if-else with x-valued condition",
+      "category": "control_flow",
+      "description": "Code should include an if-else block where the condition evaluates to x (unknown value) and the else branch contains a non-blocking assignment",
+      "snippet": "logic q1 = 1'bx;\nlogic condition = ~q1;\nalways @(posedge clk) begin\n  if (condition) begin end\n  else begin out2 <= 1'b1; end\nend",
+      "tags": [
+        "if_else",
+        "x_condition",
+        "unknown_value"
+      ],
+      "source_bug_id": "6199",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6199",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "negation of x-valued signal",
+      "category": "data_model",
+      "description": "Code should include a unary NOT operator applied to a signal that has an unknown (x) value",
+      "snippet": "logic q1 = 1'bx;\nlogic cond = ~q1;",
+      "tags": [
+        "unary_not",
+        "x_propagation",
+        "unknown_value"
+      ],
+      "source_bug_id": "6199",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6199",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "non-blocking assignment in clocked always block with x-driven condition",
+      "category": "timing",
+      "description": "Code should include a non-blocking assignment in an always @(posedge clk) block where the condition driving control flow derives from an x-valued signal",
+      "snippet": "always @(posedge clk) begin q1 <= 0; end\nassign cond = ~q1;\nalways @(posedge clk) begin if (cond) begin end else begin out2 <= 1'b1; end end",
+      "tags": [
+        "nonblocking_assignment",
+        "clocked_always",
+        "x_driven_condition"
+      ],
+      "source_bug_id": "6199",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6199",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

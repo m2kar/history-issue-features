@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 9481,
+  "title": "Fix bit-select sensitivity lists leaking LLHD ops (Fixes #9469)",
+  "features": [
+    {
+      "name": "always_ff posedge clock from bit-select of multi-bit signal",
+      "category": "timing",
+      "description": "Code should include an always_ff block whose posedge clock is a single-bit select from a wide input signal, e.g. @(posedge data[0])",
+      "snippet": "input [63:0] clkin_data;\nreg [5:0] q;\nalways_ff @(posedge clkin_data[0])\n  q <= q + 1;",
+      "tags": ["always_ff", "bit_select", "sensitivity_list", "posedge", "clock"],
+      "source_bug_id": "9481",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9481",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "always_ff with async reset using two bit-selects in sensitivity list",
+      "category": "timing",
+      "description": "Code should include an always_ff block with both posedge clock and negedge reset drawn from bit-selects of the same wide input vector",
+      "snippet": "input [63:0] clkin_data;\nreg [5:0] q;\nalways_ff @(posedge clkin_data[0], negedge clkin_data[32])\n  if (!clkin_data[32]) q <= 6'h00;\n  else q <= q + 1;",
+      "tags": ["always_ff", "bit_select", "sensitivity_list", "posedge", "negedge", "async_reset"],
+      "source_bug_id": "9481",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9481",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "wire alias of bit-select used as clock in always_ff",
+      "category": "data_model",
+      "description": "Code should include a wire assigned from a bit-select of a wide input, then used as the posedge clock in an always_ff sensitivity list",
+      "snippet": "input [63:0] clkin_data;\nwire clk = clkin_data[0];\nwire rst = clkin_data[32];\nreg [5:0] q;\nalways_ff @(posedge clk)\n  if (!rst) q <= 6'h00;\n  else q <= q + 1;",
+      "tags": ["wire", "bit_select", "alias", "always_ff", "clock", "sensitivity_list"],
+      "source_bug_id": "9481",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9481",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "always_latch with bit-select enable from wide input",
+      "category": "control_flow",
+      "description": "Code should include an always_latch block whose enable/reset condition is a bit-select from a wide multi-bit input signal",
+      "snippet": "input [63:0] clkin_data;\ninput [2:0] d;\nreg [2:0] q;\nalways_latch\n  if (!clkin_data[32]) q = 3'h0;\n  else q = d;",
+      "tags": ["always_latch", "bit_select", "latch", "enable", "wide_input"],
+      "source_bug_id": "9481",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/9481",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 8,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

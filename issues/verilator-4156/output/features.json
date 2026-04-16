@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 4156,
+  "title": "SVA assertions have false positives when used in a sub-module",
+  "features": [
+    {
+      "name": "sva assertion with dollar_past in sub-module",
+      "category": "sva_property",
+      "description": "Code should include an SVA assertion using $past() operator on an input signal (en or rst_n) inside a submodule instantiated in a design",
+      "snippet": "always @(posedge clk)\nbegin\n\tif($time > 1)\n\tbegin\n\t\tassert($past(en || !rst_n) || $stable(word_out));\n\tend\nend",
+      "tags": [
+        "sva",
+        "assertion",
+        "dollar_past",
+        "submodule"
+      ],
+      "source_bug_id": "4156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4156",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sva assertion checking register stability with dollar_past",
+      "category": "sva_property",
+      "description": "Code should include an SVA assertion checking signal stability over time using $past() combined with $stable in a non-top-level module",
+      "snippet": "assert($past(!en || !rst_n) || ($past(word_in) == word_out));",
+      "tags": [
+        "sva",
+        "assertion",
+        "dollar_past",
+        "dollar_stable",
+        "register"
+      ],
+      "source_bug_id": "4156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4156",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "submodule with registered logic and assertions underifdef",
+      "category": "sva_property",
+      "description": "Code should include a parameterized register module with sequential logic and conditional SVA assertions under `ifdef ASSERT that references internal signals via $past",
+      "snippet": "always @(posedge clk)\nbegin\n\tif(en) word_out <= word_in;\n\tif(!rst_n) word_out <= RESET_VALUE;\nend\n`ifdef ASSERT\n\talways @(posedge clk)\n\tbegin\n\t\tif($time > 1)\n\t\t\tassert($past(rst_n) || word_out == RESET_VALUE);\n\tend\n`endif",
+      "tags": [
+        "sva",
+        "ifdef_assert",
+        "registered_logic",
+        "submodule",
+        "dollar_past"
+      ],
+      "source_bug_id": "4156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4156",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

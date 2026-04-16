@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 7435,
+  "title": "[FIRRTL] CheckCombLoops: does not find all comb loops",
+  "features": [
+    {
+      "name": "self-driven wire creating combinational loop",
+      "category": "data_model",
+      "description": "Code should include a wire that is assigned to itself via a continuous assignment, forming a direct combinational loop on a net",
+      "snippet": "wire [7:0] w;\nassign w = w;\nwire [7:0] o;\nassign o = w;",
+      "tags": ["combinational_loop", "self_assignment", "wire", "continuous_assign"],
+      "source_bug_id": "circt-7435",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7435",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "output port driven with high-impedance literal from undriven wire",
+      "category": "data_model",
+      "description": "Code should include an output port assigned a high-impedance literal value due to an unresolved or undriven wire propagating to the port",
+      "snippet": "module Bar(\n  output [7:0] o\n);\n  assign o = 8'bz;\nendmodule",
+      "tags": ["high_impedance", "output_port", "undriven_wire", "z_literal"],
+      "source_bug_id": "circt-7435",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7435",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-module design with isolated combinational loop in non-top module",
+      "category": "data_model",
+      "description": "Code should include a circuit with multiple independent top-level modules where one non-primary module contains a self-driven wire, exercising comb-loop checks across module boundaries",
+      "snippet": "module Foo();\nendmodule\n\nmodule Bar(\n  output [7:0] o\n);\n  wire [7:0] w;\n  assign w = w;\n  assign o = w;\nendmodule",
+      "tags": ["multi_module", "combinational_loop", "non_top_module", "wire"],
+      "source_bug_id": "circt-7435",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7435",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

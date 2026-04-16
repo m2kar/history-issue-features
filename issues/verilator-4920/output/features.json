@@ -1,0 +1,78 @@
+{
+  "tool": "verilator",
+  "issue_number": 4920,
+  "title": "Cell parameters lost when upper module used with default and non-default parameters",
+  "features": [
+    {
+      "name": "parameterized module with default value",
+      "category": "data_model",
+      "description": "Code should include a module with a integer parameter that has a default value",
+      "snippet": "module add2 #(parameter int N = 3)\n  (input [N-1:0] d0, d1,\n   output [N-1:0] y);\n  assign y = d1 + d0;\nendmodule",
+      "tags": [
+        "parameter",
+        "module",
+        "default_value"
+      ],
+      "source_bug_id": "4920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested module instantiation with parent parameter",
+      "category": "data_model",
+      "description": "Code should include a module that instantiates a child module using its own parameter value via #(N) syntax",
+      "snippet": "module sub3 #(parameter int N = 3)\n  (input [N-1:0] d0, d1, d2,\n   output [N-1:0] y);\n  wire [N-1:0] output_ab;\n  add2 #(N) ab(.d0(d0), .d1(d1), .y(output_ab));\nendmodule",
+      "tags": [
+        "parameter",
+        "instantiation",
+        "hierarchical",
+        "parameter_passing"
+      ],
+      "source_bug_id": "4920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4920",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "transitive parameter propagation across module hierarchy",
+      "category": "data_model",
+      "description": "Code should include a three-level module hierarchy where top module passes non-default parameter to middle module, which passes its parameter to bottom module",
+      "snippet": "// Level 1: bottom\nmodule add2 #(parameter int N = 3)(input [N-1:0] d0, d1, output [N-1:0] y);\n  assign y = d1 + d0;\nendmodule\n// Level 2: middle\nmodule sub3 #(parameter int N = 3)(input [N-1:0] d0, d1, d2, output [N-1:0] y);\n  wire [N-1:0] output_ab;\n  add2 #(N) ab(.d0(d0), .d1(d1), .y(output_ab));\nendmodule\n// Level 3: top instantiated with non-default\nmodule top();\n  sub3 #(9) dut(.d0(d0), .d1(d1), .d2(d2), .y(Y));\nendmodule",
+      "tags": [
+        "parameter",
+        "transitive",
+        "hierarchy",
+        "propagation"
+      ],
+      "source_bug_id": "4920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4920",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unused module with conflicting default parameter",
+      "category": "data_model",
+      "description": "Code should include an unused parameterized module with default parameter value that conflicts with a used module's parameter override",
+      "snippet": "module add2 #(parameter int N = 3)(input [N-1:0] d0, d1, output [N-1:0] y);\n  assign y = d1 + d0;\nendmodule\nmodule sub3 #(parameter int N = 3)(input [N-1:0] d0, d1, d2, output [N-1:0] y);\n  add2 #(N) ab(.d0(d0), .d1(d1), .y(output_ab));\nendmodule\nmodule somethingelse #(parameter int N = 3)(input [N-1:0] d0, d1, d2, d3, output [N-1:0] y);\nendmodule",
+      "tags": [
+        "parameter",
+        "unused_module",
+        "default_value",
+        "conflict"
+      ],
+      "source_bug_id": "4920",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/4920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

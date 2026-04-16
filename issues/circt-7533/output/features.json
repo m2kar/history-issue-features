@@ -1,0 +1,64 @@
+{
+  "tool": "circt",
+  "issue_number": 7533,
+  "title": "[FIRRTL] design with layers not optimized as well as without",
+  "features": [
+    {
+      "name": "layerblock with trivially false assertion predicate",
+      "category": "timing",
+      "description": "Code should include a layerblock containing an intrinsic assertion where the predicate can reduce to a trivially false condition",
+      "snippet": "layerblock A :\n  intrinsic(circt_chisel_ifelsefatal<format=\"bar\">, clock, eq(a, b), UInt<1>(1))",
+      "tags": ["layerblock", "assertion", "dead_code", "fatal", "firrtl"],
+      "source_bug_id": "circt-7533",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7533",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "signal used both inside layerblock and outside",
+      "category": "data_model",
+      "description": "Code should include a node signal that is referenced both within a layerblock and outside the layerblock in the parent module",
+      "snippet": "node b = bits(a, 1, 0)\nlayerblock A :\n  intrinsic(circt_chisel_ifelsefatal<format=\"bar\">, clock, eq(a, b), UInt<1>(1))\nconnect c, b",
+      "tags": ["node", "layerblock", "cross_boundary", "signal_sharing", "firrtl"],
+      "source_bug_id": "circt-7533",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7533",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bind statement for layer instantiation",
+      "category": "control_flow",
+      "description": "Code should include a bind statement that instantiates a layer module and connects signals across module boundaries",
+      "snippet": "bind Foo Foo_A a_0 (\n  .a     (a),\n  .b     (a),\n  .clock (clock)\n);",
+      "tags": ["bind", "layer", "module_instantiation", "cross_module", "verilog"],
+      "source_bug_id": "circt-7533",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7533",
+      "construct_complexity": 5,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "synthesis guard with fatal assertion",
+      "category": "timing",
+      "description": "Code should include an always block inside a synthesis guard that checks a condition and calls $fatal",
+      "snippet": "`ifndef SYNTHESIS\nalways @(posedge clock) begin\n  if (a != b) begin\n    if (`ASSERT_VERBOSE_COND_)\n      $error(\"bar\");\n    if (`STOP_COND_)\n      $fatal;\n  end\nend\n`endif",
+      "tags": ["synthesis_guard", "fatal", "assertion", "always_ff", "verilog"],
+      "source_bug_id": "circt-7533",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/issues/7533",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

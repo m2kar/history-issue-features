@@ -1,0 +1,77 @@
+{
+  "tool": "verilator",
+  "issue_number": 7130,
+  "title": "Sched: Conditionally fire VIF triggers only on value change",
+  "features": [
+    {
+      "name": "virtual interface assignment to interface instance",
+      "category": "data_model",
+      "description": "Code should include a virtual interface variable assigned to a concrete interface instance",
+      "snippet": "interface IFace(); logic [7:0] data; endinterface\nIFace iface();\nvirtual IFace viface = iface;",
+      "tags": ["virtual_interface", "interface_assignment", "interface_instance"],
+      "source_bug_id": "7130",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7130",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational logic assign to virtual interface member",
+      "category": "control_flow",
+      "description": "Code should include a continuous assign statement that writes to a virtual interface member signal, creating a pattern where the same value may be written repeatedly",
+      "snippet": "interface INTF(); logic [7:0] data; endinterface\nINTF intf();\nvirtual INTF vif = intf;\nassign vif.data = 8'hA5;",
+      "tags": ["continuous_assign", "virtual_interface", "combinational_logic", "vif_member_write"],
+      "source_bug_id": "7130",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7130",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "class task writing to virtual interface member",
+      "category": "control_flow",
+      "description": "Code should include a class method that writes through a virtual interface handle to an interface member, which can cause convergence issues when called repeatedly with same value",
+      "snippet": "interface INTF(); logic [7:0] data; endinterface\nclass Writer; virtual INTF vif; task write_data(logic [7:0] d); vif.data = d; endtask endclass",
+      "tags": ["class_method", "virtual_interface", "vif_member_write", "task_call"],
+      "source_bug_id": "7130",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7130",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple virtual interface instances same type",
+      "category": "data_model",
+      "description": "Code should include multiple virtual interface handles referencing different instances of the same interface type, where writes to one instance can trigger spurious re-evaluation of the other",
+      "snippet": "interface INTF(); logic [7:0] data; endinterface\nINTF intf_a(); INTf intf_b();\nvirtual INTF vif_a = intf_a; virtual INTF vif_b = intf_b;",
+      "tags": ["virtual_interface", "multiple_instances", "same_interface_type"],
+      "source_bug_id": "7130",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7130",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_ff with vif member assignment in class context",
+      "category": "control_flow",
+      "description": "Code should include an always_ff block that assigns to a virtual interface member through a class field, a pattern that can cause NBA region convergence issues",
+      "snippet": "class Driver; virtual interface IFace vif; always_ff @(posedge vif.clk) vif.data <= '0; endclass",
+      "tags": ["always_ff", "virtual_interface", "class_field", "nonblocking_assignment"],
+      "source_bug_id": "7130",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/pull/7130",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

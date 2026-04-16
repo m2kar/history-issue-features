@@ -1,0 +1,63 @@
+{
+  "tool": "verilator",
+  "issue_number": 6211,
+  "title": "Bug with DFG same component",
+  "features": [
+    {
+      "name": "module_output_to_multi_wire_concatenation",
+      "category": "data_model",
+      "description": "Code should include a module instantiation where an output port is connected to a concatenation that spans multiple distinct wires",
+      "snippet": "mul mul (\n    .A(9'd10),\n    .B(17'h0cccd),\n    .Y({ C[26], C[9:0], D[15:1] })\n  );",
+      "tags": [
+        "module_instantiation",
+        "concatenation",
+        "multi_wire",
+        "output_connection"
+      ],
+      "source_bug_id": "6211",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6211",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "wire_slice_self_reference_with_replication",
+      "category": "data_model",
+      "description": "Code should include a part-select assignment where the right-hand side uses a bit from the same wire being assigned, combined with replication operator",
+      "snippet": "assign C[25:10] = {16{C[26]}};",
+      "tags": [
+        "wire",
+        "part_select",
+        "self_reference",
+        "replication",
+        "assignment"
+      ],
+      "source_bug_id": "6211",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6211",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "signed_multiplication_feed_split_concatenation",
+      "category": "data_model",
+      "description": "Code should include a signed multiplication result that is split across multiple wires via concatenation, with one of the source bits used in a self-referential slice assignment",
+      "snippet": "module mul (input [8:0] A, input [16:0] B, output [25:0] Y);\n  assign Y = $signed(A) * $signed(B);\nendmodule\n\nwire [26:0] C;\nwire [26:0] D;\nassign C[25:10] = {16{C[26]}};",
+      "tags": [
+        "signed",
+        "multiplication",
+        "concatenation",
+        "split_wire",
+        "dfg"
+      ],
+      "source_bug_id": "6211",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6211",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

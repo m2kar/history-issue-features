@@ -1,0 +1,51 @@
+{
+  "tool": "circt",
+  "issue_number": 1916,
+  "title": "[HW][FIRRTLMemory] Handle multi-bit mask in HWMemSimImpl",
+  "features": [
+    {
+      "name": "partitioned register array with per-mask-bit write enable",
+      "category": "data_model",
+      "description": "Code should include a memory simulation model where the data array is partitioned into one register per mask bit, and each register partition is independently write-enabled by the corresponding single bit of a multi-bit write mask",
+      "snippet": "parameter DEPTH = 8;\nparameter DATA_W = 8;\nparameter MASK_W = 2;\nlocalparam GRAN = DATA_W / MASK_W;\nlogic [GRAN-1:0] mem[MASK_W][DEPTH];\nalways_ff @(posedge clk)\n  if (wen)\n    for (int i = 0; i < MASK_W; i++)\n      if (mask[i])\n        mem[i][addr] <= wdata[i*GRAN +: GRAN];",
+      "tags": ["memory", "multi_bit_mask", "mask_granularity", "register_array", "partial_write"],
+      "source_bug_id": "circt-1916",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/1916",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mask granularity parameterized part-select on write data",
+      "category": "data_model",
+      "description": "Code should include a parameterized part-select expression that extracts mask-granularity-sized slices from a write data bus, where the slice index is computed as i*granularity and width equals dataWidth/maskWidth",
+      "snippet": "parameter DATA_W = 16;\nparameter MASK_W = 4;\nlocalparam GRAN = DATA_W / MASK_W;\nlogic [DATA_W-1:0] wdata;\nlogic [MASK_W-1:0] mask;\nlogic [GRAN-1:0] slice [MASK_W];\ngenerate\n  for (genvar i = 0; i < MASK_W; i++)\n    assign slice[i] = wdata[i*GRAN +: GRAN];\nendgenerate",
+      "tags": ["part_select", "mask_granularity", "parameterized", "bit_extraction", "generate"],
+      "source_bug_id": "circt-1916",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/1916",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "concatenated read data from mask-partitioned register sub-arrays",
+      "category": "data_model",
+      "description": "Code should include a read path that gathers one granule-sized slice from each mask-partition register array at the same address, then concatenates all slices into the full-width output word",
+      "snippet": "parameter DEPTH = 8;\nparameter DATA_W = 8;\nparameter MASK_W = 2;\nlocalparam GRAN = DATA_W / MASK_W;\nlogic [GRAN-1:0] mem[MASK_W][DEPTH];\nlogic [DATA_W-1:0] rdata;\nlogic [$clog2(DEPTH)-1:0] raddr;\nalways_comb begin\n  rdata = '0;\n  for (int i = 0; i < MASK_W; i++)\n    rdata[i*GRAN +: GRAN] = mem[i][raddr];\nend",
+      "tags": ["memory", "read_path", "concatenation", "mask_granularity", "register_array"],
+      "source_bug_id": "circt-1916",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/1916",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

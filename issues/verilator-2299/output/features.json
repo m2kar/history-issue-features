@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 2299,
+  "title": "Array revives gated clock",
+  "features": [
+    {
+      "name": "array element bit-select in posedge sensitivity list",
+      "category": "timing",
+      "description": "Code should include a packed array whose element is used directly as the clock edge in a posedge sensitivity list, i.e. always @(posedge arr[i])",
+      "snippet": "wire [1:0] clk_vec;\nalways @(posedge clk_vec[0])\n    $display(\"posedge clk_vec[0]\");",
+      "tags": ["packed_array", "bit_select", "posedge", "sensitivity_list", "clock"],
+      "source_bug_id": "2299",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2299",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "gated clock packed into array via concatenation",
+      "category": "data_model",
+      "description": "Code should include a packed wire array assigned via concatenation where one element is a gated clock (clock ANDed with an enable signal)",
+      "snippet": "input clk;\nreg clk_en = 1'b0;\nwire clk_gated = clk & clk_en;\nwire [1:0] clks = {1'b0, clk_gated};",
+      "tags": ["gated_clock", "packed_array", "concatenation", "clock_enable"],
+      "source_bug_id": "2299",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2299",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "gated clock element in packed array used as posedge trigger",
+      "category": "timing",
+      "description": "Code should include a gated clock stored as an element of a packed array, where that array element (via bit-select) is the posedge trigger of an always block, testing that gating is preserved through the array",
+      "snippet": "input clk;\nreg clk_en = 1'b0;\nwire clk_gated = clk & clk_en;\nwire [1:0] clks = {1'b0, clk_gated};\nalways @(posedge clks[0])\n    $display(\"should not trigger\");",
+      "tags": ["gated_clock", "packed_array", "bit_select", "posedge", "sensitivity_list", "clock_gating"],
+      "source_bug_id": "2299",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2299",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

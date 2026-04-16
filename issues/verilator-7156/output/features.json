@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 7156,
+  "title": "SIGILL (ud2) crash in coroutine actor for fork/join with large generated designs",
+  "features": [
+    {
+      "name": "fork_join_in_initial_with_large_generated_design",
+      "category": "control_flow",
+      "description": "Code should include fork/join block with multiple concurrent tasks inside an initial block, combined with a large DUT containing many generate blocks and BRAM instances",
+      "snippet": "initial begin\n    fork\n        feed_task();\n        capture_task();\n    join\nend\nmodule large_dut #(parameter BATCH_SIZE = 8)();\n    genvar i;\n    generate\n        for (i = 0; i < BATCH_SIZE * 32; i++) begin\n            // BRAM or DSP instantiation\n        end\n    endgenerate\nendmodule",
+      "tags": ["fork_join", "initial_block", "generate_blocks", "large_design", "coroutine"],
+      "source_bug_id": "7156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7156",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "fork_branches_without_suspension_points",
+      "category": "control_flow",
+      "description": "Code should include fork/join where both branch tasks are called as regular functions returningVlCoroutine temporaries that are immediately discarded, with no internal suspension points (no wait statements or delays)",
+      "snippet": "fork\n    feed_task();\n    capture_task();\njoin\n// Neither task contains wait, #delay, or co_await\n// Wrapper coroutine has no suspension points but has implicit co_return",
+      "tags": ["fork_join", "no_suspension", "coroutine", "vlcoroutine"],
+      "source_bug_id": "7156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7156",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "fork_join_workaround_with_always_block",
+      "category": "control_flow",
+      "description": "Code should include an always block代替fork/join for concurrent capture operations, demonstrating the workaround that avoids coroutine codegen",
+      "snippet": "logic capture_enable;\nalways @(posedge clk) begin\n    if (capture_enable && dut_valid) begin\n        results[count] <= dut_data;\n        count <= count + 1;\n    end\nend\n\ninitial begin\n    capture_enable = 1;\n    feed_task();\nend",
+      "tags": ["fork_join", "workaround", "always_block", "coroutine"],
+      "source_bug_id": "7156",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7156",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

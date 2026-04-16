@@ -1,0 +1,51 @@
+{
+  "tool": "verilator",
+  "issue_number": 5416,
+  "title": "Internal Error: ../V3Randomize.cpp:925: Invalid reference?",
+  "features": [
+    {
+      "name": "randomize with constraint using $clog2 on division expression",
+      "category": "data_model",
+      "description": "Code should include a class with rand members and a static function that calls randomize() with a constraint block where $clog2() is applied to a localparam division expression and result is type-cast",
+      "snippet": "package z_pkg;\n  localparam int SIZEW=4;\n  localparam int CLINE_DATAW=512;\n  typedef logic [SIZEW-1:0] size_t;\n  typedef enum { TXN_UNSET, TXN_GET } txn_type_t;\nendpackage\n\nimport z_pkg::*;\n\nclass z_txn;\n  rand txn_type_t req_txn_type;\n  rand size_t size;\n  static function z_txn generate_txn(txn_type_t txn_type);\n    z_txn txn = new;\n    int success = txn.randomize() with {\n      req_txn_type == txn_type;\n      size <= size_t'($clog2(CLINE_DATAW/8));\n    };\n  endfunction\nendclass",
+      "tags": ["randomize", "constraint", "clog2", "class", "static_function", "type_cast"],
+      "source_bug_id": "5416",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5416",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "$clog2 with localparam arithmetic in constraint",
+      "category": "data_model",
+      "description": "Code should include a randomization constraint where $clog2 is applied to a localparam divided by a literal constant",
+      "snippet": "$clog2(CLINE_DATAW/8)",
+      "tags": ["clog2", "localparam", "division", "constraint"],
+      "source_bug_id": "5416",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5416",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "type cast in randomization constraint",
+      "category": "data_model",
+      "description": "Code should include a randomization constraint expression using type cast syntax with single quotes to cast a $clog2 result",
+      "snippet": "size_t'($clog2(CLINE_DATAW/8))",
+      "tags": ["type_cast", "constraint", "clog2"],
+      "source_bug_id": "5416",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/5416",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

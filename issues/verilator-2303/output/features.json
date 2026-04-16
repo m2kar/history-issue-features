@@ -1,0 +1,64 @@
+{
+  "tool": "verilator",
+  "issue_number": 2303,
+  "title": "Tristate does not work with multiple assignments",
+  "features": [
+    {
+      "name": "default z assignment at top of always_comb with conditional override",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block that assigns 1'bz as a default at the top of the block, followed by a conditional override to a non-z value, relying on the default to propagate the tristate when the condition is false",
+      "snippet": "reg s;\nlogic condition;\nalways_comb begin\n    s = 1'bz;\n    if (condition)\n        s = 1'b1;\nend",
+      "tags": ["tristate", "always_comb", "default_assignment", "high_impedance", "conditional_override"],
+      "source_bug_id": "2303",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2303",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "explicit if-else tristate in always_comb",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block that uses an explicit if/else construct to drive a signal to either a logic value or 1'bz, with the tristate value placed in the else branch rather than as a default",
+      "snippet": "reg s;\nlogic condition;\nalways_comb begin\n    if (condition)\n        s = 1'b1;\n    else\n        s = 1'bz;\nend",
+      "tags": ["tristate", "always_comb", "if_else", "high_impedance"],
+      "source_bug_id": "2303",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2303",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multiple always_comb drivers on a single tristate net",
+      "category": "data_model",
+      "description": "Code should include two or more always_comb blocks each independently driving the same signal, where each driver uses a condition to either output a logic value or yield 1'bz, modeling a wired-OR tristate bus with multiple concurrent drivers",
+      "snippet": "reg s;\nlogic [31:0] cyc;\nalways_comb begin\n    s = 1'bz;\n    if (cyc == 0)\n        s = 1'b1;\nend\nalways_comb\n    s = (cyc == 1) ? 1'b0 : 1'bz;",
+      "tags": ["tristate", "multiple_drivers", "always_comb", "high_impedance", "wired_bus"],
+      "source_bug_id": "2303",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2303",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary operator with z arm as always_comb driver",
+      "category": "data_model",
+      "description": "Code should include an always_comb continuous assignment using a ternary expression where one arm is 1'bz, used to implement a conditional tristate driver on a shared net",
+      "snippet": "reg s;\nlogic condition;\nalways_comb\n    s = condition ? 1'b0 : 1'bz;",
+      "tags": ["tristate", "ternary", "always_comb", "high_impedance", "conditional_driver"],
+      "source_bug_id": "2303",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/2303",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

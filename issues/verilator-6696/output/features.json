@@ -1,0 +1,65 @@
+{
+  "tool": "verilator",
+  "issue_number": 6696,
+  "title": "possible scheduling semantics violation or `<=` / `=` confusion",
+  "features": [
+    {
+      "name": "task_inout_blocking_assignment_in_always_ff",
+      "category": "timing",
+      "description": "Code should include a task with an inout argument modified by a blocking assignment, called within an always_ff block, where the modified variable is also used in a subsequent non-blocking assignment.",
+      "snippet": "always_ff @(posedge clk) begin\n    reg_var <= input_val;\n    task_call(reg_var);  // inout arg modified by blocking =\n    out_var <= reg_var;   // should read modified value\nend\n\ntask automatic task_call(inout logic [3:0] bus);\n    bus = ~bus;\nendtask",
+      "tags": [
+        "task",
+        "inout",
+        "blocking_assignment",
+        "always_ff",
+        "nba",
+        "scheduling"
+      ],
+      "source_bug_id": "verilator-6696",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6696",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "task_copyout_blocks_before_subsequent_nba",
+      "category": "timing",
+      "description": "Code should include a pattern where a task's inout argument copy-out (which behaves as a blocking assignment per IEEE 1800-2023 Section 4.9.7) must complete before a subsequent non-blocking assignment reads the variable.",
+      "snippet": "always_ff @(posedge clk) begin\n    var_a <= data_in;\n    modify_task(var_a);  // copy-out is blocking, must be visible\n    var_b <= var_a;       // NBA scheduled after blocking copy-out\nend",
+      "tags": [
+        "task",
+        "inout",
+        "copy_out",
+        "blocking_assignment",
+        "always_ff",
+        "nba",
+        "ieee1800"
+      ],
+      "source_bug_id": "verilator-6696",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6696",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "mixed_blocking_nba_same_variable_always_ff",
+      "category": "timing",
+      "description": "Code should include an always_ff block where the same variable is assigned via both non-blocking assignment and blocking assignment (via task inout), with another variable reading the blocking-assigned value via NBA.",
+      "snippet": "always_ff @(posedge clk) begin\n    reg_a <= data_in;     // NBA scheduled\n    task_modify(reg_a);   // blocking modify via inout\n    reg_b <= reg_a;       // should capture blocking-modified value\nend",
+      "tags": [
+        "mixed_assignments",
+        "always_ff",
+        "nba",
+        "blocking",
+        "task_inout",
+        "scheduling"
+      ],
+      "source_bug_id": "verilator-6696",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/6696",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

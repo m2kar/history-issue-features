@@ -1,0 +1,38 @@
+{
+  "tool": "verilator",
+  "issue_number": 7109,
+  "title": "Fix new <obj> shallow copy not preserving polymorphic runtime type (#7105)",
+  "features": [
+    {
+      "name": "shallow copy through base handle to derived object",
+      "category": "data_model",
+      "description": "Code should include a shallow copy constructor `copy = new source_handle` where source_handle is a base-class variable holding a derived-class object reference, assigned via polymorphic assignment prior to the copy operation",
+      "snippet": "virtual class Base;\nendclass\nclass Derived extends Base;\nendclass\nBase source;\nDerived d = new();\nsource = d;\nBase copy = new source;",
+      "tags": ["shallow_copy", "polymorphism", "inheritance", "new_handle"],
+      "source_bug_id": "7105",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7105",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "virtual method dispatch on shallow copied object",
+      "category": "data_model",
+      "description": "Code should include virtual method calls on a shallow-copied object where the copy was created via `new source_handle` through a base-class handle, demonstrating that virtual dispatch resolves to the derived runtime type",
+      "snippet": "virtual class Base;\n  pure virtual function void do_it();\nendclass\nclass Derived extends Base;\n  function void do_it();\n    $display(\"Derived\");\n  endfunction\nendclass\nBase b;\nDerived d = new();\nb = d;\nBase c = new b;\nc.do_it();",
+      "tags": ["virtual_method", "polymorphism", "shallow_copy", "dispatch"],
+      "source_bug_id": "7105",
+      "tool": "verilator",
+      "issue_url": "https://github.com/verilator/verilator/issues/7105",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

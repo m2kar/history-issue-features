@@ -1,0 +1,38 @@
+{
+  "tool": "circt",
+  "issue_number": 1829,
+  "title": "[PyCDE] An update for parameterized extern modules",
+  "features": [
+    {
+      "name": "parameterized extern module with multiple distinct instantiations",
+      "category": "general",
+      "description": "Code should include a parameterized extern module declaration whose data-port width is driven by a parameter, then instantiated twice with different parameter values so that each instance has a different port width",
+      "snippet": "// extern module parameterized on data width\nextern module ExternMod #(parameter int DW = 2) (\n    input  logic          clk,\n    input  logic [DW-1:0] data_in\n);\n\nmodule top (\n    input logic       clk,\n    input logic [5:0] data_in\n);\n    ExternMod #(.DW(2)) inst_a (.clk(clk), .data_in(data_in[1:0]));\n    ExternMod #(.DW(4)) inst_b (.clk(clk), .data_in(data_in[5:2]));\nendmodule",
+      "tags": ["extern_module", "parameterized_module", "multiple_instantiation", "port_width", "parameter"],
+      "source_bug_id": "circt-1829",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/1829",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized module port width mismatch across instantiations",
+      "category": "data_model",
+      "description": "Code should include two instantiations of the same parameterized module where each instantiation supplies a different integer parameter value, causing the inferred port vector widths to differ between instances",
+      "snippet": "module Wrapper #(parameter int DW = 4) (\n    input  logic          clk,\n    input  logic [DW-1:0] data_in\n);\nendmodule\n\nmodule dut (\n    input logic       clk,\n    input logic [5:0] bus\n);\n    Wrapper #(.DW(2)) u0 (.clk(clk), .data_in(bus[1:0]));\n    Wrapper #(.DW(4)) u1 (.clk(clk), .data_in(bus[5:2]));\nendmodule",
+      "tags": ["parameterized_module", "port_width_mismatch", "instantiation", "vector", "parameter_override"],
+      "source_bug_id": "circt-1829",
+      "tool": "circt",
+      "issue_url": "https://github.com/llvm/circt/pull/1829",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}
