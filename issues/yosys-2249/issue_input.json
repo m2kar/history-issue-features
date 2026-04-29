@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2249,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2249",
+  "title": "ERROR: Abort in frontends/ast/simplify.cc:4239.",
+  "body": "## Steps to reproduce the issue\r\n\r\nApplies to Yosys 0.9+2406 (git sha1 a9b61080, clang 10.0.0-4ubuntu1 -fPIC -Os)\r\nCrashing on read_verilog\r\n\r\nI have narrowed down the crash to the following code fragment:\r\n\r\n     // Signals\r\n     reg [2:0] xbar_0_arb_0_select;\r\n     reg [3:0] xbar_0_arb_0_sel_0_c [0:3-1];\r\n     reg [2:0] xbar_0_arb_0_access;\r\n\r\n     // Select based on weight\r\n     always @(xbar_0_arb_0_access, xbar_0_arb_0_sel_0_c[0], xbar_0_arb_0_sel_0_c[1], xbar_0_arb_0_sel_0_c[2]) begin: HSM_TOP_XBAR_0_ARB_0_SEL_0__SEL\r\n         integer t;\r\n         integer m;\r\n         integer i;\r\n         xbar_0_arb_0_select = 0;\r\n         t = 0;\r\n         m = 0;\r\n         for (i=0; i<3; i=i+1) begin\r\n             if (xbar_0_arb_0_access[i]) begin\r\n                 if ((xbar_0_arb_0_sel_0_c[i] >= m)) begin\r\n                     m = xbar_0_arb_0_sel_0_c[i];\r\n                     t = i;\r\n                 end\r\n             end\r\n         end\r\n         if (m) begin\r\n             xbar_0_arb_0_select[t] = 1'b1; // *BUG*\r\n         end\r\n     end\r\n\r\nWork Around: \r\n\r\nReplacing the bugged line with the following alternative is  work around for the issue\r\n     xbar_0_arb_0_select = 1<<t ; // *NO BUG*\r\n\r\n\r\n## Expected behavior\r\n\r\nNo crash on read_verilog\r\n\r\n## Actual behavior\r\n\r\nERROR: Abort in frontends/ast/simplify.cc:4239.\r\nCommand exited with non-zero status 1\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-08",
+  "closed_at": "2020-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4654,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4654",
+  "title": "Set VHDL assert condition initial state if fed by FF",
+  "body": "_What are the reasons/motivation for this change?_\r\nIf we have assert that is inside VHLD process, it fails since condition signal is coming from uninitialized FF. \r\nPlease note that this primitive is VHDL only so it will not affect SVA code path.\r\nAlso there is left-over from past and there was never an \"assume\" attribute to convert this to assume.\r\n```\r\n    assert (conv_integer(addr) >= sram'low and conv_integer(addr) <= sram'high) report \"out of bounds for read\" severity error;\r\n    rdata <= sram(conv_integer(addr));\r\n    process(clk)\r\n    begin\r\n        if clk'event and clk = '1' then\r\n            if wen = '1' then\r\n                assert (conv_integer(addr) >= sram'low and conv_integer(addr) <= sram'high) report \"out of bounds for write\" severity error;\r\n                sram(conv_integer(addr)) <= wdata;\r\n            end if;\r\n        end if;\r\n    end process;\r\n\r\n```\r\n_Explain how this is achieved._\r\nInitial state in condition wire is set to 1, making assert not trigger on its undefined state.\r\nSince condition signal may originate from any internal signal (including register) we are checking if it is public.\r\nNote that it will use register condition directly only if outside process block.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-10-11",
+  "closed_at": "2024-10-14",
+  "code_blocks": [
+    "assert (conv_integer(addr) >= sram'low and conv_integer(addr) <= sram'high) report \"out of bounds for read\" severity error;\r\n    rdata <= sram(conv_integer(addr));\r\n    process(clk)\r\n    begin\r\n        if clk'event and clk = '1' then\r\n            if wen = '1' then\r\n                assert (conv_integer(addr) >= sram'low and conv_integer(addr) <= sram'high) report \"out of bounds for write\" severity error;\r\n                sram(conv_integer(addr)) <= wdata;\r\n            end if;\r\n        end if;\r\n    end process;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

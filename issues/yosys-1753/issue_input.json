@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1753,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1753",
+  "title": "Add ScriptPass::run_nocheck and use for abc9",
+  "body": "Found that abc9 had significantly regressed when dealing with large \"noflatten\" designs while trying to build a large place and route benchmark; this turns out to be due to excessive Design::check calls after every step. To compensate the removed whole-design checks I've added a single Module::check after each module is processed.\r\n\r\nThis trivial example demonstrates the problem well:\r\n\r\n```verilog\r\nmodule xorx #(parameter [31:0] b = 0) (input [31:0] a, output [31:0] y);\r\n\tassign y = a ^ b;\r\nendmodule\r\n\r\nmodule top(input [31:0] a, output [31:0] y);\r\n\tlocalparam N = 2000;\r\n\twire [31:0] s[0:N];\r\n\tgenerate\r\n\t\tgenvar i;\r\n\t\tfor (i = 0; i < N; i = i + 1'b1) begin\r\n\t\t\txorx #(.b(i)) xor_i(.a(s[i]), .y(s[i+1]));\r\n\t\tend\r\n\tendgenerate\r\n\tassign s[0] = a;\r\n\tassign y = s[N];\r\nendmodule\r\n```\r\n\r\n`synth_xilinx` (old ABC) takes 3m30s; `synth_xilinx -abc9` without this patch takes over 20 minutes (hasn't completed at the time of writing); `synth_xilinx -abc9` with this patch takes 3m48s.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-09",
+  "closed_at": "2020-03-10",
+  "code_blocks": [
+    "module xorx #(parameter [31:0] b = 0) (input [31:0] a, output [31:0] y);\r\n\tassign y = a ^ b;\r\nendmodule\r\n\r\nmodule top(input [31:0] a, output [31:0] y);\r\n\tlocalparam N = 2000;\r\n\twire [31:0] s[0:N];\r\n\tgenerate\r\n\t\tgenvar i;\r\n\t\tfor (i = 0; i < N; i = i + 1'b1) begin\r\n\t\t\txorx #(.b(i)) xor_i(.a(s[i]), .y(s[i+1]));\r\n\t\tend\r\n\tendgenerate\r\n\tassign s[0] = a;\r\n\tassign y = s[N];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

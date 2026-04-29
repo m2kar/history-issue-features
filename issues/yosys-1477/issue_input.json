@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1477,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1477",
+  "title": "Plugins on Win32 platforms",
+  "body": "# Plugins on Win32 platforms\r\n\r\nI would like to add support for plugins, for Yosys running on Win32 platforms.\r\n\r\nActually I already have a working version on MSYS2-64 with gdhlsynth as plugin, but it needs a bit of cleanup and some guidance from project owners on the preferred way to implement it.\r\n\r\n\r\n## Linking plugins against yosys.exe\r\n\r\nAll non-member functions, structs and objects marked external in the header files in shared/include would need to be marked for export with `__declspec(dllexport)` or a platform dependent macro for that. Alternatively all functions in the exe could be exported with `--export_all_functions`.\r\n\r\nYosys.exe would need to be linked with:\r\n`-Wl,--enable-auto-import -Wl,--out-implib,yosys_exe.a -Wl,--exclude-all-symbols`\r\n\r\nThe generated import library file should then be provided (via yosys-config) when linking plugins.\r\n\r\n## Loading plugins on Win32\r\n\r\nAs debugging why a plugin isn't properly loaded is quite difficult without proper error messages, the [load_plugin()](https://github.com/YosysHQ/yosys/blob/master/passes/cmds/plugin.cc#L41) function in plugin.cc would need use native functions like ::LoadLibrary(), ::GetProcAddress() and::GetLastError();\r\n\r\nFrom a win32 point of view, the correct way would be to provide a C function in the dll, that the exe could use to instantiate the struct derived from Pass parent (located in the exe).\r\n\r\n```\r\n#ifdef __MINGW32__\r\nextern \"C\" __declspec(dllexport) Pass* __cdecl create_pass_instance()\r\n{\r\n\treturn new GhdlPass;\r\n}\r\n#endif\r\n```\r\n\r\nThen [Pass::run_register()](https://github.com/YosysHQ/yosys/blob/master/kernel/register.cc#L109) would use the pointer received from the dll for those Pass structures that are instantiated using heap and 'this' for those instantiated on the stack.\r\n\r\nThis concept is described in e.g. this article:\r\n\r\nhttps://eli.thegreenplace.net/2011/09/16/exporting-c-classes-from-a-dll\r\n\r\n\r\n#### Sidenote\r\n\r\nThe declarations of the structs derived from Pass have the same name as the struct type. \r\n```\r\nstruct VHDLDefaults : public Pass {...} VHDLDefaults;\r\n```\r\nIMHO that is not very elegant and I don't know of a way how to code wise specifically reference the struct type, as gcc seems to assume the declaration with the same name. It would be better if e.g. struct and class names are capitalized and their instances having the same name would begin with lowercase.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-06",
+  "closed_at": "2022-11-01",
+  "code_blocks": [
+    "#ifdef __MINGW32__\r\nextern \"C\" __declspec(dllexport) Pass* __cdecl create_pass_instance()\r\n{\r\n\treturn new GhdlPass;\r\n}\r\n#endif",
+    "struct VHDLDefaults : public Pass {...} VHDLDefaults;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

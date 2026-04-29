@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1521,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1521",
+  "title": "Adding support for Xilinx memory attribute 'block' in single port mode.",
+  "body": "The following PR is to open a discussion about supporting `ram_style` attributes in `memory_bram` match rules. This approach needs Dave's `memory_collect.cc` changes from PR #1501 .\r\n\r\nHaving the following module with `ram_style=\"block\"` attribute defined:\r\n```verilog\r\n`default_nettype none\r\nmodule memory #(parameter W=8, D=64)\r\n   (input wire clk, wr_en,\r\n    input wire [W-1:0]  wr_addr, rd_addr,\r\n    input wire [W-1:0]  din,\r\n    output reg [W-1:0]  dout);\r\n\r\n   (*ram_style = \"block\"*)\r\n   reg [W-1:0]          mem [D-1:0];\r\n\r\n   always @(posedge clk) begin\r\n      if(wr_en) mem[wr_addr] <= din;\r\n      dout <= mem[rd_addr];\r\n   end\r\nendmodule // memory\r\n```\r\nYosys is able to match to a RAMB18E1, even if the `min bits` and `min efficiency` are below the constraints:\r\n```\r\n=== memory ===\r\n\r\n   Number of wires:                  9\r\n   Number of wire bits:             72\r\n   Number of public wires:           6\r\n   Number of public wire bits:      34\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  2\r\n     BUFG                            1\r\n     RAMB18E1                        1\r\n\r\n   Estimated number of LCs:          0\r\n```\r\n\r\nAs @eddiehung and I discussed, the apporach is to have a new match rule `attribute` into `xc7_xcu_brams.txt` as follows:\r\n```\r\nmatch $__XILINX_RAMB18_SDP\r\n  min bits 4096\r\n  min efficiency 5\r\n  shuffle_enable B\r\n  make_transp\r\n  attribute ram_style block\r\n  or_next_if_better\r\nendmatch\r\n``` \r\nSo, if the attribute in the RTL object match to the one defined in the match rule, we bypass the `min bits` and `min efficiency` checks. This is done just for `RAMB18E1`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-11-24",
+  "closed_at": "2019-12-17",
+  "code_blocks": [
+    "`default_nettype none\r\nmodule memory #(parameter W=8, D=64)\r\n   (input wire clk, wr_en,\r\n    input wire [W-1:0]  wr_addr, rd_addr,\r\n    input wire [W-1:0]  din,\r\n    output reg [W-1:0]  dout);\r\n\r\n   (*ram_style = \"block\"*)\r\n   reg [W-1:0]          mem [D-1:0];\r\n\r\n   always @(posedge clk) begin\r\n      if(wr_en) mem[wr_addr] <= din;\r\n      dout <= mem[rd_addr];\r\n   end\r\nendmodule // memory",
+    "=== memory ===\r\n\r\n   Number of wires:                  9\r\n   Number of wire bits:             72\r\n   Number of public wires:           6\r\n   Number of public wire bits:      34\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  2\r\n     BUFG                            1\r\n     RAMB18E1                        1\r\n\r\n   Estimated number of LCs:          0",
+    "match $__XILINX_RAMB18_SDP\r\n  min bits 4096\r\n  min efficiency 5\r\n  shuffle_enable B\r\n  make_transp\r\n  attribute ram_style block\r\n  or_next_if_better\r\nendmatch"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

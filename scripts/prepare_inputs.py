@@ -21,6 +21,8 @@ ISSUES_DIR = ROOT / "issues"
 REPOS = {
     "verilator": "verilator/verilator",
     "circt": "llvm/circt",
+    "iverilog": "steveicarus/iverilog",
+    "yosys": "YosysHQ/yosys",
 }
 
 # -- 排除标签 (精确匹配) --
@@ -35,6 +37,26 @@ EXCLUDE_LABELS_VERILATOR = {
 EXCLUDE_LABELS_CIRCT = {
     "documentation",
     "question",
+}
+
+EXCLUDE_LABELS_IVERILOG = {
+    "Need info",
+    "Need test program",
+    "Obsolete",
+    "VHDL",
+    "VPI",
+}
+
+EXCLUDE_LABELS_YOSYS = {
+    "question",
+    "feature-request",
+    "documentation",
+    "invalid",
+    "duplicate",
+    "needs-info",
+    "build-system",
+    "discuss",
+    "status-superseded",
 }
 
 # -- SV 关键词 (用于判断 body 是否包含 SV 内容) --
@@ -136,6 +158,63 @@ def should_include_verilator(item: dict) -> tuple[bool, str]:
     return False, "issue without SV content"
 
 
+def should_include_iverilog(item: dict) -> tuple[bool, str]:
+    """判断 iverilog issue/PR 是否应该纳入."""
+    labels = {l["name"] for l in item.get("labels", [])}
+    if labels & EXCLUDE_LABELS_IVERILOG:
+        return False, f"excluded label: {labels & EXCLUDE_LABELS_IVERILOG}"
+
+    body = item.get("body") or ""
+    title = item.get("title") or ""
+    is_pr = item.get("pull_request") is not None
+
+    if is_pr:
+        title_lower = title.lower()
+        if ("fix" in title_lower or "bug" in title_lower) and has_sv_content(body):
+            return True, "PR with fix + SV content"
+        if has_sv_content(body):
+            return True, "PR with SV content"
+        if re.search(r'(?:fix|close|resolve)s?\s+#\d+', body, re.IGNORECASE):
+            return True, "PR fixing an issue"
+        return False, "PR without SV content or fix reference"
+
+    if has_sv_content(body):
+        return True, "issue with SV content"
+    if extract_code_blocks(body):
+        return True, "issue with code blocks"
+    return False, "issue without SV content"
+
+
+def should_include_yosys(item: dict) -> tuple[bool, str]:
+    """判断 yosys issue/PR 是否应该纳入."""
+    labels = {l["name"] for l in item.get("labels", [])}
+    if labels & EXCLUDE_LABELS_YOSYS:
+        return False, f"excluded label: {labels & EXCLUDE_LABELS_YOSYS}"
+
+    body = item.get("body") or ""
+    title = item.get("title") or ""
+    is_pr = item.get("pull_request") is not None
+
+    if is_pr:
+        title_lower = title.lower()
+        if ("fix" in title_lower or "bug" in title_lower) and has_sv_content(body):
+            return True, "PR with fix + SV content"
+        if has_sv_content(body):
+            return True, "PR with SV content"
+        if re.search(r'(?:fix|close|resolve)s?\s+#\d+', body, re.IGNORECASE):
+            return True, "PR fixing an issue"
+        return False, "PR without SV content or fix reference"
+
+    if has_sv_content(body):
+        return True, "issue with SV content"
+    if extract_code_blocks(body):
+        return True, "issue with code blocks"
+    # SystemVerilog label
+    if "SystemVerilog" in labels:
+        return True, "SystemVerilog label"
+    return False, "issue without SV content"
+
+
 def should_include_circt(item: dict) -> tuple[bool, str]:
     """判断 circt issue/PR 是否应该纳入."""
     labels = {l["name"] for l in item.get("labels", [])}
@@ -207,7 +286,13 @@ def process_tool(tool: str, stats_only: bool = False) -> tuple[int, int, list[di
     items = load_jsonl(tool)
     print(f"  Loaded {len(items)} raw entries")
 
-    filter_fn = should_include_verilator if tool == "verilator" else should_include_circt
+    filter_map = {
+        "verilator": should_include_verilator,
+        "circt": should_include_circt,
+        "iverilog": should_include_iverilog,
+        "yosys": should_include_yosys,
+    }
+    filter_fn = filter_map[tool]
 
     included = []
     excluded = []
@@ -278,7 +363,7 @@ def sample_check(included: list[dict], excluded: list[dict], tool: str, n: int =
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--repo", choices=["verilator", "circt"])
+    parser.add_argument("--repo", choices=list(REPOS.keys()))
     parser.add_argument("--sample", type=int, help="Sample N items for quality check")
     parser.add_argument("--stats", action="store_true", help="Stats only, no file creation")
     args = parser.parse_args()

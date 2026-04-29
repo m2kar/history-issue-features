@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3717,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3717",
+  "title": "The `hierarchy -auto-top` command doesn't mark the top level module correctly",
+  "body": "### Version\r\n\r\n0.27\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nTake the following Verilog file:\r\n\r\n```verilog\r\nmodule m(input a, output b);\r\n  n x(a, b);\r\nendmodule\r\n\r\nmodule n(input a, output b);\r\n  assign b = !a;\r\nendmodule\r\n```\r\n\r\nLoad it into Yosys and run `hierarchy -auto-top`, for example:\r\n\r\n```\r\nyosys -p \"hierarchy -auto-top\" test.v\r\n```\r\n\r\nEdit: the remark below turned out to be wrong. The results were correct by accident.\r\n\r\n> The interesting part is, the problem can be worked around by running certain commands before `hierarchy`, for example:\r\n>\r\n> ```\r\n> yosys -p \"opt_clean; hierarchy -auto-top\" test.v\r\n> ```\r\n>\r\n> Or:\r\n>\r\n> ```\r\n> yosys -p \"write_verilog; hierarchy -auto-top\" test.v\r\n> ```\r\n\r\n### Expected Behavior\r\n\r\nModule `m` is detected as a top-level module:\r\n\r\n```\r\n2.3. Analyzing design hierarchy..\r\nTop module:  \\m\r\n```\r\n\r\n### Actual Behavior\r\n\r\nModule `n` is incorrectly detected as a top-level module:\r\n\r\n```\r\n2.3. Analyzing design hierarchy..\r\nTop module:  \\n\r\n```\r\n\r\nThis happens also for larger, real-world examples.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-29",
+  "closed_at": "2024-11-06",
+  "code_blocks": [
+    "module m(input a, output b);\r\n  n x(a, b);\r\nendmodule\r\n\r\nmodule n(input a, output b);\r\n  assign b = !a;\r\nendmodule",
+    "> yosys -p \"opt_clean; hierarchy -auto-top\" test.v\r\n>",
+    "> yosys -p \"write_verilog; hierarchy -auto-top\" test.v\r\n>",
+    "2.3. Analyzing design hierarchy..\r\nTop module:  \\m",
+    "2.3. Analyzing design hierarchy..\r\nTop module:  \\n"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

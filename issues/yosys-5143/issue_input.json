@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5143,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5143",
+  "title": "SystemVerilog: Fix typedef struct in global space",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nWhen the `typedef struct` is inside the module, it is before the AST node that uses that type and so the custom type is fully resolved.\r\n\r\nWhen the `typedef struct` is inside a package, the package is resolved before the module, so it is again fully resolved.\r\n\r\nIn the case from #4653, the `typedef struct` is in the global space, and ends up appended to the module so isn't fully resolved until _after_ the nodes that reference it are resolved, so indexing into it ends up with a range of `[-1:0]`, causing it to throw an assertion error.\r\n\r\n_Explain how this is achieved._\r\n\r\nBy marking `struct`s with `is_custom_type`, the code will fully resolve the `typedef struct` before any nodes that reference it, thereby avoiding the assertion error and fixing #4653.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\n`tests/svtypes/typedef_struct_global.ys` should fail on main with an assertion error and pass with this fix.\r\n",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-26",
+  "closed_at": "2025-05-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

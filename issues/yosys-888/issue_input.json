@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 888,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/888",
+  "title": "LSB first registers (e.g. [0:N-1]) leads to incorrect logic",
+  "body": "## Steps to reproduce the issue\r\n\r\n```\r\nmodule top (CLK, CE, SEL, SI, DO);\r\nparameter SELWIDTH = 1;\r\nparameter DATAWIDTH = 2;\r\ninput    CLK, CE;\r\ninput [DATAWIDTH-1:0] SI;\r\ninput [SELWIDTH-1:0] SEL;\r\noutput [DATAWIDTH-1:0] DO;\r\nlocalparam DATADEPTH = 2**SELWIDTH;\r\nreg [0:DATADEPTH-1] data1 [DATAWIDTH-1:0];\r\nreg [DATADEPTH-1:0] data2 [DATAWIDTH-1:0];\r\n\r\ngenerate\r\n    genvar i;\r\n    for (i = 0; i < DATAWIDTH; i=i+1) begin\r\n        always @(posedge CLK)\r\n        begin\r\n            if (CE == 1'b1) begin\r\n`ifdef BROKEN\r\n                data1[i] <= {SI[i], data1[i][0:DATADEPTH-2]};\r\n`else\r\n                data2[i] <= {data2[i][DATADEPTH-2:0], SI[i]};\r\n`endif\r\n            end\r\n        end\r\n`ifdef BROKEN\r\n        assign DO[i] = data1[i][SEL];\r\n`else\r\n        assign DO[i] = data2[i][SEL];\r\n`endif\r\n    end\r\nendgenerate\r\nendmodule\r\n```\r\n\r\n`yosys -p \"read_verilog -DBROKEN top.v; synth_xilinx\"` gives:\r\n```\r\n   Number of cells:                  5\r\n     FDRE                            3\r\n     LUT3                            2\r\n```\r\n\r\n## Expected behavior\r\n\r\n`yosys -p \"read_verilog top.v; synth_xilinx\"` gives:\r\n\r\n```\r\n   Number of cells:                  6\r\n     FDRE                            4\r\n     LUT3                            2\r\n```\r\n\r\n## Actual behavior\r\n\r\n`yosys -p \"read_verilog -DBROKEN top.v; synth_xilinx\"` on 8c0740bc gives:\r\n```\r\n   Number of cells:                  5\r\n     FDRE                            3\r\n     LUT3                            2\r\n```\r\n\r\nSame command on e112d2fb gave:\r\n```\r\n   Number of cells:                  8\r\n     FDRE                            4\r\n     LUT3                            4\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-03-21",
+  "closed_at": "2019-03-22",
+  "code_blocks": [
+    "module top (CLK, CE, SEL, SI, DO);\r\nparameter SELWIDTH = 1;\r\nparameter DATAWIDTH = 2;\r\ninput    CLK, CE;\r\ninput [DATAWIDTH-1:0] SI;\r\ninput [SELWIDTH-1:0] SEL;\r\noutput [DATAWIDTH-1:0] DO;\r\nlocalparam DATADEPTH = 2**SELWIDTH;\r\nreg [0:DATADEPTH-1] data1 [DATAWIDTH-1:0];\r\nreg [DATADEPTH-1:0] data2 [DATAWIDTH-1:0];\r\n\r\ngenerate\r\n    genvar i;\r\n    for (i = 0; i < DATAWIDTH; i=i+1) begin\r\n        always @(posedge CLK)\r\n        begin\r\n            if (CE == 1'b1) begin\r\n`ifdef BROKEN\r\n                data1[i] <= {SI[i], data1[i][0:DATADEPTH-2]};\r\n`else\r\n                data2[i] <= {data2[i][DATADEPTH-2:0], SI[i]};\r\n`endif\r\n            end\r\n        end\r\n`ifdef BROKEN\r\n        assign DO[i] = data1[i][SEL];\r\n`else\r\n        assign DO[i] = data2[i][SEL];\r\n`endif\r\n    end\r\nendgenerate\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

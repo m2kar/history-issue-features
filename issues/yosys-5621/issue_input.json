@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5621,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5621",
+  "title": "Remove `Design::sort()` calls from optimization passes",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nThese `sort()` calls in `opt_clean` and `opt` should be unnecessary, and they can have noticeable performance impact for very large designs. In a large example circuit I have with a flattened module of 3.5M cells, `Design::sort()` takes several seconds, and in typical flows `opt_clean` runs many times.\r\n\r\nAny analysis or optimization that depends on objects being sorted by name or by IdString value is inherently fragile. In the former case, that means renaming objects could change the results. In the latter case, changing the IdString internal indices could change the results. As far as I know, the only reason why sorting might be needed for correctness is if the rest of the pass is nondeterministic and sorting restores determinism. But that is not the case for `opt_clean` as far as I can tell. For `opt`, if sorting was needed to fix nondeterminism in some subpass, the sorting should be done by that subpass.\r\n\r\nRemoving these calls causes two test failures. In `gowin/mux.ys` the `mux8` test starts failing. If I split that test out into its own file, it stops failing, so this test is inherently fragile. In this PR I split `gowin/mux.ys` into separate files to avoid the problem.\r\n\r\nIn `xilinx/dsp_cascade.ys` the \"mno\" `xc6s` test starts failing with 10 `FDRE`s instead of 5. I don't really know what's going on here, but as I discussed above I don't think anything should depend on sorting for correctness, so I've just adjusted the test expectation.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-21",
+  "closed_at": "2026-02-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

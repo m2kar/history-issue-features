@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3550,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3550",
+  "title": "Little endian indexing of packed multidimensional arrays is incorrectly assumed to be big endian",
+  "body": "### Version\r\n\r\nYosys 0.22+1 (git sha1 c4a52b1b028, gcc 12.2.1 -O2 -fexceptions -fstack-protector-strong -m64 -mtune=generic -fasynchronous-unwind-tables -fstack-clash-protection -fcf-protection -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nI have added a test to tests/svtypes/struct_array.sv to demonstrate that indexing misbehaves - see diff below:\r\n[struct_array_le.diff.gz](https://github.com/YosysHQ/yosys/files/9983714/struct_array_le.diff.gz)\r\n\r\nThe asserts have been verified with Verilator.\r\nNote that iverilog has an off-by-one error in little endian array slices, and can thus not be used for verification.\r\n\r\nReplacing the `initial` block for assigments to `s3` with the output of sv2v makes the test pass:\r\n\r\n```\r\n\tinitial begin\r\n\t\ts3 = 1'sb0;\r\n\t\ts3[24+:16] = 16'h1234;\r\n\t\ts3[56+:8] = 8'h42;\r\n\t\ts3[72+:8] = 1'sb1;\r\n\t\ts3[73-:2] = 1'sb0;\r\n\t\ts3[15-:16] = 1'sb1;\r\n\t\ts3[1:0] = 1'sb0;\r\n\tend\r\n```\r\n\r\n### Expected Behavior\r\n\r\nThe augmented array test passes.\r\n\r\n### Actual Behavior\r\n\r\nThe array test fails.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-10",
+  "closed_at": "2022-11-30",
+  "code_blocks": [
+    "initial begin\r\n\t\ts3 = 1'sb0;\r\n\t\ts3[24+:16] = 16'h1234;\r\n\t\ts3[56+:8] = 8'h42;\r\n\t\ts3[72+:8] = 1'sb1;\r\n\t\ts3[73-:2] = 1'sb0;\r\n\t\ts3[15-:16] = 1'sb1;\r\n\t\ts3[1:0] = 1'sb0;\r\n\tend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

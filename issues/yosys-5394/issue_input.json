@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5394,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5394",
+  "title": "autoname may be inefficient for large circuits",
+  "body": "### Version\n\n0.57\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nSpinning out from #5277:\n\n> The current approach (which I haven't changed) is to check against double the best score. If the best name is more than twice as good as the current proposed name, we delay checking until the next iteration. Since the best score will always be assigned, the next iteration can now use that newly named object for naming other cells/wires. In the worst case this can however mean that only 1 name gets applied in each iteration, and there is no logic to check if a given proposal could actually be affected by another proposal being applied (meaning that it can take extra iterations without producing a different result). I think the way to do it would be that each wire/cell checks all of the connections, recording the best connection for that wire/cell separated into public/private scores, and then will only skip if there is a better private score and it isn't the best score available.\n\nI'm not sure how much performance impact this has in practice, but I thought I would at least open an issue so that there is some record.\n\n### Expected Behavior\n\nWires/cells delay renaming only if they have a private connection which may be better than their best public connection.\n\n### Actual Behavior\n\nWires/cells delay renaming if any private connection has a score less than half their best public connection.  This means that an object *with only public connections* may still delay renaming, which in turn delays any objects waiting for it to be renamed.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2025-09-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

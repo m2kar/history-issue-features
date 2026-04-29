@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 852,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/852",
+  "title": "vvp: Handle null-bytes in a conistent way when reading through VPI",
+  "body": "There are currently three different ways how null-bytes are handled when reading a value as vpiStringVal through the VPI API.\r\n\r\n 1) For string literals the null-byte is treated as the end of the string all further bytes are ignored\r\n 2) For literals all null-bytes are ignored\r\n 3) For signals any leading null-bytes are ignored, non-leading null-bytes are replaced with a space\r\n\r\nThe first one is clearly a bug and needs to be fixed. 2) and 3) could both be considered valid implementations since the LRM is not very clear on what should happen to null-bytes for vpiStringVal.\r\n\r\nBut for consistency we should use the same implementation for all 3 variants. This change implements variant 3), which means removing only leading null-bytes and replace others with spaces. This this based on the consensus that was found in #827 that this should be the implementation.\r\n\r\nThere are some other small subtle cases to consider for correct behavior.\r\n\r\n1) The LRM requires that the empty string (\"\") is equivalent to 8'h00. As a result e.g. `$display(\":%s:\", \"\")` should print `\": :\"`. In the current implementation it does print \"::\" and one test case gold file needs to be changed to account for this.\r\n\r\n2) The vlog95 backend currently removes leading null-bytes from string literals when emitting them to make the generated code more legible. This works fine for most cases, but results in incorrect behavior for a few corner cases. E.g. if a string literal has been zero-padded based on its context, but the context has been removed by optimization the result will be different. E.g. `$display(0 ? \"Yes\" : \"No\")` should print `\" No\"`, but will print `\"No\"` (without the space) in vlog95 mode. To ensure the behavior is correct for corner cases the vlog95 backend is modified to not remove the leading null-bytes from string literals. The downside is that slightly less legible code is generated in some cases.\r\n\r\nResolves #827.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-01-03",
+  "closed_at": "2023-01-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

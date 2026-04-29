@@ -1,0 +1,46 @@
+{
+  "tool": "iverilog",
+  "issue_number": 872,
+  "title": "Incorrect `always_comb` behavior, possible sensitivity issue",
+  "features": [
+    {
+      "name": "always_comb with variable overwritten by later assignment",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block where a reg variable is assigned a value early in the block, then overwritten with a different value later in the same block, and the variable is used in a separate continuous assignment",
+      "snippet": "reg [7:0] _GEN_0;\nwire [7:0] _GEN;\nalways_comb begin\n  _GEN_0 = 8'hF;\n  _GEN_0 = 8'h0;\nend\nassign _GEN = a & _GEN_0;",
+      "tags": ["always_comb", "variable_overwrite", "sensitivity"],
+      "source_bug_id": "872",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/872",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb reading wire fed by assign using same block's variable",
+      "category": "timing",
+      "description": "Code should include an always_comb block that reads a wire which is driven by an assign statement that uses a variable also assigned within the same always_comb block",
+      "snippet": "wire [7:0] _GEN;\nreg [7:0] _GEN_1;\nalways_comb begin\n  _GEN_1 = _GEN;\nend\nassign _GEN = a & _GEN_0;",
+      "tags": ["always_comb", "wire_dependency", "cross_block_dependency"],
+      "source_bug_id": "872",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/872",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_comb multiple assignments same variable different values",
+      "category": "control_flow",
+      "description": "Code should include an always_comb block with multiple assignments to the same variable with different literal values, where the variable drives an external wire",
+      "snippet": "reg [7:0] r;\nwire [7:0] w;\nalways_comb begin\n  r = 8'hF;\n  r = 8'h0;\nend\nassign w = a & r;",
+      "tags": ["always_comb", "multi_assignment", "literal_values"],
+      "source_bug_id": "872",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/872",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

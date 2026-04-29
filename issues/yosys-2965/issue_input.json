@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2965,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2965",
+  "title": "ecp5: LiteX dual clock memory may fail to map to DP16KD",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider this example where we read/write with different clocks. This is the pattern used by LiteX. \r\nSince 1eea06bcc0750de02a460f3e949df2f68f800382 it does not correctly map to DP16KD's if the output does not end up registered. \r\n\r\nRun the following verilog module through synth_ecp5\r\n```\r\nyosys -p \"read_verilog test.v\" -p \"synth_ecp5\"\r\n```\r\n\r\n```verilog\r\nmodule memtest(clk_a, clk_b, wr, wr_addr, wr_value, rd_addr, rd_value);\r\n\r\ninput clk_a, clk_b, wr;\r\ninput [8:0] wr_addr, rd_addr;\r\ninput [15:0] wr_value;\r\noutput wire [15:0] rd_value;\r\n\r\nreg [15:0] mem0 [0:512];\r\nreg [8:0] rd_addr_r;\r\n\r\nalways @(posedge clk_a) begin\r\n    if (wr)\r\n        mem0[wr_addr] <= wr_value;\r\nend\r\n\r\nalways @(posedge clk_b)\r\n    rd_addr_r <= rd_addr;\r\n\r\nassign rd_value = mem0[rd_addr_r];\r\n\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nBefore 1eea06bcc0750de02a460f3e949df2f68f800382 I got this result\r\n\r\n```\r\n   Number of cells:                  1\r\n     DP16KD                          1\r\n```\r\n\r\n## Actual behavior\r\n\r\nAfter The mentioned commit above, and in the current git master I get the following\r\n```\r\n   Number of cells:               3344\r\n     L6MUX21                       561\r\n     LUT4                         1781\r\n     PFUMX                         865\r\n     TRELLIS_DPR16X4               128\r\n     TRELLIS_FF                      9\r\n```\r\n\r\nIn the output from yosys it appears to not pick up the output clock domain `\\clk_b`.\r\n```\r\n2.26. Executing MEMORY_BRAM pass (mapping $mem cells to block memories).\r\nProcessing memtest.mem0:\r\n  Properties: ports=2 bits=8208 rports=1 wports=1 dbits=16 abits=10 words=513\r\n  Checking rule #1 for bram type $__ECP5_PDPW16KD (variant 1):\r\n    Bram geometry: abits=9 dbits=36 wports=0 rports=0\r\n    Estimated number of duplicates for more read ports: dups=1\r\n    Metrics for $__ECP5_PDPW16KD: awaste=511 dwaste=20 bwaste=18416 waste=18416 efficiency=22\r\n    Rule #1 for bram type $__ECP5_PDPW16KD (variant 1) accepted.\r\n    Mapping to bram type $__ECP5_PDPW16KD (variant 1):\r\n      Shuffle bit order to accommodate enable buckets of size 9..\r\n      Results of bit order shuffling: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 -1 -1\r\n      Write port #0 is in clock domain \\clk_a.\r\n        Mapped to bram port A1.\r\n      Read port #0 is in clock domain !~async~.\r\n        Bram port B1.1 has incompatible clock type.\r\n        Failed to map read port #0.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-08-15",
+  "closed_at": "2021-08-15",
+  "code_blocks": [
+    "module memtest(clk_a, clk_b, wr, wr_addr, wr_value, rd_addr, rd_value);\r\n\r\ninput clk_a, clk_b, wr;\r\ninput [8:0] wr_addr, rd_addr;\r\ninput [15:0] wr_value;\r\noutput wire [15:0] rd_value;\r\n\r\nreg [15:0] mem0 [0:512];\r\nreg [8:0] rd_addr_r;\r\n\r\nalways @(posedge clk_a) begin\r\n    if (wr)\r\n        mem0[wr_addr] <= wr_value;\r\nend\r\n\r\nalways @(posedge clk_b)\r\n    rd_addr_r <= rd_addr;\r\n\r\nassign rd_value = mem0[rd_addr_r];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

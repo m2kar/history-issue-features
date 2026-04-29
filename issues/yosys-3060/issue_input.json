@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3060,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3060",
+  "title": "Add async-load option to prep, proc, proc_dff and verific",
+  "body": "This adds code from #3031 but leaves old code as well. \r\n\r\nCode in line : https://github.com/YosysHQ/yosys/compare/micko/async-load?expand=1#diff-b8fc5a9979d976848637881b40cdd6a2b28d031f270fb775eadfbbe3b4454e54R197 is a bit ugly but easier to revert in future then multi line expression.\r\n\r\nRegarding Verific there is no more need for compile option to override value so that is reverted.\r\n\r\nTest example \r\n```\r\nmodule test (input clk, rstn, input [3:0] val, output reg [3:0] cnt);\r\n        always @ (posedge clk or negedge rstn) begin\r\n                if (~rstn)\r\n                        cnt <= val;\r\n                else\r\n                        cnt <= cnt + 1;\r\n        end\r\nendmodule\r\n```\r\n\r\ncmd line:\r\n```\r\nyosys -q -p 'read_verilog -sv test.v; prep -top test -async-load; write_rtlil; write_verilog'\r\n```\r\n\r\nverific:\r\n```\r\nyosys -q -p 'verific -async-load; read -sv test.v; prep -top test; write_rtlil; write_verilog'\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-26",
+  "closed_at": "2021-10-27",
+  "code_blocks": [
+    "module test (input clk, rstn, input [3:0] val, output reg [3:0] cnt);\r\n        always @ (posedge clk or negedge rstn) begin\r\n                if (~rstn)\r\n                        cnt <= val;\r\n                else\r\n                        cnt <= cnt + 1;\r\n        end\r\nendmodule",
+    "yosys -q -p 'read_verilog -sv test.v; prep -top test -async-load; write_rtlil; write_verilog'",
+    "yosys -q -p 'verific -async-load; read -sv test.v; prep -top test; write_rtlil; write_verilog'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

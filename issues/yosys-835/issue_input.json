@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 835,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/835",
+  "title": "Driver driver conflict on false-memory array",
+  "body": "## Steps to reproduce the issue\r\n\r\nThe enclosed ZIP [mcve-array.zip](https://github.com/YosysHQ/yosys/files/2917378/mcve-array.zip) file contains a short verilog file and an sby file.  Run SymbiYosys on the sby file.  \r\n\r\n## Expected behavior\r\n\r\nThe mcve.v verilog file contains a reference to a 2D array written as a memory, with per clock access to each element of the array.  the code is similar to the code shown below.\r\n\r\n    reg [LGCOUNT-1:0] counters [0:NS-1];\r\n\r\n    generate for(N=0; N<NS; N=N+1)\r\n    begin\r\n\r\n        always @(posedge i_clk)\r\n        if (i_stb[N])\r\n            counters[N] <= counters[N]+1;\r\n\r\n    end endgenerate\r\n\r\nObviously, `counters[N]` cannot be implemented as a memory.  It should instead be transformed into an LGCOUNT x NS array of FFs.  If yosys cannot do so, it should create an error and fail to implement the design as written.\r\n\r\n\r\n\r\n## Actual behavior\r\n\r\nYosys tries to create a memory for accessing counters, and then produces tons of driver/driver conflicts.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-02-28",
+  "closed_at": "2019-03-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

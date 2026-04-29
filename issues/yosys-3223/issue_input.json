@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3223,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3223",
+  "title": "Move SVA code out of Verific driver into core?",
+  "body": "[Antmicro's recent blog post](https://antmicro.com/blog/2022/02/simplifying-open-source-sv-synthesis-with-the-yosys-uhdm-plugin/) about integrating the up-and-coming Surelog SystemVerilog parser prompted me to kick its tires.  The parser's language support is very good and for the first time it's meaningful to talk about how a \"common core\" of SVA support would look that facilitates both Verific and other frontends.  It would be unspeakably fantastic to have SVA support in combination with Yosys's formal tooling.\r\n\r\nHere's a simple module for reference; Surelog correctly emits a parse tree for this.\r\n\r\n```systemverilog\r\nmodule very_simple(input clk, input data);\r\n    assert property( @(posedge clk) data |=> ~data);\r\nendmodule\r\n```\r\n\r\n(Perhaps you'd `bind` this into your design, which works out of the box with Surelog!)\r\n\r\nI decided to look at adding SVA support to AntMicro's plugin, but ran into a roadblock: it appears that most of Yosys's support for SVA is actually present in the frontend - e.g. `|=>` gets lowered to a state machine in this section:\r\n\r\nhttps://github.com/YosysHQ/yosys/blob/55e8f5061af57bf25bd9e30528de8196c6eabe9e/frontends/verific/verificsva.cc#L1560-L1567\r\n\r\n(I don't have a Verific-enabled version to try so it's possible I could be misinterpreting.)\r\n\r\nMuch of this looks like it should be common across any set of parsers that supply an SV AST - if I provide a \"concurrent assertion\" syntax tree, it can also be lowered to an FSM.  Is it feasible to move this functionality out of the Verific section?",
+  "labels": [
+    "enhancement",
+    "SystemVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-03-02",
+  "closed_at": null,
+  "code_blocks": [
+    "module very_simple(input clk, input data);\r\n    assert property( @(posedge clk) data |=> ~data);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

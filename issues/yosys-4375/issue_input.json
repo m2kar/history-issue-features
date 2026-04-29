@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4375,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4375",
+  "title": "Unexpected Result from `synth_gowin` Pass ",
+  "body": "### Version\n\nYosys 0.40+33 (git sha1 34d9a7451, clang++ 14.0.0-1ubuntu1.1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nI observed a potential error where 'ORing' an undriven net with an input net results in a `HIGH` output, after executing `synth_gowin`. The following example reproduces the potential error -- in this case, `buggy_a` is set `HIGH` when `bug_sub` is instantiated in `bug_top`.\r\n\r\n```\r\nmodule bug_sub(\r\n    input wire clk,\r\n    input wire buggy_a,\r\n    output wire x\r\n); \r\nreg [24:0] count; \r\nalways @(posedge clk)\r\n    if (buggy_a)\r\n        count <= count + 1'b1; \r\n    \r\nassign x = count[24]; \r\nendmodule\r\n\r\nmodule bug_top(\r\n    input wire clk,\r\n    input wire a, \r\n    input wire b,\r\n    output wire x\r\n);`\r\n    wire undriven_wire;\r\n    // assign undriven_wire = 1'b0; \r\n    bug_sub this_sub (\r\n        .clk(clk),\r\n        .buggy_a(a | undriven_wire),\r\n        .x(x)\r\n    );\r\n\r\nendmodule\r\n```\r\nThe following line from the log (`trace` on) showss that  `buggy_a` is indeed driven high:\r\n```\r\n#TRACE# Connection in module bug_top: \\this_sub.buggy_a = 1'1\r\n```\r\n\r\nThe potential error seems to disappear if I do one of the following:\r\n- explicitly assign `undriven_wire` to `1'b0` (as in the commented out line)\r\n- execute `setundef` earlier than `synth_gowin` executes it (in a custom synthesis script that otherwise mirrors `synth_gowin` \n\n### Expected Behavior\n\n`this_sub.a` should take on the the value of `a`, as `undriven_wire` is expected to be low (`synth_gowin` executes `setundef -zero`) .\n\n### Actual Behavior\n\n`this_sub.a` is driven `HIGH`.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-05",
+  "closed_at": "2024-05-08",
+  "code_blocks": [
+    "module bug_sub(\r\n    input wire clk,\r\n    input wire buggy_a,\r\n    output wire x\r\n); \r\nreg [24:0] count; \r\nalways @(posedge clk)\r\n    if (buggy_a)\r\n        count <= count + 1'b1; \r\n    \r\nassign x = count[24]; \r\nendmodule\r\n\r\nmodule bug_top(\r\n    input wire clk,\r\n    input wire a, \r\n    input wire b,\r\n    output wire x\r\n);`\r\n    wire undriven_wire;\r\n    // assign undriven_wire = 1'b0; \r\n    bug_sub this_sub (\r\n        .clk(clk),\r\n        .buggy_a(a | undriven_wire),\r\n        .x(x)\r\n    );\r\n\r\nendmodule",
+    "#TRACE# Connection in module bug_top: \\this_sub.buggy_a = 1'1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

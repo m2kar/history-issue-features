@@ -1,0 +1,33 @@
+{
+  "tool": "iverilog",
+  "issue_number": 938,
+  "title": "Handle implicit task/function imports in the unit scope",
+  "features": [
+    {
+      "name": "wildcard package import with unit-scope function call",
+      "category": "control_flow",
+      "description": "Code should include a wildcard package import (import pkgname::*), a function declared in that package, and a module that calls that function using a symbol that gets defined later in the same scope",
+      "snippet": "package test_pkt;\n    function [3:0] add;\n        input [3:0] a;\n        input [3:0] b;\n        add = a+b;\n    endfunction\nendpackage\n\nimport test_pkt::*;\n\nmodule test;\nreg[3:0] to;\ninitial to = add(A,B);\nendmodule",
+      "tags": ["package_import", "wildcard_import", "function_call", "unit_scope"],
+      "source_bug_id": "928",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/938",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "deferred symbol resolution for implicit package imports",
+      "category": "control_flow",
+      "description": "Code should include a construct where an imported function symbol has a same-named variable declared later in the unit scope, causing the compiler to defer and then fail resolution",
+      "snippet": "import test_pkt::*;\nfunction int add(int a, int b); return a+b; endfunction\nmodule top; initial $display(\"%d\", add(1,2)); endmodule",
+      "tags": ["symbol_resolution", "implicit_import", "deferred_check"],
+      "source_bug_id": "928",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/938",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

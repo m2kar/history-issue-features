@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 968,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/968",
+  "title": "Loop variables don't persist following the loop but within the same block",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following code:\r\n\r\n```verilog\r\nmodule mcve1(i_value, o_value);\r\n\tinput\twire\t[3:0]\ti_value;\r\n\toutput\treg\t[7:0]\to_value;\r\n\r\n\tinteger k;\r\n\talways @(*)\r\n\tbegin\r\n\t\tfor(k=0; k<4; k=k+1)\r\n\t\t\to_value[k] = i_value[k];\r\n\t\to_value[4] = i_value[k];\r\n\t\to_value[5] = i_value[k];\r\n\t\to_value[6] = i_value[k];\r\n\t\to_value[7] = i_value[k];\r\n\tend\r\nendmodule\r\n```\r\n\r\nand process it with\r\n```\r\nyosys -p 'read -sv mcve1.v; synth; write_verilog mcve1y.v'\r\n```\r\n\r\n## Expected behavior\r\n\r\nI'd expect the resulting Verilog code to look something like,\r\n\r\n```verilog\r\n    assign o_value = { {(5){i_value[3]}}, i_value[2:0] };\r\n```\r\n\r\n## Actual behavior\r\n\r\nInstead, I get\r\n\r\n```verilog\r\n    assign o_value = { 4'hx, i_value };\r\n```\r\n\r\nThe difference between the two is whether or not the loop variable maintains its last value after exiting the context of the for loop.",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-04-29",
+  "closed_at": "2019-05-06",
+  "code_blocks": [
+    "module mcve1(i_value, o_value);\r\n\tinput\twire\t[3:0]\ti_value;\r\n\toutput\treg\t[7:0]\to_value;\r\n\r\n\tinteger k;\r\n\talways @(*)\r\n\tbegin\r\n\t\tfor(k=0; k<4; k=k+1)\r\n\t\t\to_value[k] = i_value[k];\r\n\t\to_value[4] = i_value[k];\r\n\t\to_value[5] = i_value[k];\r\n\t\to_value[6] = i_value[k];\r\n\t\to_value[7] = i_value[k];\r\n\tend\r\nendmodule",
+    "yosys -p 'read -sv mcve1.v; synth; write_verilog mcve1y.v'",
+    "assign o_value = { {(5){i_value[3]}}, i_value[2:0] };",
+    "assign o_value = { 4'hx, i_value };"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5160,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5160",
+  "title": "verilog: improve string literal matching speed (fixes #5076)",
+  "body": "Use a greedy regular expression to match input inside a string literal, so that flex can accumulate a longer match instead of invoking a rule for each individual character.\r\n\r\n_What are the reasons/motivation for this change?_\r\nBefore this change, matching long string literals was slow (see issue #5706).\r\n\r\n_Explain how this is achieved._\r\nA small regexp is added to match the body of string literals while in the `<STRING>` state; this allows the DFA to do the work of analysing the string so it doesn't have to suspend processing between characters.\r\n\r\nFrom the `flex` manual:\r\n> Another area where the user can increase a scanner's performance (and one that's easier to implement) arises from the fact that the longer the tokens matched, the faster the scanner will run.  This is because with long tokens the processing of most input characters takes place in the (short) inner scanning loop, and does not often have to go through the additional work of setting up the scanning environment (e.g., 'yytext') for the action.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\nTry the test case attached to #5076, or use the following shell script.  There should be a significant speedup (say 50-100x) after applying this change.\r\n\r\n```\r\n#!/bin/sh\r\na='Hello, world.   ' # 16 chars\r\nb=\"$a$a$a$a$a$a$a$a$a$a$a$a$a$a$a$a\" # 256 chars\r\nc=\"$b$b$b$b$b$b$b$b$b$b$b$b$b$b$b$b\" # 4096 chars\r\nd=\"$c$c$c$c$c$c$c$c\" # 32768 chars\r\necho \"module big;\" > big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"endmodule\" >> big.v\r\n${YOSYS:-yosys} -p \"read_verilog big.v\"\r\n```",
+  "labels": [
+    "merge-after-release"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-01",
+  "closed_at": "2025-06-12",
+  "code_blocks": [
+    "#!/bin/sh\r\na='Hello, world.   ' # 16 chars\r\nb=\"$a$a$a$a$a$a$a$a$a$a$a$a$a$a$a$a\" # 256 chars\r\nc=\"$b$b$b$b$b$b$b$b$b$b$b$b$b$b$b$b\" # 4096 chars\r\nd=\"$c$c$c$c$c$c$c$c\" # 32768 chars\r\necho \"module big;\" > big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"    initial if( 0 ) \\$display( \\\"$d\\\" );\" >> big.v\r\necho \"endmodule\" >> big.v\r\n${YOSYS:-yosys} -p \"read_verilog big.v\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

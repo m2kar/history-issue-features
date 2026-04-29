@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 3329,
+  "title": "submod command introduces 'inout' ports which results in simulation failures",
+  "features": [
+    {
+      "name": "generate loop bit-indexed register assignment",
+      "category": "control_flow",
+      "description": "Code should include a generate-for loop that assigns individual bits of a reg using a genvar as the bit index in a clocked always block",
+      "snippet": "reg [7:0] data;\ngenerate\ngenvar i;\nfor (i = 0; i <= 7; i = i + 1) begin\n    always @(posedge clk)\n        data[i] <= a[i] & b[i];\nend\nendgenerate",
+      "tags": ["generate", "genvar", "bit_select", "reg", "clocked_always", "bit_indexed_assignment"],
+      "source_bug_id": "3329",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3329",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bitwise NOT of generate-driven register assigned to output",
+      "category": "general",
+      "description": "Code should include a clocked always block that assigns the bitwise NOT of a multi-bit register (whose bits are individually driven by a generate loop) to an output port",
+      "snippet": "reg [7:0] data;\noutput logic [7:0] out;\n// data bits driven bit-by-bit elsewhere\nalways @(posedge clk)\n    out <= ~data;",
+      "tags": ["bitwise_not", "register", "output_assignment", "clocked_always", "multi_bit"],
+      "source_bug_id": "3329",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3329",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "inout port with partial internal bit drive",
+      "category": "data_model",
+      "description": "Code should include a module with an inout port where only some bits of the port are driven internally via register assignments and continuous assign, while the remaining bits are undriven within that module",
+      "snippet": "module part__0(clk, a, b, data, n1);\n  input clk;\n  input [7:0] a, b;\n  inout [7:0] data;\n  wire [7:0] data;\n  reg data_reg2;\n  always @(posedge clk)\n    data_reg2 <= a[2] & b[2];\n  assign data[2] = data_reg2;\nendmodule",
+      "tags": ["inout", "port", "partial_drive", "bit_select", "assign", "register"],
+      "source_bug_id": "3329",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3329",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-bit signal distributed across submodule instantiations via concatenation",
+      "category": "data_model",
+      "description": "Code should include a parent module that connects different bit slices of the same wire to the same-named port of two different submodule instances using concatenation expressions",
+      "snippet": "wire [7:0] data;\npart__0 u0 (\n    .data({ w7, w6, w5, w4, w3, data[2], w1, w0 })\n);\npart__1 u1 (\n    .data({ data[7:3], w_mid, data[1:0] })\n);",
+      "tags": ["port_connection", "concatenation", "bit_slice", "multi_instance", "wire_sharing"],
+      "source_bug_id": "3329",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3329",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

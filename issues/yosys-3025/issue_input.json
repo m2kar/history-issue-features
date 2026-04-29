@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3025,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3025",
+  "title": "Add $aldff and $aldffe: flip-flops with async load.",
+  "body": "This is just a proposal of the cell interface, for discussion.  If accepted, the implementation plan is:\r\n\r\n1. Add the cells to `kernel/rtlil.*` and other places having the list of cells.\r\n2. Modify `FfData` to add fields representing async load. For consistency and to simplify some code, I'd also propose changing the latch representation to use the new async load / async data fields instead of the current approach of using the same data / enable fields as FFs. \r\n3. Add minor changes to passes handling `FfData` to handle the new functionality:\r\n   - `kernel/ffmerge.cc`: simply recognize the new fields\r\n   - `kernel/satgen.cc`: FFs with async set/reset are already not supported, extend the same treatment to async load\r\n   - `memory_dff`: reject the new FF types for read port merging\r\n   - `write_verilog`, `write_cxxrtl`, `zinit`, `clk2fflogic`, `async2sync`, `simplemap`, `wreduce`, `pmux2shift`: handle them the obvious way\r\n   - `opt_expr`: add to the \"merge inverters\" list\r\n4. Add support to `opt_dff` for optimizations involving the new cell type:\r\n   - convert async load with const data to plain async reset\r\n   - remove async load with always-off enable\r\n   - replace async load with always-on enable with a buffer\r\n   - replace a FF that has async load and const clock / always-off clock enable with a latch\r\n   - (discuss this one) recognize dffsr with set/reset signals that emulate async load, convert to aldff\r\n5. Add support to `dfflegalize`:\r\n   - use `aldff` / `aldffe` to map \"simpler\" cells: `dff`, `dffe`, `adff`, `adffe`, `dlatch`\r\n   - when not available, do the usual horrible async FF emulation dance with a warning\r\n6. Add code to `proc_dff` to actually emit the cell when appropriate\r\n7. Add FF mapping rules for ECP5+nexus (replacing current rules for dffsr and dlatch, letting `dfflegalize` handle them); may also consider sf2 and (non-ALM) intel, but both of those are pretty much unmaintained at the moment and I'd rather avoid messing something up here",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-01",
+  "closed_at": "2021-10-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

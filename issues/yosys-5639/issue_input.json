@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5639,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5639",
+  "title": "ABC9 is replacing missing ports with ports connected to 0, breaking Nexus carry chains",
+  "body": "### Version\n\nYosys 0.61+56 (git sha1 125609105-dirty, g++ 15.2.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe approach used for carry chain synthesis for nexus always uses first carry feed in cell that does not have a `CIN` port on it. This is because in practice, two carry chains might be placed next to each other so the `CIN` of the first (coming from hard routing) needs to be a \"don't care\": https://github.com/YosysHQ/yosys/blob/33e4b1d97f59eb6e3b1359b376ba2179b5d63ade/techlibs/lattice/arith_map_nexus.v#L67-L76 (nextpnr strictly enforces this).\n\nWhen running an adder design like this through `synth_nexus -abc9`, this is replaced with a `CIN` connected to a constant zero, which cannot be placed with how nextpnr handles this currently. This definitely used to be left disconnected at some point in the past...\n \n```verilog\nmodule top(input [4:0] a, b, output [4:0] y);\nassign y = a + b;\nendmodule\n```\n\n```\n cell \\VLO \\y_OB_O_I_CCU2_S0_A1_VLO_Z\n    connect \\Z \\y_OB_O_I_CCU2_S0_A1\n  end\n\n  attribute \\module_not_derived 1\n  attribute \\src \"add.v:2.12-2.17|/usr/local/bin/../share/yosys/nexus/arith_map.v:72.4-76.3\"\n  cell \\CCU2 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT\n    parameter \\INIT0 \"0xFFFF\"\n    parameter \\INIT1 \"0x00AA\"\n    parameter \\INJECT \"NO\"\n    connect \\A0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\A1 \\y_OB_O_I_CCU2_S0_A1\n    connect \\B0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\B1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\C0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\C1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\CIN \\y_OB_O_I_CCU2_S0_A1\n    connect \\COUT \\y_OB_O_I_CCU2_S0_2_CIN\n    connect \\D0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\D1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\S0 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT_S0\n    connect \\S1 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT_S1\n  end\n```\n\n\n### Expected Behavior\n\nEither the CIN port remains missing/disconnected, or if this isn't easily possible to fix, then I'll need to rewrite the nexus techmaps and possibly some of the nextpnr support too...\n\n### Actual Behavior\n\nSee above",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2026-01-27",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input [4:0] a, b, output [4:0] y);\nassign y = a + b;\nendmodule",
+    "cell \\VLO \\y_OB_O_I_CCU2_S0_A1_VLO_Z\n    connect \\Z \\y_OB_O_I_CCU2_S0_A1\n  end\n\n  attribute \\module_not_derived 1\n  attribute \\src \"add.v:2.12-2.17|/usr/local/bin/../share/yosys/nexus/arith_map.v:72.4-76.3\"\n  cell \\CCU2 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT\n    parameter \\INIT0 \"0xFFFF\"\n    parameter \\INIT1 \"0x00AA\"\n    parameter \\INJECT \"NO\"\n    connect \\A0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\A1 \\y_OB_O_I_CCU2_S0_A1\n    connect \\B0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\B1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\C0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\C1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\CIN \\y_OB_O_I_CCU2_S0_A1\n    connect \\COUT \\y_OB_O_I_CCU2_S0_2_CIN\n    connect \\D0 \\y_OB_O_I_CCU2_S0_D0\n    connect \\D1 \\y_OB_O_I_CCU2_S0_D0\n    connect \\S0 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT_S0\n    connect \\S1 \\y_OB_O_I_CCU2_S0_2_CIN_CCU2_COUT_S1\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

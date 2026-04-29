@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 513,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/513",
+  "title": "Add error checking for reg/wire/logic misuse - PR now passes 'make test' (plus a new test)",
+  "body": "In response to Issue #512, here is a PR that starts addressing this issue (but has issues of\r\nIt correctly detects reg/wire mix and incorrect use on blocking, nonblocking assignments within blocks and assign statements.\r\nIt seems that within Yosys, wire/reg/logic were all synonyms until now, and that actual behavior was determined by usage. (assign stmt vs (non)blocking assignment within an always block).\r\n\r\nYou can test it with tests/simple/reg_wire_error.v (look inside for the comments to enable/disable specific lines)\r\n\r\nWhat it DOES'T do (yet):\r\nDetect registers connected to output ports of instances.\r\n\r\n***Where it FAILS (do not commit this PR as is!):***\r\n1. memorty nonblocking assignments causes spurious (I assume??) errors on yosys-generated \"_ADDR\", \"_DATA\", \"EN\" signals, as these appear in the AST dump without any \"reg\" attribute, yet they are driven within an AST_BLOCK by an AST_ASSIGN_LE (tests/techmap/mem_simple_4x1_uut.v)\r\n2. running 'make test' fails with a segmentation fault on tests/simple/mem2reg .\r\n\r\nso @cliffordwolf, before I proceed to do additional work, I would like to know first your position on 2 issues:\r\n1. Do you really _want_ support for more strict error checking, or is the current situation really what you intended to be (where no error checking is done)?\r\n2. Distinguishing between 1364-1995, 1364-2001, 1364-2005, 1800-2009, 1800-2012 ?\r\nI remember from a past PR you actually _removed_ a check that enabled a SV feature only when the SV flag was used. What you wrote at the time was that as long as any SV extension did not have the potential to misinterpret legacy Verilog code, you enable it even when no -sv flag was used.\r\nPersonally, I think we should add separate flags for the above, and I don't mind contibuting PRs towards this goal. At  least that's what other tools  do (Verilator & gcc '-std=' flag).\r\n\r\nI'll leave my specific questions for debugging the memory issue for a separate comment.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-03-09",
+  "closed_at": "2018-08-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

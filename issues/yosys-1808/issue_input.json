@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1808,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1808",
+  "title": "Weird JSON output for 0-bit constants",
+  "body": "Take this Verilog code:\r\n```verilog\r\nmodule test2(input [1:0] i, output o);\r\n  assign o = i;\r\nendmodule\r\nmodule test(output o);\r\n  test2 x(0'b1, o);\r\nendmodule\r\n```\r\nThe following JSON is generated from it:\r\n```json\r\n        \"x\": {\r\n          \"hide_name\": 0,\r\n          \"type\": \"test2\",\r\n          \"parameters\": {},\r\n          \"attributes\": {\r\n            \"module_not_derived\": 1,\r\n            \"src\": \"test.sv:5\"\r\n          },\r\n          \"port_directions\": {\r\n            \"i\": \"input\",\r\n            \"o\": \"output\"\r\n          },\r\n          \"connections\": {\r\n            \"i\": [],\r\n            \"o\": [\r\n              2\r\n            ]\r\n          }\r\n        }\r\n      },\r\n```\r\nSee that there is nothing connected to the \"i\" input.\r\n\r\nIn other cases, Yosys makes sure that the input connection has the required number of bits. For example, if the `0'b1` is changed to `1'b1`, we now get:\r\n```json\r\n          \"connections\": {\r\n            \"i\": [\r\n              \"1\",\r\n              \"0\"\r\n            ],\r\n            \"o\": [\r\n              2\r\n            ]\r\n          }\r\n```\r\nSo Yosys correctly zero-extended the one-bit constant to two bits.\r\n\r\nI'm reporting this issue, because in my project, yosys2digitaljs, I'm relying on the connections being correctly extended. It works fine for every sensible example I've seen, but the zero-bit constant breaks things. I'm using yosys2digitaljs for teaching, and the test example comes from one of my students, who mistakenly thought `0'b1` is a 1-bit constant with value 0.\r\n\r\nIs this a Yosys issue, or is it normal and I should accept these kinds of inputs?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-23",
+  "closed_at": "2020-04-02",
+  "code_blocks": [
+    "module test2(input [1:0] i, output o);\r\n  assign o = i;\r\nendmodule\r\nmodule test(output o);\r\n  test2 x(0'b1, o);\r\nendmodule",
+    "\"x\": {\r\n          \"hide_name\": 0,\r\n          \"type\": \"test2\",\r\n          \"parameters\": {},\r\n          \"attributes\": {\r\n            \"module_not_derived\": 1,\r\n            \"src\": \"test.sv:5\"\r\n          },\r\n          \"port_directions\": {\r\n            \"i\": \"input\",\r\n            \"o\": \"output\"\r\n          },\r\n          \"connections\": {\r\n            \"i\": [],\r\n            \"o\": [\r\n              2\r\n            ]\r\n          }\r\n        }\r\n      },"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

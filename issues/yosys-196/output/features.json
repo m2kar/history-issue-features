@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 196,
+  "title": "ERROR: Found error in internal cell \\top.$procdff$28 ($adff) at kernel/rtlil.cc:640",
+  "features": [
+    {
+      "name": "async reset flip-flop with case statement",
+      "category": "control_flow",
+      "description": "Code should include an always block with mixed edge sensitivity (posedge clock or negedge reset) containing a case statement for state machine with multi-bit register",
+      "snippet": "reg [2:0] state;\nalways @(posedge clk or negedge reset)\n    if(!reset) state <= 0;\n    else case(state)\n        0: state <= 1;\n        1: state <= 2;\n        2: state <= 3;\n    endcase",
+      "tags": ["async_reset", "flip_flop", "case_statement", "state_machine"],
+      "source_bug_id": "196",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/196",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "multi-bit register async reset with non-zero reset value",
+      "category": "data_model",
+      "description": "Code should include a multi-bit register with async reset where reset value is non-zero and reset polarity differs from clock edge type",
+      "snippet": "reg [2:0] state;\nalways @(posedge divcnt or negedge reset)\n    if(!reset) state <= 3'b010;\n    else state <= state + 1;",
+      "tags": ["async_reset", "multi_bit_register", "reset_value", "mixed_edges"],
+      "source_bug_id": "196",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/196",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "state machine with case and async reset",
+      "category": "control_flow",
+      "description": "Code should include a state machine using case statement inside an always block with async reset, where state transitions form a complete cycle",
+      "snippet": "reg [2:0] state;\nalways @(posedge clk or negedge rst_n)\n    if(!rst_n) state <= 0;\n    else case(state)\n        0: state <= 1;\n        1: state <= 2;\n        2: state <= 3;\n        3: state <= 4;\n        4: state <= 5;\n        5: state <= 0;\n    endcase",
+      "tags": ["state_machine", "async_reset", "case_statement", "complete_cycle"],
+      "source_bug_id": "196",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/196",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

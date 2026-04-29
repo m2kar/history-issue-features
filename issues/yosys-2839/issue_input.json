@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2839,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2839",
+  "title": "Add support for parsing the SystemVerilog 'bind' construct",
+  "body": "This doesn't do anything useful yet: the patch just adds support for\r\nthe syntax to the lexer and parser and adds some tests to check the\r\nsyntax parses properly. This generates AST nodes, but doesn't yet\r\ngenerate RTLIL.\r\n\r\nSince our existing `hierarchical_identifier` parser doesn't allow bit\r\nselects (so you can't do something like `foo[1].bar[2].baz`), I've also\r\nnot added support for a trailing bit select (the `constant_bit_select`\r\nnon-terminal in `bind_target_instance` in the spec). If we turn out to\r\nneed this in future, we'll want to augment `hierarchical_identifier` and\r\nits other users too.\r\n\r\nNote that you can't easily use the BNF from the spec:\r\n\r\n    bind_directive ::=\r\n        \"bind\" bind_target_scope [ : bind_target_instance_list]\r\n               bind_instantiation ;\r\n      | \"bind\" bind_target_instance bind_instantiation ;\r\n\r\neven if you fix the lookahead problem, because code like this matches\r\nboth branches in the BNF:\r\n\r\n    bind a b b_i (.*);\r\n\r\nThe problem is that 'a' could either be a module name or a degenerate\r\nhierarchical reference. This seems to be a genuine syntactic\r\nambiguity, which the spec resolves (p739) by saying that we have to\r\nwait until resolution time (the hierarchy pass) and take whatever is\r\ndefined, treating 'a' as an instance name if it names both an instance\r\nand a module.\r\n\r\nTo keep the parser simple, it currently accepts this invalid syntax:\r\n\r\n    bind a.b : c d e (.*);\r\n\r\nThis is invalid because we're in the first branch of the BNF above, so\r\nthe `a.b` term should match bind_target_scope: a module or interface\r\nidentifier, not an arbitrary hierarchical identifier.\r\n\r\nThis will fail in the hierarchy pass (when it's implemented in a\r\nfuture patch).\r\n\r\nThis is part of the commit queue in #2752, but has been split out to make reviewing easier.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-06-17",
+  "closed_at": "2021-07-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

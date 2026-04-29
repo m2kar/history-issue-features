@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2660,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2660",
+  "title": "Unexpected case sensitivity in port names",
+  "body": "I use ghdl plugin for parsing VHDL code to be synthesized with Yosys to iCE40.\r\n\r\nGHDL 2.0.0-dev (1.0.0.r73.g691be6df)\r\nYosys 0.9+4008 (git sha1 396ad17e, gcc 10.2.0-13ubuntu1 -fPIC -Os)\r\n\r\nMy library contains the following (trivial) adapter entity:\r\n\r\n```\r\nlibrary ieee;\r\nuse ieee.std_logic_1164.all;\r\n\r\nentity clock_buffer is\r\n  port(\r\n    clock_i      : in std_ulogic;\r\n    clock_o      : out std_ulogic\r\n    );\r\nend entity;\r\n\r\narchitecture ice of clock_buffer is\r\n\r\n  component SB_GB\r\n    port (\r\n      user_signal_to_global_buffer:in std_logic;\r\n      global_buffer_output:out std_logic\r\n      );\r\n  end component;\r\n\r\nbegin\r\n\r\n  gb: sb_gb\r\n    port map(\r\n      user_signal_to_global_buffer => clock_i,\r\n      global_buffer_output => clock_o\r\n      );\r\n\r\nend architecture;\r\n```\r\n\r\nIf used in a design, elaboration works, but when mapping to library, process fails with the following error:\r\n```\r\nERROR: Module `SB_GB' referenced in module `clock_buffer' in cell `gb' does not have a port named 'global_buffer_output'.\r\n```\r\n\r\nIf I change architecture in my VHDL code to (i.e. replace both port declaration and mapping to upper-case), it works.\r\n```\r\narchitecture ice of clock_buffer is\r\n\r\n  component SB_GB\r\n    port (\r\n      USER_SIGNAL_TO_GLOBAL_BUFFER:in std_logic;\r\n      GLOBAL_BUFFER_OUTPUT:out std_logic\r\n      );\r\n  end component;\r\n\r\nbegin\r\n\r\n  gb: sb_gb\r\n    port map(\r\n      USER_SIGNAL_TO_GLOBAL_BUFFER => clock_i,\r\n      GLOBAL_BUFFER_OUTPUT => clock_o\r\n      );\r\n\r\nend architecture;\r\n```\r\n\r\nAlternatively, if I change forward declaration to the following (note case change for component name):\r\n```\r\n  component sb_gb\r\n    port (\r\n      user_signal_to_global_buffer:in std_logic;\r\n      global_buffer_output:out std_logic\r\n      );\r\n  end component;\r\n```\r\nit works as well.\r\n\r\nThere must be some unwanted case-sensitive matching somewhere.\r\n\r\nAttached a test case: [case-mapping.zip](https://github.com/YosysHQ/yosys/files/6135612/case-mapping.zip)\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-03-13",
+  "closed_at": null,
+  "code_blocks": [
+    "library ieee;\r\nuse ieee.std_logic_1164.all;\r\n\r\nentity clock_buffer is\r\n  port(\r\n    clock_i      : in std_ulogic;\r\n    clock_o      : out std_ulogic\r\n    );\r\nend entity;\r\n\r\narchitecture ice of clock_buffer is\r\n\r\n  component SB_GB\r\n    port (\r\n      user_signal_to_global_buffer:in std_logic;\r\n      global_buffer_output:out std_logic\r\n      );\r\n  end component;\r\n\r\nbegin\r\n\r\n  gb: sb_gb\r\n    port map(\r\n      user_signal_to_global_buffer => clock_i,\r\n      global_buffer_output => clock_o\r\n      );\r\n\r\nend architecture;",
+    "ERROR: Module `SB_GB' referenced in module `clock_buffer' in cell `gb' does not have a port named 'global_buffer_output'.",
+    "architecture ice of clock_buffer is\r\n\r\n  component SB_GB\r\n    port (\r\n      USER_SIGNAL_TO_GLOBAL_BUFFER:in std_logic;\r\n      GLOBAL_BUFFER_OUTPUT:out std_logic\r\n      );\r\n  end component;\r\n\r\nbegin\r\n\r\n  gb: sb_gb\r\n    port map(\r\n      USER_SIGNAL_TO_GLOBAL_BUFFER => clock_i,\r\n      GLOBAL_BUFFER_OUTPUT => clock_o\r\n      );\r\n\r\nend architecture;",
+    "component sb_gb\r\n    port (\r\n      user_signal_to_global_buffer:in std_logic;\r\n      global_buffer_output:out std_logic\r\n      );\r\n  end component;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

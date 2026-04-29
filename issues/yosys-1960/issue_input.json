@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1960,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1960",
+  "title": "SMT-LIB backend generates two datatype fields for async read-only memories",
+  "body": "Hi, I have a question regarding why Yoys's SMT-LIB backend handles async read-only memories the way it does.\r\n\r\nFor example, if I have Verilog like:\r\n```verilog\r\nmodule rom(\r\n    input clk,\r\n    input [3:0] addr,\r\n    output [31:0] dout,\r\n);\r\n    reg [31:0] rom [15:0];\r\n\r\n    assign dout = rom[addr];\r\nendmodule\r\n```\r\n\r\nAnd synthesize it like so:\r\n```\r\nyosys -p 'read_verilog example.v' \\\r\n    -p 'prep -top rom' \\\r\n    -p 'write_smt2 -stdt out.smt2'\r\n```\r\n\r\nThen the datatype for the module in the output file looks like this:\r\n```\r\n(declare-datatype |rom_s| ((|rom_mk|\r\n  (|rom_is| Bool)\r\n  (|rom#0| (_ BitVec 4)) ; \\addr\r\n  (|rom#1| Bool) ; \\clk\r\n  (|rom#2#final| (Array (_ BitVec 4) (_ BitVec 32))) ; rom\r\n  (|rom#2#0| (Array (_ BitVec 4) (_ BitVec 32))) ; rom\r\n)))\r\n```\r\n\r\nWith duplicate entries for the `rom` register. I'm curious what the purpose is of exporting these two separate fields? It seems like they're forced to be equivalent in the hierarchy relation:\r\n```\r\n(define-fun |rom_h| ((state |rom_s|)) Bool\r\n  (= (|rom#2#0| state) (|rom#2#final| state)) ; rom\r\n)\r\n```\r\n\r\nI'm wondering about this because I'm woking on a project using a custom verification script that interprets the comments after each datatype field to give them useful names, and it breaks on inputs like these due to the repeated name (\"rom\" in this case). I can work around this, but it made me curious about the purpose of this pattern and also whether it's something that might make sense to fix in the backend (either eliminating the duplicate state if unnecessary, or maybe modifying the associated name comments to make them distinct?)\r\n\r\nThank you!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-17",
+  "closed_at": "2020-06-17",
+  "code_blocks": [
+    "module rom(\r\n    input clk,\r\n    input [3:0] addr,\r\n    output [31:0] dout,\r\n);\r\n    reg [31:0] rom [15:0];\r\n\r\n    assign dout = rom[addr];\r\nendmodule",
+    "(declare-datatype |rom_s| ((|rom_mk|\r\n  (|rom_is| Bool)\r\n  (|rom#0| (_ BitVec 4)) ; \\addr\r\n  (|rom#1| Bool) ; \\clk\r\n  (|rom#2#final| (Array (_ BitVec 4) (_ BitVec 32))) ; rom\r\n  (|rom#2#0| (Array (_ BitVec 4) (_ BitVec 32))) ; rom\r\n)))",
+    "(define-fun |rom_h| ((state |rom_s|)) Bool\r\n  (= (|rom#2#0| state) (|rom#2#final| state)) ; rom\r\n)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

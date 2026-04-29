@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2614,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2614",
+  "title": "Latency 5+ self unproven circuit",
+  "body": "## Steps to reproduce the issue\r\n\r\nThe following Verilog have: `ERROR: Found 4 unproven $equiv cells in 'equiv_status -assert'.` with itself.\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        clock,\r\n  input        reset,\r\n  output [3:0] tmp30,\r\n  input  [3:0] inp_i\r\n);\r\n  reg [3:0] _tmp4;\r\n  reg [3:0] tmp7;\r\n  reg [3:0] tmp8;\r\n  reg [3:0] tmp10;\r\n  reg [3:0] tmp19;\r\n  assign tmp30 = tmp19;\r\n  always @(posedge clock) begin\r\n    if (reset) begin\r\n      _tmp4 <= 4'h0;\r\n      tmp7 <= 4'h0;\r\n      tmp8 <= 4'h0;\r\n      tmp10 <= 4'h0;\r\n      tmp19 <= 4'h0;\r\n    end else begin\r\n      _tmp4 <= inp_i;\r\n      tmp7 <= _tmp4;\r\n      tmp8 <= tmp7;\r\n      tmp10 <= tmp8;\r\n      tmp19 <= tmp10;\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\n```bash\r\nyosys -q -p \"\r\n  read_verilog top_mod.v\r\n  rename top_mod top1\r\n  proc\r\n  memory\r\n  flatten top1\r\n  hierarchy -top top1\r\n  read_verilog top_mod.v\r\n  rename top_mod top2\r\n  proc\r\n  memory\r\n  flatten top2\r\n  equiv_make top1 top2 equiv\r\n  hierarchy -top equiv\r\n  clean -purge\r\n  equiv_simple -short -undef\r\n  equiv_induct\r\n  equiv_status -assert\r\n\"\r\n```\r\n\r\n`Yosys 0.9+3911 (git sha1 58a57551, clang 11.0.1 -fPIC -Os)`\r\n\r\n## Expected behavior\r\n\r\nto be equivalent with itself\r\n\r\n`ERROR: Found 4 unproven $equiv cells in 'equiv_status -assert'.`\r\n\r\n## Actual behavior\r\n\r\nnot equivalent to itself\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-02-25",
+  "closed_at": "2021-02-26",
+  "code_blocks": [
+    "module top_mod(\r\n  input        clock,\r\n  input        reset,\r\n  output [3:0] tmp30,\r\n  input  [3:0] inp_i\r\n);\r\n  reg [3:0] _tmp4;\r\n  reg [3:0] tmp7;\r\n  reg [3:0] tmp8;\r\n  reg [3:0] tmp10;\r\n  reg [3:0] tmp19;\r\n  assign tmp30 = tmp19;\r\n  always @(posedge clock) begin\r\n    if (reset) begin\r\n      _tmp4 <= 4'h0;\r\n      tmp7 <= 4'h0;\r\n      tmp8 <= 4'h0;\r\n      tmp10 <= 4'h0;\r\n      tmp19 <= 4'h0;\r\n    end else begin\r\n      _tmp4 <= inp_i;\r\n      tmp7 <= _tmp4;\r\n      tmp8 <= tmp7;\r\n      tmp10 <= tmp8;\r\n      tmp19 <= tmp10;\r\n    end\r\n  end\r\nendmodule",
+    "yosys -q -p \"\r\n  read_verilog top_mod.v\r\n  rename top_mod top1\r\n  proc\r\n  memory\r\n  flatten top1\r\n  hierarchy -top top1\r\n  read_verilog top_mod.v\r\n  rename top_mod top2\r\n  proc\r\n  memory\r\n  flatten top2\r\n  equiv_make top1 top2 equiv\r\n  hierarchy -top equiv\r\n  clean -purge\r\n  equiv_simple -short -undef\r\n  equiv_induct\r\n  equiv_status -assert\r\n\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

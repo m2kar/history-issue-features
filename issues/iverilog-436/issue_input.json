@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 436,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/436",
+  "title": "SV: string len() operator in expressions not working",
+  "body": "Hi,\r\n  A string Q is used, its elements are processed inside a foreach, so far it works. Now, foreach element in this string Q, say we want to compare the length of the string and do some processing, Icarus breaks. \r\n\r\nMinmalist test:\r\n\r\n```verilog\r\nmodule m;\r\n\r\n  string m_argv [$];\r\n\r\n  initial begin\r\n    m_argv.push_back (\"str0\");\r\n\r\n    foreach (m_argv[i]) begin\r\n      if(m_argv[i].len() >= 2) begin\r\n        $display (\"LARGE: %0d\", lv_len);\r\n      end\r\n  \r\n    end\r\n  end\r\nendmodule : m\r\n\r\n```\r\n\r\n```log\r\nbb.sv:9: error: Scope index expression is not constant: i\r\nbb.sv:9: error: Scope index expression is not constant: i\r\nbb.sv:9: error: No function named `m_argv[i].len' found in this context (m.$ivl_foreach0).\r\nbb.sv:9: error: Unable to elaborate condition expression.\r\n4 error(s) during elaboration.\r\n```\r\n\r\nI tried breaking the code to get individual string, get it length, compare, that works as below.\r\n\r\n```verilog\r\nmodule m;\r\n\r\n  string m_argv [$];\r\n  string lv_s;\r\n  int lv_len;\r\n\r\n  initial begin\r\n    m_argv.push_back (\"str0\");\r\n    m_argv.push_back (\"str1\");\r\n    m_argv.push_back (\"str0123\");\r\n\r\n    foreach (m_argv[i]) begin\r\n      $display (\"%s\", m_argv[i]);\r\n      lv_s = m_argv[i];\r\n      lv_len = lv_s.len();\r\n      $display (\"%0d\", lv_len);\r\n      if(lv_len >= 2) begin\r\n        $display (\"LARGE: %0d\", lv_len);\r\n      end\r\n   \r\n    end\r\n  end\r\nendmodule : m\r\n\r\n\r\n```\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-20",
+  "closed_at": "2021-01-18",
+  "code_blocks": [
+    "module m;\r\n\r\n  string m_argv [$];\r\n\r\n  initial begin\r\n    m_argv.push_back (\"str0\");\r\n\r\n    foreach (m_argv[i]) begin\r\n      if(m_argv[i].len() >= 2) begin\r\n        $display (\"LARGE: %0d\", lv_len);\r\n      end\r\n  \r\n    end\r\n  end\r\nendmodule : m",
+    "bb.sv:9: error: Scope index expression is not constant: i\r\nbb.sv:9: error: Scope index expression is not constant: i\r\nbb.sv:9: error: No function named `m_argv[i].len' found in this context (m.$ivl_foreach0).\r\nbb.sv:9: error: Unable to elaborate condition expression.\r\n4 error(s) during elaboration.",
+    "module m;\r\n\r\n  string m_argv [$];\r\n  string lv_s;\r\n  int lv_len;\r\n\r\n  initial begin\r\n    m_argv.push_back (\"str0\");\r\n    m_argv.push_back (\"str1\");\r\n    m_argv.push_back (\"str0123\");\r\n\r\n    foreach (m_argv[i]) begin\r\n      $display (\"%s\", m_argv[i]);\r\n      lv_s = m_argv[i];\r\n      lv_len = lv_s.len();\r\n      $display (\"%0d\", lv_len);\r\n      if(lv_len >= 2) begin\r\n        $display (\"LARGE: %0d\", lv_len);\r\n      end\r\n   \r\n    end\r\n  end\r\nendmodule : m"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

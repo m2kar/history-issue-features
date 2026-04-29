@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2271,
+  "title": "write_verilog generate \"always @*\" blocks that can't be emulated properly",
+  "features": [
+    {
+      "name": "reg signal driven by always_at_star without initialization",
+      "category": "data_model",
+      "description": "Code should include a registered signal declared as reg without initial value, where the signal is assigned inside an always @* block with blocking assignments controlled by a case statement",
+      "snippet": "reg a;\nalways @* begin\n  a = 1'h0;\n  casez (fsm_state)\n    1'h0: a = 1'h1;\n  endcase\nend",
+      "tags": ["reg", "always_at_star", "blocking_assignment", "casez", "no_initial_value"],
+      "source_bug_id": "yosys-2271",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2271",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fsm state as continuous assign with always_at_star driven register",
+      "category": "data_model",
+      "description": "Code should include a wire signal assigned via continuous assignment that is used in an always @* sensitivity list which drives a registered signal, creating a situation where the always block may not trigger at simulation time 0",
+      "snippet": "wire fsm_state;\nassign fsm_state = 1'h0;\nreg a;\nalways @* begin\n  casez (fsm_state)\n    1'h0: a = 1'h1;\n  endcase\nend",
+      "tags": ["fsm_state", "continuous_assign", "always_at_star", "wire", "sensitivity_list"],
+      "source_bug_id": "yosys-2271",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2271",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fsm combinational output using blocking assignment to register",
+      "category": "control_flow",
+      "description": "Code should include an FSM pattern where a register is driven by combinational logic via blocking assignments inside an always @* block, where the register is not initialized and the FSM state never transitions",
+      "snippet": "reg a;\nwire fsm_state;\nassign fsm_state = 1'h0;\nalways @* begin\n  a = 1'h0;\n  casez (fsm_state)\n    1'h0: a = 1'h1;\n  endcase\nend",
+      "tags": ["fsm", "blocking_assignment", "always_at_star", "combinational_output", "no_initialization"],
+      "source_bug_id": "yosys-2271",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2271",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

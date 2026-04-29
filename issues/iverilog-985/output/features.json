@@ -1,0 +1,38 @@
+{
+  "tool": "iverilog",
+  "issue_number": 985,
+  "title": "Issue with modpaths when BUFT is in different scope",
+  "features": [
+    {
+      "name": "modpath with cross-scope BUFT reference",
+      "category": "timing",
+      "description": "Code should include a .modpath timing specification inside a submodule where the path endpoints pass through BUFT/BUFZ functors located in a different scope, causing the timing delay to not be applied",
+      "snippet": "module buffer;\n  wire in, out;\n  BUFZ #1ns b1 (out, in);\n  .modpath (in *> out);\nendmodule\nmodule top;\n  wire a, b;\n  buffer buf (.in(a), .out(b));\nendmodule",
+      "tags": ["modpath", "specify", "buft", "cross_scope", "timing"],
+      "source_bug_id": "985",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/985",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "specify block path through parent-scope signals in child module",
+      "category": "timing",
+      "description": "Code should include a submodule with a .modpath that connects to a parent-scope signal via a BUFT funnel, where the BUFT exists in the child scope, breaking the specify path timing",
+      "snippet": "module child(output out, input in);\n  wire tmp = in;\n  .modpath (tmp *> out);\nendmodule\nmodule top;\n  wire a, b;\n  child c (.in(a), .out(b));\nendmodule",
+      "tags": ["specify_block", "modpath", "buft", "scope_boundary", "timing_check"],
+      "source_bug_id": "985",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/985",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

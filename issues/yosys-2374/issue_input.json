@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2374,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2374",
+  "title": "CXXRTL: assert on nets with multiple drivers",
+  "body": "## Steps to reproduce the issue\r\n\r\n[endless_toggle.zip](https://github.com/YosysHQ/yosys/files/5177255/endless_toggle.zip)\r\n\r\nVerilog design with combinational feedback loop:\r\n\r\n```verilog\r\nmodule endless_toggle(input clk1);\r\n\r\n    wire toggle = 0;\r\n    wire taggle;\r\n\r\n    assign taggle = ~toggle;\r\n    assign toggle = taggle;\r\n\r\nendmodule\r\n```\r\n\r\n```\r\nyosys -p \"read_verilog endless_toggle.v; hierarchy -top endless_toggle; write_cxxrtl endless_toggle.cpp\"\r\n```\r\n\r\n```\r\n Yosys 0.9+3565 (git sha1 474cd02e, clang 11.0.0 -fPIC -Os)\r\n```\r\n## Expected behavior\r\n\r\nCXXRTL does something that doesn't crash. Error message or C code.\r\n\r\n## Actual behavior\r\n\r\n```\r\nERROR: Assert `flow.wire_comb_defs[wire].size() == 1' failed in backends/cxxrtl/cxxrtl_backend.cc:2185.\r\n```\r\n\r\nIt's obviously a nonsense design, but chances are that this assert would trigger valid designs as well.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-09-04",
+  "closed_at": "2020-11-01",
+  "code_blocks": [
+    "module endless_toggle(input clk1);\r\n\r\n    wire toggle = 0;\r\n    wire taggle;\r\n\r\n    assign taggle = ~toggle;\r\n    assign toggle = taggle;\r\n\r\nendmodule",
+    "yosys -p \"read_verilog endless_toggle.v; hierarchy -top endless_toggle; write_cxxrtl endless_toggle.cpp\"",
+    "ERROR: Assert `flow.wire_comb_defs[wire].size() == 1' failed in backends/cxxrtl/cxxrtl_backend.cc:2185."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

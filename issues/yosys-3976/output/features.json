@@ -1,0 +1,77 @@
+{
+  "tool": "yosys",
+  "issue_number": 3976,
+  "title": "segmentation fault : cmd hierarchy",
+  "features": [
+    {
+      "name": "recursive module instantiation with parameter decrement",
+      "category": "control_flow",
+      "description": "Code should include a module that recursively instantiates itself with a modified parameter value (WAY-1)",
+      "snippet": "if (WAY > 1)\n  parallel_Dlatch #(.WAY(WAY-1), .WIRE(WIRE)) parallel_Dlatch0(D[WAY*WIRE-1 : WIRE],\n                                                                clk[WAY-1:1],\n                                                                Q[WAY*WIRE-1 : WIRE],\n                                                                QN[WAY*WIRE-1 : WIRE]);",
+      "tags": ["recursive_instantiation", "module", "generate", "parameter"],
+      "source_bug_id": "yosys-3976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3976",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "cross_file_include_cycle_with_header_guards",
+      "category": "preprocess",
+      "description": "Code should include a cycle of cross-file includes between modules using header guards (ifndef/__define)",
+      "snippet": "`ifndef __DLATCH__\n`define __DLATCH__\n`include \"parallel_Dlatch.v\"\n`include \"serial_Dlatch.v\"\nmodule Dlatch(...);\nendmodule\n`endif",
+      "tags": ["include", "cross_file", "cycle", "header_guard"],
+      "source_bug_id": "yosys-3976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3976",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "chparam_override_before_hierarchy_check",
+      "category": "control_flow",
+      "description": "Code should include a script that uses chparam to override module parameters before calling hierarchy -check",
+      "snippet": "read_verilog $NAME.v\nchparam -set \"WAY\" $WAY $NAME\nhierarchy -check -top $NAME",
+      "tags": ["chparam", "hierarchy", "parameter_override"],
+      "source_bug_id": "yosys-3976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3976",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "conditional_if_in_module_body_with_recursion",
+      "category": "control_flow",
+      "description": "Code should include a module with non-generate if blocks at module scope that conditionally instantiate another module which recursively instantiates itself",
+      "snippet": "module Dlatch(D, clk, Q, QN);\n  parameter WAY = 1;\n  input [WAY -1: 0] clk;\n  if (WAY > 1)\n    parallel_Dlatch #(.WAY(WAY), .WIRE(WIRE)) parallel_Dlatch_inst(D, clk, Q, QN);\nendmodule",
+      "tags": ["conditional_instantiation", "if_block", "module_scope", "recursive"],
+      "source_bug_id": "yosys-3976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3976",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "parameterized_bit_select_range_with_multiplication",
+      "category": "data_model",
+      "description": "Code should include port declarations with bit-select ranges computed from parameter multiplication",
+      "snippet": "input [(WAY * WIRE)-1 : 0] D;\noutput [(WAY * WIRE)-1:0] Q, QN;",
+      "tags": ["parameter", "bit_select", "multiplication", "port"],
+      "source_bug_id": "yosys-3976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3976",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

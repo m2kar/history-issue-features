@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5442,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5442",
+  "title": "Set `port_id` for Verific `PortBus` wires",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\n`port_id` is not set for Verific `PortBus` wires, so those ports can be reordered unexpectedly. This appears to just be an oversight. This results in the following behavior, for example:\r\n```\r\nverific -sv <<EOT\r\nmodule simple (\r\n  input  [3:0] I2,\r\n  input  [3:0] I1,\r\n  output [3:0] result\r\n);\r\n  assign result = I2 & I1;\r\nendmodule\r\nEOT\r\nverific -import simple\r\nwrite_verilog verilog_port_bus_order.out\r\n```\r\nproducing\r\n```\r\n...\r\nmodule simple(I1, I2, result);\r\n...\r\n```\r\nI realize that Yosys doesn't guarantee port ordering in general, but this still seems bad and is easy to fix.\r\n\r\n_Explain how this is achieved._\r\n\r\nSet the `port_id` for `PortBus` wires to be the `port_id` of the first `Port` associated with the `PortBus`, and add a testcase.",
+  "labels": [
+    "merge-after-jf"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-23",
+  "closed_at": "2025-11-03",
+  "code_blocks": [
+    "verific -sv <<EOT\r\nmodule simple (\r\n  input  [3:0] I2,\r\n  input  [3:0] I1,\r\n  output [3:0] result\r\n);\r\n  assign result = I2 & I1;\r\nendmodule\r\nEOT\r\nverific -import simple\r\nwrite_verilog verilog_port_bus_order.out",
+    "...\r\nmodule simple(I1, I2, result);\r\n..."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

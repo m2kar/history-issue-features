@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3415,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3415",
+  "title": "Block Ram Synthesis in ECP5",
+  "body": "I seem to be having an issue where when I attempt to use Yosys to synthesis block memory, namely the SP16KD 18K block for the ECP5, it instead defaults to the DPR16X4 distributed RAM instead.\r\n\r\nI have been able to force the synthesis of the BRAM using the -nolutram flag in synth_ecp5, however it was at this point that I ran into a new issue, namely that the address bit higher than the 4th bit were not being used, as well as the synthesis generating a dual port ram rather than a single port ram, though this may be a limitation of prjtrellis, as in the support they state DP16KD, and not SP16KD.\r\n\r\nThis was true for both the distributed and the block ram, despite having a nine bit address as per the ECP5 memory guides' SP16KD 36 bit wide databuse configuration.\r\n\r\nThis was produced using the latest nightly build from the OSS-CAD-SUITE\r\n\r\nBelow is the verilog module used in the synthesis:\r\n\r\nmodule bram (\r\n\tinput clk, write,\r\n\tinput [35:0] din,\r\n\tinput [8:0] addr,\r\n\toutput reg [35:0] dout\r\n);\r\n\r\nreg [35:0] ram [0:8];\r\n\r\nalways @ (posedge clk)\r\n\tif (write)\r\n\t\tram[addr][35:0] <= din;\r\n\r\nalways @ (posedge clk)\r\n\tif (~write)\r\n\t\tdout <= ram[addr][35:0];\r\n\r\nendmodule\r\n\r\n\r\nThen to create the issue one can run yosys -p \"read_verilog _filename.v_ ; synth_ecp5 -top bram\"\r\nto generate the distributed ram or\r\n\r\nyosys -p \"read_verilog _filename.v_ ; synth_ecp5 -top bram -nolutram\"\r\n\r\nto force BRAM generation\r\n\r\nThe expected behavior is the synthesis of 1 SP16KD block, while in reality it synthesizes with 9 DPR16X4 blocks or one DP16KD block, which is acceptable if the addresses were correctly populated.\r\n\r\n![pic-selected-220718-2320-18](https://user-images.githubusercontent.com/33011991/179657427-b666e127-596b-4ba5-a661-3365f6789498.png)\r\n\r\nThis is an example image from the BRAM, where the only address bits into the DP16KD are the first four bits (3:0) rather than the specified 9 bits (8:0)\r\n\r\nI am not too familiar with the Yosys output from synthesizing, but I have put it here:\r\n\r\n[https://pastebin.com/0J0Vbh3f](Link)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-19",
+  "closed_at": "2022-07-19",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1091,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1091",
+  "title": "Improve error message in module instantiation when `wire` array given to `output` array with wrong lengths",
+  "body": "### Description\r\nI believe that the error given in the following test case is a very bad error message.\r\n\r\nThe error is that the `output` spec is an array with 8 elements, but the `wire` associated with that output is an array with 16 elements. \r\n\r\nIt would be better if the error message for this case said to check the lengths of the arrays, instead of the current `error: Unpacked dimensions are not compatible in array assignment.` message.\r\n\r\nPerhaps \"Unpacked array dimensions are mismatched in port definition during module instantiation.\", or something like that? \r\n\r\n### Example\r\n```verilog\r\nmodule test_module (\r\n        input input_1,\r\n        input [31:0] state_input [7:0],\r\n\r\n        output [31:0] state_output [7:0] // Observe that this is an array with 8 elements\r\n    );\r\n\r\n    // do random assignment (detail not important)\r\n    genvar i;\r\n    generate\r\n        for (i=0; i<8; i=i+1) begin\r\n            assign state_output[i] = state_input[i] ^ {32{input_1}};\r\n        end\r\n    endgenerate\r\nendmodule\r\n\r\n/////////////////////////////////////////\r\n\r\nmodule tb_test_module;\r\n    reg [31:0] state_input [7:0];\r\n\r\n    wire [31:0] state_output [15:0]; // Observe that this is an array with 16 elements\r\n\r\n    test_module dut (\r\n            .input_1(1'b1),\r\n            .state_input(state_input),\r\n            .state_output(state_output)\r\n        );\r\n\r\nendmodule\r\n\r\n\r\n```\r\n\r\n### Error (currently):\r\n```\r\n> iverilog -g2012 -Wall error_demo.sv\r\nerror_demo.sv:27: error: Unpacked dimensions are not compatible in array assignment.\r\nerror_demo.sv:27:      : Port 3 (state_output) of test_module is connected to state_output\r\n1 error(s) during elaboration.\r\n```\r\n",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2024-02-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module test_module (\r\n        input input_1,\r\n        input [31:0] state_input [7:0],\r\n\r\n        output [31:0] state_output [7:0] // Observe that this is an array with 8 elements\r\n    );\r\n\r\n    // do random assignment (detail not important)\r\n    genvar i;\r\n    generate\r\n        for (i=0; i<8; i=i+1) begin\r\n            assign state_output[i] = state_input[i] ^ {32{input_1}};\r\n        end\r\n    endgenerate\r\nendmodule\r\n\r\n/////////////////////////////////////////\r\n\r\nmodule tb_test_module;\r\n    reg [31:0] state_input [7:0];\r\n\r\n    wire [31:0] state_output [15:0]; // Observe that this is an array with 16 elements\r\n\r\n    test_module dut (\r\n            .input_1(1'b1),\r\n            .state_input(state_input),\r\n            .state_output(state_output)\r\n        );\r\n\r\nendmodule",
+    "> iverilog -g2012 -Wall error_demo.sv\r\nerror_demo.sv:27: error: Unpacked dimensions are not compatible in array assignment.\r\nerror_demo.sv:27:      : Port 3 (state_output) of test_module is connected to state_output\r\n1 error(s) during elaboration."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

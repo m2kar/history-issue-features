@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3639,
+  "title": "Techmap to yosys/examples cmos counter  using custom 74LVC** IC.",
+  "features": [
+    {
+      "name": "large parameterized counter with async reset",
+      "category": "data_model",
+      "description": "Code should include a counter module with a very large parameter WIDTH and an async reset using always @(posedge clk or posedge reset) with non-blocking assignment",
+      "snippet": "parameter WIDTH = 8192;\noutput [WIDTH-1 : 0] out;\ninput clk, reset;\nreg [WIDTH-1 : 0] out;\nalways @(posedge clk or posedge reset)\n  if (reset)\n    out <= 0;\n  else\n    out <= out + 1;",
+      "tags": ["counter", "parameter", "async_reset", "large_width"],
+      "source_bug_id": "yosys-3639",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3639",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "techmap to custom liberty file with sequential cells",
+      "category": "data_model",
+      "description": "Code should include a techmap operation targeting a liberty file with custom sequential cell definitions (DFF, DFFSR, COUNTER) for mapping to technology-specific cells",
+      "snippet": "read_verilog counter.v\ntechmap -map counter.v counter\nabc -liberty counter.lib\ndfflibmap -liberty counter.lib",
+      "tags": ["techmap", "liberty", "sequential_cells", "abc"],
+      "source_bug_id": "yosys-3639",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3639",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "liberty cell with chained flip-flop pattern",
+      "category": "data_model",
+      "description": "Code should include a liberty file defining a cell where each flip-flop is clocked by the output of the previous flip-flop (ripple counter pattern), where ff next_state references another ff output pin",
+      "snippet": "cell(COUNTER) {\n  ff(\"IQ\", \"IQN\") { clocked_on: Q0; next_state: Q1; clear: R; }\n  ff(\"IQ\", \"IQN\") { clocked_on: Q1; next_state: Q2; clear: R; }\n  pin(C) { direction: input; clock: true; }\n  pin(Q0) { direction: output; function: \"IQ\"; }\n  pin(Q1) { direction: output; function: \"IQ\"; }\n  pin(R) { direction: input; }\n}",
+      "tags": ["liberty", "flip_flop", "chained", "ripple_counter"],
+      "source_bug_id": "yosys-3639",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3639",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

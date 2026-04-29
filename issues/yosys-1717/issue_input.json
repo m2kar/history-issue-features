@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1717,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1717",
+  "title": "Add more precise Verilog source file location information to AST and RTLIL nodes",
+  "body": "See `frontends/ast/ast.h`, in definition of `struct AstNode`:\r\n```\r\n\t\t// this is the original sourcecode location that resulted in this AST node\r\n\t\t// it is automatically set by the constructor using AST::current_filename and\r\n\t\t// the AST::get_line_num() callback function.\r\n\t\tstd::string filename;\r\n\t\tint linenum;\r\n```\r\n\r\nIn other words, only the source file name and *a* line number are available, but no other information.\r\n\r\n## Desired behavior\r\n\r\nAST and RTLIL nodes should ideally have precise location information, not just a line number.\r\n\r\nIn `ast.h`, define a new:\r\n```\r\n\tstruct AstSrcLocType\r\n\t{\r\n\t\tunsigned int first_line, last_line;\r\n\t\tunsigned int first_column, last_column;\r\n\t};\r\n```\r\n\r\nAdd a new `AstSrcLocType location;` member variable to `AstNode`.  Optionally remove `int linenum` and replace its usages with `location.first_line`, or perhaps a more sophisticated replacement that preserves/reports the entire location information.\r\n\r\nUpdate `frontends/verilog/verilog_lexer.l` to track the precise location information in `YY_USER_ACTION` and `frontends/verilog/verilog_parser.y` to assign to the generated AST nodes locations from things on the stack.  Parsers/lexers for other file formats can also be modified to track and record precise location information, but I am personally only interested in Verilog for now.\r\n\r\nFiles like `frontends/ast/ast.cc`, `frontends/ast/genrtlil.cc`, `frontends/verilog/verilog_frontend.cc`, and perhaps other files require some modification.\r\n\r\nThis would make precise location information available in the AST and RTLIL data structures, enabling better error messages and other applications that might find such location information useful, e.g. Vennsa OnPoint-like automated RTL source level error localization.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-02-23",
+  "closed_at": "2020-03-03",
+  "code_blocks": [
+    "// this is the original sourcecode location that resulted in this AST node\r\n\t\t// it is automatically set by the constructor using AST::current_filename and\r\n\t\t// the AST::get_line_num() callback function.\r\n\t\tstd::string filename;\r\n\t\tint linenum;",
+    "struct AstSrcLocType\r\n\t{\r\n\t\tunsigned int first_line, last_line;\r\n\t\tunsigned int first_column, last_column;\r\n\t};"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

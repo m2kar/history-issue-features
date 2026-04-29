@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 413,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/413",
+  "title": "Verilog: function without result won't hold previously returned value",
+  "body": "Hi,\r\n\r\nGiven following code:\r\n\r\n```verilog\r\nmodule multiplexer(din,sel,dout);\r\n  input [3:0] din;\r\n  input [1:0] sel;\r\n  output dout;\r\n\r\n  function func;\r\n    input [3:0] in;\r\n    input [1:0] s;\r\n\r\n    begin\r\n      if(s==2'h0)\r\n        func=in[0];\r\n      if(s==2'h1)\r\n        func=in[1];\r\n      if(s==2'h2)\r\n        func=in[2];\r\n      if(s==2'h3)\r\n        func=in[3];\r\n    end\r\n  endfunction\r\n  assign dout=func(din,sel);\r\nendmodule\r\n\r\nmodule multiplexer_test;\r\n  wire [3:0] din=4'b1001;\r\n  reg [1:0] sel;\r\n  initial begin\r\n    $dumpfile(\"dump.lxt\");\r\n    $dumpvars(0,multiplexer_test);\r\n    #0 sel=2'b00;\r\n    #2 sel=2'b10;\r\n    #2 sel=2'bxx;\r\n    #2 sel=2'bzz;\r\n    #2 $stop;\r\n  end\r\n\r\n  wire dout;\r\n  multiplexer c1(din,sel,dout);\r\nendmodule\r\n```\r\n\r\nand command line:\r\n\r\n```\r\n$ iverilog -g2001 -s multiplexer_test -o multiplexer_test.v\r\n```\r\n\r\nWhen `multiplexer` got value on `sel` that fails all `if`s (e.g. `2'bxx`), the returned value is not same as previous one.\r\n\r\nAs IEEE1364: 2001 states,\r\n\r\n> 10.3.2 Returning a value from a function\r\n> \r\n> The function definition shall implicitly declare a variable, internal to the function, with the same name as the function. This variable either defaults to a 1-bit reg or is the same type as the type specified in the function declaration. The function definition initializes the return value from the function by assigning the function result to the internal variable with the same name as the function.\r\n> It is illegal to declare another object with the same name as the function in the scope where the function is declared.  Inside a function, there is an implied variable with the name of the function, which may be used in expressions within the function. It is, therefore, also illegal to declare another object with the same name as the function inside the function scope.\r\n\r\nthe function should hold the last value at `begin` of function on `-g2001` flag.\r\n\r\nThanks.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2020-12-07",
+  "closed_at": null,
+  "code_blocks": [
+    "module multiplexer(din,sel,dout);\r\n  input [3:0] din;\r\n  input [1:0] sel;\r\n  output dout;\r\n\r\n  function func;\r\n    input [3:0] in;\r\n    input [1:0] s;\r\n\r\n    begin\r\n      if(s==2'h0)\r\n        func=in[0];\r\n      if(s==2'h1)\r\n        func=in[1];\r\n      if(s==2'h2)\r\n        func=in[2];\r\n      if(s==2'h3)\r\n        func=in[3];\r\n    end\r\n  endfunction\r\n  assign dout=func(din,sel);\r\nendmodule\r\n\r\nmodule multiplexer_test;\r\n  wire [3:0] din=4'b1001;\r\n  reg [1:0] sel;\r\n  initial begin\r\n    $dumpfile(\"dump.lxt\");\r\n    $dumpvars(0,multiplexer_test);\r\n    #0 sel=2'b00;\r\n    #2 sel=2'b10;\r\n    #2 sel=2'bxx;\r\n    #2 sel=2'bzz;\r\n    #2 $stop;\r\n  end\r\n\r\n  wire dout;\r\n  multiplexer c1(din,sel,dout);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

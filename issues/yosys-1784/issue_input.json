@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1784,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1784",
+  "title": "[DRAFT] Merge DFF cells connected to BRAM output ports into BRAM cell, preserving its functionality",
+  "body": "Derived from Litex VexRiscv+Ethernet SoC, registered outputs w/wo CE and/or RST functionallity in BRAM cells, can be merged into that BRAM, reducing the number of flip-flop cells that the synthesis infers and thus, increasing QoR:\r\n\r\n__Before xilinx_bram pass, 36 FDRE.__\r\n```\r\n=== blockram ===\r\n     FDRE                           36\r\n     LUT2                           37\r\n     RAMB36E1                        1\r\n```\r\n\r\n__After xilinx_bram pass, 0 FDRE.__\r\n```\r\n=== blockram ===\r\n     LUT2                            1\r\n     RAMB36E1                        1\r\n```\r\nIn the latter case, the BRAM DOx_REG (where x is A or B) is set to 1, and the flops with CE or RST functionallity, are connected to the corresponding BRAM input.\r\n\r\n---\r\n\r\nThere exist also test cases in `tests/arch/xilinx/xilinx_bram.ys` that demonstrate:\r\n\r\n* [1] Vivado's suggested Verilog for BRAM with CE and RST.\r\n* [2] Test case [1] increasing address and data width (matching shuffled DOA/DOB bits).\r\n* [3] Reduced test case extracted from Litex VexRiscv+Ethernet SoC (2 BRAMS).\r\n* [4] Original test case extracted from Litex VexRiscv+Ethernet SoC (4 BRAMS).\r\n\r\nAll of the pattern match code is heavily inherited from `xilinx_dsp.pmg`.\r\n\r\n__TODO__:\r\nProcess other BRAMs that are not `RAMB18E1` and `RAMB36E1`.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-19",
+  "closed_at": "2022-05-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

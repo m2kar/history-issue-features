@@ -1,0 +1,51 @@
+{
+  "tool": "iverilog",
+  "issue_number": 964,
+  "title": "Support $bits() for arrays and array slices",
+  "features": [
+    {
+      "name": "$bits on array variable identifier returns element width instead of full array width",
+      "category": "data_model",
+      "description": "Code should include a variable declared via a typedef with an unpacked array dimension, then query $bits() on that variable identifier and on the typedef name separately, exposing the discrepancy where $bits(var) returns only the element width while $bits(Type) returns the correct full bit width",
+      "snippet": "typedef int T[1:0];\nT x;\ninitial begin\n  $display($bits(T)); // expected 64\n  $display($bits(x)); // bug: returns 32 instead of 64\nend",
+      "tags": ["bits", "unpacked_array", "typedef", "system_function", "wrong_output"],
+      "source_bug_id": "964",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "typedef with unpacked array dimension and $bits on type name",
+      "category": "data_model",
+      "description": "Code should include a typedef that aliases a scalar type with an unpacked array dimension, then apply $bits() to the typedef name to retrieve the full aggregate bit width",
+      "snippet": "typedef int T[1:0];\ninitial $display($bits(T)); // 64: int is 32 bits, array has 2 elements",
+      "tags": ["typedef", "unpacked_array", "bits", "system_function"],
+      "source_bug_id": "964",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "$bits on unpacked array slice expression",
+      "category": "data_model",
+      "description": "Code should include a slice of an unpacked array passed to $bits() to verify that the system function correctly computes the bit width of the sliced sub-array",
+      "snippet": "typedef int T[3:0];\nT arr;\ninitial $display($bits(arr[1:0])); // expected 64 (2 elements x 32 bits)",
+      "tags": ["bits", "array_slice", "unpacked_array", "system_function"],
+      "source_bug_id": "964",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/964",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

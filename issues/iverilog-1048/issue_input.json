@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1048,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1048",
+  "title": "Assignments to enum with a ternary operator require explicit cast",
+  "body": "Hello,\r\n\r\nIcarus seems to behave strangely when it encounters enumerated name to be assigned to an enum variable as a part of ternary operator. The following SystemVerilog code\r\n\r\n```\r\nmodule test;\r\n  logic a;\r\n  enum logic { S0, S1 } b;\r\n\r\n  always_comb\r\n    b = a ? S0 : S1;\r\nendmodule\r\n```\r\n\r\nthrows\r\n\r\n`test.sv:6: error: This assignment requires an explicit cast.`\r\n\r\nmessage and fails to compile. Casting it explicitly does the trick indeed, but it doesn't seem to make much sense and I couldn't find anything in IEEE1800-2012 that would call for an explicit cast in such assignment.\r\n\r\nThis seems to happen only when both enum and ?: come together, since the following compiles without any errors:\r\n\r\n```\r\nmodule test;\r\n  logic a;\r\n  enum logic { S0, S1 } b;\r\n  logic c;\r\n\r\n  always_comb begin\r\n    if (a) b = S0;\r\n    else   b = S1;\r\n    \r\n    c = a ? '0 : '1;\r\n  end\r\nendmodule\r\n```\r\n\r\nI could reproduce this in 12.0 stable and in current master. In all cases -g2012 option was used.\r\n\r\nThis behaviour was mentioned by jotego in #452, but since the issue itself was unrelated and labeled as Enhancement, I decided to make a new one.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-12-17",
+  "closed_at": null,
+  "code_blocks": [
+    "module test;\r\n  logic a;\r\n  enum logic { S0, S1 } b;\r\n\r\n  always_comb\r\n    b = a ? S0 : S1;\r\nendmodule",
+    "module test;\r\n  logic a;\r\n  enum logic { S0, S1 } b;\r\n  logic c;\r\n\r\n  always_comb begin\r\n    if (a) b = S0;\r\n    else   b = S1;\r\n    \r\n    c = a ? '0 : '1;\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

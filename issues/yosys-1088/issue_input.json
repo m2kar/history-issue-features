@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1088,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1088",
+  "title": "Memory inference fails when output register has initial value",
+  "body": "## Steps to reproduce the issue\r\n\r\n(Xilinx BRAMs, for example, support initial values on RAMs outputs)\r\n\r\n`./yosys -p \"synth -run coarse; memory_bram -rules +/xilinx/brams.txt; stat\" ram2.v -f \"verilog -DBUG\"`\r\n\r\n```\r\nmodule reg_file(input wire clk,\r\n                input wire wr_en,\r\n                input wire [9:0] w_addr,\r\n                input wire [9:0] r_addr,\r\n                input wire [17:0] w_data,\r\n                output reg [17:0] r_data,\r\n                output reg [17:0] r_data2);\r\n\r\n  reg [17:0] ram [0:1023];\r\n`ifdef BUG\r\n  initial r_data <= {18{1'b0}};\r\n`endif\r\n\r\n  always @(posedge clk)\r\n  begin\r\n    r_data <= ram[r_addr];\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nSuccessful inference (when `-DBUG` is omitted), and obviously with the correct `(* init *)` attributes.\r\n\r\n```\r\n   Number of cells:                 11\r\n     $__XILINX_RAMB18_SDP            2\r\n     $dff                            2\r\n     $eq                             2\r\n     $mux                            4\r\n     $pmux                           1\r\n```\r\n\r\n## Actual behavior\r\n\r\nFailed inference\r\n```\r\n   Number of cells:                  2\r\n     $dff                            1\r\n     $mem                            1\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-11",
+  "closed_at": "2022-05-18",
+  "code_blocks": [
+    "module reg_file(input wire clk,\r\n                input wire wr_en,\r\n                input wire [9:0] w_addr,\r\n                input wire [9:0] r_addr,\r\n                input wire [17:0] w_data,\r\n                output reg [17:0] r_data,\r\n                output reg [17:0] r_data2);\r\n\r\n  reg [17:0] ram [0:1023];\r\n`ifdef BUG\r\n  initial r_data <= {18{1'b0}};\r\n`endif\r\n\r\n  always @(posedge clk)\r\n  begin\r\n    r_data <= ram[r_addr];\r\n  end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

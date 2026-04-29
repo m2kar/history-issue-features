@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 2766,
+  "title": "memory_share: broken feedback detection",
+  "features": [
+    {
+      "name": "memory write with partial-bit feedback via ternary",
+      "category": "data_model",
+      "description": "Code should include a memory write operation where a ternary operator selects between new data and a feedback path that reads only a single bit from the same memory address being written, using bit replication to expand it to full width",
+      "snippet": "reg [3:0] mem[0:15];\nalways @(posedge clk)\n  mem[wa] <= {4{sel ? wd : mem[wa][0]}};",
+      "tags": ["memory", "feedback", "ternary", "partial_bit", "replication"],
+      "source_bug_id": "yosys-2766",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2766",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory read-to-write feedback with narrow bit extraction",
+      "category": "control_flow",
+      "description": "Code should include a memory where the write operation reads from the same address being written, but only extracts a narrow slice (one bit) of the read data for use in the feedback path, with the rest of the bits being unused in the feedback",
+      "snippet": "wire bit0 = mem[wa][0];\nmem[wa] <= {4{sel ? wd : bit0}};",
+      "tags": ["memory", "feedback", "bit_slice", "same_address_rw"],
+      "source_bug_id": "yosys-2766",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2766",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 855,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/855",
+  "title": "Add break and continue loop control statements support",
+  "body": "Implement the \"continue\" and \"break\" loop control statements. These are two of the three \"jump statements\" described in the IEEE1800-2017, section \"12.8 Jump statements\". These statements control the flow within the loop statements (for, forever, foreach, while, and do-while) and are only meaningful within those loops. For an obviously contrived example:\r\n```verilog\r\nidx = 0;\r\nforever begin\r\n   idx += 1;\r\n   if (idx < 2)\r\n     continue;\r\n   break;\r\nend\r\n```\r\n\r\nAt the pform (annotated parse tree) and netlist (elaborated design tree) phases, these statements present as normal statements, with no special trickery needed. This PR adds the parser support and elaborate support to handle them. They are also pretty straightforward in the ivl_target API and the stub target, so the support is there as well. The ivl_target API statement type enumeration is extended to include these statement types.\r\n\r\nIn the vvp target code generator, the jump statements are implemented using the '%jmp' vvp opcode that branches to appropriate labels. The vvp.tgt code generator keeps track of the inner-most loop with its exit label, and the jump statement just needs to jump to the innermost loop exit or continue label. The 'break' statements branch to the exit label, and the 'continue' statement branches to the continue label.\r\n\r\nThe for-loop in Icarus Verilog has in the past converted the for-loop into the equivalent while-loop so that code generators can avoid understanding the for-loop, but it turns out that doesn't work when trying to implement the continue and break loop jumps, so the for-loop handling during elaboration has been rewired, and the ivl_target.h presentation is different. There is now a new IVL_ST_FORLOOP statement type, and it has ivl_* functions for extracting the key parts. The -tstub target shows these parts.\r\n\r\nAnd once the rewrite is done, this leads to new demands on the vvp code generator, so at this point it is possible to implement the break and continue statements in for-loops as well at all the other loops. So update the vvp and vlog95 code generators to handle the new IVL_ST_FORLOOP statement type.\r\n\r\nWith all of this done, the continue and break statements fall into place in the vvp code generator. In the vlog95 code generator, we give up on break and continue statements.\r\n\r\ncloses #191\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-01-07",
+  "closed_at": "2023-01-16",
+  "code_blocks": [
+    "idx = 0;\r\nforever begin\r\n   idx += 1;\r\n   if (idx < 2)\r\n     continue;\r\n   break;\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

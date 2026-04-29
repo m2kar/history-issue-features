@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2166,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2166",
+  "title": "cxxrtl backend generates non-working c++ sources when NDEBUG=1",
+  "body": "## Steps to reproduce the issue\r\n\r\n1. Build yosys using:\r\n```\r\nmake 'ENABLE_NDEBUG=1'\r\n```\r\n2. create design **blinky.v**\r\n```verilog\r\n`default_nettype\tnone\r\nmodule blinky(i_clk, o_led);\r\n`ifdef\tSIMULATION\r\n\tparameter\tWIDTH = 12;\r\n`else\r\n\tparameter\tWIDTH = 27;\r\n`endif\r\n\tinput\twire\ti_clk;\r\n\toutput\twire\to_led;\r\n\treg\t[WIDTH-1:0]\tcounter;\r\n\talways @(posedge i_clk)\r\n\t\tcounter <= counter + 1'b1;\r\n\tassign\to_led = counter[WIDTH-1];\r\nendmodule\r\n```\r\n3. Create script **proc.ys**\r\n```\r\nverilog_defines -DSIMULATION\r\nread_verilog ./blinky.v\r\nhierarchy -check -top blinky\r\nwrite_ilang BlinkyTop.sim.ilang\r\nwrite_cxxrtl -header BlinkyTop.sim.cpp\r\n```\r\n4. Execute\r\n```\r\nyosys proc.ys\r\n```\r\n\r\nThen the generated sources are non-functional.\r\n\r\n## Expected behavior\r\n\r\n*Working* c++ sources\r\n\r\n## Actual behavior\r\n\r\n<details><summary>BlinkyTop.sim.h</summary>\r\n<p>\r\n\r\n```c++\r\n#ifndef CXXRTL_DESIGN_HEADER\r\n#define CXXRTL_DESIGN_HEADER\r\n\r\n#include <backends/cxxrtl/cxxrtl_capi.h>\r\n\r\n#ifdef __cplusplus\r\nextern \"C\" {\r\n#endif\r\n\r\ncxxrtl_toplevel cxxrtl_design_create();\r\n\r\n#ifdef __cplusplus\r\n}\r\n#endif\r\n\r\n#ifdef __cplusplus\r\n\r\n#include <backends/cxxrtl/cxxrtl.h>\r\n\r\nusing namespace cxxrtl;\r\n\r\nnamespace cxxrtl_design {\r\n\r\n} // namespace cxxrtl_design\r\n\r\n#endif // __cplusplus\r\n\r\n#endif\r\n```\r\n\r\n</p>\r\n</details>\r\n\r\n<details><summary>BlinkyTop.sim.cpp</summary>\r\n<p>\r\n\r\n```c++\r\n#include \"BlinkyTop.sim.h\"\r\n\r\n#if defined(CXXRTL_INCLUDE_CAPI_IMPL) || \\\r\n    defined(CXXRTL_INCLUDE_VCD_CAPI_IMPL)\r\n#include <backends/cxxrtl/cxxrtl_capi.cc>\r\n#endif\r\n\r\n#if defined(CXXRTL_INCLUDE_VCD_CAPI_IMPL)\r\n#include <backends/cxxrtl/cxxrtl_vcd_capi.cc>\r\n#endif\r\n\r\nusing namespace cxxrtl_yosys;\r\n\r\nnamespace cxxrtl_design {\r\n\r\n} // namespace cxxrtl_design\r\n\r\ncxxrtl_toplevel cxxrtl_design_create() {\r\n\treturn new _cxxrtl_toplevel { std::unique_ptr<cxxrtl_design::p_blinky>(new cxxrtl_design::p_blinky) };\r\n}\r\n```\r\n\r\n</p>\r\n</details>",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-17",
+  "closed_at": "2020-06-18",
+  "code_blocks": [
+    "`default_nettype\tnone\r\nmodule blinky(i_clk, o_led);\r\n`ifdef\tSIMULATION\r\n\tparameter\tWIDTH = 12;\r\n`else\r\n\tparameter\tWIDTH = 27;\r\n`endif\r\n\tinput\twire\ti_clk;\r\n\toutput\twire\to_led;\r\n\treg\t[WIDTH-1:0]\tcounter;\r\n\talways @(posedge i_clk)\r\n\t\tcounter <= counter + 1'b1;\r\n\tassign\to_led = counter[WIDTH-1];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

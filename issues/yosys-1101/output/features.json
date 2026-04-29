@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 1101,
+  "title": "synth for ECP5, inferred true dual port ram is not allocated DP16KD ram",
+  "features": [
+    {
+      "name": "true dual-port RAM with unpacked array memory",
+      "category": "data_model",
+      "description": "Code should include a true dual-port RAM with parameterized DATA and ADDR, using an unpacked array declaration where both ports perform synchronous read/write operations",
+      "snippet": "reg [DATA-1:0] mem [(2**ADDR)-1:0];\nalways @(posedge a_clk) begin\n    a_dout <= mem[a_addr];\n    if(a_wr) begin\n        a_dout <= a_din;\n        mem[a_addr] <= a_din;\n    end\nend",
+      "tags": ["dual_port_ram", "unpacked_array", "ram_inference", "ecp5"],
+      "source_bug_id": "1101",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1101",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dual-clock independent port RAM",
+      "category": "timing",
+      "description": "Code should include a RAM with two independent ports each having separate clock, write enable, address, and data signals, where both ports access the same memory array",
+      "snippet": "input wire a_clk, a_wr;\ninput wire [ADDR-1:0] a_addr;\ninput wire [DATA-1:0] a_din;\noutput reg [DATA-1:0] a_dout;\ninput wire b_clk, b_wr;\ninput wire [ADDR-1:0] b_addr;\ninput wire [DATA-1:0] b_din;\noutput reg [DATA-1:0] b_dout;\nreg [DATA-1:0] mem [(2**ADDR)-1:0];",
+      "tags": ["dual_port_ram", "dual_clock", "independent_ports"],
+      "source_bug_id": "1101",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1101",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory initialization with readmemh",
+      "category": "general",
+      "description": "Code should include a memory array with an initial block that loads contents using $readmemh, which can affect RAM inference behavior in synthesis tools",
+      "snippet": "reg [DATA-1:0] mem [(2**ADDR)-1:0];\ninitial begin\n    $readmemh(\"../build/nuc.hex\", mem);\nend",
+      "tags": ["readmemh", "memory_initialization", "ram_inference"],
+      "source_bug_id": "1101",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1101",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

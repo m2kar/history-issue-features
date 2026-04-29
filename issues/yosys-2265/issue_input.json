@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2265,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2265",
+  "title": "Port connections do not sign extend",
+  "body": "## Steps to reproduce the issue\r\n\r\n```Verilog\r\nmodule Example(a, b);\r\n    input wire [3:0] a;\r\n    output wire [3:0] b;\r\n    assign b = a;\r\nendmodule\r\n\r\nmodule top(o3, o4);\r\n    output wire [3:0] o3, o4;\r\n    Example e3(1'sb1, o3);\r\n    wire [3:0] tmp;\r\n    assign tmp = 1'sb1;\r\n    Example e4(tmp, o4);\r\nendmodule\r\n```\r\n## Expected behavior\r\n\r\nBoth `e3` and `e4` should have all 1s bound to their input ports, as per Section 12.3.11 of IEEE 1364-2005:\r\n> Any expressions on a port shall be treated as any other expression in an assignment. It shall be typed, sized, and evaluated, and the resulting value assigned to the object on the other side of the port using the same rules as an assignment.\r\n\r\n## Actual behavior\r\n\r\nOnly `e4`, the instantiation with the explicit indirection, receives all 1s on its input. `e3` incorrectly receives `4'b0001`.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-07-14",
+  "closed_at": "2020-12-22",
+  "code_blocks": [
+    "module Example(a, b);\r\n    input wire [3:0] a;\r\n    output wire [3:0] b;\r\n    assign b = a;\r\nendmodule\r\n\r\nmodule top(o3, o4);\r\n    output wire [3:0] o3, o4;\r\n    Example e3(1'sb1, o3);\r\n    wire [3:0] tmp;\r\n    assign tmp = 1'sb1;\r\n    Example e4(tmp, o4);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

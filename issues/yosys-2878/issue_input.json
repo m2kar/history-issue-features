@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2878,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2878",
+  "title": "Restructure passes/techmap/abc.cc to better support ASIC synthesis.",
+  "body": "This PR does several things to better support ASIC synthesis.  First,\r\nthe file naming and temporary directories for file transfer to ABC\r\nare enhanced.  The string `yosys-abc-XXXXX` is used for a top level\r\ndirectory.  Each module in the design then gets its own directory based\r\non the module name inside of this top level directory.  These subdirectories\r\ncontain the usual abc.script, input.blif, output.blif etc files.  To\r\nspecify this, a new flag has been added to the abc command and documented\r\nin the help as:\r\n\r\n```\r\n    -abctop_dir <directory name>\r\n        set the root level of the abc work directory to be <directory name>.\r\n        A sub-directory with the name 'yosys-abc-XXXXX' (where XXXXX will be replaced\r\n        by a random string) will be created here. Inside of this directory,\r\n        for each module a directory will be created for file transfer\r\n        to and from ABC. All will be deleted on exit if cleanup=true. The default is /tmp\r\n```\r\n\r\nSecond, the function abc_module has been broken up and out of it a new function\r\nnamed abc_reintegrate has been formed.  Its only job is to reintegrate a output.blif\r\nback into the design in place of a specified module. The function abc_module now calls\r\nabc_reitegrate after running ABC on input.blif file.\r\n\r\nThird, using the new abc_reintegrate function, a new pass named AbcReintegratePass has\r\nbeen defined.  The corresponding command name is `abc-reint`. From the help text:\r\n\r\n```\r\nyosys> help abc-reint\r\n\r\n    abc-reint [options] [selection]\r\n\r\nThis pass reintegrates ABC mapped modules back into the design\r\n\r\n    -abcdir_name <directory name>\r\n        set the root level of the abc work directory to be <directory name>.\r\n        sub-directories for each module are expected here, each with an output.blif\r\n        file produced by ABC.\r\n```\r\n\r\nNote that -abctop_dir and -abcdir_name do _not_ point to the same directory.  The former\r\nis the location in which to create the `yosys-abc-XXXXX` directory.  The latter is the actual\r\ndirectory named `yosys-abc-XXXXX` (after it has been created).\r\n\r\nHow does this help ASIC synthesis? As many know, synthesis is a very noisy process.  There\r\nis no one script, even if iterated multiple times, that always gives superior results. The\r\nvariability in area and timing can be quite large.  This change allows us to run multiple\r\nstrategies to create a set of viable alternatives with which we can then use to construct\r\na better design.\r\n\r\nNote that the tests/techmap all pass with the exception of mem_simple_4x1 which appears to\r\nbe a pre-existing failure.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-07-17",
+  "closed_at": "2022-02-01",
+  "code_blocks": [
+    "-abctop_dir <directory name>\r\n        set the root level of the abc work directory to be <directory name>.\r\n        A sub-directory with the name 'yosys-abc-XXXXX' (where XXXXX will be replaced\r\n        by a random string) will be created here. Inside of this directory,\r\n        for each module a directory will be created for file transfer\r\n        to and from ABC. All will be deleted on exit if cleanup=true. The default is /tmp",
+    "yosys> help abc-reint\r\n\r\n    abc-reint [options] [selection]\r\n\r\nThis pass reintegrates ABC mapped modules back into the design\r\n\r\n    -abcdir_name <directory name>\r\n        set the root level of the abc work directory to be <directory name>.\r\n        sub-directories for each module are expected here, each with an output.blif\r\n        file produced by ABC."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

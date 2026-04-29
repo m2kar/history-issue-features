@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1114,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1114",
+  "title": "techmap creates $_MUX_ cell with 1'bx input (correct, but less efficient)",
+  "body": "## Steps to reproduce the issue\r\n\r\n`./yosys -p \"proc; techmap; opt; dump\" case1.v`\r\n\r\nMinimised from https://github.com/cliffordwolf/picorv32/blob/e0baf2e0bd49fdddef2e3440c1f6364478655154/picorv32.v#L1110-L1124\r\n```\r\nmodule top(input instr_lui, instr_auipc, instr_jal, output reg decoded_imm);\r\n    always @*\r\n            (* parallel_case *)\r\n            case (1'b1)\r\n                instr_jal:\r\n                        decoded_imm <= 1'b0;\r\n                |{instr_lui, instr_auipc}:\r\n                        decoded_imm <= 1'b1;\r\n                default:\r\n                        decoded_imm <= 1'bx;\r\n            endcase\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nMy understanding is that `opt_expr` is expensive to run, particularly on a bit blasted netlist. We should avoid emitting `1'bx` if possible?\r\n\r\n## Actual behavior\r\n\r\n![case1](https://user-images.githubusercontent.com/6740044/59864647-29326480-933c-11e9-8e30-dd5d2c1289d3.png)\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-20",
+  "closed_at": "2019-06-20",
+  "code_blocks": [
+    "module top(input instr_lui, instr_auipc, instr_jal, output reg decoded_imm);\r\n    always @*\r\n            (* parallel_case *)\r\n            case (1'b1)\r\n                instr_jal:\r\n                        decoded_imm <= 1'b0;\r\n                |{instr_lui, instr_auipc}:\r\n                        decoded_imm <= 1'b1;\r\n                default:\r\n                        decoded_imm <= 1'bx;\r\n            endcase\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

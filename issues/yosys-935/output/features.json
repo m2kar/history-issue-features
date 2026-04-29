@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 935,
+  "title": "Logic loop",
+  "features": [
+    {
+      "name": "combinational always block with feedback mux tree",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block containing nested if-else or case statements that assign to signals which indirectly feed back into the same combinational path, creating a potential logic loop when synthesized",
+      "snippet": "reg [31:0] a;\nreg [31:0] b;\nalways @(*) begin\n  case (sel)\n    2'd0: a = b + 1;\n    2'd1: a = b - 1;\n    default: a = b;\n  endcase\nend\nalways @(*) begin\n  b = a + 2;\nend",
+      "tags": ["combinational_loop", "always_comb", "case", "mux_tree", "feedback"],
+      "source_bug_id": "935",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/935",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "multiple procedural assignments to same signal across always blocks",
+      "category": "control_flow",
+      "description": "Code should include multiple always blocks that assign to or read from shared signals in a way that creates combinational dependency cycles between blocks",
+      "snippet": "reg [7:0] x, y;\nalways @(*) begin\n  x = y + 1;\nend\nalways @(*) begin\n  y = x - 1;\nend",
+      "tags": ["combinational_loop", "cross_block_dependency", "always_comb"],
+      "source_bug_id": "935",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/935",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "proc_mux case statement with self-referencing conditional",
+      "category": "control_flow",
+      "description": "Code should include a procedural block with case or if-else chains where the output signal conditionally depends on itself through combinational paths, triggering mux tree generation that may form loops",
+      "snippet": "reg [7:0] out;\nreg [7:0] inp;\nalways @(*) begin\n  case (state)\n    2'd0: out = inp;\n    2'd1: out = out + 1;\n    default: out = 0;\n  endcase\nend",
+      "tags": ["case", "self_referencing", "mux_tree", "combinational_loop"],
+      "source_bug_id": "935",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/935",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

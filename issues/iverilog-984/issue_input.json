@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 984,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/984",
+  "title": " Fix class constructor chaining corner cases",
+  "body": "There are some corner cases around class constructor chaining that can\r\nresult in chained constructors not being called, or being called multiple\r\ntimes.\r\n\r\nThis is primarily related to that a class can have either an explicit\r\nconstructor called `new` and an implicit constructor called `new@` and how\r\nthe lookup of them is done.\r\n\r\nLookup is currently done independently for the implicit and explicit\r\nconstructor using the `method_from_name()` method. `method_from_name()`\r\nwill search the whole class hierarchy for a class method. If a class\r\ndoesn't have a method by that name it will look in the parent class and so\r\non.\r\n\r\nAs a result the lookup for the explicit constructor can return the explicit\r\nconstructor of a parent class if the class itself only has an implicit\r\nconstructor and vice versa.\r\n\r\nE.g. in the following example the constructor of D will not be called\r\nbecause the implicit constructor for C is found when looking for a implicit\r\nconstructor in D.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  int x = 10;\r\nendclass\r\n\r\nclass D extends C;\r\n  function new;\r\n    $display(\"D\");\r\n  endfunction\r\nendclass\r\n\r\nclass E extends D;\r\n  int y;\r\n  function new;\r\n    y = 20;\r\n  endfunction\r\nendclass\r\n\r\nE e = new;\r\n```\r\n\r\nThere is a similar case where the constructor of a base class can be called\r\nmultiple times if the base class has an explicit constructor and the\r\nderived class has an implicit constructor. In that case the derived class\r\nconstructor will call the base class constructor, but the code that is\r\nemitted for the `new` statement will call both of them.\r\n\r\nTo mitigate this introduce a new method to lookup the constructor that will\r\nsearch for either the explicit or implicit constructor in the current class\r\nand only continue to search in the base class if neither is found.\r\n\r\nAnother issue is that when specifying the base class constructor arguments\r\nas part of the `extends` the base class constructor will not be called if the\r\nderived class has neither an implicit or explicit constructor. Fix this by always\r\ncreating an implicit constructor if base class constructor arguments are\r\nspecified.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-05",
+  "closed_at": "2023-08-06",
+  "code_blocks": [
+    "class C;\r\n  int x = 10;\r\nendclass\r\n\r\nclass D extends C;\r\n  function new;\r\n    $display(\"D\");\r\n  endfunction\r\nendclass\r\n\r\nclass E extends D;\r\n  int y;\r\n  function new;\r\n    y = 20;\r\n  endfunction\r\nendclass\r\n\r\nE e = new;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

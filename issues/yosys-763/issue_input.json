@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 763,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/763",
+  "title": "Abort on `block :scope wire x = y;`",
+  "body": "MCVE:\r\n```verilog\r\nmodule foo(input clk, a, b);\r\n  always @(posedge clk)\r\n    if (a) begin :scope\r\n      wire b_inv = ~b;\r\n    end\r\nendmodule\r\n```\r\n```\r\n Yosys 0.8+106 (git sha1 b91debaf, clang 7.0.1-1 -fPIC -Os)\r\n\r\n\r\n-- Parsing `test.sv' using frontend `verilog -sv' --\r\n\r\n1. Executing Verilog-2005 frontend.\r\nParsing SystemVerilog input from `test.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\foo'.\r\nERROR: Abort in frontends/ast/genrtlil.cc:563.\r\n```\r\nI'm not sure how to fix it myself as I only barely know Verilog/SystemVerilog semantics. This came up while trying to write a formal testbench:\r\n```verilog\r\n                OPCODE_ARITH: begin\r\n                    if (i_type2 == OPTYPE_CMP) begin : scope\r\n                        wire [15:0] tmp;\r\n                        tmp = mem[a_regY] - mem[a_regX];\r\n                        assert (fi_z == (tmp == 0));\r\n                        assert (fi_s == tmp[15]);\r\n                        // TODO: fi_c\r\n                        // TODO: fi_v\r\n                    end\r\n                end\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-24",
+  "closed_at": "2019-03-03",
+  "code_blocks": [
+    "module foo(input clk, a, b);\r\n  always @(posedge clk)\r\n    if (a) begin :scope\r\n      wire b_inv = ~b;\r\n    end\r\nendmodule",
+    "Yosys 0.8+106 (git sha1 b91debaf, clang 7.0.1-1 -fPIC -Os)\r\n\r\n\r\n-- Parsing `test.sv' using frontend `verilog -sv' --\r\n\r\n1. Executing Verilog-2005 frontend.\r\nParsing SystemVerilog input from `test.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\foo'.\r\nERROR: Abort in frontends/ast/genrtlil.cc:563.",
+    "OPCODE_ARITH: begin\r\n                    if (i_type2 == OPTYPE_CMP) begin : scope\r\n                        wire [15:0] tmp;\r\n                        tmp = mem[a_regY] - mem[a_regX];\r\n                        assert (fi_z == (tmp == 0));\r\n                        assert (fi_s == tmp[15]);\r\n                        // TODO: fi_c\r\n                        // TODO: fi_v\r\n                    end\r\n                end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

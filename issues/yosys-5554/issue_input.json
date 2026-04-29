@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5554,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5554",
+  "title": "abc: add -word mode which uses word-level cells where possible",
+  "body": "The ABC pass currently always lowers logic to internal $_ gate cells. That’s fine for final techmapping, but it throws away word-level structure that some downstream passes and backends can still make use of. In some cases it’s useful to keep $and/$or/$xor/$not/$mux coming out of ABC instead of $_. This change adds a way to do that without changing the default behavior. \r\n\r\nTo that end, we add a -word **option** in abc that emits RTLIL $ logic cells instead of internal $_ gate cells after running ABC wherever possible. It's helpful to have logic/widths/structure in later passes esp when integrating with other tools where working gate-only is hard. fixup_parameters() is used to populate widths and parameters on the $ cells.\r\n\r\nDefault behavior is unchanged, so existing tests are unaffected.\r\n\r\nA simple manual check:\r\n\r\nyosys -p \"read_verilog tests/simple/and.v; synth -top and; abc; select -list t:*\"\r\nyosys -p \"read_verilog tests/simple/and.v; synth -top and; abc -word; select -list t:*\"\r\n\r\nWithout -word, ABC emits $_AND_, $_NOT_, etc.\r\nWith -word, the same logic is emitted as $and, $not, $mux where applicable.\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-12-18",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

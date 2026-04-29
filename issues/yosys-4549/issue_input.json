@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4549,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4549",
+  "title": "driver: print maximum memory usage on macOS",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nYosys on macOS doesn't print peak memory usage, even though the resource usage API should provide it anyway, except it's in bytes, not kilobytes.\r\n\r\n_Explain how this is achieved._\r\n\r\nAdjust ifdefs and divide max resident memory usage [by 1M](https://stackoverflow.com/questions/59913657/strange-values-of-get-rusage-maxrss-on-macos-and-linux)\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\n`$ yosys -p \"read_verilog invert.v\"`\r\n\r\nwhere invert.v is\r\n\r\n```verilog\r\nmodule invert_n_times #(parameter N = 100000) (\r\n    input wire in,\r\n    output wire out\r\n);\r\n    wire [N:0] intermediate;\r\n\r\n    assign intermediate[0] = in;\r\n\r\n    genvar i;\r\n    generate\r\n        for (i = 0; i < N; i = i + 1) begin : invert_loop\r\n            assign intermediate[i+1] = ~intermediate[i];\r\n        end\r\n    endgenerate\r\n\r\n    assign out = intermediate[N];\r\nendmodule\r\n```\r\n\r\non my Linux machine prints `End of script. Logfile hash: a63152f4f6, CPU: user 3.40s system 0.18s, MEM: 637.87 MB peak`. If the memory usage reported is now similar on a macOS device, the PR does what it's supposed to",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2024-08-19",
+  "closed_at": "2024-08-22",
+  "code_blocks": [
+    "module invert_n_times #(parameter N = 100000) (\r\n    input wire in,\r\n    output wire out\r\n);\r\n    wire [N:0] intermediate;\r\n\r\n    assign intermediate[0] = in;\r\n\r\n    genvar i;\r\n    generate\r\n        for (i = 0; i < N; i = i + 1) begin : invert_loop\r\n            assign intermediate[i+1] = ~intermediate[i];\r\n        end\r\n    endgenerate\r\n\r\n    assign out = intermediate[N];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

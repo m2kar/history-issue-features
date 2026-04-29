@@ -1,0 +1,77 @@
+{
+  "tool": "yosys",
+  "issue_number": 3096,
+  "title": "can't generate btor2 file for pulpissimo SoC's SRAM",
+  "features": [
+    {
+      "name": "large unpacked memory array",
+      "category": "data_model",
+      "description": "Code should include a large unpacked memory array where the total storage exceeds 128K bits (e.g., 1024 words x 128 bits)",
+      "snippet": "parameter [31:0] NumWords = 32'd1024;\nparameter [31:0] DataWidth = 32'd128;\nreg [DataWidth - 1:0] sram [NumWords - 1:0];",
+      "tags": ["unpacked_memory", "large_memory", "sram", "parameterized_array"],
+      "source_bug_id": "yosys-3096",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3096",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "performance_issue"
+    },
+    {
+      "name": "memory initialization with nested for-loops and urandom",
+      "category": "data_model",
+      "description": "Code should include an initial block that initializes a large unpacked memory using nested for-loops and $urandom",
+      "snippet": "reg [(NumWords * DataWidth) - 1:0] init_val;\ninitial begin\n  for (i = 0; i < NumWords; i = i + 1)\n    for (j = 0; j < DataWidth; j = j + 1)\n      init_val[(i * DataWidth) + j] = $urandom();\nend",
+      "tags": ["memory_init", "nested_for_loop", "urandom", "initial_block"],
+      "source_bug_id": "yosys-3096",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3096",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multi_port memory with generate blocks",
+      "category": "control_flow",
+      "description": "Code should include a generate block that creates multiple memory read ports using genvar and for-loops",
+      "snippet": "generate\n  genvar i;\n  for (i = 0; i < NumPorts; i = i + 1) begin : gen_port\n    wire [DataWidth:1] tmp = req_i[i] ? sram[addr_i[i * AddrWidth+:AddrWidth]] : '0;\n  end\nendgenerate",
+      "tags": ["generate_block", "multi_port", "genvar", "for_loop", "memory_read"],
+      "source_bug_id": "yosys-3096",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3096",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "variable part_select indexing on memory address",
+      "category": "data_model",
+      "description": "Code should include variable part-select indexing on a memory address port using the +: operator with computed offset",
+      "snippet": "sram[addr_i[i * AddrWidth+:AddrWidth]]",
+      "tags": ["part_select", "variable_index", "memory_address", " indexed_part_select"],
+      "source_bug_id": "yosys-3096",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3096",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "asynchronous read synchronous write memory",
+      "category": "timing",
+      "description": "Code should include a memory with asynchronous read (via always @(*) or wire assignment) and synchronous write (via always @(posedge clk))",
+      "snippet": "always @(*) rdata_o = sram[addr_i];\nalways @(posedge clk_i) if (we_i) sram[addr_i] <= wdata_i;",
+      "tags": ["async_read", "sync_write", "memory", "clocked_write"],
+      "source_bug_id": "yosys-3096",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3096",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

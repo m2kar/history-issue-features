@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3122,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3122",
+  "title": "Hierarchical names in genblk may conflict with existing identifiers",
+  "body": "I've noticed that yosys generates escaped identifiers for hierarchical names (for example `a` in the following code has a hierarchical name `genblk1.a` and yosys will create an escaped identifier `\\genblk1.a `), but if the escaped identifier is already taken, yosys does not check for this conflict and an error is generated.\r\n\r\nBTW the same problem exists in `flatten` pass but is handled by creating uniquified names. The same solution can be applied in genblk (such as creating an identifier `\\genblk1.a_1`).\r\n\r\nI also wonder if `hdlname` attributes can be generated for genblk items (`attribute \\hdlname \"genblk1 a\"` in this case) ?\r\n\r\n## Steps to reproduce the issue\r\n\r\nUse `read_verilog` to read the following code:\r\n\r\n```verilog\r\nmodule top();\r\n  wire [2:0] \\genblk1.a ;\r\n  if (1) wire [1:0] a;\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nVerilog frontend finished successfully. Two wires with width 3 and 2 respectively are generated in intermediate representation.\r\n\r\n## Actual behavior\r\n\r\nThe following error is generated:\r\n\r\n```\r\n1. Executing Verilog-2005 frontend: genblk2.v\r\nParsing Verilog input from `genblk2.v' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\ngenblk2.v:1: ERROR: Incompatible re-declaration of wire \\genblk1.a.\r\n```\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-12-18",
+  "closed_at": null,
+  "code_blocks": [
+    "module top();\r\n  wire [2:0] \\genblk1.a ;\r\n  if (1) wire [1:0] a;\r\nendmodule",
+    "1. Executing Verilog-2005 frontend: genblk2.v\r\nParsing Verilog input from `genblk2.v' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\ngenblk2.v:1: ERROR: Incompatible re-declaration of wire \\genblk1.a."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

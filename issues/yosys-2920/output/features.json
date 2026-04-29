@@ -1,0 +1,77 @@
+{
+  "tool": "yosys",
+  "issue_number": 2920,
+  "title": "Unsoundness of init value handling in opt_merge, opt_clean, and/or FfInitVals",
+  "features": [
+    {
+      "name": "dff_cells_with_init_attribute",
+      "category": "data_model",
+      "description": "Code should include multiple $dff cells each having an \\init attribute specifying initial values for flip-flop outputs",
+      "snippet": "cell $dff $ff1\n  parameter \\CLK_POLARITY 1'1\n  parameter \\WIDTH 1\n  connect \\D 1'0\n  connect \\Q $q1 [0]\nend\nattribute \\init 2'00\nwire width 2 $q1",
+      "tags": ["dff", "init_attribute", "flip_flop"],
+      "source_bug_id": "yosys-2920",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "multi_width_dff_with_constant_input",
+      "category": "data_model",
+      "description": "Code should include a multi-bit width $dff cell (width > 1) with a constant input matching its init value",
+      "snippet": "cell $dff $ff3\n  parameter \\CLK_POLARITY 1'1\n  parameter \\WIDTH 2\n  connect \\D 2'00\n  connect \\Q { $q1 [1] $q2 [1] }\nend\nattribute \\init 2'00\nwire width 2 $q2",
+      "tags": ["dff", "multi_width", "constant_input", "init"],
+      "source_bug_id": "yosys-2920",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "wire_with_init_attribute",
+      "category": "data_model",
+      "description": "Code should include wires that have \\init attributes specifying their initial reset values, separate from the DFF cells",
+      "snippet": "attribute \\init 2'00\nwire width 2 $q1\nattribute \\init 2'00\nwire width 2 $q2",
+      "tags": ["wire", "init_attribute", "initial_value"],
+      "source_bug_id": "yosys-2920",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "dff_outputs_merged_via_common_wire",
+      "category": "control_flow",
+      "description": "Code should include multiple DFF cells whose Q outputs are connected to a common wire, creating a fanin/fanout relationship that triggers init value conflict during optimization",
+      "snippet": "connect \\q [0] $q1 [0]\nconnect \\q [1] $q2 [0]\nconnect \\q [2] $q1 [1]\nconnect \\q [3] $q2 [1]\nwire output 2 width 4 \\q",
+      "tags": ["wire", "dff", "connection", "fanin", "optimization"],
+      "source_bug_id": "yosys-2920",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "private_wires_shared_between_dffs",
+      "category": "data_model",
+      "description": "Code should include private-named wires ($q1, $q2) that are shared between multiple DFF cells, with some bits used in different contexts across cells",
+      "snippet": "wire width 2 $q1\nwire width 2 $q2\nconnect \\Q $q1 [0]\nconnect \\Q $q2 [0]\nconnect \\Q { $q1 [1] $q2 [1] }",
+      "tags": ["wire", "dff", "private_name", "sharing"],
+      "source_bug_id": "yosys-2920",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

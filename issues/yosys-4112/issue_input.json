@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4112,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4112",
+  "title": "Bug with modulo in CXXRTL when operands intersect",
+  "body": "### Version\r\n\r\nYosys 0.29+11 (git sha1 0b05a6425, gcc 7.5.0-6ubuntu2 -fPIC -Os), also reproduced in\r\nYosys 0.29+11 (git sha1 f7ffd12bf, gcc 7.5.0-6ubuntu2 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nHi there!\r\n\r\nI noticed that the modulo operation sometimes provides wrong results in CXXRTL when there is an intersection between the operands.\r\n\r\n#### Design\r\n\r\nFor example, this design, supplied with `in_data=0x216231b1f16e9e8`:\r\n```\r\nmodule top(\r\n    input logic [63:0] in_data,\r\n    output logic [63:0] out_data\r\n);\r\n    assign out_data = in_data[41:6] % in_data[63:28];\r\nendmodule\r\n```\r\n\r\nSome valuations of `in_data` yield a correct result and seem to compute faster than faulty valuations.\r\n\r\nWhen there is no intersection between the operands, it seems that the calculation is correct, for example:\r\n```\r\nmodule top(\r\n    input logic [63:0] in_data,\r\n    output logic [63:0] out_data\r\n);\r\n    assign out_data = in_data[63:32] % in_data[31:0];\r\nendmodule\r\n```\r\n\r\n#### Testbench\r\n\r\nThe testbench can look like this: `tb_cxxrtl.cc`:\r\n\r\n```\r\n#include \"top.cpp\"\r\n\r\nint main() {\r\n    cxxrtl_design::p_top top;\r\n    uint64_t in_data=0x216231b1f16e9e8;\r\n    top.p_in__data.set<uint64_t>(in_data);\r\n    top.step();\r\n    uint64_t out_val = top.p_out__data.get<uint64_t>();\r\n    std::cout << \"Out data: \" << std::hex << out_val << std::endl;\r\n}\r\n```\r\n\r\n#### Commands\r\n\r\n```\r\nyosys -p \"read_verilog -sv top.sv; write_cxxrtl top.cpp\"\r\ng++ -g -O3 -std=c++14 -I `yosys-config --datdir`/include tb_cxxrtl.cc -o tb\r\n./tb\r\n```\r\n\r\nThanks!\r\nFlavien\r\n\r\n### Expected Behavior\r\n\r\nOutput value: `0x35522118`\r\n\r\n### Actual Behavior\r\n\r\nOutput value: `0x90beaf8`",
+  "labels": [
+    "pending-verification",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-06",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "module top(\r\n    input logic [63:0] in_data,\r\n    output logic [63:0] out_data\r\n);\r\n    assign out_data = in_data[41:6] % in_data[63:28];\r\nendmodule",
+    "module top(\r\n    input logic [63:0] in_data,\r\n    output logic [63:0] out_data\r\n);\r\n    assign out_data = in_data[63:32] % in_data[31:0];\r\nendmodule",
+    "#include \"top.cpp\"\r\n\r\nint main() {\r\n    cxxrtl_design::p_top top;\r\n    uint64_t in_data=0x216231b1f16e9e8;\r\n    top.p_in__data.set<uint64_t>(in_data);\r\n    top.step();\r\n    uint64_t out_val = top.p_out__data.get<uint64_t>();\r\n    std::cout << \"Out data: \" << std::hex << out_val << std::endl;\r\n}",
+    "yosys -p \"read_verilog -sv top.sv; write_cxxrtl top.cpp\"\r\ng++ -g -O3 -std=c++14 -I `yosys-config --datdir`/include tb_cxxrtl.cc -o tb\r\n./tb"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

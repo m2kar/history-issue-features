@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4115,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4115",
+  "title": "Bug: Shifts (in both directions) consider the operand signed under some conditions in CXXRTL",
+  "body": "### Version\n\nYosys 0.29+11 (git sha1 f7ffd12bf, gcc 7.5.0-6ubuntu2 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nHi there!\r\n\r\nI noticed a bug in CXXRTL, that could be reduced to the occurrence below.\r\n\r\n#### Design\r\n\r\nFor example, consider this design, supplied with `c=0x40e831aa`:\r\n```\r\nmodule top(\r\ninput logic [31:0] c,\r\n\r\noutput logic [31:0] out,\r\n);\r\n  // assign out = c >> 28'hfffffff8;\r\n  assign out = c >> 32'hfffffff8;\r\nendmodule\r\n```\r\n\r\nThe commented and the uncommented line should produce the same result: pushing c super far to the right direction, effectively producing only zeroes.\r\nHowever, I noticed that when the offset is encoded on at least 32 bits (there might be more conditions that I did not yet notice), the offset is considered signed.\r\n\r\n#### Testbench\r\n\r\nThe testbench can look like this: `tb_cxxrtl.cc`:\r\n\r\n```\r\n#include \"top.cpp\"\r\n#include <iostream>\r\nint main(int argc, char **argv, char **env) {\r\n  cxxrtl_design::p_top top;\r\n  uint32_t c = 0x40e831aa;\r\n  top.p_c.set<uint32_t>(c);\r\n  top.step();\r\n  uint64_t out = top.p_out.get<uint64_t>();\r\n  std::cout << \"Out data: \" << std::hex << out << std::endl;\r\n  exit(0);\r\n}\r\n\r\n```\r\n\r\n#### Commands\r\n\r\n```\r\nyosys -p \"read_verilog -sv top.sv; write_cxxrtl top.cpp\"\r\ng++ -g -O3 -std=c++14 -I `yosys-config --datdir`/include tb_cxxrtl.cc -o tb\r\n./tb\r\n```\r\n\r\nThanks!\r\nFlavien\n\n### Expected Behavior\n\nOut data: `0`\n\n### Actual Behavior\n\nOut data: `e831aa00` (hex)",
+  "labels": [
+    "pending-verification",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-07",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "module top(\r\ninput logic [31:0] c,\r\n\r\noutput logic [31:0] out,\r\n);\r\n  // assign out = c >> 28'hfffffff8;\r\n  assign out = c >> 32'hfffffff8;\r\nendmodule",
+    "#include \"top.cpp\"\r\n#include <iostream>\r\nint main(int argc, char **argv, char **env) {\r\n  cxxrtl_design::p_top top;\r\n  uint32_t c = 0x40e831aa;\r\n  top.p_c.set<uint32_t>(c);\r\n  top.step();\r\n  uint64_t out = top.p_out.get<uint64_t>();\r\n  std::cout << \"Out data: \" << std::hex << out << std::endl;\r\n  exit(0);\r\n}",
+    "yosys -p \"read_verilog -sv top.sv; write_cxxrtl top.cpp\"\r\ng++ -g -O3 -std=c++14 -I `yosys-config --datdir`/include tb_cxxrtl.cc -o tb\r\n./tb"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

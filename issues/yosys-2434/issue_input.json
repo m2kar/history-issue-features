@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2434,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2434",
+  "title": "Add command or option to split assignments",
+  "body": "Given the following example, `synth_gowin` produces code that cannot be parsed by the vendor toolchain.\r\n\r\n```verilog\r\nmodule top (input clk, output [1:0] leds);\r\n\r\nreg [1:0] ctr;\r\nalways @(posedge clk)\r\n\tctr <= ctr + 1'b1;\r\n\r\nassign leds = ctr;\r\n\r\nendmodule\r\n```\r\nCompile as follows. `-noiopads` is used for a minimal example, but the same behaviour can be seen _with_ iopads in more complex designs.\r\n```\r\nread_verilog blinky.v\r\nsynth_gowin -noiopads -vout vendorblinky.vg\r\ndump\r\n```\r\n`synth_gowin` uses `splitnets` to split up nets in single wires as needed for the vendor netlist. However, it does not split up the connection. So the last line of the generated verilog will read as follows, which the vendor tool cannot parse.\r\n```verilog\r\n  assign leds = { \\ctr[1] , \\ctr[0]  };\r\n```\r\nThe vendor tools gives\r\n```\r\nERROR  (PA2000) : \"/home/pepijn/code/apicula/vendorblinky.vg\":47 | syntax error near token '{'\r\n```\r\nSo a way is needed to split up the assignment itself. Note that the `-ports` option to `splitnets` does not help here, and only further complicates the LHS of the assignment.\r\n\r\nI guess I'm kinda the de facto maintainer of `synth_gowin`, so I'm happy to take a stab at implementing this behaviour. I'm just hoping for some input from people more familiar with yosys internals on how to go about this.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-11-10",
+  "closed_at": "2020-11-12",
+  "code_blocks": [
+    "module top (input clk, output [1:0] leds);\r\n\r\nreg [1:0] ctr;\r\nalways @(posedge clk)\r\n\tctr <= ctr + 1'b1;\r\n\r\nassign leds = ctr;\r\n\r\nendmodule",
+    "read_verilog blinky.v\r\nsynth_gowin -noiopads -vout vendorblinky.vg\r\ndump",
+    "assign leds = { \\ctr[1] , \\ctr[0]  };",
+    "ERROR  (PA2000) : \"/home/pepijn/code/apicula/vendorblinky.vg\":47 | syntax error near token '{'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

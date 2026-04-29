@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 568,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/568",
+  "title": "EDIF: add support for different flavors of bit indexing",
+  "body": "The EDIF code produced by `write_edif` is incorrectly renumbering the bits in multi-bit values.\r\n\r\n## Steps to reproduce the issue\r\n\r\n1. Write Verilog code such as the following with inputs/output containing multiple bits:\r\n\r\n```Verilog\r\nmodule badness (in, out);\r\n   input [1:0] in;\r\n   output [1:0] out;\r\n\r\n   assign out[0] = ~in[0];\r\n   assign out[1] = in[1];\r\nendmodule\r\n```\r\n2. Generate EDIF code:\r\n```\r\nyosys> read_verilog badness.v \r\nyosys> write_edif badness.edif\r\n```\r\n\r\nI'm using Yosys 83631555dd5d57e2a3d3b7175f77baf0ad67ccd9 (2018-06-11):\r\n\r\n```bash\r\n$ yosys -V\r\nYosys 0.7+596 (git sha1 83631555, clang 6.0.0 -fPIC -Os)\r\n```\r\n\r\n## Expected behavior\r\n\r\nI would have expected an EDIF `net` to associate `in[0]` with port 0 of `in` and with the input to an inverter and another `net` to associate `in[1]` with port 1 of `in` and with port 1 of `out`, as in the following EDIF code:\r\n\r\n```Lisp\r\n(net (rename id00003 \"in[0]\") (joined\r\n  (portRef (member in 0))\r\n  (portRef A (instanceRef id00002))\r\n))\r\n(net (rename id00004 \"in[1]\") (joined\r\n  (portRef (member in 1))\r\n  (portRef (member out 1))\r\n))\r\n(net (rename id00005 \"$not$badness.v:5$1_Y\") (joined\r\n  (portRef (member out 0))\r\n  (portRef Y (instanceRef id00002))\r\n))\r\n```\r\nIn fact, older versions of Yosys get this right.  An example of a good Yosys is the 0.7 release (61f681162754fa170494e567f1a1a9ae2d17eb69):\r\n\r\n```bash\r\n$ yosys -V\r\nYosys 0.7 (git sha1 61f6811, gcc 6.2.0-11ubuntu1 -O2 -fdebug-prefix-map=/build/yosys-OIL3SR/yosys-0.7=. -fstack-protector-strong -fPIC -Os)\r\n```\r\n\r\n## Actual behavior\r\n\r\nWhat actually happens is that an EDIF `net` associates port **1** of `in` with the input to the inverter (and with `in[0]`).  Another EDIF `net` associates port **0** of `in` directly with port **0** of `out` (and with `in[1]`)—but no inverter—as in the following EDIF code:\r\n\r\n```Lisp\r\n(net (rename id00003 \"in[1]\") (joined\r\n  (portRef (member in 0))\r\n  (portRef (member out 0))\r\n))\r\n(net (rename id00004 \"in[0]\") (joined\r\n  (portRef (member in 1))\r\n  (portRef A (instanceRef id00002))\r\n))\r\n(net (rename id00005 \"$not$badness.v:5$1_Y\") (joined\r\n  (portRef (member out 1))\r\n  (portRef Y (instanceRef id00002))\r\n))\r\n```\r\n\r\nThat is, the comment strings are correct, but the actual `portRef`s are not.  This issue *may* be similar to #315, but I'm not positive.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2018-06-13",
+  "closed_at": null,
+  "code_blocks": [
+    "module badness (in, out);\r\n   input [1:0] in;\r\n   output [1:0] out;\r\n\r\n   assign out[0] = ~in[0];\r\n   assign out[1] = in[1];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

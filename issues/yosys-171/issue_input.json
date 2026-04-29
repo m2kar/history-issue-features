@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 171,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/171",
+  "title": "YOSYS crashs when using SCC pass after Submod pass",
+  "body": "I was trying to partition my design (a simple counter)  and found it crashes. You can reproduce the crash if you follow these commands\n\n> read_verilog counter.v\n> proc; opt; fsm; opt; memory; opt; techmap; opt\n> scc -all_cell_types\n> and then put each found SCC into a module using submod.\n> scc -all_cell_types\n\nthen I received:\n\n> ERROR: Assert `workQueue.count(cell) > 0' failed in passes/cmds/scc.cc:57.\n\nI have also included the log of the crash. \nI investigated the crash and here is my observations:\n**1. when performing \"submod\". it cannot figure out the port direction. This create ambiguity for SCC pass and it causes the crash. (it adds up fake SCCs)\n2. It can be avoided if  \" we first run splitnets -ports -driver\" and then \"submod\".** \n\nDesign:\n\n```\nmodule counter (clk, rst, en, count);\n   input clk, rst, en;\n   output reg [3:0] count;\n   always @(posedge clk)\n      if (rst)\n         count <= 4'd0;\n      else if (en)\n         count <= count + 4'd1;\nendmodule\n```\n\n[crash_report.txt](https://github.com/cliffordwolf/yosys/files/272947/crash_report.txt)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-05-19",
+  "closed_at": "2016-05-27",
+  "code_blocks": [
+    "module counter (clk, rst, en, count);\n   input clk, rst, en;\n   output reg [3:0] count;\n   always @(posedge clk)\n      if (rst)\n         count <= 4'd0;\n      else if (en)\n         count <= count + 4'd1;\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

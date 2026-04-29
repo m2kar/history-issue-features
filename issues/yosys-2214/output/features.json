@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2214,
+  "title": "generate block scope resolution issues",
+  "features": [
+    {
+      "name": "genvar declared in named generate block shadowing same-named procedural locals",
+      "category": "control_flow",
+      "description": "Code should include a named generate block that contains both named procedural blocks (initial, always) each declaring a local variable with the same identifier, and also declares a genvar with that same identifier used in a generate for-loop",
+      "snippet": "reg [2:0] out;\ngenerate\n  begin : cond\n    initial begin : init\n      reg signed [31:0] x;\n      x = 2 ** 2;\n      out = x[2:0];\n    end\n    always @* begin : proc\n      reg signed [31:0] x;\n      x = 2 ** 1;\n      out = x[2:0];\n    end\n    genvar x;\n    for (x = 0; x < 3; x = x + 1)\n      assign out[x] = 1;\n  end\nendgenerate",
+      "tags": ["generate", "genvar", "named_block", "scope_resolution", "shadowing", "procedural_block"],
+      "source_bug_id": "2214",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "relative hierarchical path resolution across sibling named generate sub-blocks",
+      "category": "control_flow",
+      "description": "Code should include nested named generate blocks where a wire in a parent named block references signals in sibling sub-blocks using relative hierarchical paths (e.g. B.y instead of A.B.y)",
+      "snippet": "wire [1:0] x_top = 2'b11;\ngenerate\n  begin : A\n    begin : B\n      wire [1:0] y = 2'b00;\n    end\n    begin : C\n      wire [1:0] z = 2'b01;\n    end\n    wire [1:0] x = B.y ^ 2'b11 ^ C.z;\n  end\nendgenerate",
+      "tags": ["generate", "named_block", "hierarchical_reference", "scope_resolution", "sibling_block", "wire"],
+      "source_bug_id": "2214",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple named procedural blocks inside a named generate block with shared variable names",
+      "category": "control_flow",
+      "description": "Code should include a named generate block containing both a named initial block and a named always block, each declaring a local signed reg with the same identifier and assigning to an outer reg output",
+      "snippet": "reg [2:0] out1;\nreg [2:0] out2;\ngenerate\n  begin : cond\n    initial begin : init\n      reg signed [31:0] x;\n      x = 2 ** 2;\n      out1 = x[2:0];\n    end\n    always @* begin : proc\n      reg signed [31:0] x;\n      x = 2 ** 1;\n      out2 = x[2:0];\n    end\n  end\nendgenerate",
+      "tags": ["generate", "named_block", "initial_block", "always_block", "local_variable", "signed_reg"],
+      "source_bug_id": "2214",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

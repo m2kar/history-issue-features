@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3112,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3112",
+  "title": "CXXRTL: internal assertion on reduced testcase",
+  "body": "## Steps to reproduce the issue\r\n\r\nRepro files: [hazard3-alu-cxxrtl-repro.zip](https://github.com/YosysHQ/yosys/files/7717168/hazard3-alu-cxxrtl-repro.zip)\r\n\r\nThis zip file contains two directories. Each directory is self-contained, with source and `.ys` files.\r\n\r\n* `verilog_src` -- part of the Verilog hierarchy of my project, bisected as far as possible (the ALU and two subordinate modules)\r\n* `ilang_reduced` -- the above, reduced with bugpoint _as far as possible_. I had some issues here with bugpoint not terminating\r\n\r\n`cd` into either directory, and run \r\n\r\n```\r\nyosys bug.ys\r\n```\r\n\r\nI'm on `Yosys 0.12+23 (git sha1 5e5c8a54c, clang 10.0.0-4ubuntu1 -fPIC -Os)`, which was `master` on Monday. You should see:\r\n\r\n```\r\nERROR: Assert '!is_lhs' failed in backends/cxxrtl/cxxrtl_backend.cc:965.\r\n```\r\n\r\n## Expected behavior\r\n\r\nProduce a C++ output, or a diagnostic saying an issue with the Verilog that I can fix\r\n\r\n## Actual behavior\r\n\r\n```\r\nERROR: Assert '!is_lhs' failed in backends/cxxrtl/cxxrtl_backend.cc:965.\r\n```\r\n\r\n## Further Troubleshooting\r\n\r\nI was previously on Yosys version `c2afcbe7`, which did not trip this same assertion, and as far as I can tell produced working build output. I have gone back to rebuild that version of Yosys, and run it on the repro zip above, and it does not trip this assertion.\r\n\r\n`c2afcbe7` was a few commits after the fix for #2882, which was in fact the same assertion tripping on an earlier version of this same ALU.\r\n\r\nI tried to reduce the testcase from the full source of my project, and found that bugpoint didn't terminate, even when left running overnight. Eventually Yosys was killed. After I bisected down to a smaller part of my project source, I _still_ found that bugpoint would not terminate. It continually \"finds something\". In the reduced testcase above I see a lot of wires called `$delete_wire$xxxx` and I wonder if bugpoint is somehow looping on deleting its own created wires. I'll open another issue for this.\r\n\r\nI reduced as far as I could by hacking `bugpoint` to output its last successful testcase after hitting 20 000 iterations.\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-12-15",
+  "closed_at": "2021-12-16",
+  "code_blocks": [
+    "ERROR: Assert '!is_lhs' failed in backends/cxxrtl/cxxrtl_backend.cc:965.",
+    "ERROR: Assert '!is_lhs' failed in backends/cxxrtl/cxxrtl_backend.cc:965."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

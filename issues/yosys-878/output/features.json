@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 878,
+  "title": "Don't care optimisation for $shiftx",
+  "features": [
+    {
+      "name": "shiftx undersized A input",
+      "category": "data_model",
+      "description": "Code should include a $shiftx cell instantiation where A_WIDTH is less than 2 raised to B_WIDTH (A_WIDTH < 2**B_WIDTH), meaning the data input is smaller than the addressable range of the shift amount",
+      "snippet": "$shiftx #(.A_WIDTH(3), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0)) s (.A({A,A,A}), .B(B), .Y(Y));",
+      "tags": ["$shiftx", "undersized", "cell_instantiation"],
+      "source_bug_id": "878",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/878",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "shiftx constant replication in A",
+      "category": "data_model",
+      "description": "Code should include a $shiftx cell where the A input is constructed by replicating a single value using concatenation operator, creating all-identical bits",
+      "snippet": "$shiftx #(.A_WIDTH(3), .B_WIDTH(2)) s (.A({A,A,A}), .B(B), .Y(Y));",
+      "tags": ["$shiftx", "constant_replication", "concatenation"],
+      "source_bug_id": "878",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/878",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "shiftx with x/z in concatenated A input",
+      "category": "data_model",
+      "description": "Code should include a $shiftx cell where the A input concatenation contains don't-care values (1'bx or 1'bz) mixed with other signals",
+      "snippet": "$shiftx #(.A_WIDTH(4), .B_WIDTH(2)) s (.A({1'bx,A,A,A}), .B(B), .Y(Y));",
+      "tags": ["$shiftx", "dont_care", "x_propagation", "concatenation"],
+      "source_bug_id": "878",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/878",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "inferred shiftx via dynamic array indexing",
+      "category": "data_model",
+      "description": "Code should include dynamic array indexing where a wire is indexed by a shift amount variable, inferring a $shiftx-like operation",
+      "snippet": "wire [2:0] A3 = {A,A,A};\nassign Y = A3[B];",
+      "tags": ["inferred_shiftx", "dynamic_indexing", "wire_indexing"],
+      "source_bug_id": "878",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/878",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

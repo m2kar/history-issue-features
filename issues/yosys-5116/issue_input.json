@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5116,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5116",
+  "title": "Update fstlib",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nMemory leak detected with ASAN during `tests/sat/grom.ys`, with memory allocation `in fstReaderIterBlocks2 libs/fst/fstapi.cc`.\r\nProblem occurs in `sim.cc` calling `throw dst_end_of_data_exception()` when the desired number of cycles has been reached; this means that the fst reader can't tidy up after itself and leads to memory leaks.\r\nThis doesn't happen when the `-stop` flag is used because the `Yosys::FstData` struct tracks the end time and skips the outer callback if the simulation has gone past the desired end time.\r\n\r\nDuring investigation (while checking if there was a potential fix already upstream) I noticed that fstlib has been made available as a library separate from gtkwave.\r\n\r\n_Explain how this is achieved._\r\n\r\n- Update fstlib patches to use new code location, as well as adjusting where necessary for code refactoring.\r\n- Move cycle checking into the inner callback along with the time checking; means that the outer callback no longer needs to throw an exception in order to stop checking further values, while still allowing the fst reader to finish reading and deallocate memory.\r\n- Add test file for checking the number of simulation steps to confirm pre- and post-patch equivalence.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nRun `tests/sim/sim_cycles.ys` under Yosys built with ASAN enabled.  Pre-patch passes all tests, but fails ASAN (See #5020).  Post-patch passes all tests *and* ASAN.",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-12",
+  "closed_at": "2025-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

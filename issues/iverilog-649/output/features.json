@@ -1,0 +1,33 @@
+{
+  "tool": "iverilog",
+  "issue_number": 649,
+  "title": "Bug in variable name for 'not all bits are asynchronously set or reset. This is not currently supported in synthesis'.",
+  "features": [
+    {
+      "name": "async reset with incomplete reset assignment in combinational block",
+      "category": "timing",
+      "description": "Code should include a register with asynchronous reset where the corresponding next-state variable is not fully assigned in the combinational always block, causing incomplete reset coverage",
+      "snippet": "always @(*) begin\n    next_state = state;\nend\nalways @(posedge clk, posedge rst) begin\n    if(rst) state <= '1;\n    else state <= next_state;\nend",
+      "tags": ["async_reset", "incomplete_reset", "combinational_block"],
+      "source_bug_id": "649",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/649",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "unused next-state variable with async reset",
+      "category": "data_model",
+      "description": "Code should include a next-state variable that is used in a clocked always block with async reset but is never assigned in the corresponding combinational always block",
+      "snippet": "reg [3:0] pos;\nreg [3:0] next_pos;\nalways @(*) begin\n    next_state = state;\nend\nalways @(posedge clk, posedge rst) begin\n    if(rst) state <= '1;\n    else begin\n        state <= next_state;\n        pos <= next_pos;\n    end\nend",
+      "tags": ["next_state", "uninitialized", "async_reset", "synthesis"],
+      "source_bug_id": "649",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/649",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

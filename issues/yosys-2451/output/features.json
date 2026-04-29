@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2451,
+  "title": "SV: Parameterised module names not always contain interface parameters.",
+  "features": [
+    {
+      "name": "parameterized interface with modport",
+      "category": "data_model",
+      "description": "Code should include a parameterized interface with modport declarations, where the interface has a width parameter and defines two modports with different signal directions",
+      "snippet": "interface pingpong #(parameter WIDTH=32);\n\tlogic [WIDTH-1:0] ping;\n\tlogic [WIDTH-1:0] pong;\n\tmodport pinger(output ping, input pong);\n\tmodport ponger(output pong, input ping);\nendinterface",
+      "tags": ["interface", "parameterized_interface", "modport"],
+      "source_bug_id": "yosys-2451",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2451",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module with parameterized interface port",
+      "category": "data_model",
+      "description": "Code should include a module that has a parameterized interface as a port, using a specific modport of that interface",
+      "snippet": "module responder #(parameter WIDTH=32) (input wire clock, pingpong.ponger ping);\n\tassign ping.pong = ping.ping;\nendmodule",
+      "tags": ["interface_port", "parameterized_interface", "module_instance"],
+      "source_bug_id": "yosys-2451",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2451",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple instances of module with interface port",
+      "category": "data_model",
+      "description": "Code should include two instances of the same parameterized module, each connected to a different interface instance of the same parameterized interface type",
+      "snippet": "module top(input wire clock, pingpong.ponger p0, pingpong.ponger p1);\n\tresponder #(.WIDTH(32)) resp0(.clock(clock), .ping(p0));\n\tresponder #(.WIDTH(32)) resp1(.clock(clock), .ping(p1));\nendmodule",
+      "tags": ["module_instance", "interface_connection", "multiple_instances"],
+      "source_bug_id": "yosys-2451",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2451",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

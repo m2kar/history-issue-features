@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1920,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1920",
+  "title": "cxxrtl compile issue with disconnected outputs",
+  "body": "MCVE:\r\n```verilog\r\nmodule submod(output p, q);\r\nassign p = 1'b0;\r\nassign q = 1'b1;\r\nendmodule\r\n\r\nmodule top(output p);\r\nsubmod submod_i(.p(p), .q());\r\nendmodule\r\n```\r\n\r\n```\r\nyosys -p \"prep -top top; write_cxxrtl disconn.cc\" cxxrtl_disconn_output.v\r\ng++ -I/usr/local/share/yosys/include/backends/cxxrtl disconn.cc\r\n```\r\n\r\ngives\r\n<pre><b>disconn.cc:</b> In member function ‘<b>virtual void cxxrtl_design::p_top::eval()</b>’:\r\n<b>disconn.cc:50:36:</b> <font color=\"#CC0000\"><b>error: </b></font>no match for ‘<b>operator=</b>’ (operand types are ‘<b>cxxrtl::value&lt;0&gt;</b>’ and ‘<b>cxxrtl::value&lt;1&gt;</b>’)\r\n   50 |  value&lt;0&gt;() = cell_p_submod__i.p_q.<font color=\"#CC0000\"><b>curr</b></font>;\r\n      |                                    <font color=\"#CC0000\"><b>^~~~</b></font>\r\nIn file included from <b>disconn.cc:1</b>:\r\n<b>/usr/local/share/yosys/include/backends/cxxrtl/cxxrtl.h:79:15:</b> <font color=\"#06989A\"><b>note: </b></font>candidate: ‘<b>constexpr cxxrtl::value&lt;Bits&gt;&amp; cxxrtl::value&lt;Bits&gt;::operator=(const cxxrtl::value&lt;Bits&gt;&amp;) [with long unsigned int Bits = 0]</b>’\r\n   79 |  value&lt;Bits&gt; &amp;<font color=\"#06989A\"><b>operator</b></font>=(const value&lt;Bits&gt; &amp;) = default;\r\n      |               <font color=\"#06989A\"><b>^~~~~~~~</b></font>\r\n<b>/usr/local/share/yosys/include/backends/cxxrtl/cxxrtl.h:79:25:</b> <font color=\"#06989A\"><b>note: </b></font>  no known conversion for argument 1 from ‘<b>cxxrtl::value&lt;1&gt;</b>’ to ‘<b>const cxxrtl::value&lt;0&gt;&amp;</b>’\r\n   79 |  value&lt;Bits&gt; &amp;operator=(<font color=\"#06989A\"><b>const value&lt;Bits&gt; &amp;</b></font>) = default;\r\n      | </pre>",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-14",
+  "closed_at": "2020-04-14",
+  "code_blocks": [
+    "module submod(output p, q);\r\nassign p = 1'b0;\r\nassign q = 1'b1;\r\nendmodule\r\n\r\nmodule top(output p);\r\nsubmod submod_i(.p(p), .q());\r\nendmodule",
+    "yosys -p \"prep -top top; write_cxxrtl disconn.cc\" cxxrtl_disconn_output.v\r\ng++ -I/usr/local/share/yosys/include/backends/cxxrtl disconn.cc"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

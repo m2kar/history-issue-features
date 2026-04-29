@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2346,
+  "title": "techmap: incorrect lowering of $shift/$shiftx cells (off-by-who-knows-what in width calculations)",
+  "features": [
+    {
+      "name": "shiftx cell instantiation with B_WIDTH exceeding connected signal width",
+      "category": "data_model",
+      "description": "Code should include a direct $shiftx primitive cell instantiation where the B_WIDTH parameter is larger than the actual bit-width of the connected shift-amount signal, achieved by zero-padding the shift amount via concatenation",
+      "snippet": "input [8:0] A;\ninput [1:0] B;\noutput [2:0] Y;\n$shiftx #(\n  .A_WIDTH(9), .B_WIDTH(4),\n  .Y_WIDTH(3),\n  .A_SIGNED(1'b0), .B_SIGNED(1'b0)\n) cel (\n  .A(A), .B({B, 2'h0}), .Y(Y)\n);",
+      "tags": ["shiftx", "primitive_cell", "shift", "b_width_mismatch", "concatenation", "zero_padding", "techmap"],
+      "source_bug_id": "2346",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2346",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "shift with zero-padded concatenated shift amount",
+      "category": "data_model",
+      "description": "Code should include a right-shift operation where the shift amount is formed by concatenating a narrow signal with zero bits, effectively scaling the shift amount by a power of two",
+      "snippet": "logic [8:0] A;\nlogic [1:0] B;\nlogic [2:0] Y;\nassign Y = A >> {B, 2'h0};",
+      "tags": ["shift", "concatenation", "zero_padding", "scaled_shift", "assign"],
+      "source_bug_id": "2346",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2346",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "part-select with concatenated offset beyond array bounds returning x",
+      "category": "data_model",
+      "description": "Code should include a vector indexed part-select where the index offset can reach out-of-bounds positions, expecting 'x results for out-of-range accesses consistent with $shiftx semantics",
+      "snippet": "logic [8:0] A;\nlogic [1:0] B;\nlogic [2:0] Y;\nassign Y = A[{B, 2'h0} +: 3];",
+      "tags": ["part_select", "indexed_part_select", "out_of_bounds", "x_result", "shiftx_semantics"],
+      "source_bug_id": "2346",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2346",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

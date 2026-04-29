@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5215,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5215",
+  "title": "log_const thinks a ring buffer and prayer add up to an allocator",
+  "body": "### Version\n\n66035f70\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nRelated to #5210. In the words of an artist, \"trust me, it gets so much worse\". Dump this in your pass of choice:\n\n```cpp\nstd::vector<RTLIL::Const> consts;\nfor (int i = 0; i < 110; i++) {\n\tconsts.push_back(Const(i));\n}\nstd::vector<const char*> const_logs;\nfor (auto c : consts) {\n\tconst_logs.push_back(log_const(c));\n}\nfor (auto l : const_logs) {\n\tstd::cout << l << \"\\n\";\n}\n```\n\n### Expected Behavior\n\nNumbers from 0 to 110 get printed. `log_const` actively is built to allow returned strings to live longer than the next call to `log_const`. At least give me an error if some magic hidden resource runs out\n\n### Actual Behavior\n\nThis won't print numbers 0..8 because `log_const` uses an absurd ring buffer for leaking temporaries and just *hopes* that you never keep a pointer to a const after you've logged 100 more. Instead you get this because newer logs overwrite the ring buffer entries:\n```\n101\n102\n[...]\n108\n109\n9\n10\n11\n12\n[...]\n108\n109\n```\n\nIdeally we just return `std::string` instead of this ring buffer. Maybe finally an excuse to deprecate `log_*` functions that do string formatting instead of logging - tag them deprecated, replace their use with `std::string` functions in the codebase.\n\nAlso the same thing exists in nextpnr as the `StrRingBuffer`. I assume this bug isn't discoverable in practice in either program currently but it's a classic foot gun",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-08",
+  "closed_at": "2025-09-16",
+  "code_blocks": [
+    "std::vector<RTLIL::Const> consts;\nfor (int i = 0; i < 110; i++) {\n\tconsts.push_back(Const(i));\n}\nstd::vector<const char*> const_logs;\nfor (auto c : consts) {\n\tconst_logs.push_back(log_const(c));\n}\nfor (auto l : const_logs) {\n\tstd::cout << l << \"\\n\";\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

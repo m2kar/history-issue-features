@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4398,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4398",
+  "title": "Outputs differ before and after synthesis, but Yosys seems correct.",
+  "body": "### Version\n\nYosys 0.39+165\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n\r\nHello, the outputs before and after synthesis are inconsistent when performing bitwise operations on signed numbers in Verilog using Yosys. However, it seems that Yosys provided the correct output.\r\n\r\nGiven my original design, when the input `wire1` is `6'b110011`, the `for` loop should execute, and the `if` condition should be true, resulting in the output `y` being `01`. However, simulation results show that the original design outputs `00`, while the synthesized design outputs `01`.\r\n\r\n```\r\nmodule top  (y, clk, wire1);\r\n  output wire [1:0] y;\r\n  input wire clk;\r\n input wire signed [5:0] wire1;  \r\n\r\n  reg signed [1:0] forvar7 = 2'b00;  \r\n  reg signed [6:0] forvar5 = 7'b0000000;  \r\n\r\n  \r\n  assign y = {forvar7};\r\n  \r\n  always\r\n    @(posedge clk) \r\n    begin\r\n      for (forvar5 = (7'b0000000); (forvar5 < (7'b0000001)); forvar5 = (forvar5 + (7'b0000001)))\r\n        begin\r\n          if ( (^(forvar5 + wire1) ? forvar5 : wire1) )\r\n            begin\r\n\t\t          forvar7 = (2'b01);\r\n            end\r\n        end\r\n    end\r\nendmodule\r\n```\r\nThe testbench is as follows：\r\n```\r\n`include \"rtl.v\"\r\n\r\nmodule testbench;\r\n\r\n  reg clk;\r\n  reg signed [5:0] wire1;\r\n  wire [1:0] y;\r\n\r\n\r\n  top uut (\r\n    .y(y),\r\n    .clk(clk),\r\n    .wire1(wire1)\r\n  );\r\n\r\n\r\n  initial begin\r\n    clk = 0;\r\n    forever #5 clk = ~clk; \r\n  end\r\n\r\n\r\n  initial begin\r\n \r\n    wire1 = 6'b110011;\r\n\r\n \r\n    #10;\r\n    $display(\"At time %t, y = %b\", $time, y);\r\n\r\n \r\n    #20;\r\n    $finish;\r\n  end\r\nendmodule\r\n```\r\n\r\n\r\n[yosys_5_15.zip](https://github.com/YosysHQ/yosys/files/15324843/yosys_5_15.zip)\r\n\n\n### Expected Behavior\n\nI think the yosys tool is correct, but why does it output inconsistent\n\n### Actual Behavior\n\nInconsistent output before and after synthesis",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-15",
+  "closed_at": "2024-05-16",
+  "code_blocks": [
+    "module top  (y, clk, wire1);\r\n  output wire [1:0] y;\r\n  input wire clk;\r\n input wire signed [5:0] wire1;  \r\n\r\n  reg signed [1:0] forvar7 = 2'b00;  \r\n  reg signed [6:0] forvar5 = 7'b0000000;  \r\n\r\n  \r\n  assign y = {forvar7};\r\n  \r\n  always\r\n    @(posedge clk) \r\n    begin\r\n      for (forvar5 = (7'b0000000); (forvar5 < (7'b0000001)); forvar5 = (forvar5 + (7'b0000001)))\r\n        begin\r\n          if ( (^(forvar5 + wire1) ? forvar5 : wire1) )\r\n            begin\r\n\t\t          forvar7 = (2'b01);\r\n            end\r\n        end\r\n    end\r\nendmodule",
+    "`include \"rtl.v\"\r\n\r\nmodule testbench;\r\n\r\n  reg clk;\r\n  reg signed [5:0] wire1;\r\n  wire [1:0] y;\r\n\r\n\r\n  top uut (\r\n    .y(y),\r\n    .clk(clk),\r\n    .wire1(wire1)\r\n  );\r\n\r\n\r\n  initial begin\r\n    clk = 0;\r\n    forever #5 clk = ~clk; \r\n  end\r\n\r\n\r\n  initial begin\r\n \r\n    wire1 = 6'b110011;\r\n\r\n \r\n    #10;\r\n    $display(\"At time %t, y = %b\", $time, y);\r\n\r\n \r\n    #20;\r\n    $finish;\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1482,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1482",
+  "title": "Optimisations in OPT_LUT pass",
+  "body": "Using the command line\r\n\r\n`yosys -p synth_ice40 relut.v`\r\n\r\nthis code:\r\n\r\n```\r\nmodule top (input clk,output reg[3:0]z,input[3:0]x,input[3:0]y,input s);\r\n  always @(posedge clk) begin\r\n    z<=x+(s?y:0); // 7 LUTs\r\n  end\r\nendmodule\r\n```\r\n\r\nis synthesised differently from this code:\r\n\r\n```\r\nmodule top (input clk,output reg[3:0]z,input[3:0]x,input[3:0]y,input s);\r\n  always @(posedge clk) begin\r\n    z<=s?(x+y):x; // 4 LUTs\r\n  end\r\nendmodule\r\n```\r\n\r\nthe second style being much more efficient as the OPT_LUT pass succeeds in packing all the logic into one LC per bit.\r\n\r\nOne result of this is that multipliers synthesised from LUTs, which as far as I can tell are essentially constructed using the first style, are much bigger than they need to be.\r\n\r\nI am using Yosys 0.9+932 (git sha1 65f197e2, clang 6.0.0-1ubuntu2 -fPIC -Os).\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-11-10",
+  "closed_at": null,
+  "code_blocks": [
+    "module top (input clk,output reg[3:0]z,input[3:0]x,input[3:0]y,input s);\r\n  always @(posedge clk) begin\r\n    z<=x+(s?y:0); // 7 LUTs\r\n  end\r\nendmodule",
+    "module top (input clk,output reg[3:0]z,input[3:0]x,input[3:0]y,input s);\r\n  always @(posedge clk) begin\r\n    z<=s?(x+y):x; // 4 LUTs\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

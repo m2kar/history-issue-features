@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2401,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2401",
+  "title": "Simulation generates VCD files with no timescale",
+  "body": "## Steps to reproduce the issue\r\n\r\nSimulate a Verilog file with `sim` and write output to a VCD file with `-vcd out.vcd`.\r\n\r\n## Expected behavior\r\n\r\nThe generated VCD file should include a timescale, even just a placeholder, e.g. `$timescale 1ns $end`.\r\n\r\n## Actual behavior\r\n\r\nThe VCD file does not contain any timescale. This confuses some viewers, such as [Scansion](http://www.logicpoet.com/scansion/).\r\n\r\nA trivial workaround follows. This ignores any actual timescale defined by the file under simulation, but it does at least make Scansion happy:\r\n\r\n```\r\ndiff --git a/passes/sat/sim.cc b/passes/sat/sim.cc\r\nindex fb496ff8..2e68f803 100644\r\n--- a/passes/sat/sim.cc\r\n+++ b/passes/sat/sim.cc\r\n@@ -647,6 +647,7 @@ struct SimWorker : SimShared\r\n \t\tint id = 1;\r\n \t\ttop->write_vcd_header(vcdfile, id);\r\n \r\n+\t\tvcdfile << stringf(\"$timescale 1ns $end\\n\");\r\n \t\tvcdfile << stringf(\"$enddefinitions $end\\n\");\r\n \t}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-10-10",
+  "closed_at": "2020-10-22",
+  "code_blocks": [
+    "diff --git a/passes/sat/sim.cc b/passes/sat/sim.cc\r\nindex fb496ff8..2e68f803 100644\r\n--- a/passes/sat/sim.cc\r\n+++ b/passes/sat/sim.cc\r\n@@ -647,6 +647,7 @@ struct SimWorker : SimShared\r\n \t\tint id = 1;\r\n \t\ttop->write_vcd_header(vcdfile, id);\r\n \r\n+\t\tvcdfile << stringf(\"$timescale 1ns $end\\n\");\r\n \t\tvcdfile << stringf(\"$enddefinitions $end\\n\");\r\n \t}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

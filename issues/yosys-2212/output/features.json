@@ -1,0 +1,90 @@
+{
+  "tool": "yosys",
+  "issue_number": 2212,
+  "title": "Suggestions to Improve debug/visualisation in SMT2 backend for SBY",
+  "features": [
+    {
+      "name": "FSM with localparam state encoding and case-based next-state logic",
+      "category": "control_flow",
+      "description": "Code should include an FSM using localparam constants for state encoding with a combinational always block using a case statement to derive next-state logic and a clocked always block for state register update",
+      "snippet": "localparam [3:0] s0=0, s1=1, s2=2, s3=3;\nreg [1:0] ps, ns;\nalways @(posedge clk) begin\n    if (~rstn) ps <= s0;\n    else       ps <= ns;\nend\nalways @(*) begin\n    ns = ps;\n    case (ps)\n        s0: if (start)   ns = s1;\n        s1: if (cond_a)  ns = s2;\n        s2: if (cond_b)  ns = s3;\n        s3: if (cond_c)  ns = s0;\n    endcase\nend",
+      "tags": ["fsm", "localparam", "case_statement", "next_state_logic", "sequential_logic"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "reduction AND operator applied to concatenation",
+      "category": "data_model",
+      "description": "Code should include a wire driven by a reduction AND operator applied to a multi-bit concatenation of scalar signals",
+      "snippet": "wire [3:0] a, b, c, d;\nwire all_set;\nassign all_set = &({a, b, c, d});",
+      "tags": ["reduction_operator", "concatenation", "bitwise", "wire_assign"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "formal assume constraint in combinational always block",
+      "category": "sva_property",
+      "description": "Code should include a formal assume statement inside a combinational always @(*) block to constrain a signal to a constant value",
+      "snippet": "always @(*) assume (rstn == 1'b1);",
+      "tags": ["formal", "assume", "always_star", "combinational", "constraint"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "formal assert with precondition in clocked always block",
+      "category": "sva_property",
+      "description": "Code should include a formal assert statement with an if-precondition inside a clocked always @(posedge clk) block",
+      "snippet": "reg [1:0] ps;\nwire cond;\nalways @(posedge clk)\n    if (ps == 2'h2 && cond) assert (ps == 2'h3);",
+      "tags": ["formal", "assert", "clocked_always", "precondition", "posedge"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "SVA assert property with disable iff and implication operator",
+      "category": "sva_property",
+      "description": "Code should include an SVA assert property statement using a clocking event, disable iff guard, and the |-> implication operator to check a precondition-to-condition relationship",
+      "snippet": "assert_always_i: assert property (\n    @(posedge clk) disable iff (!rstn)\n    precondition |-> condition\n);",
+      "tags": ["sva", "assert_property", "disable_iff", "implication", "clocking_event"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "formal checker module encapsulating assertions with module instantiation",
+      "category": "sva_property",
+      "description": "Code should include a dedicated checker module containing formal assume and assert statements that is instantiated into the DUT to encapsulate verification logic",
+      "snippet": "module assert_always (\n    input wire event_m, disable_e, precondition, condition\n);\n    always @(*) assume (disable_e == 1'b1);\n    always @(posedge event_m)\n        if (precondition) assert (condition);\nendmodule\n\n// In DUT:\nwire cause  = (ps == 2'h2 && jump_cond);\nwire effect = (ps == 2'h3);\nassert_always checker_inst (clk, rstn, cause, effect);",
+      "tags": ["formal", "checker_module", "module_instantiation", "assume", "assert", "encapsulation"],
+      "source_bug_id": "2212",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2212",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 6,
+    "features_after_dedup": 6
+  }
+}

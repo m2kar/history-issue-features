@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 941,
+  "title": "ice40 cells_sim.v: update clock enable behaviour based on hardware experiments",
+  "features": [
+    {
+      "name": "SB_IO DDR output with clock enable",
+      "category": "general",
+      "description": "Code should include an SB_IO primitive instantiation with PIN_TYPE set to DDR output mode, CLOCK_ENABLE and OUTPUT_CLK ports connected, and D_OUT_0/D_OUT_1 driving DDR data to PACKAGE_PIN",
+      "snippet": "SB_IO #(\n    .PIN_TYPE(6'b01_00_00)\n) inst_SB_IO (\n    .CLOCK_ENABLE(e),\n    .OUTPUT_CLK(clk),\n    .D_OUT_0(1'b0),\n    .D_OUT_1(1'b1),\n    .PACKAGE_PIN(q)\n);",
+      "tags": ["sb_io", "ddr_output", "clock_enable", "ice40", "primitive"],
+      "source_bug_id": "941",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/941",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "DFFE with separate posedge/negedge clock domains",
+      "category": "timing",
+      "description": "Code should include a simulation model where one data flop is enabled by a clock enable signal on the positive clock edge, while a second data flop is enabled by a re-registered (pipeline-delayed) version of the same clock enable on the negative clock edge",
+      "snippet": "reg dout0_q, ce_q;\nalways @(posedge clk)\n    ce_q <= CLOCK_ENABLE;\nalways @(posedge clk)\n    if (CLOCK_ENABLE) dout0_q <= D_OUT_0;\nreg dout1_q;\nalways @(negedge clk)\n    if (ce_q) dout1_q <= D_OUT_1;",
+      "tags": ["dffe", "posedge", "negedge", "clock_enable", "pipeline_register", "ddr"],
+      "source_bug_id": "941",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/941",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "behavioral pullup on unconnected enable signal",
+      "category": "data_model",
+      "description": "Code should include a behavioral pullup (assign to 1'b1 via pullup primitive or equivalent) on a clock enable signal that defaults to high when no external net is connected in the bitstream",
+      "snippet": "pullup(CLOCK_ENABLE);",
+      "tags": ["pullup", "unconnected_net", "default_high", "behavioral_model"],
+      "source_bug_id": "941",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/941",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "clock enable gating affecting DDR output transitions",
+      "category": "timing",
+      "description": "Code should include a testbench that exercises DDR output behavior under different clock enable activation orders -- enabling clock before vs after the first rising edge -- to verify that no output transitions occur when enable is inactive at the first clock edge",
+      "snippet": "reg e, clk;\nwire q;\n// Test 1: enable rises after clock edge\ninitial begin\n    {e, clk} = 2'b00;\n    #DELAY; {e, clk} = 2'b00;\n    #DELAY; {e, clk} = 2'b01; // clk rises first\n    #DELAY; {e, clk} = 2'b11; // then enable\n    #DELAY; {e, clk} = 2'b10;\nend\n// Test 2: enable rises before clock edge\ninitial begin\n    {e, clk} = 2'b00;\n    #DELAY; {e, clk} = 2'b10; // enable rises first\n    #DELAY; {e, clk} = 2'b11; // then clk\n    #DELAY; {e, clk} = 2'b01;\nend",
+      "tags": ["ddr_output", "clock_enable_gating", "testbench", "enable_ordering", "transition_control"],
+      "source_bug_id": "941",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/941",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

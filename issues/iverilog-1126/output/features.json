@@ -1,0 +1,46 @@
+{
+  "tool": "verilator",
+  "issue_number": 1126,
+  "title": "data_out in rtl outputs at same clock cycle as data_out_reg (Flip-Flop issue)",
+  "features": [
+    {
+      "name": "two_clockeds_always_blocks_same_module",
+      "category": "timing",
+      "description": "Code should include a module with two separate clocked always blocks where one block assigns to a register (data_out_reg) and another block assigns to the output (data_out) using the registered value",
+      "snippet": "always @(posedge clk or posedge rst) begin\nif (rst) data_out <= 0;\nelse data_out <= data_out_reg;\nend\n\nalways @(posedge clk) begin\ncase(data_in[3:0])\n4'b0000: data_out_reg = {24'b0, data_in[7:0]};\ndefault: data_out_reg = 32'd0;\nendcase\nend",
+      "tags": ["clocked_always", "register", "output", "ff_chain"],
+      "source_bug_id": "iverilog-1126",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1126",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "latch_sensitivity_list_in_submodule",
+      "category": "timing",
+      "description": "Code should include a submodule with a level-sensitive always block using incorrect sensitivity list (en or rst or data_in) that feeds into clocked logic in a parent module",
+      "snippet": "always @ (en or rst or data_in)\nif (rst)\ndata_out <= 0;\nelse if (!en)\ndata_out <= 0;\nelse\ndata_out <= data_in;",
+      "tags": ["latch", "sensitivity_list", "level_sensitive", "submodule"],
+      "source_bug_id": "iverilog-1126",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1126",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module_instantiation_chain_with_combinational_output",
+      "category": "control_flow",
+      "description": "Code should include a chain of module instantiations where a submodule outputs a wire that is then connected to a register-based module with clocked always blocks",
+      "snippet": "wire [WIDTH-1:0] wire_d0_0, wire_d0_2;\nd_latch_top #(.WIDTH(WIDTH)) d_latch_instance100(.data_in(data_in),.data_out(wire_d0_0),.clk(clk),.rst(rst));\nlarge_mux #(.WIDTH(WIDTH)) large_mux_instance102(.data_in(wire_d0_0),.data_out(wire_d0_2),.clk(clk),.rst(rst));\nassign data_out = wire_d0_2;",
+      "tags": ["module_instantiation", "wire", "chain", "combinational_output"],
+      "source_bug_id": "iverilog-1126",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1126",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

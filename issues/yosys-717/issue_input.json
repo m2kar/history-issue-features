@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 717,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/717",
+  "title": "Add a new opt_lut pass, which combines inefficiently packed LUTs",
+  "body": "On iCE40, techmapping `$alu` always results in a `SB_LUT4` cell with only 3 inputs used. This is inefficient and nothing later in the synthesis pipeline is currently able to take advantage of this unused LUT input. This LUT input could be very useful for certain ALU designs, as using it to fold a multiplexer LUT into an ALU LUT in an expression such as `c ? a : a + b` or `c ? 0 : a - b` could result, in extreme cases, a 2x reduction in LUT count.\r\n\r\nThe new `opt_lut` pass is able to combine *any* _k_-LUT whose output is connected solely to an _n_-LUT where both of them share _m_ inputs, given that at least one of these LUTs has a width of _k_ + _n_ - _m_ - 1. (Attributes can be used to restrict LUT combining, such as to preserve instantiated carry logic.)\r\n\r\nThis pass is very generic and operates on any `$lut` cells, even ones of different size. To work with iCE40's `SB_LUT4`, the `ice40_unlut` pass (#716) is used; normal techmapping takes care of mapping the resulting `$lut` cells back, as `opt_lut` takes care to not disturb existing inputs or unnecessarily resize LUT cells.\r\n\r\nThis pass is tested by using `equiv_induct` and a behavioral model of `SB_CARRY` to check equivalence of several ALU elements similar to real-world ones before and after `opt_lut`.\r\n\r\nThis concludes my work on #715.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-05",
+  "closed_at": "2018-12-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

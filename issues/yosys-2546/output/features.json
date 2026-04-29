@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2546,
+  "title": "opt_clean doesn't remove init bits when it removes FFs",
+  "features": [
+    {
+      "name": "partially used multi-bit register with initial value",
+      "category": "data_model",
+      "description": "Code should include a multi-bit register assigned in an initial block where only a subset of bits is connected to an output, leaving other bits as dead FFs that an optimizer may remove while leaving dangling init attributes",
+      "snippet": "input [1:0] D;\ninput C;\noutput O;\nreg [1:0] Q;\n\ninitial Q = 0;\n\nalways @(posedge C)\n    Q <= D;\n\nassign O = Q[1];",
+      "tags": ["register", "initial", "partial_usage", "dead_ff", "optimization", "init_attribute"],
+      "source_bug_id": "2546",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2546",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-bit register initial block with clocked always",
+      "category": "timing",
+      "description": "Code should include a multi-bit register initialized in an initial block and updated in a clocked always block using non-blocking assignment, representing a synthesizable FF pattern with reset state",
+      "snippet": "reg [1:0] Q;\n\ninitial Q = 0;\n\nalways @(posedge C)\n    Q <= D;",
+      "tags": ["register", "initial", "always", "posedge", "non_blocking", "ff"],
+      "source_bug_id": "2546",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2546",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "single-bit output selecting from multi-bit register",
+      "category": "data_model",
+      "description": "Code should include a continuous assignment that selects a single bit from a multi-bit register, leaving other register bits with no downstream fanout and thus candidates for dead logic removal",
+      "snippet": "reg [1:0] Q;\noutput O;\nassign O = Q[1];",
+      "tags": ["register", "bit_select", "dead_logic", "continuous_assign", "fanout"],
+      "source_bug_id": "2546",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2546",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

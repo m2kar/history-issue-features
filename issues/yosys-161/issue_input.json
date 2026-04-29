@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 161,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/161",
+  "title": "opt_clean preserves fanout-less assignment, if LHS has initial value",
+  "body": "I have found that Yosys (0.6 release) doesn't remove buffers (.names / direct assignments) if LHS operand declared in RTL with initial value (like reg q = 0;).\nHere is a simple example to check. RTL:\n\n```\n// file: test.v\nmodule test_init_keep (input clk, din, ena, output dout);\n`ifdef __Q_INIT__\nreg q=0;\n`else\nreg q;\n`endif\nalways@(posedge clk)\nif(ena)\nq<=din;\nassign dout = q;\nendmodule\n```\n\nmakefile:\n\n```\nflow-yosys:\n    yosys -q -s y.tcl -l yosys.log\n\n```\n\nscript:\n\n```\n# y.tcl\nread_verilog -nolatches -D__Q_INIT__ test.v\nhierarchy -top test_init_keep\nproc; opt; techmap; opt -fast; hierarchy -check -purge_lib; opt_clean -purge\nwrite_blif -undef - unconn -blackbox test.init.blif\nwrite_verilog -noattr test.init.synth.v\n\ndesign -reset\n\nread_verilog -nolatches      test.v\nhierarchy -top test_init_keep\nproc; opt; techmap; opt -fast; hierarchy -check -purge_lib; opt_clean -purge\nwrite_blif -undef - unconn -blackbox test.blif\nwrite_verilog -noattr test.synth.v\n```\n\nIn 1-st case design compiled with 'reg q = 0;' in 2-nd with 'reg q;'.\nAfter synthesis 1-st blif contains unused buffer:\n\n```\n.names dout q\n1 1\n```\n\nWhich in my opinion should be removed, as INIT attribute of 'q' doesn't have meaning (actually it kept as .latch initial attribute in blif).\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-05-06",
+  "closed_at": "2016-05-06",
+  "code_blocks": [
+    "// file: test.v\nmodule test_init_keep (input clk, din, ena, output dout);\n`ifdef __Q_INIT__\nreg q=0;\n`else\nreg q;\n`endif\nalways@(posedge clk)\nif(ena)\nq<=din;\nassign dout = q;\nendmodule",
+    "# y.tcl\nread_verilog -nolatches -D__Q_INIT__ test.v\nhierarchy -top test_init_keep\nproc; opt; techmap; opt -fast; hierarchy -check -purge_lib; opt_clean -purge\nwrite_blif -undef - unconn -blackbox test.init.blif\nwrite_verilog -noattr test.init.synth.v\n\ndesign -reset\n\nread_verilog -nolatches      test.v\nhierarchy -top test_init_keep\nproc; opt; techmap; opt -fast; hierarchy -check -purge_lib; opt_clean -purge\nwrite_blif -undef - unconn -blackbox test.blif\nwrite_verilog -noattr test.synth.v"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

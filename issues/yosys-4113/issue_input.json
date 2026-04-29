@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4113,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4113",
+  "title": "Bug: Logic and arithmetic left shifts sometimes overflow the output signal",
+  "body": "### Version\r\n\r\nYosys 0.29+11 (git sha1 0b05a6425, gcc 7.5.0-6ubuntu2 -fPIC -Os), also tested on\r\nYosys 0.29+11 (git sha1 f7ffd12bf, gcc 7.5.0-6ubuntu2 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nHi there!\r\n\r\nI encountered an issue for both logic and arithmetic left shifts. In some cases, it looks that the output may overflow.\r\nFor example, you can take this design:\r\n```\r\nmodule top(input logic [31:0] a, input logic [31:0] b, output logic [4:0] out_data);\r\n  assign out_data = b[5:1] << a[31:27];\r\nendmodule\r\n```\r\n\r\nAnd a testbench like:\r\n```\r\nint main() {\r\n  uint32_t a = 0x4e57633b;\r\n  uint32_t b = 0x468e7520;\r\n  top.p_a.set<uint32_t>(a);\r\n  top.p_b.set<uint32_t>(b);\r\n  top.step();\r\n  uint32_t out_data = top.p_out__data.get<uint32_t>();\r\n  std::cout << \"Out data: \" << std::hex << out_data << std::endl;\r\n}\r\n```\r\n\r\nThank you!\r\nFlavien\r\n\r\n### Expected Behavior\r\n\r\nOut data: `0`\r\n\r\n### Actual Behavior\r\n\r\nOut data: `2000` (hex)",
+  "labels": [
+    "pending-verification",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-06",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "module top(input logic [31:0] a, input logic [31:0] b, output logic [4:0] out_data);\r\n  assign out_data = b[5:1] << a[31:27];\r\nendmodule",
+    "int main() {\r\n  uint32_t a = 0x4e57633b;\r\n  uint32_t b = 0x468e7520;\r\n  top.p_a.set<uint32_t>(a);\r\n  top.p_b.set<uint32_t>(b);\r\n  top.step();\r\n  uint32_t out_data = top.p_out__data.get<uint32_t>();\r\n  std::cout << \"Out data: \" << std::hex << out_data << std::endl;\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

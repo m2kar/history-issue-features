@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4028,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4028",
+  "title": "synth_lattice: Optionally do constant comparisons in soft logic",
+  "body": "Here we are adding a `-cmp2softlogic` option to `synth_lattice` to implement constant comparisons (arithmetic comparisons of a signal to a constant) in soft logic. Take e.g. the following:\r\n\r\n```\r\nread_verilog <<EOF\r\nmodule top(input [15:0] a, output y);\r\n\tassign y = a >= 16'h7700;\r\nendmodule\r\nEOF\r\nsynth_lattice -family xo3 [-cmp2softlogic]\r\n```\r\n\r\nWith the soft logic option, this takes up\r\n```\r\n   Number of cells:                  3\r\n     LUT4                            3\r\n```\r\nwhile ordinarily it would take\r\n\r\n```\r\n   Number of cells:                 14\r\n     CCU2D                           8\r\n     LUT4                            6\r\n```\r\n\r\nThe lower usage is due to two factors:\r\n\r\n * Once the comparisons are lowered to hard carry chains they won't be optimized, but here e.g. the lower 8 bits of the signal need not be compared at all, which is optimized away in the soft logic implementation. We could, and probaly should, extend `opt_expr` to optimize away the lower bits of the comparison on the `$ge` and other cells if the constant allows that, probably conditioned on the `-fine` mode. That would optimize the comparison before it gets implemented with the carry chains, so it would close the usage gap here somewhat.\r\n\r\n* Optimized or not optimized, simple LUT implementation of the comparison takes up less resources anyway, by (I think) a factor of three. This is at the cost of higher delay since we are not using the carry paths.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-13",
+  "closed_at": "2023-11-13",
+  "code_blocks": [
+    "read_verilog <<EOF\r\nmodule top(input [15:0] a, output y);\r\n\tassign y = a >= 16'h7700;\r\nendmodule\r\nEOF\r\nsynth_lattice -family xo3 [-cmp2softlogic]"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

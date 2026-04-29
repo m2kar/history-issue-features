@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3471,
+  "title": "Assertion failure when reading post-placement json",
+  "features": [
+    {
+      "name": "SB_IO with OUTPUT_REGISTERED PIN_TYPE in JSON round-trip",
+      "category": "data_model",
+      "description": "Code should include an SB_IO cell instantiation with OUTPUT_REGISTERED enabled (PIN_TYPE 6'b010100) that undergoes place-and-route JSON round-trip through nextpnr-ice40",
+      "snippet": "SB_IO #(\n\t.PIN_TYPE(6'b010100)\n) pin (\n\t.PACKAGE_PIN(q),\n\t.OUTPUT_CLK(clk),\n\t.D_OUT_0(d),\n);",
+      "tags": ["sb_io", "pin_type", "output_registered", "json_roundtrip", "ice40"],
+      "source_bug_id": "yosys-3471",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3471",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "SB_IO OUTPUT_CLK driving SB_GB global buffer",
+      "category": "timing",
+      "description": "Code should include an SB_IO OUTPUT_CLK port that drives an SB_GB global buffer cell after synthesis, creating a signal path that triggers assertion failure on JSON read",
+      "snippet": "SB_GB _2_ (\n\t.GLOBAL_BUFFER_OUTPUT(\\\\clk$SB_IO_IN_$glb_clk ),\n\t.USER_SIGNAL_TO_GLOBAL_BUFFER(\\\\clk$SB_IO_IN )\n);\nSB_IO #(\n\t.PIN_TYPE(6'h14)\n) pin (\n\t.OUTPUT_CLK(\\\\clk$SB_IO_IN_$glb_clk ),\n\t.PACKAGE_PIN(q)\n);",
+      "tags": ["sb_io", "sb_gb", "global_buffer", "output_clk", "ice40"],
+      "source_bug_id": "yosys-3471",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3471",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "post-placement JSON with inferred SB_IO cells from nextpnr",
+      "category": "data_model",
+      "description": "Code should include JSON representation of synthesized design with SB_IO cells that nextpnr-ice40 has processed and re-exported, where original SB_IO instances get split into multiple cells",
+      "snippet": "SB_IO #(\n\t.IO_STANDARD(\"SB_LVCMOS\"),\n\t.NEG_TRIGGER(1'h0),\n\t.PIN_TYPE(32'd1),\n\t.PULLUP(1'h0)\n) \\\\clk$sb_io  (\n\t.D_IN_0(\\\\clk$SB_IO_IN ),\n\t.PACKAGE_PIN(clk)\n);\nSB_IO #(\n\t.PIN_TYPE(6'h14)\n) pin (\n\t.CLOCK_ENABLE(_0_),\n\t.D_OUT_0(\\\\d$SB_IO_IN ),\n\t.OUTPUT_CLK(\\\\clk$SB_IO_IN_$glb_clk ),\n\t.PACKAGE_PIN(q)\n);",
+      "tags": ["sb_io", "json", "nextpnr", "inferred_cells", "ice40"],
+      "source_bug_id": "yosys-3471",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3471",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

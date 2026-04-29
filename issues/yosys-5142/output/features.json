@@ -1,0 +1,54 @@
+[
+  {
+    "name": "parameterized_module_with_arithmetic_expression_default",
+    "category": "data_model",
+    "description": "Code should include a module with a parameter declared as 'parameter integer' where the default value is an arithmetic expression rather than a literal constant. This triggers issues in certain synthesis flows (e.g., synth_gowin) that mishandle the $paramod representation of such modules.",
+    "snippet": "module blinky #(\n    parameter integer DIV = (27000000 / 2)\n) (\n    input sys_clk,\n    output logic led\n);",
+    "tags": [
+      "parameter",
+      "integer",
+      "arithmetic-expression",
+      "synth_gowin",
+      "parameterized-module"
+    ],
+    "source_bug_id": "yosys-5142",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5142",
+    "construct_complexity": 2,
+    "ub_type": null
+  },
+  {
+    "name": "always_ff_with_arithmetic_comparison_in_condition",
+    "category": "control_flow",
+    "description": "Code should include an always_ff block with conditional logic that compares a counter against an arithmetic expression result (e.g., blink_counter < (DIV - 1)). Such comparisons in procedural timing blocks may interact poorly with synthesis optimizations.",
+    "snippet": "always_ff @(posedge sys_clk) begin\n    if (sys_reset) begin\n        blink_counter <= 0;\n    end else if (blink_counter < (DIV - 1)) begin\n        blink_counter <= blink_counter + 1;\n    end else begin\n        blink_counter <= 0;\n    end\nend",
+    "tags": [
+      "always_ff",
+      "arithmetic-comparison",
+      "counter",
+      "parameter-expression"
+    ],
+    "source_bug_id": "yosys-5142",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5142",
+    "construct_complexity": 2,
+    "ub_type": null
+  },
+  {
+    "name": "synth_gowin_with_parameterized_top_module",
+    "category": "general",
+    "description": "Code should include a parameterized top-level module being processed by the 'synth_gowin' command. The synth_gowin pass appears to have issues with boxed $paramod modules that use integer parameters with arithmetic expression defaults.",
+    "snippet": "yosys -p \"synth_gowin -top blinky -json _output.json\" blinky.sv",
+    "tags": [
+      "synth_gowin",
+      "parameterized-module",
+      "synthesis-flow",
+      "gowin"
+    ],
+    "source_bug_id": "yosys-5142",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5142",
+    "construct_complexity": 3,
+    "ub_type": null
+  }
+]

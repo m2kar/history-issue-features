@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 584,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/584",
+  "title": " Put enum type into scope when declaring it",
+  "body": "When creating an enum type it must be added to the scope where it is\r\ndeclared so it can later be elaborated and the enum and its names can\r\nbe referenced in expressions.\r\n\r\nIn addition the names of the enum must be added to the lexor scope so that\r\nname collisions are detected and can be reported as errors.\r\n\r\nThis is done with pform_put_enum_type_in_scope() function.\r\n\r\nAt the moment the function is called from two different places\r\n * When adding a typedef of a enum type\r\n * When creating a signal of a enum type\r\n\r\nIn addition the enum_type_t is added to a class scope `enum_sets` when\r\ndeclaring a enum property in a class. But this only makes sure that the\r\nenum gets elaborated, its names are not added to the lexor scope.\r\n\r\nThis works fine for the most part, but breaks for a few corner cases.\r\n\r\nE.g. it is possible to declare a enum type as part of the subtype of\r\nanother packed type such as structs or packed arrays. E.g.\r\n\r\n```systemverilog\r\nstruct packed {\r\n  enum {\r\n    A\r\n  } e;\r\n} s;\r\n```\r\n\r\nThis is not covered by either of the cases above and neither do the names\r\nof the enum get added to the lexor scope, nor is the enum type elaborated.\r\n\r\nAnother corner case that is currently not working is declaring a class\r\nproperty where the type is a typedef of a enum that is declared outside of\r\nthe class. In this case the enum is elaborated again inside the class\r\nscope. E.g. the below is supposed to work, but fails with an already\r\ndeclared symbol error.\r\n\r\n```systemverilog\r\ntypedef enum {\r\n  A\r\n} e_t;\r\n\r\nclass C;\r\n  typedef enum {\r\n    A\r\n  } e1;\r\n  e_t e2;\r\nendclass\r\n```\r\n\r\nIn addition since for enums declared in classes they are only added to\r\n`enum_sets`, but names are not added to the lexor scope, it is possible to\r\ndeclare a different symbol in the class scope with the same name.\r\n\r\nE.g. the following elaborates fine\r\n\r\n```systemverilog\r\nclass C;\r\n  enum {\r\n    A\r\n  } e;\r\n  typedef int A;\r\nendclass\r\n```\r\n\r\nTo fix this call pform_put_enum_type_in_scope() when the enum_type_t is\r\ncreated in the parser. This makes sure that it is handled the same\r\nregardless where the type is declared or used.\r\n\r\nTo support this slightly refactor the parser rule of the enum to factor out common parts into a common rule.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-15",
+  "closed_at": "2022-01-15",
+  "code_blocks": [
+    "struct packed {\r\n  enum {\r\n    A\r\n  } e;\r\n} s;",
+    "typedef enum {\r\n  A\r\n} e_t;\r\n\r\nclass C;\r\n  typedef enum {\r\n    A\r\n  } e1;\r\n  e_t e2;\r\nendclass",
+    "class C;\r\n  enum {\r\n    A\r\n  } e;\r\n  typedef int A;\r\nendclass"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

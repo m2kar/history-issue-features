@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5212,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5212",
+  "title": "multiple drivers on a variable in a module change values of input ports when using `prep`",
+  "body": "### Version\n\nYosys 0.54 (git sha1 db72ec3bd, g++ 12.2.0-14+deb12u1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```sv\nread_verilog -sv <<EOT\nmodule simple_sub (\n    input logic [7:0] a,\n    input logic [7:0] b,\n    output logic [7:0] a_out,\n    output logic [7:0] b_out,\n    output logic [7:0] diff\n);\n    wire [7:0] conflict_wire;\n    assign a_out = a;\n    assign b_out = b;\n    assign conflict_wire = b;\n    assign conflict_wire = a;\n    assign diff = a - b;\n    always_comb assert(b != a);\nendmodule\n\nmodule top;\n    logic [7:0] a, b, a_out, b_out, diff;\n    \n    assign a = 8'hAA;\n    assign b = 8'h55;\n\n    simple_sub dut (\n        .a(a),\n        .b(b),\n        .a_out(a_out),\n        .b_out(b_out),\n        .diff(diff)\n    );\n\nendmodule\nEOT\n\nprep -top top\nchformal -lower\nselect simple_sub\nsat -prove-asserts -verify\n```\n\nTried to write a yosys script to simplify reproduction of bug, (hopefully it is correct 😅)\n\n### Expected Behavior\n\nI don't really know (I thought I would mention it as this behaviour surprised me), I would have thought that for `conflict_wire` the value could be either that of `a` or that of `b` but I would have thought that the inputs are not modified in the module. \n\n\n### Actual Behavior\n\n```sv\nmodule simple_sub(a, b, a_out, b_out, diff);\n  input [7:0] a;\n  wire [7:0] a;\n  output [7:0] a_out;\n  wire [7:0] a_out;\n  input [7:0] b;\n  wire [7:0] b;\n  output [7:0] b_out;\n  wire [7:0] b_out;\n  wire [7:0] conflict_wire;\n  output [7:0] diff;\n  wire [7:0] diff;\n  assign diff = a - a;\n  assign a_out = a;\n  assign b = a;\n  assign b_out = a;\n  assign conflict_wire = a;\nendmodule\n```\n\n`b` is assigned the value of `a`",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-05",
+  "closed_at": "2025-07-05",
+  "code_blocks": [
+    "read_verilog -sv <<EOT\nmodule simple_sub (\n    input logic [7:0] a,\n    input logic [7:0] b,\n    output logic [7:0] a_out,\n    output logic [7:0] b_out,\n    output logic [7:0] diff\n);\n    wire [7:0] conflict_wire;\n    assign a_out = a;\n    assign b_out = b;\n    assign conflict_wire = b;\n    assign conflict_wire = a;\n    assign diff = a - b;\n    always_comb assert(b != a);\nendmodule\n\nmodule top;\n    logic [7:0] a, b, a_out, b_out, diff;\n    \n    assign a = 8'hAA;\n    assign b = 8'h55;\n\n    simple_sub dut (\n        .a(a),\n        .b(b),\n        .a_out(a_out),\n        .b_out(b_out),\n        .diff(diff)\n    );\n\nendmodule\nEOT\n\nprep -top top\nchformal -lower\nselect simple_sub\nsat -prove-asserts -verify",
+    "module simple_sub(a, b, a_out, b_out, diff);\n  input [7:0] a;\n  wire [7:0] a;\n  output [7:0] a_out;\n  wire [7:0] a_out;\n  input [7:0] b;\n  wire [7:0] b;\n  output [7:0] b_out;\n  wire [7:0] b_out;\n  wire [7:0] conflict_wire;\n  output [7:0] diff;\n  wire [7:0] diff;\n  assign diff = a - a;\n  assign a_out = a;\n  assign b = a;\n  assign b_out = a;\n  assign conflict_wire = a;\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

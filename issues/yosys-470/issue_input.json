@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 470,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/470",
+  "title": "Support for flip-flops with async clear and preset for iCE40 devices",
+  "body": "While modeling an asynchronous FIFO according to \"Simulation and Synthesis Techniques for Asynchronous FIFO Design with Asynchronous Pointer Comparisons\" by Clifford E. Cummings and Peter Alfke SNUG 2002, I had to describe a DFF with async CLR and PRE, like this:\r\n\r\n```\r\nmodule ff_clr_pre\r\n  (\r\n   input  clk,\r\n   input  clr,\r\n   input  pre,\r\n   input  d,\r\n   output reg q);\r\n\r\n always @(posedge clk or posedge clr or posedge pre) \r\n begin : do_ff\r\n  if (clr)\r\n     q <= 1'b0;\r\n  else if (pre)\r\n     q <= 1'b1;\r\n  else\r\n     q <= d;\r\n end // d0_ff\r\n endmodule // ff_clr_pre\r\n```\r\nWhen I run:\r\n\r\n> yoysys  -q -p \"synth_ice40 -blif test.blif\" test.v\r\n\r\nI get a warning about complex reset:\r\n\r\n> Warning: Complex async reset for dff `\\q'.\r\n\r\nAnd the BLIF output contains an unmaped $\\_DFFSR_PPP\\_\r\nI don't know how to add mapping rules. One solution to this problem is to use 2 flip-flops. The first flip-flop implements the async preset and the normal D/Q behavior. The second flip-flop is used to generate the async clear. This flip-flop has D tied to Vcc and has CLR. The modeled output is the and between both FFs:\r\n\r\n```\r\nmodule DFF_ASR\r\n  (\r\n   input  d_i,\r\n   output q_o,\r\n   input  clk_i,\r\n   input  clr_i,\r\n   input  pre_i);\r\n// Simpler FF, only preset\r\nreg q;\r\nalways @(posedge clk_i or posedge pre_i)\r\nbegin : do_ff\r\n  if (pre_i)\r\n     q <= 1'b1;\r\n  else\r\n     q <= d_i;\r\nend // do_ff\r\n// Another FF for clear\r\nreg q_clr;\r\nalways @(posedge clk_i or posedge clr_i)\r\nbegin : do_clr\r\n  if (clr_i)\r\n     q_clr <= 1'b0;\r\n  else\r\n     q_clr <= 1'b1;\r\nend // do_clr\r\n// Output is conditioned by the clear FF\r\nassign q_o=q & q_clr;\r\nendmodule // DFF_ASR\r\n```\r\nThe yosys version I'm using is:\r\n\r\nYosys 0.7+207 (git sha1 ea805af6, gcc 6.3.0-18 -O2 -fdebug-prefix-map=/home/salvador/0Data/IceStorm/Yosys/Debian-git/yosys=. -fstack-p\r\nrotector-strong -fPIC -Os)\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-12-15",
+  "closed_at": "2017-12-25",
+  "code_blocks": [
+    "module ff_clr_pre\r\n  (\r\n   input  clk,\r\n   input  clr,\r\n   input  pre,\r\n   input  d,\r\n   output reg q);\r\n\r\n always @(posedge clk or posedge clr or posedge pre) \r\n begin : do_ff\r\n  if (clr)\r\n     q <= 1'b0;\r\n  else if (pre)\r\n     q <= 1'b1;\r\n  else\r\n     q <= d;\r\n end // d0_ff\r\n endmodule // ff_clr_pre",
+    "module DFF_ASR\r\n  (\r\n   input  d_i,\r\n   output q_o,\r\n   input  clk_i,\r\n   input  clr_i,\r\n   input  pre_i);\r\n// Simpler FF, only preset\r\nreg q;\r\nalways @(posedge clk_i or posedge pre_i)\r\nbegin : do_ff\r\n  if (pre_i)\r\n     q <= 1'b1;\r\n  else\r\n     q <= d_i;\r\nend // do_ff\r\n// Another FF for clear\r\nreg q_clr;\r\nalways @(posedge clk_i or posedge clr_i)\r\nbegin : do_clr\r\n  if (clr_i)\r\n     q_clr <= 1'b0;\r\n  else\r\n     q_clr <= 1'b1;\r\nend // do_clr\r\n// Output is conditioned by the clear FF\r\nassign q_o=q & q_clr;\r\nendmodule // DFF_ASR"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4333,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4333",
+  "title": "fix hierarchy -generate mode handling of cells",
+  "body": "This change in refactoring commit e38f40af5b7 (passes/hierarchy/hierarchy.cc:51) actually changed the behavior:\r\n```\r\n-\t\tif (cell->type.substr(0, 1) == \"$\" && cell->type.substr(0, 3) != \"$__\")\r\n+\t\tif (cell->type.begins_with(\"$__\"))\r\n```\r\n\r\nAs far as I can tell, the intended behavior for `hierarchy -generate` is to only create the requested module if:\r\n- the module is instantiated in the design\r\n- the module is not defined in the design\r\n- the module name is not an internal cell type (heuristically)?\r\nThe heuristic in the last point being, if the cell name starts with `$` it's ignored, unless it starts with `$__` (which is the recommended prefix for intermediate cell types in techmap rules, for which it might be desirable to generate a blackbox definition, e.g. to be able to correctly `show` or export the intermediate state for debugging purposes)\r\n\r\nThe testcase checks this behavior, but should the check perhaps be changed to use `yosys_celltypes.cell_known()` instead?",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-12",
+  "closed_at": "2024-04-25",
+  "code_blocks": [
+    "-\t\tif (cell->type.substr(0, 1) == \"$\" && cell->type.substr(0, 3) != \"$__\")\r\n+\t\tif (cell->type.begins_with(\"$__\"))"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

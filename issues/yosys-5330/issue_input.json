@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5330,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5330",
+  "title": "Fix handling of cases that look like sva labels again.",
+  "body": "Commit c8e0ac0 introduces a regression on handling case exprs that look like sva labels.  After some debugging, we shouldn't push the identifier ast node to the ast_stack, otherwise, we will get the following assertion failure:\r\n\r\n```\r\n➜  /tmp yosys -p 'read -sv a1.v'\r\n\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2025  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.57+1 (git sha1 baa61a146, clang++ 20.1.8 -fPIC -O3)\r\n\r\n-- Running command `read -sv a1.v' --\r\n\r\n1. Executing Verilog-2005 frontend: a1.v\r\nParsing SystemVerilog input from `a1.v' to AST representation.\r\nERROR: Assert `extra->ast_stack.size() == 1' failed in frontends/verilog/verilog_parser.y:709.\r\n➜  /tmp cat a1.v\r\nmodule test(input wire A);\r\n  localparam TEST = 1;\r\n  always_comb begin\r\n    case (A)\r\n      TEST: assert(1);\r\n    endcase\r\n  end\r\nendmodule\r\n```\r\n\r\nAlso, we're creating an identifier, we'd better assign a name for it.\r\n\r\nWe encountered this issue before but with a different error message[^1],\r\n\r\n[^1]: https://github.com/YosysHQ/yosys/issues/862\r\n\r\n_What are the reasons/motivation for this change?_\r\n\r\n_Explain how this is achieved._\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-05",
+  "closed_at": "2025-09-05",
+  "code_blocks": [
+    "➜  /tmp yosys -p 'read -sv a1.v'\r\n\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2025  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.57+1 (git sha1 baa61a146, clang++ 20.1.8 -fPIC -O3)\r\n\r\n-- Running command `read -sv a1.v' --\r\n\r\n1. Executing Verilog-2005 frontend: a1.v\r\nParsing SystemVerilog input from `a1.v' to AST representation.\r\nERROR: Assert `extra->ast_stack.size() == 1' failed in frontends/verilog/verilog_parser.y:709.\r\n➜  /tmp cat a1.v\r\nmodule test(input wire A);\r\n  localparam TEST = 1;\r\n  always_comb begin\r\n    case (A)\r\n      TEST: assert(1);\r\n    endcase\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

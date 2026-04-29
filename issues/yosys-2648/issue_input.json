@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2648,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2648",
+  "title": "ice40_dsp, extend_u0 and unextend incorrectly handle sign bits",
+  "body": "## Steps to reproduce the issue\r\n\r\nOn yosys 26e01a67db4135196b1d25ed89e9e6ceb536f4e3.\r\n\r\nUsing the three files in the gist https://gist.github.com/sylefeb/447c22fa39b25e7056ba4e4ecae92d7b\r\none can see that the results differ whether using the `-dsp` option or not. Without `-dsp` the result is:\r\n`result = 117 (should be 117)`\r\nWith -dsp the result is:\r\n`result = 5 (should be 117)`\r\n\r\n## Expected behavior\r\n\r\nThe result with and without `-dsp` should match, the result is correct in this case without `-dsp`.\r\n\r\n## Actual behavior\r\n\r\nThe result differs (5 vs 117).\r\n\r\n## Analysis\r\n\r\nIt appears the problem stems from the combined behavior of `unextend` and `extend_u0` in `ice40_dsp.pgm` and `ice40_dsp.cc`. My understanding is that: \r\n- `unextend` removes leading bits from signals if they are the same (wire or const), including the bit that may represent a change of sign through e.g. a two's complement on an unsigned wire (and including the sign bit of a const signal, regardless of signedness).\r\n- `extend_u0` assumes leading bits are always zeros when padding back an unsigned signal\r\n\r\n## Suggested fix\r\n\r\nI am not sure enough to propose this as a PR, but this works on my side in all tests so far:\r\n- always preserve what represents a sign bit (including on unsigned signals) in `unextend`\r\n- always give `extend_u0` a 'signed' signal (second parameter always true), such that the MSB is replicated during extension\r\n\r\nThis may be too conservative however.\r\n\r\nPatch: https://github.com/sylefeb/fpga-binutils/blob/master/patches/yosys_patch_ice40_dsp.diff\r\n\r\n## Remarks\r\n\r\n- A similar issue is also fixed by the patch, which affects signed const signals loosing their sign bit in `unextend`.\r\n- Other platforms (xilinx dsp) may be affected by a similar issue as they also use `unextend`.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2021-03-09",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

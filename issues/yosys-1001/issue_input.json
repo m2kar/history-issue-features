@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1001,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1001",
+  "title": "Could the output json include the parameters on modules?",
+  "body": "## Steps to reproduce the issue\r\n\r\n```verilog\r\nmodule inner (i, o);\r\n\tinput wire i;\r\n\toutput wire o;\r\n\r\n\tparameter A = 1;\r\nendmodule\r\n\r\nmodule top (i, o);\r\n\tinput wire i;\r\n\toutput wire o;\r\n\r\n\tparameter A = 1;\r\n\tinner #(.A(A)) n (.i(i), .o(o));\r\nendmodule\r\n```\r\n\r\n```\r\nyosys -p \"read_verilog test.v; chparam -list; write_json out.json\"\r\n```\r\n\r\n## Actual behavior\r\n\r\nThe `chparam -list` part will produce the following;\r\n```\r\ntop:\r\n  A\r\ninner:\r\n  A\r\n```\r\n\r\nWhich I believe means that Yosys seems to understand that there are parameters associated with these modules. (BTW -- Any chance `chparam -list` could also include the default value?)\r\n\r\nIn the output JSON, the **cell** `n` will have;\r\n```json\r\n      \"cells\": {\r\n        \"n\": {\r\n          \"hide_name\": 0,\r\n          \"type\": \"inner\",\r\n          \"parameters\": {\r\n            \"A\": 1\r\n          },\r\n          \"attributes\": {\r\n            \"module_not_derived\": 1,\r\n```\r\n\r\nWhich I think means that Yosys understands that `1` value was used for the `A` parameter in the `n` cell.\r\n\r\nHowever, there is no `parameter` property on `modules` output or any indication that the modules have parameters in any way.\r\n\r\n## Expected behavior\r\n\r\nIt would be nice if Yosys included a list of parameters (and even better if that list included the default values).\r\n\r\n## Version Info\r\n\r\n`Yosys 0.8+319 (git sha1 2c7e2541)`",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-10",
+  "closed_at": "2022-08-18",
+  "code_blocks": [
+    "module inner (i, o);\r\n\tinput wire i;\r\n\toutput wire o;\r\n\r\n\tparameter A = 1;\r\nendmodule\r\n\r\nmodule top (i, o);\r\n\tinput wire i;\r\n\toutput wire o;\r\n\r\n\tparameter A = 1;\r\n\tinner #(.A(A)) n (.i(i), .o(o));\r\nendmodule",
+    "yosys -p \"read_verilog test.v; chparam -list; write_json out.json\"",
+    "\"cells\": {\r\n        \"n\": {\r\n          \"hide_name\": 0,\r\n          \"type\": \"inner\",\r\n          \"parameters\": {\r\n            \"A\": 1\r\n          },\r\n          \"attributes\": {\r\n            \"module_not_derived\": 1,"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

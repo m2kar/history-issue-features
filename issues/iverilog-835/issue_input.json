@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 835,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/835",
+  "title": "Assertion firing when accessing structure array elements through foreach",
+  "body": "I'm running under WSL2, using the most-recent head of the tree (I did the 'git pull' about 5 minutes ago so this looks like the first issue filed on 13.0).  I'm also taking a crack at learning SystemVerilog over a 2-week Christmas break, so it's entirely possible that I'm doing something that isn't legal SystemVerilog. I've stripped my testcase down to this:\r\n\r\n```\r\nmodule array_struct_assert_test;\r\n\r\ntypedef struct packed\r\n{\r\n  logic b;\r\n} s;\r\n\r\ns [1:0] a;\r\n\r\nalways @(*)\r\n  foreach(a[i])\r\n    a[i].b = 1'b0;\r\n\r\nendmodule\r\n```\r\n\r\nI realize this particular snippet doesn't make a lot of sense; the real code has a lot more going on that may conditionally set a[i].b to 1 but I'm assigning the default at the beginning to avoid latch inference.   I'm aware that always_comb is supposed to avoid this requirement -- Verilog habits die hard, and if I were to use always_comb instead of always I see the same issue.  Either way, when I try to compile this I get the following\r\n\r\n```\r\nwlye@AMR-BU-L02782:~/foton$ iverilog -g2012 array_struct_test.sv\r\narray_struct_test.sv:12: error: A reference to a wire or reg (`i') is not allowed in a constant expression.\r\narray_struct_test.sv:12: error: Array index expressions must be constant here.\r\nivl: netmisc.cc:1612: NetExpr* collapse_array_indices(Design*, NetScope*, NetNet*, const std::__cxx11::list<index_component_t>&): Assertion `rc' failed.\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton$\r\n```\r\nI'm not sure whether or not the error is correct; if it is correct can I get some suggestions about how to write this correctly?  If it is incorrect, then this may point to an issue in the compiler.\r\n\r\nHowever, independent of whether or not the error message is correct, we shouldn't be seeing an assertion firing.\r\n\r\n",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2022-12-27",
+  "closed_at": null,
+  "code_blocks": [
+    "module array_struct_assert_test;\r\n\r\ntypedef struct packed\r\n{\r\n  logic b;\r\n} s;\r\n\r\ns [1:0] a;\r\n\r\nalways @(*)\r\n  foreach(a[i])\r\n    a[i].b = 1'b0;\r\n\r\nendmodule",
+    "wlye@AMR-BU-L02782:~/foton$ iverilog -g2012 array_struct_test.sv\r\narray_struct_test.sv:12: error: A reference to a wire or reg (`i') is not allowed in a constant expression.\r\narray_struct_test.sv:12: error: Array index expressions must be constant here.\r\nivl: netmisc.cc:1612: NetExpr* collapse_array_indices(Design*, NetScope*, NetNet*, const std::__cxx11::list<index_component_t>&): Assertion `rc' failed.\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton$"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,61 @@
+{
+  "tool": "yosys",
+  "issue_number": 974,
+  "title": "Autotest fails on design with $splitcmplxassign",
+  "features": [
+    {
+      "name": "LHS concatenation of bit slices from same 2D array element",
+      "category": "data_model",
+      "description": "Code should include a concatenation on the left-hand side of an assignment where the concatenated parts are adjacent bit slices of the same 2D unpacked array element, such as {arr[i][j+1], arr[i][j]} = expr",
+      "snippet": "reg [DIM_1-1:0] mem [DIM_2-1:0];\n{mem[i][j+1], mem[i][j]} = mem[i][j] + mem[i+1][j];",
+      "tags": ["concatenation", "lhs_concatenation", "unpacked_array", "bit_select", "2d_array"],
+      "source_bug_id": "974",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/974",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized 2D memory array with multiplied port width",
+      "category": "data_model",
+      "description": "Code should include a 2D unpacked array (memory) where the port width is the product of two parameters (DIM_1*DIM_2), and the memory is indexed with parameter-based part-select using +: operator",
+      "snippet": "parameter integer DIM_1 = 17;\nparameter integer DIM_2 = 7;\ninput  wire [DIM_1*DIM_2-1:0] din;\nreg [DIM_1-1:0] mem [DIM_2-1:0];\nmem[i] = din[DIM_1*i +: DIM_1];",
+      "tags": ["parameterized_array", "unpacked_array", "part_select", "memory", "multiplication"],
+      "source_bug_id": "974",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/974",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "nested for loops with non-unit stride on array indices",
+      "category": "control_flow",
+      "description": "Code should include nested for-loops iterating over a 2D unpacked array where the outer loop uses a non-unit stride (e.g., i=i+3) and the inner loop iterates over bit indices of each array element",
+      "snippet": "for (i = 0; i < DIM_2-1; i=i+3) begin\n  for (j = 0; j < DIM_1-1; j=j+1) begin\n    mem[i][j+1] = mem[i][j] + mem[i+1][j];\n  end\nend",
+      "tags": ["nested_loop", "non_unit_stride", "array_iteration", "for_loop"],
+      "source_bug_id": "974",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/974",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "array copy between two 2D memories in combinational block",
+      "category": "data_model",
+      "description": "Code should include a combinational always block that copies elements from one 2D unpacked array to another element-by-element using a for loop, combined with a second block performing array-to-vector packing",
+      "snippet": "always @* begin\n  for (i = 0; i < DIM_2; i=i+1)\n    dst_array[i] = src_array[i];\nend\nalways @* begin\n  for (i = 0; i < DIM_2; i=i+1)\n    dout[DIM_1*i +: DIM_1] = dst_array[i];\nend",
+      "tags": ["array_copy", "combinational_logic", "unpacked_array", "for_loop"],
+      "source_bug_id": "974",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/974",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

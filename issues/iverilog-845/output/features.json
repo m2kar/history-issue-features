@@ -1,0 +1,64 @@
+{
+  "tool": "iverilog",
+  "issue_number": 845,
+  "title": "Clean up assertions in #823 and #840",
+  "features": [
+    {
+      "name": "packed struct assignment to nonexistent member",
+      "category": "data_model",
+      "description": "Code should include a packed struct with a single logic member and an assign statement that writes to a non-existent struct member",
+      "snippet": "struct packed {logic a;} s;\nassign s.a = 1;\nassign s.c = 1;",
+      "tags": ["packed_struct", "member_access", "invalid_assignment"],
+      "source_bug_id": "823",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/845",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "nested packed struct assignment to nonexistent member",
+      "category": "data_model",
+      "description": "Code should include a nested packed struct and an assign statement that writes to a non-existent member at the inner struct level",
+      "snippet": "struct packed {struct packed {logic a;} t;} u;\nassign u.t.a = 1;\nassign u.t.c = 1;",
+      "tags": ["packed_struct", "nested_struct", "member_access", "invalid_assignment"],
+      "source_bug_id": "823",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/845",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "generate for loop with out-of-range index on packed array lhs",
+      "category": "timing",
+      "description": "Code should include a generate for loop with a genvar that iterates beyond the bounds of a packed array on the left-hand side of an assign",
+      "snippet": "logic [1:0][1:0] a;\nlogic [1:0][1:0] b;\ngenerate\n  for(genvar i=0;i<3;i++)\n    assign b[i] = a[i];\nendgenerate",
+      "tags": ["generate", "for_loop", "genvar", "packed_array", "out_of_range"],
+      "source_bug_id": "840",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/845",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "generate for loop with out-of-range index on packed array rhs",
+      "category": "timing",
+      "description": "Code should include a generate for loop with a genvar that iterates beyond the bounds of a packed array on the right-hand side of an assign",
+      "snippet": "logic [1:0][1:0] a;\nlogic [2:0][1:0] b;\ngenerate\n  for(genvar i=0;i<3;i++)\n    assign b[i] = a[i];\nendgenerate",
+      "tags": ["generate", "for_loop", "genvar", "packed_array", "out_of_range"],
+      "source_bug_id": "840",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/845",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

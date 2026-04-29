@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4060,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4060",
+  "title": "tribuf -formal with a single driver of the tristate net connects input to output",
+  "body": "### Version\n\nYosys 0.35+58 (git sha1 8bd681acf, clang 10.0.0-4ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nI have not tested this against git master of yosys as the issue is with the formal tool provided in `oss-cad-suite-linux-x64-20231204` release. The yosys version referenced in the one provided with the release. I can attempt to test on git master if preferred.\r\n\r\n- Pull down [this gist](https://gist.github.com/jix/6ccf5b58f10ce77cf40d9f13ed15db86)\r\n- Comment out the instantiation of the `driver_b` instance\r\n- Run `sby -f formal_tristate.sby`\r\n- View the `formal_tristate/model/design.il` and `formal_tristate/model/design_prep.il` files\r\n\r\nIt is difficult to interpret exact behavior from traces as the input that is tied to `1'bz`  seems to become an `anyseq` variable, from the `design_prep.il` file of the unmodified gist:\r\n\r\n```\r\n  cell $pmux $auto$tribuf.cc:165:run$51\r\n    parameter \\S_WIDTH 2\r\n    parameter \\WIDTH 1\r\n    connect \\A \\_witness_.anyseq_auto_setundef_cc_533_execute_55\r\n    connect \\B { \\data_b \\data_a }\r\n    connect \\S { \\driver_b.en \\driver_a.en }\r\n    connect \\Y \\data_bus\r\n  end\r\n```\r\n\r\nwhich I've interpreted as `data_bus` taking on any value at any time when `en == 1'b0`. I'm not certain of this, but I was seeing unexpected behavior in the traces with the enable signals low that could be explained by the above, so I tried to look at the `.il` files instead as they seem to describe the connectivity of the design.\n\n### Expected Behavior\n\nThe `design.il` and `design_prep.il` files present connectivity where `bus` is dependent on `en_a` and `data_a`.\r\n\r\nSomething like the following in the `design_prep.il` file:\r\n\r\n```\r\n  cell $pmux $auto$tribuf.cc:165:run$51\r\n    parameter \\S_WIDTH 2\r\n    parameter \\WIDTH 1\r\n    connect \\A \\_witness_.anyseq_auto_setundef_cc_533_execute_55\r\n    connect \\B { \\data_b \\data_a }\r\n    connect \\S { \\driver_b.en \\driver_a.en }\r\n    connect \\Y \\data_bus\r\n  end\r\n...\r\n  connect \\bus \\data_bus\r\n  connect \\driver_a.bus \\data_bus\r\n  connect \\driver_a.from_bus \\data_bus\r\n  connect \\driver_a.to_bus \\data_a\r\n```\n\n### Actual Behavior\n\nThe `data_a` input is connected directly to `bus` and there is no `pmux` cell. From the `design_prep.il` file:\r\n\r\n```\r\n  connect \\bus \\data_a\r\n  connect \\data_bus \\data_a\r\n  connect \\driver_a.bus \\data_a\r\n  connect \\driver_a.from_bus \\data_a\r\n  connect \\driver_a.to_bus \\data_a\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-12-08",
+  "closed_at": null,
+  "code_blocks": [
+    "cell $pmux $auto$tribuf.cc:165:run$51\r\n    parameter \\S_WIDTH 2\r\n    parameter \\WIDTH 1\r\n    connect \\A \\_witness_.anyseq_auto_setundef_cc_533_execute_55\r\n    connect \\B { \\data_b \\data_a }\r\n    connect \\S { \\driver_b.en \\driver_a.en }\r\n    connect \\Y \\data_bus\r\n  end",
+    "cell $pmux $auto$tribuf.cc:165:run$51\r\n    parameter \\S_WIDTH 2\r\n    parameter \\WIDTH 1\r\n    connect \\A \\_witness_.anyseq_auto_setundef_cc_533_execute_55\r\n    connect \\B { \\data_b \\data_a }\r\n    connect \\S { \\driver_b.en \\driver_a.en }\r\n    connect \\Y \\data_bus\r\n  end\r\n...\r\n  connect \\bus \\data_bus\r\n  connect \\driver_a.bus \\data_bus\r\n  connect \\driver_a.from_bus \\data_bus\r\n  connect \\driver_a.to_bus \\data_a"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

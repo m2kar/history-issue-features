@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 4574,
+  "title": "Seemingly shareable memory ports don't get merged",
+  "features": [
+    {
+      "name": "memory as array of 1-bit regs with loop access",
+      "category": "data_model",
+      "description": "Code should include a memory implemented as an unpacked array of 1-bit registers, where adjacent bits are accessed via loop index (ram[base+i] where i iterates 0 to N-1)",
+      "snippet": "(* no_rw_check *)\nreg ram [7:0];\ninteger word_addr = AD*2;\nalways @(posedge CLK) begin\n  if (WE) begin\n    for (integer i = 0; i < 2; i=i+1) ram[word_addr+i] <= DI[i];\n  end\n  for (integer i = 0; i < 2; i=i+1) begin\n    DO[i] <= ram[word_addr+i];\n  end\nend",
+      "tags": ["memory", "unpacked_array", "loop_access", "bit-level"],
+      "source_bug_id": "yosys-4574",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4574",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "adjacent bit memory access via indexed loop",
+      "category": "control_flow",
+      "description": "Code should include a for loop that accesses consecutive memory locations using an index variable to write/read adjacent bits of a wider word",
+      "snippet": "for (integer i = 0; i < 2; i=i+1) begin\n  ram[word_addr+i] <= DI[i];\nend",
+      "tags": ["for_loop", "memory_access", "indexed_access", "adjacent_bits"],
+      "source_bug_id": "yosys-4574",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4574",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

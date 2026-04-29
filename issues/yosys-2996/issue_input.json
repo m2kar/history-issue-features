@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2996,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2996",
+  "title": "Attribute to force a signal to be used \"as-is\" (like if coming from a blackbox).",
+  "body": "What I'm looking for is a way to force yosys to use a signal without looking at \"where / how\" that signal is generated when optimizing.\r\n\r\nSo for instance, take that snippet of code :\r\n\r\n```verilog\r\nwire, a, b, c, d;\r\nwire mysig;\r\nwire derived;\r\n\r\nassign mysig = a & b & c & d;\r\nassign derived = ~mysig & b;\r\n```\r\n\r\nI'd like yosys to generate `mysig` however it likes, using all the optimization it can.\r\nAnd then when generating `derived`, it should _not_ look at where `mysig` comes from, it should consider it a \"fixed point\" / \"blackbox\" / ... and not try to combine it.\r\n\r\nI tried using `(* keep *)` but it's not doing the trick unfortunately.\r\n\r\nThe use case for this is guiding yosys to generate better logic.\r\nTake for instance the module below :\r\n\r\n```verilog\r\nmodule dec(\r\n    input  wire [7:0] start,\r\n    output reg  [7:0] val,\r\n    input  wire       load,\r\n    input wire        clk\r\n);\r\n\r\n    wire load_n; \r\n\r\n//`define USE_BBOX\r\n`ifdef USE_BBOX\r\n    bbox_buf bb_I (load_n, ~load);\r\n`else\r\n    assign load_n = ~load;\r\n`endif\r\n\r\n    always @(posedge clk)\r\n        val <= load_n ? ( val + {8{load_n}} ) : start;\r\n\r\nendmodule\r\n\r\n\r\n(* blackbox *)\r\nmodule bbox_buf(output wire x, input wire a);\r\n    assign x = a;\r\nendmodule\r\n```\r\n\r\nIf you synthesize it for ice40 as is, you get :\r\n\r\n```\r\n     SB_CARRY                        7\r\n     SB_DFF                          8\r\n     SB_LUT4                        17\r\n```\r\n\r\nif you enable the `USE_BLACKBOX` which sort of illustrate what I mean (except it creates extraneous instances that need to be stripped as a post processing step). :\r\n\r\n```\r\n     SB_CARRY                        7\r\n     SB_DFF                          8\r\n     SB_LUT4                         9\r\n     bbox_buf                        1\r\n```\r\n\r\nWhich is much better logic.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-09-07",
+  "closed_at": null,
+  "code_blocks": [
+    "wire, a, b, c, d;\r\nwire mysig;\r\nwire derived;\r\n\r\nassign mysig = a & b & c & d;\r\nassign derived = ~mysig & b;",
+    "module dec(\r\n    input  wire [7:0] start,\r\n    output reg  [7:0] val,\r\n    input  wire       load,\r\n    input wire        clk\r\n);\r\n\r\n    wire load_n; \r\n\r\n//`define USE_BBOX\r\n`ifdef USE_BBOX\r\n    bbox_buf bb_I (load_n, ~load);\r\n`else\r\n    assign load_n = ~load;\r\n`endif\r\n\r\n    always @(posedge clk)\r\n        val <= load_n ? ( val + {8{load_n}} ) : start;\r\n\r\nendmodule\r\n\r\n\r\n(* blackbox *)\r\nmodule bbox_buf(output wire x, input wire a);\r\n    assign x = a;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

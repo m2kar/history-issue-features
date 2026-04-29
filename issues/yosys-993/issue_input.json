@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 993,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/993",
+  "title": "Yosys aborts with exception in peephole optimizers pass",
+  "body": "Yosys aborts with a `vector::_M_range_check` exception in the peephole optimizers pass (`PEEPOPT pass`). This happens with the verilog code below, which I have reduced as much as possible into an MCVE.\r\n\r\n```verilog\r\nmodule top(y, clk, wire1);\r\n   output wire [1:0] y;\r\n   input wire        clk;\r\n   input wire [1:0]  wire1;\r\n   reg [1:0]         reg1 = 0;\r\n   reg [1:0]         reg2 = 0;\r\n   always @(posedge clk) begin\r\n      reg1 <= wire1 == 1;\r\n   end\r\n   always @(posedge clk) begin\r\n      reg2 <= 1 >> reg1[1:1];\r\n   end\r\n   assign y = reg2;\r\nendmodule\r\n```\r\n\r\n## Steps to reproduce the issue\r\n\r\nYosys version that this was tested with: `Yosys 0.8+411 (git sha1 70d0f389, clang 8.0.0 -fPIC -Os)`, which is the current master.\r\n\r\nThe following command was used to synthesise the design:\r\n\r\n```\r\nyosys -p 'read -formal rtl.v; synth; write_verilog rtl_yosys.v'\r\n```\r\n\r\n## Expected behavior\r\n\r\nSynthesis without any exceptions.\r\n\r\n```\r\n=== top ===\r\n\r\n   Number of wires:                  4\r\n   Number of wire bits:              8\r\n   Number of public wires:           4\r\n   Number of public wire bits:       8\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  1\r\n     $_ORNOT_                        1\r\n\r\n2.27. Executing CHECK pass (checking for obvious problems).\r\nchecking module top..\r\nfound and reported 0 problems.\r\n\r\n3. Executing Verilog backend.\r\nDumping module `\\top'.\r\n```\r\n\r\n## Actual behavior\r\n\r\nYosys aborts with a `vector::_M_range_check` exception.\r\n\r\n```\r\n2.7. Executing WREDUCE pass (reducing word size of cells).\r\nRemoved top 1 bits (of 2) from port B of cell top.$eq$rtl.v:7$2 ($eq).\r\nRemoved cell top.$eq$rtl.v:7$2 ($eq).\r\nRemoved top 30 bits (of 32) from port A of cell top.$shr$rtl.v:10$4 ($shr).\r\n\r\n2.8. Executing PEEPOPT pass (run peephole optimizers).\r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  vector::_M_range_check: __n (which is 18446744073709551615) >= this->size() (which is 0)\r\nzsh: abort (core dumped)  yosys -p 'read -formal rtl.v; synth; write_verilog rtl_yosys.v'\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-06",
+  "closed_at": "2019-05-06",
+  "code_blocks": [
+    "module top(y, clk, wire1);\r\n   output wire [1:0] y;\r\n   input wire        clk;\r\n   input wire [1:0]  wire1;\r\n   reg [1:0]         reg1 = 0;\r\n   reg [1:0]         reg2 = 0;\r\n   always @(posedge clk) begin\r\n      reg1 <= wire1 == 1;\r\n   end\r\n   always @(posedge clk) begin\r\n      reg2 <= 1 >> reg1[1:1];\r\n   end\r\n   assign y = reg2;\r\nendmodule",
+    "yosys -p 'read -formal rtl.v; synth; write_verilog rtl_yosys.v'",
+    "=== top ===\r\n\r\n   Number of wires:                  4\r\n   Number of wire bits:              8\r\n   Number of public wires:           4\r\n   Number of public wire bits:       8\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  1\r\n     $_ORNOT_                        1\r\n\r\n2.27. Executing CHECK pass (checking for obvious problems).\r\nchecking module top..\r\nfound and reported 0 problems.\r\n\r\n3. Executing Verilog backend.\r\nDumping module `\\top'.",
+    "2.7. Executing WREDUCE pass (reducing word size of cells).\r\nRemoved top 1 bits (of 2) from port B of cell top.$eq$rtl.v:7$2 ($eq).\r\nRemoved cell top.$eq$rtl.v:7$2 ($eq).\r\nRemoved top 30 bits (of 32) from port A of cell top.$shr$rtl.v:10$4 ($shr).\r\n\r\n2.8. Executing PEEPOPT pass (run peephole optimizers).\r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  vector::_M_range_check: __n (which is 18446744073709551615) >= this->size() (which is 0)\r\nzsh: abort (core dumped)  yosys -p 'read -formal rtl.v; synth; write_verilog rtl_yosys.v'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

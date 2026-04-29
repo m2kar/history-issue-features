@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 514,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/514",
+  "title": "ICE40 LUTs with constant inputs should be assigned to 0 instead of 1",
+  "body": "Here's a typical example from a Yosys generated .blif file:\r\n\r\n```\r\n.gate SB_LUT4 I0=$false I1=$true I2=u_blink_pll_bottom_b.count[0] I3=$false O=$techmap\\u_blink_pll_bottom_b.$0\\count[24:0][0]\r\n.attr src \"chip.v:48\"\r\n.param LUT_INIT 0110100110010110\r\n```\r\n\r\nThis calculates the  LSB of an endless counter, so it's essentially an inverter and only one input of the LUT4 is assigned an active signal.\r\n\r\n*However, I1 is assigned $true.*\r\n\r\nWhen you run this code through arachne, all $true signals (except those connected to CEN) are converted to $true$2, which is a real signal that actually gets routed to all cells that have a constant input of 1. And when I check the result in the ICE40 layout viewer, I see that this consumes real routing resources.\r\n\r\nThe LOGIC Tile Documentation of Project IceStorm says the following:\r\n> LUT inputs that are not connected to anything are driven low. The set/reset signal is also driven low if not connected to any other driver, and the clock enable signal is driven high when left unconnected.\r\n\r\nIt would be better for the LUT4 above to be output as follows:\r\n```\r\n.gate SB_LUT4 I0=u_blink_pll_bottom_b.count[0] I1=$false I2=$false I3=$false O=$techmap\\u_blink_pll_bottom_b.$0\\count[24:0][0]\r\n.attr src \"chip.v:48\"\r\n.param LUT_INIT 0000000000000001\r\n```\r\n\r\nIn other words: assign all constant inputs to $false instead of $true.\r\n\r\nI'm not familiar with the ICE40 enough to judge whether or not routing resources are a limiting factor on tight designs.\r\n\r\nSo is this an optimization that's worth pursuing? And, if so, is this something that would better be done inside YoSys or inside Arachne? My feeling is that the answer to these questions are 'yes' and 'Yosys'.\r\n\r\nTom\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-03-12",
+  "closed_at": "2018-05-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 873,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/873",
+  "title": "Regression when initial-ising reg used on negedge clock",
+  "body": "## Steps to reproduce the issue\r\n\r\nThe following emits `Warning: Wire $paramod\\template\\neg_clk=1.q has an unprocessed 'init' attribute.` on: 44a44a0 but works on e112d2fb\r\n\r\n```\r\nmodule template (input clk, input d, output reg q);\r\nparameter neg_clk = 0;\r\n\r\ninitial q = 1'b1;\r\n\r\ngenerate\r\n    if (neg_clk) begin\r\n        always @(negedge clk) q <= d;\r\n    end\r\n    else begin\r\n        always @(posedge clk) q <= d;\r\n    end\r\nendgenerate\r\nendmodule\r\n\r\nmodule top(input clk, input d, output [1:0] q);\r\n    template #(.neg_clk(1)) neg_clk(clk, d, q[0]);\r\n    template #(.neg_clk(0)) pos_clk(clk, d, q[1]);\r\nendmodule\r\n```\r\nwhen `./yosys -q -p 'synth_xilinx; flatten; dump top' init.v`\r\n\r\n## Expected behavior\r\n\r\nExpect negedge warning to not get emitted, and the netlist to have both flops have INIT value of 1'b1\r\n\r\n## Actual behavior\r\n\r\nFails for negedge case.\r\nWorks for posedge case.\r\n\r\nnegedge case worked on e112d2fb (i.e. INIT value is correct, and no warning emitted)\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-03-14",
+  "closed_at": "2019-03-19",
+  "code_blocks": [
+    "module template (input clk, input d, output reg q);\r\nparameter neg_clk = 0;\r\n\r\ninitial q = 1'b1;\r\n\r\ngenerate\r\n    if (neg_clk) begin\r\n        always @(negedge clk) q <= d;\r\n    end\r\n    else begin\r\n        always @(posedge clk) q <= d;\r\n    end\r\nendgenerate\r\nendmodule\r\n\r\nmodule top(input clk, input d, output [1:0] q);\r\n    template #(.neg_clk(1)) neg_clk(clk, d, q[0]);\r\n    template #(.neg_clk(0)) pos_clk(clk, d, q[1]);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

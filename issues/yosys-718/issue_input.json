@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 718,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/718",
+  "title": " gate2lut: new techlib, for converting Yosys gates to FPGA LUTs",
+  "body": "This techlib is a straightforward mapping from `$_NOT_`, `$_AND_`, `$_OR_`, `$_XOR_`, and `$_MUX_` to a _k_-LUT, with configurable _k_. It is useful for experimenting with replacement of `abc`.\r\n\r\nCombined with #717, this extremely naïve techmapper produces, in my non-rigorous tests, similar LUT density to `abc`, at a miniscule fraction of the complexity and effort. For example, the design below is synthesized as follows:\r\n  * `abc` as invoked by `synth_ice40`: 17 `SB_LUT4`;\r\n  * LUT techmapping: 51 `SB_LUT4`;\r\n  * LUT techmapping followed by LUT packing via `opt_lut`: 18 `SB_LUT4`.\r\n\r\nIn addition, while right now `simplemap` and `techmap` do not seem to preserve wire names (or maybe I'm doing something wrong; haven't looked in detail yet), it seems far simpler to adjust them to do so. In that case, the naive techmapper could be greatly useful for design optimization even if it produces substantially worse logic, so long as the logic it produces is *uniformly* worse than the logic produces by `abc`.\r\n\r\n<details>\r\n\r\n```verilog\r\nmodule top(\r\n  input [15:0] s_a,\r\n  input [15:0] s_b,\r\n  output reg [16:0] s_o,\r\n  input c_or,\r\n  input c_and,\r\n  input c_xor\r\n);\r\n\r\nalways @(*) begin\r\n  x_sel <= 2'd0;\r\n  if (c_or)  x_sel <= 1'd1;\r\n  if (c_and) x_sel <= 2'd2;\r\n  if (c_xor) x_sel <= 2'd3;\r\nend\r\n\r\nalways @(*) begin\r\n  s_o <= 17'd0;\r\n  case (x_sel)\r\n    1'd0: s_o <= s_a;\r\n    1'd1: s_o <= (s_a | s_b);\r\n    2'd2: s_o <= (s_a & s_b);\r\n    2'd3: s_o <= (s_a ^ s_b);\r\n  endcase\r\nend\r\n\r\nendmodule\r\n```\r\n</details>",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-05",
+  "closed_at": "2018-12-05",
+  "code_blocks": [
+    "module top(\r\n  input [15:0] s_a,\r\n  input [15:0] s_b,\r\n  output reg [16:0] s_o,\r\n  input c_or,\r\n  input c_and,\r\n  input c_xor\r\n);\r\n\r\nalways @(*) begin\r\n  x_sel <= 2'd0;\r\n  if (c_or)  x_sel <= 1'd1;\r\n  if (c_and) x_sel <= 2'd2;\r\n  if (c_xor) x_sel <= 2'd3;\r\nend\r\n\r\nalways @(*) begin\r\n  s_o <= 17'd0;\r\n  case (x_sel)\r\n    1'd0: s_o <= s_a;\r\n    1'd1: s_o <= (s_a | s_b);\r\n    2'd2: s_o <= (s_a & s_b);\r\n    2'd3: s_o <= (s_a ^ s_b);\r\n  endcase\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

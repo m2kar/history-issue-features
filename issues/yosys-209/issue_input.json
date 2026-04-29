@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 209,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/209",
+  "title": "Readmem finish_addr problem",
+  "body": "I have faced issue when using $readmemh function to emulate ROM initial value.\nTo reproduce problem I've created ROM with 4 8-bit entries and have used `$readmemh(\"rom.hex\",0,3);` function to initialize ROM with {8'hEE, 8'hCC, 8'h33, 8'h55} value.\nDuring techmap $mem has parameter:\n`Parameter \\INIT = 25'x110011000011001101010101`\nIf I change $readmem to `$readmem(...0, 4);`\n\\INIT looks like this (correct one):\n`Parameter \\INIT = 32'11101110110011000011001101010101`\n\nThe problem is in fronetends/ast/simplify.cc. Function '*AstNode::readmem' breaks reading cycle at line 2472 on event (cursor == finish_addr). But actual assigning to the rom[finish_addr] wasn't made yet.\n\n2466:           if ((cursor == finish_addr) || (increment > 0 && cursor > range_max) || (increment < 0 && cursor < range_min))\n2467:               break;\n2468:           cursor += increment;\n2469:       }\n2470:\n2471:       if ((cursor == finish_addr) || (increment > 0 && cursor > range_max) || (increment < 0 && cursor < range_min))\n2472:break;\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-08-19",
+  "closed_at": "2016-08-20",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

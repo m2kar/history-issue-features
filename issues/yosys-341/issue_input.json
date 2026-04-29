@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 341,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/341",
+  "title": "Maybe an issue in the equivalence check",
+  "body": "I was playing with the equivalency check and came across a weird behavior. \r\nI think it is a bug, but maybe I am missing something.\r\n\r\nMy script is \r\n```\r\nequiv_make gold top_w equiv\r\n hierarchy -top equiv\r\n opt -purge\r\n equiv_simple\r\n equiv_status -assert\r\n```\r\n\r\nand the minimal code to get the issue that I was able to generate \r\n\r\n```\r\nmodule gold(input i1, input i2, output o2, output o1);\r\n wire _1_;\r\n assign o2 = i1 & i2;\r\n assign _1_ = i1 | i2;\r\n assign o1 = _1_ & o2;\r\nendmodule\r\n\r\nmodule top_r( i1, i2, o1, o2 );\r\n  input i1, i2;\r\n  output o1, o2;\r\n  wire w4;\r\n  assign o2 = (i2 & i1);\r\n  assign w4 = ((i2 && i1) | (i2) | (i1));\r\n  assign o1 = ((w4 & o2));\r\nendmodule\r\n\r\nmodule top_w( i1, i2, o1, o2 );\r\n  input i1, i2;\r\n  output o1, o2;\r\n  wire w4;\r\n  assign o2 = (i2 & i1);\r\n  assign w4 = ((i2 & i1) | (i2) | (i1));\r\n  assign o1 = ((w4 & o2));\r\nendmodule\r\n```\r\n\r\nThe issue is with top_w, top_r uses && instead of & in the assignment of w4, but both expression should simplify to `i2 + i1`.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-04-28",
+  "closed_at": "2017-04-28",
+  "code_blocks": [
+    "equiv_make gold top_w equiv\r\n hierarchy -top equiv\r\n opt -purge\r\n equiv_simple\r\n equiv_status -assert",
+    "module gold(input i1, input i2, output o2, output o1);\r\n wire _1_;\r\n assign o2 = i1 & i2;\r\n assign _1_ = i1 | i2;\r\n assign o1 = _1_ & o2;\r\nendmodule\r\n\r\nmodule top_r( i1, i2, o1, o2 );\r\n  input i1, i2;\r\n  output o1, o2;\r\n  wire w4;\r\n  assign o2 = (i2 & i1);\r\n  assign w4 = ((i2 && i1) | (i2) | (i1));\r\n  assign o1 = ((w4 & o2));\r\nendmodule\r\n\r\nmodule top_w( i1, i2, o1, o2 );\r\n  input i1, i2;\r\n  output o1, o2;\r\n  wire w4;\r\n  assign o2 = (i2 & i1);\r\n  assign w4 = ((i2 & i1) | (i2) | (i1));\r\n  assign o1 = ((w4 & o2));\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

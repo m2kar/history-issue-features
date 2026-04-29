@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2036,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2036",
+  "title": "pyosys autogeneration: Parser skips a few functions due to line breaks in header",
+  "body": "## Steps to reproduce the issue\r\n\r\n* Build yosys with pyosys Python extension\r\n* Run code below:\r\n\r\n```\r\nfrom pyosys import libyosys as ys\r\n\r\ndef addSignal(m, name, n, public = False):\r\n    w = m.addWire(name, n)\r\n    return ys.SigSpec(w)\r\n\r\ndef ID(x):\r\n    return ys.IdString(\"$\" + x)\r\n\r\nd = ys.Design()\r\nm = d.addModule(ID(\"test1\"))\r\nclk, r, d, q = [ addSignal(m, ID(\"sig_%d\" % i), 1) for i in range(4)]\r\nc = ys.Const(0, 1)\r\nm.addAdff(ID(\"adff\"), clk, r, d, q, c, 0, 0)\r\n```\r\n## Expected behavior\r\n\r\n`$adff` Element being added to the module\r\n\r\n## Actual behavior\r\n\r\nMethod not found, because not generated in the python module from the parser auxiliary `misc/py_wrap_generator.py`, due to undetected line breaks in `rtlil.h`\r\n\r\nQuick workaround: Remove line breaks. See also patch.\r\n\r\n[patch-pyosys.txt](https://github.com/YosysHQ/yosys/files/4592229/patch-pyosys.txt)\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-07",
+  "closed_at": "2025-11-05",
+  "code_blocks": [
+    "from pyosys import libyosys as ys\r\n\r\ndef addSignal(m, name, n, public = False):\r\n    w = m.addWire(name, n)\r\n    return ys.SigSpec(w)\r\n\r\ndef ID(x):\r\n    return ys.IdString(\"$\" + x)\r\n\r\nd = ys.Design()\r\nm = d.addModule(ID(\"test1\"))\r\nclk, r, d, q = [ addSignal(m, ID(\"sig_%d\" % i), 1) for i in range(4)]\r\nc = ys.Const(0, 1)\r\nm.addAdff(ID(\"adff\"), clk, r, d, q, c, 0, 0)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

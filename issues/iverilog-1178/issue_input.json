@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1178,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1178",
+  "title": "Support repeat concatenation nets in module inout port connections",
+  "body": "I ran into this error while testing some new [ROHD](https://github.com/intel/rohd) SystemVerilog generation for `wire`s.  The goal is a module which can support a bidirectional replication operation for nets.\r\n\r\n> sorry: I do not know how to elaborate repeat concatenation nets.\r\n\r\nIt looks like it's coming from here:\r\nhttps://github.com/steveicarus/iverilog/blob/d8c3c51ab1190ed3fb26540d7de6177f83e0e75b/elab_net.cc#L54-L58\r\n\r\nHere's a small testbench that reproduces the issue and should pass if the feature were implemented.\r\n\r\n```SystemVerilog\r\nmodule net_connect #(parameter WIDTH=1) (w, w); \r\ninout wire[WIDTH-1:0] w;\r\nendmodule\r\n\r\n////////////////////\r\n\r\nmodule ReplicateMod (\r\ninout wire [3:0] bus,\r\ninout wire [7:0] replicated\r\n);\r\nnet_connect #(.WIDTH(8)) net_connect (replicated, ({2{bus}}));\r\nendmodule : ReplicateMod\r\n\r\n\r\nmodule tb;\r\nlogic [3:0] bus;\r\nwire [7:0] replicated;\r\nwire [3:0] wire__bus; assign wire__bus = bus;\r\nReplicateMod dut(.bus(wire__bus), .replicated(replicated));\r\ninitial begin\r\n#1\r\nbus = 4'h3;\r\n#2\r\nif(replicated !== 8'h33) $error($sformatf(\"Expected replicated=00110011, but found replicated=0x%x with inputs {bus: 0011}\", replicated));\r\n#8\r\nbus = 4'hc;\r\n#2\r\nif(replicated !== 8'hcc) $error($sformatf(\"Expected replicated=11001100, but found replicated=0x%x with inputs {bus: 1100}\", replicated));\r\n#8\r\n$finish;\r\nend\r\nendmodule\r\n```\r\n\r\nAre there plans to support this in Icarus Verilog?  I didn't see any other open issues tracking this, sorry if it is a duplicate.",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2024-10-25",
+  "closed_at": "2024-11-10",
+  "code_blocks": [
+    "module net_connect #(parameter WIDTH=1) (w, w); \r\ninout wire[WIDTH-1:0] w;\r\nendmodule\r\n\r\n////////////////////\r\n\r\nmodule ReplicateMod (\r\ninout wire [3:0] bus,\r\ninout wire [7:0] replicated\r\n);\r\nnet_connect #(.WIDTH(8)) net_connect (replicated, ({2{bus}}));\r\nendmodule : ReplicateMod\r\n\r\n\r\nmodule tb;\r\nlogic [3:0] bus;\r\nwire [7:0] replicated;\r\nwire [3:0] wire__bus; assign wire__bus = bus;\r\nReplicateMod dut(.bus(wire__bus), .replicated(replicated));\r\ninitial begin\r\n#1\r\nbus = 4'h3;\r\n#2\r\nif(replicated !== 8'h33) $error($sformatf(\"Expected replicated=00110011, but found replicated=0x%x with inputs {bus: 0011}\", replicated));\r\n#8\r\nbus = 4'hc;\r\n#2\r\nif(replicated !== 8'hcc) $error($sformatf(\"Expected replicated=11001100, but found replicated=0x%x with inputs {bus: 1100}\", replicated));\r\n#8\r\n$finish;\r\nend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

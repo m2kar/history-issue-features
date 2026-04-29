@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 330,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/330",
+  "title": "ICE40 DDR output simulation not matching oscope",
+  "body": "The output of Icarus/GTKWave using cells_sim.v matches what I'd expect from the ICE tech library document. \r\n\r\nWhen synthesized and loaded in hardware, it appears as if D_OUT_0 and D_OUT_1 were swapped.\r\n\r\nSimplified code to demonstrate issue: \r\n```\r\nreg [1:0] ledi;\r\n   always @ (posedge clockbuf)\r\n     begin\r\n        case(count[5:0])\r\n          0: ledi <= 2'b00;\r\n          1: ledi <= 2'b11;\r\n          2: ledi <= 2'b01;\r\n          3: ledi <= 2'b10;\r\n          4: ledi <= 2'b00;\r\n          5: ledi <= 2'b11;\r\n          6: ledi <= 2'b00;\r\n\r\n          default: ledi <= 2'b11;\r\n        endcase\r\n     end\r\n\r\n   SB_IO #(.PIN_TYPE(6'b110000), .IO_STANDARD(\"SB_LVCMOS\")) led_ddr\r\n     (.PACKAGE_PIN(led),\r\n      .CLOCK_ENABLE(1'b1),\r\n      .OUTPUT_CLK(clockbuf),\r\n      .OUTPUT_ENABLE(1'b1),\r\n      .D_OUT_0(ledi[0]), // data out to pin                                                                                              \r\n      .D_OUT_1(ledi[1]));\r\n```\r\n\r\n![lecroy23](https://cloud.githubusercontent.com/assets/6054322/23815028/3d8667f2-05a3-11e7-9ce0-b14b1dd9df29.png)\r\n\r\n![ice40ddr](https://cloud.githubusercontent.com/assets/6054322/23815016/2f5925fc-05a3-11e7-97f7-5e66b20e9131.png)\r\n\r\nNote the difference in the order of the output bits.\r\n00 11 01 10 00 11 00 for simulation\r\n00 11 _10 01_ 00 11 00 in hardware\r\n\r\nled and clockbuf in the GTKWave trace are the two signals on the scope.\r\n\r\nThe chip is an ICE40HX1K.\r\nI'm currently planning to work around it by doubling the clock frequency.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-03-10",
+  "closed_at": "2017-03-11",
+  "code_blocks": [
+    "reg [1:0] ledi;\r\n   always @ (posedge clockbuf)\r\n     begin\r\n        case(count[5:0])\r\n          0: ledi <= 2'b00;\r\n          1: ledi <= 2'b11;\r\n          2: ledi <= 2'b01;\r\n          3: ledi <= 2'b10;\r\n          4: ledi <= 2'b00;\r\n          5: ledi <= 2'b11;\r\n          6: ledi <= 2'b00;\r\n\r\n          default: ledi <= 2'b11;\r\n        endcase\r\n     end\r\n\r\n   SB_IO #(.PIN_TYPE(6'b110000), .IO_STANDARD(\"SB_LVCMOS\")) led_ddr\r\n     (.PACKAGE_PIN(led),\r\n      .CLOCK_ENABLE(1'b1),\r\n      .OUTPUT_CLK(clockbuf),\r\n      .OUTPUT_ENABLE(1'b1),\r\n      .D_OUT_0(ledi[0]), // data out to pin                                                                                              \r\n      .D_OUT_1(ledi[1]));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

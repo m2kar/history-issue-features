@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 301,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/301",
+  "title": "unexpected behaviour change since v10.2",
+  "body": "Hi,\r\nSince v10.2 one further simulation step seems to be required for continuous assingments inside *always* procedure, and not for the same logic described with *assign*.\r\nLink to testcase: https://github.com/akukulanski/iverilog-testcase\r\n\r\nTestcase description:\r\nIn the repo there are two tests which are the same, except that one has an initial extra clock delay before reading the output. In iverilog 10.1 both tests pass, in v10.2 only the one with the extra delay. The failure is because the output signal has undetermined value in the first read.\r\n\r\nNow, if I change this:\r\n```verilog\r\nreg x;\r\nalways @* begin\r\n    x = 1'h0;\r\n    casez (y )\r\n      1'h0:\r\n          x = 1'h1;\r\n      1'h1:\r\n          x = 1'h0;\r\n    endcase\r\nend\r\n```\r\n\r\nTo this: (which describes the same logic)\r\n```verilog\r\nwire x;\r\nassign x = (y == 1'h0) ?\r\n           1'h1 : 1'h0;\r\n```\r\nIt works and both test PASS with **both versions**.\r\n\r\nIs this a bug or am I missing something?\r\n\r\nThanks!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-25",
+  "closed_at": "2020-01-28",
+  "code_blocks": [
+    "reg x;\r\nalways @* begin\r\n    x = 1'h0;\r\n    casez (y )\r\n      1'h0:\r\n          x = 1'h1;\r\n      1'h1:\r\n          x = 1'h0;\r\n    endcase\r\nend",
+    "wire x;\r\nassign x = (y == 1'h0) ?\r\n           1'h1 : 1'h0;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

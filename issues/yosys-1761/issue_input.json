@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1761,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1761",
+  "title": "opt_merge: speedup",
+  "body": "Previously, a `std::map` was used to keep the cells seen so far, using a custom comparator function which first looks at a cell's type, as well as some other factors like the existence of a keep attribute, before using a custom hash (cached so only run once per cell) to quickly check if same.\r\n\r\nTransformed the `std::map` container into a ~`std::unordered_map`~ `dict` that maps directly from hash-string to cell, with a match triggering a more complex equality comparison (as before) to check that they really are identical before merging. Optimised many things inside the comparator and hash function along the way. \r\n\r\n*****\r\n\r\nNow I've built this mostly preserving the existing (and potentially expensive) hashing function, however, we need not keep it so complex, since we are resistant to collisions anyway by always doing an full compare. For one, we are SHA1-ing a long string to get a short string, which then gets hashed again into a `size_t` when using the ~`unordered_map`~ `dict`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-11",
+  "closed_at": "2020-03-31",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

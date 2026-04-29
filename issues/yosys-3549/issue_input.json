@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3549,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3549",
+  "title": "CXXRTL edge detector not working for non-input clocks",
+  "body": "### Version\n\nYosys 0.22 (git sha1 f109fa3d4c5, gcc 11.3.0 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```verilog\r\nmodule top (input logic clk);\r\n    logic[7:0] counter;\r\n    logic clkdiv;\r\n    always_ff @(posedge clk) clkdiv <= ~clkdiv;\r\n    always_ff @(posedge clkdiv) counter <= counter + 1;\r\nendmodule\r\n```\r\nexport to c++ with `write_cxxrtl`, simulate with trivial testbench toggleing `clk` every cycle.\r\n\n\n### Expected Behavior\n\n`clkdiv` toggles at half the rate of `clk`.\r\n`counter` increases at every `posedge` of `clkdiv`\n\n### Actual Behavior\n\n`counter` does not increase at all.\r\nIt seems this is related to the clock detection `posedge_p_clkdiv`.\r\nIt is called in `p_top::eval` at the very beginning, before a new value for `p_clkdiv.next` has been calculated.\r\nBy the next time `p_top::eval` is called `p_clkdiv` is already `commit`ed, thus missing the posedge.",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2022-11-10",
+  "closed_at": null,
+  "code_blocks": [
+    "module top (input logic clk);\r\n    logic[7:0] counter;\r\n    logic clkdiv;\r\n    always_ff @(posedge clk) clkdiv <= ~clkdiv;\r\n    always_ff @(posedge clkdiv) counter <= counter + 1;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

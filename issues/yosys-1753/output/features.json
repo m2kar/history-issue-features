@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 1753,
+  "title": "Add ScriptPass::run_nocheck and use for abc9",
+  "features": [
+    {
+      "name": "large parameterized module chain",
+      "category": "general",
+      "description": "Code should include a top module with a large unpacked wire array connected through a chain of 2000+ parameterized module instantiations",
+      "snippet": "module xorx #(parameter [31:0] b = 0) (input [31:0] a, output [31:0] y);\n\tassign y = a ^ b;\nendmodule\n\nmodule top(input [31:0] a, output [31:0] y);\n\tlocalparam N = 2000;\n\twire [31:0] s[0:N];\n\tgenerate\n\t\tgenvar i;\n\t\tfor (i = 0; i < N; i = i + 1'b1) begin\n\t\t\txorx #(.b(i)) xor_i(.a(s[i]), .y(s[i+1]));\n\t\tend\n\tendgenerate\n\tassign s[0] = a;\n\tassign y = s[N];\nendmodule",
+      "tags": ["parameterized_module", "generate_loop", "large_unpacked_array"],
+      "source_bug_id": "yosys-1753",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1753",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "performance_regression"
+    },
+    {
+      "name": "noflatten with large generate",
+      "category": "general",
+      "description": "Code should include a large generate loop with parameterized instantiations used with noflatten synthesis attribute",
+      "snippet": "(* noflatten *) module sub(output [31:0] y);\n\tparameter P = 0;\n\tassign y = P;\nendmodule\n\nmodule top(output [31:0] y);\n\tgenvar i;\n\twire [31:0] w[0:999];\n\tfor (i = 0; i < 1000; i = i + 1) begin\n\t\tsub #(.P(i)) s(.y(w[i]));\n\tend\n\tassign y = w[999];\nendmodule",
+      "tags": ["noflatten", "generate_loop", "parameterized_instantiation"],
+      "source_bug_id": "yosys-1753",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1753",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "performance_regression"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1908,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1908",
+  "title": "Yosys aborts on $memrd/wr cells when saving json, reloading json, and continuing the same process ",
+  "body": "## Steps to reproduce the issue\r\n\r\nStart Yosys and do this:\r\n```\r\nread_verilog CpuComplex.v\r\nread_verilog -lib -D_ABC +/ice40/cells_sim.v\r\nhierarchy -check -top CpuComplex   \r\nproc\r\nwrite_json CpuComplex.proc.json\r\nexit\r\n```\r\n\r\nRestart Yosys and do this:\r\n```\r\nread_json CpuComplex.proc.json\r\nflatten\r\n```\r\n\r\n\r\n\r\nFull repro environment can be found here: https://github.com/tomverbeure/yosys_error/tree/save_reload_crash.\r\n\r\nJust clone and execute  `./run.sh`.\r\n\r\n## Expected behavior\r\n\r\nI expected to be able to use JSON to save and restore state and pick up where I left off.\r\n\r\n[According](https://old.reddit.com/r/yosys/comments/fzrdje/yosys_aborts_when_saving_during_an_intermediate/fn5umzf/) to @daveshah1, the JSON netlist format shouldn't be used for that.\r\n\r\nBut at least, Yosys should bail with some error instead of just aborting.\r\n\r\n## Actual behavior\r\n\r\nYosys aborts as follows:\r\n\r\n```\r\n...\r\nImporting module CCPipelinedMemoryBusRam from JSON tree.\r\nImporting module CCMasterArbiter from JSON tree.\r\n\r\n2. Executing FLATTEN pass (flatten design).\r\nUsing template VexRiscv for cells of type VexRiscv.\r\n<suppressed ~1 debug messages>\r\nERROR: Assert `memory_renames.count(memid) != 0' failed in passes/techmap/techmap.cc:425.\r\n```\r\n\r\nThe abort is caused by the presence of `$memrd` and `$memwr` cells in the netlist. When I remove those, Yosys proceeds as expected.\r\n\r\n## Work around\r\n\r\nUse `write_ilang`/`read_ilang` instead of  `write_json`/`read_json`. That works fine.\r\n\r\nThe reason I wanted to use json is because it doesn't require a custom parser for most languages.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-12",
+  "closed_at": "2021-03-15",
+  "code_blocks": [
+    "...\r\nImporting module CCPipelinedMemoryBusRam from JSON tree.\r\nImporting module CCMasterArbiter from JSON tree.\r\n\r\n2. Executing FLATTEN pass (flatten design).\r\nUsing template VexRiscv for cells of type VexRiscv.\r\n<suppressed ~1 debug messages>\r\nERROR: Assert `memory_renames.count(memid) != 0' failed in passes/techmap/techmap.cc:425."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 463,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/463",
+  "title": "SMT2 file left behind upon failure",
+  "body": "I have a design that fails to build an SMT2 file via yosys.  (The design likely has a bug.)  However, yosys leaves behind an SMT2 file--despite the fact that it returned a failing error code.  This can then be used in a make script (erroneously) assuming that the SMT2 file was created validly, leading to further problems down the road.\r\n\r\n```sh-4.3$ make axim2wbsp\r\nyosys -ql axim2wbsp.yslog -s axim2wbsp.ys\r\nERROR: Unsupported cell type $shiftx for cell $paramod$81c5029e495907570fed704a1cc87bca34548adb\\aximwr2wbsp.$shiftx$../../rtl/aximwr2wbsp.v:258$4723.\r\nMakefile:65: recipe for target 'axim2wbsp.smt2' failed\r\nmake: *** [axim2wbsp.smt2] Error 1\r\nsh-4.3$ make axim2wbsp\r\nrm -f axim2wbsp.check\r\nyosys-smtbmc --presat -s yices -t 36 --dump-vcd axim2wbsp.vcd axim2wbsp.smt2\r\n##      0   0:00:00  Solver: yices\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 400, in <module>\r\n    assert topmod is not None\r\nAssertionError\r\n^CException ignored in: <module 'threading' from '/usr/lib/python3.5/threading.py'>\r\nTraceback (most recent call last):\r\n  File \"/usr/lib/python3.5/threading.py\", line 1288, in _shutdown\r\n    t.join()\r\n  File \"/usr/lib/python3.5/threading.py\", line 1054, in join\r\n    self._wait_for_tstate_lock()\r\n  File \"/usr/lib/python3.5/threading.py\", line 1070, in _wait_for_tstate_lock\r\n    elif lock.acquire(block, timeout):\r\n```\r\n\r\nA second but related issue is that yosys-smtbmc fails to properly crash on error--it needs to be killed with a control C.\r\n\r\nDan",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-11-30",
+  "closed_at": "2017-11-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

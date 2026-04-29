@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3953,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3953",
+  "title": "write_smt2: Check for constant bool after fully resolving signal",
+  "body": "Fixes #3769.\r\n\r\nThe issue occured when exporting a bit that is driven through some connections by the output of a cell, but is known to be a constant. This happens with e.g. the following\r\n```verilog\r\nmodule top(input wire a, output wire b);\r\nwire [1:0] inner = |a;\r\nassign b = inner[1];\r\nendmodule\r\n```\r\nwhere `b` is always `0`, but is driven by the `$reduce_or` cell.\r\n\r\nThe previous code would export the `$reduce_or` just for `inner[0]`. When exporting `b`, the `sigmap` would be unable to map `b` through to the constant value driving it, so would create a fresh `declare-fun` for it.\r\n\r\nWith this change, when exporting `b` we first ensure that if there is a cell driving `b` it has been mapped and apply the `sigmap`. This allows the subsequent code to see that `b` is constant, and thus emit `true`/`false` directly, instead of doing `declare-fun`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-09-24",
+  "closed_at": "2024-11-11",
+  "code_blocks": [
+    "module top(input wire a, output wire b);\r\nwire [1:0] inner = |a;\r\nassign b = inner[1];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

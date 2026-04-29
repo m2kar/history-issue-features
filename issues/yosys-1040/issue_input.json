@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1040,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1040",
+  "title": "blif .subckt uses wrong indices for input/output vector not starting from 0",
+  "body": "## Steps to reproduce the issue\r\n\r\nIn the verilog for the provided testbench ([blif_index.tar.gz](https://github.com/YosysHQ/yosys/files/3219345/blif_index.tar.gz)) file a subcircuit is instantiated with an input vector that is not starting from 0:\r\n```verilog\r\nmodule dut_sub(input clk, input [32:2] a, output [32:2] a_l);\r\n\r\nalways @(posedge clk) a_l <= a;\r\n\r\nendmodule // dut_sub\r\n\r\n\r\nmodule dut(input clk, input[32:2] a, output [32:2] a_l);\r\n\r\ndut_sub sub(.clk(clk), .a(a), .a_l(a_l));\r\n\r\nendmodule // dut\r\n```\r\n\r\nIn the provided yosys script this code is just run through `synth` and `write_blif`\r\n\r\nThis bug report was triggered by ao68000 where top cell has ADR_O output with vector not starting from 0.\r\n\r\n## Actual behavior\r\n\r\nOne gets the following `.subckt` in the output blif:\r\n```blif\r\n...\r\n.subckt dut_sub a[0]=a[2] a[1]=a[3] a[2]=a[4] a[3]=a[5] a[4]=a[6] a[5]=a[7] a[6]=a[8] a[7]=a[9] a[8]=a[10] a[9]=a[11] a[10]=a[12] a[11]=a[13] a[12]=a[14] a[13]=a[15] a[14]=a[16] a[15]=a[17] a[16]=a[18] a[17]=a[19] a[18]=a[20] a[19]=a[21] a[20]=a[22] a[21]=a[23] a[22]=a[24] a[23]=a[25] a[24]=a[26] a[25]=a[27] a[26]=a[28] a[27]=a[29] a[28]=a[30] a[29]=a[31] a[30]=a[32] a_l[0]=a_l[2] a_l[1]=a_l[3] a_l[2]=a_l[4] a_l[3]=a_l[5] a_l[4]=a_l[6] a_l[5]=a_l[7] a_l[6]=a_l[8] a_l[7]=a_l[9] a_l[8]=a_l[10] a_l[9]=a_l[11] a_l[10]=a_l[12] a_l[11]=a_l[13] a_l[12]=a_l[14] a_l[13]=a_l[15] a_l[14]=a_l[16] a_l[15]=a_l[17] a_l[16]=a_l[18] a_l[17]=a_l[19] a_l[18]=a_l[20] a_l[19]=a_l[21] a_l[20]=a_l[22] a_l[21]=a_l[23] a_l[22]=a_l[24] a_l[23]=a_l[25] a_l[24]=a_l[26] a_l[25]=a_l[27] a_l[26]=a_l[28] a_l[27]=a_l[29] a_l[28]=a_l[30] a_l[29]=a_l[31] a_l[30]=a_l[32] clk=clk\r\n...\r\n```\r\n\r\n## Expected behavior\r\n\r\nUse of proper indices for `.subckt`:\r\n```blif\r\n...\r\n.subckt dut_sub a[2]=a[2] a[3]=a[3] a[4]=a[4] a[5]=a[5] a[6]=a[6] a[7]=a[7] a[8]=a[8] a[9]=a[9] a[10]=a[10] a[11]=a[11] a[12]=a[12] a[13]=a[13] a[14]=a[14] a[15]=a[15] a[16]=a[16] a[17]=a[17] a[18]=a[18] a[19]=a[19] a[20]=a[20] a[21]=a[21] a[22]=a[22] a[23]=a[23] a[24]=a[24] a[25]=a[25] a[26]=a[26] a[27]=a[27] a[28]=a[28] a[29]=a[29] a[30]=a[30] a[31]=a[31] a[32]=a[32] a_l[0]=a_l[2] a_l[1]=a_l[3] a_l[2]=a_l[4] a_l[3]=a_l[5] a_l[4]=a_l[6] a_l[5]=a_l[7] a_l[6]=a_l[8] a_l[7]=a_l[9] a_l[8]=a_l[10] a_l[9]=a_l[11] a_l[10]=a_l[12] a_l[11]=a_l[13] a_l[12]=a_l[14] a_l[13]=a_l[15] a_l[14]=a_l[16] a_l[15]=a_l[17] a_l[16]=a_l[18] a_l[17]=a_l[19] a_l[18]=a_l[20] a_l[19]=a_l[21] a_l[20]=a_l[22] a_l[21]=a_l[23] a_l[22]=a_l[24] a_l[23]=a_l[25] a_l[24]=a_l[26] a_l[25]=a_l[27] a_l[26]=a_l[28] a_l[27]=a_l[29] a_l[28]=a_l[30] a_l[29]=a_l[31] a_l[30]=a_l[32] clk=clk\r\n...\r\n```\r\n",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-05-25",
+  "closed_at": "2019-05-25",
+  "code_blocks": [
+    "module dut_sub(input clk, input [32:2] a, output [32:2] a_l);\r\n\r\nalways @(posedge clk) a_l <= a;\r\n\r\nendmodule // dut_sub\r\n\r\n\r\nmodule dut(input clk, input[32:2] a, output [32:2] a_l);\r\n\r\ndut_sub sub(.clk(clk), .a(a), .a_l(a_l));\r\n\r\nendmodule // dut"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

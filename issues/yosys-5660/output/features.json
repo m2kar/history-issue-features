@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 5660,
+  "title": "keep_hierarchy Verilog attribute leading to unconstrained top level ports from internal signals",
+  "features": [
+    {
+      "name": "keep_hierarchy attribute on submodule instance",
+      "category": "general",
+      "description": "Code should include a module instance annotated with the keep_hierarchy Verilog attribute set to TRUE, placed inside a non-top module",
+      "snippet": "(* keep_hierarchy = \"TRUE\" *) BufferCC_1 io_rxd_buffercc (\n    .io_dataIn  (io_rxd),\n    .io_dataOut (io_rxd_buffercc_io_dataOut),\n    .clk        (clk),\n    .axiReset   (axiReset)\n);",
+      "tags": ["keep_hierarchy", "attribute", "instance", "synthesis_directive"],
+      "source_bug_id": "5660",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5660",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-level hierarchy with preserved sub-module boundaries",
+      "category": "general",
+      "description": "Code should include a three-level module hierarchy where a top module instantiates a mid-level module which in turn instantiates a leaf module, with internal signals that must not propagate to the top-level ports",
+      "snippet": "module TopLevel (\n  output wire uart_txd,\n  input  wire clk\n);\n  MidLevel mid (\n    .clk(clk),\n    .data_out(txd_internal)\n  );\n  assign uart_txd = txd_internal;\nendmodule\n\nmodule MidLevel (\n  output wire data_out,\n  input  wire clk\n);\n  (* keep_hierarchy = \"TRUE\" *) LeafModule leaf (\n    .clk(clk),\n    .result(data_out)\n  );\nendmodule",
+      "tags": ["hierarchy", "module_instantiation", "keep_hierarchy", "multi_level"],
+      "source_bug_id": "5660",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5660",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "internal signal leakage across hierarchy boundary",
+      "category": "data_model",
+      "description": "Code should include an internal wire in a preserved-hierarchy submodule that is used only internally but may be incorrectly promoted as a top-level port during synthesis",
+      "snippet": "module LeafModule (\n  input  wire io_dataIn,\n  output wire io_dataOut,\n  input  wire clk,\n  input  wire axiReset\n);\n  reg  io_dataOut_r;\n  wire internal_sync_signal;\n  assign internal_sync_signal = io_dataIn;\n  always @(posedge clk) io_dataOut_r <= internal_sync_signal;\n  assign io_dataOut = io_dataOut_r;\nendmodule",
+      "tags": ["internal_signal", "hierarchy_boundary", "signal_leakage", "wire"],
+      "source_bug_id": "5660",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5660",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

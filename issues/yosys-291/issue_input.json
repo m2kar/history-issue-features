@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 291,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/291",
+  "title": "ERROR: Failed to resolve identifier - weird behaviour",
+  "body": "i get good output when parsing : \r\n\r\nmodule fifo (\r\ninput reset,               \r\ninput clk,                     \r\ninput any_push,\r\ninput any_pop\r\n);\r\n reg  [1:0] fifo_head [3:0]; \r\n reg  [1:0]  fifo_next [3:0];  \r\n wire [1:0]  fifo_head4samp [3:0];\r\n genvar fifo_num ;\r\n integer  pntr_num,fifoifo_num;  \r\n\r\n generate \r\n   for (fifo_num=0; fifo_num<4; fifo_num=fifo_num+1) begin:fifo_gen\r\n       assign fifo_head4samp[fifo_num] = fifo_next[fifo_head[fifo_num]] ;  /* **this is line 16** */\r\n   end\r\n endgenerate\r\nendmodule\r\n\r\nBUT when adding the following : \r\n\r\nalways @(posedge clk or negedge reset)\r\n begin\r\n   if (!reset) begin\r\n     for (pntr_num=0; pntr_num<4; pntr_num=pntr_num+1)\r\n       fifo_next[pntr_num] <= {2{1'b0}} ;     \r\n   end\r\n   else if (any_push | any_pop) begin\r\n     for (fifoifo_num=0; fifoifo_num<4; fifoifo_num=fifoifo_num+1) begin\r\n       fifo_head[fifoifo_num] <= fifo_head4samp[fifoifo_num] ;   \r\n     end\r\n   end \r\n end\r\n\r\nendmodule\r\n\r\ni get : \r\nERROR: Failed to resolve identifier \\fifo_head for width detection at fifo.v:16!\r\n\r\nif i remove the fifo_next assignment the parsing also done successfully\r\n\r\nThanks\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-01-15",
+  "closed_at": "2017-01-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

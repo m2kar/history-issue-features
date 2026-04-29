@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2999,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2999",
+  "title": "Writing a register array does not work",
+  "body": "## How to reproduce\r\n\r\nThe setup: I have a memory with a read and write port, `reg [31:0] mem [0:3]`. A simple counter will serve us as address. The memory is initialized to all `0xAAAA` and we want to write it all to `0xBBBB`. Here's the Verilog code (The contents of `mem_reset.bin` is all `0xAAAA`, you can imagine):\r\n\r\n```verilog\r\nmodule MulAccVerifier (\r\n  input               reset,\r\n  input               clk\r\n);\r\n  reg [2:0] counter;\r\n  reg [31:0] mem [0:3];\r\n\r\n  /* Init handling */\r\n  always @(posedge clk) begin\r\n    if($initstate()) begin\r\n      assume(reset);\r\n    end\r\n  end\r\n  initial begin\r\n    $readmemb(\"mem_reset.bin\",mem);\r\n  end\r\n\r\n  always @(posedge clk) begin\r\n    if(!reset) begin\r\n      if(counter == 3'b111) begin\r\n        /* Fail on purpose for debugging */\r\n        assert(1'b0);\r\n        assert((mem[counter[1:0]] == 32'hBBBB));\r\n      end\r\n    end\r\n  end\r\n\r\n  always @(posedge clk) begin\r\n    if(reset) begin\r\n      counter <= 3'b000;\r\n    end else begin\r\n      counter <= (counter + 3'd001);\r\n      mem[counter[1:0]] <= 32'hBBBB;\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\n## Actual behavior\r\n\r\n![image](https://user-images.githubusercontent.com/14054505/132772338-b32720fd-6905-41d2-88ca-0a15aacbc1b0.png)\r\n\r\nThe writes are very sporadic. They may be cycles late, and more often than not only one of the values is written at all. This is really non-deterministic based on what the solver produces as counter-example (well each run gives the same result, but the result may vary if the net list changes), and I couldn't really figure out a pattern.\r\n\r\nNote that I am running this through SymbiYosys because this initially came up during formal tests and the issue didn't appear in my simulation (I think it's using Verilator, but not sure). The `.sby` file is very simple, it sets `mode bmc`, `depth 15`, `[engines] smtbmc` and reads the verilog and the bin file.\r\n\r\n## Expected behavior\r\n\r\n![image](https://user-images.githubusercontent.com/14054505/132772638-2326c953-fcf6-414f-aee4-280dbe6d4fab.png)\r\n\r\nI got this behavior by replacing the `mem[counter[1:0]] <= 32'hBBBB;` line in the above snippet with\r\n\r\n```verilog\r\n      int i;\r\n      for (i = 0; i < 4; i = i + 1) begin\r\n        if (counter[1:0] == i) begin\r\n          mem[i] <= 32'hBBBB;\r\n        end\r\n      end\r\n```\r\n\r\nWith that change, Verilog prints `Warning: Replacing memory \\mem with list of registers.` which I think may be relevant to locate the root source of the bug.\r\n\r\nI did not check in-depth for issue duplicates, but this may be related to #2570. My `yosys` version is `Yosys 0.9+4052 (git sha1 687f381b69, gcc 10.3.0 -fPIC -Os)`, I will try again with master tomorrow. `symbiyosys` is from master.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-09",
+  "closed_at": "2021-09-10",
+  "code_blocks": [
+    "module MulAccVerifier (\r\n  input               reset,\r\n  input               clk\r\n);\r\n  reg [2:0] counter;\r\n  reg [31:0] mem [0:3];\r\n\r\n  /* Init handling */\r\n  always @(posedge clk) begin\r\n    if($initstate()) begin\r\n      assume(reset);\r\n    end\r\n  end\r\n  initial begin\r\n    $readmemb(\"mem_reset.bin\",mem);\r\n  end\r\n\r\n  always @(posedge clk) begin\r\n    if(!reset) begin\r\n      if(counter == 3'b111) begin\r\n        /* Fail on purpose for debugging */\r\n        assert(1'b0);\r\n        assert((mem[counter[1:0]] == 32'hBBBB));\r\n      end\r\n    end\r\n  end\r\n\r\n  always @(posedge clk) begin\r\n    if(reset) begin\r\n      counter <= 3'b000;\r\n    end else begin\r\n      counter <= (counter + 3'd001);\r\n      mem[counter[1:0]] <= 32'hBBBB;\r\n    end\r\n  end\r\nendmodule",
+    "int i;\r\n      for (i = 0; i < 4; i = i + 1) begin\r\n        if (counter[1:0] == i) begin\r\n          mem[i] <= 32'hBBBB;\r\n        end\r\n      end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5370,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5370",
+  "title": "pyosys: rewrite using pybind11",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\npybind11 is a reasonably more lightweight library that is subjectively a bit more intuitive to use. But more importantly, it does not require an external library (boost) to be installed on the machine, and does not require boost to be compiled for every version of Python.\r\n\r\n_Explain how this is achieved._\r\n\r\n- Rewrite all Python features to use the pybind11 library instead of boost::python. Unlike boost::python, pybind11 is a header-only library that is just included by Pyosys code ~~saving a lot of compile time on wheels~~ [EDIT: as it turns out not really, I used enough C++ templates to offset the time gain from not compiling boost]\r\n- Wrapper generator entirely rewritten using a fault-tolerant c++ header-parsing library\r\n   - Most of the \"translation\" moved outside of the file\r\n- Move Python-related elements to `pyosys` directory at the root of the repo\r\n- Create really short test set for pyosys that just exercises basic functionality\r\n\r\n### Pyosys API Breaks\r\n- The embedded interpreter now requires `from pyosys import libyosys as ys` like wheels\r\n- Changes in bridging semantics for some types\r\n  - Containers are declared as \"opaque types\" and are passed by reference to Python - many methods have been implemented to make them feel right at home without the overhead/ambiguity of copying to Python and then copying back after mutation\r\n  - Only classes that handle virtual methods are Monitor and Pass, which now use \"trampoline\" pattern to support overriding virtual methods in Python: virtual methods no longer use (or support) `py_` prefix\r\n- Overloaded methods no longer include type information in the function name, e.g. `Pass.call__YOSYS_NAMESPACE_RTLIL_Design__std_vector_string_` is just `Pass.call` (pybind11 handles overload resolution)\r\n- `ys.Yosys` has been renamed `ys.Globals` to more adequately communicate its purpose\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\n```bash\r\npip3 install -v .\r\npython3 ./tests/pyosys/run_tests.py\r\n```\r\n\r\n---\r\n\r\nResolves #4591 \r\n\r\n\r\n---\r\n\r\nTODO:\r\n\r\n- [x] rebase on main\r\n- [x] set operations (union, intersection, difference, etc)\r\n- [x] equivalence operators (need constexpr to determine if containers are comparable)\r\n- [x] global variables\r\n- [x] study ~~and address~~ memory concerns raised by @jix ",
+  "labels": [
+    "merge-after-release"
+  ],
+  "state": "closed",
+  "created_at": "2025-09-20",
+  "closed_at": "2025-10-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

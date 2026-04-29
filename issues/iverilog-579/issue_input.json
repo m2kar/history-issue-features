@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 579,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/579",
+  "title": "Encoding of special characters (tab, lf, ...) in string constants",
+  "body": "While writing some test bench code i've detected some strange behaviour with strings that contain special characters as TAB, LF, CR, ESC etc. If these characters are contained natively or as escaped character (\\t, \\n, \\ooo ...) in the string they will be translated into their octal escape representation \\011, \\012, which is then stored in the data array! If the string is build with a concatenation operator and explicit byte values, everything looks fine as expected.\r\n\r\nThe two strings in the following example should have the same content:\r\n```\r\nmodule strSpecials();\r\n  string isOk   = {\"A\", 8'd9, \"B\", 8'd9, \"C\", 8'd9, 8'd27, \"N\", 8'd10, 8'd13};\r\n  string failed = \"A\\tB\tC\\011\\033\\116\\n\\015\";\t// second space is a typed tab character\r\n  initial begin\r\n    $display(\"string[%3d]: %s\", $size(isOk), isOk);\r\n    // --> string[ 10]: A\tB\tC\t^[N\r\n    $display(\"string[%3d]: %s\", $size(failed), failed);\r\n    // --> string[ 28]: A\\011B\\011C\\011\\033N\\012\\015\r\n  end\r\nendmodule\r\n```\r\n\r\nUsing (Windows 10, 64-bit versions from https://bleyer.org/icarus/)\r\nIcarus Verilog version 12.0 (devel) (s20150603-965-g55e06db6) or\r\nIcarus Verilog version 12.0 (devel) (s20150603-1110-g18392a46)\r\nwith options -g2009 or -g2012\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-10",
+  "closed_at": "2022-03-06",
+  "code_blocks": [
+    "module strSpecials();\r\n  string isOk   = {\"A\", 8'd9, \"B\", 8'd9, \"C\", 8'd9, 8'd27, \"N\", 8'd10, 8'd13};\r\n  string failed = \"A\\tB\tC\\011\\033\\116\\n\\015\";\t// second space is a typed tab character\r\n  initial begin\r\n    $display(\"string[%3d]: %s\", $size(isOk), isOk);\r\n    // --> string[ 10]: A\tB\tC\t^[N\r\n    $display(\"string[%3d]: %s\", $size(failed), failed);\r\n    // --> string[ 28]: A\\011B\\011C\\011\\033N\\012\\015\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

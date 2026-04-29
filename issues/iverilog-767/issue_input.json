@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 767,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/767",
+  "title": "Prevent invalid port redeclaration",
+  "body": "(System)Verilog allows to declare the port direction separate from the\r\nsignal declaration. E.g.\r\n\r\n```SystemVerilog\r\noutput x;\r\ninteger x;\r\n```\r\n\r\nBut this is only allowed if the port declaration\r\n * does not have an explicit net type\r\n * does not have an explicit data type\r\n * is a non-ANSI style declaration\r\n\r\nFor all other cases of port declarations the signal is considered fully\r\ndefined and it is not allowed to have a separate signal declaration.\r\n\r\nIn addition the declared packed dimensions need to match between the port\r\nand signal declaration.\r\n\r\nIn the current implementation there are a few cases where this is not\r\nhandled correctly.\r\n\r\n1) It is possible to declare non-ANSI task ports with the same name over\r\nand over again, if it was declared as a signal before the port.\r\n\r\n```SystemVerilog\r\ntask t;\r\n  string x;\r\n  input logic x;\r\n  output real x;\r\nendtask\r\n```\r\n\r\n2) It is possible to re-declare non-ANSI input ports of a module that have\r\na data type, but no explicit net type.\r\n\r\n```SystemVerilog\r\nmodule M;\r\n  input integer x;\r\n  wire integer x;\r\nendmodule\r\n```\r\n\r\n3) It is possible to re-declare a ANSI port if it has an implicit data type.\r\n\r\n```SystemVerilog\r\nmodule M(output [1:0] x);\r\n  reg [1:0] x;\r\nendmodule\r\n```\r\n\r\n4) It is possible to declare a vector signal for a scalar non-ANSI task\r\nport.\r\n\r\n```SystemVerilog\r\ntask t;\r\ninput x;\r\nreg [7:0] x;\r\n```\r\n\r\nTo handle all of these correctly refactor signal declaration and lookup a\r\nbit.\r\n\r\nThe PWire class that represents a signal already has two flags `port_set_`\r\nand `net_set_`. These flags indicate whether a signal has already been used\r\nin a port or signal declaration. A port declaration that includes an\r\nexplicit data type is considered both a port and signal declaration.\r\n\r\nUse these flags to decide whether it is possible to extend an existing\r\ndeclaration. E.g. when creating a port without an explicit data type and a\r\nPWire by that name already exists and the `port_set_` flag is not set\r\nextend the existing PWire. On the other hand if the `port_set_` flag is\r\nalready set report an error.\r\n\r\nSimilar for signals but with the `net_set_` flag.\r\n\r\nFor port declarations with an explicit data type or ANSI style port\r\ndeclarations it is always an error if a PWire by that name already exists.\r\n\r\nThis is for both module and task/function ports.\r\n\r\nThere is a small number of existing regression tests that is not compliant\r\nwith the new strict behavior.\r\n\r\nThere is one test which re-declares ANSI ports as variables. This test is\r\nnot standard compliant and was added in [response to a similarly\r\nnon-compliant test in the Yosys test suite](https://sourceforge.net/p/iverilog/mailman/message/34182256/). That test has sub-sequentially\r\nbeen [updated to be standard compliant.](https://github.com/YosysHQ/yosys/issues/1570)\r\n\r\nThere are a few tests that mix scalar ports with non-scalar signals. These\r\ntests are updated to run with the existing no-io-range-error flag, which turns\r\nthe error into a warning.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-14",
+  "closed_at": "2022-09-15",
+  "code_blocks": [
+    "output x;\r\ninteger x;",
+    "task t;\r\n  string x;\r\n  input logic x;\r\n  output real x;\r\nendtask",
+    "module M;\r\n  input integer x;\r\n  wire integer x;\r\nendmodule",
+    "module M(output [1:0] x);\r\n  reg [1:0] x;\r\nendmodule",
+    "task t;\r\ninput x;\r\nreg [7:0] x;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

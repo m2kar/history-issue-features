@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 728,
+  "title": "equiv_make is confused by feedback through module port",
+  "features": [
+    {
+      "name": "feedback_through_DFF_output_to_MUX",
+      "category": "timing",
+      "description": "Code should include a feedback loop where DFF output feeds back through MUX to DFF input",
+      "snippet": "wire [2:0] o;\nwire [2:0] v$next;\nwire [2:0] v;\nwire [2:0] x;\nwire y;\nMUX _0_(.A(o), .B(x), .S(y), .Y(v$next));\nDFF _1_(.C(sys_clk), .D(v$next), .Q(o));\nassign v = o;",
+      "tags": ["feedback", "dff", "mux", "state_update"],
+      "source_bug_id": "yosys-728",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/728",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dff_to_dffe_conversion_with_enable",
+      "category": "timing",
+      "description": "Code should include equivalent designs where one uses $_DFF_P_ and another uses $_DFFE_PP_ with enable gating",
+      "snippet": "// gold: simple DFF\nDFF_P _1_(.C(sys_clk), .D(v$next), .Q(o));\n// gate: DFF with enable after dff2dffe conversion\nwire enable;\nDFFE_PP _1_(.C(sys_clk), .D(v$next), .E(enable), .Q(o));",
+      "tags": ["dff", "dffe", "enable", "conversion"],
+      "source_bug_id": "yosys-728",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/728",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "module_output_as_feedback_node",
+      "category": "control_flow",
+      "description": "Code should include a module output port connected to an internal wire that participates in feedback computation",
+      "snippet": "module gold(output [2:0] o, input sys_clk, input [2:0] x, input [3:0] y);\nwire v;\nassign v = o;  // internal wire aliases output for feedback",
+      "tags": ["module_port", "feedback", "wire_alias"],
+      "source_bug_id": "yosys-728",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/728",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mux_select_between_feedback_and_input",
+      "category": "data_model",
+      "description": "Code should include a MUX that selects between DFF output and new input based on select signal",
+      "snippet": "wire [2:0] o;    // DFF output / feedback source\nwire [2:0] x;    // new data input\nwire y;          // select signal\nwire [2:0] v$next;\nMUX _0_(.A(o), .B(x), .S(y), .Y(v$next));",
+      "tags": ["mux", "state_machine", "feedback_select"],
+      "source_bug_id": "yosys-728",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/728",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

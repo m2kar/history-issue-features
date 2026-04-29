@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 80,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/80",
+  "title": "Unexpected behaviour of events edge triggered on register value",
+  "body": "I'm not sure if this is a \"feature\" or a bug. Be easy on me, I'm new to Verilog, so maybe my understanding is faulty.\n\nFrom what I understand, when you set a register's value multiple times in an always at edge block, the register should only take on the last value it was assigned, and not glitch to the values you assigned to it earlier in the block before reaching the final value. This would match the hardware behaviour of a multiplexed input (combinational logic) being fed to a flip flop (register).\n\nI had some code where I had a register that acted as a clock for some other modules that were edge triggered off it. My original usage was more complicated, but my simplified test case has this:\n\n```\nreg cclk;\nreg override;\n\n...\n\nalways @(posedge clk) begin\n    cclk <= 0;\n    if (override) cclk <= 1;\nend\n```\n\nIn this code, I expect cclk to remain high after every clk edge if override is held high, and I don't think cclk should glitch to zero for an instant on every clk edge. However, Icarus is modelling this as cclk momentarily glitching to zero for a zero length period on every clk edge. This causes events on cclk edges to be triggered.\n\nChanging the cclk driving code to this avoids the issue:\n\n```\nalways @(posedge clk) begin\n    if (override) cclk <= 1;\n    else cclk <= 1;\nend\n```\n\nSee my full test case https://gist.github.com/sultanqasim/44b0b5cf8dbf9152ac6e and screenshot of the result http://i.imgur.com/Q3uJrMT.png\n\nIs my understanding of the expected behaviour correct (ie. is this a bug?), or is this a case where the simulation is supposed to differ from reality?\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-10-02",
+  "closed_at": "2015-10-02",
+  "code_blocks": [
+    "reg cclk;\nreg override;\n\n...\n\nalways @(posedge clk) begin\n    cclk <= 0;\n    if (override) cclk <= 1;\nend",
+    "always @(posedge clk) begin\n    if (override) cclk <= 1;\n    else cclk <= 1;\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

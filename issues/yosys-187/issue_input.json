@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 187,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/187",
+  "title": "FSM reencoding issues",
+  "body": "Apologies for the nonspecific issue title, I'm not sure what's the root cause of the bug. I have this code:\n\n``` verilog\nmodule top(\n        (* LOC=\"P4\"  *) output coilA1,\n        (* LOC=\"P6\"  *) output coilA2,\n        (* LOC=\"P8\"  *) output coilB1,\n        (* LOC=\"P10\" *) output coilB2\n    );\n\n    wire strobe;\n    GP_LFOSC #(\n        .OUT_DIV(8'd16),\n        .AUTO_PWRDN(1'b0)\n    ) lfosc (\n        .CLKOUT(strobe)\n    );\n\n    localparam STATE0 = 4'b0100,\n               STATE1 = 4'b0001,\n               STATE2 = 4'b1000,\n               STATE3 = 4'b0010;\n    // (* fsm_encoding=\"auto\" *)\n    reg [3:0] state;\n    always @(posedge strobe)\n        case(state)\n            STATE0:  state <= STATE1;\n            STATE1:  state <= STATE2;\n            STATE2:  state <= STATE3;\n            STATE3:  state <= STATE0;\n            default: state <= STATE0;\n        endcase\n\n    assign {coilA1, coilA2, coilB1, coilB2} = state;\n\nendmodule\n```\n\nIt works, but translates into lots of LUTs. If I uncomment the fsm_encoding attribute, it is translated into four DFFs, which is what I want, but it doesn't work (all outputs are low) anymore because all of them are initialized to 0. If I explicitly initialize it to `STATE0` (and comment out the `default` case), then it is translated into eight DFFs, and, most interestingly, still doesn't work (all outputs stay low), despite one of the DFFs being initialized to 1.\n\nI'm synthesizing using `yosys -p \"synth_greenpak4 -part SLG46620V -json test.txt\" test.v`, using commit e42041204.\n\nI'm not sure what should happen according to the standard in the case where `reg` is uninitialized (though @azonenberg thinks it ought be the same as without the FSM annotation), but the second case seems clearly wrong.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-07-08",
+  "closed_at": "2016-07-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

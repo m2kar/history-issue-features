@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 227,
+  "title": "torder -noautostop",
+  "features": [
+    {
+      "name": "memory array with concurrent read and write ports",
+      "category": "data_model",
+      "description": "Code should include a register-array memory with both a read access and a write access in the same or related always blocks, producing both $memrd and $memwr cells that have a data-flow dependency on one another",
+      "snippet": "reg [7:0] mem [0:15];\nreg [7:0] rdata;\nalways @(posedge clk) begin\n  if (we)\n    mem[waddr] <= wdata;\nend\nalways @(posedge clk) begin\n  rdata <= mem[raddr];\nend",
+      "tags": ["memory", "memrd", "memwr", "reg_array", "read_write"],
+      "source_bug_id": "227",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/227",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "priority mux selection feeding memory read address",
+      "category": "control_flow",
+      "description": "Code should include a chain of if-else or nested conditional expressions selecting a memory read address from multiple sources, producing a $procmux cell whose output drives a memory read port ($memrd), so that the read cell depends on the mux cell in topological order",
+      "snippet": "reg [7:0] mem [0:15];\nreg [3:0] raddr;\nreg [7:0] rdata;\nalways @(*) begin\n  if (sel == 2'b00)\n    raddr = addr0;\n  else if (sel == 2'b01)\n    raddr = addr1;\n  else\n    raddr = addr2;\n  rdata = mem[raddr];\nend",
+      "tags": ["priority_mux", "procmux", "pmuxtree", "memory", "memrd", "control_flow"],
+      "source_bug_id": "227",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/227",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "flattened hierarchy with memory and priority mux",
+      "category": "general",
+      "description": "Code should include a top-level module that instantiates a submodule containing both memory read/write operations and if-else priority selection, so that after hierarchy flattening and proc/pmuxtree passes the resulting netlist has $memwr, $memrd, and $procmux cells whose topological ordering must reflect read-after-write dependencies",
+      "snippet": "module mem_sub(input clk, input we,\n  input [3:0] waddr, raddr,\n  input [7:0] wdata,\n  output reg [7:0] rdata);\n  reg [7:0] mem [0:15];\n  always @(posedge clk) begin\n    if (we) mem[waddr] <= wdata;\n    rdata <= mem[raddr];\n  end\nendmodule\nmodule memtest04(input clk, input we,\n  input [3:0] a, b, input [7:0] d,\n  output [7:0] q);\n  mem_sub inst_m0(.clk(clk),.we(we),\n    .waddr(a),.raddr(b),.wdata(d),.rdata(q));\nendmodule",
+      "tags": ["hierarchy", "flatten", "memory", "priority_mux", "memwr", "memrd", "procmux", "torder"],
+      "source_bug_id": "227",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/227",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2969,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2969",
+  "title": "The simplification of for-loop doesn't produce the expected behavior",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following code:\r\n``` verilog\r\nmodule test (in, out); \r\n  input [3:0] in;  \r\n  output [3:0] out; \r\n  integer i; \r\n  always @(*) begin\r\n    for (i = 0; i < 4; i = i + 1) begin\r\n      out[i] = in[i];\r\n      i = i + 1;\r\n      out[i] = ~in[i];\r\n    end\r\n  end\r\nendmodule\r\n```\r\nAnd process it with:\r\n``` shell\r\nread test.v\r\nhierarchy -top test\r\nproc; opt; techmap; opt;\r\nshow\r\n```\r\n## Expected behavior\r\nI'd expect the behavior of verilog after simplification to look something like:\r\n``` verilog\r\nmodule test (in, out); \r\n  input [3:0] in;  \r\n  output [3:0] out; \r\n  always @(*) begin\r\n    out[0] = in[0];\r\n    out[1] = ~in[1];\r\n    out[2] = in[2];\r\n    out[3] = ~in[3];\r\n  end\r\nendmodule\r\n```\r\n## Actual behavior\r\nInstead, I get:\r\n``` verilog\r\nmodule test (in, out); \r\n  input [3:0] in;  \r\n  output [3:0] out; \r\n  always @(*) begin\r\n    out[0] = ~in[0];\r\n    out[1] = ~in[1];\r\n    out[2] = ~in[2];\r\n    out[3] = ~in[3];\r\n  end\r\nendmodule\r\n```\r\nThe design netlist is shown below:\r\n<img width=\"1067\" alt=\"1629164189543_D99AE6AF-D4BE-4607-9C61-358507A6B11E\" src=\"https://user-images.githubusercontent.com/29685322/129658053-7eee53ef-40e8-4cd3-8a80-df740fd42694.png\">\r\n\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-08-17",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

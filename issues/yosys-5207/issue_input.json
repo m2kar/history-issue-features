@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5207,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5207",
+  "title": "Functional backend error when bitwidths too wide",
+  "body": "### Version\n\nYosys 0.53+39 (git sha1 d8b27d41c, c++ 16.0.0 -fPIC -O3)\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\nUse the file: \n```sv\n(* use_dsp = \"yes\" *) module top(\n\tinput  [17:0] a,\n\tinput  [17:0] b,\n\tinput  [17:0] c,\n\tinput  [17:0] d,\n\toutput [17:0] out,\n\tinput clk);\n\n\tlogic  [35:0] stage0;\n\tlogic  [35:0] stage1;\n\n\talways @(posedge clk) begin\n\tstage0 <= ((d + a) * b) + c;\n\tstage1 <= stage0;\n\tend\n\n\tassign out = stage1;\nendmodule\n```\n\nRun the command:\n```\n yosys -q p 'read_verilog -sv file.sv; hierarchy -top top; prep; clk2fflogic; write_functional_rosette -provides'\n```\n\n\n\n### Expected Behavior\n\nNo error, converts to Rosette\n\n### Actual Behavior\n\nERROR: The design contains an undriven signal stage1. This is not supported by the functional backend. Call setundef with appropriate options to avoid this error. \n\nNote that shrinking the  registers to the correct size fixes the issue. However, I wouldn't expect this to be something that would cause a failure. Is there a way around this?",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-02",
+  "closed_at": "2025-11-24",
+  "code_blocks": [
+    "(* use_dsp = \"yes\" *) module top(\n\tinput  [17:0] a,\n\tinput  [17:0] b,\n\tinput  [17:0] c,\n\tinput  [17:0] d,\n\toutput [17:0] out,\n\tinput clk);\n\n\tlogic  [35:0] stage0;\n\tlogic  [35:0] stage1;\n\n\talways @(posedge clk) begin\n\tstage0 <= ((d + a) * b) + c;\n\tstage1 <= stage0;\n\tend\n\n\tassign out = stage1;\nendmodule",
+    "yosys -q p 'read_verilog -sv file.sv; hierarchy -top top; prep; clk2fflogic; write_functional_rosette -provides'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

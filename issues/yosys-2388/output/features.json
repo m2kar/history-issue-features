@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2388,
+  "title": "shiftx semantics",
+  "features": [
+    {
+      "name": "signed indexed part-select with variable offset",
+      "category": "data_model",
+      "description": "Code should include an upward indexed part-select (+:) where the base index is cast with $signed(), using a multi-bit signal as the dynamic offset",
+      "snippet": "logic [7:0] a;\nlogic [2:0] b;\nlogic [3:0] c;\nassign c = a[$signed(b) +: 4];",
+      "tags": ["indexed_part_select", "signed_cast", "dynamic_slice", "shiftx"],
+      "source_bug_id": "2388",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2388",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional signed shift with negative index detection",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block that checks whether a signal is negative using $signed() comparison, then performs a left shift for negative indices and a right shift for non-negative indices",
+      "snippet": "reg [3:0] tmp;\nreg [3:0] bneg;\nalways @(a or b) begin\n  bneg = -$signed(b);\n  if ($signed(b) < 0)\n    tmp = a << bneg;\n  else\n    tmp = a >> ($signed(b));\nend",
+      "tags": ["signed_cast", "conditional_shift", "negative_index", "always_combinational"],
+      "source_bug_id": "2388",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2388",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "x-literal masking in bitwise or for undefined shift bits",
+      "category": "data_model",
+      "description": "Code should include a 4'bx literal ANDed with a shift-derived bitmask and then ORed into a result to model undefined bits introduced by out-of-range shifts",
+      "snippet": "reg [3:0] tmp;\nreg [3:0] bneg;\nalways @(*) begin\n  bneg = -$signed(b);\n  tmp = (a << bneg) | ((4'bx) & ((1 << (-$signed(b))) - 1));\nend",
+      "tags": ["x_literal", "bitwise_or", "shift", "undefined_bits", "x_propagation"],
+      "source_bug_id": "2388",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2388",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

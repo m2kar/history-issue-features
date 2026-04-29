@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5318,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5318",
+  "title": "pool::do_insert uses expiring value when calling do_hash",
+  "body": "## Description:\nIn the first if branch of the [pool::do_insert](https://github.com/YosysHQ/yosys/blob/d4c4b2106697f62852cce03cd98eb78395a7779c/kernel/hashlib.h#L998) function, the rvalue is forwarded into entries.emplace_back. If it truly represents an rvalue, it becomes an expiring value after this line. However, the same value is then passed to do_hash, which may result in undefined or incorrect behavior.\n```cpp\nint do_insert(K &&rvalue, Hasher::hash_t &hash)\n{\n    if (hashtable.empty()) {\n        entries.emplace_back(std::forward<K>(rvalue), -1);\n        do_rehash();\n        hash = do_hash(rvalue); // <-- potential issue: rvalue already consumed\n    } else {\n        ...\n    }\n    ...\n}\n```\n\n\n\n## Proposed Fix:\nA safer approach would be to make a copy of the key before forwarding the rvalue, and then use the copy when calling do_hash:\n```cpp\nauto key = rvalue;\nentries.emplace_back(std::forward<K>(rvalue), -1);\ndo_rehash();\nhash = do_hash(key);\n```\n\n## Notes:\n- Currently, hash is not used, so this issue does not cause visible faults in the main codebase.\n- However, this behavior surfaced as a bug while I was developing a plugin, which relies on this function.\n\nI’d be happy to prepare a PR with the fix. Do you think this is worth addressing?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-01",
+  "closed_at": "2025-09-09",
+  "code_blocks": [
+    "int do_insert(K &&rvalue, Hasher::hash_t &hash)\n{\n    if (hashtable.empty()) {\n        entries.emplace_back(std::forward<K>(rvalue), -1);\n        do_rehash();\n        hash = do_hash(rvalue); // <-- potential issue: rvalue already consumed\n    } else {\n        ...\n    }\n    ...\n}",
+    "auto key = rvalue;\nentries.emplace_back(std::forward<K>(rvalue), -1);\ndo_rehash();\nhash = do_hash(key);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

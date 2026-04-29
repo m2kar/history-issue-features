@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1493,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1493",
+  "title": "RTLIL doesn't differentiate between simple bits and [0:0]",
+  "body": "Consider:\r\n```verilog\r\nmodule top(input [0:0] a, input b);\r\nendmodule\r\n```\r\nwhich produces the following RTLIL\r\n```\r\nautoidx 1\r\n\r\nattribute \\blackbox 1\r\nattribute \\cells_not_processed 1\r\nattribute \\src \"portstyles.v:1\"\r\nmodule \\top\r\n\r\n  attribute \\src \"portstyles.v:1\"\r\n  wire input 2 \\b\r\n\r\n  attribute \\src \"portstyles.v:1\"\r\n  wire input 1 \\a\r\nend\r\n```\r\nin which there is no difference between `a` and `b` (same applies, more relevantly in the below example, to downstream outputs like JSON too)\r\n\r\nHowever, were I writing pin constraints, I would probably expect to constrain `a[0]` but `b` and see these names printed in output, etc. For the former case; aliasing `a[0]` to `a` when parsing pin constraints would be one solution on the nextpnr side; but it's worth considering if they could be differentiated - although it seems useless at first glance, it might matter to some generic patterns.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-11-14",
+  "closed_at": "2019-11-17",
+  "code_blocks": [
+    "module top(input [0:0] a, input b);\r\nendmodule",
+    "autoidx 1\r\n\r\nattribute \\blackbox 1\r\nattribute \\cells_not_processed 1\r\nattribute \\src \"portstyles.v:1\"\r\nmodule \\top\r\n\r\n  attribute \\src \"portstyles.v:1\"\r\n  wire input 2 \\b\r\n\r\n  attribute \\src \"portstyles.v:1\"\r\n  wire input 1 \\a\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

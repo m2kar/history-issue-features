@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 277,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/277",
+  "title": "Sensitivity list not correctly derived",
+  "body": "Hi All,\r\n\r\nThe sensitivity list for the following case is not correctly inferred. Changing the wildcard to an explicit list, will yield correct results. The module example_module is needed to trigger the issue.\r\nThe toplevel is test_function_sensitivity. Its output ``o`` will stay X, but should evaluate. \r\n\r\n\r\n``` systemverilog\r\n`timescale 1ns/1ps\r\n\r\nmodule example_module#\r\n(\r\n    parameter WIDTH=4\r\n)\r\n    (\r\n        input logic [WIDTH-1:0] i,\r\n        output logic [WIDTH-1:0] o\r\n    );\r\n    assign o = i & i; //i must appear twice\r\nendmodule: example_module\r\n\r\nmodule test_function_sensitivity#\r\n(\r\n    parameter WIDTH=4\r\n)\r\n    (\r\n        input logic [WIDTH-1:0] i,\r\n        input logic [WIDTH-1:0] b,\r\n        output logic [WIDTH-1:0] o\r\n    );\r\n\r\n    logic [WIDTH-1:0] is;\r\n    logic [WIDTH-1:0] os;\r\n\r\n    example_module example(.i(is), .o(os));\r\n\r\n    function automatic logic [WIDTH-1:0] f(input logic [WIDTH-1:0] x, logic [WIDTH-1:0] y);\r\n        return x | y;\r\n    endfunction : f\r\n\r\n    always @(*) begin : buggy_process //changing this to @(i,os,b) will work\r\n        is = f(i, b);\r\n        o = f(os, b);\r\n    end\r\n\r\nendmodule: test_function_sensitivity\r\n```\r\n\r\nTestbench:\r\n\r\n``` systemverilog\r\n`timescale 1ns/1ps\r\n\r\nmodule test_function_sensivitiy_tb;\r\n    logic [3:0] i, o;\r\n    logic [3:0] b;\r\n\r\n    test_function_sensivitiy\r\n    UUT(.*);\r\n\r\n    initial begin\r\n        $dumpfile(\"tb.lxt\");\r\n        $dumpvars(0, test_function_sensivitiy_tb);\r\n        i <= 4'b01;\r\n        b <= 4'b0;\r\n        #1;\r\n    end\r\n\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-10-23",
+  "closed_at": "2019-10-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

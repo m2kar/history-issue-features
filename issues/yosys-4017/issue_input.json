@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4017,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4017",
+  "title": "Can't find object for defparam",
+  "body": "### Version\n\nYosys 0.34+55 (git sha1 672375ed0, clang 14.0.6 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nVerilog file `top.v` (very similar to one of the examples in [IEEE 1364-2005](https://ieeexplore.ieee.org/servlet/opac?punumber=10779) section 12.2.1):\r\n```verilog\r\nmodule top;\r\n\twire clk;\r\n\twire [0:4] in1;\r\n\twire [0:4] o1;\r\n\tvdff m1(\r\n\t\t.out(o1),\r\n\t\t.in(in1),\r\n\t\t.clk(clk)\r\n\t);\r\nendmodule\r\n\r\nmodule vdff (\r\n\tout,\r\n\tin,\r\n\tclk\r\n);\r\n\tparameter size = 1;\r\n\tinput [0:size - 1] in;\r\n\tinput clk;\r\n\toutput reg [0:size - 1] out;\r\n\talways @(posedge clk) out = in;\r\nendmodule\r\n\r\nmodule annotate;\r\n\tdefparam top.m1.size = 5;\r\nendmodule\r\n``` \r\nRun:\r\n```\r\nyosys -p \"read_verilog top.v\"\r\n```\n\n### Expected Behavior\n\nSuccessfully finished Verilog frontend.\n\n### Actual Behavior\n\nYosys failed with:\r\n```\r\n-- Running command `read_verilog top.v' --\r\n\r\n1. Executing Verilog-2005 frontend: top.v\r\nParsing Verilog input from `top.v' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\nGenerating RTLIL representation for module `\\vdff'.\r\nGenerating RTLIL representation for module `\\annotate'.\r\ntop.v:0: ERROR: Can't find object for defparam `top.m1.size`!\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-11-02",
+  "closed_at": null,
+  "code_blocks": [
+    "module top;\r\n\twire clk;\r\n\twire [0:4] in1;\r\n\twire [0:4] o1;\r\n\tvdff m1(\r\n\t\t.out(o1),\r\n\t\t.in(in1),\r\n\t\t.clk(clk)\r\n\t);\r\nendmodule\r\n\r\nmodule vdff (\r\n\tout,\r\n\tin,\r\n\tclk\r\n);\r\n\tparameter size = 1;\r\n\tinput [0:size - 1] in;\r\n\tinput clk;\r\n\toutput reg [0:size - 1] out;\r\n\talways @(posedge clk) out = in;\r\nendmodule\r\n\r\nmodule annotate;\r\n\tdefparam top.m1.size = 5;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

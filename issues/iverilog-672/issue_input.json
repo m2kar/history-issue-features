@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 672,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/672",
+  "title": "\"fork\" blocks re-triggering of always block",
+  "body": "In this module a new process should be started on every `posedge`:\r\n\r\n```\r\nmodule top;\r\n\r\n    logic clk = 0;\r\n    int cnt = 0;\r\n\r\n    always @(posedge clk) begin\r\n        fork begin\r\n            #(10*2); // Wait 10 clock periods\r\n            $display(\"End of this process\");\r\n            cnt++;\r\n        end\r\n        join_none\r\n    end\r\n\r\n    initial begin\r\n        $display(\"Starting test!\");\r\n        #(100*2); // Wait 100 clock periods\r\n        $display(\"cnt = %d\", cnt);\r\n        $finish;\r\n    end\r\n    \r\n    always begin\r\n        #1 clk = ~clk;\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\nThe output is the following:\r\n\r\n```\r\niverilog -o test -s top -g2012 test.sv\r\nvvp test\r\nStarting test!\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\ncnt =           9\r\niverilog_test.sv:18: $finish called at 200 (1s)\r\n```\r\n\r\nThe value of `cnt` at the end of execution is 9 instead of the expected 90. This means when the always block was triggered it was only possible to trigger it again when the process inside fork has finished.\r\n\r\nRunning the same example on Xcelium xrun 20.09 returns the value 90 for `cnt`.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-06",
+  "closed_at": "2022-04-15",
+  "code_blocks": [
+    "module top;\r\n\r\n    logic clk = 0;\r\n    int cnt = 0;\r\n\r\n    always @(posedge clk) begin\r\n        fork begin\r\n            #(10*2); // Wait 10 clock periods\r\n            $display(\"End of this process\");\r\n            cnt++;\r\n        end\r\n        join_none\r\n    end\r\n\r\n    initial begin\r\n        $display(\"Starting test!\");\r\n        #(100*2); // Wait 100 clock periods\r\n        $display(\"cnt = %d\", cnt);\r\n        $finish;\r\n    end\r\n    \r\n    always begin\r\n        #1 clk = ~clk;\r\n    end\r\n\r\nendmodule",
+    "iverilog -o test -s top -g2012 test.sv\r\nvvp test\r\nStarting test!\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\nEnd of this process\r\ncnt =           9\r\niverilog_test.sv:18: $finish called at 200 (1s)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

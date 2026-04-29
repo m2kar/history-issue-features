@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1242,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1242",
+  "title": "fixing yylloc when lexing \"// synthesis translate_on\"",
+  "body": "Hello,\n\n  lexor.lex swallows the trailing newline without updating yylloc when lexing \"// synthesis translate_on\",\n thus compromising reported error locations.\n\n  I think this should fix it:\n\n```diff\ndiff --git a/lexor.lex b/lexor.lex\nindex 5a77684f3..deeaed584 100644\n--- a/lexor.lex\n+++ b/lexor.lex\n@@ -184,8 +184,8 @@ TU [munpf]\n      \"always\" statements. */\n \n \"// Icarus preprocessor had (\"[0-9]+\") errors.\"\\n { pre_process_failed(yytext); }\n-\"//\"{W}*\"synthesis\"{W}+\"translate_on\"{W}*\\n { pform_mc_translate_on(true); }\n-\"//\"{W}*\"synthesis\"{W}+\"translate_off\"{W}*\\n { pform_mc_translate_on(false); }\n+\"//\"{W}*\"synthesis\"{W}+\"translate_on\"{W}*\\n { pform_mc_translate_on(true); yylloc.first_line += 1; }\n+\"//\"{W}*\"synthesis\"{W}+\"translate_off\"{W}*\\n { pform_mc_translate_on(false); yylloc.first_line += 1; }\n \"//\" { comment_enter = YY_START; BEGIN(LCOMMENT); }\n <LCOMMENT>.    { yymore(); }\n <LCOMMENT>\\n   { yylloc.first_line += 1; BEGIN(comment_enter); }\n```\n\nBest Regards,\nRobert Larice",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-08",
+  "closed_at": "2025-05-11",
+  "code_blocks": [
+    "diff --git a/lexor.lex b/lexor.lex\nindex 5a77684f3..deeaed584 100644\n--- a/lexor.lex\n+++ b/lexor.lex\n@@ -184,8 +184,8 @@ TU [munpf]\n      \"always\" statements. */\n \n \"// Icarus preprocessor had (\"[0-9]+\") errors.\"\\n { pre_process_failed(yytext); }\n-\"//\"{W}*\"synthesis\"{W}+\"translate_on\"{W}*\\n { pform_mc_translate_on(true); }\n-\"//\"{W}*\"synthesis\"{W}+\"translate_off\"{W}*\\n { pform_mc_translate_on(false); }\n+\"//\"{W}*\"synthesis\"{W}+\"translate_on\"{W}*\\n { pform_mc_translate_on(true); yylloc.first_line += 1; }\n+\"//\"{W}*\"synthesis\"{W}+\"translate_off\"{W}*\\n { pform_mc_translate_on(false); yylloc.first_line += 1; }\n \"//\" { comment_enter = YY_START; BEGIN(LCOMMENT); }\n <LCOMMENT>.    { yymore(); }\n <LCOMMENT>\\n   { yylloc.first_line += 1; BEGIN(comment_enter); }"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

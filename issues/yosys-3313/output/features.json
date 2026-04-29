@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 3313,
+  "title": "No equivalent circuit is output by `write_verilog`",
+  "features": [
+    {
+      "name": "jump state machine in nested combinational loops",
+      "category": "control_flow",
+      "description": "Code should include a 2-bit jump state machine variable controlling nested loop break behavior in a combinational always block",
+      "snippet": "always @(*) begin : sv2v_autoblock_1\n  reg [0:1] _sv2v_jump;\n  _sv2v_jump = 2'b00;\n  for (p = 0; p < GRANT_NUM; p = p + 1)\n    if (_sv2v_jump < 2'b10) begin\n      _sv2v_jump = 2'b00;\n      granted[p] = 1'sb0;\n      for (e = p; e < ENTRY_NUM; e = e + GRANT_NUM)\n        if (_sv2v_jump < 2'b10) begin\n          _sv2v_jump = 2'b00;\n          if (reqTmp[e]) begin\n            granted[p] = 1'sb1;\n            _sv2v_jump = 2'b10;\n          end\n        end\n    end\nend",
+      "tags": ["jump_state_machine", "nested_loop", "always_block", "combinational"],
+      "source_bug_id": "3313",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3313",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "variable-length part select with clog2 in procedural assignment",
+      "category": "data_model",
+      "description": "Code should include an indexed part select with variable length using $clog2 computation inside a loop in an always block",
+      "snippet": "grantPtr[((GRANT_NUM - 1) - p) * $clog2(ENTRY_NUM)+:$clog2(ENTRY_NUM)] = e;",
+      "tags": ["variable_length_part_select", "clog2", "indexed_part_select", "procedural"],
+      "source_bug_id": "3313",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3313",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "opt_muxtree conditional assignment in always block",
+      "category": "control_flow",
+      "description": "Code should include an always @* block with conditional signal assignments that interact with a jump state machine, processed through opt_muxtree optimization",
+      "snippet": "always @*\n  if (_18_) granted[0] = _01_[0];\nalways @*\n  if (!1'h0) granted[1] = _01_[1];",
+      "tags": ["always_block", "conditional_assignment", "opt_muxtree", "mux_tree"],
+      "source_bug_id": "3313",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3313",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

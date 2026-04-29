@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5157,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5157",
+  "title": "`read_verilog`: `inout` parameters not copied out of tasks",
+  "body": "This issue is related to #5151\n\n### Version\n\nYosys 0.53+70 (git sha1 3ef4c91c3, g++ 12.2.0-14+deb12u1 -fPIC -O3)\nAnd the #5154 PR \n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```sv\nmodule stmt_if_task (\n    output logic [7:0] out_val_m6,\n    input logic [7:0] in_val_m6,\n    input bit condition_m6\n);\n    logic [7:0] var_m6;\n    task automatic update_conditional_m6(input bit cond, inout logic [7:0] val);\n        if (cond) begin\n            val++;\n        end else begin\n            --val;\n        end\n    endtask\n    always_comb begin\n        var_m6 = in_val_m6;\n        update_conditional_m6(condition_m6, var_m6);\n        out_val_m6 = var_m6;\n    end\nendmodule\n```\n\nSimulate with these hexadecimal values as input\n```txt\n  in_val_m6 = 79 // or 121 in base10\n  condition_m6 = 0\n```\n\n\nSynthesize with\n```bash\nyosys -p \"read_verilog -sv stmt_if_task.sv ; proc; opt ; write_verilog -sv -noattr synth.sv\"\n```\n\n### Expected Behavior\n\noutput of `out_val_m6` should be `120`\n\n### Actual Behavior\n\noutput of `out_val_m6` is in fact `121`",
+  "labels": [
+    "bug",
+    "fix-pending",
+    "SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-30",
+  "closed_at": "2025-06-04",
+  "code_blocks": [
+    "module stmt_if_task (\n    output logic [7:0] out_val_m6,\n    input logic [7:0] in_val_m6,\n    input bit condition_m6\n);\n    logic [7:0] var_m6;\n    task automatic update_conditional_m6(input bit cond, inout logic [7:0] val);\n        if (cond) begin\n            val++;\n        end else begin\n            --val;\n        end\n    endtask\n    always_comb begin\n        var_m6 = in_val_m6;\n        update_conditional_m6(condition_m6, var_m6);\n        out_val_m6 = var_m6;\n    end\nendmodule",
+    "yosys -p \"read_verilog -sv stmt_if_task.sv ; proc; opt ; write_verilog -sv -noattr synth.sv\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

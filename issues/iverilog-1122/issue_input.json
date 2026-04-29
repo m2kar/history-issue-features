@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1122,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1122",
+  "title": "Delayed transmission from tranif0/tranif1 primitives",
+  "body": "(Discussed in https://github.com/steveicarus/iverilog/discussions/1121)\r\n\r\n# Description of issue\r\nThe 'output' (for lack of a better word) of multi-stage tranif networks doesn't appear at the correct or expected time. A demo testbench, along with its expected and actual outputs, are listed below.\r\n\r\n# Expected testbench output\r\n```\r\n         0 a=0 b=0 Y=0\r\n        10 a=0 b=1 Y=1\r\n        20 a=1 b=0 Y=1\r\n        30 a=1 b=1 Y=1\r\n```\r\n\r\n# Actual testbench output\r\n```\r\n         0 a=0 b=0 Y=x\r\n        10 a=0 b=1 Y=0\r\n        20 a=1 b=0 Y=1\r\n        30 a=1 b=1 Y=1\r\n```\r\n\r\n# Testbench code\r\n```\r\nmodule tranif_test;\r\nreg a, b;\r\nwire y;\r\n\r\ninitial begin\r\n\t$dumpfile(\"Sim.vcd\");\r\n\t$dumpvars(0, tranif_test);\r\nend\r\n\r\ntranif_or dut(a, b, y);\r\n\r\ninitial\r\nbegin\r\n\ta = 0; b = 0;\r\n\t#10 a = 0; b = 1;\r\n\t#10 a = 1; b = 0;\r\n\t#10 a = 1; b = 1;\r\n\t#10 $finish;\r\nend\r\n\r\ninitial\r\nbegin\r\n\t$monitor($stime,,\"a=%b b=%b Y=%b\", a, b, y);\r\nend\r\nendmodule\r\n\r\nmodule tranif_or(a, b, y);\r\n\tinput a, b;\r\n\tinout y;\r\n\r\n\tsupply1 vdd;\r\n\tsupply0 vss;\r\n\r\n\twire w1, w2;\r\n\r\n        // I added this part after reading\r\n        // https://github.com/steveicarus/iverilog/issues/560#issue-1046681362\r\n        // It has no effect on the output\r\n\tinitial begin\r\n\t\tforce y = 1'bx;\r\n\t\tforce w1 = 1'bx;\r\n\t\tforce w2 = 1'bx;\r\n\t\trelease y;\r\n\t\trelease w1;\r\n\t\trelease w2;\r\n\tend\r\n\r\n\t// NOR\r\n\ttranif0(w1, vdd, a);\r\n\ttranif0(w2, w1,  b);\r\n\ttranif1(w2, vss, a);\r\n\ttranif1(w2, vss, b);\r\n\r\n\t// OR\r\n\ttranif0(y, vdd, w2);\r\n\ttranif1(y, vss, w2);\r\nendmodule\r\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-06",
+  "closed_at": "2024-05-06",
+  "code_blocks": [
+    "module tranif_test;\r\nreg a, b;\r\nwire y;\r\n\r\ninitial begin\r\n\t$dumpfile(\"Sim.vcd\");\r\n\t$dumpvars(0, tranif_test);\r\nend\r\n\r\ntranif_or dut(a, b, y);\r\n\r\ninitial\r\nbegin\r\n\ta = 0; b = 0;\r\n\t#10 a = 0; b = 1;\r\n\t#10 a = 1; b = 0;\r\n\t#10 a = 1; b = 1;\r\n\t#10 $finish;\r\nend\r\n\r\ninitial\r\nbegin\r\n\t$monitor($stime,,\"a=%b b=%b Y=%b\", a, b, y);\r\nend\r\nendmodule\r\n\r\nmodule tranif_or(a, b, y);\r\n\tinput a, b;\r\n\tinout y;\r\n\r\n\tsupply1 vdd;\r\n\tsupply0 vss;\r\n\r\n\twire w1, w2;\r\n\r\n        // I added this part after reading\r\n        // https://github.com/steveicarus/iverilog/issues/560#issue-1046681362\r\n        // It has no effect on the output\r\n\tinitial begin\r\n\t\tforce y = 1'bx;\r\n\t\tforce w1 = 1'bx;\r\n\t\tforce w2 = 1'bx;\r\n\t\trelease y;\r\n\t\trelease w1;\r\n\t\trelease w2;\r\n\tend\r\n\r\n\t// NOR\r\n\ttranif0(w1, vdd, a);\r\n\ttranif0(w2, w1,  b);\r\n\ttranif1(w2, vss, a);\r\n\ttranif1(w2, vss, b);\r\n\r\n\t// OR\r\n\ttranif0(y, vdd, w2);\r\n\ttranif1(y, vss, w2);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

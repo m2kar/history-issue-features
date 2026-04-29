@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 279,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/279",
+  "title": "Timing inconsistencies?",
+  "body": "I think the following code produces incorrect results (although I am not a Verilog expert).\r\nThere seems to be a delay in one of the signals. \r\nAlthough \"data\" and \"mode\" should appear to change at the same time, they don't. \r\n\r\n```\r\nmodule Observer(clk, mode, data);\r\n\tinput clk, reset;\r\n\tinput [1:0] mode;\r\n\tinput [31:0] data;\r\n\t\t\r\n\talways @(posedge clk) $display (\"Mode: %d Data: %h\", mode, data);\t\t\t\r\nendmodule // Observer\r\n\r\nmodule Modules(clk, valid, data);\r\n\tinput clk, valid;\t\t\r\n\tinput[31:0]  data;\r\n\t\r\n\twire [1:0] mode;\t\r\n\tassign mode=(valid)?2:3;\r\n\t\r\n\tObserver o0(clk, mode, data);\t\r\nendmodule //Modules\r\n\r\nmodule Top_Level();\r\n\treg clk, valid;\t\r\n\treg [31:0] data;\r\n\t\r\n\tModules m(clk, valid, data);\t\r\n\t\r\n\tinteger k;\r\n\tinitial begin\t\r\n\t\tk=1;\r\n\t\tvalid=0;\r\n\t\t\r\n\t\trepeat(10) begin\t\t\t\r\n\t\t\tvalid=1; data=k;\r\n\t\t\tclk=1; #10 clk=0; #10; \t\r\n\t\t\tk=k+1;\t\r\n\t\tend\r\n\t\tvalid=0; data=k+1;\r\n\t\tclk=1; #10 clk=0; #10; \t\r\n\tend\r\nendmodule //Top_Level\r\n```\r\n\r\nOutput:\r\n```\r\nMode: z Data: 00000001\r\nMode: 2 Data: 00000002\r\nMode: 2 Data: 00000003\r\nMode: 2 Data: 00000004\r\nMode: 2 Data: 00000005\r\nMode: 2 Data: 00000006\r\nMode: 2 Data: 00000007\r\nMode: 2 Data: 00000008\r\nMode: 2 Data: 00000009\r\nMode: 2 Data: 0000000a\r\nMode: 2 Data: 0000000c\r\n\r\n```\r\n\r\nExpected result:\r\n```\r\nMode: 2 Data: 00000001\r\nMode: 2 Data: 00000002\r\nMode: 2 Data: 00000003\r\nMode: 2 Data: 00000004\r\nMode: 2 Data: 00000005\r\nMode: 2 Data: 00000006\r\nMode: 2 Data: 00000007\r\nMode: 2 Data: 00000008\r\nMode: 2 Data: 00000009\r\nMode: 2 Data: 0000000a\r\nMode: 3 Data: 0000000c\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-11-05",
+  "closed_at": "2019-11-05",
+  "code_blocks": [
+    "module Observer(clk, mode, data);\r\n\tinput clk, reset;\r\n\tinput [1:0] mode;\r\n\tinput [31:0] data;\r\n\t\t\r\n\talways @(posedge clk) $display (\"Mode: %d Data: %h\", mode, data);\t\t\t\r\nendmodule // Observer\r\n\r\nmodule Modules(clk, valid, data);\r\n\tinput clk, valid;\t\t\r\n\tinput[31:0]  data;\r\n\t\r\n\twire [1:0] mode;\t\r\n\tassign mode=(valid)?2:3;\r\n\t\r\n\tObserver o0(clk, mode, data);\t\r\nendmodule //Modules\r\n\r\nmodule Top_Level();\r\n\treg clk, valid;\t\r\n\treg [31:0] data;\r\n\t\r\n\tModules m(clk, valid, data);\t\r\n\t\r\n\tinteger k;\r\n\tinitial begin\t\r\n\t\tk=1;\r\n\t\tvalid=0;\r\n\t\t\r\n\t\trepeat(10) begin\t\t\t\r\n\t\t\tvalid=1; data=k;\r\n\t\t\tclk=1; #10 clk=0; #10; \t\r\n\t\t\tk=k+1;\t\r\n\t\tend\r\n\t\tvalid=0; data=k+1;\r\n\t\tclk=1; #10 clk=0; #10; \t\r\n\tend\r\nendmodule //Top_Level"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

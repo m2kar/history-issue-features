@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 224,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/224",
+  "title": "Package enum members not bound in case statement",
+  "body": "When I import a package, the various members of enums are not able to bind as cases in a case statement. I'm using version 10.2.\r\n\r\nI encountered this in a larger design but created the following contrived test case that hopefully illustrates the issue.\r\n\r\nFile: ALUPkg.sv\r\n```\r\npackage ALUPkg;\r\n    typedef enum logic [1:0] {\r\n        PASS_A = 2'b00,\r\n        ADD = 2'b01,\r\n        SUB = 2'b10\r\n    } ALUOpType;\r\nendpackage: ALUPkg\r\n```\r\nFile: ALU_bind_error.sv\r\n```\r\nmodule ALU_bind_error (\r\n    input ALUPkg::ALUOpType ALUOp,\r\n    input logic [31:0] A,\r\n    input logic [31:0] B,\r\n    output logic [31:0] out\r\n);\r\n\r\nimport ALUPkg::*;\r\n\r\nalways @(*) begin\r\n    case(ALUOp)\r\n        PASS_A: out = A;\r\n        ADD: out = A + B;\r\n        SUB: out = A - B;\r\n        default: out = A;\r\n    endcase\r\nend\r\n\r\nendmodule: ALU_bind_error\r\n```\r\nCompilation:\r\n```\r\niverilog -g2012 -tnull -s ALU_bind_error ALUPkg.sv ALU_bind_error.sv \r\nALU_bind_error.sv:13: error: Unable to bind wire/reg/memory `PASS_A' in `ALU_bind_error'\r\nALU_bind_error.sv:14: error: Unable to bind wire/reg/memory `ADD' in `ALU_bind_error'\r\nALU_bind_error.sv:15: error: Unable to bind wire/reg/memory `SUB' in `ALU_bind_error'\r\n3 error(s) during elaboration.\r\n```\r\nFor what it is worth, invoking verilator version 4.008 and commercial tools on the above code and my larger design works as expected.\r\n\r\nAs a seemingly silly workaround, creating an unused variable of the type successfully imports the enum members and allows them to be used in cases:\r\n\r\nFile: ALUPkg.sv (same as before)\r\nFile: ALU_no_error.sv\r\n```\r\nmodule ALU_no_error (\r\n    input ALUPkg::ALUOpType ALUOp,\r\n    input logic [31:0] A,\r\n    input logic [31:0] B,\r\n    output logic [31:0] out\r\n);\r\n\r\nimport ALUPkg::*;\r\n\r\nALUOpType do_nothing; //useless code\r\nassign do_nothing = PASS_A; //useless code\r\n\r\nalways @(*) begin\r\n    case(ALUOp)\r\n        PASS_A: out = A;\r\n        ADD: out = A + B;\r\n        SUB: out = A - B;\r\n        default: out = A;\r\n    endcase\r\nend\r\n\r\nendmodule: ALU_no_error\r\n```\r\nCompilation:\r\n```\r\niverilog -g2012 -tnull -s ALU_no_error ALUPkg.sv ALU_no_error.sv\r\n(no output)\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-01-04",
+  "closed_at": "2019-01-15",
+  "code_blocks": [
+    "package ALUPkg;\r\n    typedef enum logic [1:0] {\r\n        PASS_A = 2'b00,\r\n        ADD = 2'b01,\r\n        SUB = 2'b10\r\n    } ALUOpType;\r\nendpackage: ALUPkg",
+    "module ALU_bind_error (\r\n    input ALUPkg::ALUOpType ALUOp,\r\n    input logic [31:0] A,\r\n    input logic [31:0] B,\r\n    output logic [31:0] out\r\n);\r\n\r\nimport ALUPkg::*;\r\n\r\nalways @(*) begin\r\n    case(ALUOp)\r\n        PASS_A: out = A;\r\n        ADD: out = A + B;\r\n        SUB: out = A - B;\r\n        default: out = A;\r\n    endcase\r\nend\r\n\r\nendmodule: ALU_bind_error",
+    "iverilog -g2012 -tnull -s ALU_bind_error ALUPkg.sv ALU_bind_error.sv \r\nALU_bind_error.sv:13: error: Unable to bind wire/reg/memory `PASS_A' in `ALU_bind_error'\r\nALU_bind_error.sv:14: error: Unable to bind wire/reg/memory `ADD' in `ALU_bind_error'\r\nALU_bind_error.sv:15: error: Unable to bind wire/reg/memory `SUB' in `ALU_bind_error'\r\n3 error(s) during elaboration.",
+    "module ALU_no_error (\r\n    input ALUPkg::ALUOpType ALUOp,\r\n    input logic [31:0] A,\r\n    input logic [31:0] B,\r\n    output logic [31:0] out\r\n);\r\n\r\nimport ALUPkg::*;\r\n\r\nALUOpType do_nothing; //useless code\r\nassign do_nothing = PASS_A; //useless code\r\n\r\nalways @(*) begin\r\n    case(ALUOp)\r\n        PASS_A: out = A;\r\n        ADD: out = A + B;\r\n        SUB: out = A - B;\r\n        default: out = A;\r\n    endcase\r\nend\r\n\r\nendmodule: ALU_no_error",
+    "iverilog -g2012 -tnull -s ALU_no_error ALUPkg.sv ALU_no_error.sv\r\n(no output)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

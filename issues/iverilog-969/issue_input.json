@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 969,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/969",
+  "title": "`vvp` output is not fully redirected",
+  "body": "When using a terminal, it is not possible to completely redirect/suppress the output of `vvp`.\r\n\r\nModule and testbench example:\r\n\r\n```systemverilog\r\nmodule example (\r\n  input logic [7:0] d,\r\n  output logic [3:0] q\r\n);\r\n  always_comb begin\r\n    q = d[3:0];\r\n  end\r\nendmodule\r\n\r\nmodule testbench;\r\n  logic [7:0] d;\r\n  logic [3:0] q;\r\n\r\n  example example_instance (.d(d), .q(q));\r\n\r\n  initial begin\r\n    d = 255;\r\n    #0;\r\n    $display(q);\r\n  end\r\nendmodule\r\n```\r\n\r\nHere are the commands without redirection:\r\n\r\n```bash\r\niverilog -g2012 out.sv -oout.vvp; vvp out.vvp\r\n```\r\n\r\nAnd here is their result:\r\n\r\n```text\r\nout.sv:5: sorry: constant selects in always_* processes are not currently supported (all bits will be included).\r\n15\r\n```\r\n\r\nAnd here are the commands with redirection `stdout` and `stderr` to `/dev/null`:\r\n\r\n```bash\r\niverilog -g2012 out.sv -oout.vvp; vvp out.vvp 2>&1 > /dev/null\r\n```\r\n\r\nYou can see that the output of the `$display` command is gone, but the notice `sorry: ...` remains:\r\n\r\n```text\r\nout.sv:5: sorry: constant selects in always_* processes are not currently supported (all bits will be included).\r\n```\r\n\r\n**The expected behavior is the absence of any output in the console after executing the commands (for this example).**\r\n\r\nVersion: `Icarus Verilog version 12.0 (stable)`",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-11",
+  "closed_at": "2023-07-11",
+  "code_blocks": [
+    "module example (\r\n  input logic [7:0] d,\r\n  output logic [3:0] q\r\n);\r\n  always_comb begin\r\n    q = d[3:0];\r\n  end\r\nendmodule\r\n\r\nmodule testbench;\r\n  logic [7:0] d;\r\n  logic [3:0] q;\r\n\r\n  example example_instance (.d(d), .q(q));\r\n\r\n  initial begin\r\n    d = 255;\r\n    #0;\r\n    $display(q);\r\n  end\r\nendmodule",
+    "iverilog -g2012 out.sv -oout.vvp; vvp out.vvp",
+    "out.sv:5: sorry: constant selects in always_* processes are not currently supported (all bits will be included).\r\n15",
+    "iverilog -g2012 out.sv -oout.vvp; vvp out.vvp 2>&1 > /dev/null",
+    "out.sv:5: sorry: constant selects in always_* processes are not currently supported (all bits will be included)."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

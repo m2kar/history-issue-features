@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1451,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1451",
+  "title": "Parameter/attribute type encoding in protobuf backend",
+  "body": "Consider:\r\n```verilog\r\n(* blackbox *)\r\nmodule submod(output q);\r\nparameter [7:0] a = 0;\r\nparameter [7:0] b = 0;\r\nparameter [71:0] c = 0;\r\nparameter [72*8-1:0] d = 0;\r\nendmodule\r\n\r\nmodule top(output q);\r\n\tsubmod #(\r\n\t\t.a(8'b11110000),\r\n\t\t.b(8'b1111xxxx),\r\n\t\t.c(72'h1),\r\n\t\t.d(\"000000000000000000000000000000000000000000000000000000000000000000000001\")\r\n\t) submod_i(\r\n\t\t.q(q)\r\n\t);\r\nendmodule\r\n```\r\nrunning `yosys -p \"proc; hierarchy; write_protobuf -text\" ptypes.v` gives (abridged):\r\n```\r\n        parameter {\r\n          key: \"a\"\r\n          value {\r\n            int: 240\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"b\"\r\n          value {\r\n            int: 240\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"c\"\r\n          value {\r\n            str: \"000000000000000000000000000000000000000000000000000000000000000000000001\"\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"d\"\r\n          value {\r\n            str: \"000000000000000000000000000000000000000000000000000000000000000000000001\"\r\n          }\r\n        }\r\n```\r\n\r\nClearly `a` and `b`; and `c` and `d`; should not be encoded identically. \r\n\r\nAs I am interested in protobuf or equivalent being a JSON replacement for nextpnr; at least for more advanced flows with hierarchy; it would be good to sort this out properly and avoid the pain we had fixing this in the JSON flow.\r\n\r\nA proposal would be to add an explicit type message that stores width, signedness and stringness; and also ensure that any value with 'x' bits is not converted to an integer.\r\n\r\nAny other thoughts before I implement something like this?\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-10-17",
+  "closed_at": null,
+  "code_blocks": [
+    "(* blackbox *)\r\nmodule submod(output q);\r\nparameter [7:0] a = 0;\r\nparameter [7:0] b = 0;\r\nparameter [71:0] c = 0;\r\nparameter [72*8-1:0] d = 0;\r\nendmodule\r\n\r\nmodule top(output q);\r\n\tsubmod #(\r\n\t\t.a(8'b11110000),\r\n\t\t.b(8'b1111xxxx),\r\n\t\t.c(72'h1),\r\n\t\t.d(\"000000000000000000000000000000000000000000000000000000000000000000000001\")\r\n\t) submod_i(\r\n\t\t.q(q)\r\n\t);\r\nendmodule",
+    "parameter {\r\n          key: \"a\"\r\n          value {\r\n            int: 240\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"b\"\r\n          value {\r\n            int: 240\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"c\"\r\n          value {\r\n            str: \"000000000000000000000000000000000000000000000000000000000000000000000001\"\r\n          }\r\n        }\r\n        parameter {\r\n          key: \"d\"\r\n          value {\r\n            str: \"000000000000000000000000000000000000000000000000000000000000000000000001\"\r\n          }\r\n        }"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

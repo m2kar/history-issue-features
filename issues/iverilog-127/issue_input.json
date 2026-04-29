@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 127,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/127",
+  "title": "Simulation when port width mismatch",
+  "body": "There is yet another open source Verilog compiler. It is part of ACL2 proof checker:\nhttp://www.cs.utexas.edu/users/moore/acl2/manuals/current/manual/?topic=ACL2____VL\nIt contains some tests where its behaviour is compared with commerical NCV and VCS Verilog complilers. Recently we compared its behaviour also with the Icarus Verilog. We want to report found differences in case they might be useful.\n\nThe first issue was found when port instance is connected with mismatched width. Icarus Verilog prints warnings and continues simulation. It's good but simulation results differ from NCV/VCS. Perhaps Icarus could mimic their results.\nTo reproduce this:\n1) Download two files into directory ${COSIMS}:\nhttps://github.com/acl2/acl2/blob/master/books/centaur/sv/cosims/test.sv\nhttps://github.com/acl2/acl2/blob/master/books/centaur/sv/cosims/fourvalued.data\nand the third file into directory ${COSIMS}/inst_size3:\nhttps://github.com/acl2/acl2/blob/master/books/centaur/sv/cosims/inst_size3/spec.sv\n2)\n\n```\ncd ${COSIMS}/inst_size3\niverilog -g2012 spec.sv ../test.sv -Dinfile=\\\"../fourvalued.data\\\" -Doutfile=\\\"outputs.iv.data\\\" && ./a.out\n```\n\n3) The file ${COSIMS}/inst_size3/outputs.iv.data starts from lines\n\n```\n// 0x00000000\n00000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzzzzzzz00zzzzzzz00zzzz00zzz00zz00z00000\n00000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzzzzzzz01zzzzzzz01zzzz01zzz01zz01z01011\n00000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzzzzzzz10zzzzzzz10zzzz10zzz10zz10z10100\n00000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzzzzzzz00zzzzzzz00zzzz00zzz00zz00z00000\n00000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzzzzzzz00zzzzzzz00zzzz00zzz00zz00z00000\n```\n\nthough the expected output is \n\n```\n0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzz00zzzz00zzz00zz00z0000x\n0000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101zzzzz01zzzz01zzz01zz01z0101x\n0000000000000000000000000000000000000000000000000000000000000000000000000000000000000010101010101000zzzzz10zzzz10zzz10zz10z1010x\n0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzz00zzzz00zzz00zz00z0000x\n0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000zzzzz00zzzz00zzz00zz00z0000x\n```\n\nThere are other tests in the repository rejected by Icarus Verilog.\nThey are marked by empty marker files\n\n```\n${COSIMS}/*/no_icv\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-09-17",
+  "closed_at": "2016-09-20",
+  "code_blocks": [
+    "cd ${COSIMS}/inst_size3\niverilog -g2012 spec.sv ../test.sv -Dinfile=\\\"../fourvalued.data\\\" -Doutfile=\\\"outputs.iv.data\\\" && ./a.out"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

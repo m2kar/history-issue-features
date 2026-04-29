@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4893,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4893",
+  "title": "Continuous assign drives right-hand side",
+  "body": "### Version\n\nYosys 0.49+29 (git sha1 ce5ad2a55, clang++ 18.1.8 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following Verilog exhibits the unexpected behaviour. Note, in particular, that `top.first_delay` is only present on the right-hand side of a continuous assign.\n\n```verilog\nmodule top\n(\n  input wire clock,\n  input wire signal,\n  output wire first_delay,\n  output wire second_delay\n);\n\n  wire delay;\n  dff dff1(clock, signal, delay);\n  dff dff2(clock, delay, second_delay);\n  \n  assign second_delay = first_delay;\nendmodule\n\n\nmodule dff\n(\n  input wire c,\n  input wire d,\n  output reg q\n);\n\n  always @(posedge c)\n    q <= d;\n\nendmodule\n```\n\nThen synthesize using `yosys -p 'read_verilog top.v; synth; show top'`\n\n### Expected Behavior\n\n`top.first_delay` should float. Diagnostic should be issued for `top.second_delay` being doubly-driven.\n\n### Actual Behavior\n\n`top.second_delay` is driven onto `top.first_delay`. No diagnostic is issued.\n\nSynthesis result illustrated in the following diagram produced by `show -format svg top`. \n\n![Image](https://github.com/user-attachments/assets/d9410fa9-f77f-44a1-b556-dc9419fb603b)",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-11",
+  "closed_at": "2025-03-22",
+  "code_blocks": [
+    "module top\n(\n  input wire clock,\n  input wire signal,\n  output wire first_delay,\n  output wire second_delay\n);\n\n  wire delay;\n  dff dff1(clock, signal, delay);\n  dff dff2(clock, delay, second_delay);\n  \n  assign second_delay = first_delay;\nendmodule\n\n\nmodule dff\n(\n  input wire c,\n  input wire d,\n  output reg q\n);\n\n  always @(posedge c)\n    q <= d;\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

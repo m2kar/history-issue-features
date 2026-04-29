@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2587,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2587",
+  "title": "pyosys interface for Pass doesn't work with virtual functions.",
+  "body": "## Steps to reproduce the issue\r\n\r\nWith version `Yosys 0.9+3905 (git sha1 4e741add, gcc 9.3.0-17ubuntu1~20.04 -fPIC -Os)` and `PYOSYS_ENABLE=1`.\r\n\r\nWith this python file, run as `python3 pass.py`\r\n\r\nFile: `pass.py`\r\n```py\r\nfrom pyosys import libyosys as ys\r\n\r\n\r\nclass MyPass(ys.Pass):\r\n    def __init__(self):\r\n        super().__init__(\"my_pass\",  \"Runs my pass\")\r\n        ys.log(\"Init on MyPass\\n\")\r\n\r\n    def py_help(self):\r\n        ys.log(\"Runs my pass\\n\")\r\n\r\n    def py_execute(self, args, design):\r\n        ys.log_header(design, \"Running my pass\\n\")\r\n\r\n    def py_clear_flags(self):\r\n        ys.log(\"Clear Flags - MyPass\\n\")\r\n\r\n    def py_on_register(self):\r\n        ys.log(\"MyPass on_register called\\n\")\r\n\r\n    def py_on_shutdown(self):\r\n        ys.log(\"MyPass on_shutdown called\\n\")\r\n\r\n\r\n# This should add the instance to the queued_passes.\r\nMyPass()\r\n\r\n# This should register the queued_passes into the pass_register.\r\nys.Pass.init_register()\r\nys.log(\"Ready to run MyPass\\n\")\r\ndesign = ys.Design()\r\n\r\nys.run_pass(\"my_pass\", design)\r\n```\r\n\r\n## Expected behavior\r\n\r\nWe should see some log messages related running the pass.\r\n\r\n## Actual behavior\r\n\r\nThe output is:\r\n\r\n```\r\nInit on MyPass\r\nReady to run MyPass\r\n\r\n-- Running command `my_pass' --\r\npure virtual method called\r\nterminate called without an active exception\r\nAborted\r\n```\r\n\r\n## Discussion\r\n\r\nThis apparently happens when `Pass::execute` is called, based on some additional logs I put in `kernel/register.cc`. That's odd because the Python wrappers are supposed to handle pure virtuals. In addition, when `pre_execute` is called, that is supposed to call `clear_flags`. The Python wrappers map this to `py_clear_flags`, which means I should see a `Clear Flags - MyPass` message, which also doesn't appear.\r\n\r\nI don't know enough about Boost.Python to know what is going wrong here, but it seems that the whole handling of virtual functions doesn't seem to work.\r\n\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-15",
+  "closed_at": "2025-11-05",
+  "code_blocks": [
+    "from pyosys import libyosys as ys\r\n\r\n\r\nclass MyPass(ys.Pass):\r\n    def __init__(self):\r\n        super().__init__(\"my_pass\",  \"Runs my pass\")\r\n        ys.log(\"Init on MyPass\\n\")\r\n\r\n    def py_help(self):\r\n        ys.log(\"Runs my pass\\n\")\r\n\r\n    def py_execute(self, args, design):\r\n        ys.log_header(design, \"Running my pass\\n\")\r\n\r\n    def py_clear_flags(self):\r\n        ys.log(\"Clear Flags - MyPass\\n\")\r\n\r\n    def py_on_register(self):\r\n        ys.log(\"MyPass on_register called\\n\")\r\n\r\n    def py_on_shutdown(self):\r\n        ys.log(\"MyPass on_shutdown called\\n\")\r\n\r\n\r\n# This should add the instance to the queued_passes.\r\nMyPass()\r\n\r\n# This should register the queued_passes into the pass_register.\r\nys.Pass.init_register()\r\nys.log(\"Ready to run MyPass\\n\")\r\ndesign = ys.Design()\r\n\r\nys.run_pass(\"my_pass\", design)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

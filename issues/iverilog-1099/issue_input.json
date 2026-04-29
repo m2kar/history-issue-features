@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1099,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1099",
+  "title": "unsigned port connection sign extends",
+  "body": "The following example:\r\n```Verilog\r\nmodule top;\r\n    reg [3:0] inp1;\r\n    reg signed [3:0] inp2;\r\n    wire [4:0] out1, out2;\r\n    initial begin\r\n        $monitor(\"%b %b %b %b\", inp1, inp2, out1, out2);\r\n        #1 inp1 = 4'b1111;\r\n        #1 inp2 = 4'b1111;\r\n    end\r\n    mod m1({inp1}, out1);\r\n    mod m2({inp2}, out2);\r\nendmodule\r\n\r\nmodule mod(\r\n    input [4:0] inp,\r\n    output [4:0] out\r\n);\r\n    assign out = inp;\r\nendmodule\r\n```\r\nOutputs:\r\n```\r\niverilog-extend-bug.v:10: warning: Port 1 (inp) of mod expects 5 bits, got 4.\r\niverilog-extend-bug.v:10:        : Padding 1 high bits of the port.\r\niverilog-extend-bug.v:11: warning: Port 1 (inp) of mod expects 5 bits, got 4.\r\niverilog-extend-bug.v:11:        : Padding (signed) 1 high bits of the port.\r\nxxxx xxxx 0xxxx xxxxx\r\n1111 xxxx 01111 xxxxx\r\n1111 1111 01111 11111\r\n```\r\n\r\nPer the warning and the sim output, `{inp2}` is incorrectly treated as signed in this context. The same issue occurs for `$unsigned(inp2)`, `unsigned'(inp2)`, and `inp2[3:0]`, but not for, e.g., `{inp2[3:2], inp2[1:0]}`. All of these expressions should be treated as unsigned.\r\n\r\nI am running `Icarus Verilog version 13.0 (devel) (s20150603-909-g83db6915)`.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-02-11",
+  "closed_at": "2024-02-24",
+  "code_blocks": [
+    "module top;\r\n    reg [3:0] inp1;\r\n    reg signed [3:0] inp2;\r\n    wire [4:0] out1, out2;\r\n    initial begin\r\n        $monitor(\"%b %b %b %b\", inp1, inp2, out1, out2);\r\n        #1 inp1 = 4'b1111;\r\n        #1 inp2 = 4'b1111;\r\n    end\r\n    mod m1({inp1}, out1);\r\n    mod m2({inp2}, out2);\r\nendmodule\r\n\r\nmodule mod(\r\n    input [4:0] inp,\r\n    output [4:0] out\r\n);\r\n    assign out = inp;\r\nendmodule",
+    "iverilog-extend-bug.v:10: warning: Port 1 (inp) of mod expects 5 bits, got 4.\r\niverilog-extend-bug.v:10:        : Padding 1 high bits of the port.\r\niverilog-extend-bug.v:11: warning: Port 1 (inp) of mod expects 5 bits, got 4.\r\niverilog-extend-bug.v:11:        : Padding (signed) 1 high bits of the port.\r\nxxxx xxxx 0xxxx xxxxx\r\n1111 xxxx 01111 xxxxx\r\n1111 1111 01111 11111"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

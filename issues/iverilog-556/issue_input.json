@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 556,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/556",
+  "title": "Segmentation fault during OOB access to real array",
+  "body": "Hi, thanks for this very useful software! I encountered a strange segmentation fault which I have narrowed down to this code:\r\n\r\n```verilog\r\nmodule  interp1d_tb ();\r\n    reg clk;\r\n\r\n    initial begin\r\n        clk = 0;\r\n\r\n        forever begin\r\n            #1;\r\n            clk = ~clk;\r\n        end\r\n    end\r\n\r\n\r\n    real lut_values[1:0];\r\n    assign lut_values[0] = 1;\r\n    assign lut_values[1] = 2;\r\n\r\n    wire[8-1:0] lut2_addr;\r\n    reg[8-1:0] lut2_out;\r\n\r\n    always @(posedge clk) begin\r\n        lut2_out <= lut_values[lut2_addr];\r\n    end\r\n\r\n    // Check output\r\n    always begin\r\n        #1 // Must be at least 1\r\n\r\n        $finish();\r\n    end\r\n\r\n\r\n    // Stage 3 (LUT)\r\n    assign lut2_addr = 3; \r\nendmodule\r\n```\r\n\r\nwhen run using\r\n```\r\niverilog -g2012 segfault_tb.sv -o build/buggy.vvp && ./build/buggy.vvp\r\n```\r\n\r\nThis is about as minimal of an example as I can create. It looks like this is\r\ncaused by indexing out of bounds in the `lut_values` array which wasn't very\r\nobvious in a bigger example.\r\n\r\nThe bug is not triggered if `lut2_addr` is `2` which is still OOB. In that case, I get\r\n```\r\nvvp: array.cc:730: double __vpiArray::get_word_r(unsigned int): Assertion `vsig' failed.\r\nzsh: abort (core dumped)  ./build/buggy.vvp\r\n```\r\nMoving the 3 directly to the correctly gives an OOB warning and no segmentation fault\r\n\r\nChanging the type of the `lut_values` array to `integer` gives no warnings, and\r\nno assertion errors.\r\n\r\nThis is with icarus and vvp version\r\n```\r\nIcarus Verilog version 11.0 (stable) (v11_0)\r\n```\r\nfrom the arch repository.\r\n\r\nI will see if I can reproduce this in the git version when I get more time this week\r\n\r\nGithub does not seem to allow uploads of core dumps. If that would be useful, let me know if I should upload it.\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-11-02",
+  "closed_at": "2021-11-04",
+  "code_blocks": [
+    "module  interp1d_tb ();\r\n    reg clk;\r\n\r\n    initial begin\r\n        clk = 0;\r\n\r\n        forever begin\r\n            #1;\r\n            clk = ~clk;\r\n        end\r\n    end\r\n\r\n\r\n    real lut_values[1:0];\r\n    assign lut_values[0] = 1;\r\n    assign lut_values[1] = 2;\r\n\r\n    wire[8-1:0] lut2_addr;\r\n    reg[8-1:0] lut2_out;\r\n\r\n    always @(posedge clk) begin\r\n        lut2_out <= lut_values[lut2_addr];\r\n    end\r\n\r\n    // Check output\r\n    always begin\r\n        #1 // Must be at least 1\r\n\r\n        $finish();\r\n    end\r\n\r\n\r\n    // Stage 3 (LUT)\r\n    assign lut2_addr = 3; \r\nendmodule",
+    "vvp: array.cc:730: double __vpiArray::get_word_r(unsigned int): Assertion `vsig' failed.\r\nzsh: abort (core dumped)  ./build/buggy.vvp"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

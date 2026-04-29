@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 492,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/492",
+  "title": "iverilog hangs forever for certain bit of Verilog code",
+  "body": "Sorry if this is due to some trivial issue, my Verilog experience is limited:\r\n\r\nI'm trying to compile the following Verilog code with `iverilog` version 11.0:\r\n\r\n```verilog\r\n`timescale 1ns/10ps\r\n\r\nmodule datamem_mock #(\r\n    parameter SZ_LOG2 = 16,\r\n    parameter INITFILE = \"datamem.txt\"\r\n) (\r\n    input clk,\r\n    input [SZ_LOG2-1:0] addr,\r\n    input [7:0] din,\r\n    input ce,\r\n    input we,\r\n    output reg [7:0] dout\r\n);\r\n\r\nlocalparam SIZE = 1 << SZ_LOG2;\r\n\r\nwire [SZ_LOG2-1:0] addr_int;\r\nwire [7:0] din_int;\r\n\r\nreg [7:0] datamem [SIZE-1:0];\r\nreg [SZ_LOG2-1:0] addr_sampled;\r\nreg [7:0] din_sampled;\r\n\r\nassign #1 addr_int = addr;\r\nassign #1 din_int  = din;\r\n\r\nalways @(posedge ce) begin\r\n    addr_sampled <= addr_int;\r\n    din_sampled  <= din_int;\r\nend\r\n\r\nalways @(posedge clk) begin\r\n    if (we) begin\r\n        if (addr !== addr_sampled || din !== din_sampled)\r\n            datamem[addr] <= 8'hxx;\r\n        else\r\n            datamem[addr] <= din;\r\n    end\r\nend\r\n\r\nalways @* begin\r\n    if (!ce || we)\r\n        dout = 8'hzz;\r\n    else if (addr !== addr_sampled)\r\n        dout = 8'hxx;\r\n    else\r\n        dout = datamem[addr];\r\nend\r\n\r\ninitial begin\r\n    $readmemh(INITFILE, datamem);\r\nend\r\n\r\nendmodule\r\n```\r\nThis seemingly casues `iverilog` to hang forever (100% percent CPU but little to no memory usage). Is there a problem with the code itself? Should `iverilog` emit an error here?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-03-25",
+  "closed_at": "2021-03-26",
+  "code_blocks": [
+    "`timescale 1ns/10ps\r\n\r\nmodule datamem_mock #(\r\n    parameter SZ_LOG2 = 16,\r\n    parameter INITFILE = \"datamem.txt\"\r\n) (\r\n    input clk,\r\n    input [SZ_LOG2-1:0] addr,\r\n    input [7:0] din,\r\n    input ce,\r\n    input we,\r\n    output reg [7:0] dout\r\n);\r\n\r\nlocalparam SIZE = 1 << SZ_LOG2;\r\n\r\nwire [SZ_LOG2-1:0] addr_int;\r\nwire [7:0] din_int;\r\n\r\nreg [7:0] datamem [SIZE-1:0];\r\nreg [SZ_LOG2-1:0] addr_sampled;\r\nreg [7:0] din_sampled;\r\n\r\nassign #1 addr_int = addr;\r\nassign #1 din_int  = din;\r\n\r\nalways @(posedge ce) begin\r\n    addr_sampled <= addr_int;\r\n    din_sampled  <= din_int;\r\nend\r\n\r\nalways @(posedge clk) begin\r\n    if (we) begin\r\n        if (addr !== addr_sampled || din !== din_sampled)\r\n            datamem[addr] <= 8'hxx;\r\n        else\r\n            datamem[addr] <= din;\r\n    end\r\nend\r\n\r\nalways @* begin\r\n    if (!ce || we)\r\n        dout = 8'hzz;\r\n    else if (addr !== addr_sampled)\r\n        dout = 8'hxx;\r\n    else\r\n        dout = datamem[addr];\r\nend\r\n\r\ninitial begin\r\n    $readmemh(INITFILE, datamem);\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

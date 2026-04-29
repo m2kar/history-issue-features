@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 882,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/882",
+  "title": "Better inference of the ICE40 SB_MUL16 blocks",
+  "body": "# Background\r\n\r\nYosys has recently grown the ability to partially infer ICE40 DSP blocks.  This works for some Verilog code, but it is not yet at the same level as the proprietary tools when it comes to inferring DSP blocks (see https://github.com/SpinalHDL/VexRiscv/issues/40#issuecomment-438609381)\r\n\r\n## Steps to reproduce the issue\r\n\r\nThe repository at https://github.com/im-tomu/fomu-tests/tree/master/mul-infer contains a VexRiscv `MulPlugin` that has been grafted from a VexRiscv synthesis into a standalone testbench.  Two targets are provided:\r\n\r\n* `make test` generates a vcd file using iverilog, to ensure that it is operating correctly, and\r\n* `make`, which runs the file through `yosys` and `nextpnr` to demonstrate that only one DSP block is being inferred. nextpnr is not actually necessary, as pins in the Verilog file don't match up to the given pcf file, however the nextpnr resource usage report is rather nice.\r\n\r\n## Expected behavior\r\n\r\nYosys should infer four multiplication blocks, based on the four 16-bit multiplication lines:\r\n\r\n```verilog\r\n  wire [15:0] execute_MulPlugin_aULow;\r\n  wire [15:0] execute_MulPlugin_bULow;\r\n  wire [16:0] execute_MulPlugin_aSLow;\r\n  wire [16:0] execute_MulPlugin_bSLow;\r\n  wire [16:0] execute_MulPlugin_aHigh;\r\n  wire [16:0] execute_MulPlugin_bHigh;\r\n  wire [33:0] _zz_26_;\r\n  wire [33:0] _zz_27_;\r\n  wire [33:0] _zz_28_;\r\n  wire [31:0] _zz_29_;\r\n  assign _zz_29_ = (execute_MulPlugin_aULow * execute_MulPlugin_bULow);\r\n  assign _zz_28_ = ($signed(execute_MulPlugin_aSLow) * $signed(execute_MulPlugin_bHigh));\r\n  assign _zz_27_ = ($signed(execute_MulPlugin_aHigh) * $signed(execute_MulPlugin_bSLow));\r\n  assign _zz_26_ = ($signed(execute_MulPlugin_aHigh) * $signed(execute_MulPlugin_bHigh));\r\n```\r\n\r\n## Actual behavior\r\n\r\nYosys only infers one DSP block, probably the one assigned to `_zz_29_`:\r\n\r\n```\r\nInfo: Device utilisation:\r\nInfo:            ICESTORM_LC:  6945/ 5280   131%\r\nInfo:           ICESTORM_RAM:    30/   30   100%\r\nInfo:                  SB_IO:    12/   96    12%\r\nInfo:                  SB_GB:     8/    8   100%\r\nInfo:           ICESTORM_PLL:     1/    1   100%\r\nInfo:            SB_WARMBOOT:     0/    1     0%\r\nInfo:           ICESTORM_DSP:     1/    8    12%\r\nInfo:         ICESTORM_HFOSC:     0/    1     0%\r\nInfo:         ICESTORM_LFOSC:     0/    1     0%\r\nInfo:                 SB_I2C:     0/    2     0%\r\nInfo:                 SB_SPI:     0/    2     0%\r\nInfo:                 IO_I3C:     0/    2     0%\r\nInfo:            SB_LEDDA_IP:     0/    1     0%\r\nInfo:            SB_RGBA_DRV:     0/    1     0%\r\nInfo:         ICESTORM_SPRAM:     4/    4   100%\r\n```",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-03-16",
+  "closed_at": "2019-10-01",
+  "code_blocks": [
+    "wire [15:0] execute_MulPlugin_aULow;\r\n  wire [15:0] execute_MulPlugin_bULow;\r\n  wire [16:0] execute_MulPlugin_aSLow;\r\n  wire [16:0] execute_MulPlugin_bSLow;\r\n  wire [16:0] execute_MulPlugin_aHigh;\r\n  wire [16:0] execute_MulPlugin_bHigh;\r\n  wire [33:0] _zz_26_;\r\n  wire [33:0] _zz_27_;\r\n  wire [33:0] _zz_28_;\r\n  wire [31:0] _zz_29_;\r\n  assign _zz_29_ = (execute_MulPlugin_aULow * execute_MulPlugin_bULow);\r\n  assign _zz_28_ = ($signed(execute_MulPlugin_aSLow) * $signed(execute_MulPlugin_bHigh));\r\n  assign _zz_27_ = ($signed(execute_MulPlugin_aHigh) * $signed(execute_MulPlugin_bSLow));\r\n  assign _zz_26_ = ($signed(execute_MulPlugin_aHigh) * $signed(execute_MulPlugin_bHigh));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

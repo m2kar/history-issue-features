@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 5658,
+  "title": "satgen: fix flip flop clock",
+  "features": [
+    {
+      "name": "positive-edge DFF with formal clock gating assumption",
+      "category": "control_flow",
+      "description": "Code should include a positive-edge-triggered D flip-flop ($_DFF_P_ cell) whose clock is constrained to remain constant via an assume property, and an assertion that the flop output retains its value across time steps without a clock edge",
+      "snippet": "$_DFF_P_ ff (.C(clk), .D(data), .Q(q));\nassume property (~clk);\nassert property (q !== 1'bx);",
+      "tags": ["dff", "clock_edge", "assume", "assert", "formal_verification", "sat_solver"],
+      "source_bug_id": "5658",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5658",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "undef propagation through DFF without clock toggle",
+      "category": "data_model",
+      "description": "Code should include a D flip-flop where the data input transitions from a defined value to undef (x) while the clock is held constant, verifying that the output does not change to undef in the absence of a clock edge",
+      "snippet": "$_DFF_P_ ff (.C(C), .D(D), .Q(Q));\nassume property (~C);\n// D transitions def->undef, Q should not change",
+      "tags": ["undef_propagation", "dff", "clock_edge", "x_state", "formal_verification"],
+      "source_bug_id": "5658",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5658",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "icells instantiation of internal DFF primitive",
+      "category": "general",
+      "description": "Code should include read_verilog with -icells flag to instantiate internal Yosys cell primitives like $_DFF_P_ directly in SystemVerilog source, enabling white-box testing of internal cells",
+      "snippet": "module top(input C, D, output Q);\n$_DFF_P_ ff (.C(C), .D(D), .Q(Q));\nendmodule",
+      "tags": ["icells", "internal_cell", "dff", "yosys_primitive", "white_box"],
+      "source_bug_id": "5658",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5658",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "SAT verification with undef enabled and sequential depth",
+      "category": "control_flow",
+      "description": "Code should include SAT-based formal verification using -enable_undef -seq 2 -verify -prove-asserts flags, exercising multi-step sequential analysis with undef states to detect incorrect state transitions",
+      "snippet": "// sat -show-all -enable_undef -set-assumes\n//   -set-init-def -verify -prove-asserts -seq 2\n// Exercises 2-step SAT with undef tracking",
+      "tags": ["sat_solver", "formal_verification", "undef", "sequential_depth", "assertions"],
+      "source_bug_id": "5658",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5658",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3125,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3125",
+  "title": "Inconsistent handling of multiple default_nettype directives",
+  "body": "## Steps to reproduce the issue\r\n\r\nFilename `default_nettype.v`:\r\n\r\n```verilog\r\n`default_nettype none\r\n\r\nmodule m (\r\n\tinput  wire a,\r\n\toutput wire b\r\n);\r\n\r\nassign b = x;\r\n\r\nendmodule\r\n\r\n`default_nettype wire\r\n```\r\n\r\nRun:\r\n\r\n```bash\r\nyosys -p \"read_verilog default_nettype.v\"\r\n```\r\n\r\n## Expected behavior\r\n\r\nAn error like:\r\n\r\n```\r\ndefault_nettype.v:8: ERROR: Identifier `\\x' is implicitly declared and `default_nettype is set to none.\r\n```\r\n\r\n## Actual behavior\r\n\r\nNo error. An implicitly declared net is created.\r\n\r\n## Notes\r\n\r\nThis pattern is used to avoid breaking other code, which may rely on `default_nettype` being `wire`, since `default_nettype` is global (or at least, has greater than file scope) in many tools.\r\n\r\nThis might stem from an ambiguity in the language reference (1364-2005 19.2):\r\n\r\n![image](https://user-images.githubusercontent.com/1298595/146976873-77b1a275-1cd2-4003-ba7b-779f1ae30f32.png)\r\n\r\nSpecifically:\r\n> Multiple  `default_nettype  directives  are  allowed.  The latest occurrence of this directive in the source controls the type of nets that will be implicitly declared\r\n\r\nThere are two intepretations of \"latest\":\r\n* Yosys' behaviour seems be \"the _last_ `default_nettype` in the entire file prevails\". If I append another `default_nettype none` to the repro above, it does raise an error.\r\n* The behaviour of big-iron simulators like Xcelium seems to be  \"at any point in the file, the _most recent_ `default_nettype` prevails\".\r\n\r\nThe second interpretation makes it easier to write portable HDL that uses `default_nettype none` internally.\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-12-21",
+  "closed_at": null,
+  "code_blocks": [
+    "`default_nettype none\r\n\r\nmodule m (\r\n\tinput  wire a,\r\n\toutput wire b\r\n);\r\n\r\nassign b = x;\r\n\r\nendmodule\r\n\r\n`default_nettype wire"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2729,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2729",
+  "title": "BLIF frontend does not honor reversed order of port bit indices",
+  "body": "When a cell in a Verilog library has a wide port with reversed bit indices (eg. `input A[0:3]` instead of `input A[3:0]`) then performing a round trip of a Verilog design through BLIF and back to Verilog will effectively reverse the port indices.\r\n\r\nConsider the following cell library. The second one has reversed indices of the `in` port:\r\n```\r\n(* blackbox *)\r\nmodule my_cell_normal (\r\n    input  wire [3:0] in,\r\n    output wire       out\r\n);\r\nendmodule\r\n\r\n(* blackbox *)\r\nmodule my_cell_reversed (\r\n    input  wire [0:3] in,\r\n    output wire       out\r\n);\r\nendmodule\r\n```\r\n\r\nThen in a design those cells are instantiated and individual signal vectors are connected to their input ports:\r\n```\r\nmodule top(\r\n    input  wire      I0,\r\n    input  wire      I1,\r\n    input  wire      I2,\r\n    input  wire      I3,\r\n    output wire      out_a,\r\n    output wire      out_b\r\n);\r\n    my_cell_normal normal_inst (\r\n        .in  ({I3, I2, I1, I0}),\r\n        .out (out_a)\r\n    );\r\n    my_cell_reversed reversed_inst (\r\n        .in  ({I3, I2, I1, I0}),\r\n        .out (out_b)\r\n    );\r\nendmodule\r\n```\r\n\r\nAfter writing this design to a BLIF file and loading it back (and writing verilog for comparison) the signal ordering should be the same while it isn't:\r\n```\r\n  my_cell_normal normal_inst (\r\n    .in({ I3, I2, I1, I0 }),\r\n    .out(out_a)\r\n  );\r\n  my_cell_reversed reversed_inst (\r\n    .in({ I0, I1, I2, I3 }),\r\n    .out(out_b)\r\n  );\r\n```\r\n\r\neven though the order is correct (in the sense of the cell definition) in the BLIF:\r\n```\r\n.subckt my_cell_normal in[0]=I0 in[1]=I1 in[2]=I2 in[3]=I3 out=out_a\r\n.cname normal_inst\r\n.subckt my_cell_reversed in[3]=I0 in[2]=I1 in[1]=I2 in[0]=I3 out=out_b\r\n.cname reversed_inst\r\n```\r\n\r\n## Steps to reproduce the issue\r\n\r\n[case.tar.gz](https://github.com/YosysHQ/yosys/files/6337081/case.tar.gz)\r\n\r\nUse the files from the attached archive file. Invoke Yosys for each of the scripts present there:\r\n - `yosys -s script1.v`\r\n - `yosys -s script2.v`\r\n\r\nCompare order of signals connected to the port `in` of each instanced cell. The order for the cell `reversed_inst`  in `my_design.eblif.v` should be reversed when compared to the original design `my_design.v`.\r\n\r\n## Expected behavior\r\n\r\nThe BLIF frontend honors ordering of port bit indices\r\n\r\n## Actual behavior\r\n\r\nThe BLIF frontend does not respect port bit ordering defined in a cell library.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-04-13",
+  "closed_at": "2021-05-08",
+  "code_blocks": [
+    "(* blackbox *)\r\nmodule my_cell_normal (\r\n    input  wire [3:0] in,\r\n    output wire       out\r\n);\r\nendmodule\r\n\r\n(* blackbox *)\r\nmodule my_cell_reversed (\r\n    input  wire [0:3] in,\r\n    output wire       out\r\n);\r\nendmodule",
+    "module top(\r\n    input  wire      I0,\r\n    input  wire      I1,\r\n    input  wire      I2,\r\n    input  wire      I3,\r\n    output wire      out_a,\r\n    output wire      out_b\r\n);\r\n    my_cell_normal normal_inst (\r\n        .in  ({I3, I2, I1, I0}),\r\n        .out (out_a)\r\n    );\r\n    my_cell_reversed reversed_inst (\r\n        .in  ({I3, I2, I1, I0}),\r\n        .out (out_b)\r\n    );\r\nendmodule",
+    "my_cell_normal normal_inst (\r\n    .in({ I3, I2, I1, I0 }),\r\n    .out(out_a)\r\n  );\r\n  my_cell_reversed reversed_inst (\r\n    .in({ I0, I1, I2, I3 }),\r\n    .out(out_b)\r\n  );"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

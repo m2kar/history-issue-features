@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 118,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/118",
+  "title": "DDR output cell simulation",
+  "body": "I might have found a bug in the ice40 techlib for SB_IO (yosys/techlibs/ice40/cells_sim.v):\nAccording to the Lattice spec TN1253 ([1] page 11) the two flip flops in the IO cell used for DDR output mode are sensitive to the rising and falling clock edge respectively. The output of each flip flop is fed into a multiplexer controlled by the clock, such that each flip flop drives the pin for a half clock cycle. From the document it is not clear which flip flop drives the output in which phase. The current model switches the multiplexer to the flip flop which just updated its output. In my Icarus simulation this results in glitches.  I think this multiplexer's control input must be inverted in the model.\n\nI have not tested on an FPGA, but in another Lattice document for a different FPGA series ([2] page 11, figure 10/11) the inverted sense of the multiplexer is documented. This also makes perfect sense for me.\n\nA fix which works for me is to swap the dout assignment to\n`dout = (OUTPUT_CLK ^ NEG_TRIGGER) || PIN_TYPE[2] ? dout_q_1 : dout_q_0;`\n\n[1] http://www.latticesemi.com/view_document?document_id=47960\n[2] http://www.latticesemi.com/~/media/LatticeSemi/Documents/ApplicationNotes/MO/ORCASeries4FastDDRInterface.PDF?la=en\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-02-06",
+  "closed_at": "2016-02-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

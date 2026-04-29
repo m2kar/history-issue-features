@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 333,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/333",
+  "title": "Problem with $readmemh when passing a file as a parameter",
+  "body": "I have define a rom that will be loaded from a generic file:\r\n\r\n```verilog\r\nmodule rom #(\r\nparameter ROMFILE=\"nofile\"\r\n) (\r\ninput clk,\r\ninput [3:0] A,\r\noutput [3:0] D\r\n);\r\n\r\n//-- ROM memory\r\nreg [3:0] rom [0:15];\r\n\r\n//-- Address bus (4 bits)\r\nwire [3:0] A;\r\n\r\n//-- Data bus (8 bits)\r\nreg [3:0] D;\r\n\r\nalways @(negedge clk) begin\r\n  D <= rom[A];\r\nend\r\n\r\n//-- Memory contents read\r\n//-- from the ROMFILE file\r\ninitial begin\r\n    $readmemh(ROMFILE, rom);\r\nend\r\nendmodule\r\n```\r\n\r\nThe top entity instantiates the rom and gives a name to the ROMFILE parameter:\r\n\r\n```verilog\r\n`default_nettype none\r\n\r\nmodule main (\r\n input clk,\r\n output wire d0, d1, d2, d3\r\n);\r\n\r\n parameter ROMFILE = \"rom0.list\";\r\n\r\n wire [3:0] addr = 4'h0;\r\n wire [3:0] data;\r\n\r\n rom #(\r\n  .ROMFILE(ROMFILE)\r\n ) rom1 (\r\n  .A(addr),\r\n  .D(data),\r\n  .clk(clk)\r\n );\r\n\r\n assign {d3,d2,d1,d0} = data;\r\n\r\n endmodule\r\n```\r\n\r\nWhen synthesizing with yosys, the following error appears:\r\n\r\n```\r\nyosys -p \"synth_ice40 -blif hardware.blif\" -q rom.v testrom.v\r\nERROR: Can not open file `nofile` for \\$readmemh at rom.v:27.\r\n```\r\nIt seems that yosys is trying to open the nofile file, instead of rom0.list\r\n\r\nIf I create an empty nofile file, it does not shown the error message, and the rom is loaded with the correct rom0.list\r\n\r\nIt is a minor bug. But we need this feature for using generic roms in icestudio, so that the memory contents can be specify by the user file\r\n\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-03-19",
+  "closed_at": "2017-03-20",
+  "code_blocks": [
+    "module rom #(\r\nparameter ROMFILE=\"nofile\"\r\n) (\r\ninput clk,\r\ninput [3:0] A,\r\noutput [3:0] D\r\n);\r\n\r\n//-- ROM memory\r\nreg [3:0] rom [0:15];\r\n\r\n//-- Address bus (4 bits)\r\nwire [3:0] A;\r\n\r\n//-- Data bus (8 bits)\r\nreg [3:0] D;\r\n\r\nalways @(negedge clk) begin\r\n  D <= rom[A];\r\nend\r\n\r\n//-- Memory contents read\r\n//-- from the ROMFILE file\r\ninitial begin\r\n    $readmemh(ROMFILE, rom);\r\nend\r\nendmodule",
+    "`default_nettype none\r\n\r\nmodule main (\r\n input clk,\r\n output wire d0, d1, d2, d3\r\n);\r\n\r\n parameter ROMFILE = \"rom0.list\";\r\n\r\n wire [3:0] addr = 4'h0;\r\n wire [3:0] data;\r\n\r\n rom #(\r\n  .ROMFILE(ROMFILE)\r\n ) rom1 (\r\n  .A(addr),\r\n  .D(data),\r\n  .clk(clk)\r\n );\r\n\r\n assign {d3,d2,d1,d0} = data;\r\n\r\n endmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

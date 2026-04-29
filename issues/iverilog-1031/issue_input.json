@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1031,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1031",
+  "title": "VPI: is vpi_handle_by_name() a good substitute for vpiLowConn?",
+  "body": "I have a VPI module that acts as a bridge between VVP running a simulation and a larger simulation that contains it.  That means that it acts very like a testbench written inside the VPI module.  It is intended to be rather general, so contains no information about the Verilog source code.\r\n\r\nTo make that work, early on it must scan the ports of the top-level module and set up the means to send inputs and capture outputs.  From the standard docs, the way to do that seems to be to call vpiHandle(vpiLowConn, port) to get access to the internal variable that represents the value on the port.  Then force values or set callbacks on it.\r\n\r\nBut vpiLowConn is not implemented.  Instead, I have this code, that works so far.\r\n\r\n``\r\n\r\n    /* Get the ports. */\r\n\r\n    iter = vpi_iterate(vpiPort, top);\r\n    while ((item = vpi_scan(iter))) {\r\n        PLI_INT32  direction;\r\n        char      *name;\r\n        vpiHandle  namesake;\r\n\r\n        direction = vpi_get(vpiDirection, item);\r\n        name = vpi_get_str(vpiName, item);\r\n\r\n        /* Assume that there is an object with the same name as the port\r\n         * whose value may be read or set as needed.  This is an assumption\r\n         * about how code for VVP is generated.\r\n         */\r\n\r\n        namesake = vpi_handle_by_name(name, top);\r\n        if (direction == vpiOutput) {\r\n            static struct t_vpi_time  time = {.type = vpiScaledRealTime};\r\n            static struct t_vpi_value val = { .format = vpiIntVal };\r\n\r\n            /* Put a watch on it. */\r\n\r\n            cb->reason = cbValueChange;\r\n            cb->cb_rtn = output_cb;\r\n            cb->obj = namesake;\r\n            cb->time = &time;\r\n            cb->value = &val;\r\n            if (!vpi_register_cb(cb))\r\n                DBG(\"No callback\\n\");\r\n        } else {\r\n            static struct t_vpi_value val = { .format = vpiIntVal };\r\n\r\n            // Set initial value.\r\n            \r\n            vpi_put_value(namesake, &val, NULL, vpiForceFlag);\r\n\r\n``\r\nMy question, for anyone still reading: is this the best way to do it?  If so, can it be expected to continue to work in future releases?\r\n\r\nThanks,\r\n\r\nGiles",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-14",
+  "closed_at": "2023-11-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

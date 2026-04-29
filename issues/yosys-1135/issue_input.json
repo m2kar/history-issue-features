@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1135,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1135",
+  "title": "Over-aggressive pmux2shiftx inferring $sub",
+  "body": "## Steps to reproduce the issue\r\n\r\n`./yosys -p \"proc; pmux2shiftx; opt -full; stat\" pmux2shiftx.v`\r\n\r\n```\r\nmodule top(input [7:0] i, output o);\r\nalways @*\r\ncase (i[6:3])\r\n    4: o <= i[0];\r\n    3: o <= i[2];\r\n    7: o <= i[3];\r\n    default: o <= 1'b0;\r\nendcase\r\nendmodule\r\n```\r\n\r\nCreates:\r\n```\r\n   Number of cells:                  4\r\n     $and                            1\r\n     $shift                          1\r\n     $shiftx                         1\r\n     $sub                            1\r\n```\r\nwhich includes a `$sub` cell (due to offset correction). This `$sub` cell can get inferred into a tech-specific carry chain from which it can't get optimised away.\r\n![pmux2shiftx](https://user-images.githubusercontent.com/6740044/60152193-69f30900-9794-11e9-8407-89b9e2ee808b.png)\r\n\r\n## Expected behavior\r\n\r\nIdeally, ability to create a better `$shiftx` that can be created that will eventually boil down to a 6-input LUT?\r\n`yosys -p \"proc; pmux2shiftx; opt -full; techmap; abc -lut 6; stat\" pmux2shiftx.v` shows that this is possible.\r\n\r\nMore concretely: \r\n`./yosys -p \"proc; synth_xilinx -nosrl\" pmux2shiftx.v` returns a LUT6 (`-nosrl` flag is necessary otherwise a `pmuxshiftx` is run internally)\r\nbut:\r\n`./yosys -p \"proc; pmux2shiftx; synth_xilinx -nosrl\" pmux2shiftx.v` returns a bigger circuit with multiple LUTs and carry elements.\r\n\r\nOtherwise, perhaps option to control `pmux2shiftx`to not perform such conversions?\r\n\r\n## Actual behavior\r\n\r\n`$sub` cell that gets mapped to a carry chain.\r\n\r\n```\r\n3. Executing PMUX2SHIFTX pass.\r\nInspecting $pmux cell top/$procmux$3.\r\n  data width: 1 (next power-of-2 = 1, log2 = 0)\r\n  checking ctrl signal \\i [6:3]\r\n    best permutation: \\i [6:3]\r\n    best xor mask: 4'0000\r\n      0: 4'0111 -> 4'0111 -> 4'0111: \\i [3]\r\n      1: 4'0011 -> 4'0011 -> 4'0011: \\i [2]\r\n      2: 4'0100 -> 4'0100 -> 4'0100: \\i [0]\r\n    choices: 3\r\n    min choice: 3\r\n    max choice: 7\r\n    range density: 60%\r\n    absolute density: 37%\r\n    full density: 18%\r\n    full case: false\r\n    offset: 4'0011 <<<<<\r\n    created $shiftx cell $auto$pmux2shiftx.cc:712:execute$12.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-26",
+  "closed_at": "2019-06-27",
+  "code_blocks": [
+    "module top(input [7:0] i, output o);\r\nalways @*\r\ncase (i[6:3])\r\n    4: o <= i[0];\r\n    3: o <= i[2];\r\n    7: o <= i[3];\r\n    default: o <= 1'b0;\r\nendcase\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1382,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1382",
+  "title": "Accessing large registers results in excessive compile-time burden (read_verilog)",
+  "body": "## Steps to reproduce the issue\r\n\r\nSimplified example:\r\n\r\n```bash\r\ncat > /tmp/large_register.v <<EOF\r\nmodule large_register(input  \t   clk,\r\n\t\t      input \t   valid,\r\n\t\t      input [19:0] addr,\r\n\t\t      input \t   wr_bit\r\n\t\t      );\r\n   reg [1<<20:0] large_register;\r\n   always @(posedge clk) begin\r\n      large_register[addr] <= (valid ? wr_bit : large_register[addr]);\r\n   end\r\nendmodule\r\nEOF\r\n\r\n# Now running yosys on this will eat a lot of CPU and memory\r\nyosys -QTp \"read_verilog /tmp/large_register.v\"\r\n```\r\nUsing version at head: 36df37a734c3dd315f00edbe19b364b6f9a1a132\r\n\r\n## Expected behavior\r\n\r\nEven though the register in question is somewhat large, the expectation is be that the code would be processed with reasonable use of CPU and memory.\r\n\r\n## Actual behavior\r\n\r\nYosys uses 10G+ memory and uses 100% CPU for > 30min (interrupted after that) to just `read_verilog` this code.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-09-17",
+  "closed_at": "2021-03-04",
+  "code_blocks": [
+    "cat > /tmp/large_register.v <<EOF\r\nmodule large_register(input  \t   clk,\r\n\t\t      input \t   valid,\r\n\t\t      input [19:0] addr,\r\n\t\t      input \t   wr_bit\r\n\t\t      );\r\n   reg [1<<20:0] large_register;\r\n   always @(posedge clk) begin\r\n      large_register[addr] <= (valid ? wr_bit : large_register[addr]);\r\n   end\r\nendmodule\r\nEOF\r\n\r\n# Now running yosys on this will eat a lot of CPU and memory\r\nyosys -QTp \"read_verilog /tmp/large_register.v\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

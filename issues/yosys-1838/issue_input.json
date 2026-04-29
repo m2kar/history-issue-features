@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1838,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1838",
+  "title": "Extremely large wires in generated RTLIL produce confusing parser errors",
+  "body": "## Steps to reproduce the issue\r\n\r\nAttempt to parse the following RTLIL:\r\n\r\n```\r\nattribute \\generator \"nMigen\"\r\nattribute \\top 1\r\nattribute \\nmigen.hierarchy \"top\"\r\nmodule \\top\r\n  wire width 32 \\y\r\n  wire width 4294967327 $1\r\n  wire width 32 \\a\r\n  wire width 32 \\b\r\n  wire width 4294967327 $2\r\n  cell $sshl $3\r\n    parameter \\A_SIGNED 1'0 \r\n    parameter \\A_WIDTH 6'100000\r\n    parameter \\B_SIGNED 1'0 \r\n    parameter \\B_WIDTH 6'100000\r\n    parameter \\Y_WIDTH 33'100000000000000000000000000011111\r\n    connect \\A \\a\r\n    connect \\B \\b\r\n    connect \\Y $2\r\n  end \r\n  connect $1 $2\r\n  process $group_0\r\n    assign \\y 32'00000000000000000000000000000000\r\n    assign \\y $1 [31:0]\r\n    sync init\r\n  end \r\n  connect \\a 32'00000000000000000000000000000000\r\n  connect \\b 32'00000000000000000000000000000000\r\nend\r\n```\r\n\r\nTo test, save the above RTLIL as `bug.il` and run:\r\n\r\n`yosys -q -p \"read_ilang bug.il; write_verilog bug.v;\"`\r\n\r\nObserve:\r\n\r\n`ERROR: Parser error in line 24: invalid slice`\r\n\r\n## Expected behavior\r\n\r\nThe above RTLIL was created by a code generator. It seems unlikely that a designer would intentionally create a wire that is 4 billion bits wide, so it might be nice to produce a warning or error which points to the oversized wire instead of (or in addition to) printing an error at the attempt to slice that wire.\r\n\r\nAs someone who is still learning the toolchain, it was not immediately clear to me why the parser complained about slicing the first 32 bits out of a value, but I can understand that a wire should not be billions of bits wide under normal circumstances.\r\n\r\n## Actual behavior\r\n\r\nThe parser points to this line as the source of the problem:\r\n\r\n`assign \\y $1 [31:0]`\r\n\r\nIn a larger design, the problematic RTLIL line will probably be located among many similar (and valid) statements, which makes it harder to track down the real source of the problem.\r\n\r\nIn my case, I was designing an ALU with a variety of operations, and only the left-shift one produced this issue. When I looked at the RTLIL line which Yosys me pointed to, I couldn't tell why that particular `assign \\y` statement would cause issues when it was surrounded by dozens of almost identical statements which the parser seemed happy with.\r\n\r\nThank you!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-29",
+  "closed_at": "2020-04-09",
+  "code_blocks": [
+    "attribute \\generator \"nMigen\"\r\nattribute \\top 1\r\nattribute \\nmigen.hierarchy \"top\"\r\nmodule \\top\r\n  wire width 32 \\y\r\n  wire width 4294967327 $1\r\n  wire width 32 \\a\r\n  wire width 32 \\b\r\n  wire width 4294967327 $2\r\n  cell $sshl $3\r\n    parameter \\A_SIGNED 1'0 \r\n    parameter \\A_WIDTH 6'100000\r\n    parameter \\B_SIGNED 1'0 \r\n    parameter \\B_WIDTH 6'100000\r\n    parameter \\Y_WIDTH 33'100000000000000000000000000011111\r\n    connect \\A \\a\r\n    connect \\B \\b\r\n    connect \\Y $2\r\n  end \r\n  connect $1 $2\r\n  process $group_0\r\n    assign \\y 32'00000000000000000000000000000000\r\n    assign \\y $1 [31:0]\r\n    sync init\r\n  end \r\n  connect \\a 32'00000000000000000000000000000000\r\n  connect \\b 32'00000000000000000000000000000000\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

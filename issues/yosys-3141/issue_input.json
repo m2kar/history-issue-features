@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3141,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3141",
+  "title": "yosys incrorrectly infers latches",
+  "body": "## Steps to reproduce the issue\r\n\r\nI was trying to synthesize some VHDL designs using ghdl and yosys and discovered that there were latches inferred when I expected none. I managed to simplify the verilog produced by ghdl to this:\r\n\r\n```verilog\r\nmodule dff\r\n  (input  clk,\r\n   input  d,\r\n   input  load,\r\n   output q);\r\n  wire r;\r\n  wire rin;\r\n  wire n4_o;\r\n  reg n5_o;\r\n  reg n11_q;\r\n  assign q = r;\r\n  assign r = n11_q;\r\n  assign rin = n5_o;\r\n  assign n4_o = load == 1'b1;\r\n  always @*\r\n    case (n4_o)\r\n      1'b1: n5_o <= d;\r\n    endcase\r\n  always @(posedge clk)\r\n    n11_q <= rin;\r\nendmodule\r\n```\r\n\r\nThis shows that latches are produced:\r\n```shell\r\n% yosys -p \"read_verilog dff.v; synth_xilinx;\"\r\n...\r\n   Number of cells:                  7\r\n     BUFG                            1\r\n     FDRE                            1\r\n     IBUF                            3\r\n     LDCE                            1\r\n     OBUF                            1\r\n...\r\n```\r\n\r\nNote the LDCE used here, in addition to the expected FDRE.\r\n\r\nStrangely, this does not produce any latches, ~~and can be used as workaround~~:\r\n\r\n```shell\r\n% yosys -p \"read_verilog dff.v; proc_dff; synth_xilinx;\"\r\n...\r\n   Number of cells:                  7\r\n     BUFG                            1\r\n     FDRE                            1\r\n     IBUF                            3\r\n     LUT3                            1\r\n     OBUF                            1\r\n...\r\n```\r\n\r\nThe problem does not seem to be specific to `synth_xilinx`, running `synth_intel` without explicit `proc_dff` results in a crash:\r\n```\r\n2.18. Executing DFFLEGALIZE pass (convert FFs to types supported by the target).\r\nERROR: FF dff.$auto$ff.cc:262:slice$95 (type $_DLATCH_P_) cannot be legalized: D latches are not supported\r\n```\r\n\r\nI'm not very familiar with verilog, so there may be some problems with the code produced by ghdl, but I find it strange that yosys is able to produce expected result when using `proc_dff`.\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-02",
+  "closed_at": "2022-01-02",
+  "code_blocks": [
+    "module dff\r\n  (input  clk,\r\n   input  d,\r\n   input  load,\r\n   output q);\r\n  wire r;\r\n  wire rin;\r\n  wire n4_o;\r\n  reg n5_o;\r\n  reg n11_q;\r\n  assign q = r;\r\n  assign r = n11_q;\r\n  assign rin = n5_o;\r\n  assign n4_o = load == 1'b1;\r\n  always @*\r\n    case (n4_o)\r\n      1'b1: n5_o <= d;\r\n    endcase\r\n  always @(posedge clk)\r\n    n11_q <= rin;\r\nendmodule",
+    "% yosys -p \"read_verilog dff.v; synth_xilinx;\"\r\n...\r\n   Number of cells:                  7\r\n     BUFG                            1\r\n     FDRE                            1\r\n     IBUF                            3\r\n     LDCE                            1\r\n     OBUF                            1\r\n...",
+    "% yosys -p \"read_verilog dff.v; proc_dff; synth_xilinx;\"\r\n...\r\n   Number of cells:                  7\r\n     BUFG                            1\r\n     FDRE                            1\r\n     IBUF                            3\r\n     LUT3                            1\r\n     OBUF                            1\r\n..."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

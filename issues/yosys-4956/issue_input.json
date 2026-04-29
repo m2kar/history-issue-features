@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4956,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4956",
+  "title": "synth_xilinx crashes on FDSE with unconnected S port during XILINX_DFFOPT",
+  "body": "### Version\n\nYosys 0.50+7 (git sha1 38f858374, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nCreate a Verilog file top.v with the following content:\n```\nmodule top(\n    input wire clk,\n    input wire data,\n    output reg q\n);\n    FDSE fdse_inst (\n        .C(clk),    // Clock\n        .D(data),   // Data input\n        .CE(1'b1),  // Clock enable\n        .Q(q)      // Output\n        // .S (synchronous set) port is left unconnected\n    );\nendmodule\n```\nRun Yosys with the following command:\n`yosys -p \"read_verilog top.v; synth_xilinx -flatten -nowidelut -arch xc7 -top top; json -o synth.json\" `\nObserve the crash during the XILINX_DFFOPT pass.\n\n### Expected Behavior\n\nIf the S port of the FDSE primitive is required, Yosys should throw a clear error message indicating that the port is missing.\n\nIf the S port is optional, Yosys should either:\n\nSilently ignore the unconnected port.\n\nAssign a default value (e.g., S = 0 to disable the set function).\n\n### Actual Behavior\n\nYosys crashes with the following error:\n```\n2.46. Executing XILINX_DFFOPT pass (optimize FF control signal usage).\nOptimizing FFs in top.\nterminate called after throwing an instance of 'std::out_of_range'\n  what():  dict::at()\nAborted (core dumped)\n```\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-21",
+  "closed_at": "2025-03-21",
+  "code_blocks": [
+    "module top(\n    input wire clk,\n    input wire data,\n    output reg q\n);\n    FDSE fdse_inst (\n        .C(clk),    // Clock\n        .D(data),   // Data input\n        .CE(1'b1),  // Clock enable\n        .Q(q)      // Output\n        // .S (synchronous set) port is left unconnected\n    );\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

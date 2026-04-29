@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4516,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4516",
+  "title": "Represent string constants as strings",
+  "body": "Currently, a `RTLIL::Const` representing a string will use `std::vector<RTLIL::State>`, encoding the string into a vector of individual bits. This increases the memory consumption of string attributes, such as `src` and `hdlname`, by a factor of 8.\r\n\r\nAs of this PR, the structure now holds data represented with ~~an `std::variant<bitvectype, std::string>` named `backing`~~ a union. The `bits` vector is no longer accessible and instead `std::vector<RTLIL::State>& bits()` has to be used. When a Const is constructed from a string, it is represented with the string alternative. When its `bits()` method is used, the string is encoded into the bit vector alternative as prior to this PR, see `Const::bitvectorize()`. This is similar to how `RTLIL::SigSpec` \"unpacks\" into bits.\r\n\r\nIn the initial implementation, when `bits()` were being accessed, I asserted that the Const isn't represented with a string. This found some places in Yosys that access string attributes bit-by-bit. As a result, this PR comes with bonus content:\r\n\r\n+ `kernel/cellaigs.cc`\r\n+ `frontends/ast/ast.cc`\r\n+ `Const::pretty_fmt`\r\n+ cell checker `is_param` that doesn't try return bits\r\n\r\nIt's possible to split these now necessary changes out to a separate PR, but it will be heavy on git conflicts. Please advise.\r\n\r\nThis PR does not affect constant `SigChunk`s which also have an `std::vector<RTLIL::State>` each.\r\n\r\n- [X] clean my desk (TODO, log_debug, did_something_hook, unwrap `std::get` from `assert_get_bits` etc)\r\n- [x] ~~add some way of debugging how much unpacking we're doing~~ requires unrelated changes in followup PR\r\n\r\nPlease comment what memory usage changes you see with this PR. I've observed memory savings of 0-20% depending on the design with negligible runtime improvements. The open source Verilog frontend often dominates memory usage, so flows that use Verific may more readily show these improvements.",
+  "labels": [
+    "merge-after-jf"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-31",
+  "closed_at": "2024-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

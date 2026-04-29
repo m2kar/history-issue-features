@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2419,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2419",
+  "title": "Yosys reading the wrong execution path",
+  "body": "## Short description\r\n\r\nThe error occurs when installing yosys in a user defined directory. When executing yosys as a library (here: pyosys) passes, like techmap, that look for files inside `/share` folder can't find that folder since yosys reads the execution path from the environment (e.g. `/usr/bin`).\r\n\r\n## Steps to reproduce the issue\r\n\r\nEnable pyosys by adjusting the Makefile:\r\nL21: ENABLE_LIBYOSYS := 1\r\nL26: ENABLE_PYOSYS := 1\r\n\r\nInstall yosys in a non-standard destination by manually setting the `PREFIX` variable in Makefile (either add a `PREFIX =` line or use `make --prefix=**` when building)\r\n\r\nIn my case i used `~/.local` as the destination directory.\r\n\r\nSet the installation directory of libyosys:\r\n`L174: PYTHON_DESTDIR := $(shell $(PYTHON_EXECUTABLE) -c \"import site; print(site.getsitepackages()[-1]);\")`\r\nto\r\n`PYTHON_DESTDIR := $(PREFIX)/python`\r\n\r\nAdd yosys executable folder to PATH by adding `export PATH=~/.local/bin:$PATH` to `~/.bashrc`\r\nAdd libyosys folder by adding `export PYTHONPATH=~/.local/python:$PYTHONPATH` to `~/.bashrc`\r\n\r\nRun the `techmap` pass inside a python script like\r\n```\r\nimport libyosys as ys\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog example.v\", design)\r\nys.run_pass(\"techmap\", design)\r\n```\r\n\r\nThe techmap pass internally calls the verilog frontend to load `techmap.v` file (found in `share`-directory).\r\n\r\nThe destination of the share directory is gathered at\r\nhttps://github.com/YosysHQ/yosys/blob/e2a39bb1e71b97d423a3c2233abce996376e25dd/kernel/yosys.cc#L755\r\nand adding `/share` to it.\r\n\r\n## Expected behavior\r\n\r\nTechmap pass is executed successfully since all paths are built correctly. The path to the file `techmap.v` is created adding `/share` to the execution path returned by the environment (here the execution path of python3: `/usr/bin`)\r\n\r\n## Actual behavior\r\n\r\nThe pass ends with an error:\r\n```\r\n5. Executing TECHMAP pass (map to technology primitives).\r\nERROR: proc_share_dirname: unable to determine share/ directory!\r\n```\r\nThe error is thrown by\r\nhttps://github.com/YosysHQ/yosys/blob/e2a39bb1e71b97d423a3c2233abce996376e25dd/kernel/yosys.cc#L856\r\n\r\n## Quick fix\r\nA quick way to fix the issue is to change\r\n`L761: return std::string(path, buflen);`\r\nto\r\n`return ABS_PATH_TO_BINFOLDER`\r\n\r\n## Possible fix\r\nUse the installation directory as gathered by the makefile but this prohibits the user from moving the created yosys directories after installation\r\n\r\n## Discussion\r\nThis problem could also occur when running yosys as a library inside any c++ program that has a different execution path then the yosys intallation.\r\n\r\nI do not have a usecase for that at hand so i can not test it.\r\n\r\nI also discussed this with @btut ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-10-29",
+  "closed_at": "2020-10-29",
+  "code_blocks": [
+    "import libyosys as ys\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog example.v\", design)\r\nys.run_pass(\"techmap\", design)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

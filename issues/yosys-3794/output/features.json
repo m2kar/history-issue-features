@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 3794,
+  "title": "CXXRTL: \"Assert `!for_debug' failed\" caused by the \"-noflatten\" option",
+  "features": [
+    {
+      "name": "hierarchical module array instantiation with buffered wire output",
+      "category": "control_flow",
+      "description": "Code should include a parent module instantiating a child module as an array, where the child module contains a buffered combinatorial wire output",
+      "snippet": "module inner(input sub_i, output sub_o);\n  assign sub_o = !sub_i;\nendmodule\n\nmodule gen(input [3:0] in, output [3:0] out);\n  wire [3:0] sub_output_vec;\n  inner l[3:0] (.sub_i(in), .sub_o(sub_output_vec));\nendmodule",
+      "tags": ["module_instantiation", "array_instantiation", "hierarchical", "buffered_wire"],
+      "source_bug_id": "3794",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3794",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "intermediate wire connecting module array outputs to parent output",
+      "category": "data_model",
+      "description": "Code should include an intermediate unpacked wire connecting module array instance outputs before assignment to parent module output",
+      "snippet": "wire [3:0] sub_output_vec;\ninner l[3:0] (.sub_i(in), .sub_o(sub_output_vec));\nassign out = sub_output_vec;",
+      "tags": ["intermediate_wire", "array_instantiation", "wire_assignment"],
+      "source_bug_id": "3794",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3794",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "cxxrtl_backend -noflatten with non_flattened_hierarchy",
+      "category": "general",
+      "description": "Code should include a hierarchical design processed with write_cxxrtl -noflatten option on module array instantiations",
+      "snippet": "read_verilog gen.v; hierarchy -check -top gen\nwrite_cxxrtl -noflatten gen.cpp",
+      "tags": ["cxxrtl_backend", "noflatten", "hierarchical", "backend_option"],
+      "source_bug_id": "3794",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3794",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

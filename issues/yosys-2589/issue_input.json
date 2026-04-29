@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2589,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2589",
+  "title": "CXXRTL: (* top *) attribute causes wildcard port connections (.*) to break",
+  "body": "## Steps to reproduce the issue\r\n\r\ntest.sv:\r\n```\r\n(* top *)\r\nmodule top(\r\n        input  logic       clk,\r\n        output logic [3:0] seq,\r\n    );\r\n\r\n    test t(.*);\r\nendmodule\r\n\r\nmodule test(\r\n        input  logic       clk,\r\n        output logic [3:0] seq,\r\n    );\r\n\r\n    always_ff @(posedge clk) seq++;\r\nendmodule\r\n```\r\n\r\nGenerate test.cc with:\r\n```\r\nyosys -p \"write_cxxrtl test.cc\" test.sv\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe output file test.cc should contain an eval function similar to this:\r\n```\r\nbool p_top::eval() {\r\n    bool converged = true;\r\n    bool posedge_p_clk = this->posedge_p_clk();\r\n    // cells $procdff$3 $flatten\\t.$add$test.sv:0$2\r\n    if (posedge_p_clk) {\r\n        p_t_2e_seq.next = add_uu<32>(p_t_2e_seq.curr, value<32>{0x1u}).slice<3,0>().val();\r\n    }\r\n    // connection\r\n    p_seq = p_t_2e_seq.curr;    // <----- IMPORTANT LINE\r\n    return converged;\r\n}\r\n```\r\n\r\n## Actual behavior\r\n\r\nThe output file test.cc does not contain the line marked with the comment \"IMPORTANT LINE\" in the code snipped above. If the top-attribute is removed from the top module or if the port connections are done more explicit (.clk, .seq) instead of the wildcard, then the output file is correct and works as expected.\r\n\r\nI'm not sure, maybe I'm not supposed to assign the top-attribute to the top module manually. In that case I apologize, please just close this issue, I will get the message.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-16",
+  "closed_at": "2021-07-16",
+  "code_blocks": [
+    "(* top *)\r\nmodule top(\r\n        input  logic       clk,\r\n        output logic [3:0] seq,\r\n    );\r\n\r\n    test t(.*);\r\nendmodule\r\n\r\nmodule test(\r\n        input  logic       clk,\r\n        output logic [3:0] seq,\r\n    );\r\n\r\n    always_ff @(posedge clk) seq++;\r\nendmodule",
+    "bool p_top::eval() {\r\n    bool converged = true;\r\n    bool posedge_p_clk = this->posedge_p_clk();\r\n    // cells $procdff$3 $flatten\\t.$add$test.sv:0$2\r\n    if (posedge_p_clk) {\r\n        p_t_2e_seq.next = add_uu<32>(p_t_2e_seq.curr, value<32>{0x1u}).slice<3,0>().val();\r\n    }\r\n    // connection\r\n    p_seq = p_t_2e_seq.curr;    // <----- IMPORTANT LINE\r\n    return converged;\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

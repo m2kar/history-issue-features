@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 968,
+  "title": "Loop variables don't persist following the loop but within the same block",
+  "features": [
+    {
+      "name": "for-loop variable persistence after loop exit",
+      "category": "control_flow",
+      "description": "Code should include a for-loop with an integer loop variable whose value is read after the loop terminates within the same always block, verifying that the variable retains its last assigned value per Verilog semantics",
+      "snippet": "integer k;\nalways @(*) begin\n  for (k = 0; k < 4; k = k + 1)\n    out[k] = in[k];\n  // k should equal 4 here\n  out[7:4] = {4{in[k]}};\nend",
+      "tags": ["for_loop", "integer", "loop_variable", "variable_persistence", "always_comb"],
+      "source_bug_id": "968",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/968",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "integer variable dual use as loop iterator and array index",
+      "category": "data_model",
+      "description": "Code should include an integer variable used both as a for-loop iteration counter and subsequently as an array index expression after the loop body, testing that the post-loop index value resolves correctly",
+      "snippet": "integer k;\nreg [7:0] out;\nreg [3:0] in;\nalways @(*) begin\n  for (k = 0; k < 4; k = k + 1)\n    out[k] = in[k];\n  out[4] = in[k]; // k == 4 post-loop\nend",
+      "tags": ["integer", "for_loop", "array_index", "variable_reuse"],
+      "source_bug_id": "968",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/968",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

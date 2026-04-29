@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2538,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2538",
+  "title": "Certain code causes error in OPT_CLEAN pass",
+  "body": "Synthesizing this kind of module \r\n```\r\nmodule muller(ind, alpha, outd, dither);\r\ninput[3:0] ind;\r\ninput[3:0] alpha;\r\noutput[3:0] outd;\r\ninput dither;\r\n\r\nreg outd;\r\n\r\nalways @( * ) begin : pask\r\n\treg[6:0] roppe1;\r\n\treg[6:0] roppe2;\r\n\r\n\troppe1 = ({4'b0000,ind[2:0]} * {3'b000,alpha}) + 4;\r\n\troppe2 = ({4'b0000,ind[2:0]} * {3'b000,alpha}) + 12;\r\n\r\n\tif (dither)\r\n\t\toutd = {ind[3],roppe1[6:4]};\r\n\telse\r\n\t\toutd = {ind[3],roppe2[6:4]};\r\nend\r\nendmodule\r\n\r\n```\r\nwith\r\n```\r\nread -sv muller.v\r\nsynth -lut 3 -top muller\r\n```\r\n\r\ncauses\r\n```\r\n2.21.8. Executing OPT_CLEAN pass (remove unused cells and wires).\r\nFinding unused cells or wires in module \\muller..\r\nRemoved 0 unused cells and 4 unused wires.\r\n<suppressed ~1 debug messages>\r\nERROR: Found error in internal cell \\muller.$auto$alumacc.cc:485:replace_alu$12 ($alu) at kernel/rtlil.cc:973:\r\n  attribute \\src \"muller.v:16.11-16.52\"\r\n  cell $alu $auto$alumacc.cc:485:replace_alu$12\r\n    parameter \\A_SIGNED 0\r\n    parameter \\A_WIDTH 2\r\n    parameter \\B_SIGNED 0\r\n    parameter \\B_WIDTH 5\r\n    parameter \\Y_WIDTH 5\r\n    connect \\A $auto$rtlil.cc:2218:Mux$20\r\n    connect \\B $auto$wreduce.cc:454:run$9 [6:2]\r\n    connect \\BI 1'0\r\n    connect \\CI 1'0\r\n    connect \\CO $auto$opt_share.cc:248:merge_operators$22\r\n    connect \\X $auto$opt_share.cc:247:merge_operators$21\r\n    connect \\Y $auto$opt_share.cc:219:merge_operators$18\r\n  end\r\n```\r\n\r\nThis issue can be worked around by doing\r\n```\r\n\tif (dither)\r\n\t\troppe1 = roppe2;\r\n\r\n\toutd = {ind[3],roppe1[6:4]};\r\n\r\n```\r\n\r\ngit commit b0004911ca15ec41db56c76c83461061fedc742e",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-14",
+  "closed_at": "2021-01-14",
+  "code_blocks": [
+    "module muller(ind, alpha, outd, dither);\r\ninput[3:0] ind;\r\ninput[3:0] alpha;\r\noutput[3:0] outd;\r\ninput dither;\r\n\r\nreg outd;\r\n\r\nalways @( * ) begin : pask\r\n\treg[6:0] roppe1;\r\n\treg[6:0] roppe2;\r\n\r\n\troppe1 = ({4'b0000,ind[2:0]} * {3'b000,alpha}) + 4;\r\n\troppe2 = ({4'b0000,ind[2:0]} * {3'b000,alpha}) + 12;\r\n\r\n\tif (dither)\r\n\t\toutd = {ind[3],roppe1[6:4]};\r\n\telse\r\n\t\toutd = {ind[3],roppe2[6:4]};\r\nend\r\nendmodule",
+    "2.21.8. Executing OPT_CLEAN pass (remove unused cells and wires).\r\nFinding unused cells or wires in module \\muller..\r\nRemoved 0 unused cells and 4 unused wires.\r\n<suppressed ~1 debug messages>\r\nERROR: Found error in internal cell \\muller.$auto$alumacc.cc:485:replace_alu$12 ($alu) at kernel/rtlil.cc:973:\r\n  attribute \\src \"muller.v:16.11-16.52\"\r\n  cell $alu $auto$alumacc.cc:485:replace_alu$12\r\n    parameter \\A_SIGNED 0\r\n    parameter \\A_WIDTH 2\r\n    parameter \\B_SIGNED 0\r\n    parameter \\B_WIDTH 5\r\n    parameter \\Y_WIDTH 5\r\n    connect \\A $auto$rtlil.cc:2218:Mux$20\r\n    connect \\B $auto$wreduce.cc:454:run$9 [6:2]\r\n    connect \\BI 1'0\r\n    connect \\CI 1'0\r\n    connect \\CO $auto$opt_share.cc:248:merge_operators$22\r\n    connect \\X $auto$opt_share.cc:247:merge_operators$21\r\n    connect \\Y $auto$opt_share.cc:219:merge_operators$18\r\n  end",
+    "if (dither)\r\n\t\troppe1 = roppe2;\r\n\r\n\toutd = {ind[3],roppe1[6:4]};"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

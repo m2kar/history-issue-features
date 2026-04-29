@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 19,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/19",
+  "title": "LibertyParer::lexer can't handle '+' in exponents",
+  "body": "Clifford\n\nI've been experimenting with yosys recently and I really like this tool.  I was having some trouble with a foundry model and I tracked down the issue to the handling of positive exponents.  Here are two excerpts from my .lib file:\n\n---\n\n```\nwire_load (NONE) {\n    capacitance : 0.000000;\n    resistance : 0.000000e+00;\n    slope : 1.000000;\n    fanout_length(1, 1.00);\n}\n```\n\n---\n\nelsewhere in the same file\n\n---\n## cell_leakage_power : 3.420563e+00;\n\nThe issue appears to be that the code in LibertyParer::lexer doesn't check for the '+' character giving a syntax error on:\n\nresistance : 0.000000e+00;\n\nand\n\ncell_leakage_power : 3.420563e+00;\n\nI experimented with adding || c == '+' to the two if statements there  and it seems to handle these cases correctly.  Here is what I got to work:\n\nif (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_' || c == '-' || c == '.' || c == '+') \n\nThanks again for creating this excellent tool.  I hope to be able to help out in the future.  \n\nregards,\nRyan\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-01-14",
+  "closed_at": "2014-01-14",
+  "code_blocks": [
+    "wire_load (NONE) {\n    capacitance : 0.000000;\n    resistance : 0.000000e+00;\n    slope : 1.000000;\n    fanout_length(1, 1.00);\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

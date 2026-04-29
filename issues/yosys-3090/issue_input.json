@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3090,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3090",
+  "title": "Wrong sign extension during multiplication",
+  "body": "Code and testbench: https://gist.github.com/punzik/0d4d5cc3e8ae26bdbeb485467744edad\r\n\r\nIn this code tests several ways to multiply a signed and unsigned number.\r\n```verilog\r\n    reg signed [11:0] a;\r\n    reg [11:0] b;\r\n    reg signed [31:0] c1;\r\n    reg signed [31:0] c2;\r\n    reg signed [31:0] c3;\r\n    reg signed [31:0] c4;\r\n \r\n    initial begin\r\n        a = -12'sd20;\r\n        b = 12'hfff;\r\n    end\r\n\r\n    logic signed [12:0] bs;\r\n    assign bs = 13'(b);\r\n\r\n    always @(posedge clock) begin\r\n        c1 <= a * b;\r\n        c2 <= a * $signed(13'(b));\r\n        c3 <= 32'(a) * b;\r\n        c4 <= a * bs;\r\n    end\r\n```\r\n\r\n## Expected behavior\r\n\r\nTested on iverilog 11.0, QuestaSim, XCellium and VCS.\r\n\r\n```\r\nc1 = 16691220\r\nc2 = -81900\r\nc3 = -81900\r\nc3 = -81900\r\n```\r\n\r\n## Actual behavior\r\n\r\nYosys 0.11:\r\n\r\n```\r\nc1 = 16691220\r\nc2 = 20\r\nc3 = 16691220\r\nc3 = -81900\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-26",
+  "closed_at": "2022-01-08",
+  "code_blocks": [
+    "reg signed [11:0] a;\r\n    reg [11:0] b;\r\n    reg signed [31:0] c1;\r\n    reg signed [31:0] c2;\r\n    reg signed [31:0] c3;\r\n    reg signed [31:0] c4;\r\n \r\n    initial begin\r\n        a = -12'sd20;\r\n        b = 12'hfff;\r\n    end\r\n\r\n    logic signed [12:0] bs;\r\n    assign bs = 13'(b);\r\n\r\n    always @(posedge clock) begin\r\n        c1 <= a * b;\r\n        c2 <= a * $signed(13'(b));\r\n        c3 <= 32'(a) * b;\r\n        c4 <= a * bs;\r\n    end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

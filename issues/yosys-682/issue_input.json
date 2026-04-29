@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 682,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/682",
+  "title": "issue trying to prove equivalency with equiv_struct",
+  "body": "I am trying to prove equivalency with a blackbox submodule and found a somewhat weird behavior.\r\nThere are also considerable differences between older commits and HEAD.\r\n\r\n## Steps to reproduce the issue\r\n\r\na.v:\r\n```\r\nmodule a(input a, input b, output c, output d);\r\nwire g;\r\nadd add(.a(a), .b(b), .c(c), .d(g));\r\nassign d = g & 1;\r\nendmodule\r\n```\r\n\r\nb.v:\r\n```\r\nmodule a(input a, input b, output c, output d);\r\nwire f;\r\nadd add(.a(a), .b(b), .c(c), .d(f));\r\nassign d = f & 1;\r\nendmodule\r\n```\r\n\r\nrun:\r\n```\r\nyosys -p \"read_verilog -sv ./a.v; hierarchy -auto-top; rename -top gold; design -stash gold; read_verilog -sv ./b.v; hierarchy -auto-top; rename -top gate; design -stash gate; design -copy-from gold -as gold gold; design -copy-from gate -as gate gate; equiv_make gold gate equiv; hierarchy -top equiv; flatten; equiv_simple; equiv_struct; equiv_simple;  equiv_status;\"\r\n```\r\n\r\n## Expected behavior\r\n\r\nAll equiv cells proven.\r\n\r\n## Actual behavior\r\n\r\n```\r\nUnproven $equiv $auto$equiv_make.cc:241:find_same_wires$4: \\d_gold \\d_gate\r\n```\r\n\r\nNow the part that I think is weirder is using a.v as gold and gate (simple net name change)\r\n\r\n1) successful verification in Yosys 0.7+681 (git sha1 ed1f0b25, clang 6.0.1 -fPIC -Os)\r\n2) fails in Yosys 0.8+23 (git sha1 db676957, clang 6.0.1 -fPIC -Os)\r\n\r\nI am not sure this is intended behavior that got fixed recently or not. \r\nHowever, it would be nice to be able to structurally verify in both cases (same and different net names).\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-10-29",
+  "closed_at": "2019-03-14",
+  "code_blocks": [
+    "module a(input a, input b, output c, output d);\r\nwire g;\r\nadd add(.a(a), .b(b), .c(c), .d(g));\r\nassign d = g & 1;\r\nendmodule",
+    "module a(input a, input b, output c, output d);\r\nwire f;\r\nadd add(.a(a), .b(b), .c(c), .d(f));\r\nassign d = f & 1;\r\nendmodule",
+    "yosys -p \"read_verilog -sv ./a.v; hierarchy -auto-top; rename -top gold; design -stash gold; read_verilog -sv ./b.v; hierarchy -auto-top; rename -top gate; design -stash gate; design -copy-from gold -as gold gold; design -copy-from gate -as gate gate; equiv_make gold gate equiv; hierarchy -top equiv; flatten; equiv_simple; equiv_struct; equiv_simple;  equiv_status;\"",
+    "Unproven $equiv $auto$equiv_make.cc:241:find_same_wires$4: \\d_gold \\d_gate"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

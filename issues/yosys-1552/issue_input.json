@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1552,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1552",
+  "title": "feedback loop missing in logic cell.",
+  "body": "## Steps to reproduce the issue\r\n\r\nYosys 0.9+932 (git sha1 fcce9401, clang 9.0.0 -fPIC -Os)\r\n\r\ninput : top.v\r\n\r\n```\r\nmodule top (\r\n    output PIN_21, PIN_22, PIN_23, PIN_24, USBPU,\r\n    input CLK, PIN_1, PIN_2, PIN_3, PIN_4, PIN_5, PIN_6, PIN_7, PIN_8, PIN_9, PIN_10, PIN_11, PIN_12, PIN_13\r\n);\r\n\r\n    reg compareBuf = 0;\r\n    assign PIN_21 = compareBuf;\r\n\r\n    always @(posedge CLK) begin\r\n        compareBuf <= IN_1 < PIN_2 ? 1 : PIN_1 > PIN_2 ? 0 : compareBuf;\r\n    end\r\n\r\n\r\nendmodule\r\n\r\n```\r\n\r\n## Expected behavior\r\n\r\nHave one LC with 3 inputs, the 2 from the pins and a third is a feedback loop.\r\n\r\n## Actual behavior\r\n\r\nThere are 2 LCs:\r\n\r\n1. has the LUT set to `PIN_1 < PIN_2` and has the dff enable.\r\n\r\n2. has the LUT set to `PIN_1 ^ PIN_2` and is affecting the enable of the dff from the first LC.\r\n\r\nSo the expected and actual behavior have the same outcome, but is there a way to tell yosys to favor size vs speed?\r\n\r\nIt is arguable if the 2 LC solution is faster then the 1 LC, but for sure is bigger.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-12-04",
+  "closed_at": null,
+  "code_blocks": [
+    "module top (\r\n    output PIN_21, PIN_22, PIN_23, PIN_24, USBPU,\r\n    input CLK, PIN_1, PIN_2, PIN_3, PIN_4, PIN_5, PIN_6, PIN_7, PIN_8, PIN_9, PIN_10, PIN_11, PIN_12, PIN_13\r\n);\r\n\r\n    reg compareBuf = 0;\r\n    assign PIN_21 = compareBuf;\r\n\r\n    always @(posedge CLK) begin\r\n        compareBuf <= IN_1 < PIN_2 ? 1 : PIN_1 > PIN_2 ? 0 : compareBuf;\r\n    end\r\n\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

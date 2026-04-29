@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3312,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3312",
+  "title": "Techmap: Failed to map cell",
+  "body": "## Techmap issue\r\n\r\nHi all,\r\nI am trying to make YOSYS map some custom blocks. Just out of testing, I am trying to make it recognize a simple multiplier.  The idea was to define a NxN bit multiplier but since I got some problems during the process, I simplified it to make things easier.\r\nI am using this sv source file as the design to be implemented (`custom_mul_test.sv`):\r\n\r\n```\r\nmodule custom_mul_test\r\n\t(\r\n\t\tinput logic  in1_0, \r\n\t\tinput logic  in2_0,\r\n\t\toutput logic out_0\r\n\t);\r\n\tassign out_0 = in1_0*in2_0;\r\nendmodule\r\n```\r\nand I am tryting to map the multiplier into this custom module (`mul16x16.v`):\r\n```\r\nmodule mul16x16 (input in1, in2, output out);\r\n\tassign out = in1 * in2;\r\nendmodule\r\n```\r\nI have the following yosys script which reads my sv design and the library file containing my custom module (`[path]` is just a cut for the whole real path, to save space here):\r\n```\r\nread_verilog -sv [path]/custom_mul_test.sv\r\nread_verilog -lib [path]/mul16x16.v\r\n\r\nproc\r\nflatten\r\nopt -full\r\ncheck\r\n\r\nstat\r\n```\r\nFrom the `stat` command, I can get the following result:\r\n```\r\n=== custom_mul_test ===\r\n\r\n   Number of wires:                  3\r\n   Number of wire bits:              3\r\n   Number of public wires:           3\r\n   Number of public wire bits:       3\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  1\r\n     $mul                            1\r\n\r\n```\r\nSo yosys recognizes that the design needs a multiplier thanks to the `-sv` option when running `read_verilog` instruction. Now I get to the point where I want to map that `$mul` to my custom mul. To do that I added the following line to the yosys script file:\r\n```\r\ntechmap -map [path]/custom_lib.v -assert\r\n```\r\nwhere `custom_lib.v` contains the following module:\r\n```\r\n(* techmap_celltype = \"$mul\" *)\r\nmodule \\$_MUL_ (input in1, in2, output out);\r\n\tmul16x16 _TECHMAP_REPLACE_ (.in1(in1),\t.in2(in2), .out(out));\r\nendmodule\r\n```\r\nBut when `techmap` runs, I got the following output:\r\n```\r\n9. Executing TECHMAP pass (map to technology primitives).\r\n\r\n9.1. Executing Verilog-2005 frontend:  [path]/custom_lib.v\r\nParsing Verilog input from `[path]/custom_lib.v' to AST representation.\r\nGenerating RTLIL representation for module `\\$_MUL_'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n9.2. Continuing TECHMAP pass.\r\nERROR: (ASSERT MODE) Failed to map cell custom_mul_test.$mul$results/custom_mul_test_sv2v.v:9$1 ($mul).\r\n```\r\nSo it seems like the flow could not map the `$mul` cell with my custom one and I am not getting what I am doing wrong. Can somebody point me to the right direction for custom technology mapping? Thank you so much.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-11",
+  "closed_at": "2022-05-17",
+  "code_blocks": [
+    "module custom_mul_test\r\n\t(\r\n\t\tinput logic  in1_0, \r\n\t\tinput logic  in2_0,\r\n\t\toutput logic out_0\r\n\t);\r\n\tassign out_0 = in1_0*in2_0;\r\nendmodule",
+    "module mul16x16 (input in1, in2, output out);\r\n\tassign out = in1 * in2;\r\nendmodule",
+    "=== custom_mul_test ===\r\n\r\n   Number of wires:                  3\r\n   Number of wire bits:              3\r\n   Number of public wires:           3\r\n   Number of public wire bits:       3\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  1\r\n     $mul                            1",
+    "techmap -map [path]/custom_lib.v -assert",
+    "(* techmap_celltype = \"$mul\" *)\r\nmodule \\$_MUL_ (input in1, in2, output out);\r\n\tmul16x16 _TECHMAP_REPLACE_ (.in1(in1),\t.in2(in2), .out(out));\r\nendmodule",
+    "9. Executing TECHMAP pass (map to technology primitives).\r\n\r\n9.1. Executing Verilog-2005 frontend:  [path]/custom_lib.v\r\nParsing Verilog input from `[path]/custom_lib.v' to AST representation.\r\nGenerating RTLIL representation for module `\\$_MUL_'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n9.2. Continuing TECHMAP pass.\r\nERROR: (ASSERT MODE) Failed to map cell custom_mul_test.$mul$results/custom_mul_test_sv2v.v:9$1 ($mul)."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

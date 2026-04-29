@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 146,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+  "title": "Constant function call in generate loop causes assert",
+  "body": "If a generate loop has a call to a constant function inside, e.g.:\r\nfor (i = 0; i < log2(BUFS + 1); i = i + 1) ...\r\nThe compiler aborts with (latest git):\r\nivl: elab_scope.cc:1174: bool PGenerate::generate_scope_loop_(Design*, NetScope*): Assertion `test' failed.\r\nAborted\r\n\r\nIf the result of the constant function is first assigned to a parameter, e.g.:\r\nparameter BUF2 = log2(BUFS + 1);\r\nfor (i = 0; i < BUF2; i = i + 1) ...\r\nthe compiler operates as expected and no assertion is hit.\r\n\r\nA full testcase representing the issue is as follows:\r\n--cut--\r\nmodule test;\r\n\r\nparameter [16 - 1:0] BUFS = 16'd1;\r\n\r\nfunction integer log2;\r\ninput integer x;\r\n\r\ninteger i;\r\nbegin \r\n        i = 0; \r\n        while ((1 << i) < x)\r\n                i = i + 1;\r\n        log2 = i;\r\nend\r\nendfunction\r\n\r\nwire [16 - 1:0] buf_seqno;\r\nwire [log2(BUFS + 1) - 1:0] buf_seqno_gray;\r\n\r\ngenvar j;\r\n\r\ngenerate \r\n        for (j = 0; j < log2(BUFS + 1); j = j + 1)\r\n                assign buf_seqno_gray[j] = ^buf_seqno[log2(BUFS[(0 * 16)+:16] + 1) - 1:j];\r\nendgenerate\r\n\r\nendmodule\r\n--cut--\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-02-03",
+  "closed_at": "2017-02-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

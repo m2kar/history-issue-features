@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3854,
+  "title": "kernel/mem: Assert ABITS is not below wide_log2",
+  "features": [
+    {
+      "name": "memory write with insufficient address width",
+      "category": "data_model",
+      "description": "Code should include a memory write operation where the address width parameter (ABITS) is set to zero or too small for the memory size, causing an out-of-bounds access when checking wide_log2 bits",
+      "snippet": "memory width 8 size 2 \\mem\ncell $memwr $auto$:1:$8\n  parameter \\ABITS 1'0\n  parameter \\WIDTH 6'010000\n  connect \\ADDR { }",
+      "tags": ["memory", "memwr", "abits", "address_width", "out_of_bounds"],
+      "source_bug_id": "yosys-3854",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/3854",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "memory with wide data relative to address size",
+      "category": "data_model",
+      "description": "Code should include a memory declaration where the data width (WIDTH) is much larger than what the address width (ABITS) can address, creating a mismatch between memory size and addressable space",
+      "snippet": "memory width 8 size 2 \\mem\ncell $memwr\n  parameter \\ABITS 1'0\n  parameter \\WIDTH 6'010000",
+      "tags": ["memory", "width", "abits", "addressable_space"],
+      "source_bug_id": "yosys-3854",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/3854",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "memory write with multi-bit enable and zero address",
+      "category": "data_model",
+      "description": "Code should include a memory write cell with a multi-bit enable signal (EN) that is wider than the address port, combined with an empty address connection",
+      "snippet": "cell $memwr\n  parameter \\MEMID \"\\\\mem\"\n  parameter \\WIDTH 6'010000\n  connect \\EN 16'0000000000000000\n  connect \\ADDR { }",
+      "tags": ["memory", "memwr", "enable", "multi_bit", "address"],
+      "source_bug_id": "yosys-3854",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/3854",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ]
+}

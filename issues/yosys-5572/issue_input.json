@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5572,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5572",
+  "title": "Invalid verilog generated for empty RTLIL `switch` with attributes",
+  "body": "### Version\n\nYosys 0.54 (git sha1 db72ec3bd, g++ 15.2.1 -march=x86-64-v3 -mtune=haswell -O3 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -mpclmul -ffile-prefix-map=/startdir/src=/usr/src/debug/yosys -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```rtlil\nattribute \\top 1\nmodule \\top\n  wire width 1 \\sig\n  wire width 1 \\val\n\n  process $2\n    switch \\sig [0]\n      case 1'0\n      case 1'1\n      case\n        assign \\val [0] 1'1\n    end\n  end\nend\n```\n\nOr any other exhaustive switch for which there are no expressions for \"normal\" cases, but there is some expression in the default (dead) case.\n\n- `read_rtlil`\n- `proc -nomux`\n- `write_verilog`\n\n### Expected Behavior\n\nValid verilog is generated\n\n### Actual Behavior\n\n```verilog\nmodule top();\n  reg \\$auto$verilog_backend.cc:2359:dump_module$1  = 0;\n  wire sig;\n  wire val;\n  always @* begin\n    if (\\$auto$verilog_backend.cc:2359:dump_module$1 ) begin end\n    (* full_case = 32'd1 *)\n    \n  end\nendmodule\n```\n\nSee `(* full_scase = 32'd1 *)`. As it is an attribute it should be attached to something (e.g empty expression), so there should be a `;` before the `end` clause.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-29",
+  "closed_at": "2026-01-08",
+  "code_blocks": [
+    "attribute \\top 1\nmodule \\top\n  wire width 1 \\sig\n  wire width 1 \\val\n\n  process $2\n    switch \\sig [0]\n      case 1'0\n      case 1'1\n      case\n        assign \\val [0] 1'1\n    end\n  end\nend",
+    "module top();\n  reg \\$auto$verilog_backend.cc:2359:dump_module$1  = 0;\n  wire sig;\n  wire val;\n  always @* begin\n    if (\\$auto$verilog_backend.cc:2359:dump_module$1 ) begin end\n    (* full_case = 32'd1 *)\n    \n  end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

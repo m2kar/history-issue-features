@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 5398,
+  "title": "`synth -hieropt` generates wrong code",
+  "features": [
+    {
+      "name": "module instantiation with same signal connected to multiple clock ports",
+      "category": "control_flow",
+      "description": "Code should include a module instantiation where the same parent signal is connected to multiple clock ports (e.g., R0_clk and W0_clk) of a child module",
+      "snippet": "module child(input clk1, input clk2);\n  always @(posedge clk1) begin end\n  always @(posedge clk2) begin end\nendmodule\nmodule parent(input clk);\n  child c(.clk1(clk), .clk2(clk));\nendmodule",
+      "tags": ["module_instantiation", "multiple_clock_ports", "hieropt_bug", "port_mapping"],
+      "source_bug_id": "yosys-5398",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5398",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory array with write-first synchronization and read assignment",
+      "category": "data_model",
+      "description": "Code should include a memory array (reg [bits] name[depth]) with a synchronous write always block and a continuous assign read path that feeds an output port",
+      "snippet": "reg [3:0] Memory[0:1];\nalways @(posedge W0_clk) begin\n  if (W0_en) Memory[W0_addr] <= W0_data;\nend\nassign R0_data = Memory[R0_addr];",
+      "tags": ["memory_array", "synchronous_write", "read_via_assign", "hieropt_bug"],
+      "source_bug_id": "yosys-5398",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5398",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

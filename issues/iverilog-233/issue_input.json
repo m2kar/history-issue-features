@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 233,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/233",
+  "title": "SystemVerilog: Function call by named association not supported",
+  "body": "SystemVerilog allows the usage of function calls with named association to pass arguments. Icarus generates an invalid syntax error when this is used.\r\nI'm using iverilog 10.1 (stable).\r\n\r\nExample code:\r\n```systemverilog\r\npackage TestPkg;\r\n\r\n    function automatic logic [31:0] encode(\r\n        logic [11:0] a,\r\n        logic [4:0] b,\r\n        logic [2:0] c,\r\n        logic [4:0] d,\r\n        logic [6:0] e\r\n    );\r\n        begin\r\n            encode[31:20] = a;\r\n            encode[19:15] = b;\r\n            encode[14:12] = c;\r\n            encode[11:7] = d;\r\n            encode[6:0] = e;\r\n        end\r\n    endfunction\r\n\r\nendpackage\r\n```\r\nModule that works, compiled with `iverilog -Wall -tnull -g2012 TestPkg.sv FuncUnnamedAssoc.sv` :\r\n```systemverilog\r\nmodule FuncUnnamedAssoc(\r\n    output logic [31:0] encoded,\r\n    input logic [11:0] f,\r\n    input logic [4:0] g,\r\n    input logic [2:0] h,\r\n    input logic [4:0] i,\r\n    input logic [6:0] j\r\n);\r\n\r\nimport TestPkg::*;\r\n\r\nalways @(*) begin\r\n    encoded = encode(\r\n        f,\r\n        g,\r\n        h,\r\n        i,\r\n        j\r\n    );\r\nend\r\n```\r\nModule that generates a syntax error, compiled with `iverilog -Wall -tnull -g2012 TestPkg.sv FuncNamedAssoc.sv` :\r\n```systemverilog\r\nmodule FuncNamedAssoc(\r\n    output logic [31:0] encoded,\r\n    input logic [11:0] f,\r\n    input logic [4:0] g,\r\n    input logic [2:0] h,\r\n    input logic [4:0] i,\r\n    input logic [6:0] j\r\n);\r\n\r\nimport TestPkg::*;\r\n\r\nalways @(*) begin\r\n    encoded = encode(\r\n        .a(f),\r\n        .b(g),\r\n        .c(h),\r\n        .d(i),\r\n        .e(j)\r\n    );\r\nend\r\n\r\nendmodule\r\n```\r\nError message is:\r\nFuncNamedAssoc.sv:14: syntax error\r\nFuncNamedAssoc.sv:19: error: malformed statement",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-03-14",
+  "closed_at": "2023-08-21",
+  "code_blocks": [
+    "package TestPkg;\r\n\r\n    function automatic logic [31:0] encode(\r\n        logic [11:0] a,\r\n        logic [4:0] b,\r\n        logic [2:0] c,\r\n        logic [4:0] d,\r\n        logic [6:0] e\r\n    );\r\n        begin\r\n            encode[31:20] = a;\r\n            encode[19:15] = b;\r\n            encode[14:12] = c;\r\n            encode[11:7] = d;\r\n            encode[6:0] = e;\r\n        end\r\n    endfunction\r\n\r\nendpackage",
+    "module FuncUnnamedAssoc(\r\n    output logic [31:0] encoded,\r\n    input logic [11:0] f,\r\n    input logic [4:0] g,\r\n    input logic [2:0] h,\r\n    input logic [4:0] i,\r\n    input logic [6:0] j\r\n);\r\n\r\nimport TestPkg::*;\r\n\r\nalways @(*) begin\r\n    encoded = encode(\r\n        f,\r\n        g,\r\n        h,\r\n        i,\r\n        j\r\n    );\r\nend",
+    "module FuncNamedAssoc(\r\n    output logic [31:0] encoded,\r\n    input logic [11:0] f,\r\n    input logic [4:0] g,\r\n    input logic [2:0] h,\r\n    input logic [4:0] i,\r\n    input logic [6:0] j\r\n);\r\n\r\nimport TestPkg::*;\r\n\r\nalways @(*) begin\r\n    encoded = encode(\r\n        .a(f),\r\n        .b(g),\r\n        .c(h),\r\n        .d(i),\r\n        .e(j)\r\n    );\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

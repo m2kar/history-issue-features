@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4786,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4786",
+  "title": "`cxxrtl` output port changes value after back to back `.step()`",
+  "body": "### Version\r\n\r\nYosys 0.45 (git sha1 9ed031ddd588442f22be13ce608547a5809b62f0, g++ 13.3.0 -fPIC -O3)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nrunning the following script\r\n```\r\nread_rtlil <<EOF\r\nread_rtlil <<EOF\r\nmodule \\top\r\n  wire $0\\client_valid[0:0]\r\n  wire $not$out.v:13$1_Y\r\n  wire \\client_valid\r\n  wire \\client_valid_next\r\n  wire input 2 \\clock\r\n  wire output 1 \\data_out\r\n  cell $not $not$out.v:13$1\r\n    parameter \\A_SIGNED 0\r\n    parameter \\A_WIDTH 1\r\n    parameter \\Y_WIDTH 1\r\n    connect \\A \\client_valid\r\n    connect \\Y $not$out.v:13$1_Y\r\n  end\r\n  process $proc$out.v:15$2\r\n    assign $0\\client_valid[0:0] \\client_valid_next\r\n    sync posedge \\clock\r\n      update \\client_valid $0\\client_valid[0:0]\r\n  end\r\n  connect \\data_out \\client_valid\r\n  connect \\client_valid_next $not$out.v:13$1_Y\r\nend\r\nEOF\r\n\r\ndebug write_cxxrtl -print-wire-types out.cxx\r\nexec -expect-return 0 -- c++ -I$(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp && ./a.out\r\n```\r\n\r\nusing a `main.cpp` containing\r\n```c++\r\n#include \"cxxrtl/cxxrtl.h\"\r\n#include \"out.cxx\"\r\n#include <cstdio>\r\n\r\nauto main() -> int {\r\n  cxxrtl_design::p_top dut;\r\n  dut.step();\r\n\r\n  for(int i = 0; i < 5; i++) {\r\n    dut.p_clock.set(false);\r\n    dut.step();\r\n\r\n    dut.p_clock.set(true);\r\n    dut.step();\r\n    auto a = dut.p_data__out.get<int>();\r\n    dut.step();\r\n    auto b = dut.p_data__out.get<int>();\r\n    if (a != b) {\r\n      printf(\"fail\\n\");\r\n      return 83;\r\n    }\r\n  }\r\n  return 0;\r\n}\r\n```\r\n\r\n\r\nYou can also find the `yosys` script aswell as the `main.cpp` in the attached [repro.zip](https://github.com/user-attachments/files/17963613/repro.zip).\r\n\r\nFor reference, the rtlil is generated from the following verilog file:\r\n```verilog\r\nmodule top(data_out, clock);\r\n  reg client_valid;\r\n\r\n  input clock;\r\n  wire clock;\r\n\r\n  output data_out;\r\n  wire data_out;\r\n\r\n  wire client_valid_next;\r\n\r\n  assign data_out = client_valid;\r\n  assign client_valid_next  = ~client_valid;\r\n\r\n  always @(posedge clock)\r\n    client_valid <= client_valid_next;\r\nendmodule\r\n```\r\n\r\n### Expected Behavior\r\n\r\nI expect the `a.out` binary to never print \"fail\", or expressed differently for the value of a output port to not change between subsequent `.step()` calls.\r\n\r\n### Actual Behavior\r\n\r\nThe value of the output port changes between `.step()` calls.",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2024-11-29",
+  "closed_at": null,
+  "code_blocks": [
+    "read_rtlil <<EOF\r\nread_rtlil <<EOF\r\nmodule \\top\r\n  wire $0\\client_valid[0:0]\r\n  wire $not$out.v:13$1_Y\r\n  wire \\client_valid\r\n  wire \\client_valid_next\r\n  wire input 2 \\clock\r\n  wire output 1 \\data_out\r\n  cell $not $not$out.v:13$1\r\n    parameter \\A_SIGNED 0\r\n    parameter \\A_WIDTH 1\r\n    parameter \\Y_WIDTH 1\r\n    connect \\A \\client_valid\r\n    connect \\Y $not$out.v:13$1_Y\r\n  end\r\n  process $proc$out.v:15$2\r\n    assign $0\\client_valid[0:0] \\client_valid_next\r\n    sync posedge \\clock\r\n      update \\client_valid $0\\client_valid[0:0]\r\n  end\r\n  connect \\data_out \\client_valid\r\n  connect \\client_valid_next $not$out.v:13$1_Y\r\nend\r\nEOF\r\n\r\ndebug write_cxxrtl -print-wire-types out.cxx\r\nexec -expect-return 0 -- c++ -I$(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp && ./a.out",
+    "You can also find the `yosys` script aswell as the `main.cpp` in the attached [repro.zip](https://github.com/user-attachments/files/17963613/repro.zip).\r\n\r\nFor reference, the rtlil is generated from the following verilog file:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

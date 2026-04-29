@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5410,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5410",
+  "title": "abc_new: Avoid bufnorm helper cell churn",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nWe were performing the helper passes `abc9_ops -replace_zbufs` and `abc9_ops -restore_zbufs` for every module, but those passes act on the full design (and can't be applied entirely selectively due to entering and leaving bufnorm).\r\n\r\nThis lead to an explosive creation of a lot of redundant bufnorm helper cells that would have been cleaned up by `clean` but that never ran. \r\n\r\n_Explain how this is achieved._\r\n\r\nInstead we now run each helper pass once, one before and one after iterating over the selected modules. This limits the number of bufnorm helper cells.\r\n\r\nSince this just reduces memory usage, we can't easily test for it as part of our testsuite, but #5404 contains a reproducer (but I'd recommend running it with something like `systemd-run --scope -p MemoryLimit=5G ...` when using a yosys version that is affected by this). \r\n\r\nThis fixes #5404\r\n\r\n@mmicko this is the last release blocker on my end",
+  "labels": [
+    "merge-before-release"
+  ],
+  "state": "closed",
+  "created_at": "2025-10-07",
+  "closed_at": "2025-10-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1180,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1180",
+  "title": "Cryptic error messages when trying to use packed and unpacked array parameters",
+  "body": "On this issue I'm reporting:\r\n* A bug(?) I found when trying to declare a parameter as a *packed* array (note that issue #846 refers to *unpacked* arrays).\r\n* A suggestion/request to improve the error message displayed on unsupported features.\r\n________\r\n\r\nI was trying to simulate this code (well, not this code exactly but a similar one), which seems to use an unsupported feature (unpacked array parameters):\r\n```sv\r\nmodule TEST_param_arr;\r\n\r\nparameter int num = 6;\r\nparameter int vars [0:num-1] = '{4, 8, 15, 16, 23, 42};\r\n\r\ninitial begin\r\n    for (int i=0; i<num; i++)\r\n        $display(\"vars[%0d] = %2d\", i, vars[i]);\r\n    $finish;\r\nend\r\n\r\nendmodule\r\n```\r\nand got this rather cryptic error message:\r\n```\r\nTEST_param_arr.sv:4: error: parameter declared outside parameter port list must have a default value.\r\nTEST_param_arr.sv:4: syntax error\r\nTEST_param_arr.sv:4: error: invalid module item.\r\n```\r\nI managed to figure out that this was due to issue #846 *(Parameters having an **unpacked** array type is a SystemVerilog feature that isn't supported yet)*, but iverilog could at least try to figure out what I was trying to do and tell me that that's not supported; the error message as it is is quite confusing.\r\n\r\nNow, since a comment in that issue mentions that I cannot use *unpacked* arrays, I thought OK, I'll use a *packed* array instead:\r\n```sv\r\nmodule TEST_param_arr2;\r\n\r\nparameter int num = 6;\r\nparameter [0:num-1] [31:0] vars = {32'd4, 32'd8, 32'd15, 32'd16, 32'd23, 32'd42};\r\n\r\ninitial begin\r\n    for (int i=0; i<num; i++)\r\n        $display(\"vars[%0d] = %2d\", i, vars[i]);\r\n    $finish;\r\nend\r\n\r\nendmodule\r\n```\r\nand got this much more colorful error message:\r\n```\r\nTEST_param_arr2.sv:8: assert: ../iverilog/netmisc.cc:1821: failed assertion packed_dims.size() == 1\r\n```\r\nI honestly don't know how to interpret that error message, other than it seeming to be related to the use of packed dimensions.\r\nIn this case, the issue seems to be in the *use* of the variable though; for some reason using a single index on a multidimensional packed parameter.  I tried replacing `vars[i]` with `vars[i][31:0]` with no luck.\r\n\r\nApparently the only way around this issue is to declare the parameter as `parameter [0:32*num-1] vars = {32'd4, 32'd8, 32'd15, 32'd16, 32'd23, 32'd42};` and then use `vars[32*i+:32]` in the code, which isn't very readable or maintainable.\r\n________\r\nOS: Windows\r\nIcarus Verilog version 12.0 (devel) (s20150603-1539-g2693dd32b)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-07",
+  "closed_at": "2024-11-15",
+  "code_blocks": [
+    "module TEST_param_arr;\r\n\r\nparameter int num = 6;\r\nparameter int vars [0:num-1] = '{4, 8, 15, 16, 23, 42};\r\n\r\ninitial begin\r\n    for (int i=0; i<num; i++)\r\n        $display(\"vars[%0d] = %2d\", i, vars[i]);\r\n    $finish;\r\nend\r\n\r\nendmodule",
+    "TEST_param_arr.sv:4: error: parameter declared outside parameter port list must have a default value.\r\nTEST_param_arr.sv:4: syntax error\r\nTEST_param_arr.sv:4: error: invalid module item.",
+    "module TEST_param_arr2;\r\n\r\nparameter int num = 6;\r\nparameter [0:num-1] [31:0] vars = {32'd4, 32'd8, 32'd15, 32'd16, 32'd23, 32'd42};\r\n\r\ninitial begin\r\n    for (int i=0; i<num; i++)\r\n        $display(\"vars[%0d] = %2d\", i, vars[i]);\r\n    $finish;\r\nend\r\n\r\nendmodule",
+    "TEST_param_arr2.sv:8: assert: ../iverilog/netmisc.cc:1821: failed assertion packed_dims.size() == 1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

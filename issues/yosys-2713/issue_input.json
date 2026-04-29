@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2713,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2713",
+  "title": "Warning: No SAT model available for cell  ... ($adff).",
+  "body": "## Steps to reproduce the issue\r\n\r\nThe following Verilog:\r\n\r\n```verilog\r\nmodule top_mod(\r\n  input        clock,\r\n  input        arst,\r\n  output [9:0] _tmp16\r\n);\r\n  reg [9:0] state_9;\r\n  wire [10:0] _GEN_0 = state_9 + 10'h1;\r\n  assign _tmp16 = state_9;\r\n  always @(posedge clock or posedge arst) begin\r\n    if (arst) begin\r\n      state_9 <= 10'h0;\r\n    end else begin\r\n      state_9 <= _GEN_0[9:0];\r\n    end\r\n  end\r\nendmodule\r\n```\r\n\r\n```bash\r\nyosys -q -p \"\r\n  read_verilog top_mod.v\r\n  rename top_mod top1\r\n  proc\r\n  memory\r\n  flatten top1\r\n  hierarchy -top top1\r\n  read_verilog top_mod.v\r\n  rename top_mod top2\r\n  proc\r\n  memory\r\n  flatten top2\r\n  equiv_make top1 top2 equiv\r\n  hierarchy -top equiv\r\n  clean -purge\r\n  equiv_simple -short -undef\r\n  equiv_induct\r\n  equiv_status -assert\r\n\"\r\n```\r\n\r\nProduces this error:\r\n```\r\nWarning: No SAT model available for cell $procdff$3_gold ($adff).\r\nWarning: No SAT model available for cell $procdff$6_gate ($adff).\r\nERROR: Found 10 unproven $equiv cells in 'equiv_status -assert'.\r\n```\r\n\r\n`Yosys 0.9+4008 (git sha1 192601385, clang 11.0.1 -fPIC -Os)`\r\n\r\n## Expected behavior\r\n\r\nto be equivalent with itself\r\n\r\n## Actual behavior\r\n\r\nnot equivalent to itself\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-03-30",
+  "closed_at": "2021-03-30",
+  "code_blocks": [
+    "module top_mod(\r\n  input        clock,\r\n  input        arst,\r\n  output [9:0] _tmp16\r\n);\r\n  reg [9:0] state_9;\r\n  wire [10:0] _GEN_0 = state_9 + 10'h1;\r\n  assign _tmp16 = state_9;\r\n  always @(posedge clock or posedge arst) begin\r\n    if (arst) begin\r\n      state_9 <= 10'h0;\r\n    end else begin\r\n      state_9 <= _GEN_0[9:0];\r\n    end\r\n  end\r\nendmodule",
+    "yosys -q -p \"\r\n  read_verilog top_mod.v\r\n  rename top_mod top1\r\n  proc\r\n  memory\r\n  flatten top1\r\n  hierarchy -top top1\r\n  read_verilog top_mod.v\r\n  rename top_mod top2\r\n  proc\r\n  memory\r\n  flatten top2\r\n  equiv_make top1 top2 equiv\r\n  hierarchy -top equiv\r\n  clean -purge\r\n  equiv_simple -short -undef\r\n  equiv_induct\r\n  equiv_status -assert\r\n\"",
+    "Warning: No SAT model available for cell $procdff$3_gold ($adff).\r\nWarning: No SAT model available for cell $procdff$6_gate ($adff).\r\nERROR: Found 10 unproven $equiv cells in 'equiv_status -assert'."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

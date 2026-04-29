@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 846,
+  "title": "[WIP/RFC] ecp5: 'Fix' transparent DRAMs by putting register on address",
+  "features": [
+    {
+      "name": "dual_port_sram_with_transparent_read_port",
+      "category": "data_model",
+      "description": "Code should include a dual-port SRAM where one port is transparent (write-through) - writing to address A immediately reflects in the read output at the same address, while a second port reads from a different address",
+      "snippet": "reg [41:0] storage[0:63];\nreg [5:0] memadr_w;\nreg [5:0] memadr_r;\nalways @(posedge clk) begin\n\tif (we) storage[wr_adr] <= data_w;\n\tmemadr_w <= wr_adr;\nend\nassign wrport_dat_r = storage[memadr_w];\nassign rdport_dat_r = storage[memadr_r];",
+      "tags": ["dual_port", "sram", "transparent", "write_through", "dram"],
+      "source_bug_id": "yosys-846",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/846",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "address_register_following_write_address",
+      "category": "timing",
+      "description": "Code should include a pattern where a write address is captured in a register during the write operation, and the same captured address is used for an immediate read-back on a transparent memory port",
+      "snippet": "always @(posedge clk) begin\n\tif (we) storage[wr_adr] <= data_w;\n\tmemadr_w <= wr_adr;\nend\nassign wrport_dat_r = storage[memadr_w];",
+      "tags": ["address_register", "transparent_port", "write_through", "address_capture"],
+      "source_bug_id": "yosys-846",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/846",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

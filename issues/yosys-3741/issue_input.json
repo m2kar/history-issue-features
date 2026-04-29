@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3741,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3741",
+  "title": "Crash when using -chparam and '0 as input to a module",
+  "body": "### Version\r\n\r\nYosys 0.27+22 (git sha1 53c0a6b78, gcc 12.2.0-3ubuntu1 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nSorry for completely misrepresenting the problem while constructing a minimal example in #3712 .\r\nI still have problems though when using -chparam under some conditions.\r\nThe following code\r\n```\r\nmodule mod1\r\n  #(parameter int NBITS=32)\r\n   (output logic [NBITS-1:0] B);\r\n   mod2 #(.NBITS(NBITS)) m (.A('0), .B(B));          // crash\r\n//   mod2 #(.NBITS(NBITS)) m (.A(1'b0), .B(B));   // ok\r\nendmodule\r\n\r\nmodule mod2\r\n  #(parameter NBITS=32)\r\n   (input  logic A,\r\n    output logic [NBITS-1:0] B);   \r\n   assign B = { NBITS{A} };\r\nendmodule\r\n```\r\ncrashes when I execute\r\n```\r\nyosys -QT -p \"read_verilog -defer -sv Modules/mod1.sv\" -p \"hierarchy -top mod1 -chparam NBITS 16;\"\r\n```\r\nwith\r\n```\r\nERROR: Assert `modules_.count(module->name) == 0' failed in kernel/rtlil.cc:674.\r\n```\r\nbut not when I execute\r\n```\r\nyosys -QT -p \"read_verilog -defer -sv Modules/mod1.sv\" -p \"hierarchy -top mod1;\"\r\n```\r\nIt seems that the problem arises when using `'0` instead of `1'b0`. I was under the impression that SystemVerilog would evaluate `'0` in a context-dependent way, using the appropriate size. Note that the crash takes place only when a parameter is changed in the top-level module.\r\n\r\nCan you comment on whether using `'0` in this case is invalid, or the behaviour is indeed a bug?\r\n\r\n### Expected Behavior\r\n\r\nI can use `'0` to tie input ports to zero.\r\n\r\n### Actual Behavior\r\n\r\nI cannot, when also using `-chparam`",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-04-24",
+  "closed_at": null,
+  "code_blocks": [
+    "module mod1\r\n  #(parameter int NBITS=32)\r\n   (output logic [NBITS-1:0] B);\r\n   mod2 #(.NBITS(NBITS)) m (.A('0), .B(B));          // crash\r\n//   mod2 #(.NBITS(NBITS)) m (.A(1'b0), .B(B));   // ok\r\nendmodule\r\n\r\nmodule mod2\r\n  #(parameter NBITS=32)\r\n   (input  logic A,\r\n    output logic [NBITS-1:0] B);   \r\n   assign B = { NBITS{A} };\r\nendmodule",
+    "yosys -QT -p \"read_verilog -defer -sv Modules/mod1.sv\" -p \"hierarchy -top mod1 -chparam NBITS 16;\"",
+    "ERROR: Assert `modules_.count(module->name) == 0' failed in kernel/rtlil.cc:674.",
+    "yosys -QT -p \"read_verilog -defer -sv Modules/mod1.sv\" -p \"hierarchy -top mod1;\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

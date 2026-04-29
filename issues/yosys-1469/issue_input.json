@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1469,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1469",
+  "title": "Support for math operations on real constants",
+  "body": "## Steps to reproduce the issue\r\n\r\nYosys (81876a37) does not support passing real values as parameters to modules and doing math operations on them.\r\n\r\nAn example use case of that is a counter that generates a divided clock with duty cycle specified as a real number. Another use case is eg. calculation of PLL dividers given desired clock frequencies.\r\n\r\nConsider the following design:\r\n\r\n```\r\n`timescale 1ns/10ps\r\n\r\nmodule counter (\r\n  input  wire CLK,\r\n  output wire O\r\n);\r\n  parameter MAX = 100;\r\n  parameter real DUTY = 0.5;\r\n\r\n  localparam MATCH = $rtoi(MAX * DUTY);\r\n\r\n  initial begin\r\n    $display(\"MAX:   %d\", MAX);\r\n    $display(\"DUTY:  %f\", DUTY);\r\n    $display(\"MATCH: %d\", MATCH);\r\n  end\r\n\r\n  reg [31:0] cnt;\r\n  initial cnt <= 0;\r\n\r\n  always @(posedge CLK)\r\n    if (cnt == (MAX-1))\r\n      cnt <= 0;\r\n    else\r\n      cnt <= cnt + 1;\r\n\r\n  assign O = (cnt < MATCH);\r\n\r\nendmodule\r\n\r\nmodule top(\r\n);\r\n  reg CLK;\r\n\r\n  initial CLK <= 0;\r\n  always #0.5 CLK <= !CLK;\r\n\r\n  counter #\r\n  (\r\n    .MAX(100),\r\n    .DUTY(0.75)\r\n  )\r\n  my_counter\r\n  (\r\n    .CLK(CLK),\r\n    .O()\r\n  );\r\n\r\nendmodule\r\n```\r\n\r\nHere we have a counter with `MAX` and `DUTY` parameters. The `MAX` parameter specifies its counting range while the `DUTY` specifies output duty cycle as a fraction of the `MAX`. It is gives as a real number.\r\n\r\nSimulation of the design should yield in a 75% duty cycle square wave signal at the `my_counter.O` pin with the frequency 100 times lower than the input `CLK`.\r\n\r\nThe design successfully simulates with the XSim (Vivado) and the `$display` statements produce the following output:\r\n```\r\nMAX:           100\r\nDUTY:  0.750000\r\nMATCH:          75\r\n```\r\n\r\nThe simulation succeeded in the Icarus Verilog too with the identical output of the `$display` statements.\r\n\r\n## Expected behavior\r\n\r\nThe real value of the parameter is accepted and used in calculation of the value of the `MATCH` localparam.\r\n\r\n## Actual behavior\r\n\r\nYosys fails on the `read_verilog -pwires design.v` command with:\r\n```\r\ndesign.v:15: ERROR: System task `$display' called with invalid/unsupported format specifier\r\n```\r\n\r\nEven when the `initial` block with `$display` directives is commented out it fails with:\r\n```\r\ndesign.v:9: ERROR: Parameter `\\DUTY' with non-constant value!\r\n```",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-10-30",
+  "closed_at": null,
+  "code_blocks": [
+    "`timescale 1ns/10ps\r\n\r\nmodule counter (\r\n  input  wire CLK,\r\n  output wire O\r\n);\r\n  parameter MAX = 100;\r\n  parameter real DUTY = 0.5;\r\n\r\n  localparam MATCH = $rtoi(MAX * DUTY);\r\n\r\n  initial begin\r\n    $display(\"MAX:   %d\", MAX);\r\n    $display(\"DUTY:  %f\", DUTY);\r\n    $display(\"MATCH: %d\", MATCH);\r\n  end\r\n\r\n  reg [31:0] cnt;\r\n  initial cnt <= 0;\r\n\r\n  always @(posedge CLK)\r\n    if (cnt == (MAX-1))\r\n      cnt <= 0;\r\n    else\r\n      cnt <= cnt + 1;\r\n\r\n  assign O = (cnt < MATCH);\r\n\r\nendmodule\r\n\r\nmodule top(\r\n);\r\n  reg CLK;\r\n\r\n  initial CLK <= 0;\r\n  always #0.5 CLK <= !CLK;\r\n\r\n  counter #\r\n  (\r\n    .MAX(100),\r\n    .DUTY(0.75)\r\n  )\r\n  my_counter\r\n  (\r\n    .CLK(CLK),\r\n    .O()\r\n  );\r\n\r\nendmodule",
+    "design.v:15: ERROR: System task `$display' called with invalid/unsupported format specifier",
+    "design.v:9: ERROR: Parameter `\\DUTY' with non-constant value!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

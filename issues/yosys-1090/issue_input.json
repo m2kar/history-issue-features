@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1090,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1090",
+  "title": "python: wire() and cell() methods of Module segfault when wire/cell doesn't exist",
+  "body": "Module::wire() and Module::cell() look up a wire or cell by IdString, and return nullptr if not found. The associated python wrappers don't account for the nullptr case and immediately dereference the returned pointer, resulting in a segfault.\r\n\r\n## Steps to reproduce the issue\r\n```\r\ncd yosys/examples/python-api\r\npython3 -i script.py\r\nmodule.wire(ys.IdString('\\\\not_a_wire'))\r\n```\r\n\r\n## Expected behavior\r\n\r\nNot a segfault. Aside from that, I'm not really sure. From a python perspective the ideal behavior would be to return `None`, but I don't see a way to shoehorn that in with boost::python. Maybe the wrapper classes need to be updated to tolerate a null ref_obj, with a function exposed to python to query whether it is null.\r\n\r\nIf the methods are removed from the python interface, then we need some other way to cheaply check for the existence of a wire. Module.wires_ is accessible through python, but requires copying the entire dictionary.\r\n\r\n## Actual behavior\r\n```\r\nSegmentation fault (core dumped)\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-11",
+  "closed_at": "2019-07-05",
+  "code_blocks": [
+    "cd yosys/examples/python-api\r\npython3 -i script.py\r\nmodule.wire(ys.IdString('\\\\not_a_wire'))"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

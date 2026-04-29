@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5605,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5605",
+  "title": "Add opt_balance_tree pass",
+  "body": "This pass converts cascaded chains of arithmetic and logic cells ($add, $mul, $and, $or, $xor) into balanced binary trees to improve timing performance in hardware synthesis. For example, converting sth like `a + b + c + d + e + f` into into balanced binary trees (`((a + b) + (c + d)) + ((e + f) + ...)`) cuts the critical path depth roughly in half.\r\n\r\nThe pass does a BFS traversal starting from each cell to find chains of the same operation type ($add, $mul, $and, $or, $xor). For each chain:\r\n\r\n  1. Walk backwards from the sink to collect all source signals, checking that we only traverse cells of the matching type\r\n  2. Verify all operands have consistent signedness (mixed signed/unsigned chains are skipped)\r\n  3. Recursively build a balanced binary tree by splitting sources at the midpoint\r\n  4. Replace the original chain with the tree\r\n\r\nWidth calculations handle the fact that adders grow by 1 bit per level and multipliers sum their input widths. The pass preserves all cell attributes and properly handles port connections.\r\n\r\n**Command-line flags**: `-arith` for just arithmetic ops, `-logic` for just logic ops, or default for all supported types.\r\n\r\n## Tests\r\n\r\n  The test suite has 30 cases covering:\r\n  - Basic chains (4-input AND, 8-input ADD)\r\n  - Chains with intermediate outputs and fanout\r\n  - Mixed bit widths and signedness checking\r\n  - Pre-existing partial trees\r\n  - Wide operands (64+ bits)\r\n  - Diamond patterns and reconvergent fanout\r\n\r\nEach test uses `equiv_opt` to verify functional equivalence and `select` with traversal operators to check the actual tree depth.\r\n\r\nRun with: `./yosys tests/opt/opt_balance_tree.ys\r\n\r\nOriginal implementation by Akash Levy <akash@silimate.com> for Silimate. Upstreamed from https://github.com/Silimate/yosys\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2026-01-13",
+  "closed_at": "2026-01-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

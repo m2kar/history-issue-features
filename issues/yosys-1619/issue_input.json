@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1619,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1619",
+  "title": "Refactor `abc9` pass",
+  "body": "* `abc9` is now a script pass containing the refactored result, pulling out many of the calls that the old `abc9` was doing internally, yet maintaining the property that it should be a drop-in replacement for `abc`\r\n* New pass `abc9_exe` responsible for just executing external dep\r\n* New pass `abc9_ops` which encapsulates many of the supporting tasks to prep the circuit for `abc9_exe` and to reintegrate the result back into the design\r\n* New option `read_aiger -xaiger` for reading XAIGER extensions, no longer tightly coupled/dependent on ABC box definitions being present in design\r\n* Many cleanups along the way\r\n\r\n`abc9` now looks something like this:\r\n```\r\n    pre:\r\n        scc -set_attr abc9_scc_id {}\r\n        abc9_ops -mark_scc -prep_xaiger [-dff]    (option for -dff)\r\n        select -set abc9_holes A:abc9_holes\r\n        flatten -wb @abc9_holes\r\n        techmap @abc9_holes\r\n        abc9_ops -prep_dff    (only if -dff)\r\n        opt -purge @abc9_holes\r\n        aigmap\r\n        wbflip @abc9_holes\r\n\r\n    map:\r\n        foreach module in selection\r\n            write_xaiger -map <abc-temp-dir>/input.sym <abc-temp-dir>/input.xaig\r\n            abc9_exe -cwd <abc-temp-dir> [options]\r\n            read_aiger -xaiger -wideports -module_name <module-name>$abc9 -map <abc-temp-dir>/input.sym <abc-temp-dir>/output.aig\r\n            abc9_ops -reintegrate\r\n\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-08",
+  "closed_at": "2020-01-27",
+  "code_blocks": [
+    "pre:\r\n        scc -set_attr abc9_scc_id {}\r\n        abc9_ops -mark_scc -prep_xaiger [-dff]    (option for -dff)\r\n        select -set abc9_holes A:abc9_holes\r\n        flatten -wb @abc9_holes\r\n        techmap @abc9_holes\r\n        abc9_ops -prep_dff    (only if -dff)\r\n        opt -purge @abc9_holes\r\n        aigmap\r\n        wbflip @abc9_holes\r\n\r\n    map:\r\n        foreach module in selection\r\n            write_xaiger -map <abc-temp-dir>/input.sym <abc-temp-dir>/input.xaig\r\n            abc9_exe -cwd <abc-temp-dir> [options]\r\n            read_aiger -xaiger -wideports -module_name <module-name>$abc9 -map <abc-temp-dir>/input.sym <abc-temp-dir>/output.aig\r\n            abc9_ops -reintegrate"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

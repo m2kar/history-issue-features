@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1834,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1834",
+  "title": "mingw2 build failure: SIGTERM was not declared in this scope",
+  "body": "As of cbc5664d370230803ac25705485ef1c6ed5f8416 yosys no longer compiles under Windows.  It looks like it's defining WTERMSIG(x) to be SIGTERM, but never actually includes any files that define SIGTERM:\r\n\r\n```\r\nx86_64-w64-mingw32-g++ -o passes/cmds/exec.o -c  -Wall -Wextra -ggdb -I. -I\"./\" -MD -D_YOSYS_ -I/usr/local/include -std=c++11 -Os -D_POSIX_SOURCE -DYOSYS_WIN32_UNIX_DIR -DYOSYS_ENABLE_GLOB -DYOSYS_ENABLE_ABC passes/cmds/exec.cc\r\n\r\npasses/cmds/exec.cc: In member function 'virtual void {anonymous}::ExecPass::execute(std::vector<std::__cxx11::basic_string<char> >, Yosys::RTLIL::Design*)':\r\n\r\npasses/cmds/exec.cc:29:23: error: 'SIGTERM' was not declared in this scope\r\n #  define WTERMSIG(x) SIGTERM\r\n                       ^\r\npasses/cmds/exec.cc:29:23: note: in definition of macro 'WTERMSIG'\r\n #  define WTERMSIG(x) SIGTERM\r\n                       ^~~~~~~\r\npasses/cmds/exec.cc:188:16: error: 'WSTOPSIG' was not declared in this scope\r\n       retval = WSTOPSIG(status);\r\n                ^~~~~~~~\r\npasses/cmds/exec.cc:188:16: note: suggested alternative: 'STATSTG'\r\n       retval = WSTOPSIG(status);\r\n                ^~~~~~~~\r\n                STATSTG\r\nMakefile:625: recipe for target 'passes/cmds/exec.o' failed\r\nmake: *** [passes/cmds/exec.o] Error 1\r\n```\r\n\r\nReverting that commit results in a successful build.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-28",
+  "closed_at": "2020-03-28",
+  "code_blocks": [
+    "x86_64-w64-mingw32-g++ -o passes/cmds/exec.o -c  -Wall -Wextra -ggdb -I. -I\"./\" -MD -D_YOSYS_ -I/usr/local/include -std=c++11 -Os -D_POSIX_SOURCE -DYOSYS_WIN32_UNIX_DIR -DYOSYS_ENABLE_GLOB -DYOSYS_ENABLE_ABC passes/cmds/exec.cc\r\n\r\npasses/cmds/exec.cc: In member function 'virtual void {anonymous}::ExecPass::execute(std::vector<std::__cxx11::basic_string<char> >, Yosys::RTLIL::Design*)':\r\n\r\npasses/cmds/exec.cc:29:23: error: 'SIGTERM' was not declared in this scope\r\n #  define WTERMSIG(x) SIGTERM\r\n                       ^\r\npasses/cmds/exec.cc:29:23: note: in definition of macro 'WTERMSIG'\r\n #  define WTERMSIG(x) SIGTERM\r\n                       ^~~~~~~\r\npasses/cmds/exec.cc:188:16: error: 'WSTOPSIG' was not declared in this scope\r\n       retval = WSTOPSIG(status);\r\n                ^~~~~~~~\r\npasses/cmds/exec.cc:188:16: note: suggested alternative: 'STATSTG'\r\n       retval = WSTOPSIG(status);\r\n                ^~~~~~~~\r\n                STATSTG\r\nMakefile:625: recipe for target 'passes/cmds/exec.o' failed\r\nmake: *** [passes/cmds/exec.o] Error 1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

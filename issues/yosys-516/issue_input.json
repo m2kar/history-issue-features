@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 516,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/516",
+  "title": "Verific Frontend Blasts Memories to DFFs",
+  "body": "I've been using this simple memory as a test case: [test_mem.tar.gz](https://github.com/YosysHQ/yosys/files/1843592/test_mem.tar.gz). The memory in examples/smtbmc/demo3.v works as well but is much larger, so it is slow to run.\r\n\r\nWith the normal front-end, memories are preserved when run as follows:\r\n```yosys -p \"proc; memory -nomap; opt; prep -top test_mem -nordff; write_smt2 test_mem.smt2\" -ql test_mem.log test_mem.v```\r\n\r\nIn this case, test_mem.smt2 contains Arrays.\r\n\r\nWith the Verific frontend, the memory is transformed into a bunch of DFFs. \r\n```yosys -p \"verific -vlog2k test_mem.v; verific -import -v test_mem; proc; memory -nomap; opt; prep -top test_mem -nordff; write_smt2 verific_test_mem.smt2\" -ql verific_test_mem.log```\r\n\r\nHere, verific_test_mem.smt2 does not contain Arrays.\r\n\r\nIt appears that \\mem is imported as a NetBus instead of a RamNet, which is checked for in frontends/verific.cc. Additionally, there is an instance with Type OPER_DUAL_PORT_RAM which is unhandled. I tried adding a RTLIL::Memory in that case, but got stuck trying to connect it properly.\r\n\r\nHere's the log file for the verific case: [verific_test_mem.log](https://github.com/YosysHQ/yosys/files/1843573/verific_test_mem.log)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-03-23",
+  "closed_at": "2018-03-27",
+  "code_blocks": [
+    "In this case, test_mem.smt2 contains Arrays.\r\n\r\nWith the Verific frontend, the memory is transformed into a bunch of DFFs."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

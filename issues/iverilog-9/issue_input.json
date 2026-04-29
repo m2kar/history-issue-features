@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 9,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/9",
+  "title": "Efficiency of verinum and vpp_net pow() functions",
+  "body": "Modules such as\n\n```\nmodule test(y);\n  output [5:0] y;\n  assign y = 6'd3 ** 123456789;\nendmodule\n```\n\ntake forever to compile because the [verinum pow() function](https://github.com/steveicarus/iverilog/blob/master/verinum.cc#L1129) is actually using a loop to evaluate the power:\n\n```\n  for (long idx = 1 ;  idx < pow_count ;  idx += 1)\n        result = result * left;\n```\n\n(For exponents that do not fit into a long long this would also return incorrect values, but I think no-one would wait for such a case to finish compiling..)\n\nThis should of course be instead calculated using a [Power-Modulus Algorithm](http://en.wikipedia.org/wiki/Modular_exponentiation). See the [const_pow() function in Yosys](https://github.com/cliffordwolf/yosys/blob/master/kernel/calc.cc#L487) for an example implementation.\n\nThe [vvp_net pow() function](https://github.com/steveicarus/iverilog/blob/master/vvp/vvp_net.cc#L2363) seems to implement a power-modulus algorithm but nevertheless the following code snippet hangs vvp:\n\n```\nmodule test(a, y);\n  input [5:0] a;\n  output [5:0] y;\n  assign a = 3;\n  assign y = a ** 123456789;\nendmodule\n```\n\nPS: the examples above should evaluate to\n\n```\nassign y = 6'b110011;\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-01-06",
+  "closed_at": "2014-02-15",
+  "code_blocks": [
+    "module test(y);\n  output [5:0] y;\n  assign y = 6'd3 ** 123456789;\nendmodule",
+    "for (long idx = 1 ;  idx < pow_count ;  idx += 1)\n        result = result * left;",
+    "module test(a, y);\n  input [5:0] a;\n  output [5:0] y;\n  assign a = 3;\n  assign y = a ** 123456789;\nendmodule",
+    "assign y = 6'b110011;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4798,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4798",
+  "title": "Synthesis with -nowidelut gives drastically better results",
+  "body": "### Version\n\n0.45+139\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWhile synthesizing a SHA3 design on the Colorlight 5A-75B (Lattice ECP5 FPGA) board, I noticed that the LUT usage was way higher than when I used Vivado to synthesize the same design on a Xilinx board I own. It turns out that synthesizing with `-nowidelut` drastically reduced resource usage and significantly improved timing as well.\r\n\r\nThe problem was in the theta step of the algorithm:\r\n\r\n```verilog\r\nmodule sha3theta (\r\n  input  wire[4:0][4:0][63:0] i_state,\r\n  output wire[4:0][4:0][63:0] o_state\r\n);\r\n\r\n  wire[4:0][63:0] sum_sheet;\r\n\r\n  genvar i;\r\n  generate\r\n  for (i = 0; i < 5; i++) begin\r\n    assign sum_sheet[i] =\r\n      i_state[0][i] ^\r\n      i_state[1][i] ^\r\n      i_state[2][i] ^\r\n      i_state[3][i] ^\r\n      i_state[4][i];\r\n  end\r\n  endgenerate\r\n\r\n  genvar row, col;\r\n  generate\r\n  for (row = 0; row < 5; row++) begin\r\n    for (col = 0; col < 5; col++) begin\r\n      assign o_state[row][col] =\r\n        i_state[row][col] ^\r\n        sum_sheet[(col - 1) % 5] ^\r\n        {sum_sheet[(col + 1) % 5][62:0], sum_sheet[(col + 1) % 5][63:63]};\r\n    end\r\n  end\r\n  endgenerate;\r\n\r\nendmodule\r\n```\r\n\r\nSynthesizing this module with `-nowidelut` gives the following resource usage:\r\n```\r\nNumber of cells: 1972\r\n     LUT4 1972\r\n```\r\n\r\nAnd without the flag:\r\n```\r\nNumber of cells: 9512\r\n     L6MUX21 1188\r\n     LUT4 5656\r\n     PFUMX 2668\r\n```\n\n### Expected Behavior\n\nI would expect that at least the timing would be improved by the usage of the wide muxes found on the ECP5 FPGA.\n\n### Actual Behavior\n\nSynthesizing the full design with `-nowidelut` improved the timing, `Fmax` being 90 MHz, vs 60 MHz without the flag. Of course I verified that this module was in the critical path.",
+  "labels": [
+    "ABC"
+  ],
+  "state": "open",
+  "created_at": "2024-12-05",
+  "closed_at": null,
+  "code_blocks": [
+    "module sha3theta (\r\n  input  wire[4:0][4:0][63:0] i_state,\r\n  output wire[4:0][4:0][63:0] o_state\r\n);\r\n\r\n  wire[4:0][63:0] sum_sheet;\r\n\r\n  genvar i;\r\n  generate\r\n  for (i = 0; i < 5; i++) begin\r\n    assign sum_sheet[i] =\r\n      i_state[0][i] ^\r\n      i_state[1][i] ^\r\n      i_state[2][i] ^\r\n      i_state[3][i] ^\r\n      i_state[4][i];\r\n  end\r\n  endgenerate\r\n\r\n  genvar row, col;\r\n  generate\r\n  for (row = 0; row < 5; row++) begin\r\n    for (col = 0; col < 5; col++) begin\r\n      assign o_state[row][col] =\r\n        i_state[row][col] ^\r\n        sum_sheet[(col - 1) % 5] ^\r\n        {sum_sheet[(col + 1) % 5][62:0], sum_sheet[(col + 1) % 5][63:63]};\r\n    end\r\n  end\r\n  endgenerate;\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

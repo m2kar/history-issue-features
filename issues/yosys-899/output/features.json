@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 899,
+  "title": "Optimization too aggressive?",
+  "features": [
+    {
+      "name": "unpacked array memory with indexed write in FSM case",
+      "category": "data_model",
+      "description": "Code should include an unpacked array (memory) where indexed write operations occur inside an FSM-style case statement with multiple states",
+      "snippet": "reg [31:0] r[4];\nreg [1:0] rd;\nreg [1:0] step;\nalways @(posedge CLK) begin\n  case (step)\n    1: if (rd != 0) r[rd] <= 1;\n    2: if (r[1] == 1) LED <= 1;\n  endcase\nend",
+      "tags": ["unpacked_array", "fsm", "indexed_write", "memory"],
+      "source_bug_id": "899",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/899",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "array index variable updated in FSM with conditional memory write",
+      "category": "control_flow",
+      "description": "Code should include an FSM where a register used as array index is updated across states and used conditionally to write to unpacked array memory",
+      "snippet": "reg [31:0] r[4];\nreg [1:0] rd;\nreg [1:0] step;\ninitial rd = 0;\nalways @(posedge CLK) begin\n  case (step)\n    0: rd <= 0;\n    1: if (rd != 0) r[rd] <= 1;\n    2: rd <= 1;\n  endcase\nend",
+      "tags": ["fsm", "array_index", "conditional_write", "register_update"],
+      "source_bug_id": "899",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/899",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cross-state array read after indexed write pattern",
+      "category": "data_model",
+      "description": "Code should include an unpacked array where a write at index X occurs in one FSM state and a read at index Y occurs in a subsequent FSM state",
+      "snippet": "reg [31:0] r[4];\nreg [1:0] rd;\nalways @(posedge CLK)\n  case (step)\n    1: if (rd != 0) r[rd] <= 1;\n    2: if (r[1] == 1) LED <= 1;\n  endcase",
+      "tags": ["unpacked_array", "indexed_read", "indexed_write", "fsm"],
+      "source_bug_id": "899",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/899",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1229,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1229",
+  "title": "Fundamental combinatorial synthesis error. . . ABC script problem?",
+  "body": "I spent half of yesterday trying to figure out why my version of the picosoc simulated differently between the original verilog source and the synthesized verilog netlist.  I had made numerous changes in qflow, so I was convinced it was something I did.  However, in the end, I found that a combinational expression had been incorrectly optimized, presumably by ABC.  The mem_16bit_buffer[15] bit became undefined while mem_state was 2'b01.  This absolutely should not happen, as mem_16bit_buffer should be untouched when mem_state is 1.  It appears that the undefined state of the RAM at that point was forcing the next state of that single bit to be undefined, when it should have been a don't-care condition.\r\n\r\nThe only thing I can find that I did differently on this synthesis run is that I adapted an ABC synthesis script that I got from Mohamed Shalan (which he uses in CloudV).  This could be a very complicated debug, so before I trigger that, I would like to post the ABC script I use, and I would like to know if there is something I did that is obviously wrong with it.  However, I tend to think that this is a real bug in ABC.\r\n\r\nThe original ABC script is this:\r\n\r\n    `+strash;scorr;ifraig;retime,{D};strash;dch,-f;map,-M,1,{D}`\r\n\r\nThe ABC script that showed the bug is this:\r\n\r\n    `+fx;mfs;strash;refactor;balance;rewrite;refactor;balance;rewrite;rewrite,-z;balance;refactor,-z;rewrite,-z;balance;retime,-D,{D},-M,5;scleanup;map,-M,0;retime,-D,{D};buffer,-N,12,-S,230;upsize,{D};dnsize,{D};stime,-p;`\r\n\r\nThe main purpose of the modified script was to force ABC to keep all fanouts less than 12 so that there would be no need for my fanout-handling tool in qflow to do anything except create the clock buffer tree.\r\n\r\nThe \"upsize\" and \"dnsize\" are probably unnecessary because the qflow gate resizing script should take care of the timing, but I was interested in knowing what result ABC would generate from gate resizing.\r\n\r\nI have not (yet) tried any extensive experiments in modifying the ABC script to see if I can isolate the problem to a single statement.  I wanted to raise the issue first and get an opinion from somebody who knows more about the ABC scripts than I do to see (1) if I did something obviously bad, and (2) if any of the statements in the script are known to be \"experimental\" and less well vetted than others.\r\n\r\nThe synthesis is in X-Fab XH018, so I cannot post the netlist here.  If this seems like an issue that would raise alarms, then I can try some experiments to see if I can reproduce the error in an open technology.  I'm doubtful that the error is going to be easily reproduced, though.\r\n\r\n---Tim",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-07-26",
+  "closed_at": "2019-07-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

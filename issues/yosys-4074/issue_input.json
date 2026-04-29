@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4074,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4074",
+  "title": "cxxrtl: bmux does not mask the result",
+  "body": "### Version\n\nYosys 0.36+8 (git sha1 fb4cbfa73, clang 10.0.0-4ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nCXXRTL's `$bmux` cell implementation does not mask the result with `msb_mask`, which yields the wrong results. I ran into this bug with a more extensive design, so here is a direct RTLIL example (2x1 `$bmux` with hardcoded input value 0xf1) to pinpoint the issue.\r\n\r\nyosys script: `test.ys`:\r\n```\r\nread_rtlil << EOT\r\n\r\nmodule \\top\r\n  wire width 1 input 1 \\S\r\n  wire width 4 output 2 \\Y\r\n\r\n  cell $bmux $0\r\n    parameter \\WIDTH 4\r\n    parameter \\S_WIDTH 1\r\n    connect \\A {8'11110001}\r\n    connect \\S \\S\r\n    connect \\Y \\Y\r\n  end\r\nend\r\n\r\nEOT\r\n\r\nwrite_cxxrtl top.cc\r\n``` \r\n\r\nThe C++ file `main.cc`:\r\n```c++\r\n#include <iostream>\r\n#include \"top.cc\"\r\n\r\nint main() {\r\n  cxxrtl_design::p_top top;\r\n\r\n  // sel = 0\r\n  top.p_S.set(false);\r\n  top.step();\r\n  std::cout << \"Y = \" << std::hex << top.p_Y.get<uint32_t>() << std::endl;\r\n\r\n  // sel = 1\r\n  top.p_S.set(true);\r\n  top.step();\r\n  std::cout << \"Y = \" << std::hex << top.p_Y.get<uint32_t>() << std::endl;\r\n\r\n  return 0;\r\n}\r\n```\r\n\r\nRun:\r\n\r\n```bash\r\nyosys -s test.ys\r\nclang++ -ggdb -I$(yosys-config --datdir)/include/backends/cxxrtl/runtime/ main.cc -o test\r\n./test\r\n```\n\n### Expected Behavior\n\n```\r\nY = 1\r\nY = f\r\n```\n\n### Actual Behavior\n\n```\r\nY = f1\r\nY = f\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2023-12-13",
+  "closed_at": "2023-12-14",
+  "code_blocks": [
+    "read_rtlil << EOT\r\n\r\nmodule \\top\r\n  wire width 1 input 1 \\S\r\n  wire width 4 output 2 \\Y\r\n\r\n  cell $bmux $0\r\n    parameter \\WIDTH 4\r\n    parameter \\S_WIDTH 1\r\n    connect \\A {8'11110001}\r\n    connect \\S \\S\r\n    connect \\Y \\Y\r\n  end\r\nend\r\n\r\nEOT\r\n\r\nwrite_cxxrtl top.cc"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

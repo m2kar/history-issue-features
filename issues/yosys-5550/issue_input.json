@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5550,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5550",
+  "title": "avoid merging formal properties",
+  "body": "_What are the reasons/motivation for this change?_\r\nWe recommend that SBY users use `prep` in the user script as a good general-purpose elaboration script. However, this runs some optimizations. If there are multiple properties in the design that `opt` can statically determine to always be true or false, they might end up getting merged by `opt_merge` and SBY never sees the removed properties. This produces confusing output with unpredictably missing properties.\r\n\r\n_Explain how this is achieved._\r\n1. Put the property cell types (`$check $assume $assert $cover $live`) on the ignore list in `opt_merge`.\r\n2. Automatically add a `keep` attribute on the same cell types on import in the frontend, in case any other optimization might be tempted to touch them in the future or in another edge case we haven't considered yet.\r\n\r\n_Make sure your change comes with tests. If not possible, share how a reviewer might evaluate it._\r\nCI test case included. Here's the SBY file that demonstrates the bigger problem:\r\n```\r\n[options]\r\nmode cover\r\ndepth 2\r\n\r\n[engines]\r\nsmtbmc --keep-going\r\n\r\n[script]\r\nread -sv test.sv\r\nprep -top top\r\n\r\n[file test.sv]\r\nmodule top(output [1:0] o);\r\nassign o = 2'b10;\r\nalways_comb begin\r\n    cover_false_1: cover (o[0] == 1'b1);\r\n    cover_false_2: cover (o[1] == 1'b0);\r\nend\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-12-17",
+  "closed_at": "2025-12-22",
+  "code_blocks": [
+    "[options]\r\nmode cover\r\ndepth 2\r\n\r\n[engines]\r\nsmtbmc --keep-going\r\n\r\n[script]\r\nread -sv test.sv\r\nprep -top top\r\n\r\n[file test.sv]\r\nmodule top(output [1:0] o);\r\nassign o = 2'b10;\r\nalways_comb begin\r\n    cover_false_1: cover (o[0] == 1'b1);\r\n    cover_false_2: cover (o[1] == 1'b0);\r\nend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

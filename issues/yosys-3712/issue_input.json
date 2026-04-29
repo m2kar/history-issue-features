@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3712,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3712",
+  "title": "Failure to change top-module parameter value in hierarchy command with -chparam",
+  "body": "### Version\n\nYosys 0.27+22 (git sha1 53c0a6b78, gcc 12.2.0-3ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nI have a minimal example with the following SystemVerilog file ***module.sv*** which just uses two submodules:\r\n```\r\nmodule mod1 \r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);\r\n   logic [2*NBITS-1:0] C;\r\n   mod2 #(.NBITS(NBITS)) m (.A(A), .B(C));\r\n   mod3 #(.NBITS(NBITS)) m (.A(C), .B(B));\r\nendmodule\r\n\r\nmodule mod2 \r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);   \r\n   assign B = { A[NBITS-1:0], A[2*NBITS-1:NBITS] };\r\nendmodule\r\n\r\nmodule mod3\r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);   \r\n   assign B = { A[NBITS-2:0], A[2*NBITS-1:NBITS], A[NBITS-1] };\r\nendmodule\r\n```\r\nI want to load the file and then elaborate the top module ***mod1*** with a different value for the `NBITS` parameter.\r\n```\r\n/usr/local/bin/yosys -QT -p \"read_verilog -defer -sv module.sv; ls; hierarchy -top mod1 -chparam NBITS 7\"\r\n```\n\n### Expected Behavior\n\nThe module is elaborated correctly\n\n### Actual Behavior\n\n```\r\n-- Running command `read_verilog -defer -sv module.sv; ls; hierarchy -top mod1 -chparam NBITS 7' --\r\n\r\n1. Executing Verilog-2005 frontend: module.sv\r\nParsing SystemVerilog input from `module.sv' to AST representation.\r\nStoring AST representation for module `$abstract\\mod1'.\r\nStoring AST representation for module `$abstract\\mod2'.\r\nStoring AST representation for module `$abstract\\mod3'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n3 modules:\r\n  $abstract\\mod1\r\n  $abstract\\mod2\r\n  $abstract\\mod3\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\nParameter \\NBITS = 7\r\n\r\n3. Executing AST frontend in derive mode using pre-parsed AST for module `\\mod1'.\r\nParameter \\NBITS = 7\r\nGenerating RTLIL representation for module `$paramod\\mod1\\NBITS=32'00000000000000000000000000000111'.\r\nmodule.sv:8: ERROR: Cannot add cell `\\m' because a cell with the same name was already created at module.sv:7.26-7.42!\r\n```\r\nNote that if the top module has only ***one*** submodule the procedure works correctly.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-03-24",
+  "closed_at": "2023-04-24",
+  "code_blocks": [
+    "module mod1 \r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);\r\n   logic [2*NBITS-1:0] C;\r\n   mod2 #(.NBITS(NBITS)) m (.A(A), .B(C));\r\n   mod3 #(.NBITS(NBITS)) m (.A(C), .B(B));\r\nendmodule\r\n\r\nmodule mod2 \r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);   \r\n   assign B = { A[NBITS-1:0], A[2*NBITS-1:NBITS] };\r\nendmodule\r\n\r\nmodule mod3\r\n  #(parameter NBITS=5)\r\n   (input  logic [2*NBITS-1:0] A,\r\n    output logic [2*NBITS-1:0] B);   \r\n   assign B = { A[NBITS-2:0], A[2*NBITS-1:NBITS], A[NBITS-1] };\r\nendmodule",
+    "/usr/local/bin/yosys -QT -p \"read_verilog -defer -sv module.sv; ls; hierarchy -top mod1 -chparam NBITS 7\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

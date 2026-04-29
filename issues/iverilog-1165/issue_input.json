@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1165,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1165",
+  "title": "Incorrect result from shift operation",
+  "body": "```verilog\r\nmodule top();\r\n\r\nreg signed [1:0] shift;\r\nreg [31:0] y;\r\n\r\ninitial begin\r\n    shift = 2'b10;\r\n    y = 32'd7 << shift[1:0];\r\n    $display(\"%b\", y);\r\nend\r\n\r\nendmodule\r\n \r\n```\r\nWhen running this test code, Icarus Verilog returns:\r\n```\r\n00000000000000000000000000000000\r\n```\r\nHowever, when testing the same code with Jasper 2022.09, Jasper returns:\r\n```\r\n00000000000000000000000000011100\r\n```\r\nOur initial analysis suggests that the 'shift' variable was treated as signed and sign-extended, which resulted in a left shift amount that was too large, causing the final result to be zero.\r\n\r\nAccording to the IEEE Standard for SystemVerilog 1800-2017:\r\n> The **right operand** is always treated as an **unsigned number** and has no effect on the signedness of the result.\r\n\r\nTherefore, during the extension, 'shift' should be treated as unsigned, and the final shift amount should be 2'b10 (which is 2 in decimal). The correct result should be ’11100‘, not all zeros.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-02",
+  "closed_at": "2024-09-07",
+  "code_blocks": [
+    "module top();\r\n\r\nreg signed [1:0] shift;\r\nreg [31:0] y;\r\n\r\ninitial begin\r\n    shift = 2'b10;\r\n    y = 32'd7 << shift[1:0];\r\n    $display(\"%b\", y);\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

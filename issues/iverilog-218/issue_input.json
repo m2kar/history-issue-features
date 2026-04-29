@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 218,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/218",
+  "title": "Assertion failure when building timing model",
+  "body": "I seem to have bumped into a similar issue to #96 when trying to compile a simple project that contains a memory model from Microchip for the 23K640 SPI SRSAM.\r\n\r\nMy simple design looks like this:\r\n\r\n// We need this since the specific memory module sets timescale.\r\n`timescale 1ns/10ps\r\n\r\nmodule simple();\r\n\r\n  //----------------------------------------------------------------\r\n  // Parameters.\r\n  //----------------------------------------------------------------\r\n  reg  mem_si;\r\n  wire mem_so;\r\n  reg  mem_sck;\r\n  reg  mem_hold_n;\r\n  reg  mem_reset;\r\n\r\n\r\n  //----------------------------------------------------------------\r\n  // Memory model.\r\n  //----------------------------------------------------------------\r\n  M23K640 memory(.SI(mem_si),\r\n                 .SO(mem_so),\r\n                 .SCK(mem_sck),\r\n                 .CS_N(mem_cs_n),\r\n                 .HOLD_N(mem_hold_n),\r\n                 .RESET(mem_reset)\r\n                );\r\n\r\n\r\n  //----------------------------------------------------------------\r\n  // main\r\n  //----------------------------------------------------------------\r\n  initial\r\n    begin : main\r\n      $display(\"Simple mem test bench started.\");\r\n      $display(\"\");\r\n\r\n      mem_si     = 1'h1;\r\n      mem_sck    = 1'h0;\r\n      mem_hold_n = 1'h1;\r\n      mem_reset  = 1'h1;\r\n\r\n      $display(\"\");\r\n      $display(\"Simple mem test bench completed.\");\r\n      $finish;\r\n    end // main\r\n\r\nendmodule // simple\r\n\r\nThe specific memory model can be downloaded here:\r\nhttps://www.microchip.com/wwwproducts/en/23A640\r\n\r\nDirect link to the zip file with the 23K640.v model:\r\nhttp://ww1.microchip.com/downloads/en/DeviceDoc/23x640_Verilog_Model.zip\r\n\r\nIn the model, there is a set of dynamic delay statements (row 294 - 298):\r\n\r\n   always @(DataShifterO) SO_DO <= #(tV) DataShifterO[07];\r\n\r\n   bufif1 #(tV,0)    (OutputEnable1, SO_Enable, 1);\r\n   notif1 #(tDIS)    (OutputEnable2, CS_N,   1);\r\n   bufif1 #(tHV,tHZ) (OutputEnable3, HOLD_N, 1);\r\n\r\n\r\nIf I remove them, the compilation goes through.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-11-13",
+  "closed_at": "2018-11-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

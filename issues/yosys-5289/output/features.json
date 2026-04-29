@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 5289,
+  "title": "Yosys is unable to prove logical equivalence when _DFFE_PP_ cells are duplicated",
+  "features": [
+    {
+      "name": "dffe_pp cell duplication via techmap",
+      "category": "timing",
+      "description": "Code should include a techmap that replaces a single _DFFE_PP_ cell with two _DFFE_PP_ cells in series, creating a two-stage sequential pipeline",
+      "snippet": "module \\\\$_DFFE_PP_ (input D, C, E, output Q);\n    wire connector;\n    _DFFE_PP_ _TECHMAP_REPLACE_.inst1 (.D(D), .C(C), .E(E), .Q(connector));\n    _DFFE_PP_ _TECHMAP_REPLACE_.inst2 (.D(connector), .C(C), .E(E), .Q(Q));\nendmodule",
+      "tags": ["sequential_cell", "duplication", "techmap", "dffe", "retiming"],
+      "source_bug_id": "5289",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5289",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "chained dffe_pp cells with shared clock and enable",
+      "category": "timing",
+      "description": "Code should include two _DFFE_PP_ cells where the output of the first feeds into the D input of the second, with both sharing the same clock (C) and enable (E) signals",
+      "snippet": "wire connector;\n_DFFE_PP_ ff1 (.D(data_in), .C(clk), .E(en), .Q(connector));\n_DFFE_PP_ ff2 (.D(connector), .C(clk), .E(en), .Q(data_out));",
+      "tags": ["dffe", "clock", "enable", "sequential", "pipeline"],
+      "source_bug_id": "5289",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5289",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "techmap module replacement of sequential cell",
+      "category": "preprocess",
+      "description": "Code should include a techmap module that replaces an internal cell type (backslash-prefixed name like \\$_DFFE_PP_) with a library cell (_DFFE_PP_) via _TECHMAP_REPLACE_",
+      "snippet": "module \\\\$_DFFE_PP_ (input D, C, E, output Q);\n    _DFFE_PP_ _TECHMAP_REPLACE_ (.D(D), .C(C), .E(E), .Q(Q));\nendmodule",
+      "tags": ["techmap", "module_replacement", "sequential", "cell_library"],
+      "source_bug_id": "5289",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5289",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

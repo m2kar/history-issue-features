@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 550,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/550",
+  "title": "Support SystemVerilog `` extension for macros",
+  "body": "These patches add support for the ``` `` ``` token-pasting operator in macros, and clean up whitespace handling (which becomes more important when using ``` `` ```).  I verified with:\r\n```\r\n`define ADD(a,b) a+b\r\n`define CONCAT1(a,b) a``b\r\n`define CONCAT2(a) test_``a\r\n`define CONCAT3(a) a``_test\r\n`define FOO foo\r\n`define BAR bar\r\n`define CONCAT4 `FOO```BAR\r\n`define STRING(a) `\"a`\"\r\n\r\nmodule test;\r\n   reg r0  = `CONCAT1(foo, bar);\r\n   reg r1  = `CONCAT2(xx);\r\n   reg r2  = `CONCAT3(yy);\r\n   reg r3  = `CONCAT4;\r\n   reg r4  = `ADD(1,2);\r\n   reg r5  = `ADD(1, 2);\r\n   reg r6  = `ADD(1,2 );\r\n   reg r7  = `ADD( 1,2);\r\n   reg r8  = `ADD( 1, 2);\r\n   reg r9  = `ADD( 1,2 );\r\n   reg r10 = `ADD(1 ,2);\r\n   reg r11 = `ADD(1 , 2);\r\n   reg r12 = `ADD(1 ,2 );\r\n   reg r13 = `STRING(hello);\r\nendmodule\r\n```\r\nand compared the output of yosis, iverilog, and Verilog-Perl:\r\n```\r\nyosys -p 'read_verilog -ppdump test.v'\r\nivlpp test.v # iverilog\r\nvppreproc test.v # Verilog-Perl\r\n```\r\nwhich all give:\r\n```\r\nmodule test;\r\n   reg r0  = foobar;\r\n   reg r1  = test_xx;\r\n   reg r2  = yy_test;\r\n   reg r3  = foobar;\r\n   reg r4  = 1+2;\r\n   reg r5  = 1+2;\r\n   reg r6  = 1+2;\r\n   reg r7  = 1+2;\r\n   reg r8  = 1+2;\r\n   reg r9  = 1+2;\r\n   reg r10 = 1+2;\r\n   reg r11 = 1+2;\r\n   reg r12 = 1+2;\r\n   reg r13 = \"hello\";\r\nendmodule\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-05-17",
+  "closed_at": "2018-05-17",
+  "code_blocks": [
+    "and compared the output of yosis, iverilog, and Verilog-Perl:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

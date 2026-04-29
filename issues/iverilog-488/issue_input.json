@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 488,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/488",
+  "title": "Verilog preprocessor line directives not always honored ",
+  "body": "On both 10.2 (stable) and 11.0 (stable), when you insert preprocessor line directives, they work up until a `` `include `` or multi-line macro is expanded. At that point, it reverts back to the original filename and number.\r\n\r\nLine directives are a bit of an esoteric feature, but this is how I understand it. iverilog accepts two flavors of preprocessor line directives,  `` `line `` and `#line`. They both do the same thing (with slightly different syntax) and allow you to rename and renumber the current file being processed for reporting purposes. iverilog itself makes use of these directives, since the preprocessor, ivlpp, inserts them during preprocessing. And they work, to some degree.\r\n\r\nHere's an example of a failure condition. Say you have 2 files, `foo.v`:\r\n```verilog\r\n/* This is foo.v:1 */\r\n/* This is foo.v:2 */\r\n`line 10 \"hello.v\" 0\r\n/* This is foo.v:4, should be reported as hello.v:10 */\r\n`include \"bar.v\"\r\n/* This is foo.v:6, should be reported as hello.v:12 */\r\n`define MACRO reg A; \\\r\n              reg B; \\\r\n              reg C;\r\n`line 5 \"world.v\" 0\r\n/* This is foo.v:11, should be reported as world.v:5 */\r\nmodule foo;\r\n`MACRO\r\n/* This is foo.v:14, should be reported as world.v:8 */\r\nendmodule\r\n```\r\nand `bar.v`:\r\n```verilog\r\nmodule bar;\r\nendmodule\r\n```\r\nHere is the output when you run just the preprocessor `/usr/lib/x86_64-linux-gnu/ivl/ivlpp -L foo.v`:\r\n```verilog\r\n`line 1 \"foo.v\" 0\r\n/* This is foo.v:1 */\r\n/* This is foo.v:2 */\r\n`line 10 \"hello.v\" 0\r\n/* This is foo.v:4, should be reported as hello.v:10 */\r\n\r\n`line 1 \"./bar.v\" 1\r\nmodule bar;\r\nendmodule\r\n\r\n`line 6 \"foo.v\" 2   <- BUG\r\n/* This is foo.v:6, should be reported as hello.v:12 */\r\n\r\n\r\n\r\n`line 5 \"world.v\" 0\r\n/* This is foo.v:11, should be reported as world.v:5 */\r\nmodule foo;\r\nreg A;\r\n              reg B;\r\n              reg C;\r\n\r\n`line 13 \"foo.v\" 2  <- BUG\r\n\r\n/* This is foo.v:14, should be reported as world.v:8 */\r\nendmodule\r\n```\r\n\r\nivlpp inserts `` `line `` directive at the beginning of both files correctly, as it should. But when it comes back from the include, it ends up using the original filename and numbering scheme, not the one that was explicitly added in the file. And again, when coming back from the multi-line macro expansion, it uses the wrong scheme. There may be other scenarios where it misbehaves, but these are the ones I've found.",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-06",
+  "closed_at": "2021-03-14",
+  "code_blocks": [
+    "/* This is foo.v:1 */\r\n/* This is foo.v:2 */\r\n`line 10 \"hello.v\" 0\r\n/* This is foo.v:4, should be reported as hello.v:10 */\r\n`include \"bar.v\"\r\n/* This is foo.v:6, should be reported as hello.v:12 */\r\n`define MACRO reg A; \\\r\n              reg B; \\\r\n              reg C;\r\n`line 5 \"world.v\" 0\r\n/* This is foo.v:11, should be reported as world.v:5 */\r\nmodule foo;\r\n`MACRO\r\n/* This is foo.v:14, should be reported as world.v:8 */\r\nendmodule",
+    "module bar;\r\nendmodule",
+    "`line 1 \"foo.v\" 0\r\n/* This is foo.v:1 */\r\n/* This is foo.v:2 */\r\n`line 10 \"hello.v\" 0\r\n/* This is foo.v:4, should be reported as hello.v:10 */\r\n\r\n`line 1 \"./bar.v\" 1\r\nmodule bar;\r\nendmodule\r\n\r\n`line 6 \"foo.v\" 2   <- BUG\r\n/* This is foo.v:6, should be reported as hello.v:12 */\r\n\r\n\r\n\r\n`line 5 \"world.v\" 0\r\n/* This is foo.v:11, should be reported as world.v:5 */\r\nmodule foo;\r\nreg A;\r\n              reg B;\r\n              reg C;\r\n\r\n`line 13 \"foo.v\" 2  <- BUG\r\n\r\n/* This is foo.v:14, should be reported as world.v:8 */\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

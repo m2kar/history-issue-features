@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4613,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4613",
+  "title": "log: Never silence `log_cmd_error`",
+  "body": "\r\n_What are the reasons/motivation for this change?_\r\n\r\nSome errors can get hidden by `-v N`, see The-OpenROAD-Project/OpenROAD-flow-scripts#2375\r\n\r\nThis makes the user almost always worse off. The only exception I can think of is someone scripting around Yosys commands, checking for their exit status, and handling failures gracefully (for the few failure modes where that can be done). I've never seen such a Yosys script.\r\n\r\n_Explain how this is achieved._\r\n\r\nAdd extra handling to arrange for `log_cmd_error` never being silenced by the command line `-v N` option. Similar path for `log_error` exists already.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nWith test.tcl:\r\n\r\n```\r\nyosys -import\r\nhierarchy -top nonexistent\r\n```\r\n\r\nBefore\r\n\r\n```\r\n$ ./yosys -v 3 test.tcl\r\n1. Executing HIERARCHY pass (managing design hierarchy).\r\nERROR: TCL interpreter returned an error: Yosys command produced an error\r\n```\r\n\r\nAfter\r\n\r\n```\r\n$ ./yosys -v 3 test.tcl\r\n1. Executing HIERARCHY pass (managing design hierarchy).\r\nERROR: Module `nonexistent' not found!\r\nERROR: TCL interpreter returned an error: Yosys command produced an error\r\n```\r\n",
+  "labels": [
+    "merge-before-release"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-24",
+  "closed_at": "2024-10-07",
+  "code_blocks": [
+    "yosys -import\r\nhierarchy -top nonexistent",
+    "$ ./yosys -v 3 test.tcl\r\n1. Executing HIERARCHY pass (managing design hierarchy).\r\nERROR: Module `nonexistent' not found!\r\nERROR: TCL interpreter returned an error: Yosys command produced an error"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

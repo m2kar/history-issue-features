@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1931,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1931",
+  "title": "cxxrtl: ROM doesn't function correctly",
+  "body": "rom.v:\r\n```verilog\r\nmodule top(input clk, input [3:0] addr, output reg [15:0] q);\r\n\treg [15:0] rom[0:15];\r\n\tinitial begin : rom_init\r\n\t\tinteger i;\r\n\t\tfor (i = 0; i < 16; i = i + 1'b1)\r\n\t\t\trom[i] = i[0] ? 16'hAAAA : 16'h5555;\r\n\tend\r\n\r\n\talways @(posedge clk)\r\n\t\tq <= rom[addr];\r\nendmodule\r\n```\r\n\r\nrom_test.cc:\r\n```c++\r\n#include \"rom.cc\"\r\n#include <iostream>\r\n\r\nint main() {\r\n  cxxrtl_design::p_top top;\r\n  \r\n  for (int i = 0; i < 16; i++) {\r\n    top.p_addr.next = value<4> {i};\r\n    top.p_clk.next = value<1> {1u};\r\n    top.step();\r\n    top.p_clk.next = value<1> {0u};\r\n    top.step();\r\n    std::cerr << top.p_q.curr << std::endl;\r\n  }\r\n}\r\n```\r\n\r\nCommand line:\r\n```\r\nyosys -p \"prep -top top; write_cxxrtl rom.cc\" rom.v && g++ -I`yosys-config --datdir`/include -o rom_test rom_test.cc && ./rom_test\r\n```\r\n\r\nOutput from `rom_test` is all 16'h0000 rather than 16'h5555/16'hAAAA alternating as expected. Looking inside the generated code, the `if (value<1>{0u})` doesn't look right here:\r\n```c++\r\n\tauto tmp_0 = memory_index(p_addr.curr, 0, 16);\r\n\tif (value<1>{0u}) {\r\n\t\tassert(tmp_0.valid && \"out of bounds read\");\r\n\t\tif(tmp_0.valid) {\r\n\t\t\ti_0_5c_q_5b_15_3a_0_5d_ = memory_p_rom[tmp_0.index];\r\n\t\t} else {\r\n\t\t\ti_0_5c_q_5b_15_3a_0_5d_ = value<16> {};\r\n\t\t}\r\n\t}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-14",
+  "closed_at": "2020-04-15",
+  "code_blocks": [
+    "module top(input clk, input [3:0] addr, output reg [15:0] q);\r\n\treg [15:0] rom[0:15];\r\n\tinitial begin : rom_init\r\n\t\tinteger i;\r\n\t\tfor (i = 0; i < 16; i = i + 1'b1)\r\n\t\t\trom[i] = i[0] ? 16'hAAAA : 16'h5555;\r\n\tend\r\n\r\n\talways @(posedge clk)\r\n\t\tq <= rom[addr];\r\nendmodule",
+    "Output from `rom_test` is all 16'h0000 rather than 16'h5555/16'hAAAA alternating as expected. Looking inside the generated code, the `if (value<1>{0u})` doesn't look right here:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

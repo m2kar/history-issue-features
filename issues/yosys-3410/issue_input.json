@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3410,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3410",
+  "title": "verilog `resetall directive clears defined macros",
+  "body": "## Steps to reproduce the issue\r\n\r\nUse `read_verilog -DMYMACRO resetall.v` to read the following file:\r\n\r\nresetall.v:\r\n```verilog\r\nmodule foo;\r\n`ifdef SYNTHESIS\r\ninitial $display(\"%m: SYNTHESIS defined\");\r\n`else\r\ninitial $display(\"%m: SYNTHESIS not defined\");\r\n`endif\r\n`ifdef MYMACRO\r\ninitial $display(\"%m: MYMACRO defined\");\r\n`else\r\ninitial $display(\"%m: MYMACRO not defined\");\r\n`endif\r\nendmodule\r\n\r\n`resetall\r\n\r\nmodule bar;\r\n`ifdef SYNTHESIS\r\ninitial $display(\"%m: SYNTHESIS defined\");\r\n`else\r\ninitial $display(\"%m: SYNTHESIS not defined\");\r\n`endif\r\n`ifdef MYMACRO\r\ninitial $display(\"%m: MYMACRO defined\");\r\n`else\r\ninitial $display(\"%m: MYMACRO not defined\");\r\n`endif\r\nendmodule\r\n```\r\n\r\n## Actual behavior\r\n\r\n```\r\n1. Executing Verilog-2005 frontend: resetall.v\r\nParsing Verilog input from `resetall.v' to AST representation.\r\nGenerating RTLIL representation for module `\\foo'.\r\nfoo: SYNTHESIS defined\r\nfoo: MYMACRO defined\r\nGenerating RTLIL representation for module `\\bar'.\r\nbar: SYNTHESIS not defined\r\nbar: MYMACRO not defined\r\nSuccessfully finished Verilog frontend.\r\n```\r\n\r\n## Expected behavior\r\n\r\nIn this example, a yosys-defined macro `SYNTHESIS` and a user-defined macro `MYMACRO` are used. After a `` `resetall`` directive, both macros are expected to be unaffected.\r\n\r\nIn Verilog-2005 spec §19.3, it says,\r\n```\r\nThe text macro facility is not affected by the compiler directive `resetall.\r\n```\r\nSo all macros should be preserved after a `` `resetall``.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-12",
+  "closed_at": "2022-08-10",
+  "code_blocks": [
+    "module foo;\r\n`ifdef SYNTHESIS\r\ninitial $display(\"%m: SYNTHESIS defined\");\r\n`else\r\ninitial $display(\"%m: SYNTHESIS not defined\");\r\n`endif\r\n`ifdef MYMACRO\r\ninitial $display(\"%m: MYMACRO defined\");\r\n`else\r\ninitial $display(\"%m: MYMACRO not defined\");\r\n`endif\r\nendmodule\r\n\r\n`resetall\r\n\r\nmodule bar;\r\n`ifdef SYNTHESIS\r\ninitial $display(\"%m: SYNTHESIS defined\");\r\n`else\r\ninitial $display(\"%m: SYNTHESIS not defined\");\r\n`endif\r\n`ifdef MYMACRO\r\ninitial $display(\"%m: MYMACRO defined\");\r\n`else\r\ninitial $display(\"%m: MYMACRO not defined\");\r\n`endif\r\nendmodule",
+    "1. Executing Verilog-2005 frontend: resetall.v\r\nParsing Verilog input from `resetall.v' to AST representation.\r\nGenerating RTLIL representation for module `\\foo'.\r\nfoo: SYNTHESIS defined\r\nfoo: MYMACRO defined\r\nGenerating RTLIL representation for module `\\bar'.\r\nbar: SYNTHESIS not defined\r\nbar: MYMACRO not defined\r\nSuccessfully finished Verilog frontend."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

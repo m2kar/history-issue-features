@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 173,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/173",
+  "title": "crash if variables present more than once in LHS of the same assignment",
+  "body": "Here is some code that cause Yosys 0.6 (git sha1 5869d26, clang 3.4-1ubuntu3 -fPIC -Os) to fail:\n\n```\n// File: testcase_order.v\nmodule testcase_order\n(\n   input ai, bi, ci,\n   output reg ao, bo, co\n);\n   always@*\n   begin\n      ao=ai;\n      bo=bi;\n      co=ci;\n      {co,co,bo,ao} = {ai,bi,ai,ci}; // Error: multiple assignment to 'co' with blocking assignment\n   end\n\nendmodule\n\n```\n\nWhen same variable 'co' assigned more than once in same statement (inside concatenation) seg-fault happen. Although presented code is a bad coding style (AFAIK, IEEE-1364 doesn't specify order in which assignment should be made inside same assign), I believe tool should not fail.\n\nTool invoked with:\n`yosys -q -p \"read_verilog testcase_order.v; proc;\"`\n\nGDB log looks like this:\n\n>  #0  Yosys::RTLIL::SigSpec::operator= (this=0x7ffd5551b3c8, other=...) at kernel/rtlil.cc:2339\n>  #1  0x00000000004f8876 in Yosys::RTLIL::SigSpec::SigSpec (this=0x7ffd5551b3c8, other=...) at kernel/rtlil.cc:2298\n>  #2  0x000000000071fe72 in (anonymous namespace)::SigSnippets::insert (this=0x7ffd5551b6a0, cs=0x236cba0) at passes/proc/proc_mux.cc:101\n>  #3  0x000000000071f8a3 in proc_mux (mod=<optimized out>, proc=<optimized out>, mod=<optimized out>, proc=<optimized out>) at passes/proc/proc_mux.cc:359\n>  #4  (anonymous namespace)::ProcMuxPass::execute (this=<optimized out>, args=..., design=0x2352c40) at passes/proc/proc_mux.cc:402\n>  #5  0x00000000004c54cd in Yosys::Pass::call (design=0x2352c40, args=std::vector of length 1, capacity 1 = {...}) at kernel/register.cc:227\n>  #6  0x00000000004c518a in Yosys::Pass::call (design=0x2352c40, command=...) at kernel/register.cc:207\n>  #7  0x00000000007196f5 in (anonymous namespace)::ProcPass::execute (this=<optimized out>, args=..., design=0x2352c40) at passes/proc/proc.cc:81\n>  #8  0x00000000004c54cd in Yosys::Pass::call (design=0x2352c40, args=std::vector of length 1, capacity 1 = {...}) at kernel/register.cc:227\n>  #9  0x00000000004c4fbe in Yosys::Pass::call (design=0x2352c40, command=...) at kernel/register.cc:184\n>  #10 0x000000000051a1fa in Yosys::run_pass (command=\"read_verilog testcase_order.v; proc;\", design=<optimized out>) at kernel/yosys.cc:861\n>  #11 0x00000000004c2c7a in main (argc=<optimized out>, argv=<optimized out>) at kernel/driver.cc:362\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-05-27",
+  "closed_at": "2016-05-27",
+  "code_blocks": [
+    "// File: testcase_order.v\nmodule testcase_order\n(\n   input ai, bi, ci,\n   output reg ao, bo, co\n);\n   always@*\n   begin\n      ao=ai;\n      bo=bi;\n      co=ci;\n      {co,co,bo,ao} = {ai,bi,ai,ci}; // Error: multiple assignment to 'co' with blocking assignment\n   end\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

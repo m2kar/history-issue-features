@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 712,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/712",
+  "title": "Return value of correct width for dynamic array out-of-bound access",
+  "body": "Commit e1870acfacc9 (\"Return the correct value when a queue or darray\r\nreferences an undefined element\") added support for specifying the width of\r\nthe vector elements stored in a queue or dynamic array, so that an\r\nout-of-bounds access can create a word with the right width.\r\n\r\nTo get the element width of a queue or dynamic array it uses the\r\n`packed_width()` method. But this method is only implemented for\r\n`netqueue_t` and returns always 1 for dynamic arrays. As a result\r\nout-of-bounds access on a dynamic array will push a vector of the wrong\r\nwidth onto the stack if the vector element is wider than 1 bit. This will\r\nusually trigger an assert in vvp.\r\n\r\nFix this by moving the `packed_width()` method implementation from\r\n`netqueue_t` to its base class `netdarray_t` so that it works for all types\r\nof dynamic arrays.\r\n\r\nAlso add regression tests that check that the return value for a out-of-bounds\r\naccess on a dynamic array works and returns the correct value. Note that for\r\n2-state vectors this test currently fails since while the returned value now has\r\nthe right width the value itself is incorrect. On 2-state vectors the value should\r\nbe `'0`, but it is `'X`, just like for 4-state vectors. Some additional work will be\r\nnecessary to resolve that.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-15",
+  "closed_at": "2022-05-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

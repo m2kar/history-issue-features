@@ -1,0 +1,33 @@
+{
+  "tool": "verilator",
+  "issue_number": 1111,
+  "title": "vpi_put_value() at T0 is overridden",
+  "features": [
+    {
+      "name": "vpi callback at time zero with vpi_put_value",
+      "category": "general",
+      "description": "Code should include a VPI callback registered at time 0 combined with vpi_put_value() to set a signal value, where the callback fires before the simulator finishes pre-initial signal initialization",
+      "snippet": "vpiHandle cb_h; cb_h = vpi_register_cb(cbAfterDelay, 0); vpi_put_value(sig, &val, vpiNoDelay, vpiNoReturn);\n// T0 callback fires, but signal gets overwritten to 'z' by simulator's pre-initial setup",
+      "tags": ["vpi", "callback", "time_zero", "vpi_put_value", "signal_initialization"],
+      "source_bug_id": "iverilog-1111",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1111",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "vpi callback delayed at simulation start",
+      "category": "timing",
+      "description": "Code should include a VPI callback registered before simulation time 0 using vpi_register_cb with cbAfterDelay and zero delay, which can conflict with the simulator's internal signal initialization at T0",
+      "snippet": "PLI_INT32 delay = 0; vpi_register_cb(cbAfterDelay, delay);\n// When delay is 0 and callback is registered in pre-initial phase",
+      "tags": ["vpi", "callback", "simulation_start", "cbAfterDelay"],
+      "source_bug_id": "iverilog-1111",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1111",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

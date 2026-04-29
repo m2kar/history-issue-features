@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 289,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/289",
+  "title": "enum in struct is counted as 0 bits when struct is used in packed union.",
+  "body": "I started working in a larger systemverilog codebase and wanted to simulate it using iverilog. But I was getting an error during elaboration. I was able to track it down to the following minimal example:\r\n\r\n```systemverilog\r\npackage pkg;\r\n\r\ntypedef enum logic [3:0] { \r\n    ABC = 4'h0\r\n} enum_t;\r\n\r\ntypedef struct packed {\r\n    enum_t item;\r\n} w_enum;\r\n\r\ntypedef struct packed {\r\n    logic [3:0] item;\r\n} w_logic;\r\n\r\ntypedef union packed {\r\n    w_enum el1;\r\n    w_logic el2;\r\n} foo_t;\r\n\r\nendpackage\r\n\r\nimport pkg::*;\r\n\r\nmodule main();\r\nfoo_t val;\r\nendmodule\r\n```\r\n\r\nCompiling this with `iverilog -v -g2012 main.sv` gives me the following error message (I stripped the copyright notice):\r\n\r\n```\r\nIcarus Verilog version 11.0 (devel) (s20150603-774-g7f95abc6)\r\n\r\ntranslate: /usr/lib/ivl/ivlpp  -v -L -F\"/tmp/ivrlg24dc6567c\" -f\"/tmp/ivrlg4dc6567c\" -p\"/tmp/ivrli4dc6567c\" | /usr/lib/ivl/ivl -v -C\"/tmp/ivrlh4dc6567c\" -C\"/usr/lib/ivl/vvp.conf\" -- -\r\nIcarus Verilog Preprocessor version 11.0 (devel) (s20150603-774-g7f95abc6)\r\n\r\nUsing language generation: IEEE1800-2012,no-specify,xtypes,icarus-misc\r\nPARSING INPUT\r\nLOCATING TOP-LEVEL MODULES\r\n   main\r\n ... done, 0 seconds.\r\nELABORATING DESIGN\r\n:0: error: Member el2 of packed union is 4 bits, expecting 0 bits.\r\n1 error(s) during elaboration.\r\n```\r\n\r\nI am not too advanced in Systemverilog but from reading the standard and looking at other examples it seems to me the above code should be correct.\r\n\r\nOne curious thing I noticed it when you take all the struct, enum and union declarations out of the `pkg` package, the error no longer occurs.\r\n\r\nI wasn't able to trim down the code any further, for example directly using the enum and logic vector in the `foo_t` union no longer produces the error:\r\n\r\n```systemverilog\r\ntypedef union packed {\r\n    enum_t el1;\r\n    logic [3:0] el2;\r\n} foo_t;\r\n```\r\n\r\nIf you need any more information let me know.\r\n\r\nI am using the latest commit of iverilog (7f95abc6)",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-12-03",
+  "closed_at": "2019-12-23",
+  "code_blocks": [
+    "package pkg;\r\n\r\ntypedef enum logic [3:0] { \r\n    ABC = 4'h0\r\n} enum_t;\r\n\r\ntypedef struct packed {\r\n    enum_t item;\r\n} w_enum;\r\n\r\ntypedef struct packed {\r\n    logic [3:0] item;\r\n} w_logic;\r\n\r\ntypedef union packed {\r\n    w_enum el1;\r\n    w_logic el2;\r\n} foo_t;\r\n\r\nendpackage\r\n\r\nimport pkg::*;\r\n\r\nmodule main();\r\nfoo_t val;\r\nendmodule",
+    "Icarus Verilog version 11.0 (devel) (s20150603-774-g7f95abc6)\r\n\r\ntranslate: /usr/lib/ivl/ivlpp  -v -L -F\"/tmp/ivrlg24dc6567c\" -f\"/tmp/ivrlg4dc6567c\" -p\"/tmp/ivrli4dc6567c\" | /usr/lib/ivl/ivl -v -C\"/tmp/ivrlh4dc6567c\" -C\"/usr/lib/ivl/vvp.conf\" -- -\r\nIcarus Verilog Preprocessor version 11.0 (devel) (s20150603-774-g7f95abc6)\r\n\r\nUsing language generation: IEEE1800-2012,no-specify,xtypes,icarus-misc\r\nPARSING INPUT\r\nLOCATING TOP-LEVEL MODULES\r\n   main\r\n ... done, 0 seconds.\r\nELABORATING DESIGN\r\n:0: error: Member el2 of packed union is 4 bits, expecting 0 bits.\r\n1 error(s) during elaboration.",
+    "typedef union packed {\r\n    enum_t el1;\r\n    logic [3:0] el2;\r\n} foo_t;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

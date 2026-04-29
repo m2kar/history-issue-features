@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4785,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4785",
+  "title": "read_verilog: array of instances parsing assertion failure",
+  "body": "### Version\n\nYosys 0.44 (git sha1 80ba43d26, clang++-18 18.1.8 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```verilog\r\nmodule test(in1, in2, out1);\r\n  input in1, in2;\r\n  output out1;\r\n\r\n  nand  #2 t_nand[0:7](out1, in1, in2);\r\n  nand  #2 x_nand[0:3](out1, in1, in2), y_nand[4:7](out1, in1, in2);\r\nendmodule\r\n```\n\n### Expected Behavior\n\n> IEEE Std 1364-2005:\r\n>    7. Gate- and switch-level modeling\r\n>      7.1 Gate and switch declaration syntax\r\n>        7.1.5 The range specification\r\n>          An array of instances shall have a continuous range. One instance identifier shall be\r\n>          associated with only one range to declare an array of instances.\r\n>          The range specification shall be optional. If no range specification is given, a single\r\n>          instance shall be created.\r\n\r\nThe module body specified in reproduction steps was taken directly from the standard (page 78). It should be parsed just fine.\n\n### Actual Behavior\n\n```shell\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.44 (git sha1 80ba43d26, clang++-18 18.1.8 -fPIC -O3)\r\n\r\nyosys> read_verilog module.v \r\n\r\n1. Executing Verilog-2005 frontend: module.v\r\nParsing Verilog input from `module.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `new_cell->children.at(0)->type == AST_CELLTYPE' failed in frontends/ast/simplify.cc:2686.\r\n```",
+  "labels": [
+    "bug",
+    "error-handling"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-29",
+  "closed_at": "2025-07-20",
+  "code_blocks": [
+    "module test(in1, in2, out1);\r\n  input in1, in2;\r\n  output out1;\r\n\r\n  nand  #2 t_nand[0:7](out1, in1, in2);\r\n  nand  #2 x_nand[0:3](out1, in1, in2), y_nand[4:7](out1, in1, in2);\r\nendmodule",
+    "/----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.44 (git sha1 80ba43d26, clang++-18 18.1.8 -fPIC -O3)\r\n\r\nyosys> read_verilog module.v \r\n\r\n1. Executing Verilog-2005 frontend: module.v\r\nParsing Verilog input from `module.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `new_cell->children.at(0)->type == AST_CELLTYPE' failed in frontends/ast/simplify.cc:2686."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

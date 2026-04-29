@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5238,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5238",
+  "title": "Incorrect handling of `x` in if blocks (`if (x) else` ) ?",
+  "body": "### Version\n\nYosys 0.54 (git sha1 db72ec3bd, g++ 12.2.0-14+deb12u1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nHello, \n\nI think this is possibly a bug as when i tried it with [other simulators](https://edaplayground.com/x/Jrwi) they outputed a 1 on this circuit which is what I would have thought, from running it by hand. \n\nI am nearly sure that this yosys script is not good, I am sorry I am not yet proficient in yosys scripting. \n\n```sv\nread_verilog -sv <<EOT\nmodule minimal_repro (\n    input logic clk,\n    output logic out\n);\n    logic condition;\n    logic q1 = 1'bx; // Start with x\n    \n    always @(posedge clk) begin\n        q1 <= 0;\n    end\n\n    assign condition = ~q1;\n\n    always @(posedge clk) begin\n        if (condition) begin\n            // Do nothing: out retains its previous value\n        end else begin\n            out <= 1'b1;\n        end\n    end\nendmodule\nEOT\n// here I tried different options prep / proc ; opt / ...\nshow -prefix minimal_repro\n\nsat -set-def-inputs -set-init-undef -prove out 1 -verify -seq 5 -prove-skip 1\n```\n\n\n### Expected Behavior\n\nI would have expected: \n| cycle | q1 | condition | out |\n|---------|-----|---------------|-------|\n| 0 | x | x | 1 |\n| 1 | 0 | 1 | 1 |\n| 2 | 0 | 1 | 1 |\n| 3 | 0 | 1 | 1 |\n| ... | 0 | 1 | 1 |\n\nBecause the `if (condition)` should be evaluated to false as `x` is not truthy, so `out` should be assigned the value `1`.  \n\n### Actual Behavior\n\nAt the moment I am not managing to run my script correctly, because it seems to prove that the value can be anything it wants...\n\nif I use `prep` then out is always `x` which I would have thought also wrong and if I use `proc ; opt` I seem to run into #4151 and then the value is always 1 so the proof passes from false to true...\n\nHopefully it is clear enough, sorry for the bad reproduction steps, Thanks for the work on yosys !",
+  "labels": [
+    "SystemVerilog",
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-07-18",
+  "closed_at": "2025-07-24",
+  "code_blocks": [
+    "read_verilog -sv <<EOT\nmodule minimal_repro (\n    input logic clk,\n    output logic out\n);\n    logic condition;\n    logic q1 = 1'bx; // Start with x\n    \n    always @(posedge clk) begin\n        q1 <= 0;\n    end\n\n    assign condition = ~q1;\n\n    always @(posedge clk) begin\n        if (condition) begin\n            // Do nothing: out retains its previous value\n        end else begin\n            out <= 1'b1;\n        end\n    end\nendmodule\nEOT\n// here I tried different options prep / proc ; opt / ...\nshow -prefix minimal_repro\n\nsat -set-def-inputs -set-init-undef -prove out 1 -verify -seq 5 -prove-skip 1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

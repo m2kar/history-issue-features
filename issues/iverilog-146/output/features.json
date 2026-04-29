@@ -1,0 +1,77 @@
+{
+  "tool": "iverilog",
+  "issue_number": 146,
+  "title": "Constant function call in generate loop causes assert",
+  "features": [
+    {
+      "name": "constant function call directly in generate for loop bound",
+      "category": "control_flow",
+      "description": "Code should include a generate for loop whose upper-bound condition is a direct call to a user-defined constant function, rather than a pre-computed parameter",
+      "snippet": "parameter integer N = 4;\nfunction integer log2;\n  input integer x;\n  integer i;\n  begin\n    i = 0;\n    while ((1 << i) < x) i = i + 1;\n    log2 = i;\n  end\nendfunction\ngenvar j;\ngenerate\n  for (j = 0; j < log2(N + 1); j = j + 1)\n    assign w[j] = 1'b0;\nendgenerate",
+      "tags": ["generate", "genvar", "constant_function", "for_loop", "loop_bound"],
+      "source_bug_id": "146",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "user-defined integer constant function with while loop",
+      "category": "general",
+      "description": "Code should include a user-defined integer function that computes a value using a while loop and bit-shift, callable at elaboration time as a constant function",
+      "snippet": "function integer log2;\n  input integer x;\n  integer i;\n  begin\n    i = 0;\n    while ((1 << i) < x)\n      i = i + 1;\n    log2 = i;\n  end\nendfunction",
+      "tags": ["constant_function", "integer_function", "while_loop", "bit_shift"],
+      "source_bug_id": "146",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "wire width determined by constant function call",
+      "category": "data_model",
+      "description": "Code should include a wire whose bit-width is computed by a direct call to a user-defined constant function in the port/net declaration",
+      "snippet": "parameter integer BUFS = 1;\nfunction integer log2;\n  input integer x;\n  integer i;\n  begin i = 0; while ((1<<i)<x) i=i+1; log2=i; end\nendfunction\nwire [log2(BUFS + 1) - 1:0] result_wire;",
+      "tags": ["wire_width", "constant_function", "net_declaration", "parameterized_width"],
+      "source_bug_id": "146",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "indexed part-select as argument to constant function",
+      "category": "data_model",
+      "description": "Code should include an indexed part-select expression (array[(const_expr)+:width]) used as an argument to a constant function call at elaboration time",
+      "snippet": "parameter [15:0] BUFS = 16'd4;\nfunction integer log2;\n  input integer x;\n  integer i;\n  begin i=0; while((1<<i)<x) i=i+1; log2=i; end\nendfunction\nlocalparam K = log2(BUFS[(0*16)+:16] + 1);",
+      "tags": ["indexed_part_select", "constant_function", "part_select", "elaboration"],
+      "source_bug_id": "146",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "generate assign inside for loop using constant function in bit-select",
+      "category": "control_flow",
+      "description": "Code should include a generate for loop body with a continuous assign statement that uses a constant function call in the part-select range expression",
+      "snippet": "genvar j;\ngenerate\n  for (j = 0; j < LOG; j = j + 1)\n    assign gray[j] = ^seqno[LOG - 1:j];\nendgenerate",
+      "tags": ["generate", "genvar", "continuous_assign", "part_select", "xor_reduction"],
+      "source_bug_id": "146",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/146",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

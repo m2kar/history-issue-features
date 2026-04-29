@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 870,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/870",
+  "title": "Yosys crashes on reading exported verilog design containing concatenation.",
+  "body": "Having run `opt -full` after `flatten` yosys crashes on importing just exported verilog file.\r\n\r\nThe error message is:\r\n\r\n> 1. Executing Verilog-2005 frontend.\r\nParsing Verilog input from `multimux_out_2.v' to AST representation.\r\nERROR: Parser error in line multimux_out_2.v:34: syntax error, unexpected '['\r\n\r\n\r\n## Steps to reproduce the issue\r\n\r\n```\r\nread_verilog multimux.v\r\nhierarchy -auto-top -check;\r\nproc; clean;\r\nmemory;\r\nopt -full;\r\nflatten;\r\n\r\nwrite_verilog multimux_out_1.v\r\nopt -full;\r\nwrite_verilog multimux_out_2.v\r\n\r\ndelete;\r\nread_verilog multimux_out_2.v\r\n```\r\n\r\n## Expected behavior\r\n\r\nYosys does not crash on multimux_out_1.v.\r\n\r\n## Actual behavior\r\nYosys crashes on multimux_out_2.v\r\n\r\nThe difference between the generated verilog is that \\m3.q is now concatenated and accessed through indexing in the same line:\r\n\r\n`assign \\m3.q  = { \\m2.q , \\m1.q  }[select[0] +: 1];`\r\n\r\nYosys does still generate  `assign q_tmp = { \\m2.q , \\m1.q  };`   \r\nbut does not use it.\r\n\r\nIf I insert q_tmp into the assignment of \\m3.q it works again.\r\n\r\nThe input file and the two output files I got are attached.\r\n\r\n[multimux.zip](https://github.com/YosysHQ/yosys/files/2962973/multimux.zip)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-13",
+  "closed_at": "2019-03-14",
+  "code_blocks": [
+    "read_verilog multimux.v\r\nhierarchy -auto-top -check;\r\nproc; clean;\r\nmemory;\r\nopt -full;\r\nflatten;\r\n\r\nwrite_verilog multimux_out_1.v\r\nopt -full;\r\nwrite_verilog multimux_out_2.v\r\n\r\ndelete;\r\nread_verilog multimux_out_2.v"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

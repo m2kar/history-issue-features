@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4989,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4989",
+  "title": "opt_expr: Fix #4590",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\n#4590\r\n\r\n_Explain how this is achieved._\r\n\r\nIf all the (non-select) inputs of a `$_MUX{4,8,16}_` are undefined, replace it, just like we do for `$mux` and `$_MUX_`. Add `tests/opt/opt_expr_mux_undef.ys` to verify this.\r\n\r\nThis doesn't do any const folding on the wide muxes, or shrinking to less wide muxes.  It only handles the case where all inputs are 'x and the mux can be completely removed.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nThe following script (from https://github.com/YosysHQ/yosys/issues/4590#issuecomment-2766390391) fails without this patch, and passes with it.\r\n\r\n```\r\nread_verilog << EOT\r\nmodule top (\r\n\tinput  clk,\r\n\toutput [7:0] rddata\r\n);\r\n\r\n  reg [31:0] index;\r\n\r\n  always @(posedge clk)\r\n    index <= index + 1;\r\n  initial\r\n    index = 32'b0;\r\n\r\n  reg [7:0] rom[33:0];\r\n  initial begin\r\n    rom[33] = 8'b00000000;\r\n    rom[32] = 8'b00000001;\r\n    rom[31] = 8'b00000010;\r\n    rom[30] = 8'b00000011;\r\n    rom[29] = 8'b00000100;\r\n    rom[28] = 8'b00000101;\r\n    rom[27] = 8'b00000110;\r\n    rom[26] = 8'b00000111;\r\n    rom[25] = 8'b00001000;\r\n    rom[24] = 8'b00001001;\r\n    rom[23] = 8'b00001010;\r\n    rom[22] = 8'b00001011;\r\n    rom[21] = 8'b00001100;\r\n    rom[20] = 8'b00001101;\r\n    rom[19] = 8'b00001110;\r\n    rom[18] = 8'b00001111;\r\n    rom[17] = 8'b00010000;\r\n    rom[16] = 8'b00010001;\r\n    rom[15] = 8'b00010010;\r\n    rom[14] = 8'b00010011;\r\n    rom[13] = 8'b00010100;\r\n    rom[12] = 8'b00010101;\r\n    rom[11] = 8'b00010110;\r\n    rom[10] = 8'b00010111;\r\n    rom[ 9] = 8'b00011000;\r\n    rom[ 8] = 8'b00011001;\r\n    rom[ 7] = 8'b00011010;\r\n    rom[ 6] = 8'b00011011;\r\n    rom[ 5] = 8'b00011100;\r\n    rom[ 4] = 8'b00011101;\r\n    rom[ 3] = 8'b00011110;\r\n    rom[ 2] = 8'b00011111;\r\n    rom[ 1] = 8'b00100000;\r\n    rom[ 0] = 8'b00100001;\r\n    end\r\n\r\n  assign rddata = rom[index];\r\n\r\nendmodule\r\nEOT\r\nsynth_xilinx -arch xc7 -top top -widemux 5\r\n```",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-03",
+  "closed_at": "2025-04-07",
+  "code_blocks": [
+    "read_verilog << EOT\r\nmodule top (\r\n\tinput  clk,\r\n\toutput [7:0] rddata\r\n);\r\n\r\n  reg [31:0] index;\r\n\r\n  always @(posedge clk)\r\n    index <= index + 1;\r\n  initial\r\n    index = 32'b0;\r\n\r\n  reg [7:0] rom[33:0];\r\n  initial begin\r\n    rom[33] = 8'b00000000;\r\n    rom[32] = 8'b00000001;\r\n    rom[31] = 8'b00000010;\r\n    rom[30] = 8'b00000011;\r\n    rom[29] = 8'b00000100;\r\n    rom[28] = 8'b00000101;\r\n    rom[27] = 8'b00000110;\r\n    rom[26] = 8'b00000111;\r\n    rom[25] = 8'b00001000;\r\n    rom[24] = 8'b00001001;\r\n    rom[23] = 8'b00001010;\r\n    rom[22] = 8'b00001011;\r\n    rom[21] = 8'b00001100;\r\n    rom[20] = 8'b00001101;\r\n    rom[19] = 8'b00001110;\r\n    rom[18] = 8'b00001111;\r\n    rom[17] = 8'b00010000;\r\n    rom[16] = 8'b00010001;\r\n    rom[15] = 8'b00010010;\r\n    rom[14] = 8'b00010011;\r\n    rom[13] = 8'b00010100;\r\n    rom[12] = 8'b00010101;\r\n    rom[11] = 8'b00010110;\r\n    rom[10] = 8'b00010111;\r\n    rom[ 9] = 8'b00011000;\r\n    rom[ 8] = 8'b00011001;\r\n    rom[ 7] = 8'b00011010;\r\n    rom[ 6] = 8'b00011011;\r\n    rom[ 5] = 8'b00011100;\r\n    rom[ 4] = 8'b00011101;\r\n    rom[ 3] = 8'b00011110;\r\n    rom[ 2] = 8'b00011111;\r\n    rom[ 1] = 8'b00100000;\r\n    rom[ 0] = 8'b00100001;\r\n    end\r\n\r\n  assign rddata = rom[index];\r\n\r\nendmodule\r\nEOT\r\nsynth_xilinx -arch xc7 -top top -widemux 5"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

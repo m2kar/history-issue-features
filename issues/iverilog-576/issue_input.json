@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 576,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/576",
+  "title": "Assertion when calling $clog2",
+  "body": "Calling\r\n```\r\niverilog -g2012 -o test test.sv\r\n```\r\nwith this `test.sv`:\r\n```\r\nmodule test;\r\n\tfunction void fun;\r\n\t\t$clog2(1);\r\n\tendfunction\r\n\talways_comb fun;\r\nendmodule\r\n```\r\nfails with an assertion:\r\n```\r\ntest.sv:5: warning: always_comb process has no sensitivities.\r\nivl: net_scope.cc:502: const NetTaskDef* NetScope::task_def() const: Assertion `type_ == TASK' failed.\r\nsh: line 1: 11118 Done                    /usr/local/lib/ivl/ivlpp -L -F\"/tmp/ivrlg25dedf82f\" -f\"/tmp/ivrlg5dedf82f\" -p\"/tmp/ivrli5dedf82f\"\r\n     11119 Aborted                 | /usr/local/lib/ivl/ivl -C\"/tmp/ivrlh5dedf82f\" -C\"/usr/local/lib/ivl/vvp.conf\" -- -\r\n```\r\n\r\nReplacing `always_comb` with `always` or `initial` works fine. Calling `$clog2` within an `always_comb` block directly (without being wrapped in another function) also works. It prints this warning though:\r\n```\r\nwarning: System task ($clog2) cannot be synthesized in an always_comb process.\r\n```\r\nIs this true? Shouldn't this get optimized away during synthesis when the argument to `$clog2` is constant at compile time?",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-01-06",
+  "closed_at": "2022-02-28",
+  "code_blocks": [
+    "module test;\r\n\tfunction void fun;\r\n\t\t$clog2(1);\r\n\tendfunction\r\n\talways_comb fun;\r\nendmodule",
+    "test.sv:5: warning: always_comb process has no sensitivities.\r\nivl: net_scope.cc:502: const NetTaskDef* NetScope::task_def() const: Assertion `type_ == TASK' failed.\r\nsh: line 1: 11118 Done                    /usr/local/lib/ivl/ivlpp -L -F\"/tmp/ivrlg25dedf82f\" -f\"/tmp/ivrlg5dedf82f\" -p\"/tmp/ivrli5dedf82f\"\r\n     11119 Aborted                 | /usr/local/lib/ivl/ivl -C\"/tmp/ivrlh5dedf82f\" -C\"/usr/local/lib/ivl/vvp.conf\" -- -",
+    "warning: System task ($clog2) cannot be synthesized in an always_comb process."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

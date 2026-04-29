@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 922,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/922",
+  "title": "Can't get write_firrtl output for design than contains memory.",
+  "body": "Automated test case:\r\nhttps://github.com/YosysHQ/yosys-tests/tree/master/backends/write_firrtl_mem\r\n\r\nIn all cases what I tried to use I had this error in the report:  \r\n\r\n> ERROR: Unclocked write port 0 on memory top.ram. \r\n\r\nDo I need some special RAM description for write_firrtl or it is a bug?\r\n\r\n## Steps to reproduce the issue\r\ntop.v:\r\n```\r\nmodule top\r\n(\r\n\tinput [7:0] data_a,\r\n\tinput [6:1] addr_a,\r\n\tinput we_a, clk,\r\n\toutput reg [7:0] q_a\r\n);\r\n\t// Declare the RAM variable\r\n\treg [7:0] ram[63:0];\r\n\r\n\t// Port A\r\n\talways @ (posedge clk)\r\n\tbegin\r\n\t\tif (we_a)\r\n\t\tbegin\r\n\t\t\tram[addr_a] <= data_a;\r\n\t\t\tq_a <= data_a;\r\n\t\tend\r\n\t\t\tq_a <= ram[addr_a];\r\n\tend\r\n\r\nendmodule\r\n```\r\nscript:\r\nread_verilog ../top.v\r\nmemory_collect\r\nproc\r\nwrite_firrtl f.f\r\n\r\n## Expected behavior\r\n\r\nFirrtl backend successfully executed.\r\n\r\n## Actual behavior\r\n\r\nyosys> write_firrtl f.f\r\n\r\n4. Executing FIRRTL backend.\r\n\r\n4.1. Executing PMUXTREE pass.\r\nWarning: Initial value (00000000) for (top.q_a) not supported\r\nWarning: Initial value (00000000) for (top.q_b) not supported\r\nERROR: Unclocked write port 0 on memory top.ram.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-04-08",
+  "closed_at": "2019-04-15",
+  "code_blocks": [
+    "module top\r\n(\r\n\tinput [7:0] data_a,\r\n\tinput [6:1] addr_a,\r\n\tinput we_a, clk,\r\n\toutput reg [7:0] q_a\r\n);\r\n\t// Declare the RAM variable\r\n\treg [7:0] ram[63:0];\r\n\r\n\t// Port A\r\n\talways @ (posedge clk)\r\n\tbegin\r\n\t\tif (we_a)\r\n\t\tbegin\r\n\t\t\tram[addr_a] <= data_a;\r\n\t\t\tq_a <= data_a;\r\n\t\tend\r\n\t\t\tq_a <= ram[addr_a];\r\n\tend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

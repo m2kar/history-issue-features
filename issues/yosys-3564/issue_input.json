@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3564,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3564",
+  "title": "BLIF outputed by yosys involves DFF, and the BLIF file cannot be read by ABC",
+  "body": "### Version\n\nyosys --0.23\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nI'm new to yosys and ABC for logic synthesis. I downloaded one design [aes_core](https://opencores.org/projects/apbtoaes128) from opencores, and run the following script with yosys to map the design into blif:\r\n```\r\nread_verilog ./designs/apbtoaes128/trunk/rtl/*.v\r\nhierarchy -check -top aes_core\r\nproc\r\ntechmap -map ./oss-cad-suite/share/yosys/adff2dff.v\r\nsynth\r\ndfflibmap -prepare ./yosys-yosys-0.23/manual/PRESENTATION_Intro/mycells.lib \r\nabc -liberty ./yosys-yosys-0.23/manual/PRESENTATION_Intro/mycells.lib\r\ndfflibmap -liberty ./yosys-yosys-0.23/manual/PRESENTATION_Intro/mycells.lib \r\nwrite_blif  -gates ./designs/aes_core.blif\r\n``` \r\nAfter this, the blif only contains five types of gates (BUF, NOT, NAND, NOR, DFF); one snippet of the blif file is as follows:\r\n\r\n```\r\n...\r\n.gate DFF C=clk D=$auto$rtlil.cc:2560:MuxGate$25762 Q=rd_count[0]\r\n.gate DFF C=clk D=$auto$rtlil.cc:2560:MuxGate$25766 Q=rd_count[1]\r\n.gate DFF C=clk D=$auto$rtlil.cc:2560:MuxGate$25770 Q=rd_count[2]\r\n.gate DFF C=clk D=$auto$rtlil.cc:2560:MuxGate$25774 Q=rd_count[3]\r\n.gate DFF C=clk D=$abc$11428$auto$fsm_map.cc:170:map_fsm$2040[0] Q=state[0]\r\n.gate DFF C=clk D=$abc$11428$auto$fsm_map.cc:170:map_fsm$2040[1] Q=state[1]\r\n.gate DFF C=clk D=$abc$11428$auto$fsm_map.cc:170:map_fsm$2040[2] Q=state[2]\r\n.gate DFF C=clk D=$abc$11428$auto$fsm_map.cc:118:implement_pattern_cache$2077 Q=state[3]\r\n.gate DFF C=clk D=$abc$11428$auto$fsm_map.cc:170:map_fsm$2040[4] Q=state[4]\r\n...\r\n```\r\nAt last, I wish to use ABC to read the blif file, the script I used with ABC is:\r\n```\r\nread ./yosys-yosys-0.23/manual/PRESENTATION_Intro/mycells.lib \r\nread_blif ./designs/aes_core.blif\r\n```\r\n\n\n### Expected Behavior\n\nThe BLIF is read by ABC.\n\n### Actual Behavior\n\nThe output is:\r\n```\r\nGeneric file reader requires a known file extension to open \"./yosys-yosys-0.23/manual/PRESENTATION_Intro/mycells.h\".\r\nLine 393: Cannot find gate \"DFF\" in the library.\r\nReading network from file has failed.\r\n```\r\nIt seems that when I read the cell library in ABC, the sequential gate is skipped, and I wonder the reason of this and how can we fix this issue.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-11-28",
+  "closed_at": "2022-12-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

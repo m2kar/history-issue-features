@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5465,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5465",
+  "title": "SystemVerilog unsized literal '1 incorrectly evaluated as 1-bit value instead of filling all bits",
+  "body": "### Version\n\nYosys 0.58+84 (git sha1 f5c9e122d, g++ 15.2.1 -march=x86-64 -mtune=generic -O2 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```sv\nread_verilog -sv <<EOF\nmodule top (\n    output logic [3:0] o\n);\n   localparam logic [3:0] L1 = '1;\n   assign o = L1;\n   always_comb assert(o == 4'b1111);\nendmodule\nEOF\n\nprep -top top\nchformal -lower\nselect top\nsat -prove-asserts -verify\n```\n\n\n### Expected Behavior\n\nFrom what I understand of the IEEE-1800-2023 paragraph 5.7.1 Integer literal constants\n\n> An unsized unsigned single-bit value can be specified by preceding the single-bit value with an apostrophe\n( ' ), but without the base specifier. All bits of the unsized value shall be set to the value of the specified bit. \n> In a self-determined context, it shall have a width of 1 bit.\n> '0, '1, 'X, 'x, 'Z, 'z // sets all bits to specified value\n\nThen the check should succeed, as o should take the value 'b1111\n\n### Actual Behavior\n\nInstead it takes the value 'b0001",
+  "labels": [
+    "bug",
+    "fix-pending",
+    "SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-04",
+  "closed_at": "2025-11-11",
+  "code_blocks": [
+    "read_verilog -sv <<EOF\nmodule top (\n    output logic [3:0] o\n);\n   localparam logic [3:0] L1 = '1;\n   assign o = L1;\n   always_comb assert(o == 4'b1111);\nendmodule\nEOF\n\nprep -top top\nchformal -lower\nselect top\nsat -prove-asserts -verify"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4980,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4980",
+  "title": "`Executing XAIGER backend` cannot terminate until out-of-memory.",
+  "body": "### Version\n\nYosys 0.50+49 (git sha1 05c81b3f1, clang++ 14.0.0-1ubuntu1.1 -Og -fPIC -O1 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize=address,undefined)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following is the Verilog code file `bug.v` that causes the bug. I have minimized it as much as possible:\n\n```verilog\nmodule a (\n    input  [2:7] b,\n    input  [2:7] c,\n    output [2:7] d\n);\n    reg [2:7] e;\n\n    always @(*) begin\n        case (e ? b << e : 0)\n            'd67: begin\n                e = c;\n                d = e;\n            end\n        endcase\n    end\nendmodule\n```\nRunning the following script will trigger the bug.\n```\nyosys -p \"read_verilog bug.v; synth_quicklogic\"\n```\nI discovered this bug while testing Yosys using a fuzzing tool I am developing.\n\n### Expected Behavior\n\nIn the end, it should either synthesize successfully or fail with an error, but it should not result in an out-of-memory error.\n\n### Actual Behavior\n\nMemory usage keeps increasing after reaching the step `Executing XAIGER backend`, until the `yosys` process is killed by the system due to an OOM (Out Of Memory) condition.\nHere is the log generated at the end:\n```\n2.40.14.1. Executing ABC9_OPS pass (helper functions for ABC9).\n\n2.40.14.2. Executing ABC9_OPS pass (helper functions for ABC9).\n\n2.40.14.3. Executing XAIGER backend.\n\n\n^C\n```\nI used GDB for debugging and found that the final call stack of Yosys is as follows. I suspect that an infinite recursion might have occurred.\n```\n#0  0x000055555731e7f8 in std::vector<int, std::allocator<int> >::empty() const ()\n#1  0x00005555574ae854 in Yosys::hashlib::dict<Yosys::RTLIL::SigBit, int, Yosys::hashlib::hash_ops<Yosys::RTLIL::SigBit> >::do_hash(Yosys::RTLIL::SigBit const&) const ()\n#2  0x00005555574454e9 in Yosys::hashlib::dict<Yosys::RTLIL::SigBit, int, Yosys::hashlib::hash_ops<Yosys::RTLIL::SigBit> >::find(Yosys::RTLIL::SigBit const&) ()\n#3  0x0000555558dd8ae0 in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#4  0x0000555558dd8cc6 in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#5  0x0000555558dd8c1f in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#6  0x0000555558dd8c1f in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#7  0x0000555558dd8cc6 in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#8  0x0000555558dd8c1f in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n#9  0x0000555558dd8c1f in (anonymous namespace)::XAigerWriter::bit2aig(Yosys::RTLIL::SigBit) ()\n```\nrepeat.........",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-01",
+  "closed_at": "2025-04-02",
+  "code_blocks": [
+    "module a (\n    input  [2:7] b,\n    input  [2:7] c,\n    output [2:7] d\n);\n    reg [2:7] e;\n\n    always @(*) begin\n        case (e ? b << e : 0)\n            'd67: begin\n                e = c;\n                d = e;\n            end\n        endcase\n    end\nendmodule",
+    "yosys -p \"read_verilog bug.v; synth_quicklogic\"",
+    "2.40.14.1. Executing ABC9_OPS pass (helper functions for ABC9).\n\n2.40.14.2. Executing ABC9_OPS pass (helper functions for ABC9).\n\n2.40.14.3. Executing XAIGER backend.\n\n\n^C"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

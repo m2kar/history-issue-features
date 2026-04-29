@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 34,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/34",
+  "title": "Assertion `lval_->more == 0' failed",
+  "body": "I've tried to compile this with -tblif\nit generates:\n\n> $ iverilog ./tgt2t.v -tblif -dsynth2\n> debug: Enable synth2 debug\n> ./tgt2t.v:16: NetProcTop::synth_sync: Process is apparently synchronous. Making NetFFs.\n> ./tgt2t.v:16: NetEvWait::synth_sync: Synchronous process an event statement.\n> ./tgt2t.v:16: NetEvWait::synth_sync: Found and synthesized the FF clock.\n>  ivl: synth2.cc:85: virtual bool NetAssignBase::synth_async(Design_, NetScope_, NexusSet&, NetBus&, NetBus&): Assertion `lval_->more == 0' failed.\n> sh: line 1:  4168 Done                    /usr/lib/ivl/ivlpp -L -F\"/tmp/ivrlg27e788233\" -f\"/tmp/ivrlg7e788233\" -p\"/tmp/ivrli7e788233\"\n>       4169 Aborted                 | /usr/lib/ivl/ivl -C\"/tmp/ivrlh7e788233\" -C\"/usr/lib/ivl/blif.conf\" -- -\n\nThe code:\n\n```\nmodule pci_tgt(\n(*PAD=\"1\"*)\ninput wire clk,\n(*PAD=\"4\"*)\ninput wire RST,\n(*PAD=\"?\"*)\noutput reg S0,\n(*PAD=\"?\"*)\noutput reg S1,\n(*PAD=\"?\"*)\noutput reg S2);\n\n//the state bits\n`define S {S0,S1,S2}\n\nalways @(posedge clk or posedge RST)\nbegin\n  if(RST)\n  begin\n  //this failz an assert....\n    `S <= 0;\n  end\nend\n\nendmodule\n```\n\nWith the clk removed, it still segfaults(but does not fail the assert). \nWhat's broken now?\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-08-07",
+  "closed_at": "2015-04-21",
+  "code_blocks": [
+    "module pci_tgt(\n(*PAD=\"1\"*)\ninput wire clk,\n(*PAD=\"4\"*)\ninput wire RST,\n(*PAD=\"?\"*)\noutput reg S0,\n(*PAD=\"?\"*)\noutput reg S1,\n(*PAD=\"?\"*)\noutput reg S2);\n\n//the state bits\n`define S {S0,S1,S2}\n\nalways @(posedge clk or posedge RST)\nbegin\n  if(RST)\n  begin\n  //this failz an assert....\n    `S <= 0;\n  end\nend\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

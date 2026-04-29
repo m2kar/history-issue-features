@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4738,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4738",
+  "title": "Internal Yosys nodes not removed",
+  "body": "### Version\r\n\r\nYosys 0.47+46 (git sha1 9da734100, g++ 11.4.0-1ubuntu1~22.04 -fPIC -O3)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nI used custom library:\r\n```\r\n# Read in all Verilog files for the design\r\nyosys read -sv \"./designs/$::env(DESIGN)/verilog/*.v\"\r\n\r\n# Set the top module for the design hierarchy\r\nyosys hierarchy -top $::env(DESIGN)\r\n\r\n# Check for obvious problems in the current design (combinatorial loops, conflicts, etc.)\r\nyosys prep;\r\n\r\n# Extract and optimize finite state machines (FSMs)\r\nyosys fsm; yosys opt;\r\n\r\n# Translate memories to basic cells and optimize\r\nyosys memory; yosys opt;\r\n\r\n# Perform technology mapping\r\nyosys techmap;\r\n\r\n# Run the general synthesis process\r\nyosys synth;\r\n\r\n# Map D flip-flops to the specified library\r\nyosys dfflibmap -liberty ./$::env(TECH)/SK_typ.lib;\r\n\r\n# Perform logic optimization and mapping using ABC tool with the specified library\r\nyosys abc -dff -liberty ./$::env(TECH)/SK_typ.lib;\r\n\r\n# Perform functional reduction to simplify the design\r\nyosys freduce;\r\n\r\n# Map high-level logic to the specified cells -hicell LOGIC1 OUT\r\nyosys hilomap -singleton -locell LOGIC0 OUT;\r\n\r\n# Remove unused cells and wires with purge option\r\nyosys opt_clean -purge;\r\n\r\n# Perform final check on the design\r\nyosys check;\r\n\r\n# Write the synthesized Verilog output to the specified file\r\nyosys write_verilog ./designs/$::env(DESIGN)/results/synth_$::env(DESIGN).v;\r\n\r\n# extract the statistics of the design\r\nyosys stat;\r\n\r\n# Flatten the design hierarchy\r\nyosys flatten;\r\n```\r\n\r\n### Expected Behavior\r\n\r\nEliminate internal nodes\r\n\r\n### Actual Behavior\r\n\r\n  reg par3;\r\n  (* src = \"./designs/qr_encoding_4x4_15_11/verilog/qr_encoding_4x4_15_11.v:26.9-26.13\" *)\r\n  reg par4;\r\n\r\nThese internal nodes are appeared in the synthesized verilog code\r\nSo Openroad returns this error:\r\n[ERROR STA-0164] ./designs/qr_encoding_4x4_15_11/results/run/synth_qr_encoding_4x4_15_11.v line 139, syntax error\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-13",
+  "closed_at": "2025-03-27",
+  "code_blocks": [
+    "# Read in all Verilog files for the design\r\nyosys read -sv \"./designs/$::env(DESIGN)/verilog/*.v\"\r\n\r\n# Set the top module for the design hierarchy\r\nyosys hierarchy -top $::env(DESIGN)\r\n\r\n# Check for obvious problems in the current design (combinatorial loops, conflicts, etc.)\r\nyosys prep;\r\n\r\n# Extract and optimize finite state machines (FSMs)\r\nyosys fsm; yosys opt;\r\n\r\n# Translate memories to basic cells and optimize\r\nyosys memory; yosys opt;\r\n\r\n# Perform technology mapping\r\nyosys techmap;\r\n\r\n# Run the general synthesis process\r\nyosys synth;\r\n\r\n# Map D flip-flops to the specified library\r\nyosys dfflibmap -liberty ./$::env(TECH)/SK_typ.lib;\r\n\r\n# Perform logic optimization and mapping using ABC tool with the specified library\r\nyosys abc -dff -liberty ./$::env(TECH)/SK_typ.lib;\r\n\r\n# Perform functional reduction to simplify the design\r\nyosys freduce;\r\n\r\n# Map high-level logic to the specified cells -hicell LOGIC1 OUT\r\nyosys hilomap -singleton -locell LOGIC0 OUT;\r\n\r\n# Remove unused cells and wires with purge option\r\nyosys opt_clean -purge;\r\n\r\n# Perform final check on the design\r\nyosys check;\r\n\r\n# Write the synthesized Verilog output to the specified file\r\nyosys write_verilog ./designs/$::env(DESIGN)/results/synth_$::env(DESIGN).v;\r\n\r\n# extract the statistics of the design\r\nyosys stat;\r\n\r\n# Flatten the design hierarchy\r\nyosys flatten;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

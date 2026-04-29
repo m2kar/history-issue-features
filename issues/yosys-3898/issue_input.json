@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3898,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3898",
+  "title": "i386 (only) test failure: Error opening grom.fst as FST file",
+  "body": "Hi,\r\n\r\nI'm seeing the `test/sat/grom.ys` test fail on Debian i386 (but not on amd64 or any other architecture). I tried to bisect the issue in the YosysHQ/yosys repo, but even as far back as yosys-0.23 I'm seeing the test fail now altough it must have passed just fine as part of the 0.23 Debian package builds see buildd history below. \r\n\r\nRepro, in a Debian i386 chroot:\r\n\r\n```\r\n$ echo CONFIG:=gcc > Makefile.conf\r\n$ make -j32\r\n$ ( cd tests/sat/; ../../yosys grom.ys )\r\n[...]\r\n7. Executing SIM pass (simulate the circuit).\r\nERROR: Error opening 'grom.fst' as FST file\r\n```\r\n\r\nFull grom.log in yosys repo on top of 6405bbab1e8afc587febf41339aaf8b514c8f202 (Fri Aug 18 00:14:07 2023 +0000): https://gist.github.com/DanielG/084cf786c57afc4050dd5f874bee7869\r\nDebian i386 buildd log: https://buildd.debian.org/status/fetch.php?pkg=yosys&arch=i386&ver=0.30-2&stamp=1692708361&raw=0\r\nDebian i386 buildd history, showing that 0.23 should work: https://buildd.debian.org/status/logs.php?pkg=yosys&arch=i386 \r\n\r\nA quick debug session shows this break being triggered (in libs/fst/fstapi.cc):\r\n```\r\n                        if (vu.d != FST_DOUBLE_ENDTEST) {\r\n                            break; /* either corrupt file or wrong architecture (offset +33 also functions as matchword)\r\n                                    */\r\n                        }\r\n```\r\n\r\nbut I haven't had time to dig further into it yet.\r\n\r\n--Daniel\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-22",
+  "closed_at": "2025-03-24",
+  "code_blocks": [
+    "$ echo CONFIG:=gcc > Makefile.conf\r\n$ make -j32\r\n$ ( cd tests/sat/; ../../yosys grom.ys )\r\n[...]\r\n7. Executing SIM pass (simulate the circuit).\r\nERROR: Error opening 'grom.fst' as FST file",
+    "if (vu.d != FST_DOUBLE_ENDTEST) {\r\n                            break; /* either corrupt file or wrong architecture (offset +33 also functions as matchword)\r\n                                    */\r\n                        }"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

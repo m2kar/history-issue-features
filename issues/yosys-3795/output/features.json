@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 3795,
+  "title": "techmap: $DFFSR_NPN_ with combinational logic instead $DFFSR_NNN_",
+  "features": [
+    {
+      "name": "dfflegalize target cell type not preserved through techmap",
+      "category": "control_flow",
+      "description": "Code should include a DFFSR cell with dfflegalize targeting $_DFFSR_NNN_ cell type where the tool incorrectly infers $_DFFSR_NPN_ with combinational logic instead",
+      "snippet": "module test_dffsr(clk, data, out, rst, set);\n input clk, data, rst, set;\n output reg out;\n always @(negedge clk, negedge rst, negedge set)\n if (rst == 0) out <= 1'b0;\n else if (set == 0) out <= 1'b1;\n else out <= data;\nendmodule",
+      "tags": ["dffsr", "dfflegalize", "techmap", "negedge", "set_reset"],
+      "source_bug_id": "yosys-3795",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3795",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "negated polarity in legalized DFF cell output",
+      "category": "control_flow",
+      "description": "Code should include a DFFSR with all negedge (active-low) control signals where techmap produces incorrect mixed-polarity cell with combinational logic compensation",
+      "snippet": "\\$_DFFSR_NPN_ out_reg (.C(clk), .D(data), .Q(out), .R(rst), .S(_0_));\n\\$_NOT_ _3_(.A(set), .Y(_1_));\n\\$_MUX_ _4_(.A(1'h0), .B(_1_), .S(rst), .Y(_0_));",
+      "tags": ["dffsr", "negated_set", "mux_logic", "polarity_mismatch"],
+      "source_bug_id": "yosys-3795",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3795",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2061,
+  "title": "ice40: opt_lut can break carry packing by moving SB_CARRY out to another input than I3",
+  "features": [
+    {
+      "name": "replicated operand in adder for carry chain",
+      "category": "data_model",
+      "description": "Code should include an addition where one operand uses the replication operator to expand a single bit to match the adder width, creating a conditional increment pattern",
+      "snippet": "cnt + { (WIDTH+1){last_n} }",
+      "tags": ["replication_operator", "adder", "carry_chain", "parameterized_width"],
+      "source_bug_id": "yosys-2061",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2061",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary conditional with counter increment",
+      "category": "control_flow",
+      "description": "Code should include a ternary conditional operator selecting between a counter increment and a constant literal, used in a registered output assignment",
+      "snippet": "cnt <= last_n ? ( cnt + { (WIDTH+1){last_n} } ) : 13'h1aaa;",
+      "tags": ["ternary_operator", "counter", "registered_output", "conditional_assignment"],
+      "source_bug_id": "yosys-2061",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2061",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized width counter with carry chain",
+      "category": "data_model",
+      "description": "Code should include a parameterized width counter where the MSB feeds back through a wire to control increment behavior, creating a dependency on carry chain logic",
+      "snippet": "output reg [WIDTH:0] cnt;\nwire last_n;\nassign last_n = cnt[WIDTH];\nalways @(posedge clk) cnt <= last_n ? (cnt + {...}) : ...;",
+      "tags": ["parameterized_module", "counter", "carry_chain", "msb_feedback"],
+      "source_bug_id": "yosys-2061",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2061",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

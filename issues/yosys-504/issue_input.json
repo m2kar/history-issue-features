@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 504,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/504",
+  "title": "can yosys infer single port block ram?",
+  "body": "Let's assume the following memory model generated from within [RocketChip](https://github.com/freechipsproject/rocket-chip/blob/master/scripts/vlsi_mem_gen).\r\n\r\nI can't seem to \"coerce\" RocketChip to infer single-ported ram.\r\n\r\nIs this functionality supported?\r\n\r\n~~~~verilog\r\nmodule mem_ext(\r\n  input RW0_clk,\r\n  input [3:0] RW0_addr, // <-- single port\r\n  input RW0_en,\r\n  input RW0_wmode,\r\n  input [63:0] RW0_wdata,\r\n  output [63:0] RW0_rdata\r\n);\r\n\r\n  reg reg_RW0_ren;\r\n  reg [3:0] reg_RW0_addr;\r\n  reg [63:0] ram [15:0];\r\n  integer i;\r\n  always @(posedge RW0_clk)\r\n    reg_RW0_ren <= RW0_en && !RW0_wmode;\r\n  always @(posedge RW0_clk)\r\n    if (RW0_en && !RW0_wmode) reg_RW0_addr <= RW0_addr;\r\n  always @(posedge RW0_clk)\r\n    if (RW0_en && RW0_wmode) begin\r\n      ram[RW0_addr][63:0] <= RW0_wdata[63:0]; // <-- write happens here\r\n    end\r\n  assign RW0_rdata = ram[reg_RW0_addr]; // <-- read happens here, address registered\r\nendmodule\r\n~~~~\r\n\r\nHere is the simplified synthesis script:\r\n\r\n~~~~\r\nread_verilog -nomem2reg /mnt/raid/tmp/nade/coregen/MemCompiler/vlsi_mem_gen.v\r\nhierarchy -check -top mem_ext\r\nproc\r\nmemory_dff\r\nmemory_share\r\nmemory_collect\r\nwrite_ilang output.ilang\r\n~~~~\r\n\r\nAnd, this is the resulting cell.  Observe how it is a dual-ported cell (i.e., separate read and write address ports).\r\n\r\n~~~~\r\n cell $mem \\ram\r\n    parameter \\ABITS 4\r\n    parameter \\INIT 1'x\r\n    parameter \\MEMID \"\\\\ram\"\r\n    parameter \\OFFSET 0\r\n    parameter \\RD_CLK_ENABLE 1'0\r\n    parameter \\RD_CLK_POLARITY 1'0\r\n    parameter \\RD_PORTS 1\r\n    parameter \\RD_TRANSPARENT 1'0\r\n    parameter \\SIZE 16\r\n    parameter \\WIDTH 64\r\n    parameter \\WR_CLK_ENABLE 1'0\r\n    parameter \\WR_CLK_POLARITY 1'0\r\n    parameter \\WR_PORTS 1\r\n    connect \\RD_ADDR \\reg_RW0_addr\r\n    connect \\RD_CLK 1'x\r\n    connect \\RD_DATA $memrd$\\ram$/mnt/raid/tmp/nade/coregen/MemCompiler/vlsi_mem_gen.v:242$104_DATA\r\n    connect \\RD_EN 1'x\r\n    connect \\WR_ADDR $memwr$\\ram$/mnt/raid/tmp/nade/coregen/MemCompiler/vlsi_mem_gen.v:228$92_ADDR\r\n    connect \\WR_CLK 1'x\r\n    connect \\WR_DATA $memwr$\\ram$/mnt/raid/tmp/nade/coregen/MemCompiler/vlsi_mem_gen.v:228$92_DATA\r\n    connect \\WR_EN $memwr$\\ram$/mnt/raid/tmp/nade/coregen/MemCompiler/vlsi_mem_gen.v:228$92_EN\r\n  end\r\n~~~~",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-02-07",
+  "closed_at": "2018-02-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

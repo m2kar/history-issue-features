@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1112,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1112",
+  "title": "Fixed pyosys commands returning RTLIL::SigSig",
+  "body": "In the Python API for Yosys (pyosys), when I try to access `connections_` from a `Module`, I get the following error in python:\r\n```\r\nTypeError: No to_python (by-value) converter found for C++ type: Yosys::RTLIL::SigSpec\r\n```\r\n\r\nI have no previous experience with Boost Python, but it appears from looking at the rest of the C++ wrapper that the C++ code for creating a tuple is missing a call to `get_py_obj` when necessary. I looked at the code in `misc/py_wrap_generator.py` for other containers and modeled my solution after those. In addition to fixing the bug, I also removed a significant amount of dead code in the function.\r\n\r\nA possible improvement for this function (beyond my bugfix) is to add logic for the case where the types are in `known_containers`. This case doesn't happen with the current Yosys API, but if any function is added that returns a tuple of one or more containers, then a bug will reappear. This simplest way to protect against this is to raise an exception if either type is a container.\r\n\r\nHere's a python script to reproduce the bug I fixed:\r\n\r\n```python\r\ntry:\r\n    from pyosys import libyosys as ys\r\nexcept:\r\n    import sys\r\n    sys.path.append('/usr/lib/python3.5/site-packages')\r\n    from pyosys import libyosys as ys\r\n\r\nwith open('test.v', 'w') as f:\r\n    f.write('''\r\nmodule test_module(\r\n        input x,\r\n        output y\r\n    );\r\n    assign y = x;\r\nendmodule''')\r\n\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog test.v\", design);\r\n\r\nmodule = design.selected_whole_modules_warn()[0]\r\nconnections = module.connections_\r\nprint(str(connections))\r\n```\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-19",
+  "closed_at": "2019-08-25",
+  "code_blocks": [
+    "try:\r\n    from pyosys import libyosys as ys\r\nexcept:\r\n    import sys\r\n    sys.path.append('/usr/lib/python3.5/site-packages')\r\n    from pyosys import libyosys as ys\r\n\r\nwith open('test.v', 'w') as f:\r\n    f.write('''\r\nmodule test_module(\r\n        input x,\r\n        output y\r\n    );\r\n    assign y = x;\r\nendmodule''')\r\n\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog test.v\", design);\r\n\r\nmodule = design.selected_whole_modules_warn()[0]\r\nconnections = module.connections_\r\nprint(str(connections))"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

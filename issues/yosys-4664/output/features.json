@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 4664,
+  "title": "Assert `flow.wire_comb_defs[it].size() == 1` in `write_cxxrtl`",
+  "features": [
+    {
+      "name": "mux with partial bit range select output",
+      "category": "data_model",
+      "description": "Code should include a $mux cell where the output Y connects to a partial bit range of a wider wire (e.g., wire[68:2]) rather than the full wire",
+      "snippet": "cell $mux \\288\n    parameter \\WIDTH 67\n    connect \\A 67'x\n    connect \\B \\internal_bus [68:2]\n    connect \\S 1'x\n    connect \\Y $auto$ghdl.cc:806:import_module$61",
+      "tags": ["mux", "partial_connection", "bit_range", "wire_slice"],
+      "source_bug_id": "yosys-4664",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4664",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "wire with multiple bit range connect aliases",
+      "category": "data_model",
+      "description": "Code should include a wire that receives multiple connect statements assigning different bit ranges from different sources, creating multiple driver scenario",
+      "snippet": "wire width 277 \\internal_bus\n  connect { \\internal_bus [137:71] \\internal_bus [69] } { $auto$ghdl.cc:806:import_module$61 \\internal_bus [0] }",
+      "tags": ["wire", "alias", "multi_driver", "bit_range_connect", "conflict"],
+      "source_bug_id": "yosys-4664",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4664",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "indirect wire driven by cell output",
+      "category": "data_model",
+      "description": "Code should include an indirect wire ($indirect$) that is driven by a cell output, where the wire is later used in conflicting connect statements",
+      "snippet": "wire width 75 $indirect$\\tx_data$top.v:230$906\n  cell \\arq_wrap \\genblk1[0].arq\n    connect \\tx_data $indirect$\\tx_data$top.v:230$906",
+      "tags": ["indirect_wire", "cell_connection", "multi_usage"],
+      "source_bug_id": "yosys-4664",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4664",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

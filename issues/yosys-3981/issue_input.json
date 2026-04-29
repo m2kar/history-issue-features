@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3981,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3981",
+  "title": "Assertion fail with chparam.",
+  "body": "### Version\n\nYosys 0.33+103 (git sha1 aeb742b8b, gcc 11.4.0-1ubuntu1~22.04 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nRun `yosys -p \"read_verilog -defer top.v\" -p \"hierarchy -top top -chparam p 1\"` with the file\r\n\r\n`top.v`:\r\n```verilog\r\nmodule top #(parameter p=1) ();\r\nwire x [1:0]; \r\nempty e(x[0]);\r\nendmodule\r\n\r\nmodule empty(input wire y);\r\nendmodule \r\n```\n\n### Expected Behavior\n\nSuccessful elaboration.\n\n### Actual Behavior\n\nAssertion failed:\r\n```\r\n-- Running command `read_verilog -defer top.v' --\r\n\r\n1. Executing Verilog-2005 frontend: top.v\r\nParsing Verilog input from `top.v' to AST representation.\r\nStoring AST representation for module `$abstract\\top'.\r\nStoring AST representation for module `$abstract\\empty'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n-- Running command `hierarchy -top top -chparam p 1' --\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\nParameter \\p = 1\r\n\r\n3. Executing AST frontend in derive mode using pre-parsed AST for module `\\top'.\r\nParameter \\p = 1\r\nGenerating RTLIL representation for module `$paramod\\top\\p=32'00000000000000000000000000000001'.\r\n\r\n3.1. Analyzing design hierarchy..\r\nTop module:  \\top\r\n\r\n3.2. Executing AST frontend in derive mode using pre-parsed AST for module `\\empty'.\r\nGenerating RTLIL representation for module `\\empty'.\r\nReprocessing module top because instantiated module empty has become available.\r\nGenerating RTLIL representation for module `$paramod\\top\\p=32'00000000000000000000000000000001'.\r\nERROR: Assert `modules_.count(module->name) == 0' failed in kernel/rtlil.cc:690.\r\n```\r\n\r\nThe execution proceeds without error if any of the following is changed:\r\n\r\n- no `-defer` in `read_verilog`\r\n- no `chparam` in `hierarchy`\r\n- no array indexing in the `top` module\r\n\r\nMight be related to #3741",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-10-04",
+  "closed_at": null,
+  "code_blocks": [
+    "module top #(parameter p=1) ();\r\nwire x [1:0]; \r\nempty e(x[0]);\r\nendmodule\r\n\r\nmodule empty(input wire y);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

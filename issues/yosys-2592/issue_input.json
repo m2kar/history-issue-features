@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2592,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2592",
+  "title": "Bug #2383 got revived: Task argument inherits width of value that was passed to it",
+  "body": "I don't know when and how this happened. @zachjs made a testcase for it when he fixed it.\r\n\r\n## Steps to reproduce the issue\r\n\r\ntest.v:\r\n```\r\nmodule test(input wire [7:0] a, output reg [8:0] b);\r\n\ttask t(input wire [7:0] c, input wire d);\r\n\t\tb = { c, d };\r\n\tendtask\r\n\talways @* t(a, 0);\r\nendmodule\r\n```\r\nRun:\r\n`yosys -p \"synth_ice40 -blif test.blif\" test.v`\r\n\r\n## Expected behavior\r\n\r\nI would expect the output port b[0] to be 0; and b[8:1] to equal a[7:0].\r\nSnippet from test.blif:\r\n```\r\n...\r\n.names a[0] b[1]\r\n1 1\r\n.names a[1] b[2]\r\n1 1\r\n.names a[2] b[3]\r\n1 1\r\n.names a[3] b[4]\r\n1 1\r\n...\r\n\r\n```\r\n## Actual behavior\r\n\r\nAll nine bits of output port b are zero.\r\nSnippet from test.blif:\r\n```\r\n...\r\n.names $false b[0]\r\n1 1\r\n.names $false b[1]\r\n1 1\r\n.names $false b[2]\r\n1 1\r\n.names $false b[3]\r\n1 1\r\n...\r\n\r\n```\r\n\r\nIn comparison to the original version of this bug (#2383), the workaround of setting the range of the argument d to [0:0] doesn't work anymore.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-02-20",
+  "closed_at": "2021-02-23",
+  "code_blocks": [
+    "module test(input wire [7:0] a, output reg [8:0] b);\r\n\ttask t(input wire [7:0] c, input wire d);\r\n\t\tb = { c, d };\r\n\tendtask\r\n\talways @* t(a, 0);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

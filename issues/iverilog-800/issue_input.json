@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 800,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/800",
+  "title": "Unexpected results when assigning string literals with escapes to string variables",
+  "body": "Using 12.0 (devel) on Windows, the following code \r\n\r\n```systemverilog\r\nmodule AssignLiterals;\r\n    initial begin\r\n        string s;\r\n\r\n        s = \"A\\0B\";\r\n        $display(\"1. '%s' len=%1d\",s,s.len());\r\n\r\n        s = \"A\\015\\12B\";\r\n        $display(\"2. '%s' len=%1d\",s,s.len());\r\n\r\n        s = {\"A\",\"\\015\",\"\\012\",\"B\"};\r\n        $display(\"3. '%s' len=%1d\",s,s.len());\r\n\r\n        s = \"A\\170\\171B\";\r\n        $display(\"4. '%s' len=%1d\",s,s.len());\r\n\r\n        s = {\"A\",8'o15,8'o12,\"\\012\",\"B\"};\r\n        $display(\"5. '%s' len=%1d\",s,s.len());\r\n    end\r\nendmodule\r\n```\r\nresults in\r\n```\r\n1. 'A\\000B' len=6\r\n2. 'A\\015\\012B' len=10\r\n3. 'A\\015\\012B' len=10\r\n4. 'AxyB' len=4\r\n5. 'A\r\nB' len=5  <-- [separate line because CR/NL was correctly made part of s]\r\n```\r\nIn cases 1, 2, and 3, the octal escapes embedded in the string literals assigned to the `string` variable `s` are not handled as expected, becoming character sequences starting with a backslash in `s`.  In case 1, `\\0` becomes the four characters `\\000`.  I believe `\\0` should not appear in `s` at all since according to the spec, \"\\0 characters are ignored\" when assigning to values of type `string`.  In cases 2 and 3, I believe `\\015` and `\\012` should become single bytes within `s` with decimal values 13 and 10.\r\n\r\nInterestingly, cases 4 and 5 does work as expected.  The escapes are processed at some level, since `\\170\\171` becomes `xy` in case 4.  And case 5 shows that the escapes being part of a literal string matters, since using literal octal integers are fine.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-08",
+  "closed_at": "2023-01-17",
+  "code_blocks": [
+    "module AssignLiterals;\r\n    initial begin\r\n        string s;\r\n\r\n        s = \"A\\0B\";\r\n        $display(\"1. '%s' len=%1d\",s,s.len());\r\n\r\n        s = \"A\\015\\12B\";\r\n        $display(\"2. '%s' len=%1d\",s,s.len());\r\n\r\n        s = {\"A\",\"\\015\",\"\\012\",\"B\"};\r\n        $display(\"3. '%s' len=%1d\",s,s.len());\r\n\r\n        s = \"A\\170\\171B\";\r\n        $display(\"4. '%s' len=%1d\",s,s.len());\r\n\r\n        s = {\"A\",8'o15,8'o12,\"\\012\",\"B\"};\r\n        $display(\"5. '%s' len=%1d\",s,s.len());\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

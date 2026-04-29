@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 74,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/74",
+  "title": "NOT accuracy when mix block & non-block assignment",
+  "body": "Icarus Verilog version 0.10.0 (devel) (s20150603-55-g97c6339)\ncygwin, gcc-4.8.3\n# the following is bench file.\n\nmodule  test (\n\noutput reg  MPC_LCLK,  \noutput reg  MPC_LALE,   \n\noutput reg [7:0] MPC_LA,  \ninout      [7:0] MPC_LAD  \n);\n\nreg    [7:0]  mpc_address;\n\nassign  MPC_LAD   = (MPC_LALE  == 1'b1) ? mpc_address : 8'hz;\n\ninitial begin\n    MPC_LCLK  =  0;\n    MPC_LALE  =  0;\n    mpc_address =  0;\nend\n\nalways #15 MPC_LCLK = !MPC_LCLK;\n\ntask  foo;\ninput  [16:0]  address;\n\nbegin\n    @(posedge MPC_LCLK)\n    mpc_address = address[15:8];\n    MPC_LA = address[7:0];\n    MPC_LALE = 1;\n    @(posedge MPC_LCLK)\n    MPC_LALE = 0;\nend\n\nendtask\n\nreg [15:0]  addr;\n\nalways @(posedge MPC_LCLK)\n    begin\n        addr <= {MPC_LAD, MPC_LA};\n    end\n\ninteger  i;\ninitial begin\n    //$dumpfile(\"test.vcd\"); \n    //$dumpvars(0, test);\n    $monitor($time, \" : %h %h : %h %h\", MPC_LAD, MPC_LA, MPC_LALE, addr);\n    #100 foo(4);\n    #100 $finish;\nend\n\nendmodule\n# \n# the simulation result is below.\n\n```\n               0 : zz xx : 0 xxxx\n             15  : zz xx : 0 zzxx\n             105 : 00 04 : 1 zz04        <-  this line should be \"105 : 00 04 : 1 zzxx\"\n             135 : zz 04 : 0 0004\n             165 : zz 04 : 0 zz04\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-07-07",
+  "closed_at": "2015-07-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

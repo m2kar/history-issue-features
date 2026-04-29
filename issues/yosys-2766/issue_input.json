@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2766,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2766",
+  "title": "memory_share: broken feedback detection",
+  "body": "```\r\nmodule top(...);\r\n\r\ninput clk;\r\ninput sel;\r\ninput [3:0] ra;\r\ninput [3:0] wa;\r\ninput wd;\r\noutput [3:0] rd;\r\n\r\nreg [3:0] mem[0:15];\r\n\r\ninteger i;\r\ninitial begin\r\n        for (i = 0; i < 16; i = i + 1)\r\n                mem[i] <= i;\r\nend\r\n\r\nassign rd = mem[ra];\r\n\r\nalways @(posedge clk) begin\r\n        mem[wa] <= {4{sel ? wd : mem[wa][0]}};\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nWhen this module is processed with `proc; clean; memory_share`, the `memory_share` read-to-write feedback detection gets overeager and removes (turns to X) the second input to the shared mux, even though it's only a feedback path for bit 0, causing wrong values to be written to bits 1-3 (the `mem[wa]` read port is unused and will be deleted by subsequent `clean`).",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-22",
+  "closed_at": "2021-05-24",
+  "code_blocks": [
+    "module top(...);\r\n\r\ninput clk;\r\ninput sel;\r\ninput [3:0] ra;\r\ninput [3:0] wa;\r\ninput wd;\r\noutput [3:0] rd;\r\n\r\nreg [3:0] mem[0:15];\r\n\r\ninteger i;\r\ninitial begin\r\n        for (i = 0; i < 16; i = i + 1)\r\n                mem[i] <= i;\r\nend\r\n\r\nassign rd = mem[ra];\r\n\r\nalways @(posedge clk) begin\r\n        mem[wa] <= {4{sel ? wd : mem[wa][0]}};\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

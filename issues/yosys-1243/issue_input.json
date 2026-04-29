@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1243,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1243",
+  "title": "Unexpected behaviour of for loop and if statement",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following piece of code:\r\n\r\n```verilog\r\nmodule top  (y, clk, sel);\r\n   output wire y  ;\r\n   input       clk; \r\n   input       sel;\r\n   reg         reg_assign = (1'h0) ;\r\n   reg [1:0]   reg_count = (1'h0) ;\r\n   assign y = reg_assign ;\r\n   always @(posedge clk) \r\n     if (sel)\r\n       for (reg_count = 0; reg_count < 2; reg_count = reg_count + 1'h1)\r\n         if (0);\r\n         else reg_assign <= 1;\r\n     else reg_assign <=  0;\r\nendmodule\r\n```\r\n\r\nFirst of all, the for loop in the code does seem a bit dodgy, however, I would still expect `reg_assign` to be set to 1 when `sel` is high. When `sel` is low, `reg_assign` should then be reset to 0. \r\n\r\nHowever, when synthesised with \r\n\r\n```\r\nYosys 0.8+618 (git sha1 acd8bc0a, clang  -fPIC -Os)\r\n```\r\n\r\nusing\r\n\r\n```\r\nyosys -p \"read_verilog rtl.v; synth; write_verilog -noattr synth.v\"\r\n```\r\n\r\n`reg_assign` is set to a constant 0 instead of to what the value of `sel` is. Removing the dead if statement in the for loop results in the correct behaviour.\r\n\r\nI have also attached a folder containing a test bench and SymbiYosys script to compare the design to the synthesised net list.\r\n\r\n## Expected behaviour\r\n\r\nI would expect this to be implemented by assigning `sel` to `y`. This is actually also the output of a previous version of Yosys (`Yosys 0.8+508 (git sha1 c2ea3746, clang 8.0.0 -fPIC -Os)`)\r\n\r\n```verilog\r\nmodule top(y, clk, sel);\r\n  input clk;\r\n  wire reg_assign;\r\n  wire [1:0] reg_count;\r\n  input sel;\r\n  output y;\r\n  assign reg_assign = 1'h0;\r\n  assign reg_count = 2'h0;\r\n  assign y = sel;\r\nendmodule\r\n```\r\n\r\n## Actual behaviour\r\n\r\nHowever, with Yosys, `y` is set to a constant 0.\r\n\r\n```verilog\r\nmodule top(y, clk, sel);\r\n  input clk;\r\n  wire reg_assign;\r\n  wire [1:0] reg_count;\r\n  input sel;\r\n  output y;\r\n  assign reg_assign = 1'h0;\r\n  assign reg_count = 2'h0;\r\n  assign y = 1'h0;\r\nendmodule\r\n```\r\n\r\n[test.zip](https://github.com/YosysHQ/yosys/files/3457004/test.zip)\r\n",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-08-01",
+  "closed_at": "2019-08-09",
+  "code_blocks": [
+    "module top  (y, clk, sel);\r\n   output wire y  ;\r\n   input       clk; \r\n   input       sel;\r\n   reg         reg_assign = (1'h0) ;\r\n   reg [1:0]   reg_count = (1'h0) ;\r\n   assign y = reg_assign ;\r\n   always @(posedge clk) \r\n     if (sel)\r\n       for (reg_count = 0; reg_count < 2; reg_count = reg_count + 1'h1)\r\n         if (0);\r\n         else reg_assign <= 1;\r\n     else reg_assign <=  0;\r\nendmodule",
+    "yosys -p \"read_verilog rtl.v; synth; write_verilog -noattr synth.v\"",
+    "module top(y, clk, sel);\r\n  input clk;\r\n  wire reg_assign;\r\n  wire [1:0] reg_count;\r\n  input sel;\r\n  output y;\r\n  assign reg_assign = 1'h0;\r\n  assign reg_count = 2'h0;\r\n  assign y = sel;\r\nendmodule",
+    "module top(y, clk, sel);\r\n  input clk;\r\n  wire reg_assign;\r\n  wire [1:0] reg_count;\r\n  input sel;\r\n  output y;\r\n  assign reg_assign = 1'h0;\r\n  assign reg_count = 2'h0;\r\n  assign y = 1'h0;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

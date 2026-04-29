@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2976,
+  "title": "ecp5: can't map true dual port RAM",
+  "features": [
+    {
+      "name": "true dual port ram with same clock domain",
+      "category": "data_model",
+      "description": "Code should include a dual-port RAM with two independent read/write ports operating on the same clock domain",
+      "snippet": "(* syn_ramstyle = \"block_ram\" *) reg [DATA_WIDTH-1:0] ram[0:(1 << ADDR_WIDTH)-1];\nalways_ff @(posedge clk) begin if (wen_1) ram[addr_1] <= wdata_1; else rdata_1 <= ram[addr_1]; end\nalways_ff @(posedge clk) begin if (wen_2) ram[addr_2] <= wdata_2; else rdata_2 <= ram[addr_2]; end",
+      "tags": ["ram", "dual_port", "block_ram", "ecp5"],
+      "source_bug_id": "yosys-2976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2976",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "write-through on write-during-read RAM port",
+      "category": "data_model",
+      "description": "Code should include a RAM port where write enable and read/write mode select signals conditionally route write data directly to read output during write operations",
+      "snippet": "if (wen_1) begin if (wwr_1) begin ram[addr_1] <= wdata_1; rdata_1 <= wdata_1; end else rdata_1 <= ram[addr_1]; end",
+      "tags": ["ram", "write_through", "write_enable", "conditional_read"],
+      "source_bug_id": "yosys-2976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2976",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "synth_ecp5 target for block RAM inference",
+      "category": "control_flow",
+      "description": "Code should include a design that is synthesized with the synth_ecp5 pass targeting ECP5 architecture BRAM inference",
+      "snippet": "yosys -p 'read_verilog -sv design.sv; synth_ecp5'",
+      "tags": ["synth_ecp5", "yosys_command", "bram_inference"],
+      "source_bug_id": "yosys-2976",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2976",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

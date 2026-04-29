@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 602,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/602",
+  "title": "Issues when cross-compiling for Windows",
+  "body": "Hi,\r\n \r\nThe traditional way to build icarus verilog for Windows seems to be using Msys. I didn't want to embark on this (sometimes complicated) path, and as a fun experiment I decided to build on linux instead, using a cross compiler (thanks [mxe](https://mxe.cc/) !!)\r\n\r\nThe process is very straightforward:\r\n```\r\n./configure --host=x86_64-w64-mingw32.shared\r\nmake install\r\n```\r\n\r\nIt all works very nicely, but I later found that something wasn't quite right.\r\nWhen building `iverilog-vpi.exe`, the flow automatically generates `config.h`, assuming that the compiler that will be used on the host machine is going to be the same as the compiler that is used on the build machine:\r\n```\r\n#define IVERILOG_VPI_CC        \"x86_64-w64-mingw32.shared-gcc\"\r\n#define IVERILOG_VPI_CXX       \"x86_64-w64-mingw32.shared-g++\"\r\n```\r\n\r\nThe effect is that when executing `iverilog-vpi.exe`, it fails due to being 'unable to locate MinGW'.\r\nTo solve the problem, I manually edited `driver-vpi/config.h` as follows and did a `make install` again:\r\n```\r\n#define IVERILOG_VPI_CC        \"gcc\"\r\n#define IVERILOG_VPI_CXX       \"g++\"\r\n```\r\n\r\nI'm not familiar enough with autoconf to address this issue in a nice and clean way, but it would be nice if someone could look into this !\r\n\r\nHaving solved this first issue, I then decided to install [myhld ](http://docs.myhdl.org/en/stable/manual/cosimulation.html)and install co-simulation support as described in https://github.com/myhdl/myhdl/blob/master/cosimulation/icarus/README.txt\r\n\r\nThe first step is to build `myhdl.vpi` simply by doing `make`. That didn't work.\r\n\r\nLooking into the details, I seem to have found an issue in the source code of `iverilog-vpi.exe`. I'm not sure if this issue is real, and perhaps it's only revealed when cross-compiling (but not when compiling natively with Msys)\r\nThe list of source files passed to `iverilog-vpi.exe` is `myhdl.c myhdl_table.c`. However, while the first source file is correctly parsed as `myhdl.c`, the corresponding object file is generated as `myhdl.c myhdl_table.o`. It eventually leads to the error below:\r\n\r\n```gcc: fatal error: input file 'myhdl.c' is the same as output file```\r\n\r\nFrom what I can tell, it all comes down to a few lines in `driver-vpi/main.c` :\r\n```\r\n\t\t /* Build the object file name */\r\n\t\tostart = strrchr(ptr1, '/');\r\n\t\tif (ostart == NULL) ostart = ptr1;\r\n\t\telse ostart += 1;\r\n\t\tolen = strrchr(ptr1, '.') - ostart;\r\n\t\tassignn(&obj, ostart, olen);\r\n\t\tappend(&obj, \".o\");\r\n```\r\n\r\nI could be wrong, but it seems that all is required to fix the issue is to replace `ptr1` with `src`. Et voila !\r\nCan anyone confirm ?\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2022-02-05",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

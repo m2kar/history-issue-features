@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 504,
+  "title": "can yosys infer single port block ram?",
+  "features": [
+    {
+      "name": "single_port_ram_with_separate_write_clock",
+      "category": "data_model",
+      "description": "Code should include a single-port RAM inference pattern with separate read address register and write address from shared bus, where read and write share the same address port based on mode",
+      "snippet": "reg [3:0] reg_RW0_addr;\nreg reg_RW0_ren;\nreg [63:0] ram [15:0];\nalways @(posedge RW0_clk) if (RW0_en && !RW0_wmode) reg_RW0_addr <= RW0_addr;\nalways @(posedge RW0_clk) if (RW0_en && RW0_wmode) ram[RW0_addr] <= RW0_wdata;\nassign RW0_rdata = ram[reg_RW0_addr];",
+      "tags": ["single_port_ram", "registered_read_address", "shared_address_bus"],
+      "source_bug_id": "504",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/504",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "registered_read_enable_signal",
+      "category": "data_model",
+      "description": "Code should include a registered read enable signal that captures the read/write mode at clock edge before being used to select the registered read address",
+      "snippet": "reg reg_RW0_ren;\nalways @(posedge RW0_clk) reg_RW0_ren <= RW0_en && !RW0_wmode;",
+      "tags": ["registered_read_enable", "single_port_ram"],
+      "source_bug_id": "504",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/504",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mode_based_read_write_on_shared_address",
+      "category": "control_flow",
+      "description": "Code should include a memory access pattern where write occurs on positive clock edge when write mode is active, and read uses a registered address from the same address input when not in write mode",
+      "snippet": "always @(posedge RW0_clk) if (RW0_en && !RW0_wmode) reg_RW0_addr <= RW0_addr;\nalways @(posedge RW0_clk) if (RW0_en && RW0_wmode) ram[RW0_addr] <= RW0_wdata;\nassign RW0_rdata = ram[reg_RW0_addr];",
+      "tags": ["mode_based_access", "shared_address", "single_port_ram"],
+      "source_bug_id": "504",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/504",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

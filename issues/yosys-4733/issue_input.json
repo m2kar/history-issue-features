@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4733,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4733",
+  "title": "Fix setting bits of parameters in setundef pass",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nThis PR fixes setting bits of parameters in `setundef` pass.\r\n\r\n_Explain how this is achieved._\r\n\r\nCurrently we are looping through module parameters using `for (auto bit : parameter.second)`.\r\nIt is equivalent to:\r\n```\r\nfor( auto _bit = parameter.second.begin(); _bit != parameter.second.end(); _bit++) {\r\n    auto bit = *_bit;\r\n    ...\r\n}\r\n```\r\nwhere `auto` is resolved to [`RTLIL::Const`](https://github.com/YosysHQ/yosys/blob/915df16c84f4595b6ad5f198de0f7aaf43896723/kernel/rtlil.h#L1677C2-L1677C49). \r\n\r\nIterator that we are using is defined in [`Const` class](https://github.com/YosysHQ/yosys/blob/915df16c84f4595b6ad5f198de0f7aaf43896723/kernel/rtlil.h#L713) which iterates through [`State` enum](https://github.com/YosysHQ/yosys/blob/6d4f056a353faeaa69dc23bb30c1ea05f38aae80/kernel/rtlil.h#L30). \r\n\r\n`operator *` of iterator returns [copy of the state](https://github.com/YosysHQ/yosys/blob/915df16c84f4595b6ad5f198de0f7aaf43896723/kernel/rtlil.cc#L543).\r\n\r\nThis PR changes to use reference instead.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nI attached example test case that showcase the problem.\r\n\r\nFixes: https://github.com/YosysHQ/yosys/issues/4732",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-12",
+  "closed_at": "2025-03-28",
+  "code_blocks": [
+    "for( auto _bit = parameter.second.begin(); _bit != parameter.second.end(); _bit++) {\r\n    auto bit = *_bit;\r\n    ...\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

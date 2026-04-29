@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1192,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1192",
+  "title": "support cross-module task invocation?",
+  "body": "Hi,\r\n\r\nI am wondering how much work it would take to support invocation of tasks from outside of the module that defines them. Here is a minimal example:\r\n\r\n```verilog\r\nmodule counter;\r\n  reg [31:0] cnt = 0;\r\n  task increment; begin\r\n    cnt = cnt + 1;\r\n  end endtask\r\nendmodule\r\n\r\nmodule top(input wire clk);\r\n  counter C();\r\n  always @(posedge clk) begin\r\n    C.increment(); // yosys: ERROR: Can't resolve task name `\\C.increment'.\r\n  end\r\nendmodule\r\n```\r\n\r\n[Internets](https://stackoverflow.com/questions/37624934/how-to-call-tasks-from-a-separate-module-in-verilog) tell me that this is not supposed to work, but it does in `iverilog`, and I would like to use it in yosys for prototyping in the context of a larger system.\r\n\r\nI would be be happy to try my hand at implementing this, but first I am reaching out to hear whether there are any gotchas that would make this much more work than replacing code like https://github.com/YosysHQ/yosys/blob/1706798f4e595266a8758ae6d0ff9d978299de10/frontends/ast/simplify.cc#L2231 with... something recursive.\r\n\r\n[Here](https://gist.github.com/andres-erbsen/7ae70c455eca1b0da3ced0636e94f6a2) is a more complete example of the desired behavior.\r\n\r\nThanks,\r\nAndres",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-07-13",
+  "closed_at": "2019-07-17",
+  "code_blocks": [
+    "module counter;\r\n  reg [31:0] cnt = 0;\r\n  task increment; begin\r\n    cnt = cnt + 1;\r\n  end endtask\r\nendmodule\r\n\r\nmodule top(input wire clk);\r\n  counter C();\r\n  always @(posedge clk) begin\r\n    C.increment(); // yosys: ERROR: Can't resolve task name `\\C.increment'.\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

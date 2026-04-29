@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4972,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4972",
+  "title": "An infinite loop occurred in the log during the `synth_greenpak4` process.",
+  "body": "### Version\n\nYosys 0.50+49 (git sha1 05c81b3f1, clang++ 14.0.0-1ubuntu1.1 -Og -fPIC -O1 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize=address,undefined)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following is the problematic Verilog code file bug.v, which I have minimized as much as possible out of responsibility:\n```verilog\nmodule a(input b, c, output reg d);\n  reg [31:0] e;\n\n  always @(*) begin\n    if (b >> e) begin\n        d = e;\n    end\n\n    if (c - c) begin\n      e = 0;\n    end\n\n    e = !e;\n  end\nendmodule\n```\nRunning the following command causes Yosys to enter an infinite logging loop, possibly due to an internal infinite loop during synthesis:\n```\nyosys -p \"read_verilog bug.v; synth_greenpak4\"\n```\nI discovered this bug while testing Yosys using a fuzzing tool I am developing.\n\n### Expected Behavior\n\nThe `synth_greenpak4` synthesis process should not result in an infinite loop.\n\n### Actual Behavior\n\nThe following log was produced:\n```\n2.24.2. Continuing TECHMAP pass.\nUsing template $paramod\\$lut\\WIDTH=32'00000000000000000000000000000001\\LUT=2'01 for cells of type $lut.\nUsing template $paramod\\$lut\\WIDTH=32'00000000000000000000000000000010\\LUT=4'0111 for cells of type $lut.\nNo more expansions possible.\n<suppressed ~41 debug messages>\n\n2.25. Executing GREENPAK4_DFFINV pass (merge input/output inverters into FF/latch cells).\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\n```\nand it keeps repeating without termination.",
+  "labels": [
+    "bug",
+    "fuzzer"
+  ],
+  "state": "open",
+  "created_at": "2025-03-31",
+  "closed_at": null,
+  "code_blocks": [
+    "module a(input b, c, output reg d);\n  reg [31:0] e;\n\n  always @(*) begin\n    if (b >> e) begin\n        d = e;\n    end\n\n    if (c - c) begin\n      e = 0;\n    end\n\n    e = !e;\n  end\nendmodule",
+    "yosys -p \"read_verilog bug.v; synth_greenpak4\"",
+    "2.24.2. Continuing TECHMAP pass.\nUsing template $paramod\\$lut\\WIDTH=32'00000000000000000000000000000001\\LUT=2'01 for cells of type $lut.\nUsing template $paramod\\$lut\\WIDTH=32'00000000000000000000000000000010\\LUT=4'0111 for cells of type $lut.\nNo more expansions possible.\n<suppressed ~41 debug messages>\n\n2.25. Executing GREENPAK4_DFFINV pass (merge input/output inverters into FF/latch cells).\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCH -> GP_DLATCHI\nMerged input inverter into cell a.$auto$ff.cc:266:slice$122: GP_DLATCHI -> GP_DLATCH"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3713,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3713",
+  "title": "Synthesis results can change based on comments or blank lines in Verilog source",
+  "body": "### Version\n\nYosys 0.22 (git sha1 f109fa3d4c5, gcc 8.3.1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n# tl;dr\r\n\r\nIf you add just the right number of comments-only header lines (e.g. license text) or blank lines to the top of a Verilog file being run through yosys, you can find that in some cases it will change the synthesis result even though the rest of the file is unchanged.\r\n\r\nThis emerged through OpenLane, and I'm too new to yosys to know how to reproduce this completely with yosys alone, but hopefully I can still provide enough information or be guided to do so.\r\n\r\n# Background\r\n\r\nI encountered this using [efabless/caravel_user_project](https://github.com/efabless/caravel_user_project) (latest tag `mpw-9a`), via OpenLane, and reported it in https://github.com/The-OpenROAD-Project/OpenLane/issues/1697. Here's an example simple design intended for the sky130A PDK that demonstrates the issue:\r\n\r\n[MYTEST.tar.gz](https://github.com/YosysHQ/yosys/files/11068620/MYTEST.tar.gz) - Contents:\r\n```\r\nverilog/rtl/MYTEST.v          # Top design; instantiates MYTEST_sub.\r\nverilog/rtl/MYTEST_sub.v      # The file where blank lines change synthesis results!!\r\nopenlane/MYTEST/config.json   # Uses the above 2 Verilog files.\r\n```\r\n\r\nUsing OpenLane with Caravel, we'd run `make MYTEST` and grab the synthesis result from `openlane/MYTEST/runs/MYTEST/*/results/synthesis/MYTEST.v`.\r\n\r\nIf you run the above `make MYTEST`, you'll get a certain result in `results/synthesis/MYTEST.v`.\r\n\r\nIf you add 20 blank lines to the top of the source `MYTEST_sub.v` file and run the make again, you'll get a **different** result in `results/synthesis/MYTEST.v`.\r\n\r\nIf you add 10 more blank lines (30 total) and run the make again, you'll get the **SAME** result as for only 20 blank lines.\r\n\r\nIf you add 10 more (40 total), you'll get a **DIFFERENT** result yet again.\r\n\r\nResults for these 4 cases in my OpenLane environment are attached: \r\n[MYTEST_synth.tar.gz](https://github.com/YosysHQ/yosys/files/11068647/MYTEST_synth.tar.gz)\r\n\n\n### Expected Behavior\n\nWhitespace that doesn't actually alter the meaning of the Verilog code (especially adding blank lines or comment-only lines) should not change the synthesis result, allowing a consistent result regardless of whether comments (or blank lines) are used or not.\n\n### Actual Behavior\n\nIt *seems* that the line numbers on which certain lines of Verilog code appear will have an effect on the yosys synthesis result, especially near a change in magnitude of the line number (i.e. 9 &rarr; 10, 99 &rarr; 100, 999 &rarr; 1000, etc).",
+  "labels": [
+    "ABC"
+  ],
+  "state": "open",
+  "created_at": "2023-03-25",
+  "closed_at": null,
+  "code_blocks": [
+    "verilog/rtl/MYTEST.v          # Top design; instantiates MYTEST_sub.\r\nverilog/rtl/MYTEST_sub.v      # The file where blank lines change synthesis results!!\r\nopenlane/MYTEST/config.json   # Uses the above 2 Verilog files."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

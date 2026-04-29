@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2521,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2521",
+  "title": "CXXRTL: Unflattened designs cause assertion failures",
+  "body": "In cxxrtl you can pass a flag `-noflatten` to prevent the `flatten` pass being run before elaboration during `write_cxxrtl`, however, a number of issues prevent non-flat modules from functioning.\r\n\r\nDuring elaboration by cxxrtl there's a desire to flatten modules to allow inlining and unbuffering of nets, by doing so it can be possible to avoid delta iterations during simulation. \r\n\r\nWhile debugging #2516 I attempted to use `-noflatten` to attempt to avoid this behavior without affecting other debug settings, I hit the assertion here, due to my top level module having reset assigned to a constant `1'b0` value. Which fails the `is_wire()` check. https://github.com/YosysHQ/yosys/blob/b72c29465392c8d260ddf55def169438f7fb64b2/backends/cxxrtl/cxxrtl_backend.cc#L1328\r\n\r\nWhile attempting to workaround the issue by not using a constant driver, I hit the assert here https://github.com/YosysHQ/yosys/blob/b72c29465392c8d260ddf55def169438f7fb64b2/backends/cxxrtl/cxxrtl_backend.cc#L1321\r\n\r\nI'm fairly confident that this is a bug, however it could also be intended behavior that's not adequately documented at the moment. \r\n\r\nFor a testcase you can take the case from #2516 and modify `cxxrtl.ys` to have `write_cxxrtl -noflatten` instead of `write_cxxrtl`, that should hit the case.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-04",
+  "closed_at": "2021-07-16",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

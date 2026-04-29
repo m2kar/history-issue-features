@@ -1,0 +1,51 @@
+{
+  "tool": "iverilog",
+  "issue_number": 7,
+  "title": "Undef propagation in power operator",
+  "features": [
+    {
+      "name": "division by zero produces x undef",
+      "category": "general",
+      "description": "Code should include integer division where the divisor is a variable that can be zero, so that the result is X (undef) at runtime",
+      "snippet": "logic [3:0] a;\nlogic [3:0] q;\nassign q = 4'd1 / a; // when a==0, q must be 4'bx",
+      "tags": ["division", "x_propagation", "undef", "division_by_zero", "arithmetic"],
+      "source_bug_id": "7",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/7",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "power operator x-propagation from undef exponent",
+      "category": "general",
+      "description": "Code should include a power operator ** where the exponent operand is or can be X (undef), and verify the result is also X rather than a concrete value",
+      "snippet": "logic [3:0] exp_v;\nlogic [3:0] result;\nassign exp_v = 4'bx;\nassign result = 4'd2 ** exp_v; // result must be 4'bx",
+      "tags": ["power_operator", "x_propagation", "undef", "exponent", "arithmetic"],
+      "source_bug_id": "7",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/7",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "chained x-propagation through division-into-power-operator",
+      "category": "general",
+      "description": "Code should include a chain where integer division by a zero variable produces X and that X value is used as the exponent of the power operator **, requiring X to propagate end-to-end",
+      "snippet": "input [3:0] a;\noutput [3:0] y;\nassign y = 4'd2 ** (4'd1 / a); // when a==0: inner div yields x, y must be 4'bx",
+      "tags": ["power_operator", "division_by_zero", "x_propagation", "undef", "arithmetic_chain"],
+      "source_bug_id": "7",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/7",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

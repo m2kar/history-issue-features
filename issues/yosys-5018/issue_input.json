@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5018,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5018",
+  "title": "equiv_opt falsely claims equivalence on designs with different unknown modules",
+  "body": "### Version\n\nYosys 0.51+41 (git sha1 0c689091e, ccache clang++ 16.0.6 -Og -fPIC)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```\nmodule gold(input X, output Y);\n    bar bar(X, Y);\nendmodule\n\nmodule gate(input X, output Y);\n    baz baz(X, Y);\nendmodule\n```\n\n`read_verilog bug.v; proc; equiv_make gold gate equiv; equiv_induct equiv; equiv_status -assert equiv`\n\n### Expected Behavior\n\nFailure to prove equivalence or other error\n\n### Actual Behavior\n\nOnly warnings are emitted and equivalence is claimed to be proven:\n```\n3. Executing EQUIV_INDUCT pass.\nFound 1 unproven $equiv cells in module equiv:\nWarning: No SAT model available for cell baz_gate (baz).\nWarning: No SAT model available for cell bar_gold (bar).\n  Proving existence of base case for step 1. (10 clauses over 5 variables)\n  Proving induction step 1. (17 clauses over 8 variables)\n  Proof for induction step holds. Entire workset of 1 cells proven!\nProved 1 previously unproven $equiv cells.\n\n4. Executing EQUIV_STATUS pass.\nFound 1 $equiv cells in equiv:\n  Of those cells 1 are proven and 0 are unproven.\n  Equivalence successfully proven!\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2025-04-11",
+  "closed_at": null,
+  "code_blocks": [
+    "module gold(input X, output Y);\n    bar bar(X, Y);\nendmodule\n\nmodule gate(input X, output Y);\n    baz baz(X, Y);\nendmodule",
+    "3. Executing EQUIV_INDUCT pass.\nFound 1 unproven $equiv cells in module equiv:\nWarning: No SAT model available for cell baz_gate (baz).\nWarning: No SAT model available for cell bar_gold (bar).\n  Proving existence of base case for step 1. (10 clauses over 5 variables)\n  Proving induction step 1. (17 clauses over 8 variables)\n  Proof for induction step holds. Entire workset of 1 cells proven!\nProved 1 previously unproven $equiv cells.\n\n4. Executing EQUIV_STATUS pass.\nFound 1 $equiv cells in equiv:\n  Of those cells 1 are proven and 0 are unproven.\n  Equivalence successfully proven!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

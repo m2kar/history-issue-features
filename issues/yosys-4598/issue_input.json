@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4598,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4598",
+  "title": "Excessive recursion in simple program",
+  "body": "### Version\n\nYosys 0.45+106 (git sha1 982fade0d, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nProgram used:\r\n```systemverilog\r\n\r\nlocalparam id_1 = id_1;\r\nmodule module_0 (\r\n    output logic id_1,\r\n    id_2,\r\n    inout id_6\r\n);\r\n  assign id_2 = id_6;\r\nendmodule\r\n```\r\nCommand: \r\n```bash\r\nyosys -p 'read -sv program.v; hierarchy -check'\r\n```\n\n### Expected Behavior\n\nI believe the program should not be accepted by yosys frontend, since in the declaration `localparam id_1 = id_1` id_1 does not exist and is not within a module, causing a loop in the simplifier.\n\n### Actual Behavior\n\n```bash\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.45+106 (git sha1 982fade0d, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\r\n\r\n-- Running command `read -sv program.v; hierarchy -check' --\r\n\r\n1. Executing Verilog-2005 frontend: program.v\r\nParsing SystemVerilog input from `program.v' to AST representation.\r\nStoring AST representation for module `$abstract\\module_0'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\n\r\n2.1. Executing AST frontend in derive mode using pre-parsed AST for module `\\module_0'.\r\nGenerating RTLIL representation for module `\\module_0'.\r\nWarning: Deep recursion in AST simplifier.\r\nDoes this design contain overly long or deeply nested expressions, or excessive recursion?\r\nSegmentation fault\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2024-09-12",
+  "closed_at": null,
+  "code_blocks": [
+    "localparam id_1 = id_1;\r\nmodule module_0 (\r\n    output logic id_1,\r\n    id_2,\r\n    inout id_6\r\n);\r\n  assign id_2 = id_6;\r\nendmodule",
+    "yosys -p 'read -sv program.v; hierarchy -check'",
+    "/----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.45+106 (git sha1 982fade0d, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\r\n\r\n-- Running command `read -sv program.v; hierarchy -check' --\r\n\r\n1. Executing Verilog-2005 frontend: program.v\r\nParsing SystemVerilog input from `program.v' to AST representation.\r\nStoring AST representation for module `$abstract\\module_0'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\n\r\n2.1. Executing AST frontend in derive mode using pre-parsed AST for module `\\module_0'.\r\nGenerating RTLIL representation for module `\\module_0'.\r\nWarning: Deep recursion in AST simplifier.\r\nDoes this design contain overly long or deeply nested expressions, or excessive recursion?\r\nSegmentation fault"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2562,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2562",
+  "title": "Apparent bug in const checking logic",
+  "body": "To reproduce this issue, check out [Ibex](https://github.com/lowRISC/ibex), e.g. version b295f07b (although this shouldn't be version-sensitive) and then run the synthesis flow. The instructions in `syn/README.md` should work.\r\n\r\nThe synthesis flow works by running sv2v and then running Yosys on the output. With the current head of the Yosys master branch, you get the following error message:\r\n```\r\nout/generated/ibex_cs_registers.v:544: ERROR: Non-constant function call in constant expression.\r\n```\r\nThe relevant code looks like this:\r\n```systemverilog\r\nmstatus_d = {\r\n   ... // some other elements in the concatenation\r\n   sv2v_cast_2(sv2v_cast_2(csr_wdata_int[ibex_pkg_CSR_MSTATUS_MPP_BIT_HIGH:ibex_pkg_CSR_MSTATUS_MPP_BIT_LOW])),\r\n   ... // some other elements in the concatenation\r\n};\r\n```\r\nHere, `sv2v_cast_2` is defined as follows:\r\n```systemverilog\r\n\tfunction automatic [1:0] sv2v_cast_2;\r\n\t\tinput reg [1:0] inp;\r\n\t\tsv2v_cast_2 = inp;\r\n\tendfunction\r\n```\r\n\r\nBisecting Yosys builds points to commit 2085d9a.\r\n\r\nIf you manually hack the generated code to replace the argument to the inner `sv2v_cast_2` with a constant like `8'b0` OR (more confusingly) remove one layer of `sv2v_cast_2` calls, the error message goes away.\r\n\r\n@zachjs (since this was your change, and you probably also understand the output from sv2v better than me!)\r\n",
+  "labels": [
+    "bug",
+    "fix-pending",
+    "regression"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-26",
+  "closed_at": "2021-02-11",
+  "code_blocks": [
+    "out/generated/ibex_cs_registers.v:544: ERROR: Non-constant function call in constant expression.",
+    "mstatus_d = {\r\n   ... // some other elements in the concatenation\r\n   sv2v_cast_2(sv2v_cast_2(csr_wdata_int[ibex_pkg_CSR_MSTATUS_MPP_BIT_HIGH:ibex_pkg_CSR_MSTATUS_MPP_BIT_LOW])),\r\n   ... // some other elements in the concatenation\r\n};",
+    "function automatic [1:0] sv2v_cast_2;\r\n\t\tinput reg [1:0] inp;\r\n\t\tsv2v_cast_2 = inp;\r\n\tendfunction"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

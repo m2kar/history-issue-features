@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 144,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/144",
+  "title": "Nested macro expansion not evaluating correctly",
+  "body": "I'm trying to get a design from one of the commercial simulators / synthesis tools to run with iverilog and running into a macro expansion issue with ivlpp (version 10.1).  The verilog code uses nested macro expansion which expands a single macro out to nearly 1000 signals.  I have included a much smaller snippet here:\r\n\r\n```verilog\r\n`define IO_HLPR_INPUT_2_VEC (name,c) \\\r\n   input [c-1:0] name``_0, \\\r\n   input [c-1:0] name``_1,\r\n\r\n`define IO_HLPR_OUTPUT_2_VEC (n,c) \\\r\n   output [c-1:0] n``_0, \\\r\n   output [c-1:0] n``_1,\r\n\r\n`define ADC_IO_SIGNALS(prefix)\\\r\n   `IO_HLPR_INPUT_2_VEC(prefix``bits,6) \\\r\n   `IO_HLPR_OUTPUT_2_VEC(prefix``data,10) \\\r\n   input prefix``clk\r\n\r\nmodule adc_dsp\r\n(\r\n   `ADC_IO_SIGNALS(adc1_)\r\n);\r\nendmodule\r\n```\r\n\r\nThis *should* evaluate to the following:\r\n\r\n```verilog\r\nmodule adc_dsp\r\n(\r\n   input [6-1:0] adc1_bits_0,\r\n   input [6-1:0] adc1_bits_1,\r\n   output [10-1:0] adc1_data_0,\r\n   output [10-1:0] adc1_data_1,\r\n   input adc1_clk\r\n);\r\nendmodule\r\n```\r\n\r\nHowever when I issue the command ivlpp macro.v (my test filename), the generated output after the macro expansion is:\r\n\r\n```verilog\r\nmodule adc_dsp\r\n(\r\n   \r\n   (name,c)\r\n   input [c-1:0] name_0,\r\n   input [c-1:0] name_1,(adc1_bits,6)\r\n   (n,c)\r\n   output [c-1:0] n_0,\r\n   output [c-1:0] n_1,(adc1_data,10)\r\n   input adc1_clk\r\n);\r\nendmodule\r\n```\r\n\r\nAny assistance resolving this would be a great help and appreciated.  \r\nThanks,\r\nKen",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-01-16",
+  "closed_at": "2017-01-20",
+  "code_blocks": [
+    "`define IO_HLPR_INPUT_2_VEC (name,c) \\\r\n   input [c-1:0] name``_0, \\\r\n   input [c-1:0] name``_1,\r\n\r\n`define IO_HLPR_OUTPUT_2_VEC (n,c) \\\r\n   output [c-1:0] n``_0, \\\r\n   output [c-1:0] n``_1,\r\n\r\n`define ADC_IO_SIGNALS(prefix)\\\r\n   `IO_HLPR_INPUT_2_VEC(prefix``bits,6) \\\r\n   `IO_HLPR_OUTPUT_2_VEC(prefix``data,10) \\\r\n   input prefix``clk\r\n\r\nmodule adc_dsp\r\n(\r\n   `ADC_IO_SIGNALS(adc1_)\r\n);\r\nendmodule",
+    "module adc_dsp\r\n(\r\n   input [6-1:0] adc1_bits_0,\r\n   input [6-1:0] adc1_bits_1,\r\n   output [10-1:0] adc1_data_0,\r\n   output [10-1:0] adc1_data_1,\r\n   input adc1_clk\r\n);\r\nendmodule",
+    "module adc_dsp\r\n(\r\n   \r\n   (name,c)\r\n   input [c-1:0] name_0,\r\n   input [c-1:0] name_1,(adc1_bits,6)\r\n   (n,c)\r\n   output [c-1:0] n_0,\r\n   output [c-1:0] n_1,(adc1_data,10)\r\n   input adc1_clk\r\n);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

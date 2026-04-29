@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4126,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4126",
+  "title": "Share pass uses too much system memory for large combinatorial networks",
+  "body": "### Version\r\n\r\nYosys 0.36+85 (git sha1 f26495e54, clang 10.0.0-4ubuntu1 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\n[yosys_crash.zip](https://github.com/YosysHQ/yosys/files/13896897/yosys_crash.zip)\r\n\r\n* Extract the .zip file\r\n* `cd yosys_crash/top`\r\n* `bash ghdl_and_yosys.sh`\r\n\r\nThe `.sh` script invokes the GHDL plugin for yosys and then yosys like so (just with a bunch more VHDL files than show below - sorry):\r\n```sh\r\n#!/usr/bin/env bash\r\nexport GHDL_PREFIX=/usr/local/lib/ghdl\r\n# Elab+Syn\r\n/usr/local/bin/yosys -m ghdl  -p 'ghdl --std=08 -frelaxed ../top/top_f7ea.vhd  -e top_f7ea; synth_ecp5 -abc9 -nowidelut  -top top_f7ea -json top_f7ea.json; write_edif -top top_f7ea  top_f7ea.edf'\r\n```\r\n\r\nThe design is a large combinatorial network between a set of registers. Directory is output from a tool, not human written code.\r\n\r\n### Expected Behavior\r\n\r\nOutput `.json` file, no huge jump in RAM use that locks up the system.\r\n\r\n### Actual Behavior\r\n\r\nDuring step `2.17. Executing SHARE pass (SAT-based resource sharing).` RAM usage on my PC climbs rapidly (typically uses total few GBs then climbs to 10+GB). System/program crashes eventually.\r\n\r\nCan be worked around by commenting out the share pass from https://github.com/YosysHQ/yosys/blob/f26495e54d936830e067e66b91bfac824011897c/techlibs/ecp5/synth_ecp5.cc#L294\r\n\r\nAlso `share -fast` seems to behave the same way.",
+  "labels": [
+    "wontfix"
+  ],
+  "state": "closed",
+  "created_at": "2024-01-11",
+  "closed_at": "2025-02-12",
+  "code_blocks": [
+    "#!/usr/bin/env bash\r\nexport GHDL_PREFIX=/usr/local/lib/ghdl\r\n# Elab+Syn\r\n/usr/local/bin/yosys -m ghdl  -p 'ghdl --std=08 -frelaxed ../top/top_f7ea.vhd  -e top_f7ea; synth_ecp5 -abc9 -nowidelut  -top top_f7ea -json top_f7ea.json; write_edif -top top_f7ea  top_f7ea.edf'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

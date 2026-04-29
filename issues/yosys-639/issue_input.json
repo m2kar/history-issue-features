@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 639,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/639",
+  "title": "Problem about equivalence check",
+  "body": "Hi, I have two Verilog files:\r\n### old.v\r\n``` verilog\r\nmodule top (\r\n    input a,\r\n    input b,\r\n    output [1:0] z);\r\nwire n1, n2;\r\n\r\nmiddle M1(.a(a), .b(b), .c(n1));\r\nassign n2 = ~n1;\r\nassign z[0] = n2;\r\n\r\nassign z[1] = a & b;\r\nendmodule\r\n\r\nmodule middle (\r\n    input a,\r\n    input b,\r\n    output c);\r\nassign c = a | b;\r\nendmodule\r\n```\r\n### new.v\r\n``` verilog\r\nmodule top (\r\n    input a,\r\n    input b,\r\n    output [1:0] z);\r\nwire n1, n2;\r\n\r\nmiddle M1(.a(a), .b(b), .c(n1));\r\nassign n2 = n1;  // z[0] in new.v is different from that in old.v due to this line\r\nassign z[0] = n2;\r\n\r\nassign z[1] = a | b;\r\nendmodule\r\n\r\nmodule middle (\r\n    input a,\r\n    input b,\r\n    output c);\r\nassign c = a | b;\r\nendmodule\r\n```\r\nThen, I used the following script to check their equivalence. The netlists were not flattened on purpose.\r\n```\r\nread_verilog -ignore_redef -nooverwrite  old.v\r\nhierarchy -check -top top\r\nrename top netlist_v1\r\nhierarchy -check -top netlist_v1\r\nprep\r\nsplitnets -ports\r\ndesign -save netlist_v1\r\n\r\nread_verilog -ignore_redef -overwrite  new.v\r\nhierarchy -check -top top\r\nrename top netlist_v2\r\nhierarchy -check -top netlist_v2\r\nprep\r\nsplitnets -ports\r\ndesign -save netlist_v2\r\n\r\ndesign -copy-from netlist_v1 -as netlist_old netlist_v1\r\ndesign -copy-from netlist_v2 -as netlist_new netlist_v2\r\n\r\nequiv_make -inames netlist_old netlist_new miter_netlist\r\nequiv_simple -undef -seq 10\r\nequiv_induct -undef -seq 10\r\nequiv_status\r\n```\r\n\r\n## Expected behavior\r\n\r\nz[0] in old.v and new.v should be different.\r\n\r\n## Actual behavior\r\n\r\nBut equiv_simple reported that they are equivalent.\r\n\r\nI would like to know whether this is a bug. Thanks a lot.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-09-26",
+  "closed_at": "2018-10-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

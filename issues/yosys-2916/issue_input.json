@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2916,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2916",
+  "title": "active low enable for tristate buffer",
+  "body": "@yrabbit found that Gowin tristate buffers \"OEN\" inputs are active low, which I confirmed, but `synth_gowin` does not treat them as such.\r\n\r\nhttps://github.com/YosysHQ/yosys/blob/2e421feb0ea526468493ab008f3c72beb12c2bc6/techlibs/gowin/synth_gowin.cc#L281-L282\r\n\r\nTo reproduce, take the following code and synthesize it with Yosys and the Gowin IDE. You will see the vendor produces an IBUF wired straight to a TBUF, while `synth_gowin` generate a `LUT1` inverter between the two.\r\n\r\n```\r\n`default_nettype none\r\n`define LEDS_NR 3\r\n// TBUF\r\nmodule bidir(\r\n    inout wire io_pin,\r\n    input wire i_output,\r\n    input wire data_to_pin);\r\n\r\n    assign io_pin = (i_output == 1) ? data_to_pin : 1'bz;\r\nendmodule\r\n\r\n//\r\nmodule top (\r\n    input wire clk,\r\n    input wire key_n,\r\n    inout wire [`LEDS_NR-1:0] led\r\n);\r\n\r\nwire [`LEDS_NR-1:0] w_dir;\r\n\r\nbidir bd[`LEDS_NR-1:0](led, w_dir, 1'b1);\r\n\r\nassign w_dir[`LEDS_NR-1:1] = {`LEDS_NR-1{1'b0}};\r\n// switch the direction with the key\r\nassign w_dir[0] = !key_n;\r\nendmodule\r\n```\r\n\r\nI don't see any support in `iopadmap` for this. But it could be it needs to happen at `$_TBUF_` inference or somewhere else.\r\n\r\nWhat's the correct way forward?",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-05",
+  "closed_at": "2025-10-08",
+  "code_blocks": [
+    "`default_nettype none\r\n`define LEDS_NR 3\r\n// TBUF\r\nmodule bidir(\r\n    inout wire io_pin,\r\n    input wire i_output,\r\n    input wire data_to_pin);\r\n\r\n    assign io_pin = (i_output == 1) ? data_to_pin : 1'bz;\r\nendmodule\r\n\r\n//\r\nmodule top (\r\n    input wire clk,\r\n    input wire key_n,\r\n    inout wire [`LEDS_NR-1:0] led\r\n);\r\n\r\nwire [`LEDS_NR-1:0] w_dir;\r\n\r\nbidir bd[`LEDS_NR-1:0](led, w_dir, 1'b1);\r\n\r\nassign w_dir[`LEDS_NR-1:1] = {`LEDS_NR-1{1'b0}};\r\n// switch the direction with the key\r\nassign w_dir[0] = !key_n;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

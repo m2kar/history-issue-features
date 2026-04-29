@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 865,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/865",
+  "title": "Got a different result by adding write_verilog right after read_verilog",
+  "body": "## Steps to reproduce the issue\r\nSample code is as follows.\r\n\r\nmodule tc(clk,A,B,C,D,E,F);\r\ninput clk;\r\ninput[3:0] A,B,C,E;\r\noutput reg[7:0] D,F;\r\nalways @(posedge clk)\r\n\t\tbegin\r\n\t\t\t  D = A + B + C;\r\n\t\t\tF =  A + B + E;\r\n\t\tend\r\nendmodule\r\n\r\nThe following two command sets are supposed to generate the same results.\r\ntcl set 1 (reported 14 FDRE)     filename: run1.tcl\r\nyosys read_verilog tc.v\r\nyosys proc\r\nyosys opt\r\nyosys fsm\r\nyosys opt\r\nyosys memory\r\nyosys opt\r\nyosys synth_xilinx -top tc\r\n\r\ntcl set 2 (reported 12 FDRE)     filename: run2.tcl\r\nyosys read_verilog tc.v\r\nyosys write_verilog temp.v\r\nyosys proc\r\nyosys opt\r\nyosys fsm\r\nyosys opt\r\nyosys memory\r\nyosys opt\r\nyosys synth_xilinx -top tc\r\n\r\nhow to run the tcl files: \"yosys -c run1.tcl\" and \"yosys -c run2.tcl\"\r\n\r\n\r\n\r\n\r\n## Expected behavior\r\n\r\nAfter the synthesis, two command sets are supposed to generate the same results. \r\n(12 FDREs is the result we expect, cause D[7:6] and F[7:6] are always 0s.)\r\n\r\n## Actual behavior\r\n\r\ntcl set1 (run1.tcl) reported 14 FDREs, \r\n\r\n\r\n=== tc ===\r\n\r\n   Number of wires:                 41\r\n   Number of wire bits:             99\r\n   Number of public wires:           7\r\n   Number of public wire bits:      33\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                 73\r\n     FDRE                           14\r\n     LUT2                           24\r\n     MUXCY                          16\r\n     XORCY                          19\r\n\r\nwhereas tcl set2 (run2.tcl) reported 12 FDREs.\r\n\r\n\r\n   Number of wires:                 41\r\n   Number of wire bits:             95\r\n   Number of public wires:           7\r\n   Number of public wire bits:      33\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                 67\r\n     FDRE                           12\r\n     LUT2                           24\r\n     MUXCY                          14\r\n     XORCY                          17\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-11",
+  "closed_at": "2019-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

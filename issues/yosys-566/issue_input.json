@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 566,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/566",
+  "title": "Sync reset",
+  "body": "## Steps to reproduce the issue\r\n\r\n```\r\nmodule sync_reset_test(clk, rst, d, z);\r\n      input clk, rst, d;\r\n      output z;\r\n\r\n  test_m #() my_m (\r\n      .clk(clk),\r\n      .arst(1'b1),\r\n      .srst(rst),\r\n      .d(d),\r\n      .z(z)\r\n    );\r\nendmodule\r\n\r\nmodule test_m (clk, arst, srst, d, z);\r\n\r\n    input   clk;\r\n    input   arst;\r\n    input   srst;\r\n    input   d;\r\n    output  z;\r\n\r\n    reg     q_reg;\r\n\r\n    assign z = q_reg;\r\n\r\n        //always @(posedge clk or posedge arst)\r\n        always @(posedge clk or negedge arst)\r\n        if (arst == 1'b0)\r\n        begin\r\n            q_reg  <= 1'b0;\r\n        end\r\n        else if (srst == 1'b1)\r\n        begin\r\n            q_reg  <= 1'b0;\r\n        end\r\n        else\r\n        begin\r\n            q_reg  <= d;\r\n        end\r\n\r\nendmodule\r\n```\r\n```\r\nread_verilog ...\r\nprep\r\n\r\n```\r\n## Expected behavior\r\nExpect to have $dff with $mux.\r\n\r\n## Actual behavior\r\nResult is $adff with $mux.\r\n\r\nAnother note:\r\nThis alternative \"always\" with \"posedge\" will give you this. \r\nERROR: Async reset \\arst yields non-constant value 1'm for signal \\q_reg.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-06-11",
+  "closed_at": "2018-06-11",
+  "code_blocks": [
+    "module sync_reset_test(clk, rst, d, z);\r\n      input clk, rst, d;\r\n      output z;\r\n\r\n  test_m #() my_m (\r\n      .clk(clk),\r\n      .arst(1'b1),\r\n      .srst(rst),\r\n      .d(d),\r\n      .z(z)\r\n    );\r\nendmodule\r\n\r\nmodule test_m (clk, arst, srst, d, z);\r\n\r\n    input   clk;\r\n    input   arst;\r\n    input   srst;\r\n    input   d;\r\n    output  z;\r\n\r\n    reg     q_reg;\r\n\r\n    assign z = q_reg;\r\n\r\n        //always @(posedge clk or posedge arst)\r\n        always @(posedge clk or negedge arst)\r\n        if (arst == 1'b0)\r\n        begin\r\n            q_reg  <= 1'b0;\r\n        end\r\n        else if (srst == 1'b1)\r\n        begin\r\n            q_reg  <= 1'b0;\r\n        end\r\n        else\r\n        begin\r\n            q_reg  <= d;\r\n        end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

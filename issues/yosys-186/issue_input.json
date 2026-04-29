@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 186,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/186",
+  "title": "Incorrect handling of LHS with {}",
+  "body": "I have found that same assignment split into 2 parts gives different result compared to single one.\nTo be sure that it is a bug I have checked with commercial tool. It gives exactly the same result for both ways to declare such assignment.\n\nHere is command I have used:\n\n```\nyosys -l report1.log -q -p \"read_verilog -DTEST_1 testcase.v; hierarchy -top testcase; proc; memory; opt -full; techmap; write_verilog -noattr testcase1.v\"\nyosys -l report2.log -q -p \"read_verilog -DTEST_2 testcase.v; hierarchy -top testcase; proc; memory; opt -full; techmap; write_verilog -noattr testcase2.v\"\n```\n\nAnd here is testcase.v file:\n\n```\nmodule testcase (\n   input [1:0] adr,\n   input clk,\n   input [1:0] din,\n   output reg [1:0] q\n);\n   reg [1:0] ram [3:0];\n   always@(posedge clk)\n   begin\n`ifdef TEST_1\n     {ram[adr],q} <= {din, ram[adr]};\n`elsif TEST_2\n      ram[adr] <= din;\n      q <= ram[adr];\n`endif\n   end\nendmodule\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-07-07",
+  "closed_at": "2016-07-08",
+  "code_blocks": [
+    "yosys -l report1.log -q -p \"read_verilog -DTEST_1 testcase.v; hierarchy -top testcase; proc; memory; opt -full; techmap; write_verilog -noattr testcase1.v\"\nyosys -l report2.log -q -p \"read_verilog -DTEST_2 testcase.v; hierarchy -top testcase; proc; memory; opt -full; techmap; write_verilog -noattr testcase2.v\"",
+    "module testcase (\n   input [1:0] adr,\n   input clk,\n   input [1:0] din,\n   output reg [1:0] q\n);\n   reg [1:0] ram [3:0];\n   always@(posedge clk)\n   begin\n`ifdef TEST_1\n     {ram[adr],q} <= {din, ram[adr]};\n`elsif TEST_2\n      ram[adr] <= din;\n      q <= ram[adr];\n`endif\n   end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

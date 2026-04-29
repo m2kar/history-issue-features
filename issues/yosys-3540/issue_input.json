@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3540,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3540",
+  "title": "write_smt2: Error when using \"-nobv\" option",
+  "body": "### Version\n\nYosys 0.22+57 (git sha1 518194fac, clang 11.0.1-2 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nIt seems like the `-nobv` option with `wirte_smt2` is not working properly.\r\nMy module:\r\n```\r\n// simple 3 way round-robin arbiter\r\nmodule top (\r\n    input            clk,\r\n    input            rstn,\r\n    input      [2:0] req,\r\n    output     [2:0] grant\r\n);\r\n\r\n    reg [2:0] p;\r\n    wire [5:0] double_req;\r\n    wire [5:0] double_gnt;\r\n\r\n    always @(posedge clk or negedge rstn) begin\r\n        if (!rstn)\r\n        begin\r\n            p <= 3'b001;\r\n        end\r\n        else\r\n        begin\r\n            p <= {p[1:0],p[2]};\r\n        end\r\n    end\r\n\r\n    assign double_req = {req,req};\r\n    assign double_gnt = double_req & ~(double_req - p);\r\n    assign grant = double_gnt[5:3] | double_gnt[2:0];\r\n\r\nendmodule\r\n```\r\nYosys commands:\r\n```\r\nread_verilog top.v\r\nprep\r\nasync2sync\r\ndffunmap\r\nwrite_smt2 -nobv\r\n```\n\n### Expected Behavior\n\nWriting out smt-lib format files without error.\n\n### Actual Behavior\n\nYosys reports:\r\n```\r\nERROR: Unsupported cell type $dff for cell arbiter.$procdff$7.\r\n```\r\n\r\nNote: \r\n`write_smt2` and `write_smt2 -nomem` is working.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2022-11-04",
+  "closed_at": null,
+  "code_blocks": [
+    "// simple 3 way round-robin arbiter\r\nmodule top (\r\n    input            clk,\r\n    input            rstn,\r\n    input      [2:0] req,\r\n    output     [2:0] grant\r\n);\r\n\r\n    reg [2:0] p;\r\n    wire [5:0] double_req;\r\n    wire [5:0] double_gnt;\r\n\r\n    always @(posedge clk or negedge rstn) begin\r\n        if (!rstn)\r\n        begin\r\n            p <= 3'b001;\r\n        end\r\n        else\r\n        begin\r\n            p <= {p[1:0],p[2]};\r\n        end\r\n    end\r\n\r\n    assign double_req = {req,req};\r\n    assign double_gnt = double_req & ~(double_req - p);\r\n    assign grant = double_gnt[5:3] | double_gnt[2:0];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

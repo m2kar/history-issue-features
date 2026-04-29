@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1369,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1369",
+  "title": "SV interfaces fail to synthesize depending on module order",
+  "body": "## Steps to reproduce the issue\r\n\r\nA submodule `\\submod` takes an interface `\\iface` as a port.\r\nA parent module `\\top` instantiates both.\r\n\r\nWhen passing the `\\top` module to Yosys first, there is no error:\r\n\r\n`yosys -f \"verilog -sv\" -p \"read_verilog -icells -lib +/ice40/cells_sim.v; hierarchy -check -top top;\" top.sv submod.sv iface.sv`\r\n\r\nBut when `\\submod` comes before `\\top`:\r\n\r\n`yosys -f \"verilog -sv\" -p \"read_verilog -icells -lib +/ice40/cells_sim.v; hierarchy -check -top top;\" submod.sv top.sv iface.sv`\r\n\r\nThen Yosys fails with this error:\r\n\r\n>5.1. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     \\submod\r\nUsed module:     \\iface\r\nGenerating RTLIL representation for module `\\submod`.\r\nERROR: Module `submod` referenced in module `top` in cell `submod_inst` does not have a port named 'ifaceport'.\r\n\r\nThis can be reproduced with those three files:\r\n\r\n>top.sv\r\n```systemverilog\r\nmodule top(input clk);\r\n    iface #(.YOSYS_BUG_KEEP_IFACE(1)) iface_inst();\r\n    submod submod_inst(.clk, .ifaceport(iface_inst));\r\nendmodule\r\n```\r\n>submod.sv\r\n```systemverilog\r\nmodule submod(input clk, iface ifaceport);\r\n    assign ifaceport.x = 1;\r\nendmodule\r\n```\r\n\r\n>iface.sv\r\n```systemverilog\r\n// We need a dummy parameter when instantiating interfaces or they fail to synthetize\r\ninterface iface #(YOSYS_BUG_KEEP_IFACE = 0) ();\r\n    logic x;\r\nendinterface\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe order should not matter.\r\n\r\n## Actual behavior\r\n\r\nThis could have the same root cause as #1360 since I only reproduce it with the ice40 cell libs, but just in case here are the symptoms.\r\n\r\nIt seems when `\\submod` is processed first by the hierarchy pass, `AstModule::reprocess_module` is called on it early which results in the interface's ports being exploded: `submod_inst.ifaceport` is replaced by `submod_inst.ifaceport.x`.\r\nThen when we expand module `\\top` it still expects to connect to the un-exploded port (`connect \\ifaceport $dummywireforinterface\\iface_inst`)\r\n\r\nExpanding `\\top` first seems to work because it can connect to `top.submod_inst.ifaceport`, before the ports of both modules get exploded.\r\n\r\nI haven't looked into it much further than this.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-09-11",
+  "closed_at": "2019-09-20",
+  "code_blocks": [
+    "module top(input clk);\r\n    iface #(.YOSYS_BUG_KEEP_IFACE(1)) iface_inst();\r\n    submod submod_inst(.clk, .ifaceport(iface_inst));\r\nendmodule",
+    "module submod(input clk, iface ifaceport);\r\n    assign ifaceport.x = 1;\r\nendmodule",
+    "// We need a dummy parameter when instantiating interfaces or they fail to synthetize\r\ninterface iface #(YOSYS_BUG_KEEP_IFACE = 0) ();\r\n    logic x;\r\nendinterface"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

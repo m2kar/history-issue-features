@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 647,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/647",
+  "title": "Internal module wires are not accessible using dot notation",
+  "body": "## Steps to reproduce the issue\r\nThe following code...\r\n\r\n```verilog\r\nmodule foo();\r\n  wire test;\r\nendmodule\r\n\r\nmodule bar();\r\n  foo myfoo();\r\n  wire x = myfoo.test;\r\nendmodule\r\n```\r\n...when read with yosys...\r\n```\r\nyosys -q -h \"read_verilog\" test.v\r\n```\r\n...generates with the following warning:\r\n```\r\ntest.v:8: Warning: Identifier `\\myfoo.test' is implicitly declared.\r\n```\r\n\r\n## Expected behavior\r\n\r\nThis code should read cleanly.\r\n\r\n## Background\r\n\r\nThis issue was prompted by the method described @ZipCPU 's article: https://zipcpu.com/blog/2018/07/06/afifo.html .\r\n\r\nThe article explains how to use formal methods to verify an asychronous FIFO described in this artcle: http://www.sunburst-design.com/papers/CummingsSNUG2002SJ_FIFO1.pdf\r\n\r\nThe FIFO design uses a sub-modules to wrap up address generation RTL that is repeated twice: once for the read-side, and once for the write-side.\r\n\r\nUnfortunately, because the yosys verilog front-end can't access internal wires, @ZipCPU had to unroll the sub-modules into the parent module so that he could access these hidden signals.\r\n\r\nAn alternative would be to expose these wires as ports on the sub-module. However, for more complex deeply nested modules this may become rather impractical.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2018-10-02",
+  "closed_at": null,
+  "code_blocks": [
+    "module foo();\r\n  wire test;\r\nendmodule\r\n\r\nmodule bar();\r\n  foo myfoo();\r\n  wire x = myfoo.test;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

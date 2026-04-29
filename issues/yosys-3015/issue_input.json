@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3015,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3015",
+  "title": "Infers concat in FIRRTL for output ports on LHS ",
+  "body": "## Steps to reproduce the issue\r\nHaving concatenations in the output ports of an instantiated module infers improper FIRRTL.\r\nRun `yosys -s script`\r\n\r\nscript:\r\n```\r\nread_verilog dff.v\r\nopt_clean\r\nwrite_firrtl dff.fir\r\n```\r\ndff.v \r\n```\r\nmodule bsg_dff\r\n(\r\n\tinput clk_i, \r\n\tinput [4-1:0] data_i,\r\n\toutput [4-1:0] data_o\r\n);\r\n\r\n\treg [4-1:0] data_r;\r\n\tassign data_o = data_r;\r\n\talways @(posedge clk_i)\r\n\t\tdata_r <= data_i;\r\nendmodule\r\n\r\nmodule bsg_dff_chain\r\n(\r\n\tinput clk_i,\r\n\tinput [4-1:0] data_i,\r\n\toutput [4-1:0] data_o\r\n);\r\n\r\n\treg [4-1:0] data_delayed;\r\n\tassign data_delayed = data_i;\r\n\tassign data_o = data_delayed[num_stages_p];\r\n\r\n\tbsg_dff\r\n\tch_reg \r\n\t(\r\n\t\t.clk_i(clk_i)\r\n\t\t,.data_i(data_delayed)\r\n\t\t,.data_o({data_delayed[3:1], data_delayed[3]})\r\n\t);\r\nendmodule\r\n```\r\n## Expected behavior\r\n\r\n1. Declare a wire that is the concatenation of output elements\r\n2. Running `firrtl -i dff.fir -X verilog -o dff_converted.v` should generate roughly the same verilog.\r\n\r\n## Actual behavior\r\n\r\n1. Instead infers something like `Cat(a,b) <= c`\r\n2. ~Doesn't generate verilog;~ throws this exception while running firrtl:\r\n`Exception in thread \"main\" firrtl.passes.CheckHighFormLike$InvalidLOCException:  @[dff.v:26.2-31.3]: [module bsg_dff_chain_____] Invalid connect to an expression that is not a reference or a WritePort.`\r\n\r\n## Yosys version\r\n\r\n0.9+4306",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-09-24",
+  "closed_at": null,
+  "code_blocks": [
+    "module bsg_dff\r\n(\r\n\tinput clk_i, \r\n\tinput [4-1:0] data_i,\r\n\toutput [4-1:0] data_o\r\n);\r\n\r\n\treg [4-1:0] data_r;\r\n\tassign data_o = data_r;\r\n\talways @(posedge clk_i)\r\n\t\tdata_r <= data_i;\r\nendmodule\r\n\r\nmodule bsg_dff_chain\r\n(\r\n\tinput clk_i,\r\n\tinput [4-1:0] data_i,\r\n\toutput [4-1:0] data_o\r\n);\r\n\r\n\treg [4-1:0] data_delayed;\r\n\tassign data_delayed = data_i;\r\n\tassign data_o = data_delayed[num_stages_p];\r\n\r\n\tbsg_dff\r\n\tch_reg \r\n\t(\r\n\t\t.clk_i(clk_i)\r\n\t\t,.data_i(data_delayed)\r\n\t\t,.data_o({data_delayed[3:1], data_delayed[3]})\r\n\t);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

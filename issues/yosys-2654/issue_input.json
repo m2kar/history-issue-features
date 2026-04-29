@@ -1,0 +1,26 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2654,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2654",
+  "title": "Yosys asserts on signed signal assigned to unsigned instance port",
+  "body": "## Steps to reproduce the issue\r\n\r\nReduced example:\r\n\r\n`test.v`:\r\n```verilog\r\nmodule test;\r\n\twire signed [31:0] a_ff;\r\n\r\n\tmy_dff #(32) u_my_dff(\r\n\t\t.dout(a_ff[31:0])\r\n\t);\r\nendmodule\r\n```\r\n\r\nYosys:\r\n```\r\nread_verilog -sv test.v\r\n```\r\n\r\n## Expected behavior\r\n\r\nFile gets read correctly. `verilator --lint-only` doesn't have an issue with it.\r\n\r\n## Actual behavior\r\n\r\n```\r\nyosys> read_verilog -sv test.v\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing SystemVerilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `arg->is_signed == sig.as_wire()->is_signed' failed in frontends/ast/genrtlil.cc:1828.\r\n```\r\n\r\nI don't think SystemVerilog requires equal signedness between argument and instance port, but even if it does, it should only check that during elaboration.\r\n\r\n## Isolation\r\n\r\n### Adding submodule definition -> also fail\r\n\r\nThe following case fails too, with the same error:\r\n\r\n```verilog\r\nmodule my_dff #( parameter WIDTH=1) (output logic signed [WIDTH-1:0] dout);\r\n\r\n    assign dout = 0;\r\n\r\nendmodule\r\n\r\nmodule test;\r\n        wire signed [31:0] a_ff;\r\n\r\n        my_dff #(32) u_my_dff(\r\n                .dout(a_ff[31:0])\r\n        );\r\nendmodule\r\n```\r\n\r\n```\r\nyosys> read_verilog -sv test.v\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing SystemVerilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\my_dff'.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `arg->is_signed == sig.as_wire()->is_signed' failed in frontends/ast/genrtlil.cc:1828.\r\n```\r\n\r\n### Remove `signed` qualifier -> pass\r\n\r\nWhen I remove the `signed` qualifiers, Yosys processes both cases fine.\r\n\r\n```verilog\r\nmodule test;\r\n        wire [31:0]  a_ff;\r\n\r\n        my_dff #(32) u_my_dff(\r\n                .dout(a_ff[31:0])\r\n        );\r\nendmodule\r\n```\r\n\r\n### Change argument from vector to 1-bit wire -> pass\r\n\r\nAlso, when I keep the argument signed, but change argument from vector to a one-bit wire, it passes too:\r\n\r\n```verilog\r\nmodule test;\r\n        wire signed  a_ff;\r\n\r\n        my_dff #(1) u_my_dff(\r\n                .dout(a_ff)\r\n        );\r\nendmodule\r\n```\r\n\r\n### Change argument from multi-bit vector to 1-bit vector -> fail\r\n\r\n```verilog\r\nmodule test;\r\n        wire signed [0:0]  a_ff;\r\n\r\n        my_dff #(1) u_my_dff(\r\n                .dout(a_ff[0:0])\r\n        );\r\nendmodule\r\n```\r\n\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-12",
+  "closed_at": "2021-10-26",
+  "code_blocks": [
+    "module test;\r\n\twire signed [31:0] a_ff;\r\n\r\n\tmy_dff #(32) u_my_dff(\r\n\t\t.dout(a_ff[31:0])\r\n\t);\r\nendmodule",
+    "yosys> read_verilog -sv test.v\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing SystemVerilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `arg->is_signed == sig.as_wire()->is_signed' failed in frontends/ast/genrtlil.cc:1828.",
+    "module my_dff #( parameter WIDTH=1) (output logic signed [WIDTH-1:0] dout);\r\n\r\n    assign dout = 0;\r\n\r\nendmodule\r\n\r\nmodule test;\r\n        wire signed [31:0] a_ff;\r\n\r\n        my_dff #(32) u_my_dff(\r\n                .dout(a_ff[31:0])\r\n        );\r\nendmodule",
+    "yosys> read_verilog -sv test.v\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing SystemVerilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\my_dff'.\r\nGenerating RTLIL representation for module `\\test'.\r\nERROR: Assert `arg->is_signed == sig.as_wire()->is_signed' failed in frontends/ast/genrtlil.cc:1828.",
+    "module test;\r\n        wire [31:0]  a_ff;\r\n\r\n        my_dff #(32) u_my_dff(\r\n                .dout(a_ff[31:0])\r\n        );\r\nendmodule",
+    "module test;\r\n        wire signed  a_ff;\r\n\r\n        my_dff #(1) u_my_dff(\r\n                .dout(a_ff)\r\n        );\r\nendmodule",
+    "module test;\r\n        wire signed [0:0]  a_ff;\r\n\r\n        my_dff #(1) u_my_dff(\r\n                .dout(a_ff[0:0])\r\n        );\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 73,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/73",
+  "title": "vpi: tri bus split",
+  "body": "Something that worked last week does not work now. \nWorks with Modelsim as expected.\nWhen tri state bus is split the state is not propagated.\n\n``` cpp\n\n#include <assert.h>\n#include \"vpi_user.h\"\n\nstatic PLI_INT32\nEndOfCompile(s_cb_data *data)\n{\n    s_vpi_time timerec = { vpiSimTime, 0, 0, 0 };\n    s_vpi_value val_b0;\n\n    vpiHandle bd_handle;\n\n    (void)data;\n\n    bd_handle = vpi_handle_by_name(\"test.BD\", 0);\n    assert(bd_handle);\n\n    val_b0.value.str = \"zzzzzzzz\";\n    val_b0.format = vpiBinStrVal;\n    vpi_put_value(bd_handle, &val_b0,  &timerec, vpiInertialDelay);\n\n    timerec.low = 1000;\n    val_b0.value.str = \"00000010\";\n    vpi_put_value(bd_handle, &val_b0,  &timerec, vpiInertialDelay);\n\n    timerec.low = 2000;\n    val_b0.value.str = \"zzzzzzzz\";\n    vpi_put_value(bd_handle, &val_b0,  &timerec, vpiInertialDelay);\n\n    timerec.low = 3000;\n    vpi_put_value(bd_handle, &val_b0,  &timerec, vpiInertialDelay);\n\n    return 0;\n}\n\n\nstatic void\nVPIRegister(void)\n{\n    s_cb_data cb_data;\n    s_vpi_time timerec = { vpiSuppressTime, 0, 0, 0 };\n\n    cb_data.time = &timerec;\n    cb_data.value = 0;\n    cb_data.user_data = 0;\n    cb_data.obj = 0;\n    cb_data.reason = cbEndOfCompile;\n    cb_data.cb_rtn = EndOfCompile;\n\n    vpi_register_cb(&cb_data);\n}\n\nvoid (*vlog_startup_routines[]) () = { VPIRegister, 0};\n```\n\n``` verilog\n`timescale 1 ns / 1 ns\n\nmodule bus_to_ip\n#(\n    parameter DBUSWIDTH = 8\n)\n(\n    inout wire [DBUSWIDTH-1:0] BUS_DATA\n);\n\nassign BUS_DATA = {DBUSWIDTH{1'bz}};\n\nendmodule\n\n\nmodule test(\n    inout wire [7:0] BD\n);\n\n    bus_to_ip #( .DBUSWIDTH(4)) i_bus_to_ip1\n    (\n        .BUS_DATA(BD[3:0])\n    );\n\n    bus_to_ip #( .DBUSWIDTH(8)) i_bus_to_ip2\n    (\n        .BUS_DATA(BD)\n    );\n\n    initial begin\n        $dumpfile(\"testz.vcd\");\n        $dumpvars(0);\n    end\n\n    initial begin\n        #1500\n        $display(\"BUS_IP1 = %b BUS_IP2 = %b @ %0t\", i_bus_to_ip1.BUS_DATA, i_bus_to_ip2.BUS_DATA, $time);\n    end\n\nendmodule\n\n```\n\nOutput:\n\n```\nBUS_IP1 = zzzz BUS_IP2 = 00000010 @ 1500\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-06-30",
+  "closed_at": "2015-07-01",
+  "code_blocks": [
+    "Output:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3703,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3703",
+  "title": "issue while converting verilog of serial adder into aiger",
+  "body": "### Version\r\n\r\nYosys 0.9 (git sha1 1979e0b)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\ni tried to convert serial adder verilog to aiger with the following code:\r\n`read -sv ./serial_adder.v\r\nhierarchy -top serial_adder\r\nflatten\r\nclean -purge\r\nproc \r\nopt\r\nclean -purge\r\ntechmap\r\naigmap\r\nopt\r\nclean -purge\r\nwrite_aiger -ascii ./SA.aag\r\nshow -format dotssssssssssssssssssssssssssssssssssssssssssssss\r\n `\r\n \r\n while the serial adder verilog implementation is as follows:\r\n `module serial_adder \r\n    (   input clk,reset,  //clock and reset\r\n        input a,b,cin,  //note that cin is used for only first iteration.\r\n        output reg s,cout  //note that s comes out at every clock cycle and cout is valid only for last clock cycle.\r\n        );\r\n\r\nreg c,flag;\r\n\r\nalways@(posedge clk or posedge reset)\r\nbegin\r\n    if(reset == 1) begin //active high reset\r\n        s = 0;\r\n        cout = c;\r\n        flag = 0;\r\n    end else begin\r\n        if(flag == 0) begin\r\n            c = cin;  //on first iteration after reset, assign cin to c.\r\n            flag = 1;  //then make flag 1, so that this if statement isnt executed any more.\r\n        end \r\n        cout = 0;\r\n        s = a ^ b ^ c;  //SUM\r\n        c = (a & b) | (c & b) | (a & c);  //CARRY\r\n    end \r\nend\r\n\r\nendmodule \r\n `\r\n The implementation of serial adder is available in [https://verilogcodes.blogspot.com/2017/11/verilog-code-for-n-bit-serial-adder.html](Serial Adder).\r\n\r\n### Expected Behavior\r\n\r\nI should be able to get an AIG file, but I only get an empty file.\r\n\r\n\r\n### Actual Behavior\r\n\r\nI got error:\r\n`Executing AIGER backend.\r\nERROR: Unsupported cell type: $_DFFSR_PPP_ ($auto$simplemap.cc:467:simplemap_dffsr$82)\r\n`\r\nI would appreciate your help in solving this issue.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-14",
+  "closed_at": "2023-03-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

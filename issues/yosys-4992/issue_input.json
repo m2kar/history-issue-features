@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4992,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4992",
+  "title": "ice40_dsp: fix const handling",
+  "body": "_What are the reasons/motivation for this change?_\r\nice40_dsp seems to incorrectly handle unsigned consts. The issue seems to be with unextend function. By searching previous issues I could find this one #2648.\r\n_Explain how this is achieved._\r\nNow unextend is called only on non constant inputs.\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n```\r\nread_verilog << EOT\r\nmodule top(input wire [14:0] a, output wire [31:0] b);\r\nassign b = a*$unsigned(5'b01111);\r\nendmodule\r\nEOT\r\n\r\nprep\r\nice40_dsp\r\nwrite_rtlil\r\n```\r\n\r\n```\r\nread_verilog << EOT\r\nmodule top(input wire signed [14:0] a, output wire signed [31:0] b);\r\nassign b = a*$signed(5'b01111);\r\nendmodule\r\nEOT\r\n\r\nprep\r\nice40_dsp\r\nwrite_rtlil\r\n```\r\n\r\nGives two different connect \\B values in \\SB_MAC16 cell on pre-PR code, and the same value on post-PR code.",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-05",
+  "closed_at": "2025-04-25",
+  "code_blocks": [
+    "read_verilog << EOT\r\nmodule top(input wire [14:0] a, output wire [31:0] b);\r\nassign b = a*$unsigned(5'b01111);\r\nendmodule\r\nEOT\r\n\r\nprep\r\nice40_dsp\r\nwrite_rtlil",
+    "read_verilog << EOT\r\nmodule top(input wire signed [14:0] a, output wire signed [31:0] b);\r\nassign b = a*$signed(5'b01111);\r\nendmodule\r\nEOT\r\n\r\nprep\r\nice40_dsp\r\nwrite_rtlil"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

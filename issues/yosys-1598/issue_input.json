@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1598,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1598",
+  "title": "Revert \"write_xaiger: only instantiate each whitebox cell type once\"",
+  "body": "Reverts YosysHQ/yosys#1588\r\n\r\nThis is a priority as it causes abc9 flows for ecp5 and ice40 to totally break.\r\n\r\nEven the following small example:\r\n\r\n```verilog\r\nmodule led_blink (\r\n        input clk,\r\n        output ledc\r\n    );\r\n \r\n    reg [6:0] led_counter = 0;\r\n    always @( posedge clk ) begin\r\n            led_counter <= led_counter + 1;\r\n    end\r\n    assign ledc = !led_counter[ 6:3 ];\r\n \r\nendmodule\r\n```\r\n\r\nfails `prep; equiv_opt -map +/ecp5/cells_sim.v synth_ecp5 -abc9` with:\r\n\r\n```\r\n  Unproven $equiv $auto$equiv_make.cc:251:find_same_wires$3852: \\ledc_gold \\ledc_gate\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3851: \\led_counter_gold [6] \\led_counter_gate [6]\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3849: \\led_counter_gold [4] \\led_counter_gate [4]\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3847: \\led_counter_gold [2] \\led_counter_gate [2]\r\nFound a total of 4 unproven $equiv cells.\r\n```\r\nand indeed something very strange is going on with these bits:\r\n![Screenshot from 2019-12-27 23-30-03](https://user-images.githubusercontent.com/5521177/71535813-e364e300-2900-11ea-808c-1ba6d62160d4.png)\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-12-27",
+  "closed_at": "2019-12-27",
+  "code_blocks": [
+    "module led_blink (\r\n        input clk,\r\n        output ledc\r\n    );\r\n \r\n    reg [6:0] led_counter = 0;\r\n    always @( posedge clk ) begin\r\n            led_counter <= led_counter + 1;\r\n    end\r\n    assign ledc = !led_counter[ 6:3 ];\r\n \r\nendmodule",
+    "Unproven $equiv $auto$equiv_make.cc:251:find_same_wires$3852: \\ledc_gold \\ledc_gate\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3851: \\led_counter_gold [6] \\led_counter_gate [6]\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3849: \\led_counter_gold [4] \\led_counter_gate [4]\r\n  Unproven $equiv $auto$equiv_make.cc:280:find_same_wires$3847: \\led_counter_gold [2] \\led_counter_gate [2]\r\nFound a total of 4 unproven $equiv cells."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

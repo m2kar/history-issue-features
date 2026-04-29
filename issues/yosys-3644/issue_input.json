@@ -1,0 +1,25 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3644,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3644",
+  "title": "\"abc -liberty ...\" maps to LUTs not the provided library if the \"-dress\" option is used.",
+  "body": "### Version\n\nYosys 0.25+60 (git sha1 611f71c67, clang 14.0.6-2 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWith this file `add4.v`:\r\n```\r\nmodule top(input [3:0] a, input [3:0] b, output [3:0] q);\r\n    assign q = a + b;\r\nendmodule\r\n```\r\nand running this script:\r\n```\r\nread_verilog add4.v\r\nproc\r\nhierarchy -top top\r\n\r\nsynth -flatten\r\n\r\nopt_clean -purge\r\n\r\nabc -liberty  sky130_fd_sc_hd__ff_100C_1v95.lib -dress\r\n\r\nopt_clean -purge\r\n\r\nwrite_verilog -noexpr out.v\r\n```\r\n\r\nthe output file `out.v` contains all `$lut` cells such as:\r\n```\r\n\\$lut  #(\r\n    .LUT(4'h7),\r\n    .WIDTH(32'd2)\r\n  ) _08_ (\r\n    .A({ a[0], b[0] }),\r\n    .Y(_01_)\r\n  );\r\n```\r\n\r\n## To reproduce\r\n[dress.tar.gz](https://github.com/YosysHQ/yosys/files/10493332/dress.tar.gz)\r\n\r\n```\r\ngunzip dress.tar.gz\r\ntar xvf dress.tar\r\ncd dress\r\nyosys add4-dress.ys\r\n```\r\n\r\n\r\n\r\n\r\n\r\n\n\n### Expected Behavior\n\nI would expect `out.v` to contain a mapping to the cells in the sky130 Liberty file.   That\r\n is the behavior if the `-dress` option to the `abc` command is removed:\r\n\r\n```\r\n  sky130_fd_sc_hd__xnor2_1 _17_ (\r\n    .A(b[3]),\r\n    .B(a[3]),\r\n    .Y(_07_)\r\n  );\r\n```\r\n\n\n### Actual Behavior\n\nthe output file `out.v` contains all `$lut` cells such as:\r\n```\r\n\\$lut  #(\r\n    .LUT(4'h7),\r\n    .WIDTH(32'd2)\r\n  ) _08_ (\r\n    .A({ a[0], b[0] }),\r\n    .Y(_01_)\r\n  );\r\n```\r\n",
+  "labels": [
+    "bug",
+    "liberty",
+    "ABC"
+  ],
+  "state": "open",
+  "created_at": "2023-01-24",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input [3:0] a, input [3:0] b, output [3:0] q);\r\n    assign q = a + b;\r\nendmodule",
+    "\\$lut  #(\r\n    .LUT(4'h7),\r\n    .WIDTH(32'd2)\r\n  ) _08_ (\r\n    .A({ a[0], b[0] }),\r\n    .Y(_01_)\r\n  );",
+    "sky130_fd_sc_hd__xnor2_1 _17_ (\r\n    .A(b[3]),\r\n    .B(a[3]),\r\n    .Y(_07_)\r\n  );",
+    "\\$lut  #(\r\n    .LUT(4'h7),\r\n    .WIDTH(32'd2)\r\n  ) _08_ (\r\n    .A({ a[0], b[0] }),\r\n    .Y(_01_)\r\n  );"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

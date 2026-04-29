@@ -1,0 +1,26 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5074,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5074",
+  "title": "CXXRTL: Missing sign extension before shift operation for signed values",
+  "body": "### Version\n\nYosys 0.52+117 (git sha1 bfe05965f, clang++ 14.0.0-1ubuntu1.1 -fsanitize=address -fsanitize=undefined -fPIC -O3 -O1 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize=address,undefined)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThis is the original Verilog file `test.v`:\n```verilog\n`timescale 1ns/1ps\nmodule cqsnqdxwkr (in2, out0);\nreg signed [9:0] reg_7;\ninput wire in2;\noutput wire [12:0] out0;\n\n    initial begin\n        reg_7 = 848;\n    end\n  \n    assign out0 = reg_7 >> in2;\nendmodule\n```\n\nThe following command is used to convert it into a CXXRTL file:\n```\nyosys -p \"read_verilog test.v; write_cxxrtl test.cpp\"\n```\n\nThen, the following `main.cpp` is written to perform simulation:\n```cpp\n#include <iostream>\n#include \"test.cpp\"\n    \nusing namespace std;\nusing namespace cxxrtl_design;\n\nint main() {\n    std::unique_ptr<p_cqsnqdxwkr> mod = std::make_unique<p_cqsnqdxwkr>();\n    mod->p_in2 = cxxrtl::value<1>(1u);\n\n    mod->step();\n\n    cout << (mod->p_out0.get<uint32_t>()) << endl;\n\n    return 0;\n}\n```\n\nCompiled with:\n```\nclang++ -w -g -O3 -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp -o a.out\n```\n\nRun:\n```\n./a.out\n```\n\nThe output is:\n```\n424\n```\n\nI believe there is an issue with this result. Here's the analysis:\n\n1. `reg_7` is a 10-bit signed number initialized to 848, which in binary is `10'b11_0101_0000`.\n\n2.  \n> The right operand is always treated as an unsigned number and has no effect on the signedness of the result. The result signedness is determined by the left-hand operand and the remainder of the expression.\n\nAccording to the description on page 53 of the IEEE Std 1364™-2005 standard, the signedness of the expression `reg_7 >> in2` depends on the left operand `reg_7`. Since `reg_7` is signed, the result of the expression is also signed.\n\n3. According to the IEEE Std 1364™-2005 standard (pages 62–66) and the discussion in [[this StackOverflow post](https://stackoverflow.com/questions/23322737/verilog-shift-extending-result)](https://stackoverflow.com/questions/23322737/verilog-shift-extending-result), in the assignment `assign out0 = reg_7 >> in2;`, the width of each operand is determined by the maximum width among the operands (13 for the left-hand side, and 10 for `reg_7` on the right-hand side). Therefore, before the operation, `reg_7` should be **sign-extended** to 13 bits because it is a signed value.\n\n4. CXXRTL generated the following corresponding code:\n```cpp\np_out0 = shr_su<13>(value<10>{0x350u}, p_in2);\n```\nLooking at the implementation of `shr_su` in `cxxrtl.h`:\n```cpp\ntemplate<size_t BitsY, size_t BitsA, size_t BitsB>\nCXXRTL_ALWAYS_INLINE\nvalue<BitsY> shr_su(const value<BitsA> &a, const value<BitsB> &b) {\n    return a.shr(b).template scast<BitsY>();\n}\n```\nIt can be seen that `a` is **not sign-extended** before the shift operation, which leads to incorrect results.\n\n5. To verify my hypothesis, I tested it with both **Verilator** and **Icarus Verilog (iverilog)**. Both simulators output `4008`, which is the correct result that requires `reg_7` to be sign-extended before the shift.\n\n### Expected Behavior\n\n Before evaluating `assign a = b op c`, if `b` is a signed value and its bit-width is smaller than the width of the expression, `b` should be sign-extended to match the expression's width.\n\n### Actual Behavior\n\nCurrently, this expected behavior is missing",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-29",
+  "closed_at": "2025-05-03",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule cqsnqdxwkr (in2, out0);\nreg signed [9:0] reg_7;\ninput wire in2;\noutput wire [12:0] out0;\n\n    initial begin\n        reg_7 = 848;\n    end\n  \n    assign out0 = reg_7 >> in2;\nendmodule",
+    "yosys -p \"read_verilog test.v; write_cxxrtl test.cpp\"",
+    "#include <iostream>\n#include \"test.cpp\"\n    \nusing namespace std;\nusing namespace cxxrtl_design;\n\nint main() {\n    std::unique_ptr<p_cqsnqdxwkr> mod = std::make_unique<p_cqsnqdxwkr>();\n    mod->p_in2 = cxxrtl::value<1>(1u);\n\n    mod->step();\n\n    cout << (mod->p_out0.get<uint32_t>()) << endl;\n\n    return 0;\n}",
+    "clang++ -w -g -O3 -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp -o a.out",
+    "p_out0 = shr_su<13>(value<10>{0x350u}, p_in2);",
+    "template<size_t BitsY, size_t BitsA, size_t BitsB>\nCXXRTL_ALWAYS_INLINE\nvalue<BitsY> shr_su(const value<BitsA> &a, const value<BitsB> &b) {\n    return a.shr(b).template scast<BitsY>();\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

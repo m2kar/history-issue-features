@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4275,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4275",
+  "title": "Use of system functions in localparam value prevents resolution of port",
+  "body": "Not 100% sure what the standard has to say about using a localparam defined inside a module in its port definitions, but given that these two examples work:\r\n\r\n```\r\nmodule works1 (\r\n    output [N-1:0] foo\r\n);\r\n    localparam N = $clog2(4);\r\n\r\n    assign foo = -1;\r\nendmodule\r\n\r\nmodule works2 (\r\n    output [N:0] foo\r\n);\r\n    localparam N = 2;\r\n\r\n    assign foo = -1;\r\nendmodule\r\n```\r\n\r\nI think this should also work (and verific accept it too):\r\n\r\n```\r\nmodule fails (\r\n    output [N:0] foo\r\n);\r\n    localparam N = $clog2(4);\r\n\r\n    assign foo = -1;\r\nendmodule\r\n```\r\n\r\nHowever with `read_verilog` the combination of using the parameter straight (not in an expression) and defining its value with a function call leads to an error:\r\n```\r\n-- Running command `read_verilog test.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing Verilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\fails'.\r\ntest.v:2: ERROR: Non-constant range in declaration of \\foo\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-03-11",
+  "closed_at": null,
+  "code_blocks": [
+    "module works1 (\r\n    output [N-1:0] foo\r\n);\r\n    localparam N = $clog2(4);\r\n\r\n    assign foo = -1;\r\nendmodule\r\n\r\nmodule works2 (\r\n    output [N:0] foo\r\n);\r\n    localparam N = 2;\r\n\r\n    assign foo = -1;\r\nendmodule",
+    "module fails (\r\n    output [N:0] foo\r\n);\r\n    localparam N = $clog2(4);\r\n\r\n    assign foo = -1;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

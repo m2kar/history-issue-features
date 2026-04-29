@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5541,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5541",
+  "title": "yosys 0.60 tests fail with `ERROR: posix_spawn abc failed` when `ABCEXTERNAL:=abc` is set",
+  "body": "### Version\n\n0.60\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nHi @KrystalDelusion I'm following up from https://github.com/YosysHQ/yosys/issues/5537 with a reproducer for the behaviour of `make test` failing like this when trying to build yosys 0.60 with `ABCEXTERNAL:=abc` under Alpine Linux 3.23.0\n\nWe need an Alpine build environment, which requires generating a couple of temporary keys first:\n\n```\ndocker run --name keys --entrypoint abuild-keygen --env PACKAGER=\"Yosys <yosys@test.org>\" strophy/alpine-abuild:3.23.0 -n\n```\n\nYou will see the key name with some random, e.g.: `/home/builder/.abuild/yosys@test.org-693d24c3.rsa`. Copy the keys to your local `~/.abuild` dir and prepare the aports repo with my yosys branch:\n\n```\nmkdir ~/.abuild\ndocker cp keys:/home/builder/.abuild/yosys@test.org-693d24c3.rsa ~/.abuild/\ndocker cp keys:/home/builder/.abuild/yosys@test.org-693d24c3.rsa.pub ~/.abuild/\ngit clone -b yosys-0.60 https://gitlab.alpinelinux.org/strophy/aports.git\ncd aports\n```\n\nStart the build environment (mount the keys you generated earlier by name):\n\n```\ndocker run \\\n-v \"$PWD:/home/builder/package\" \\\n-v \"$HOME/.abuild/packages:/packages\" \\\n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa.pub:/etc/apk/keys/yosys@test.org-693d24c3.rsa.pub\" \\\n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa.rsa.pub:/home/builder/.abuild/yosys@test.org-693d24c3.rsa.pub\" \\ \n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa:/home/builder/.abuild/yosys@test.org-693d24c3.rsa\" \\ \n-e PACKAGER_PRIVKEY=\"/home/builder/.abuild/badfunkstripe@gmail.com-69131905.rsa\" \\ \n-it --entrypoint bash \\\nstrophy/alpine-abuild:3.23.0\n```\n\nThen run the full build:\n\n```\ncd testing/yosys\nabuild -r\n```\n\nThe build should succeed, but tests should fail. Observe errors like:\n```\nTest: arrays02 -> ERROR!\nNote: Make sure that 'iverilog' is an up-to-date git checkout of Icarus Verilog.\nmake[1]: *** [../tools/autotest.mk:10: arrays02.sv] Error 1\n```\n\nView test error logs:\n```\ncat src/tests/simple/arrays02.err\n> ERROR: posix_spawn abc failed\nwhich abc\n> /usr/bin/abc\n```\n\nModify the APKBUILD file on your host by e.g. commenting out `ABCEXTERNAL:=abc`, run the build again, and the tests should pass. You can also re-run individual steps like this:\n```\nabuild clean\nabuild deps\nabuild unpack\nabuild prepare\nabuild build\nabuild check\n```\n\n\nClean up by deleting the container and `~/.abuild` directory. Thanks for your time and help investigating this, I hope the process is not too involved or time consuming!\n\n### Expected Behavior\n\nyosys should build and test against external abc without errors\n\n### Actual Behavior\n\nConfusing errors about iverilog appear to be masking an underlying issue finding the system `abc` binary, even though this in the path and can be seen after running `abuild deps` with `which abc`",
+  "labels": [
+    "bug",
+    "fix-pending",
+    "regression"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-13",
+  "closed_at": "2025-12-16",
+  "code_blocks": [
+    "docker run --name keys --entrypoint abuild-keygen --env PACKAGER=\"Yosys <yosys@test.org>\" strophy/alpine-abuild:3.23.0 -n",
+    "docker run \\\n-v \"$PWD:/home/builder/package\" \\\n-v \"$HOME/.abuild/packages:/packages\" \\\n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa.pub:/etc/apk/keys/yosys@test.org-693d24c3.rsa.pub\" \\\n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa.rsa.pub:/home/builder/.abuild/yosys@test.org-693d24c3.rsa.pub\" \\ \n-v \"$HOME/.abuild/yosys@test.org-693d24c3.rsa:/home/builder/.abuild/yosys@test.org-693d24c3.rsa\" \\ \n-e PACKAGER_PRIVKEY=\"/home/builder/.abuild/badfunkstripe@gmail.com-69131905.rsa\" \\ \n-it --entrypoint bash \\\nstrophy/alpine-abuild:3.23.0"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

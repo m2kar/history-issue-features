@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 371,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/371",
+  "title": "constant functions with multi-dimensional regs and for-loops",
+  "body": "While elaborating the two modules below, Yosys (as of 5c09f24e48db032d36448125508aa3c28c5b2ef4) throws an assertion from `frontends/ast/simplify.cc:3178` for the first module (with one reg) and from `frontends/ast/simplify.cc:3199` for the second module (with two regs). If either the foor-loop or the multi-dimensioanl regs are removed, no assertions are thrown.\r\n``` Verilog\r\nmodule yosys_constant_function_2(output [7:0] data_o);\r\n\r\n   parameter  WIDTH = 3;\r\n   localparam DEPTH = 1 << WIDTH;\r\n   \r\n   function [7:0] lookup(input [WIDTH-1:0] index);\r\n      integer   i;\r\n      reg [7:0] val_table [DEPTH-1:0];\r\n      begin\r\n         for(i = 0; i < DEPTH; i = i + 1) begin\r\n            val_table[i] = ~(i & 32'hFF);\r\n         end\r\n         lookup = val_table[index];\r\n      end\r\n   endfunction\r\n\r\n   assign data_o = lookup(2);\r\n   \r\nendmodule\r\n```\r\n``` Verilog\r\nmodule yosys_constant_function_3(output [7:0] data_o);\r\n\r\n   parameter  WIDTH = 3;\r\n   localparam DEPTH = 1 << WIDTH;\r\n\r\n   function [7:0] lookup(input select,\r\n                         input [WIDTH-1:0] index);\r\n      integer   i;\r\n      reg [7:0] val_table_a [DEPTH-1:0];\r\n      reg [7:0] val_table_b [DEPTH-1:0];\r\n      begin\r\n         for(i = 0; i < DEPTH; i = i + 1) begin\r\n            val_table_a[i] = ~(i & 8'hFF);\r\n\t    val_table_b[i] = ~(i & 8'hF0);\r\n         end\r\n         lookup = (select) ? val_table_a[index] : val_table_b[index];\r\n      end\r\n   endfunction\r\n\r\n   assign data_o = lookup(1'b1, 5);\r\n   \r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-08-04",
+  "closed_at": "2023-09-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

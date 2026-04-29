@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 120,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/120",
+  "title": "SVA properties (feature request)",
+  "body": "Hi,\n\nI'm thinking about adding support for SVA properties to Yosys. However, it is pretty hard to do that without a simulator to test against. So I've tried all the free and free-as-in-free-beer Verilog simulators I could find, but none of them seem to support SVA properties. This is the test case I'm using right now:\n\n```\nmodule test (\n  input clk, resetn, tvalid, tready,\n  input [7:0] tdata\n);\n  property tvalid_reset;\n    @(posedge clk)\n      !(resetn) & !($isunknown(resetn))\n      ##1 resetn\n      |-> !tvalid;\n  endproperty\n  assert property (tvalid_reset) else $display(\"error: tvalid_reset\");\n\n  property tdata_stable;\n    @(posedge clk)\n      !($isunknown({tvalid,tready,tdata})) &\n      resetn & tvalid & !tready\n      ##1 resetn\n      |-> $stable(tdata);\n  endproperty\n  assert property (tdata_stable) else $display(\"error: tdata_stable\");\nendmodule\n```\n\n(This code is derived from the ARM AXI4-Stream Protocol Assertions r0p1.)\n\nIcarus Verilog (git head) doesn't really like that:\n\n```\n$ iverilog -g2012 test.sv \ntest.sv:5: syntax error\ntest.sv:5: error: invalid module item.\ntest.sv:6: syntax error\ntest.sv:9: error: invalid module item.\ntest.sv:10: syntax error\ntest.sv:11: error: invalid module item.\ntest.sv:13: syntax error\ntest.sv:13: error: invalid module item.\ntest.sv:14: syntax error\ntest.sv:18: error: invalid module item.\ntest.sv:19: syntax error\ntest.sv:20: error: invalid module item.\n```\n\nHowever, I've seen that for example `property` and `endproperty` are at least supported by the lexer.\n\nAre there any plans for supporting (a subset of) SVA properties in Icarus Verilog anytime soon?\n",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2016-08-20",
+  "closed_at": null,
+  "code_blocks": [
+    "module test (\n  input clk, resetn, tvalid, tready,\n  input [7:0] tdata\n);\n  property tvalid_reset;\n    @(posedge clk)\n      !(resetn) & !($isunknown(resetn))\n      ##1 resetn\n      |-> !tvalid;\n  endproperty\n  assert property (tvalid_reset) else $display(\"error: tvalid_reset\");\n\n  property tdata_stable;\n    @(posedge clk)\n      !($isunknown({tvalid,tready,tdata})) &\n      resetn & tvalid & !tready\n      ##1 resetn\n      |-> $stable(tdata);\n  endproperty\n  assert property (tdata_stable) else $display(\"error: tdata_stable\");\nendmodule",
+    "$ iverilog -g2012 test.sv \ntest.sv:5: syntax error\ntest.sv:5: error: invalid module item.\ntest.sv:6: syntax error\ntest.sv:9: error: invalid module item.\ntest.sv:10: syntax error\ntest.sv:11: error: invalid module item.\ntest.sv:13: syntax error\ntest.sv:13: error: invalid module item.\ntest.sv:14: syntax error\ntest.sv:18: error: invalid module item.\ntest.sv:19: syntax error\ntest.sv:20: error: invalid module item."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

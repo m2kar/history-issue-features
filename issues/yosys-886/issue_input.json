@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 886,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/886",
+  "title": "Yosys fails to ignore $readmemh call in generate block to non-existant file",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following code:\r\n\r\n```\r\nmodule\tnofile(i_v, o_v);\r\n\tparameter\tN=4;\r\n\tparameter\tLUTFILE=\"\";\r\n\tparameter [0:0]\tFLAG = 1;\r\n\tinput\twire\t[N-1:0]\ti_v;\r\n\toutput\treg\t\to_v;\r\n\r\n\treg\t[0:0]\tluttbl\t[0:(1<<N)-1];\r\n\tinteger\tk;\r\n\r\n\tgenerate if (FLAG)\r\n\tbegin\r\n\r\n\t\tinitial if (LUTFILE)\r\n\t\t\t$readmemh(LUTFILE, luttbl);\r\n\t\telse begin\r\n\t\t\tfor(k=0; k<(1<<N); k=k+1)\r\n\t\t\t\tluttbl[k] = ^k;\r\n\t\tend\r\n\r\n\t\talways @(*)\r\n\t\t\to_v = luttbl[i_v];\r\n\tend else begin\r\n\r\n\t\talways @(*)\r\n\t\t\to_v = 1'b0;\r\n\r\n\tend endgenerate\r\nendmodule\r\n```\r\n\r\nNotice the parameter, LUTFILE, that would nominally contain a filename for $readmemh.  As set, this parameter is empty.  I've tried setting it to `\"\"` or even `0` with the same effect.  If there's no intermediate generate, the behavior is as I would expect: the file is not read, $readmemh is not called, and yosys doesn't complain about the $readmemh call with a missing file.  However, when I add in the intermediate generate based upon the 1-bit FLAG, things change.\r\n\r\nTo see this, I run yosys with\r\n\r\n    yosys -q -p 'read -formal nofile.v; prep -top nofile'\r\n\r\nand now it fails with: `ERROR: Can not open file .. for \\$readmemh'.\r\n\r\n## Expected behavior\r\n\r\nI expect that the `if` within the generate block should keep the $readmemh from being executed, and thus from failing due to a missing file.  This works fine if there's no generate block for FLAG (not shown above), but fails when this block is added.\r\n\r\n## Actual behavior\r\n\r\nI'm probably being redundant by now, but what's actually happening is that I get an error due to a missing file that yosys wasn't supposed to try to read in the first place.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-03-20",
+  "closed_at": "2022-08-18",
+  "code_blocks": [
+    "module\tnofile(i_v, o_v);\r\n\tparameter\tN=4;\r\n\tparameter\tLUTFILE=\"\";\r\n\tparameter [0:0]\tFLAG = 1;\r\n\tinput\twire\t[N-1:0]\ti_v;\r\n\toutput\treg\t\to_v;\r\n\r\n\treg\t[0:0]\tluttbl\t[0:(1<<N)-1];\r\n\tinteger\tk;\r\n\r\n\tgenerate if (FLAG)\r\n\tbegin\r\n\r\n\t\tinitial if (LUTFILE)\r\n\t\t\t$readmemh(LUTFILE, luttbl);\r\n\t\telse begin\r\n\t\t\tfor(k=0; k<(1<<N); k=k+1)\r\n\t\t\t\tluttbl[k] = ^k;\r\n\t\tend\r\n\r\n\t\talways @(*)\r\n\t\t\to_v = luttbl[i_v];\r\n\tend else begin\r\n\r\n\t\talways @(*)\r\n\t\t\to_v = 1'b0;\r\n\r\n\tend endgenerate\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

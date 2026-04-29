@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5104,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5104",
+  "title": "stat -json does not output valid JSON when using libcache",
+  "body": "### Version\n\nYosys 0.53+3 (git sha1 6378ba10e)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWe `tee stat -liberty ex.lib -json` to a JSON file and then ingest it into other tools. When using the recently added `libcache -enable -all`, this command no longer outputs valid JSON because of these logs: https://github.com/YosysHQ/yosys/blob/6378ba10eb9263dce58fb70afd1b22a62900e273/passes/techmap/libparse.cc#L44\n\nhttps://github.com/YosysHQ/yosys/blob/6378ba10eb9263dce58fb70afd1b22a62900e273/passes/techmap/libparse.cc#L54\n\nRepro steps:\n\n`yosys libparse.tcl`\n\nlibparse.tcl:\n```\nyosys libcache -enable -all\nyosys read_verilog tests/liberty/small.v;\nyosys synth -top small;\nyosys dfflibmap -info -liberty tests/liberty/normal.lib\nputs \"stats json:\"\nyosys stat -liberty tests/liberty/normal.lib -json\n```\n\n### Expected Behavior\n\nThe output of the `stat -liberty tests/liberty/normal.lib -json` command should produce valid JSON that can be directly exported to a file.\n\n### Actual Behavior\n\nThe added logs are triggered in the LibertyParser logic invoked by the stat pass.\n\nThere are a few ways to fix this, such as removing the logs altogether or passing some quiet flag through.\n\n@jix how do you think it is best to resolve this?",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-08",
+  "closed_at": "2025-05-23",
+  "code_blocks": [
+    "yosys libcache -enable -all\nyosys read_verilog tests/liberty/small.v;\nyosys synth -top small;\nyosys dfflibmap -info -liberty tests/liberty/normal.lib\nputs \"stats json:\"\nyosys stat -liberty tests/liberty/normal.lib -json"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

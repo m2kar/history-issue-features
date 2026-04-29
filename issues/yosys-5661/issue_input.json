@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5661,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5661",
+  "title": "Incorrect `$pow` transform by opt_expr",
+  "body": "### Version\n\nv0.61\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\n```\nread_rtlil <<EOF\nmodule \\top\n  wire width 3 input 2 \\binary\n\n  wire width 32 output 3 \\y\n\n  cell $pow $0\n    parameter \\A_WIDTH 32\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 2\n    connect \\B \\binary\n    connect \\Y \\y\n  end\nend\nEOF\n\ndump\nopt_expr\ndump\n```\n\n### Expected Behavior\n\nThe transformed netlist is equivalent to the original\n\n### Actual Behavior\n\n```\n  cell $pow $0\n    parameter \\A_WIDTH 32\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 2\n    connect \\B \\binary\n    connect \\Y \\y\n  end\n```\nis replaced with\n```\n  cell $shl $0\n    parameter \\A_WIDTH 1\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 1'1\n    connect \\B \\binary\n    connect \\Y \\y\n  end\n```\n\nNote the A input of the new instance is tied to `-1`. The function of the two netlists differs, take e.g.\n```\neval -set binary 0\n```\nwhich first gives the result\n```\nEval result: \\y = 1.\n```\nand then\n```\nEval result: \\y = 32'11111111111111111111111111111111.\n```\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2026-02-01",
+  "closed_at": null,
+  "code_blocks": [
+    "read_rtlil <<EOF\nmodule \\top\n  wire width 3 input 2 \\binary\n\n  wire width 32 output 3 \\y\n\n  cell $pow $0\n    parameter \\A_WIDTH 32\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 2\n    connect \\B \\binary\n    connect \\Y \\y\n  end\nend\nEOF\n\ndump\nopt_expr\ndump",
+    "cell $pow $0\n    parameter \\A_WIDTH 32\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 2\n    connect \\B \\binary\n    connect \\Y \\y\n  end",
+    "cell $shl $0\n    parameter \\A_WIDTH 1\n    parameter \\B_WIDTH 3\n    parameter \\A_SIGNED 1\n    parameter \\B_SIGNED 0\n    parameter \\Y_WIDTH 32\n    connect \\A 1'1\n    connect \\B \\binary\n    connect \\Y \\y\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

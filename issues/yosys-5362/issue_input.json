@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5362,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5362",
+  "title": "Don't sort anything ever",
+  "body": "This PR adds one small commit on top of #5315. That commit removes `design->sort();` from all passes that unconditionally run it. I believe Yosys is deterministic with reproducible results with or without those. If abc isn't, then that's a more impactful problem than can be saved by sorting at any point in the flow.\r\n\r\nThe only test that ultimately has to be fixed with this change is `tests/arch/xilinx/dsp_cascade.ys` where the reordering of the design changes the count of some `FDRE` primitives received by synthesis. This change also greatly increases the runtime of `equiv_opt` in that one test despite the size of the SAT problem being exactly the same. Reduced reproducer for this slowdown:\r\n\r\n```\r\ndesign -reset\r\nread_verilog <<EOT\r\nmodule cascade(input clk, input [4:0] a, input [4:0] b, output reg [9:0] o);\r\nreg [4:0] ar1, ar2, ar3, br1, br2, br3;\r\nreg [9:0] m, n;\r\nalways @(posedge clk) begin\r\nar1 <= a;\r\nar2 <= ar1;\r\nar3 <= ar2;\r\nbr1 <= b;\r\nbr2 <= br1;\r\nbr3 <= br2;\r\nm <= ar1 * br1;\r\nn <= ar2 * br2 + m;\r\no <= ar3 * br3 + n;\r\nend\r\nendmodule\r\nEOT\r\nproc\r\ndesign -save read\r\n\r\nequiv_opt -assert -map +/xilinx/cells_sim.v synth_xilinx -noiopad\r\n```\r\n\r\nThis PR **speeds up running synth on jpeg by 5%**, tested with 3 different values for `--hash-idx`. It also likely makes `--hash-idx` a more powerful hyper-optimization input. However it also makes the test suite take around 30% longer to complete on my machine due to the arbitrary change in oredering.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-18",
+  "closed_at": null,
+  "code_blocks": [
+    "design -reset\r\nread_verilog <<EOT\r\nmodule cascade(input clk, input [4:0] a, input [4:0] b, output reg [9:0] o);\r\nreg [4:0] ar1, ar2, ar3, br1, br2, br3;\r\nreg [9:0] m, n;\r\nalways @(posedge clk) begin\r\nar1 <= a;\r\nar2 <= ar1;\r\nar3 <= ar2;\r\nbr1 <= b;\r\nbr2 <= br1;\r\nbr3 <= br2;\r\nm <= ar1 * br1;\r\nn <= ar2 * br2 + m;\r\no <= ar3 * br3 + n;\r\nend\r\nendmodule\r\nEOT\r\nproc\r\ndesign -save read\r\n\r\nequiv_opt -assert -map +/xilinx/cells_sim.v synth_xilinx -noiopad"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2920,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2920",
+  "title": "Unsoundness of init value handling in opt_merge, opt_clean, and/or FfInitVals",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun `opt_clean; opt_merge; opt_dff; opt_clean` on the following:\r\n\r\n```\r\nmodule \\mod\r\n  wire input 1 \\clk\r\n  attribute \\init 2'00\r\n  wire width 2 $q1\r\n  attribute \\init 2'00\r\n  wire width 2 $q2\r\n  wire output 2 width 4 \\q\r\n  cell $dff $ff1\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 1\r\n    connect \\CLK \\clk\r\n    connect \\D 1'0\r\n    connect \\Q $q1 [0]\r\n  end\r\n  cell $dff $ff2\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 1\r\n    connect \\CLK \\clk\r\n    connect \\D 1'0\r\n    connect \\Q $q2 [0]\r\n  end\r\n  cell $dff $ff3\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 2\r\n    connect \\CLK \\clk\r\n    connect \\D 2'00\r\n    connect \\Q { $q1 [1] $q2 [1] }\r\n  end\r\n  connect \\q [0] $q1 [0]\r\n  connect \\q [1] $q2 [0]\r\n  connect \\q [2] $q1 [1]\r\n  connect \\q [3] $q2 [1]\r\nend\r\n```\r\n\r\n## Expected behavior\r\n\r\nRemoval of some useless FFs, no crash.\r\n\r\n## Actual behavior\r\n\r\n```\r\nERROR: Conflicting init values for signal 1'0 ($q2 [1] = 1'x != 1'0).\r\n```\r\n\r\nWhat happens:\r\n\r\n1. `opt_clean` considers the public name `q` more important than the private names `$q1, `$q2`, and thus considers it canonical, reconnects Q outputs of the FFs to it, but does *not* move the init attributes.\r\n2. `opt_merge` merges `$ff1` with `$ff2`, but fails to remove the duplicated init value bit, because it only looks at the directly-connected wire for those.\r\n3. `opt_dff` replaces the merged FF with a constant driver (because of const input matching init value), and calls `FfInitVals` in the process to remove the now-unneeded init value, but this only removes *one* of them.\r\n4. `opt_clean` (or whichever pass happens to construct a `FfInitVals` helper next) sees conflicting initial values (x and 0) on what is now a const-driven net, and crashes.\r\n\r\nWhile I was unable to construct a Verilog testcase for this (probably impossible due to need for FF connected to a private-name wire), this has been triggered in the wild by nMigen, and is *very* tricky to reproduce due to the number of things that have to go wrong.\r\n\r\nThe question here is: which pass is in the wrong? What are the validity constraints on init values?  Is `FfInitVals` in the wrong for failing to deal with a duplicated init val? Is it wrong to have multiple non-x init vals on a single net in the first place? Is `opt_clean` wrong for moving the Q output without moving the init bit?  I really don't know.\r\n\r\nHowever, I'm pretty sure that `opt_merge` is in the wrong for only removing the redundant init sometimes, and will change it to use `FfInitVals` to properly notice init values on faraway wires, thus fixing the above interaction.  The above should still be discussed because it's not going to be the last `init`-related bug.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-07",
+  "closed_at": "2021-08-22",
+  "code_blocks": [
+    "module \\mod\r\n  wire input 1 \\clk\r\n  attribute \\init 2'00\r\n  wire width 2 $q1\r\n  attribute \\init 2'00\r\n  wire width 2 $q2\r\n  wire output 2 width 4 \\q\r\n  cell $dff $ff1\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 1\r\n    connect \\CLK \\clk\r\n    connect \\D 1'0\r\n    connect \\Q $q1 [0]\r\n  end\r\n  cell $dff $ff2\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 1\r\n    connect \\CLK \\clk\r\n    connect \\D 1'0\r\n    connect \\Q $q2 [0]\r\n  end\r\n  cell $dff $ff3\r\n    parameter \\CLK_POLARITY 1'1\r\n    parameter \\WIDTH 2\r\n    connect \\CLK \\clk\r\n    connect \\D 2'00\r\n    connect \\Q { $q1 [1] $q2 [1] }\r\n  end\r\n  connect \\q [0] $q1 [0]\r\n  connect \\q [1] $q2 [0]\r\n  connect \\q [2] $q1 [1]\r\n  connect \\q [3] $q2 [1]\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

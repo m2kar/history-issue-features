@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 4293,
+  "title": "Extreme logic usage",
+  "features": [
+    {
+      "name": "nonblocking_assignment_in_combinational_always_block",
+      "category": "control_flow",
+      "description": "Code should include a combinational always @(*) block with non-blocking assignments (<=) to registers used to compute next-state values",
+      "snippet": "always @(*) begin\n    next[0] <= a ^ b ^ c;\n    next[1] <= d ^ e ^ f;\nend\nalways @(posedge clk) begin\n    reg1 <= next;\nend",
+      "tags": ["nonblocking_assignment", "combinational_logic", "register_inference"],
+      "source_bug_id": "yosys-4293",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4293",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational_xor_tree_with_30plus_inputs",
+      "category": "data_model",
+      "description": "Code should include wide XOR expressions with 30+ input terms computed in a combinational block",
+      "snippet": "next[0] <= crc_reg[0] ^ crc_reg[24] ^ data1[7] ^ crc_reg[29] ^ data1[2] ^ crc_reg[28] ^ data1[3] ^ crc_reg[10] ^ crc_reg[26] ^ data1[5] ^ data1[21] ^ crc_reg[9] ^ crc_reg[25] ^ data1[6] ^ data1[22] ^ crc_reg[6] ^ crc_reg[30] ^ data1[1] ^ crc_reg[16] ^ data1[15] ^ crc_reg[31] ^ data1[0] ^ crc_reg[12] ^ data1[19] ^ data1[25] ^ data1[31];",
+      "tags": ["xor_tree", "wide_xor", "combinational_logic"],
+      "source_bug_id": "yosys-4293",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4293",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "intermediate_combinational_register_chain",
+      "category": "data_model",
+      "description": "Code should include a two-stage register pipeline where combinational logic computes intermediate values (next) that feed into a clocked register (reg) in a subsequent always block",
+      "snippet": "reg [31:0] next = 32'd0;\nreg [31:0] crc_reg = 32'd4294967295;\nalways @(*) begin\n    next[0] <= crc_reg[0] ^ crc_reg[24] ^ data1[7];\n    // ... more next bit computations\nend\nalways @(posedge sys_clock) begin\n    crc_reg <= next;\nend",
+      "tags": ["register_pipeline", "combinational_next_state", "clocked_register"],
+      "source_bug_id": "yosys-4293",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4293",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional_partial_word_assignment",
+      "category": "control_flow",
+      "description": "Code should include conditional assignments to registers based on bit-selects of a control signal, where different width slices are assigned based on bit position",
+      "snippet": "if (last_be1[0]) begin\n    data1 <= data0[7:0];\n    error_1 <= (next != 32'd2164574534);\nend\nif (last_be1[1]) begin\n    data1 <= data0[15:0];\n    error_1 <= (next != 30'd981122162);\nend",
+      "tags": ["conditional_assignment", "partial_word", "bit_select"],
+      "source_bug_id": "yosys-4293",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4293",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

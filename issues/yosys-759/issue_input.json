@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 759,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/759",
+  "title": "memory_collect: do not truncate 'x from \\INIT",
+  "body": "The semantics of an RTLIL constant that has less bits than its declared bit width is zero padding. Therefore, if the output of memory_collect will be used for simulation, truncating 'x from the end of \\INIT will produce incorrect simulation results.\r\n\r\nFor example, this is the `write_verilog` output for a 16-deep memory initialized at two first locations:\r\n```verilog\r\n  reg [7:0] mem [15:0];\r\n  initial begin\r\n    mem[0] = 8'haa;\r\n    mem[1] = 8'h55;\r\n    mem[2] = 8'b0000000x;\r\n    mem[3] = 8'h00;\r\n    // [snip]\r\n    mem[15] = 8'h00;\r\n  end\r\n```\r\nAnd this is the `write_verilog` output after this patch:\r\n```verilog\r\n  initial begin\r\n    mem[0] = 8'haa;\r\n    mem[1] = 8'h55;\r\n    mem[2] = 8'hxx;\r\n    // [snip]\r\n    mem[15] = 8'hxx;\r\n  end\r\n```\r\nThe former listing is clearly incorrect, and the bug is caused by, I believe, the fact that RTLIL doesn't appear to have the same x-extension rules as Verilog. One of the two needs to happen: either no `x` are removed from `\\INIT` value, or no leading `x` is left in the `\\INIT` value. I have chosen the former fix for this PR because it preserves what I understand the intent of the existing code.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-21",
+  "closed_at": "2018-12-21",
+  "code_blocks": [
+    "reg [7:0] mem [15:0];\r\n  initial begin\r\n    mem[0] = 8'haa;\r\n    mem[1] = 8'h55;\r\n    mem[2] = 8'b0000000x;\r\n    mem[3] = 8'h00;\r\n    // [snip]\r\n    mem[15] = 8'h00;\r\n  end",
+    "initial begin\r\n    mem[0] = 8'haa;\r\n    mem[1] = 8'h55;\r\n    mem[2] = 8'hxx;\r\n    // [snip]\r\n    mem[15] = 8'hxx;\r\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

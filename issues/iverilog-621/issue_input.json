@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 621,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/621",
+  "title": "accessing 2D array defined through generate command",
+  "body": "I have a module that generates a memory with a nested generate command. \r\nThe final array is a 2D array with 32x4 elements each one on 8 bits.\r\nI see that this array is not automatically dumped using $dumpvars.\r\nI the assigned the elements to a wire and dumped them. \r\nThe results are tricky.  The varius elements are visualized correctly with the execption of the element with [0,0] index.\r\n\r\nBelow the example of the code I put in the TB.\r\n\r\n// definition of the 2D array that accesses to the internal hierarchy\r\nwire [31:0] MEM [31:0];\r\ngenvar ii;\r\ngenerate\r\nfor (ii=0;ii<32;ii=ii+1)\r\n\tassign MEM[ii] = {UUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[3].byte_ram[ii],\r\n\t\t\t\tUUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[2].byte_ram[ii],\r\n\t\t\t\tUUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[1].byte_ram[ii],\r\n\t\t\t\tUUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[0].byte_ram[ii]};\r\nendgenerate\r\n\r\n// code for the initial block\r\ninitial\r\nbegin\r\n$dumpfile(\"waveform.vcd\");\r\n$dumpvars;\r\nfor (idx = 0; idx < 32; idx = idx + 1) $dumpvars(0, MEM[idx]);\r\n\r\nEverything works fine with the MEM elements from 1 to 31. They are visualized and when I chenge the values they behave accordingly.\r\nBut when I work with the element MEM[0] only the higher 16bits are changed and the other ones remain xxxxxx.\r\nIt looks like there is problem in conncting the MEM0] with the elements:\r\nUUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[1].byte_ram[0],\r\nUUT.Mycirc.BRAM_GEN[0].BYTE_BRAM_GEN[0].byte_ram[0]\r\n\r\n* It is not a visualization probelm. I checke the vcd file visualized by GTKwave and it stores the wrong result.\r\n* the same code is simulate in Mdelsim and provides correct results also for the MEM0] element.\r\n\r\nAny hint?\r\n\r\nThx\r\n\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-02-21",
+  "closed_at": "2022-03-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

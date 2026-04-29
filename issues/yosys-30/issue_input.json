@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 30,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+  "title": "MUXOPT does not scale",
+  "body": "Hi,\n\nthe mux optimizer seems to have a problem with scalability in some designs. Try the somewhat nonsensical test case below to create a mux tree controlled by parallel prefix comparators (should synthesize to a few 100 gates). If BITS is larger than a few bits, the optimizer will spin forever. How is this supposed to scale?\n\n```\n/* Count leading zeroes by independent prefix comparison: works for non-power-of-two sizes: */\nmodule count_leading_zeroes (in, out);\n        parameter BITS = 4; /* no problem */\n/* set parameter BITS = 32 or some BIG_NUMBER and watch the optimizer spinning.... */\n        localparam OUT_BITS = $clog2(BITS) + 1;\n        input [BITS-1:0] in;\n        output reg [OUT_BITS-1:0] out;\n        generate\n                genvar i;\n                for (i=0; i<BITS; i=i+1) begin\n                        always @(*) begin\n                                if (in[BITS-1:BITS-1-i] == { { i { 1'b0 } }, 1'b1 }) begin\n                                        out = i;\n                                end\n                        end\n                end\n                always @(*) begin\n                        if (in == 0) begin\n                                out = { 1'b1 , { OUT_BITS - 1 { 1'b0 } } };\n                        end\n                end\n        endgenerate\nendmodule\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-03-19",
+  "closed_at": "2014-03-19",
+  "code_blocks": [
+    "/* Count leading zeroes by independent prefix comparison: works for non-power-of-two sizes: */\nmodule count_leading_zeroes (in, out);\n        parameter BITS = 4; /* no problem */\n/* set parameter BITS = 32 or some BIG_NUMBER and watch the optimizer spinning.... */\n        localparam OUT_BITS = $clog2(BITS) + 1;\n        input [BITS-1:0] in;\n        output reg [OUT_BITS-1:0] out;\n        generate\n                genvar i;\n                for (i=0; i<BITS; i=i+1) begin\n                        always @(*) begin\n                                if (in[BITS-1:BITS-1-i] == { { i { 1'b0 } }, 1'b1 }) begin\n                                        out = i;\n                                end\n                        end\n                end\n                always @(*) begin\n                        if (in == 0) begin\n                                out = { 1'b1 , { OUT_BITS - 1 { 1'b0 } } };\n                        end\n                end\n        endgenerate\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

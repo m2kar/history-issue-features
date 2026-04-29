@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1092,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1092",
+  "title": "Can't get error from 'setundef' command.",
+  "body": "## Steps to reproduce the issue\r\n\r\nHow to get this error from the command: \"One of the options -zero, -one, -anyseq, -anyconst, or -random <seed> must be specified.\"\r\n\r\nI have tried this command but didn't get an error:\r\n`setundef -random 256 -zero -one -anyseq -anyconst\r\n`\r\n\r\n**But this error is reported when use this command:**\r\n```\r\nread_verilog top.v\r\nsetundef -undriven\r\n```\r\n20. Executing SETUNDEF pass (replace undef values with defined constants).\r\nERROR: One of the options -zero, -one, -anyseq, -anyconst, or -random <seed> must be specified.\r\n\r\n**And should be:**\r\n\r\nERROR: The 'setundef' command can't operate in -undriven mode on modules with processes. Run 'proc' first.\r\n\r\n**test case:**\r\n```\r\nmodule top\r\n(\r\n input x,\r\n input y,\r\n input cin,\r\n\r\n output reg A,\r\n output cout\r\n );\r\n parameter X = 1;\r\n wire o;\r\n\r\n`ifndef BUG\r\nalways @(posedge cin)\r\n\tA <= o;\r\n\r\n//assign cout =  cin? y : x;\r\n\r\nmiddle u_mid (.x(x),.o(o));\r\n`else\r\nassign {cout,A} =  cin - y * x;\r\n`endif\r\n\r\nendmodule\r\n\r\nmodule middle\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule\r\n```\r\n## Expected behavior\r\n\r\nERROR: One of the options -zero, -one, -anyseq, -anyconst, or -random <seed> must be specified.\r\n\r\n## Actual behavior\r\n\r\nNo errors.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-12",
+  "closed_at": "2020-04-15",
+  "code_blocks": [
+    "module top\r\n(\r\n input x,\r\n input y,\r\n input cin,\r\n\r\n output reg A,\r\n output cout\r\n );\r\n parameter X = 1;\r\n wire o;\r\n\r\n`ifndef BUG\r\nalways @(posedge cin)\r\n\tA <= o;\r\n\r\n//assign cout =  cin? y : x;\r\n\r\nmiddle u_mid (.x(x),.o(o));\r\n`else\r\nassign {cout,A} =  cin - y * x;\r\n`endif\r\n\r\nendmodule\r\n\r\nmodule middle\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

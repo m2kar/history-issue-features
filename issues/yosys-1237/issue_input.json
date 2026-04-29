@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1237,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1237",
+  "title": "VHDL Initial values not ignored when also set in combinatorial process",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following VHDL test case:\r\n\r\n```vhdl\r\nlibrary ieee;\r\nuse ieee.std_logic_1164.all;\r\n\r\nentity tst is\r\n  port (\r\n    i_clk    : In   std_logic;\r\n    i_val    : In   std_logic;\r\n    o_val    : out  std_logic);\r\nend entity tst;\r\n\r\narchitecture implementation of tst is\r\n\tsignal\tw_val : std_logic := '0';\r\n\tsignal\tr_val : std_logic := '1';\r\nbegin\r\n\r\n\tw_val <= r_val;\r\n\r\n\tprocess(i_clk)\r\n\tbegin\r\n\t\tif (i_clk'event and i_clk = '1') then\r\n\t\t\tr_val <= i_val;\r\n\t\tend if;\r\n\tend process;\r\n\r\n\to_val <= w_val;\r\n\r\nend architecture;\r\n```\r\n\r\nprocessed with the following SBY script,\r\n\r\n```\r\n[options]\r\nmode prove\r\ndepth 5\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -vhdl tst.vhd\r\nprep -top tst\r\n\r\n[files]\r\ntst.vhd\r\n```\r\n\r\nNotice in this construct that contradictory initial values are given to w_val.\r\n\r\n## Expected behavior\r\n\r\nI understand this is a common VHDL coding style.  Looking through a popular vendor's code, I'm seeing many examples of it.  I am not expecting this to generate a warmup failure, but rather for the initial value to be ignored when overridden by a combinatorial assignment.\r\n\r\n## Actual behavior\r\n\r\nWarmup failure.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-07-30",
+  "closed_at": "2019-08-10",
+  "code_blocks": [
+    "library ieee;\r\nuse ieee.std_logic_1164.all;\r\n\r\nentity tst is\r\n  port (\r\n    i_clk    : In   std_logic;\r\n    i_val    : In   std_logic;\r\n    o_val    : out  std_logic);\r\nend entity tst;\r\n\r\narchitecture implementation of tst is\r\n\tsignal\tw_val : std_logic := '0';\r\n\tsignal\tr_val : std_logic := '1';\r\nbegin\r\n\r\n\tw_val <= r_val;\r\n\r\n\tprocess(i_clk)\r\n\tbegin\r\n\t\tif (i_clk'event and i_clk = '1') then\r\n\t\t\tr_val <= i_val;\r\n\t\tend if;\r\n\tend process;\r\n\r\n\to_val <= w_val;\r\n\r\nend architecture;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

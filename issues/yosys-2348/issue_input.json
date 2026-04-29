@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2348,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2348",
+  "title": "SystemVerilog structs cannot be used in module arguments",
+  "body": "## Steps to reproduce the issue\r\n\r\n```systemverilog\r\ntypedef struct packed {\r\n\treg foo;\r\n} bar;\r\n\r\nmodule baz (\r\n\tinput bar b,\r\n\toutput wire qux,\r\n);\r\n\r\n\tassign qux = b.foo;\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nParses, synthesizes, etc.\r\n\r\n## Actual behavior\r\n\r\n```\r\n$ yosys -qp \"read -sv test.sv\"\r\ntest.sv:6: ERROR: syntax error, unexpected TOK_USER_TYPE\r\n```\r\n\r\n---\r\n\r\nA workaround for now is to do something like\r\n\r\n```systemverilog\r\ntypedef struct packed {\r\n\treg foo;\r\n} bar;\r\n\r\ninterface wrapper;\r\n\tbar b;\r\nendinterface\r\n\r\nmodule baz (\r\n\twrapper w,\r\n\toutput wire qux,\r\n);\r\n\r\n\tassign qux = w.b.foo;\r\nendmodule\r\n```\r\n\r\nbut this is not ideal since it introduces another level of indirection.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2020-08-19",
+  "closed_at": "2021-02-28",
+  "code_blocks": [
+    "typedef struct packed {\r\n\treg foo;\r\n} bar;\r\n\r\nmodule baz (\r\n\tinput bar b,\r\n\toutput wire qux,\r\n);\r\n\r\n\tassign qux = b.foo;\r\nendmodule",
+    "typedef struct packed {\r\n\treg foo;\r\n} bar;\r\n\r\ninterface wrapper;\r\n\tbar b;\r\nendinterface\r\n\r\nmodule baz (\r\n\twrapper w,\r\n\toutput wire qux,\r\n);\r\n\r\n\tassign qux = w.b.foo;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

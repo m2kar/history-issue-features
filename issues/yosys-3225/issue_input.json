@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3225,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3225",
+  "title": "Synthesizing large memory blocks takes a really long time.",
+  "body": "## Steps to reproduce the issue\r\n\r\ne.g. synthesize:\r\n\r\n```\r\n// represents memory controller (plus memory that the memory is controlling)\r\nmodule mem(\r\n    input we, clk,\r\n    input [15:0] read_addr,\r\n    input [15:0] write_addr,\r\n    output [15:0] read_data,\r\n    input [15:0] write_data,\r\n\r\n    input [15:0] oob_write_addr,\r\n    input [15:0] oob_write_data,\r\n    input oob_wen\r\n);\r\n    reg [15:0] mem [65536];\r\n\r\n    always @(posedge clk) begin\r\n        if (we) begin\r\n            mem[write_addr] <= write_data;\r\n        end\r\n        if(oob_wen) begin\r\n            mem[oob_write_addr] <= oob_write_data;\r\n        end\r\n    end\r\n    assign read_data = mem[read_addr];\r\nendmodule\r\n```\r\n\r\nAnd use following yosys script:\r\n```\r\nread_verilog -sv src/mem.sv\r\nsynth\r\n```\r\n\r\n## Expected behavior\r\n\r\nGiven that it's a single memory block, I would have expected that one could synthesize for one memory location, and just replicate that 65,526 times for the other memory locations?\r\n\r\n## Actual behavior\r\n\r\nTreats each memory location as its own special snowflake, running full optimization passes on every single memroy location, which takes a really long time.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-04",
+  "closed_at": "2022-03-05",
+  "code_blocks": [
+    "// represents memory controller (plus memory that the memory is controlling)\r\nmodule mem(\r\n    input we, clk,\r\n    input [15:0] read_addr,\r\n    input [15:0] write_addr,\r\n    output [15:0] read_data,\r\n    input [15:0] write_data,\r\n\r\n    input [15:0] oob_write_addr,\r\n    input [15:0] oob_write_data,\r\n    input oob_wen\r\n);\r\n    reg [15:0] mem [65536];\r\n\r\n    always @(posedge clk) begin\r\n        if (we) begin\r\n            mem[write_addr] <= write_data;\r\n        end\r\n        if(oob_wen) begin\r\n            mem[oob_write_addr] <= oob_write_data;\r\n        end\r\n    end\r\n    assign read_data = mem[read_addr];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

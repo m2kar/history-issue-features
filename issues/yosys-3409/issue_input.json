@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3409,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3409",
+  "title": "`$mem_v2` cells are not stored in `module->memories`, causing some passes to be unaware of them",
+  "body": "I suspect this may already be a known issue, but just in case it isn't I'm writing it up because it caught me out today.\r\n\r\nEdit: I've had a bit more of a play and this may just be misunderstanding about what is meant to go on and what the behaviour was before, in which case just close the issue.\r\n\r\nAs I understand it, memories used to be stored separately to cells in `module->memories`, whereas with the recent memory work by mwk they are now instead represented with `$mem_v2` cells. There seem to be some passes that are unaware of this change and thus are incorrectly only checking `module->memories` for the existence of memories.\r\n\r\nA lot of these passes are ones that don't work on unmapped memories so try to check if there are memories using something like `module->memories.size() > 0` or `module->has_memories()`. This means they miss `$mem_v2` cells which can lead to a `$mem_v2` cell being referenced in output without an implementation provided (e.g. write_spice/edif/blif), or in the case of write_aiger,, a warning message isn't produced.\r\n\r\nThis also means that `stat` displays 0 memories, which is potentially confusing, although this may be intended behaviour.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-07-10",
+  "closed_at": "2022-07-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

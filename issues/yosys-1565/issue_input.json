@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1565,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1565",
+  "title": "sim pass assertion failure on unflattened design with unused port",
+  "body": "## Steps to reproduce the issue\r\n\r\nTo reproduce, create the following Verilog file,\r\n\r\n```verilog\r\nmodule check(clk, rst, value, out);\r\n\tinput\twire\tclk, rst, value;\r\n\toutput\twire\tout;\r\n\r\n\tsubmod m1(.clk(clk), .rst(rst), .value(value), .out(out), .count());\r\nendmodule\r\n\r\nmodule submod(clk, rst, value, out, count);\r\n\tinput\twire\tclk, rst, value;\r\n\toutput\twire\tout;\r\n\toutput\twire\t[7:0]\tcount;\r\n\r\n\talways @(posedge clk)\r\n\tif (rst)\r\n\t\tcount <= 0;\r\n\telse\r\n\t\tcount <= count + 1;\r\n\r\n\tassign\tout = value;\r\nendmodule\r\n```\r\n\r\nTogether with the Yosys script,\r\n\r\n```text\r\nread_verilog -sv check.v\r\nprep -top check\r\nsim -d -clock clk -reset rst -rstlen 1 -n 1 -w check\r\n```\r\n\r\nThen run `yosys -s script.ys`.\r\n\r\n## Expected behavior\r\n\r\nI expect the tool to simulate a single step without errors.\r\n\r\n## Actual behavior\r\n\r\nThe core crashes with an internal log_assert() error in passes/sat/sim.cc:set_state()\r\n\r\nAt issue is the null reference to the `count` output of the submodule.  Inside set_state(), the simulation tries to set a zero length value--associated with the count output of the submodule that ... doesn't go anywhere.\r\n\r\nIf the script file is adjusted to include `flatten`, the assertion failure vanishes.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-12-10",
+  "closed_at": "2019-12-19",
+  "code_blocks": [
+    "module check(clk, rst, value, out);\r\n\tinput\twire\tclk, rst, value;\r\n\toutput\twire\tout;\r\n\r\n\tsubmod m1(.clk(clk), .rst(rst), .value(value), .out(out), .count());\r\nendmodule\r\n\r\nmodule submod(clk, rst, value, out, count);\r\n\tinput\twire\tclk, rst, value;\r\n\toutput\twire\tout;\r\n\toutput\twire\t[7:0]\tcount;\r\n\r\n\talways @(posedge clk)\r\n\tif (rst)\r\n\t\tcount <= 0;\r\n\telse\r\n\t\tcount <= count + 1;\r\n\r\n\tassign\tout = value;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

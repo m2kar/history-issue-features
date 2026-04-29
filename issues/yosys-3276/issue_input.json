@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3276,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3276",
+  "title": "Errors while trying to compile for MINGW64 in Windows 10 ",
+  "body": "## Steps to reproduce the issue\r\n\r\nI've ran these commands:\r\n```\r\ngit clone https://github.com/YosysHQ/yosys.git\r\ncd yosys\r\nmake config-msys2-64\r\nmake\r\n```\r\n\r\n### Error 01\r\n\r\n```\r\ncouldn't read file \"/proc/1674/fd/63\": no such file or directory\r\n[  2%] Building kernel/yosys.o\r\n```\r\nWorked for me after changing this line in the Makefile:\r\n```\r\nTCL_VERSION ?= tcl$(shell bash -c \"tclsh <(echo 'puts [info tclversion]')\")\r\n```\r\nTo:\r\n```\r\nTCL_VERSION ?= tcl$(shell echo \"puts [info tclversion]\" | tclsh)\r\n```\r\n\r\n### Error 02\r\n\r\n```\r\n[100%] Building yosys.exe\r\nC:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/11.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: cannot find -ltcl8.6: No such file or directory\r\ncollect2.exe: error: ld returned 1 exit status\r\nmake: *** [Makefile:709: yosys.exe] Error 1\r\n```\r\nThe Makefile has this if-else statement to define LDLIBS:\r\n```\r\nifeq ($(OS), FreeBSD)\r\n# FreeBSD uses tcl8.6, but lib is named \"libtcl86\"\r\nLDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --silence-errors --libs tcl || echo -l$(TCL_VERSION) | tr -d '.')\r\nelse\r\nLDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --silence-errors --libs tcl || echo -l$(TCL_VERSION))\r\nendif\r\n```\r\nFor MINGW64, I think we need the LDLIBS of the \"FreeBSD\" if branch:\r\n```\r\nLDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --silence-errors --libs tcl || echo -l$(TCL_VERSION) | tr -d '.')\r\n```\r\nThis changed the ld argument -ltcl8.6 to -ltcl86 and worked for me.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-04-09",
+  "closed_at": null,
+  "code_blocks": [
+    "ifeq ($(OS), FreeBSD)\r\n# FreeBSD uses tcl8.6, but lib is named \"libtcl86\"\r\nLDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --silence-errors --libs tcl || echo -l$(TCL_VERSION) | tr -d '.')\r\nelse\r\nLDLIBS += $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) --silence-errors --libs tcl || echo -l$(TCL_VERSION))\r\nendif"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

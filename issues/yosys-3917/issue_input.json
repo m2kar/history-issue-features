@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3917,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3917",
+  "title": "`$print` cells converted from `$display` tasks don't sample signals according to Verilog semantics",
+  "body": "### Version\n\nYosys 0.32+76 (git sha1 73cb4977b2e, clang++ 11.1.0 -fPIC -Os) with patch for print support in sim command\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\nTake the following script\r\n\r\n```\r\nread_verilog <<EOF\r\nmodule top(clk);\r\ninput wire clk;\r\n\r\nreg [7:0] counter = 0;\r\nalways @(posedge clk) begin\r\n    counter = counter + 1;\r\nend\r\n\r\nreg [7:0] save;\r\nalways @(posedge clk) begin\r\n    save = counter;\r\n    $display(\"counter %x save %x\", counter, save);\r\nend\r\nendmodule\r\nEOF\r\nprep\r\nsim -q -clock clk\r\n```\n\n### Expected Behavior\n\n`counter` and `save` have the same value as far as the print is concerned, i.e. the following gets printed\r\n\r\n```\r\ncounter 00 save 00\r\ncounter 01 save 01\r\ncounter 02 save 02\r\ncounter 03 save 03\r\ncounter 04 save 04\r\ncounter 05 save 05\r\n...\r\n```\r\n\r\nThis is what happens with iverilog.\n\n### Actual Behavior\n\nLog output\r\n\r\n```\r\ncounter 01 save 00\r\ncounter 02 save 01\r\ncounter 03 save 02\r\ncounter 04 save 03\r\ncounter 05 save 04\r\ncounter 06 save 05\r\n...\r\n```\r\n\r\nDesign after `prep`\r\n\r\n![output](https://github.com/YosysHQ/yosys/assets/382160/db873cdf-cabf-4bbc-befd-0b840cfef437)\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-05",
+  "closed_at": "2023-09-11",
+  "code_blocks": [
+    "read_verilog <<EOF\r\nmodule top(clk);\r\ninput wire clk;\r\n\r\nreg [7:0] counter = 0;\r\nalways @(posedge clk) begin\r\n    counter = counter + 1;\r\nend\r\n\r\nreg [7:0] save;\r\nalways @(posedge clk) begin\r\n    save = counter;\r\n    $display(\"counter %x save %x\", counter, save);\r\nend\r\nendmodule\r\nEOF\r\nprep\r\nsim -q -clock clk"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

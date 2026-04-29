@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 557,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/557",
+  "title": "conditional initial value for async register",
+  "body": "RE: https://github.com/freechipsproject/rocket-chip/commit/41702a950f2fdc9a247b654869bff6a9389a9bb2\r\n\r\nA statement was added in async reg initial block that is unsupported by yosys.\r\n\r\n## Steps to reproduce the issue\r\n\r\n[racecond.zip](https://github.com/YosysHQ/yosys/files/2064330/racecond.zip)\r\n\r\n1. unzip racecond.zip\r\n1. yosys -s ys\r\n\r\n## Expected behavior\r\n\r\nNo error.\r\n\r\n## Actual behavior\r\n\r\n~~~~\r\n3.2.3. Executing PROC_INIT pass (extract init attributes).\r\nFound init rule in `\\AsyncResetReg.$proc$AsyncResetReg.v:11$3'.\r\nERROR: Failed to get a constant init value for \\q_reg: $2\\q_reg[0:0]\r\n~~~~\r\n\r\n## Location of failure\r\n\r\n~~~~\r\nmodule AsyncResetReg (\r\n                      input      d,\r\n                      output     q,\r\n                      input      en,\r\n\r\n                      input      clk,\r\n                      input      rst);\r\n\r\n   reg                           q_reg;\r\n\r\n   initial begin\r\n// ---8<---\r\n      if (rst) begin\r\n        q_reg = 1'b0;\r\n      end\r\n// --->8---\r\n   end\r\n\r\n   always @(posedge clk or posedge rst) begin\r\n      if (rst) begin\r\n         q_reg <= 1'b0;\r\n      end else if (en) begin\r\n         q_reg <= d;\r\n      end\r\n   end\r\n\r\n   assign q = rst ? 1'b0 :  q_reg;\r\n\r\nendmodule // AsyncResetReg\r\n~~~~\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-06-01",
+  "closed_at": "2018-06-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

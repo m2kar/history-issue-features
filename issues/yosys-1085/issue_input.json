@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1085,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1085",
+  "title": "Improve shregmap to handle case where first flop is common to two chains",
+  "body": "e.g.\r\n```\r\nmodule shregmap_test(input i, clk, output [1:0] q);\r\nreg head = 1'b0;\r\nreg [3:0] shift1 = 4'b0000;\r\nreg [3:0] shift2 = 4'b0000;\r\n\r\nalways @(posedge clk) begin\r\n    head <= i;\r\n    shift1 <= {shift1[2:0], head};\r\n    shift2 <= {shift2[2:0], head};\r\nend\r\n\r\nassign q = {shift2[3], shift1[3]};\r\nendmodule\r\n```\r\n\r\nPreviously, `shregmap` would create one `SHREG` only since the key for `sigbit_chain_next` would be clobbered; now I create a new temporary wire (which isn't updated by `SigMap`) to circumvent this clobbering.... a bit hacky -- is there a better way to do this?\r\n\r\nEDIT: The alternative would be to change the data structure (multimap) or a new one (vector) capable of containing duplicates, because I really don't like the fact it could break on a sigmap update...",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-10",
+  "closed_at": "2019-06-21",
+  "code_blocks": [
+    "module shregmap_test(input i, clk, output [1:0] q);\r\nreg head = 1'b0;\r\nreg [3:0] shift1 = 4'b0000;\r\nreg [3:0] shift2 = 4'b0000;\r\n\r\nalways @(posedge clk) begin\r\n    head <= i;\r\n    shift1 <= {shift1[2:0], head};\r\n    shift2 <= {shift2[2:0], head};\r\nend\r\n\r\nassign q = {shift2[3], shift1[3]};\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

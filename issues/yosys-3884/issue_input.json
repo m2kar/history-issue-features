@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3884,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3884",
+  "title": "proc_clean doesn't handle State::Sa, will remove switches that use them",
+  "body": "This is a bug report with a suggested fix.\r\n\r\nConsider the following RTLIL:\r\n\r\n```rtlil\r\nmodule \\m\r\n  wire width 1 \\w\r\n  process $p\r\n    switch 2'10\r\n      case 2'-1\r\n        assign \\w 1'0\r\n      case 2'1-\r\n        assign \\w 1'1\r\n    end\r\n  end\r\nend\r\n```\r\n\r\nInvoking `proc` on this will first run `proc_clean`. `proc_clean` does not know how to handle `Sa`, and for fully-const switch operands (`2'10` here) that don't `==` fully-const case operands (`2'-1` and `2'1-` here), the case operand will be removed:\r\n\r\nhttps://github.com/YosysHQ/yosys/blob/2829cd9caa5729b3b7e2393d3428e265cd038ea6/passes/proc/proc_clean.cc#L44-L51\r\n\r\n`SigSpec::operator ==` doesn't do \"don't care\" matching, so none are considered equal. Accordingly, post-`proc_clean` we get:\r\n\r\n```rtlil\r\nautoidx 1\r\nmodule \\m\r\n  wire \\w\r\n  process $p\r\n    switch 2'10\r\n    end\r\n  end\r\nend\r\n```\r\n\r\nThe only passes invoked by `proc` that handle `Sa` are `proc_mux` and `proc_rmdead`, and indeed, if we run `proc_mux` first, the cases are pulled out into individual muxes which implement the desired behavior.\r\n\r\n`proc_rmdead` does manage to erase all but the first case that matches (if any) -- this is because it uses `BitPatternPool`, which understands `Sa`. (We are guaranteed to use `BitPatternPool` because `can_use_fully_defined_pool` L36-L38 returns false if any part of the signal operand is const.)\r\n\r\nOther passes invoked by `proc` that haven't been mentioned yet don't mess with the cases afaict.\r\n\r\nI see four options going forward:\r\n\r\n1. `proc_clean` avoids doing strict equality checking on operands that are not **fully-defined**, rather than fully-const. This is this PR.\r\n   1. There's an additional weirdness here: we can `switch 2'-1`, too, and it will likewise degenerate and not match `case 2'01` (but will match `case 2'-1`). Perhaps we should not be permitting inclusion of `Sa` in a switch operand at all (? unclear to me), but as long as it is permitted, I am supposing we should not be eliminating it like this. This PR therefore adjusts the condition on the switch operand in addition to the case operands.\r\n2. `proc_clean` learns to match considering `Sa` (on both sides).\r\n3. `proc` invokes `proc_mux` before `proc_clean`. (Perhaps in addition to where it's currently situated?) This feels liable to mess with workflows.\r\n4. We decide this input isn't okay.\r\n\r\nThis came from Amaranth, where a `If(0) ... Elif(1) ...` control structure assigning synchronously to a register is turned into the above process.\r\n\r\n/cc @mcclure who hit this!",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-08-11",
+  "closed_at": "2023-08-12",
+  "code_blocks": [
+    "module \\m\r\n  wire width 1 \\w\r\n  process $p\r\n    switch 2'10\r\n      case 2'-1\r\n        assign \\w 1'0\r\n      case 2'1-\r\n        assign \\w 1'1\r\n    end\r\n  end\r\nend",
+    "autoidx 1\r\nmodule \\m\r\n  wire \\w\r\n  process $p\r\n    switch 2'10\r\n    end\r\n  end\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

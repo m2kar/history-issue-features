@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5082,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5082",
+  "title": "write_verilog: Vivado transparent memory port regression",
+  "body": "### Version\n\n0.40\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n1. Emit Verilog code for memory with one write port and read port that is transparent to write port.\n\nCode is emitted with https://github.com/YosysHQ/yosys/blob/aa30589c123844bc576fc3c9938157b5db35a7c1/backends/verilog/verilog_backend.cc#L732 creating registered address input on read port.\n\nExample:\n```verilog\n  reg [20:0] tag_mem_0 [127:0];\n  always @(posedge clk) begin\n    if (tag_mem_wp__en)\n      tag_mem_0[tag_mem_wp__addr] <= tag_mem_wp__data;\n  end\n  reg [6:0] _2_;\n  always @(posedge clk) begin\n    _2_ <= tag_mem_rp__addr;\n  end\n  assign tag_mem_rp__data = tag_mem_0[_2_];\n```\n\n2. Synthesize it with Vivado\n\nTested on Vivado 2024.2\nThis issue comes from Amaranth language: https://github.com/amaranth-lang/amaranth/issues/1589\n\n### Expected Behavior\n\nVivado synthesizes it correctly to block ram with transparency.\n\nI assume it worked in previous Vivado versions, because this issue was not reported earlier, with successful Xilinx designs made.\n\n### Actual Behavior\n\nVivado synthesis emits warning `The block RAM may get collision error if read and write address collide` and leads to non-functional gateware.\n\nWorkaround is to add `(* rw_addr_collision = \"yes\" *)` attribute for each memory declaration. Without it, the default behaviour is `design writes to the same address it is reading from, the RAM output is unpredictable`. Warnings are not emitted for non-transparent ports.\nThis is problematic for HDL generated code, that depends on verilog backend for external synthesis. ",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2025-05-02",
+  "closed_at": null,
+  "code_blocks": [
+    "reg [20:0] tag_mem_0 [127:0];\n  always @(posedge clk) begin\n    if (tag_mem_wp__en)\n      tag_mem_0[tag_mem_wp__addr] <= tag_mem_wp__data;\n  end\n  reg [6:0] _2_;\n  always @(posedge clk) begin\n    _2_ <= tag_mem_rp__addr;\n  end\n  assign tag_mem_rp__data = tag_mem_0[_2_];"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

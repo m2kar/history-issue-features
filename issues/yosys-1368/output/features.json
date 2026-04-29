@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 1368,
+  "title": "synth_intel error, synth_xilinx is fine",
+  "features": [
+    {
+      "name": "one_hot FSM state encoding with excess state register bits",
+      "category": "data_model",
+      "description": "Code should include a one-hot FSM state encoding where the state register width exceeds the number of defined states, leaving some bit positions unassigned",
+      "snippet": "localparam [4:0] IDLE=1, START=2, WORKING=4, END=8;\nreg [4:0] cstate, nstate;",
+      "tags": ["fsm", "one_hot", "state_encoding", "localparam"],
+      "source_bug_id": "yosys-1368",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1368",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "async reset FF with multi_bit state reset value",
+      "category": "timing",
+      "description": "Code should include an asynchronous reset flip-flop where the reset value is a multi-bit pattern representing a one-hot state",
+      "snippet": "always @ (posedge clk or negedge rst_n) begin\n    if (!rst_n)\n        cstate <= IDLE;\n    else\n        cstate <= nstate;\nend",
+      "tags": ["async_reset", "ff", "adff", "fsm", "reset_value"],
+      "source_bug_id": "yosys-1368",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1368",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "FSM case statement with incomplete state coverage",
+      "category": "control_flow",
+      "description": "Code should include an FSM implemented with a case statement that does not cover all possible values of the state register",
+      "snippet": "case (cstate)\n    IDLE: nstate = START;\n    START: nstate = ready ? WORKING : START;\n    WORKING: nstate = ready ? (stop ? END : WORKING) : WORKING;\n    END: nstate = ready ? IDLE : END;\n    default: nstate = IDLE;\nendcase",
+      "tags": ["fsm", "case", "state_machine", "one_hot"],
+      "source_bug_id": "yosys-1368",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1368",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ]
+}

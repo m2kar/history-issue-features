@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 209,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/209",
+  "title": "%c writes nothing if argument equal to 'h0",
+  "body": "I am trying to read in BMP file and write it back into another BMP file without modification (this is simplification, original was more complex). But when I write back read values that equal to 8'h0 not written back. As I can see this is due to way vpi/sys_display.c implements \"get_format\" function. It appends every new variable to already formed string, and if value is 0x0 it just do not add '\\0' symbol at the end of string.\r\nHere is the call for argument:\r\n```\r\n      cnt = get_format_char(&result, ljust, plus, ld_zero, width, prec, *cp,\r\n                            info, idx);\r\n\r\n```\r\nAnd here is result processing:\r\n```\r\n      *rtn = realloc(*rtn, (size+cnt)*sizeof(char));\r\n      memcpy(*rtn+size-1, result, cnt);\r\n      free(result);\r\n      size += cnt;\r\n      if (*cp) cp += 1;\r\n\r\n```\r\nI've found (but didn't test well) that 'cnt==0' if value of variable for given argument is 8'h0.\r\nSo the trick is to add following line after 'get_format_char' call. As even if value is NULL, argument should be written into file (at least in case of binary files).\r\n`   if(cnt == 0) cnt = 1;\r\n`\r\nI've attached associated example. To run, just type 'make example'. 'diff' will return error in case of original Icarus sources. If patch is applied result will be OK. Can any one prove or deny this patch?\r\n\r\n[example.tar.gz](https://github.com/steveicarus/iverilog/files/2429434/example.tar.gz)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-09-28",
+  "closed_at": "2018-09-29",
+  "code_blocks": [
+    "cnt = get_format_char(&result, ljust, plus, ld_zero, width, prec, *cp,\r\n                            info, idx);",
+    "*rtn = realloc(*rtn, (size+cnt)*sizeof(char));\r\n      memcpy(*rtn+size-1, result, cnt);\r\n      free(result);\r\n      size += cnt;\r\n      if (*cp) cp += 1;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

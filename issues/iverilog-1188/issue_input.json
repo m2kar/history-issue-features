@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1188,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1188",
+  "title": "Segmentation fault caused by null pointer `ranges_` inside `PGModule::dump`",
+  "body": "Hi,\r\n\r\nI tried to run `ivl` with the `-P <path>` flag. However, I got a segmentation fault when working with [`examples/sqrt.vl`](https://github.com/steveicarus/iverilog/blob/06077ed026b4d8498d9129a6acfb0b44d0b51f18/examples/sqrt.vl).\r\n\r\nHere is the backtrace:\r\n\r\n```\r\n#0  PGate::dump_ranges (this=this@entry=0x555555898490, out=...) at pform_dump.cc:721\r\n#1  0x000055555573910d in PGModule::dump (this=0x555555898490, out=..., ind=<optimized out>) at pform_dump.cc:826\r\n#2  0x000055555573ff63 in Module::dump (this=<optimized out>, out=...) at pform_dump.cc:1783\r\n#3  0x00005555557401de in pform_dump (out=..., mod=<optimized out>) at pform_dump.cc:1815\r\n#4  0x0000555555605cdc in main (argc=<optimized out>, argv=<optimized out>) at main.cc:1168\r\n```\r\n\r\nAfter investigation, I found that this segmentation fault happened when dumping a `PGModule` object in module `main`. Therefore, I guess this `PGModule` object corresponds to the following line in the module definition:\r\nhttps://github.com/steveicarus/iverilog/blob/06077ed026b4d8498d9129a6acfb0b44d0b51f18/examples/sqrt.vl#L123\r\n\r\nAdditionally, `PGModule::dump` doesn't check whether `ranges_` is null before calling the `dump_ranges()` function, resulting in this segmentation fault.\r\nAfter wrapping `dump_ranges(out);` with `if (is_array()) {...}`, the segmentation fault was eliminated.\r\n\r\nhttps://github.com/steveicarus/iverilog/blob/06077ed026b4d8498d9129a6acfb0b44d0b51f18/pform_dump.cc#L721\r\nhttps://github.com/steveicarus/iverilog/blob/06077ed026b4d8498d9129a6acfb0b44d0b51f18/pform_dump.cc#L826",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-12-10",
+  "closed_at": "2024-12-29",
+  "code_blocks": [
+    "#0  PGate::dump_ranges (this=this@entry=0x555555898490, out=...) at pform_dump.cc:721\r\n#1  0x000055555573910d in PGModule::dump (this=0x555555898490, out=..., ind=<optimized out>) at pform_dump.cc:826\r\n#2  0x000055555573ff63 in Module::dump (this=<optimized out>, out=...) at pform_dump.cc:1783\r\n#3  0x00005555557401de in pform_dump (out=..., mod=<optimized out>) at pform_dump.cc:1815\r\n#4  0x0000555555605cdc in main (argc=<optimized out>, argv=<optimized out>) at main.cc:1168"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

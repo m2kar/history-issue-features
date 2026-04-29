@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 938,
+  "title": "Crash occurs in case when use write_firrtl command for design with $memwr and $memrd cells.",
+  "features": [
+    {
+      "name": "inferred RAM array with write-enable port",
+      "category": "data_model",
+      "description": "Code should include a reg array used as RAM with synchronous write-enable logic, where a conditional block performs array write and the same always block also reads from the array",
+      "snippet": "reg [7:0] ram[63:0];\nalways @ (posedge clk) begin\n  if (we_a) begin\n    ram[addr_a] <= data_a;\n  end\n  q_a <= ram[addr_a];\nend",
+      "tags": ["ram", "reg_array", "write_enable", "synchronous", "memory_inference"],
+      "source_bug_id": "938",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/938",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "partial-width address bus on memory access",
+      "category": "data_model",
+      "description": "Code should include a memory array addressed by a port whose bit width is not a full power-of-two width, such as a 6-bit address bus indexing a 64-entry array declared as [6:1]",
+      "snippet": "input [6:1] addr_a;\nreg [7:0] ram[63:0];\nram[addr_a] <= data_a;",
+      "tags": ["memory_array", "partial_width", "address_bus", "indexing"],
+      "source_bug_id": "938",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/938",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "write-through to output during conditional memory write",
+      "category": "control_flow",
+      "description": "Code should include a synchronous always block where the output register is assigned the input data inside the write-enable condition block, while also being assigned from the memory array outside the condition, creating a write-through and read pattern",
+      "snippet": "always @ (posedge clk) begin\n  if (we_a) begin\n    ram[addr_a] <= data_a;\n    q_a <= data_a;\n  end\n  q_a <= ram[addr_a];\nend",
+      "tags": ["write_through", "conditional_assignment", "register", "always_block"],
+      "source_bug_id": "938",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/938",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

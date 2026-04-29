@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5385,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5385",
+  "title": "Unify handling of quoted strings in pass args",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nhttps://yosyshq.discourse.group/t/quoted-strings-in-pass-arguments/83\r\n\r\n_Explain how this is achieved._\r\n\r\n- [x] Use `std::quoted()` from `<iomanip>` to quote/unquote pass arguments.  In order to maintain handling of (unquoted) comments and semicolons this occurs when adding the token to the arg list, rather than in the tokenization itself.  Passes no longer receive tokenized-but-raw arguments and are instead pre-unquoted.  Should resolve #4511.\r\n- [x] Add support for single quoted strings.  These have no escape character and are treated verbatim.  This is useful for minimizing the number of backslashes in (for example) `logger -expect` regexps (e.g. `\"\\\\\\\"\"` -> `'\\\"'`).\r\n- [x] In order to maintain reproducibility with `echo on`, arguments which require quoting will automatically quote (arguments which were quoted but didn't need to be will not be quoted in the echo).  Single quotes are used by default, unless the arg contains a single quote and then it will use `std::quoted()` (which uses double quotes and can escape with backslash).\r\n- [x] Resolve issues with passes such as `setattr` which rely on arguments having quotation marks for disambiguation.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nPR includes tests for checking behavior of arg parsing in `tests/scripts`.  Many of these utilize a plugin that gets compiled during testing and provides the `test_args` pass, which is basically just `log` but each argument is separated by a newline.\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-09-24",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

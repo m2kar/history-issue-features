@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 715,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/715",
+  "title": "Packing iCE40 $alu+$mux cells into one LUT4",
+  "body": "Currently, `ice40/arith_map.v` is not using `SB_LUT4` primitives very efficiently. That is, `I0` is not used at all, and is tied to `0`:\r\n```verilog\r\n\t\tSB_LUT4 #( ... ) adder (\r\n\t\t\t.I0(1'b0),\r\n\t\t\t.I1(AA[i]),\r\n\t\t\t.I2(BB[i]),\r\n\t\t\t.I3(C[i]),\r\n\t\t\t.O(Y[i])\r\n\t\t);\r\n```\r\nHowever, that LUT row could be used to perform one of the following functions...\r\n  * output constant 0,\r\n  * output constant 1,\r\n  * output A,\r\n  * output B,\r\n... effectively packing a pair of `$alu`+`$mux` cells into a single `SB_LUT4`. This is quite important for small CPUs such as the one described in the [PicoBlaze](http://bleyer.org/pacoblaze/picoblaze.pdf paper).\r\n\r\nI was able to design a [prototype](https://github.com/YosysHQ/yosys/files/2645463/alu.zip) using the `extract` and `techmap` commands that seems to do the trick. However, there are multiple issues with it.\r\n  * The `extract` command does not appear to provide any way to _infer_ parameters from the design. I had to fix `A_WIDTH` etc to 8, which is obviously suboptimal.\r\n  * The `extract` command appears to require extremely verbose definitions. For example, I would need four different cells (of which the sample design currently uses two), to handle the four cases where:\r\n    * mux input low selects ALU Y, mux input high selects ALU A\r\n    * mux input low selects ALU Y, mux input high selects ALU B\r\n    * mux input low selects ALU A, mux input high selects ALU Y\r\n    * mux input low selects ALU B, mux input high selects ALU Y\r\n\r\n    and (I think?) it is only possible to unify them into one cell in `techmap` by going through an additional layer of techmap indirection.\r\n  * The `extract` command appears to not recognize subtraction unless `-constports` is provided, which is I understand slow.\r\n\r\nDo I understand it correctly that the proper way to work around these is to add an extraction pass in C++?\r\n\r\nI would like to test such a pass (no matter how implemented) using formal equivalence checking. Could you point me to any way to integrate such a test into the Yosys testsuite? I'd want to make sure that both (a) the `alu_mux` cells are extracted, and (b) the result is equivalent to the original design. The included `synth_equiv.ys` script tests (b), but I do not understand how to test (a).\r\n\r\nAside: I found that if I ran `techmap -map +/ice40/cells_sim.v`, Yosys would hang (or otherwise work for a very long time, but if I extracted the definitions for `SB_LUT4` and `SB_CARRY` from `cells_sim.v` and ran `techmap -map cells_sim_reduced.v`, this would finish quickly. Is this a bug?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-04",
+  "closed_at": "2018-12-04",
+  "code_blocks": [
+    "SB_LUT4 #( ... ) adder (\r\n\t\t\t.I0(1'b0),\r\n\t\t\t.I1(AA[i]),\r\n\t\t\t.I2(BB[i]),\r\n\t\t\t.I3(C[i]),\r\n\t\t\t.O(Y[i])\r\n\t\t);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

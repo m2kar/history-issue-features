@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4345,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4345",
+  "title": "Another out-of-memory problem with for loop",
+  "body": "### Version\n\nYosys 0.40+25 (git sha1 171577f90, clang++ 14.0.6 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nHello. After searching existing issues, I found #3447 and #3456. However, the problem I encountered seems different from those former ones. Therefore, I opened this new issue. Any help would be appreciated!\r\n\r\nI managed to reduce the input program into `oom.v` as below:\r\n```verilog\r\nmodule oom #(parameter P = 4);\r\n\r\nfunction [31:0] foo;\r\n  input [31:0]  x;\r\n  begin\r\n    foo = x;\r\n  end\r\nendfunction\r\n\r\nlocalparam STEP = foo(P);\r\ninteger i;\r\n  always @(*) begin\r\n    for (i = 4; i >= 0; i=i-STEP) begin\r\n      /* empty */\r\n    end\r\n  end\r\n\r\nendmodule\r\n\r\n```\r\n\r\nCommand:\r\n```\r\nyosys -p \"read_verilog oom.v\"\r\n```\n\n### Expected Behavior\n\nTo perform `read_verilog` successfully.\n\n### Actual Behavior\n\nBefore the Yosys process got killed, it took nearly 20g of virtual memory on my PC.\r\n\r\nConsole output:\r\n```\r\n$ yosys -p \"read_verilog oom.v\"\r\n\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.40+25 (git sha1 171577f90, clang++ 14.0.6 -fPIC -Os)\r\n\r\n-- Running command `read_verilog oom.v' --\r\n\r\n1. Executing Verilog-2005 frontend: oom.v\r\nParsing Verilog input from `oom.v' to AST representation.\r\nGenerating RTLIL representation for module `\\oom'.\r\nKilled\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2024-04-19",
+  "closed_at": null,
+  "code_blocks": [
+    "module oom #(parameter P = 4);\r\n\r\nfunction [31:0] foo;\r\n  input [31:0]  x;\r\n  begin\r\n    foo = x;\r\n  end\r\nendfunction\r\n\r\nlocalparam STEP = foo(P);\r\ninteger i;\r\n  always @(*) begin\r\n    for (i = 4; i >= 0; i=i-STEP) begin\r\n      /* empty */\r\n    end\r\n  end\r\n\r\nendmodule",
+    "$ yosys -p \"read_verilog oom.v\"\r\n\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.40+25 (git sha1 171577f90, clang++ 14.0.6 -fPIC -Os)\r\n\r\n-- Running command `read_verilog oom.v' --\r\n\r\n1. Executing Verilog-2005 frontend: oom.v\r\nParsing Verilog input from `oom.v' to AST representation.\r\nGenerating RTLIL representation for module `\\oom'.\r\nKilled"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

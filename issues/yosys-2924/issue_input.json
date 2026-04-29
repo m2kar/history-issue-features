@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2924,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2924",
+  "title": "share: Assuming $pmux inputs are onehot is unsound.",
+  "body": "## Steps to reproduce the issue\r\n\r\nSuppose we have a contrived ALU where the opcode interpretation is determined by a mode input, and in one case it is one-hot:\r\n\r\n```\r\nmodule my_alu(\r\n        input [2:0] op,\r\n        input mode,\r\n        input [3:0] A,\r\n        input [3:0] B,\r\n        input [3:0] C,\r\n        output [3:0] X,\r\n        output [3:0] Y,\r\n);\r\n\r\nalways @* begin\r\n        if (mode) begin\r\n                (* full_case, parallel_case *)\r\n                casez (op)\r\n                        3'b??1: begin\r\n                                X = A & B;\r\n                                Y = A & C;\r\n                        end\r\n                        3'b?1?: begin\r\n                                X = A | B;\r\n                                Y = A | C;\r\n                        end\r\n                        3'b1??: begin\r\n                                X = A ^ B;\r\n                                Y = A ^ C;\r\n                        end\r\n                endcase\r\n        end else begin\r\n                if (op[0])\r\n                        X = A * B;\r\n                else\r\n                        X = 0;\r\n                if (op[1])\r\n                        Y = A * C;\r\n                else\r\n                        Y = 0;\r\n        end\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nRunning `proc; opt_clean; eval -set mode 0 -set op 3 -set A 1 -set B 2 -set C 3` on it, we supply valid input values, and obtain correct output:\r\n\r\n```\r\nEval result: \\X = 4'0010.\r\nEval result: \\Y = 4'0011.\r\n```\r\n\r\n## Expected behavior\r\n\r\nRunning `share` before eval should not change the (well-defined) behavior of this circuit.\r\n\r\n## Actual behavior\r\n\r\nRunning `proc; opt_clean; share; eval -set mode 0 -set op 3 -set A 1 -set B 2 -set C 3` on the above example, we get mis-optimized circuit with incorrect output:\r\n\r\n```\r\nEval result: \\X = 4'0011.\r\nEval result: \\Y = 4'0011.\r\n```\r\n\r\nThis is because there is a `$pmux` cell in the netlist that has `op` as an input, and `share` incorrectly infers from that that `op` must always be one-hot, and thus the `if (op[0])` and `if (op[1])` branches can never be true at the same time, then decides to merge the two multiplier cells into one multiplexed cell.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-08",
+  "closed_at": "2021-08-09",
+  "code_blocks": [
+    "module my_alu(\r\n        input [2:0] op,\r\n        input mode,\r\n        input [3:0] A,\r\n        input [3:0] B,\r\n        input [3:0] C,\r\n        output [3:0] X,\r\n        output [3:0] Y,\r\n);\r\n\r\nalways @* begin\r\n        if (mode) begin\r\n                (* full_case, parallel_case *)\r\n                casez (op)\r\n                        3'b??1: begin\r\n                                X = A & B;\r\n                                Y = A & C;\r\n                        end\r\n                        3'b?1?: begin\r\n                                X = A | B;\r\n                                Y = A | C;\r\n                        end\r\n                        3'b1??: begin\r\n                                X = A ^ B;\r\n                                Y = A ^ C;\r\n                        end\r\n                endcase\r\n        end else begin\r\n                if (op[0])\r\n                        X = A * B;\r\n                else\r\n                        X = 0;\r\n                if (op[1])\r\n                        Y = A * C;\r\n                else\r\n                        Y = 0;\r\n        end\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

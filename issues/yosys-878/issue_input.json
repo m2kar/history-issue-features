@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 878,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/878",
+  "title": "Don't care optimisation for $shiftx",
+  "body": "## Steps to reproduce the issue\r\n\r\n`yosys -p \"read_verilog -icells shiftx.v; synth_xilinx; stat\"`\r\n\r\n```\r\nmodule top(input A, input [1:0] B, output [5:0] Y);\r\n// Containing $shiftx instantiations\r\nno_opt no_opt(A, B, Y[0]);\r\nno_opt2 no_opt2(A, B, Y[1]);\r\nopt opt(A, B, Y[2]);\r\n\r\n// Containing inferred $shiftx\r\nno_opt3 no_opt3(A, B, Y[3]);\r\nopt3 opt3(A, B, Y[4]);\r\nendmodule\r\n\r\nmodule no_opt(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(3), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule no_opt2(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(4), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({1'bx,A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule no_opt3(input A, input [1:0] B, output Y);\r\nwire [2:0] A3 = {A,A,A};\r\nassign Y = A3[B];\r\nendmodule\r\n\r\nmodule opt(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(4), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({A,A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule opt3(input A, input [1:0] B, output Y);\r\nwire [3:0] A4 = {A,A,A,A};\r\nassign Y = A4[B];\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\n`no_opt*` circuits should be optimised away since all its inputs are the same.\r\nDifference between those and `opt*` is that the latter have A_WIDTH == 2**B_WIDTH exactly.\r\n\r\n## Actual behavior\r\n\r\n`no_opt*` circuits are not optimised away.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-03-16",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input A, input [1:0] B, output [5:0] Y);\r\n// Containing $shiftx instantiations\r\nno_opt no_opt(A, B, Y[0]);\r\nno_opt2 no_opt2(A, B, Y[1]);\r\nopt opt(A, B, Y[2]);\r\n\r\n// Containing inferred $shiftx\r\nno_opt3 no_opt3(A, B, Y[3]);\r\nopt3 opt3(A, B, Y[4]);\r\nendmodule\r\n\r\nmodule no_opt(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(3), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule no_opt2(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(4), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({1'bx,A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule no_opt3(input A, input [1:0] B, output Y);\r\nwire [2:0] A3 = {A,A,A};\r\nassign Y = A3[B];\r\nendmodule\r\n\r\nmodule opt(input A, input [1:0] B, output Y);\r\n$shiftx #(.A_WIDTH(4), .B_WIDTH(2), .Y_WIDTH(1), .A_SIGNED(0), .B_SIGNED(0))\r\n    s (.A({A,A,A,A}), .B(B), .Y(Y));\r\nendmodule\r\n\r\nmodule opt3(input A, input [1:0] B, output Y);\r\nwire [3:0] A4 = {A,A,A,A};\r\nassign Y = A4[B];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 29,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/29",
+  "title": "module Input ports are unconnected...",
+  "body": "Hello,\nI was trying to dump a netlist from\na modified 'ivtest/blif/blif01c.v'.\nAs it turns out, the inputs to the module\nare disconnected and get replaced by a 5'b0zzzz...\n(in the netlist and blif output)\nAm I doing something wrong invoking the module\nor is it a bug?\n(it does not seem to happen with the other, structural adder(..01a.v))\n\nThis is the snippet I used:\n\n```\nmodule addN\n   #(parameter WID = 4)\n    (input wire [WID-1:0] A,\n     input wire [WID-1:0] B,\n     output wire [WID:0]  Q\n     /* */);\n\n    assign Q = A + B;\n\nendmodule // add\n\nmodule top;\n\n    parameter WID = 4;\n    (* PAD=\"2,3,4,5\"*)\n    wire [WID-1:0] A;\n    (* PAD=\"6,7,8,9\"*)\n    wire [WID-1:0] B;\n    (* PAD=\"14,15,16,17,18\"*)\n    wire [WID:0]  Q;\n\n    addN #(.WID(WID)) usum (.A(A), .B(B), .Q(Q));\n\n\nendmodule\n```\n\ncompiled using:\niverilog -tblif -N./t.net ./atf01c.v\n\nI'm getting:\n\n```\nELABORATED NODES:\nAdder (NetAddSub): _s9 width=5 pin_count=4\n     0 Cout   O (strong0 strong1):.\n     1 DataA  I (strong0 strong1): 0x8ba8448 top.usum._s0\n     2 DataB  I (strong0 strong1): 0x8ba90c8 top.usum._s4\n     3 Result O (strong0 strong1): 0x8ba9258 top.Q\n     LPM_Direction = \"\"ADD\"\"\nconstant 5'b0zzzz: _s1 #(.,.,.)\n     0 pin0 O (strong0 strong1): 0x8ba8448 top.usum._s0\nconstant 5'b0zzzz: _s5 #(.,.,.)\n     0 pin0 O (strong0 strong1): 0x8ba90c8 top.usum._s4\n```\n\nIt happens with version currently on github...\n\nBTW: I tried posting on iverilog-devel, but it bounced...\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-06-09",
+  "closed_at": "2014-06-10",
+  "code_blocks": [
+    "module addN\n   #(parameter WID = 4)\n    (input wire [WID-1:0] A,\n     input wire [WID-1:0] B,\n     output wire [WID:0]  Q\n     /* */);\n\n    assign Q = A + B;\n\nendmodule // add\n\nmodule top;\n\n    parameter WID = 4;\n    (* PAD=\"2,3,4,5\"*)\n    wire [WID-1:0] A;\n    (* PAD=\"6,7,8,9\"*)\n    wire [WID-1:0] B;\n    (* PAD=\"14,15,16,17,18\"*)\n    wire [WID:0]  Q;\n\n    addN #(.WID(WID)) usum (.A(A), .B(B), .Q(Q));\n\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

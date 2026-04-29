@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 502,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/502",
+  "title": "SDF Error with IOPATH",
+  "body": "I'm trying to compile verilog with an SDF file. iverilog cannot seem to find the ports associated with the IOPATH calls.  iverilog compiles the verilog file correctly when the SDF file is not included.\r\n\r\nHere is the relevant patch of SDF:\r\n  (CELL\r\n     (CELLTYPE \"latchdr\")\r\n     (INSTANCE g3970_L1)\r\n     (DELAY\r\n        (ABSOLUTE\r\n          (IOPATH D Q (::148) (::148))\r\n          (IOPATH ENA Q (::147) (::147))\r\n          (IOPATH R Q () (::110))\r\n        )\r\n     )\r\n     (TIMINGCHECK\r\n        (RECREM (posedge R) (negedge ENA) (::80) ())\r\n        (SETUPHOLD (negedge D) (negedge ENA) (::100) (::100))\r\n        (SETUPHOLD (posedge D) (negedge ENA) (::100) (::100))\r\n     )\r\n  )\r\n\r\n\r\nThe relevant lines in the verilog file:\r\n  latchdr g3970_L1(.R (n_340), .ENA (n_339), .D (n_338), .Q (n_337));\r\n...\r\nmodule latchdr(ENA, D, R, Q);\r\n  input ENA, D, R;\r\n  output Q;\r\n  wire ENA, D, R;\r\n  wire Q;\r\n  wire next_state;\r\n  reg  qi;\r\n  assign #1 Q = qi;\r\n  assign next_state = D;\r\n  always\r\n    @(next_state or ENA or R)\r\n      if (!R)\r\n        qi <= 0;\r\n      else begin\r\n        if (ENA)\r\n          qi <= next_state;\r\n      end\r\n  initial\r\n    qi <= 1'b0;\r\nendmodule\r\n\r\n\r\nAnd the error messages:\r\nSDF WARNING: teststmp.v:157: Unable to match ModPath D -> Q in testbench.dut.g3970_L1\r\nSDF WARNING: teststmp.v:157: Unable to match ModPath ENA -> Q in testbench.dut.g3970_L1\r\nSDF WARNING: teststmp.v:157: Unable to match ModPath R -> Q in testbench.dut.g3970_L1\r\n\r\nI get one of these for every element in the SDF.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-04-22",
+  "closed_at": "2021-04-23",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

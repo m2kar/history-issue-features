@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2172,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2172",
+  "title": "Add `partition` command to do balanced hypergraph partitioning on a gate-level module",
+  "body": "This PR adds the `partition` command to do [balanced hypergraph partitioning](https://kahypar.org/#what-is-a-hypergraph-what-is-hypergraph-partitioning) on a flattened gate-level module.  Finding an optimal partitioning is generally an [NP-hard problem](https://en.wikipedia.org/wiki/Graph_partition#Problem_complexity), but fortunately there are good heuristics for it.\r\n\r\nMiscellaneous changes:\r\n----\r\nThis PR makes a few various enabling changes around the code base:\r\n- ~Add a `Design::select()` interface for selecting whole modules~ (See PR #2178 )\r\n- ~Add `operator+=()` to `dict<>::iterator` and `dict<>::const_iterator` and add `operator+()` and `operator+=()` to `ObjIterator`.  This enables indexing into `dict`s with an iterator, like `auto value = *(dict.begin() + offset)`, which helps reduce memory by avoiding the need for a node number -> cell `dict<int, Cell *>`~ (See PR #2177 )\r\n- ~Break out `statdata_t` to the Yosys namespace.  This is to support the `-s` option, where we need to measure the size of our module~\r\n- Add `unit_gate_cost()`, where all gates except NOT and BUF have a unit cost. This is the default cell type cost used for node weights in the hypergraph ~and for determining module size in the `-s` option~\r\n\r\nSolvers, interface, integration:\r\n----\r\n[hMETIS](http://glaros.dtc.umn.edu/gkhome/metis/hmetis/overview) seems to be the most performant solver, but has a very restrictive license.  [KaHIP](https://github.com/KaHIP/KaHIP) has an MIT license but seems to have a nasty dependency on an old version of OpenMPI.  [minipart](https://github.com/Coloquinte/minipart2) is also MIT licensed, but brings in boost dependencies.\r\n\r\n@daveshah1 has indicated that he is developing hypergraph partitioning in-tree in nextpnr, so when that is done, I think we all agree to bring that in-tree, and I will update this PR and mark it as ready for review.\r\n\r\nUntil then, this command makes a temporary directory, writes a `.hgr` file (spec in [this document](http://glaros.dtc.umn.edu/gkhome/fetch/sw/hmetis/manual.pdf)), invokes `minipart` (which must be on the `PATH`), and reads a `.sol` file with the partition assignments.\r\n\r\nDepends:\r\n----\r\n- [x] PR #2135 \r\n- [x] PR #2177 \r\n- [x] PR #2178",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-06-18",
+  "closed_at": "2025-03-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

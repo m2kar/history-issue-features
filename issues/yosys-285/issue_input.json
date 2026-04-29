@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 285,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/285",
+  "title": "Probem cross-compiling ABC (From Yosys)",
+  "body": "I'm trying to cross compile Yosis for Windows using docker and the mxe target;\r\n\r\n```\r\nFROM debian:jessie\r\nMAINTAINER Udi Finkelstein <github@udifink.om>\r\nRUN \\\r\n  echo \"deb http://pkg.mxe.cc/repos/apt/debian jessie main\" > /etc/apt/sources.list.d/mxeapt.list && \\\r\n  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D43A795B73B16ABE9643FE1AFD8FFF16DB45C6AB && \\\r\n  apt-get update -y && \\\r\n  apt-get install -y \\\r\n  autoconf \\\r\n  bison \\\r\n  flex \\\r\n  g++ \\\r\n  gawk \\\r\n  gettext \\\r\n  git \\\r\n  libffi-dev \\\r\n  make \\\r\n  mercurial \\\r\n  mxe-i686-w64-mingw32.static-gcc \\\r\n  pkg-config \\\r\n  python3 \\\r\n   tcl-dev \\\r\n  xdot\r\n\r\nRUN git clone https://github.com/cliffordwolf/yosys.git && cd yosys && make config-mxe && \\\r\n  ln -s /usr/lib/mxe /usr/local/src/mxe && \\\r\n  make mxebin\r\n\r\nRUN git clone https://github.com/cliffordwolf/icestorm.git icestorm && cd icestorm && make -j$(nproc) mxebin\r\n\r\nRUN git clone https://github.com/cseed/arachne-pnr.git && cd arachne-pnr && make mxebin\r\n```\r\n\r\nCompilation progresses fine, until I get the following error while compiling ABC:\r\n\r\n```\r\nsrc/proof/acec/acecSt.o: In function `Z17Acec_StatsCollectP10Gia_Man_t_i':\r\n/yosys/abc/src/proof/acec/acecSt.c:409: undefined reference to `Dar_LibReturnClass(unsigned int)'\r\ncollect2: error: ld returned 1 exit status\r\nmake[1]: *** [abc-a4872e22c646.exe] Error 1\r\n```\r\n\r\nAfter some investigation it seems that the cross compile configs always use '-x c++' causing all files to be parsed as C++ (despite their '.c' suffix).\r\nThe file defining Dar_LibReturnClass() (sorry, forgot the path for this file) is compiled as C, while src/proof/acec/acecSt.c is compiled as C++, assuming Dar_LibReturnClass() is a C++ func and calls it with a mangled filename.\r\nThe non-cross-compile versions successfully compile ABC as C code.\r\nThis also happened when I tried to use the Ubuntu built-in mingw32 cross compile packages (I created soft links from /usr/bin/mingw... to the hardcoded path in the Yosys Makefile).\r\n\r\nI tracked the source of the '-x c++' flag and it dates back to the original commit of the cross-compile code in the Makefile.\r\nIs there any special reason you compiled ABC as C++?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-12-26",
+  "closed_at": "2016-12-29",
+  "code_blocks": [
+    "src/proof/acec/acecSt.o: In function `Z17Acec_StatsCollectP10Gia_Man_t_i':\r\n/yosys/abc/src/proof/acec/acecSt.c:409: undefined reference to `Dar_LibReturnClass(unsigned int)'\r\ncollect2: error: ld returned 1 exit status\r\nmake[1]: *** [abc-a4872e22c646.exe] Error 1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

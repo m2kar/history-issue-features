@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 3093,
+  "title": "Latches on conditions optimized as X upon multiple conditions",
+  "features": [
+    {
+      "name": "always_ff with mutually exclusive if-else if assignments",
+      "category": "timing",
+      "description": "Code should include an always_ff block with async reset where a signal is assigned under mutually exclusive conditions in an if-else if chain",
+      "snippet": "always_ff @(posedge i_clk or negedge i_rst_n) begin\n    if (~i_rst_n) begin o_signal <= 0; end\n    else if (i_force) begin o_signal <= 0; end\n    else if (i_valid) begin o_signal <= o_signal + 1; end\nend",
+      "tags": ["always_ff", "async_reset", "mutually_exclusive_conditions", "latch_inference", "if_else_if_chain"],
+      "source_bug_id": "3093",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3093",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "signal assigned under multiple exclusive conditions",
+      "category": "data_model",
+      "description": "Code should include a signal that is assigned different values under mutually exclusive conditions where one branch increments the signal and another resets it",
+      "snippet": "if (i_force) begin o_signal <= 0; end\nelse if (i_valid) begin o_signal <= o_signal + 1; end",
+      "tags": ["signal_assignment", "exclusive_conditions", "increment", "reset", "latch"],
+      "source_bug_id": "3093",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3093",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary operator workaround for mux tree issue",
+      "category": "control_flow",
+      "description": "Code should include a workaround using a ternary operator inside a combined condition to avoid the X inference bug with exclusive conditions",
+      "snippet": "if (i_force | i_valid) begin\n    o_signal <= i_force ? 0 : o_signal + 1;\nend",
+      "tags": ["ternary_operator", "combined_condition", "workaround", "mux_tree"],
+      "source_bug_id": "3093",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3093",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

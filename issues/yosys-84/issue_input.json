@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 84,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/84",
+  "title": "Possible bug with memory_bram",
+  "body": "I find a bug with memory_bram. Not sure if it is a real bug or I just misused something, but here it is:\n\n```\nmodule ram_block (addr, ce, q, clk);\n\ninput clk;\ninput [9:0] addr;\ninput ce;\noutput reg [7:0] q;\n\nreg [7:0] ram[1023:0];\n\nalways @(posedge clk)\nbegin\n    if (ce)\n    begin\n        q <= ram[addr];\n    end\nend\n\nendmodule\n```\n\nIf I just run `./yosys -p \"read_verilog ram_block.v; synth_xilinx -top ram_block\"`, it will segfault during memory_bram pass:\n\n```\n...\n...\n\n2.7. Executing MEMORY_BRAM pass (mapping $mem cells to block memories).\nProcessing ram_block.ram:\n  Properties: ports=1 bits=8192 rports=1 wports=0 dbits=8 abits=10 words=1024\n  Checking rule #1 for bram type $__XILINX_RAMB36_SDP (variant 1):\n    Bram geometry: abits=9 dbits=72 wports=0 rports=0\n    Estimated number of duplicates for more read ports: dups=1\n    Metrics for $__XILINX_RAMB36_SDP: awaste=0 dwaste=64 bwaste=32768 waste=32768 efficiency=11\n    Rule #1 for bram type $__XILINX_RAMB36_SDP (variant 1) accepted.\n    Mapping to bram type $__XILINX_RAMB36_SDP (variant 1):\n      Shuffle bit order to accommodate enable buckets of size 9..\n      Results of bit order shuffling: 0 1 2 3 4 5 6 7 -1\nSegmentation fault\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-09-23",
+  "closed_at": "2015-09-24",
+  "code_blocks": [
+    "module ram_block (addr, ce, q, clk);\n\ninput clk;\ninput [9:0] addr;\ninput ce;\noutput reg [7:0] q;\n\nreg [7:0] ram[1023:0];\n\nalways @(posedge clk)\nbegin\n    if (ce)\n    begin\n        q <= ram[addr];\n    end\nend\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

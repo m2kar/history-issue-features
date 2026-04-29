@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4915,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4915",
+  "title": "yosys synth_ice40 infers incorrect number of BRAMS for some memory sizes",
+  "body": "### Version\n\nYosys 0.30+38 (git sha1 2310a0ea9, clang 10.0.0-4ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nCompile this with: `yosys -p \"synth_ice40 -top top -json top.json\" top.v`\n\n```\nmodule top (\n    input                               clk,\n    input wire [16:0]                   addr1,\n    input wire [16:0]                   addr2,\n    input wire [7:0]                    data1,\n    output reg [7:0]                    data2\n    );\n\n    // Fail : NUM_BRAMS(Actual BRAMS) = 23(24), 27(28), 31(32)\n    //      : All other values of NUM_BRAMS between 1 => 32 pass/match.\n    localparam NUM_BRAMS = 27;\n\n    reg [7:0] mem1 [0:(512*NUM_BRAMS)-1];\n\n    always @(posedge clk) begin\n        mem1[addr1] <= data1;\n        data2 <= mem1[addr2];\n    end\n\nendmodule\n```\n\nTry setting NUM_BRAMS to 23, 27, or 31 and see an extra mystery BRAM is consumed.\nOthers I am collaborating with have reported identical failures on versions:\n\nYosys 0.49+17 (git sha1 f2d96cf61, g++ 12.2.0-14 -fPIC -O3)  [WSL2 Debian Bookworm]\nYosys 0.23 (git sha1 7ce5011c24b)  [on Debian GNU/Linux 12 (bookworm) Kernel: Linux 6.6.74+rpt-rpi-v8]\n\nThis problem does NOT appear to be an issue on yosys version:\n\nYosys 0.9 (git sha1 1979e0b)  [raspberry pi release: Debian GNU/Linux 11 (bullseye)]\n\n\n### Expected Behavior\n\nExpecting the number of BRAMs to be correlated to the inferred memory size.\n\n### Actual Behavior\n\nOne extra BRAM appears to get allocated for some certain specific sizes (see example code.)",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-02-25",
+  "closed_at": "2025-02-25",
+  "code_blocks": [
+    "module top (\n    input                               clk,\n    input wire [16:0]                   addr1,\n    input wire [16:0]                   addr2,\n    input wire [7:0]                    data1,\n    output reg [7:0]                    data2\n    );\n\n    // Fail : NUM_BRAMS(Actual BRAMS) = 23(24), 27(28), 31(32)\n    //      : All other values of NUM_BRAMS between 1 => 32 pass/match.\n    localparam NUM_BRAMS = 27;\n\n    reg [7:0] mem1 [0:(512*NUM_BRAMS)-1];\n\n    always @(posedge clk) begin\n        mem1[addr1] <= data1;\n        data2 <= mem1[addr2];\n    end\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 678,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/678",
+  "title": "Assignments to a concatenation are treated as separate assignments to each element of the concatenation",
+  "body": "```SystemVerilog\r\nmodule top;\r\n    reg x, y;\r\n    always @(x + y)\r\n        $display(\"%0d %b %b\", $time, x, y);\r\n    initial begin\r\n        #1 {x, y} = 2'b00;\r\n        #1 {x, y} = 2'b01;\r\n        #1 {x, y} = 2'b10;\r\n        #1 {x, y} = 2'b11;\r\n        #1 {x, y} = 2'b00;\r\n        #1 {x, y} = 2'b10;\r\n    end\r\nendmodule\r\n```\r\n\r\nWhen compiled with `-gstrict-expr-width`, I would expect the `always` block to only be triggered when the parity changes. Indeed, when using `^` rather than `+` , iverilog simulates this correctly.\r\n\r\n\r\nResults in iverilog, only with `+`, even with `-gstrict-expr-width`:\r\n```\r\n1 0 0\r\n2 0 1\r\n3 1 0\r\n4 1 1\r\n5 0 0\r\n6 1 0\r\n```\r\n\r\nResults in other simulators, using either `+` or `^`:\r\n```\r\n1 0 0\r\n2 0 1\r\n4 1 1\r\n6 1 0\r\n```\r\n\r\nThis appears to deal with event trigger evaluation in general, rather than `event_expression`s alone, as the following modification still results in the errant results.\r\n```SystemVerilog\r\n    ...\r\n    wire z;\r\n    assign z = x + y;\r\n    always @(z)\r\n    ...\r\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2022-04-12",
+  "closed_at": null,
+  "code_blocks": [
+    "module top;\r\n    reg x, y;\r\n    always @(x + y)\r\n        $display(\"%0d %b %b\", $time, x, y);\r\n    initial begin\r\n        #1 {x, y} = 2'b00;\r\n        #1 {x, y} = 2'b01;\r\n        #1 {x, y} = 2'b10;\r\n        #1 {x, y} = 2'b11;\r\n        #1 {x, y} = 2'b00;\r\n        #1 {x, y} = 2'b10;\r\n    end\r\nendmodule",
+    "...\r\n    wire z;\r\n    assign z = x + y;\r\n    always @(z)\r\n    ..."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

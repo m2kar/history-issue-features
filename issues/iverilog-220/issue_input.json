@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 220,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/220",
+  "title": "SystemVerilog explicit resizing and context-determined expressions",
+  "body": "Here's another (#219) issue with the explicit resizing. Consider the following `Main.sv`:\r\n\r\n```\r\nmodule Main();\r\n   logic[4:0] r5;\r\n\r\n   initial begin\r\n      r5 = logic[4:0]'(3'd7 + 3'd6);\r\n      $display(\"r5 = %b, %d\", r5, r5);\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule\r\n```\r\n\r\nDoing `iverilog -g2012 Main.sv && ./a.out` gives\r\n\r\n```\r\nr5 = 00101,  5\r\n```\r\n\r\nHowever, I think the correct result it 13. The SystemVerilog-2017 standard on p. 132 says:\r\n\r\n> If the expression is assignment compatible with the casting type, then the cast shall return the value that a variable of the casting type would hold after being assigned the expression.\r\n\r\nAnd this does not hold true in the above `Main` module:\r\n\r\n```\r\nmodule Main();\r\n   logic[4:0] r5;\r\n   logic [4:0] tmp;\r\n\r\n   initial begin\r\n      tmp = 3'd7 + 3'd6;\r\n      r5 = tmp;\r\n      \r\n      $display(\"r5 = %b, %d\", r5, r5); // gives r5 = 01101, 13\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2018-12-10",
+  "closed_at": "2018-12-15",
+  "code_blocks": [
+    "module Main();\r\n   logic[4:0] r5;\r\n\r\n   initial begin\r\n      r5 = logic[4:0]'(3'd7 + 3'd6);\r\n      $display(\"r5 = %b, %d\", r5, r5);\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule",
+    "module Main();\r\n   logic[4:0] r5;\r\n   logic [4:0] tmp;\r\n\r\n   initial begin\r\n      tmp = 3'd7 + 3'd6;\r\n      r5 = tmp;\r\n      \r\n      $display(\"r5 = %b, %d\", r5, r5); // gives r5 = 01101, 13\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

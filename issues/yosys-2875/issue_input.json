@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2875,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2875",
+  "title": "Generate an RTLIL representation of bind constructs",
+  "body": "This code now takes the AST nodes of type AST_BIND and generates a\r\nrepresentation in the RTLIL for them.\r\n\r\nThis is a little tricky, because a binding of the form:\r\n\r\n    bind baz foo_t foo_i (.arg (1 + bar));\r\n\r\nmeans \"make an instance of `foo_t` called `foo_i`, instantiate it inside\r\n`baz` and connect the port `arg` to the result of the expression `1+bar`\".\r\nOf course, `1+bar` needs a cell for the addition. Where should that cell\r\nlive?\r\n\r\nWith this patch, the `Binding` structure that represents the construct\r\nis itself an `AST::AstModule` module. This lets us put the adder cell\r\ninside it. We'll pull the contents out and plonk them into 'baz' when\r\nwe actually do the binding operation as part of the hierarchy pass.\r\n\r\nOf course, we don't want `RTLIL::Binding` to contain an\r\n`AST::AstModule` (since kernel code shouldn't depend on a frontend), so\r\nwe define `RTLIL::Binding` as an abstract base class and put the\r\nAST-specific code into an `AST::Binding` subclass. This is analogous to\r\nthe `AST::AstModule` class.\r\n\r\n(Note: This patch is part of the larger queue at #2752. The idea is to split things out to avoid having a giant PR to review all at once)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-07-16",
+  "closed_at": "2021-08-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

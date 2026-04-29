@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4525,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4525",
+  "title": "peepopt: Add formal opt to rewrite latches to ffs in clock gates",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nCommon clock gating patterns use a latch, which after `clk2fflogic` leaves a combinational path between the enable input and clock output. This can cause comb loops even though there is no true path due to an AND gate gating the output when the latch is transparent. This can be optimized into an equivalent circuit using a flip-flop that no longer has this comb path.\r\n\r\nThis optimization is suitable for formal to prevent false comb loops, but should not be used for synthesis where the latch is an intentional choice.\r\n\r\n```verilog\r\n// Latch style:\r\nalways @* if (!clk_i) latched_en = en;\r\nassign gated_clk_o = latched_en & clk_i;\r\n\r\n// Flip-flop style:\r\nalways @(posedge clk) flopped_en = en;\r\nassign gated_clk_o = flopped_en & clk_i;\r\n```\r\n\r\n_Explain how this is achieved._\r\nA peephole optimizer detects and rewrites the standard latch into and gate pattern.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nI have checked that this works correctly with the clock gating rtl from [ibex](https://github.com/lowRISC/ibex/blob/master/syn/rtl/prim_clock_gating.v) and [cv32e40p](https://github.com/openhwgroup/cv32e40p/blob/master/bhv/cv32e40p_sim_clock_gate.sv).\r\n\r\nThis is draft for now as I'm not sure what command it is best to put this in, seeing as it is only applicable from formal. Should it just be a check in `clk2fflogic` instead of a pmgen optimizer? I have temporarily added it to peepopt.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-06",
+  "closed_at": "2024-11-11",
+  "code_blocks": [
+    "// Latch style:\r\nalways @* if (!clk_i) latched_en = en;\r\nassign gated_clk_o = latched_en & clk_i;\r\n\r\n// Flip-flop style:\r\nalways @(posedge clk) flopped_en = en;\r\nassign gated_clk_o = flopped_en & clk_i;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

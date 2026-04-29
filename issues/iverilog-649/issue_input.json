@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 649,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/649",
+  "title": "Bug in variable name for 'not all bits are asynchronously set or reset. This is not currently supported in synthesis'.",
+  "body": "Use `iverilog -S -g2012` to compile the following:\r\n\r\n```\r\nmodule test(input clk, input rst, input a, output reg [1:0] state);\r\n    reg [1:0] next_state;\r\n    reg [3:0] pos;\r\n    reg [3:0] next_pos;\r\n\r\n    always @(*) begin\r\n        next_state = state;\r\n       if(a) begin\r\n           next_state = '0;\r\n       end\r\n    end\r\n    always @(posedge clk, posedge rst) begin\r\n        if(rst) begin\r\n            state <= '1;\r\n            // pos <= '0;\r\n        end else begin\r\n            state <= next_state;\r\n            pos <= next_pos;\r\n        end\r\n    end\r\nendmodule\r\n\r\n```\r\n\r\nGives message `sorry: Not all bits of 'state' are asynchronously set or reset. This is not currently supported in synthesis.`\r\n\r\nTurns out it's actually because of pos, not state. uncommenting the line that sets pos to 0s gets rid of the error message.\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-03-15",
+  "closed_at": "2022-03-19",
+  "code_blocks": [
+    "module test(input clk, input rst, input a, output reg [1:0] state);\r\n    reg [1:0] next_state;\r\n    reg [3:0] pos;\r\n    reg [3:0] next_pos;\r\n\r\n    always @(*) begin\r\n        next_state = state;\r\n       if(a) begin\r\n           next_state = '0;\r\n       end\r\n    end\r\n    always @(posedge clk, posedge rst) begin\r\n        if(rst) begin\r\n            state <= '1;\r\n            // pos <= '0;\r\n        end else begin\r\n            state <= next_state;\r\n            pos <= next_pos;\r\n        end\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

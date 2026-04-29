@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 219,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/219",
+  "title": "opt_clean reverses assignments ",
+  "body": "Here a minimal example: \n\n``` verilog\nmodule bsp_e(a, z);\n    output z;\n    input  a;\n    wire s1;\nassign\n    s1 = ~a,\n    z = s1;\nendmodule\n```\n\nAfter executing the following skript: \n\n```\nread_verilog ../examples/bsp_e.v\nproc; opt; fsm; opt; memory; opt\ntechmap; opt\ndfflibmap -liberty ../libraries/yosys/mycells.lib\nabc -liberty ../libraries/yosys/mycells.lib\nclean\nwrite_verilog -noattr ../tmp.v\n```\n\nI get the following output:\n\n``` verilog\nmodule bsp_e(a, z);\n  input a;\n  wire s1;\n  output z;\n  YNOT _0_ (\n    .A(a),\n    .Y(z)\n  );\n  assign s1 = z; /* this is reversed */\nendmodule\n```\n\nI pinned it down to opt_clean reversing the assignments.\nThis happens with commit b226893461af46f2183be8ca9dfab62b49133c71\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-08-29",
+  "closed_at": "2016-08-29",
+  "code_blocks": [
+    "I get the following output:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

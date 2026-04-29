@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5149,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5149",
+  "title": "Add genlib support to abc_new",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nI'd like to experiment with a box-aware flow for `synth_gatemate`, but the generated \"cell\" library for it is in the genlib format. The easiest way to achieve this is to extend `abc_new` to accept a genlib library.\r\n\r\n_Explain how this is achieved._\r\n\r\nIt's handled pretty similarly to Liberty libraries, although I took the opportunity to add a `rewrite_filename` call to correctly handle `+/...` paths.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nI've been using a quick hack of `synth_gatemate` to use `abc_new` for this:\r\n\r\n```diff\r\ndiff --git a/techlibs/gatemate/synth_gatemate.cc b/techlibs/gatemate/synth_gatemate.cc\r\nindex fa36252f5..406997631 100644\r\n--- a/techlibs/gatemate/synth_gatemate.cc\r\n+++ b/techlibs/gatemate/synth_gatemate.cc\r\n@@ -308,11 +308,11 @@ struct SynthGateMatePass : public ScriptPass\r\n                if (check_label(\"map_luts\"))\r\n                {\r\n                        if (luttree || help_mode) {\r\n-                               std::string abc_args = \" -genlib +/gatemate/lut_tree_cells.genlib\";\r\n+                               std::string abc_args = \" -genlib +/gatemate/lut_tree_cells.genlib -script \\\"+&sweep;&dc2;&nf\\\"\";\r\n                                if (dff) {\r\n                                        abc_args += \" -dff\";\r\n                                }\r\n-                               run(\"abc \" + abc_args, \"(with -luttree)\");\r\n+                               run(\"abc_new \" + abc_args, \"(with -luttree)\");\r\n                                run(\"techmap -map +/gatemate/lut_tree_map.v\", \"(with -luttree)\");\r\n                                run(\"gatemate_foldinv\", \"(with -luttree)\");\r\n                                run(\"techmap -map +/gatemate/inv_map.v\", \"(with -luttree)\");\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-27",
+  "closed_at": "2025-05-27",
+  "code_blocks": [
+    "diff --git a/techlibs/gatemate/synth_gatemate.cc b/techlibs/gatemate/synth_gatemate.cc\r\nindex fa36252f5..406997631 100644\r\n--- a/techlibs/gatemate/synth_gatemate.cc\r\n+++ b/techlibs/gatemate/synth_gatemate.cc\r\n@@ -308,11 +308,11 @@ struct SynthGateMatePass : public ScriptPass\r\n                if (check_label(\"map_luts\"))\r\n                {\r\n                        if (luttree || help_mode) {\r\n-                               std::string abc_args = \" -genlib +/gatemate/lut_tree_cells.genlib\";\r\n+                               std::string abc_args = \" -genlib +/gatemate/lut_tree_cells.genlib -script \\\"+&sweep;&dc2;&nf\\\"\";\r\n                                if (dff) {\r\n                                        abc_args += \" -dff\";\r\n                                }\r\n-                               run(\"abc \" + abc_args, \"(with -luttree)\");\r\n+                               run(\"abc_new \" + abc_args, \"(with -luttree)\");\r\n                                run(\"techmap -map +/gatemate/lut_tree_map.v\", \"(with -luttree)\");\r\n                                run(\"gatemate_foldinv\", \"(with -luttree)\");\r\n                                run(\"techmap -map +/gatemate/inv_map.v\", \"(with -luttree)\");"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

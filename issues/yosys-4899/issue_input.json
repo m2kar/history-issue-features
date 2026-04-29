@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4899,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4899",
+  "title": "Fix runtime error on shift by INT_MAX",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nMain is failing CI on a seeded fsm test: https://github.com/YosysHQ/yosys/actions/runs/13282021101/job/37083651932#step:11:1099\r\n\r\nThis specific case can be minimised to calling `opt_expr` on the following verilog:\r\n```verilog\r\nmodule uut_00034(b, y);\r\n  input signed [30:0] b;\r\n  output [11:0] y = b >> ~31'b0; // shift by INT_MAX\r\nendmodule\r\n```\r\n\r\nThe line in `opt_expr` encountering the error is `int idx = i + shift_bits;`, where `shift_bits` is equal to the value of the RHS, which in this case is INT_MAX.  Therefore any non-zero value of `i` results in an integer overflow. \r\n\r\n_Explain how this is achieved._\r\n\r\nThe value of `shift_bits` is meaningless for values greater than the width of the A port, since anything greater than or equal to that causes the Y output to be all 0.  As such, we can safely cap the value of `shift_bits` to this value.\r\n\r\nThis doesn't prevent overflow entirely; if A is more than 2^30 bits wide it could still overflow, but given that we already have the below in `celledges.cc::shift_op()` I'm pretty sure other problems will already be cropping up by then.\r\n\r\n```c++\r\n// the cap below makes sure we don't overflow in the arithmetic further down, though\r\n// it makes the edge data invalid once a_width approaches the order of 2**30\r\n// (that ever happening is considered improbable)\r\nint b_width_capped = min(b_width, 30);\r\n```\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nBuild Yosys with make option `SANITIZER=undefined` and run `opt_expr_shr_int_max.ys` with environment variable `UBSAN_OPTIONS=halt_on_errror=1`.  Without this change it should fail, with this change it should pass (and other tests should be unaffected).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-02-14",
+  "closed_at": "2025-02-14",
+  "code_blocks": [
+    "module uut_00034(b, y);\r\n  input signed [30:0] b;\r\n  output [11:0] y = b >> ~31'b0; // shift by INT_MAX\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

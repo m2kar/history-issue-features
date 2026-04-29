@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2530,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2530",
+  "title": "ABC9 flop bypass specify rules can cause combinational loops",
+  "body": "This testcase has been minimised from a QuickLogic benchmark:\r\n```verilog\r\nmodule top(input WBs_CLK_i, _1_, _0_, output reg Rx_overflow_detected_o);\r\n  wire rx_fifo_cntr_rst;\r\n  assign rx_fifo_cntr_rst = _1_ | Rx_overflow_detected_o;\r\n  always @(posedge WBs_CLK_i, posedge rx_fifo_cntr_rst)\r\n    if (rx_fifo_cntr_rst) Rx_overflow_detected_o <= 1'h0;\r\n    else Rx_overflow_detected_o <= _0_;\r\nendmodule\r\n```\r\nwhich is a flop that asynchronously resets itself depending on its output.\r\n\r\n## Expected behavior\r\n\r\nIf you take an ABC flow, such as `synth_ice40`, you get:\r\n```\r\n   Number of wires:                  5\r\n   Number of wire bits:              5\r\n   Number of public wires:           3\r\n   Number of public wire bits:       3\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  2\r\n     SB_DFFR                         1\r\n     SB_LUT4                         1\r\n```\r\n\r\n## Actual behavior\r\n\r\nIf you take an ABC9 flow, such as `synth_ice40`, you get:\r\n```\r\n2.41.9. Executing ABC9_OPS pass (helper functions for ABC9).\r\n<suppressed ~2 debug messages>\r\nERROR: Assert `no_loops' failed in passes/techmap/abc9_ops.cc:758.\r\n```\r\n\r\nThe cause of this is that near-universally flop cells have specify rules to produce an ABC9 flop bypass box that models the combinational path from a set/reset pin to the output. In this particular case, however, this models a combinational loop through the flop, which causes ABC9 to assert.\r\n\r\nThe reason I'm posting this as an issue is to come to a consensus on how to resolve this given the tradeoffs.\r\n\r\n- We could consider this a combinational loop, which is forbidden in RTLIL, keep the specify rules, and possibly extract better results, since a longer critical path means more area reduction opportunities.\r\n- We could remove the specify rules, which I have confirmed fixes the issue, but potentially regress result quality in the rare case that the critical path involves an asynchronous set/reset.\r\n- I could attempt to fix this in ABC9, but with Eddie gone, it's going to be a bug that stays around for a long while, since I am very unfamiliar with the code there.\r\n\r\ncc @daveshah1 (for iCE40/ECP5/Nexus), @pepijndevos (for Gowin), @mwkmwkmwk (for Xilinx)",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-07",
+  "closed_at": "2021-03-30",
+  "code_blocks": [
+    "module top(input WBs_CLK_i, _1_, _0_, output reg Rx_overflow_detected_o);\r\n  wire rx_fifo_cntr_rst;\r\n  assign rx_fifo_cntr_rst = _1_ | Rx_overflow_detected_o;\r\n  always @(posedge WBs_CLK_i, posedge rx_fifo_cntr_rst)\r\n    if (rx_fifo_cntr_rst) Rx_overflow_detected_o <= 1'h0;\r\n    else Rx_overflow_detected_o <= _0_;\r\nendmodule",
+    "Number of wires:                  5\r\n   Number of wire bits:              5\r\n   Number of public wires:           3\r\n   Number of public wire bits:       3\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  2\r\n     SB_DFFR                         1\r\n     SB_LUT4                         1",
+    "2.41.9. Executing ABC9_OPS pass (helper functions for ABC9).\r\n<suppressed ~2 debug messages>\r\nERROR: Assert `no_loops' failed in passes/techmap/abc9_ops.cc:758."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

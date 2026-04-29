@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3769,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3769",
+  "title": "write_smt2: redundant uninterpreted function",
+  "body": "### Version\n\nYosys 0.29+21 (git sha1 147cceb51, clang 10.0.0-4ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nVerilog file `top.v`:\r\n\r\n```verilog\r\nmodule top(\r\n  input clk,\r\n  input [2:0] i,\r\n  output reg [2:0] o\r\n);\r\n  always @(posedge clk) begin\r\n    o <= ((3'h6) & (^i)) ? 3'h0 : i;\r\n  end\r\nendmodule\r\n```\r\n\r\nSMT-LIBv2 template `test.tpl`:\r\n\r\n```\r\n(set-logic QF_UFBV)\r\n\r\n%%\r\n\r\n(declare-fun s1\r\n    () top_s)\r\n(declare-fun s2\r\n    () top_s)\r\n(assert\r\n    (top_t s1 s2))\r\n\r\n(assert\r\n    (distinct\r\n        (|top_n i| s1)\r\n        (|top_n o| s2)))\r\n\r\n(check-sat)\r\n(get-model)\r\n```\r\n\r\nYosys script `write_smt2.ys`:\r\n\r\n```\r\nread_verilog top.v\r\nhierarchy -check; proc; opt; dffunmap\r\nwrite_smt2 -tpl test.tpl top.smt2\r\n```\r\n\r\nCommands:\r\n\r\n```\r\n$ yosys write_smt2.ys\r\n$ z3 top.smt2\r\n```\n\n### Expected Behavior\n\n- `(3'h6) & (^i)` is expected to be `0`.\r\n- Therefore, the procedural assignment can be considered as `o <= i`.\r\n- `(check-sat)` is expected to yield **UNSAT**.\n\n### Actual Behavior\n\nThe output of `z3` shows that it did find a model for us.\r\n\r\n```\r\nsat\r\n(\r\n  (define-fun s2 () top_s\r\n    top_s!val!0)\r\n  (define-fun s1 () top_s\r\n    top_s!val!0)\r\n  (define-fun |top#0| ((x!0 top_s)) Bool\r\n    false)\r\n  (define-fun |top#1| ((x!0 top_s)) (_ BitVec 3)\r\n    #b011)\r\n  (define-fun |top#4| ((x!0 top_s)) Bool\r\n    true)\r\n  (define-fun |top#2| ((x!0 top_s)) (_ BitVec 3)\r\n    #b000)\r\n  (define-fun top_is ((x!0 top_s)) Bool\r\n    false)\r\n)\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-18",
+  "closed_at": "2024-11-11",
+  "code_blocks": [
+    "module top(\r\n  input clk,\r\n  input [2:0] i,\r\n  output reg [2:0] o\r\n);\r\n  always @(posedge clk) begin\r\n    o <= ((3'h6) & (^i)) ? 3'h0 : i;\r\n  end\r\nendmodule",
+    "(set-logic QF_UFBV)\r\n\r\n%%\r\n\r\n(declare-fun s1\r\n    () top_s)\r\n(declare-fun s2\r\n    () top_s)\r\n(assert\r\n    (top_t s1 s2))\r\n\r\n(assert\r\n    (distinct\r\n        (|top_n i| s1)\r\n        (|top_n o| s2)))\r\n\r\n(check-sat)\r\n(get-model)",
+    "read_verilog top.v\r\nhierarchy -check; proc; opt; dffunmap\r\nwrite_smt2 -tpl test.tpl top.smt2"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

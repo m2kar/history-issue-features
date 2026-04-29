@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 846,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/846",
+  "title": "[WIP/RFC] ecp5: 'Fix' transparent DRAMs by putting register on address",
+  "body": "I'm not convinced that this is the best way to solve the problem, but I'm working on getting liteeth working with Yosys on the ECP5.\r\n\r\nMigen generates a lot of \"write through\" memories thus:\r\n\r\n```verilog\r\nreg [41:0] storage_4[0:63];\r\nreg [5:0] memadr_5;\r\nreg [5:0] memadr_6;\r\nalways @(posedge eth_rx_clk) begin\r\n\tif (ethmac_rx_cdc_wrport_we)\r\n\t\tstorage_4[ethmac_rx_cdc_wrport_adr] <= ethmac_rx_cdc_wrport_dat_w;\r\n\tmemadr_5 <= ethmac_rx_cdc_wrport_adr;\r\nend\r\n\r\nalways @(posedge sys_clk) begin\r\n\tmemadr_6 <= ethmac_rx_cdc_rdport_adr;\r\nend\r\n\r\nassign ethmac_rx_cdc_wrport_dat_r = storage_4[memadr_5];\r\nassign ethmac_rx_cdc_rdport_dat_r = storage_4[memadr_6];\r\n```\r\n\r\nThis is mapped to DRAM because it is too shallow/wide to be economically mapped to BRAM. \r\n\r\nThe liteeth core fails to work with Yosys unless one of the following is carried out\r\n - The threshold is changed such BRAM is used instead\r\n - DRAM is disabled altogether and logic is used instead\r\n - memory_bram.cc is patched to not generate the transparent \"bypass\" logic even if a port is supposed to be transparent\r\n\r\nIndeed this small case \r\n[outreg_transp.zip](https://github.com/YosysHQ/yosys/files/2922317/outreg_transp.zip) shows some synthesis/simulation mismatches without this patch.\r\n\r\nmaster:\r\n![screenshot from 2019-03-02 16-58-07](https://user-images.githubusercontent.com/5521177/53684977-62eb4b00-3d0c-11e9-893c-3636bfe85bec.png)\r\n\r\npatched:\r\n![screenshot from 2019-03-02 16-59-22](https://user-images.githubusercontent.com/5521177/53684992-929a5300-3d0c-11e9-9cc5-011b6e98066a.png)\r\n\r\nThis patch creates a new bram type and techmap to deal with this specifically for the ECP5. I'm not sure if this should really be looked at in a more generic way, or whether I'm barking up the wrong tree altogether here. \r\n\r\nIncidentally, this patch gives significantly improved Fmax - from 95MHz to 108MHz.\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-02",
+  "closed_at": "2019-03-24",
+  "code_blocks": [
+    "reg [41:0] storage_4[0:63];\r\nreg [5:0] memadr_5;\r\nreg [5:0] memadr_6;\r\nalways @(posedge eth_rx_clk) begin\r\n\tif (ethmac_rx_cdc_wrport_we)\r\n\t\tstorage_4[ethmac_rx_cdc_wrport_adr] <= ethmac_rx_cdc_wrport_dat_w;\r\n\tmemadr_5 <= ethmac_rx_cdc_wrport_adr;\r\nend\r\n\r\nalways @(posedge sys_clk) begin\r\n\tmemadr_6 <= ethmac_rx_cdc_rdport_adr;\r\nend\r\n\r\nassign ethmac_rx_cdc_wrport_dat_r = storage_4[memadr_5];\r\nassign ethmac_rx_cdc_rdport_dat_r = storage_4[memadr_6];"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

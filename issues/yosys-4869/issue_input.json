@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4869,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4869",
+  "title": "level of non-const reset logged incorrectly? after #4569",
+  "body": "### Version\n\n0.49\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\nmkdir and cd into an empty directory, where you download and untar this archive:\n\n[yosys_repro.tgz](https://github.com/user-attachments/files/18571165/yosys_repro.tgz)\n\nThen `/path/to/yosys run.ys`.\n\n### Expected Behavior\n\nFor this negative asynchronous reset:\n\n```v\nmodule non_const_reset(\n    input clk,\n    input rstn,\n    input rstval,\n    output reg value\n);\n    wire value_next = ~value;\n\n    always_ff @ (posedge clk or negedge rstn)\n        if (!rstn)\n            value <= rstval;\n        else\n            value <= value_next;\nendmodule\n```\n\n`proc_dff` (run as part of `synth`) should report the following:\n\n\n```\n3.2.9. Executing PROC_DFF pass (convert process syncs to FFs).\nCreating register for signal `\\non_const_reset.\\value' using process `\\non_const_reset.$proc$non_const_reset.v:9$2'.\nWarning: Async reset value `\\rstval' is not constant!\n  created $aldff cell `$procdff$4' with positive edge clock and negative level non-const reset.\n```\n\n### Actual Behavior\n\nThe issue bisects to #4569 (i.e. after Yosys 0.44+60)-- in the latest version, the log states the following:\n\n> It's worth mentioning that there was a separate issue with this patch when there are multiple asynchronous resets that was fixed in #4714. \n\n```\n3.2.9. Executing PROC_DFF pass (convert process syncs to FFs).\nCreating register for signal `\\non_const_reset.\\value' using process `\\non_const_reset.$proc$non_const_reset.v:9$2'.\nWarning: Async reset value `\\rstval' is not constant!\n  created $aldff cell `$procdff$8' with positive edge clock and positive level non-const reset.\n```\n\nNotice how the non-const reset is reported as *positive level*.\n\n---\n\nYet, with the provided mapping file, the result from synthesis is identical to the expected behavior. I've provided the logs AND output netlist from both a known-working version and 0.49 in the reproducible tarball.\n\nTo be 100% clear, I'm not sure if I'm misunderstanding something or if this is an actual logging bug.\n\n\n---\n\n**EDIT**: Updated the issue because I'd switched Expected and Actual Behavior sections around.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-01-28",
+  "closed_at": "2025-01-28",
+  "code_blocks": [
+    "module non_const_reset(\n    input clk,\n    input rstn,\n    input rstval,\n    output reg value\n);\n    wire value_next = ~value;\n\n    always_ff @ (posedge clk or negedge rstn)\n        if (!rstn)\n            value <= rstval;\n        else\n            value <= value_next;\nendmodule",
+    "3.2.9. Executing PROC_DFF pass (convert process syncs to FFs).\nCreating register for signal `\\non_const_reset.\\value' using process `\\non_const_reset.$proc$non_const_reset.v:9$2'.\nWarning: Async reset value `\\rstval' is not constant!\n  created $aldff cell `$procdff$4' with positive edge clock and negative level non-const reset.",
+    "3.2.9. Executing PROC_DFF pass (convert process syncs to FFs).\nCreating register for signal `\\non_const_reset.\\value' using process `\\non_const_reset.$proc$non_const_reset.v:9$2'.\nWarning: Async reset value `\\rstval' is not constant!\n  created $aldff cell `$procdff$8' with positive edge clock and positive level non-const reset."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 456,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/456",
+  "title": "Non-blocking assignment to real output port doesn't compile",
+  "body": "This program should work. The problem is that the \"out <= in + 1.0\" generates an error that \"out\" is not a valid l-value. But it is.\r\n\r\n    module testr(input clk, output real out, input wire real in);\r\n       real tmp;\r\n       always @(posedge clk)\r\n         out <= in + 1.0;\r\n    endmodule // testr\r\n    \r\n    module testi(input clk, output int out, input wire int in);\r\n       always @(posedge clk)\r\n         out <= in + 1;\r\n    endmodule // testi\r\n    \r\n    module main;\r\n    \r\n       reg  clk;\r\n       always begin\r\n          #10 clk = 0;\r\n          #10 clk = 1;\r\n       end\r\n    \r\n       real srcr;\r\n       int \tsrci;\r\n    \r\n       wire real valr;\r\n       wire int  vali;\r\n       testr r0 (.clk(clk), .out(valr), .in(srcr));\r\n       testi i0 (.clk(clk), .out(vali), .in(srci));\r\n    \r\n       real refr;\r\n       int  refi;\r\n       always @(posedge clk) begin\r\n          refr <= srcr + 1.0;\r\n          refi <= srci + 1;\r\n       end\r\n    \r\n       initial begin\r\n          @(negedge clk) ;\r\n          srcr = 2.0;\r\n          srci = 2;\r\n          @(negedge clk) ;\r\n    \r\n          $display(\"srcr=%f, valr=%f, refr=%f\", srcr, valr, refr);\r\n          if (valr != refr && valr != 3.0) begin\r\n    \t $display(\"FAILED\");\r\n    \t $finish;\r\n          end\r\n    \r\n          $display(\"srci=%0d, vali=%0d, refi=%0d\", srci, vali, refi);\r\n          if (vali != refi && vali != 3) begin\r\n    \t $display(\"FAILED\");\r\n    \t $finish;\r\n          end\r\n    \r\n          $display(\"PASSED\");\r\n          $finish;\r\n       end\r\n    \r\n    endmodule // main\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-12-30",
+  "closed_at": "2020-12-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

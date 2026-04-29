@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 954,
+  "title": "Eval, aigmap combination bug.",
+  "features": [
+    {
+      "name": "bit-slice multiplication producing narrow result",
+      "category": "data_model",
+      "description": "Code should include a multiplication of two bit slices from the same signal, with the result width equal to one of the operand widths, causing potential truncation of the product",
+      "snippet": "input [7:0] addr;\noutput [3:0] out;\nassign out = addr[7:4] * addr[3:0];",
+      "tags": ["multiplication", "bit_slice", "truncation", "combinational"],
+      "source_bug_id": "954",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/954",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "partial product of same-signal slices",
+      "category": "data_model",
+      "description": "Code should include a multiplication where both operands are bit-selected sub-ranges of the same bus signal, which can expose optimizer assumptions about signal independence",
+      "snippet": "input [7:0] addr;\nwire [3:0] a = addr[7:4];\nwire [3:0] b = addr[3:0];\nassign out = a * b;",
+      "tags": ["multiplication", "bit_slice", "same_signal", "aliasing"],
+      "source_bug_id": "954",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/954",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "narrow multiply with truncated result",
+      "category": "data_model",
+      "description": "Code should include a multiply of two 4-bit values assigned to a 4-bit output, where the full product requires 8 bits and the upper bits are implicitly truncated",
+      "snippet": "wire [3:0] a, b;\nwire [3:0] out = a * b;",
+      "tags": ["multiplication", "width_truncation", "overflow"],
+      "source_bug_id": "954",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/954",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

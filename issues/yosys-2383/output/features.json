@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2383,
+  "title": "Task argument inherits width of value that was passed to it",
+  "features": [
+    {
+      "name": "task implicit single-bit input port with unsized constant argument",
+      "category": "data_model",
+      "description": "Code should include a task with an implicit single-bit input port (declared without explicit range, e.g., 'input wire d') called with an unsized integer constant (e.g., 0), where the formal port should retain its declared 1-bit width rather than inheriting the 32-bit width of the passed constant",
+      "snippet": "task t(input wire [7:0] c, input wire d);\n  // d is 1-bit by declaration; passing unsized 0 should not widen d\n  logic [8:0] result;\n  result = { c, d };\nendtask\nalways @* t(a, 0);",
+      "tags": ["task", "implicit_width", "port_declaration", "unsized_constant", "width_inference"],
+      "source_bug_id": "2383",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2383",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit concatenation of task formal port with implicit width",
+      "category": "data_model",
+      "description": "Code should include a bit concatenation inside a task body that combines a multi-bit input port and a single-bit implicit-width port, where the concatenation result width depends on the formal port's declared width (1 bit) not the actual argument's width",
+      "snippet": "task t(input wire [7:0] c, input wire d);\n  output reg [8:0] b;\n  b = { c, d };  // must be 9 bits: b[8:1]=c, b[0]=d\nendtask",
+      "tags": ["task", "concatenation", "implicit_width", "formal_port", "width_mismatch"],
+      "source_bug_id": "2383",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2383",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "task call width coercion from actual to formal port",
+      "category": "general",
+      "description": "Code should include a task invocation where the actual argument is an unsized integer literal (implicitly 32-bit) passed to a narrower formal port, testing that the formal port is truncated to its declared width at the call site",
+      "snippet": "// formal port: input wire d (1-bit)\n// actual arg:  0 (32-bit unsized)\n// expected: d is 1'b0 inside the task, not 32'b0\ntask t(input wire d);\n  logic [1:0] r;\n  r = { 1'b1, d };\nendtask\nalways @* t(0);",
+      "tags": ["task", "task_call", "width_coercion", "unsized_literal", "formal_actual_mismatch"],
+      "source_bug_id": "2383",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2383",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

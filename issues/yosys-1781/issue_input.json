@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1781,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1781",
+  "title": "fsm_extract broken when control outputs are connected directly to submodule inputs",
+  "body": "## Steps to reproduce the issue\r\n\r\n```\r\nmodule top(input clk, input rst);\r\n\r\nreg [1:0] state;\r\n\r\nalways @(posedge clk, posedge rst) begin\r\n        if (rst)\r\n                state <= 0;\r\n        else\r\n                case (state)\r\n                        2'b00: state <= 2'b01;\r\n                        2'b01: state <= 2'b10;\r\n                        2'b10: state <= 2'b00;\r\n                endcase\r\nend\r\n\r\nsub sub_i(.i(state == 0));\r\n\r\nendmodule\r\n\r\n\r\n(* blackbox, keep *)\r\nmodule sub(input i);\r\nendmodule\r\n```\r\n\r\nRun with `proc; fsm; dump`\r\n\r\n## Expected behavior\r\n\r\nThe `sub_i` instance input is connected to some logic implementing the state machine\r\n\r\n## Actual behavior\r\n\r\nThe `sub_i` instance input is unconnected",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-18",
+  "closed_at": "2020-03-19",
+  "code_blocks": [
+    "module top(input clk, input rst);\r\n\r\nreg [1:0] state;\r\n\r\nalways @(posedge clk, posedge rst) begin\r\n        if (rst)\r\n                state <= 0;\r\n        else\r\n                case (state)\r\n                        2'b00: state <= 2'b01;\r\n                        2'b01: state <= 2'b10;\r\n                        2'b10: state <= 2'b00;\r\n                endcase\r\nend\r\n\r\nsub sub_i(.i(state == 0));\r\n\r\nendmodule\r\n\r\n\r\n(* blackbox, keep *)\r\nmodule sub(input i);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

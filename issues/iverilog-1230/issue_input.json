@@ -1,0 +1,23 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1230,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1230",
+  "title": "Parameters cannot be used in RHS of input port (default value)",
+  "body": "Those snippets of code fail under the latest version of Icarus Verilog (both stable 12.0 and development `f5decd4`).\n\n```sv\nmodule Foo #(parameter F) (input logic i = F);\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule\n```\n\n```sv\nmodule Foo #(parameter F) (input logic i = F'(1));\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule\n```\n\nBoth result in:\n\n```\n$ iverilog -v -g 2012 test/sandbox.sv\n[...]\nUsing language generation: IEEE1800-2012,no-specify,no-interconnect,xtypes,icarus-misc\nPARSING INPUT\nLOCATING TOP-LEVEL MODULES\n   Test\n ... done, 0 seconds.\nELABORATING DESIGN\ntest/sandbox.sv:1: error: Unable to bind parameter `F' in `Test'\ntest/sandbox.sv:1: error: Failed to elaborate port default value.\n2 error(s) during elaboration.\n```\n\nHowever, something like this works (which is not equivalent, it's just setting the initial value of a register, but syntactically it looks similar enough to make me expect consistent behavior):\n\n```sv\nmodule Foo #(parameter F) (output logic o = F);\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2025-03-31",
+  "closed_at": null,
+  "code_blocks": [
+    "module Foo #(parameter F) (input logic i = F);\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule",
+    "module Foo #(parameter F) (input logic i = F'(1));\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule",
+    "$ iverilog -v -g 2012 test/sandbox.sv\n[...]\nUsing language generation: IEEE1800-2012,no-specify,no-interconnect,xtypes,icarus-misc\nPARSING INPUT\nLOCATING TOP-LEVEL MODULES\n   Test\n ... done, 0 seconds.\nELABORATING DESIGN\ntest/sandbox.sv:1: error: Unable to bind parameter `F' in `Test'\ntest/sandbox.sv:1: error: Failed to elaborate port default value.\n2 error(s) during elaboration.",
+    "module Foo #(parameter F) (output logic o = F);\nendmodule\n\nmodule Test;\n\tFoo #(.F(1)) f();\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

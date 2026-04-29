@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 199,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/199",
+  "title": "divide overflow is not detected for verilog 32-bit integers.",
+  "body": "I'm using iverilog 10.1 on x64 win7 system with \"iverlog -v\" outputs:\r\n\r\n$ iverilog -v\r\nIcarus Verilog version 10.1 (stable) (v10_1_1)\r\n\r\nCopyright 1998-2015 Stephen Williams\r\n\r\nWhen I simulating my serial divider, I found that divide overflow of 32-bit integers:\r\n$signed(32'h8000_0000) / $signed(32'hFFFF_FFFF) \r\nis not detected by vvp and will stall the program when evaluating the expression.\r\n\r\nMy test program is:\r\n\r\nmodule divov1;\r\n  reg [31:0] q1;\r\n  reg [31:0] q2;\r\n  reg [31:0] quotient;\r\n  initial begin\r\n    q1 = 32'h8000_0000;\r\n    q2 = 32'hFFFF_FFFF;\r\n    quotient = $signed(q1) / $signed(q2);\r\n    $display(\"quotient = 0x%08h;\", quotient);\r\n    $finish;\r\n  end\r\nendmodule // divov1\r\n\r\nExecuting the test program never returns to the shell (cygwin) or cmd.exe.\r\n\r\n$vvp divov.vvp\r\n\r\n\r\nI also tested wider (64-bit) and narrower (16-bit) integers. Both of them didn't stall the program.\r\n\r\nThe 64-bit test program is:\r\n\r\nmodule divov2;\r\n  reg [63:0] q1;\r\n  reg [63:0] q2;\r\n  reg [63:0] quotient;\r\n  initial begin\r\n    q1 = 64'h8000_0000_0000_0000;\r\n    q2 = 64'hFFFF_FFFF_FFFF_FFFF;\r\n    quotient = $signed(q1) / $signed(q2);\r\n    $display(\"quotient = 0x%016h;\", quotient);\r\n    $finish;\r\n  end\r\nendmodule // divov2\r\n\r\nThe output of 64-bit test program is:\r\n\r\n$ vvp divov2.vvp\r\nquotient = 0x8000000000000000;\r\n\r\nThe 16-bit test program is\r\n\r\nmodule divov3;\r\n  reg [15:0] q1;\r\n  reg [15:0] q2;\r\n  reg [15:0] quotient;\r\n  initial begin\r\n    q1 = 16'h8000;\r\n    q2 = 16'hFFFF;\r\n    quotient = $signed(q1) / $signed(q2);\r\n    $display(\"quotient = 0x%04h;\", quotient);\r\n    $finish;\r\n  end\r\nendmodule // divov3\r\n\r\nThe output of 16-bit test program is:\r\n\r\n$ vvp divov3.vvp\r\nquotient = 0x8000;\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-06-11",
+  "closed_at": "2018-06-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

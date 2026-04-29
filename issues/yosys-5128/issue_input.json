@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5128,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5128",
+  "title": "Add association-list-based helper functions into Rosette backend ",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nCurrently, the Rosette code emitted by Yosys requires the user to ensure they correctly order module inputs when creating the \"inputs\" struct to be passed to the Rosette function generated for the module. This makes it difficult to use the backend in an automated way, and may lead to silent failures -- e.g., if we provide the right number of ports but in the wrong order, it won't be clear why our module isn't behaving as expected. (As an aside: even more confusingly, it seems like the backend may currently reverse the order of the ports!)\r\n\r\nSimilarly on the outputs side, it would be nice to have a way to access outputs via their name.\r\n\r\nThis change adds an optional helper functions (guarded by a flag) that can construct inputs/convert outputs to/from string-keyed association lists. Users can thus explicitly specify and access each input/output port by name. This allows users to be more confident that they are constructing the input struct correctly, and allows users to more easily access outputs by name.\r\n\r\n_Explain how this is achieved._\r\n\r\nTwo new Rosette/Racket functions are (optionally) written out. One wraps over the current inputs struct constructor, taking a string-keyed association list mapping input port names to values. The other takes an outputs struct and converts it into a string-keyed association list mapping output port name strings to values.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nI would appreciate feedback on how to test. I see that the Python tests currently run the generated Racket files. Here are two options:\r\n1. Add the new `-keyword-constructor` flag in the existing tests, which will not actually cause the keyword constructors to be used, but it will cause them to be generated. This will at least test that we do not have syntax errors.\r\n2. Add another set of nearly-identical Python tests that instantiate the input structs via the helper function, rather than the original constructor. \r\n\r\n_Testing_\r\n\r\nI test this PR by hooking into the existing tests for the Rosette backend. Essentially, for each test of the Rosette backend, there are now two tests: one that doesn't use the association list helpers (ie, what the tests used to do) and a test that does use the helpers. This is achieved via pytest's `parametrize`. This effectively doubles the number of Rosette tests, which may not be wanted if testing time is an issue.\r\n\r\nTODO\r\n- [x] Add tests (see above, need guidance from maintainers)\r\n- [ ] `access_by_base_name` feels unnecessary, but `access` doesn't work for my purposes because I can't actually get the IdString of the field name.",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-17",
+  "closed_at": "2025-12-03",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

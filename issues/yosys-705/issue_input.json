@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 705,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/705",
+  "title": "ice40: bad port maps generated for post-synthesis verilog of SB_RAM40_4K",
+  "body": "Hi,\r\n\r\nThis verilog code correctly synthesizes an SB_RAM40_4K:\r\n\r\n```\r\nmodule top(\r\n    output reg [7:0] dbr,   // Data bus READ\r\n    input  [7:0] addr,  // Address bus - eight bits\r\n    input  clk          // Clock\r\n    );\r\n    \r\n    reg [7:0] rom_data[0:255];\r\n\r\n    always @(posedge clk)\r\n        dbr <= rom_data[addr];\r\n\r\nendmodule\r\n```\r\n\r\nBy using `yosys -q -p 'synth_ice40 -top top -blif top.blif' top.v ` to generate a BLIF file and then `yosys -o top_syn.v top.blif` to generate a post-synthesis  verilog file, the resulting verilog file is invalid, as it contains port declarations like:\r\n```\r\n    .\\MASK[0] (_10_),\r\n    .\\MASK[10] (_10_),\r\n    .\\MASK[11] (_10_),\r\n    .\\MASK[12] (_10_),\r\n```\r\n\r\nThe correct syntax should be ` .MASK( { _10_, _10_, ` etc.\r\n\r\nIn a more complex design, if I manually fix the MASK, RADDR, RDATA, WADDR and WDATA port declarations I can successfully run a simulation of the synthesized code.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-11-20",
+  "closed_at": "2018-11-24",
+  "code_blocks": [
+    "module top(\r\n    output reg [7:0] dbr,   // Data bus READ\r\n    input  [7:0] addr,  // Address bus - eight bits\r\n    input  clk          // Clock\r\n    );\r\n    \r\n    reg [7:0] rom_data[0:255];\r\n\r\n    always @(posedge clk)\r\n        dbr <= rom_data[addr];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

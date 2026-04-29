@@ -1,0 +1,64 @@
+{
+  "tool": "iverilog",
+  "issue_number": 174,
+  "title": "Value got in same edge are different",
+  "features": [
+    {
+      "name": "async reset always block with posedge clock and negedge reset",
+      "category": "timing",
+      "description": "Code should include an always block sensitive to posedge of a clock and negedge of an active-low reset signal, with non-blocking assignments inside",
+      "snippet": "reg [3:0] control_r;\nreg parity_rec_c;\nalways @(posedge ready_control or negedge rx_resetn) begin\n  if (!rx_resetn) begin\n    control_r    <= 4'd0;\n    parity_rec_c <= 1'b0;\n  end else begin\n    control_r    <= {bit_c_3, bit_c_2, bit_c_1, bit_c_0};\n    parity_rec_c <= bit_c_3;\n  end\nend",
+      "tags": ["async_reset", "negedge_reset", "posedge_clock", "non_blocking_assignment", "sensitivity_list"],
+      "source_bug_id": "174",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/174",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple non-blocking assignments reading same signal in one always block",
+      "category": "timing",
+      "description": "Code should include multiple non-blocking assignments within the same always block that each read the same signal, verifying consistent signal value across all reads in the same evaluation",
+      "snippet": "reg [3:0] packed_out;\nreg single_bit_out;\nalways @(posedge clk or negedge rstn) begin\n  if (!rstn) begin\n    packed_out    <= 4'd0;\n    single_bit_out <= 1'b0;\n  end else begin\n    packed_out    <= {sig3, sig2, sig1, sig0};\n    single_bit_out <= sig3;\n  end\nend",
+      "tags": ["non_blocking_assignment", "signal_consistency", "same_edge", "read_same_signal", "simulation_semantics"],
+      "source_bug_id": "174",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/174",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bit concatenation of individual 1-bit signals in non-blocking assignment",
+      "category": "data_model",
+      "description": "Code should include a non-blocking assignment that concatenates multiple individually-declared 1-bit signals into a wider register",
+      "snippet": "reg bit_c_3, bit_c_2, bit_c_1, bit_c_0;\nreg [3:0] control_r;\nalways @(posedge clk) begin\n  control_r <= {bit_c_3, bit_c_2, bit_c_1, bit_c_0};\nend",
+      "tags": ["concatenation", "bit_vector", "non_blocking_assignment", "individual_bits"],
+      "source_bug_id": "174",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/174",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "XOR parity chain in non-blocking assignment inside conditional",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment of a boolean NOT-XOR parity expression over multiple signals inside an if/else-if construct within a clocked always block",
+      "snippet": "reg parity_gen;\nreg [7:0] data;\nreg [1:0] control;\nreg last_is_control, last_is_data;\nalways @(posedge clk) begin\n  if (last_is_control)\n    parity_gen <= !(bit2 ^ control[0] ^ control[1]);\n  else if (last_is_data)\n    parity_gen <= !(bit2 ^ data[7] ^ data[6] ^ data[5] ^ data[4] ^\n                   data[3] ^ data[2] ^ data[1] ^ data[0]);\nend",
+      "tags": ["xor_parity", "non_blocking_assignment", "conditional_if_else", "clocked_block", "boolean_reduction"],
+      "source_bug_id": "174",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/174",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

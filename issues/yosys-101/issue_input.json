@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 101,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/101",
+  "title": "Spurious write to BRAM after configuration on iCE40",
+  "body": "The following code\n\n``` verilog\nmodule bram(\n        input clk,\n        output LED0,\n        output LED1,\n        output LED2,\n        output LED3,\n        output LED4,\n        output LED5,\n        output LED6,\n        output LED7\n        );\n\n   wire        ramclk;\n   assign ramclk = clk;\n\n   reg [3:0]       cnt;\n   reg [7:0]       leds;\n\n   reg [7:0]       ram[511:0];\n\n   assign {LED7, LED6, LED5, LED4, LED3, LED2, LED1, LED0} = leds;\n\n   initial begin\n      ram[0] <= 8'hAA;\n   end\n\n   always @(posedge clk) begin\n      cnt <= cnt + 1;\n   end\n\n   always @(posedge ramclk) begin\n      case (cnt)\n    4: ram[7] <= 8'h55;\n    6: leds <= ram[0];\n      endcase\n   end\n\n\nendmodule // bram\n```\n\nshould always (after 6 cycles at least :) read out the value 10101010\nto the LEDs, since ram[0] is never modified by the code.  However,\nsometimes (about half the time) all zeros are read out instead.  It appears\nthat a spurious write of data 0 to address 0 is sometimes happening\nbetween configuration and the execution of the state machine.  (I have\nconfirmed in more complicated verilog that address 0 and only address 0\ngets modified this way.)\n\nIf I remove the assignment to ram[7], then the problem goes away.\n\nIs it a hardware bug in iCE40 that you can't both have init data in\nBRAMs and use the write function, or is yosys (or arachne-pnr) doing\nsomething wrong here?\n\nYosys 0.5+389 (git sha1 faa3da5, gcc 4.8.5 -mcpu=power4 -mtune=power4 -maltivec -mabi=altivec -fno-strict-aliasing -O2 -fPIC -Os)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-11-14",
+  "closed_at": "2015-11-24",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

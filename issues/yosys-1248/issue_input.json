@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1248,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1248",
+  "title": "abc9: speedup by using using \"clean\" more efficiently",
+  "body": "Unfortunately, I overlooked the fact that while `clean` does operate on selected modules, it also runs `optimize()`/`sort()`/`check()` on the entire design that it gets called on:\r\n\r\nhttps://github.com/YosysHQ/yosys/blob/e8a2d10982cd8f6ba3b0e66fbd922b051073f0cf/passes/opt/opt_clean.cc#L625-L627\r\n\r\nSince `abc9` (currently, rightly or wrongly) relies on a O(N) of `clean`-s for (several for each module to be abc9-ed) in order to remove the AIG from which LUTs were generated, this ends up costing quite a bit, particularly on large designs with many modules.\r\n\r\nThis PR improves this situation by placing each of the to-be-cleaned modules into its own design. ~There's one remaining known TODO (which I will revisit next week) to get rid of one final `clean` call.~ EDIT: Don't think my TODO would have helped things since we need to run a `clean` before doing any of those optimisations anyway...\r\n\r\nQuick experiment with soc_ethernetsoc_rocket on Xilinx. Before:\r\n```\r\nCPU: user 473.28s system 19.69s, MEM: 1157.45 MB total, 1119.32 MB resident\r\nYosys 0.8+618 (git sha1 e8a2d109, clang 7.0.0-3 -fPIC -Os)\r\nTime spent: 27% 1x abc9 (133 sec), 24% 316x clean (120 sec), ...\r\n```\r\nAfter:\r\n```\r\nCPU: user 332.13s system 16.11s, MEM: 1157.91 MB total, 1120.63 MB resident\r\nYosys 0.8+615 (git sha1 0218e641, clang 7.0.0-3 -fPIC -Os)\r\nTime spent: 29% 1x abc9 (103 sec), 13% 312x write_xaiger (45 sec), ...\r\n```\r\n\r\nEDIT: Currently merged with #1253 (thus that should be merged first) to give:\r\n```\r\nCPU: user 190.63s system 16.80s, MEM: 1147.50 MB total, 1108.03 MB resident\r\nYosys 0.8+623 (git sha1 5301c527, clang 7.0.0-3 -fPIC -Os)\r\nTime spent: 16% 61x techmap (34 sec), 14% 24x opt_clean (29 sec), ...\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-08-02",
+  "closed_at": "2019-08-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

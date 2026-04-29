@@ -1,0 +1,59 @@
+{
+  "tool": "iverilog",
+  "issue_number": 492,
+  "title": "iverilog hangs forever for certain bit of Verilog code",
+  "features": [
+    {
+      "name": "large unpacked memory array with 2^16 elements",
+      "category": "data_model",
+      "description": "Code should include a large unpacked array memory of 2^16 (65536) elements where SIZE is a localparam calculated as 1 << SZ_LOG2 with SZ_LOG2=16",
+      "snippet": "localparam SIZE = 1 << SZ_LOG2;\nreg [7:0] datamem [SIZE-1:0];",
+      "tags": ["unpacked_array", "memory", "large_size"],
+      "source_bug_id": "492",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/492",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "delayed wire assignment with #1 delay",
+      "category": "timing",
+      "description": "Code should include wire assignments with explicit delay (#1) driving signals used in multiple always blocks",
+      "snippet": "assign #1 addr_int = addr;\nassign #1 din_int  = din;",
+      "tags": ["delayed_assignment", "wire", "timing"],
+      "source_bug_id": "492",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/492",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "combinational always block with inequality comparisons",
+      "category": "control_flow",
+      "description": "Code should include an always @* block with multiple inequality comparisons (!==) and logical OR that accesses a large unpacked array",
+      "snippet": "always @* begin\n    if (!ce || we)\n        dout = 8'hzz;\n    else if (addr !== addr_sampled)\n        dout = 8'hxx;\n    else\n        dout = datamem[addr];\nend",
+      "tags": ["always_at_star", "inequality_comparison", "combinational"],
+      "source_bug_id": "492",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/492",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "signals driven by different always blocks with cross-references",
+      "category": "control_flow",
+      "description": "Code should include signals where addr_sampled and din_sampled are assigned in an always @(posedge ce) block but compared in an always @* block",
+      "snippet": "always @(posedge ce) begin\n    addr_sampled <= addr_int;\n    din_sampled  <= din_int;\nend",
+      "tags": ["cross_block_signals", "clocked_combinational_mix"],
+      "source_bug_id": "492",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/492",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    }
+  ]
+}

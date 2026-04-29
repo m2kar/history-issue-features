@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 4405,
+  "title": "CXXRTL: Information loss when outputs are aliased",
+  "features": [
+    {
+      "name": "output_aliased_to_internal_wire",
+      "category": "data_model",
+      "description": "Code should include an output port assigned directly to an internal wire, creating an alias where the output signal shares the same storage as an internal wire that is not marked as an output",
+      "snippet": "output c0;\nwire culprit;\nassign c0 = culprit;",
+      "tags": ["output", "alias", "wire", "assignment"],
+      "source_bug_id": "yosys-4405",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4405",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi_level_wire_computation_chain",
+      "category": "data_model",
+      "description": "Code should include internal wires that are computed from other internal wires, creating a multi-level combinational logic chain where final outputs alias to intermediate computed wires",
+      "snippet": "wire a0b1, a1b0;\nwire a0b1z, a1b0z;\nwire culprit;\nassign a0b1z = a0b1 ^ z;\nassign a1b0z = a1b0 ^ z;\nassign culprit = a1b1 ^ a1b0z;\nassign c0 = culprit;",
+      "tags": ["internal_wire", "combinational", "chain", "alias"],
+      "source_bug_id": "yosys-4405",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4405",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "output_metadata_loss_after_optimization",
+      "category": "general",
+      "description": "Code should include output signals that get optimized by high-level synthesis optimization passes, causing debug metadata to lose the OUTPUT flag and incorrectly report the signal as an internal wire reference",
+      "snippet": "output c0;\nwire culprit;\nassign c0 = culprit;",
+      "tags": ["output", "optimization", "metadata", "cxxrtl"],
+      "source_bug_id": "yosys-4405",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4405",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

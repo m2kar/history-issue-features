@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2750,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2750",
+  "title": "bad/no optimization on simple MUX&XOR design",
+  "body": "Hello,\r\nSo I am attending a lab at the TU Wien where we have to fix the Trusthub trojans and we are currently relying on the subpar optimization of the code via Yosys to prevent an otherwise not connected signal from getting optimized away. \r\nIn short we trick the optimizer to think a signal is used, when it isn't to prevent the trojan from getting optimized away.\r\nDesign used (also attached as a file):\r\n```\r\nmodule mask_gate(\r\n    input trojan,\r\n    input legit,\r\n    output masked\r\n    );\r\n\r\nassign masked = trojan^legit?~trojan:legit;\r\n\r\nendmodule\r\n```\r\n I also tried to replace the MUX and XOR with basic components like AND/OR to maybe get it optimized that way, but that didn't help. Hopefully the commands used are all that is needed to trigger decent optimization. (maybe I am missing some cool command :sweat_smile: )\r\n\r\nI am not sure, if this is a duplicate of #324. \r\n\r\nThanks in advance!\r\n\r\n```\r\n$ yosys --version\r\nYosys 0.9+4052 (git sha1 445208086, gcc 10.2.0 -march=x86-64 -mtune=generic -O2 -fno-plt -fPIC -Os)\r\n```\r\n\r\n## Steps to reproduce the issue\r\n\r\n```\r\nread_verilog mask_gate.v\r\nprep -auto-top\r\nopt -full\r\nshow\r\n```\r\nand \r\n```\r\nread_verilog mask_gate_basic.v\r\nprep -auto-top\r\nopt -full\r\nshow\r\n```\r\nHere is a zip with the masking gate designs:\r\n[mask_gates.zip](https://github.com/YosysHQ/yosys/files/6460415/mask_gates.zip)\r\n\r\n## Expected behavior\r\nThe whole design should be optimized away and `legit` should be directly mapped to `masked`.\r\n\r\nVivado is able to optimize both designs and shows `trojan` being disconnected.\r\nVivado mask_gate.v:\r\n![2021-05-11-17-36-05](https://user-images.githubusercontent.com/27691485/117848008-2a980d80-b283-11eb-8792-01a0f938e387.png)\r\n\r\n\r\n## Actual behavior\r\nThe design isn't optimized at all and this results in `trojan` still being connected even though it doesn't influence `masked`.\r\nYosys:\r\n![2021-05-11-17-48-09](https://user-images.githubusercontent.com/27691485/117848124-456a8200-b283-11eb-80cf-be41f5421e68.png)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-11",
+  "closed_at": "2021-05-11",
+  "code_blocks": [
+    "module mask_gate(\r\n    input trojan,\r\n    input legit,\r\n    output masked\r\n    );\r\n\r\nassign masked = trojan^legit?~trojan:legit;\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

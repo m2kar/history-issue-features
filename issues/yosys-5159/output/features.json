@@ -1,0 +1,81 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5159,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+  "title": "Fix `proc` handling of whiteboxes",
+  "features": [
+    {
+      "name": "whitebox_module_in_design_selection",
+      "category": "data_model",
+      "description": "Code should include a design where a whitebox (boxed module) is part of the selected modules processed by proc_* passes. Whitebox modules are vendor-specific or simulation models kept as black boxes during synthesis, and the proc pass must iterate over all_selected_modules() to properly handle them alongside regular modules.",
+      "snippet": "for (auto mod : design->all_selected_modules()) {\n    for (auto proc : mod->selected_processes()) {\n        // process each procedure\n    }\n}",
+      "tags": [
+        "whitebox",
+        "boxed-module",
+        "all_selected_modules",
+        "proc",
+        "selection"
+      ],
+      "source_bug_id": "yosys-5159",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "abc9_ops_invoking_proc",
+      "category": "general",
+      "description": "Code should include a synthesis flow where abc9_ops calls the proc pass on derived modules containing both regular and boxed (whitebox) modules. The fix requires calling 'proc -noopt' to skip opt_expr, preventing warnings about boxed modules being silently ignored.",
+      "snippet": "abc9_ops:\n    proc -noopt  // skip opt_expr to avoid double-warning\n    // abc9 optimization steps",
+      "tags": [
+        "abc9_ops",
+        "proc",
+        "noopt",
+        "whitebox",
+        "synthesis-flow"
+      ],
+      "source_bug_id": "yosys-5159",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "proc_opt_expr_warns_on_boxes",
+      "category": "control_flow",
+      "description": "Code should include a design with boxed modules where the proc pass's default call to opt_expr triggers a warning because opt_expr does not operate on whitebox modules but is called within a context expecting full module coverage. Using 'proc -noopt' bypasses this warning by skipping the opt_expr call entirely.",
+      "snippet": "proc:\n    // proc runs optimization passes\n    // then calls opt_expr by default\n    // which warns: Ignoring boxed module $paramod\\...\"",
+      "tags": [
+        "proc",
+        "opt_expr",
+        "warning",
+        "boxed-module",
+        "noopt"
+      ],
+      "source_bug_id": "yosys-5159",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "all_selected_modules_iteration_pattern",
+      "category": "control_flow",
+      "description": "Code should include the correct iteration pattern over selected modules: using all_selected_modules() to enumerate both regular and boxed modules, rather than iterating only over selected_processes() which silently skips whitebox modules without warning.",
+      "snippet": "for (auto mod : design->all_selected_modules()) {\n    log_debug(\"Processing module: %s\\n\", mod->name.c_str());\n    for (auto proc : mod->selected_processes()) {\n        // process procedures\n    }\n}",
+      "tags": [
+        "all_selected_modules",
+        "iteration",
+        "whitebox",
+        "proc-pass",
+        "selection"
+      ],
+      "source_bug_id": "yosys-5159",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ]
+}

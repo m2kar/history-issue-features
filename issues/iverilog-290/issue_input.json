@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 290,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/290",
+  "title": "Function result corruption",
+  "body": "I have encountered an interesting edge case where two \"simultaneous\" function calls observe the same result despite being called with different inputs.\r\n\r\nThe following example:\r\n```SystemVerilog\r\nmodule top;\r\n    reg [1:0] inp;\r\n    wire [3:0] out;\r\n    Foo foo(inp, out);\r\n    initial begin\r\n        $monitor(\"inp=%b out=%b\", inp, out);\r\n        inp = 0; #10;\r\n        inp = 1; #10;\r\n        inp = 2; #10;\r\n        inp = 3; #10;\r\n    end\r\nendmodule\r\n\r\nmodule Foo(inp, out);\r\n    input wire [1:0] inp;\r\n    output reg [3:0] out;\r\n    always @(inp)\r\n        out[0+:2] = pack(inp + 1);\r\n    always @(inp)\r\n        out[2+:2] = pack(inp + 2);\r\n    function [1:0] pack;\r\n        input reg [1:0] last;\r\n        pack = last;\r\n    endfunction\r\nendmodule\r\n```\r\nCorrectly produces the following output:\r\n```\r\ninp=00 out=1001\r\ninp=01 out=1110\r\ninp=10 out=0011\r\ninp=11 out=0100\r\n```\r\n\r\nHowever, if the function is changed to:\r\n```systemverilog\r\nfunction [1:0] pack;\r\n    input reg [1:0] last;\r\n    begin : block_name\r\n        pack = last;\r\n    end\r\nendfunction\r\n```\r\nThe output produced is:\r\n```\r\ninp=00 out=1010\r\ninp=01 out=1111\r\ninp=10 out=0000\r\ninp=11 out=0101\r\n```\r\n\r\nI am compiling and running the simulation as follows:\r\n`iverilog test.v && ./a.out`\r\n\r\nVersion: `Icarus Verilog version 10.3 (stable) (v10_3)`",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-12-22",
+  "closed_at": "2019-12-22",
+  "code_blocks": [
+    "module top;\r\n    reg [1:0] inp;\r\n    wire [3:0] out;\r\n    Foo foo(inp, out);\r\n    initial begin\r\n        $monitor(\"inp=%b out=%b\", inp, out);\r\n        inp = 0; #10;\r\n        inp = 1; #10;\r\n        inp = 2; #10;\r\n        inp = 3; #10;\r\n    end\r\nendmodule\r\n\r\nmodule Foo(inp, out);\r\n    input wire [1:0] inp;\r\n    output reg [3:0] out;\r\n    always @(inp)\r\n        out[0+:2] = pack(inp + 1);\r\n    always @(inp)\r\n        out[2+:2] = pack(inp + 2);\r\n    function [1:0] pack;\r\n        input reg [1:0] last;\r\n        pack = last;\r\n    endfunction\r\nendmodule",
+    "function [1:0] pack;\r\n    input reg [1:0] last;\r\n    begin : block_name\r\n        pack = last;\r\n    end\r\nendfunction"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

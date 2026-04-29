@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4946,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4946",
+  "title": "cost: Add `$mem_v2`, `$macc_v2` estimates",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nFill in blind spots of the keep_hierarchy command.\r\n\r\n_Explain how this is achieved._\r\n\r\nAdd `$mem`, `$macc` estimation consistent with existing `$mul`, `$dff` formulas.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nThis script can exercise the new support:\r\n\r\n```\r\ndesign -reset\r\nread_verilog <<EOF\r\nmodule top(input clk, input [10:0] a, input [2:0] w, output [2:0] y);\r\n\treg [3:0] m[60:0];\r\n\r\n\talways @(posedge clk) begin\r\n\t\ty <= m[a];\r\n\t\tm[a] <= w;\r\n\tend\r\nendmodule\r\nEOF\r\nprep\r\nkeep_hierarchy -min_cost 20\r\n\r\ndesign -reset\r\nread_verilog <<EOF\r\nmodule top(input [2:0] a, input [2:0] b, output [2:0] y);\r\n\tassign y = a * b;\r\nendmodule\r\nEOF\r\ndesign -save r\r\nkeep_hierarchy -min_cost 20\r\n\r\ndesign -load r\r\nalumacc\r\nopt_clean\r\nkeep_hierarchy -min_cost 20\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-03-18",
+  "closed_at": "2025-04-14",
+  "code_blocks": [
+    "design -reset\r\nread_verilog <<EOF\r\nmodule top(input clk, input [10:0] a, input [2:0] w, output [2:0] y);\r\n\treg [3:0] m[60:0];\r\n\r\n\talways @(posedge clk) begin\r\n\t\ty <= m[a];\r\n\t\tm[a] <= w;\r\n\tend\r\nendmodule\r\nEOF\r\nprep\r\nkeep_hierarchy -min_cost 20\r\n\r\ndesign -reset\r\nread_verilog <<EOF\r\nmodule top(input [2:0] a, input [2:0] b, output [2:0] y);\r\n\tassign y = a * b;\r\nendmodule\r\nEOF\r\ndesign -save r\r\nkeep_hierarchy -min_cost 20\r\n\r\ndesign -load r\r\nalumacc\r\nopt_clean\r\nkeep_hierarchy -min_cost 20"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

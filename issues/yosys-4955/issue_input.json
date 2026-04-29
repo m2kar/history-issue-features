@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4955,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4955",
+  "title": "Misleading error message when overriding localparam via defparam",
+  "body": "### Version\n\nYosys 0.50+7 (git sha1 38f858374, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nSave the following minimal testcase as testcase.v:\n\n```\n// testcase.v\nmodule child #(parameter A=1, localparam B=2);\n    initial $display(\"A=%d B=%d\", A, B);\nendmodule\n\nmodule parent;\n    defparam invalid_inst.B = 4; // Illegal defparam\n    child invalid_inst();\nendmodule\n```\n\nRun Yosys with:\n`yosys -p \"read_verilog testcase.v; hierarchy -check`\n\nThe error message incorrectly suggests the parameter is missing, while the real issue is an illegal localparam override.\nNo indication of the actual violation type (localparam vs missing parameter)\n\n### Expected Behavior\n\nA clear error message indicating an attempt to override a localparam:\n`ERROR: Cannot override localparam 'B' in module 'child' via defparam at testcase.v:5`\n\n### Actual Behavior\n\nMisleading error message stating the parameter does not exist:\n`ERROR: Module `child' referenced in module `parent' in cell `invalid_inst' does not have a parameter named 'B'`",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-03-21",
+  "closed_at": "2025-03-21",
+  "code_blocks": [
+    "// testcase.v\nmodule child #(parameter A=1, localparam B=2);\n    initial $display(\"A=%d B=%d\", A, B);\nendmodule\n\nmodule parent;\n    defparam invalid_inst.B = 4; // Illegal defparam\n    child invalid_inst();\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "variable_width_shift_in_always_ff",
+    "category": "data_model",
+    "description": "Code should include a right shift operation (>>) where the shift amount is a multi-bit register variable rather than a constant. This creates variable-length shift behavior that can cause unpredictable synthesis results.",
+    "snippet": "if (b >> e) begin d = e; end",
+    "tags": ["shift", "variable_width", "always_comb", "register_as_shift_amount"],
+    "source_bug_id": "yosys-4972",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4972",
+    "construct_complexity": 4,
+    "ub_type": null
+  },
+  {
+    "name": "self_canceling_arithmetic_condition",
+    "category": "control_flow",
+    "description": "Code should include an arithmetic expression that subtracts a variable from itself (e.g., c - c), which always evaluates to zero. This creates a constant-false condition that can confuse synthesis optimizations.",
+    "snippet": "if (c - c) begin e = 0; end",
+    "tags": ["arithmetic", "redundant", "self_subtraction", "constant_condition"],
+    "source_bug_id": "yosys-4972",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4972",
+    "construct_complexity": 1,
+    "ub_type": null
+  },
+  {
+    "name": "combinational_toggle_feedback",
+    "category": "data_model",
+    "description": "Code should include a register assignment that toggles its value (!e) inside a combinational always block. This creates an unstable feedback loop where the register changes every evaluation cycle, potentially causing synthesis tools to fail to converge.",
+    "snippet": "e = !e;",
+    "tags": ["toggle", "combinational", "feedback", "unstable", "always_ff"],
+    "source_bug_id": "yosys-4972",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4972",
+    "construct_complexity": 3,
+    "ub_type": null
+  },
+  {
+    "name": "dff_inverter_merge_oscillation",
+    "category": "timing",
+    "description": "Code should include a latch inference pattern with feedback that causes synthesis tools to oscillate between inverted and non-inverted latch states. The pattern involves registers with toggle behavior driving latch control signals, leading to infinite loops in DFF optimization passes.",
+    "snippet": "always @(*) begin if (b >> e) begin d = e; end e = !e; end",
+    "tags": ["latch", "dff", "inverter_merge", "oscillation", "feedback", "greenpak4"],
+    "source_bug_id": "yosys-4972",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4972",
+    "construct_complexity": 5,
+    "ub_type": null
+  }
+]

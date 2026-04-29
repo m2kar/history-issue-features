@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1144,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1144",
+  "title": "$display not working inside function during non clocked execution",
+  "body": "after building newest commit today, Thank you BTW. its really helped me out alot... sry. after building and copying it over to the oss-cad-suite, I noticed that functions no longer $display when called outside of an always block or initial block.\r\n\r\n```verilog\r\n// Icarus Verilog Parser/Elaborator version 13.0 (devel) (s20221226-529-gcb6544fac)\r\nmodule bug_module(clk, out);\r\n    input   wire clk;\r\n    output  wire out;\r\n\r\n    function automatic integer f_bug;\r\n        input integer value;\r\n        begin\r\n            $display(\"function: %1d\", value);\r\n            f_bug = value + 1;\r\n        end\r\n    endfunction\r\n\r\n    localparam lp = f_bug(0);   //first call of function. does not print\r\n    reg r = 0;\r\n    integer temp;\r\n    initial temp = f_bug(1);    // prints\r\n    always @(posedge clk) r <= ~r;\r\n    always @(posedge clk) temp <= f_bug(temp); // repeated calls of function print.\r\n    assign out = r;\r\nendmodule\r\n\r\nmodule test;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_module UUT( .clk(clk), .out(out) );\r\n\r\n    always #1 clk <= ~clk;\r\n\r\n    initial begin\r\n        $dumpfile(\"UUT.vcd\");\r\n        $dumpvars(0, test);\r\n        $display(\"starting bug_report_tb.v\");\r\n        #8 $display( \"***WARNING*** Forcing simulation to end\");\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n```\r\n>iverilog bug_report_0_tb.v\r\n>vvp a.out\r\nfunction: 1\r\nVCD info: dumpfile UUT.vcd opened for output.\r\nstarting bug_report_tb.v\r\nfunction: 2\r\nfunction: 3\r\nfunction: 4\r\nfunction: 5\r\n***WARNING*** Forcing simulation to end\r\nbug_report_0_tb.v:36: $finish called at 8 (1s)\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-13",
+  "closed_at": "2024-07-13",
+  "code_blocks": [
+    "// Icarus Verilog Parser/Elaborator version 13.0 (devel) (s20221226-529-gcb6544fac)\r\nmodule bug_module(clk, out);\r\n    input   wire clk;\r\n    output  wire out;\r\n\r\n    function automatic integer f_bug;\r\n        input integer value;\r\n        begin\r\n            $display(\"function: %1d\", value);\r\n            f_bug = value + 1;\r\n        end\r\n    endfunction\r\n\r\n    localparam lp = f_bug(0);   //first call of function. does not print\r\n    reg r = 0;\r\n    integer temp;\r\n    initial temp = f_bug(1);    // prints\r\n    always @(posedge clk) r <= ~r;\r\n    always @(posedge clk) temp <= f_bug(temp); // repeated calls of function print.\r\n    assign out = r;\r\nendmodule\r\n\r\nmodule test;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_module UUT( .clk(clk), .out(out) );\r\n\r\n    always #1 clk <= ~clk;\r\n\r\n    initial begin\r\n        $dumpfile(\"UUT.vcd\");\r\n        $dumpvars(0, test);\r\n        $display(\"starting bug_report_tb.v\");\r\n        #8 $display( \"***WARNING*** Forcing simulation to end\");\r\n        $finish;\r\n    end\r\nendmodule",
+    ">iverilog bug_report_0_tb.v\r\n>vvp a.out\r\nfunction: 1\r\nVCD info: dumpfile UUT.vcd opened for output.\r\nstarting bug_report_tb.v\r\nfunction: 2\r\nfunction: 3\r\nfunction: 4\r\nfunction: 5\r\n***WARNING*** Forcing simulation to end\r\nbug_report_0_tb.v:36: $finish called at 8 (1s)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

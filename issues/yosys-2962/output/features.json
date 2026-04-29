@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2962,
+  "title": "proc_prune sometimes does invalid assignment promotions leading to multiply-driven wires",
+  "features": [
+    {
+      "name": "overlapping full and partial bit-range assignments in process",
+      "category": "data_model",
+      "description": "Code should include a full wire assignment and a partial bit-range assignment to the same wire within a process, where the partial assignment overlaps with a subset of the full assignment bits",
+      "snippet": "wire [3:0] nq;\nwire [3:0] a;\nwire [1:0] b;\nassign nq = a;\nassign nq[1:0] = b;",
+      "tags": ["assignment", "partial_assignment", "bit_range", "process"],
+      "source_bug_id": "yosys-2962",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2962",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "conditional partial assignment in switch statement",
+      "category": "control_flow",
+      "description": "Code should include a conditional partial bit assignment inside a switch statement that overlaps with other assignments to the same wire",
+      "snippet": "switch (en)\n  case 1'b1:\n    assign nq[3] = 1'b0;\nend",
+      "tags": ["switch", "conditional_assignment", "partial_assignment"],
+      "source_bug_id": "yosys-2962",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2962",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "process with multiple overlapping assignments to same wire",
+      "category": "control_flow",
+      "description": "Code should include a process block containing multiple assignments targeting overlapping bit ranges of the same wire, including full and partial assignments",
+      "snippet": "process p\n  assign nq a\n  assign nq [1:0] b\n  switch en\n    case 1'b1\n      assign nq [3] 1'b0\n  end\n  sync posedge clk\n    update q nq\nend",
+      "tags": ["process", "multiple_assignments", "overlapping_bits", "sync"],
+      "source_bug_id": "yosys-2962",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2962",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

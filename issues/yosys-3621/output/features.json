@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 3621,
+  "title": "memory_libmap creates initialized registers but some architectures don't support them",
+  "features": [
+    {
+      "name": "memory array with readmemh initialization",
+      "category": "data_model",
+      "description": "Code should include a memory array declaration with $readmemh initial loading in an initial block, where the memory is an unpacked array of registers",
+      "snippet": "reg [DATA_SIZE-1:0] mem [0:(1 << ADDR_SIZE)];\ninitial begin\n\t$readmemh(\"ex1.mem\", mem);\nend",
+      "tags": ["memory", "readmemh", "unpacked_array", "initial_block"],
+      "source_bug_id": "yosys-3621",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3621",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "synchronous memory read through registered output",
+      "category": "timing",
+      "description": "Code should include a synchronous read from memory where data is read on posedge clock into a registered output, creating read-through-DFF behavior",
+      "snippet": "output reg [DATA_SIZE-1:0] dat_r;\n...\nalways @(posedge clk) begin\n\tdat_r <= mem[addr];\nend",
+      "tags": ["synchronous_read", "registered_output", "memory_read", "dff"],
+      "source_bug_id": "yosys-3621",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3621",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory read-first emulation with initialized DFF",
+      "category": "timing",
+      "description": "Code should include memory read operations that trigger tool internal DFF creation for read-first emulation, where the tool-generated initialized DFFs cause architecture incompatibility",
+      "snippet": "reg [DATA_SIZE-1:0] mem [0:(1 << ADDR_SIZE)];\ninitial begin\n\t$readmemh(\"ex1.mem\", mem);\nend\nalways @(posedge clk) begin\n\tdat_r <= mem[addr];\nend",
+      "tags": ["memory_read_first", "dff_emulation", "init_val", "architecture_constraint"],
+      "source_bug_id": "yosys-3621",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3621",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

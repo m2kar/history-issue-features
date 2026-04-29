@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1799,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1799",
+  "title": "\"Memory with non-constant width or size!\" message, when a function which returns a constant value is used",
+  "body": "I was [comparing Yosys against ISE and Vivado](https://github.com/rodrigomelo9/yosys-versus), using examples provided by Xilinx. After discarding some files with errors (a `.v` which is in fact a `.zip`, another one which is VHDL package with stranger things, etc), I found a few problems. Here one of them.\r\n\r\n## Steps to reproduce the issue\r\n\r\nThe conflicted file:\r\n\r\n```\r\n// A function that computes and returns a constant value\r\n//\r\n// functions_constant.v\r\n//\r\nmodule functions_constant (clk, we, a, di, do);\r\n    parameter ADDRWIDTH = 8;\r\n    parameter DATAWIDTH = 4;\r\n    input clk;\r\n    input we;\r\n    input  [ADDRWIDTH-1:0] a;\r\n    input  [DATAWIDTH-1:0] di;\r\n    output [DATAWIDTH-1:0] do;\r\n\r\n    function integer getSize;\r\n        input addrwidth;\r\n        begin\r\n            getSize = 2**addrwidth;\r\n        end\r\n    endfunction\r\n\r\n    reg [DATAWIDTH-1:0] ram [getSize(ADDRWIDTH)-1:0];\r\n\r\n    always @(posedge clk) begin\r\n        if (we)\r\n            ram[a] <= di;\r\n    end\r\n    assign do = ram[a];\r\n\r\nendmodule\r\n```\r\n\r\nThe Yosys command to reproduce the problem and the message:\r\n\r\n```\r\n$ yosys -Q -p \"read_verilog examples/vivado/functions_constant.v\"\r\n\r\n-- Running command `read_verilog examples/vivado/functions_constant.v' --\r\n\r\n1. Executing Verilog-2005 frontend: examples/vivado/functions_constant.v\r\nParsing Verilog input from `examples/vivado/functions_constant.v' to AST representation.\r\nGenerating RTLIL representation for module `\\functions_constant'.\r\nexamples/vivado/functions_constant.v:21: ERROR: Memory `\\ram' with non-constant width or size!\r\n```\r\n\r\nIt complains about `reg [DATAWIDTH-1:0] ram [getSize(ADDRWIDTH)-1:0];`, but `getSize` returns a constant value. I used this kind of solutions in some VHDL memories that I have, and I think that it is a desired feature to support.\r\n\r\nI can create and provide another example if needed (to avoid to include a Xilinx example in the repository).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-21",
+  "closed_at": "2021-03-28",
+  "code_blocks": [
+    "// A function that computes and returns a constant value\r\n//\r\n// functions_constant.v\r\n//\r\nmodule functions_constant (clk, we, a, di, do);\r\n    parameter ADDRWIDTH = 8;\r\n    parameter DATAWIDTH = 4;\r\n    input clk;\r\n    input we;\r\n    input  [ADDRWIDTH-1:0] a;\r\n    input  [DATAWIDTH-1:0] di;\r\n    output [DATAWIDTH-1:0] do;\r\n\r\n    function integer getSize;\r\n        input addrwidth;\r\n        begin\r\n            getSize = 2**addrwidth;\r\n        end\r\n    endfunction\r\n\r\n    reg [DATAWIDTH-1:0] ram [getSize(ADDRWIDTH)-1:0];\r\n\r\n    always @(posedge clk) begin\r\n        if (we)\r\n            ram[a] <= di;\r\n    end\r\n    assign do = ram[a];\r\n\r\nendmodule",
+    "$ yosys -Q -p \"read_verilog examples/vivado/functions_constant.v\"\r\n\r\n-- Running command `read_verilog examples/vivado/functions_constant.v' --\r\n\r\n1. Executing Verilog-2005 frontend: examples/vivado/functions_constant.v\r\nParsing Verilog input from `examples/vivado/functions_constant.v' to AST representation.\r\nGenerating RTLIL representation for module `\\functions_constant'.\r\nexamples/vivado/functions_constant.v:21: ERROR: Memory `\\ram' with non-constant width or size!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

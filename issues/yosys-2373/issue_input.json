@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2373,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2373",
+  "title": "CXXRTL: Don't force combinatorial outputs of modules to be a wire object",
+  "body": "Right now, all outputs of a modules are forced to be a wire object, even if that output is a combinatorial signal instead of coming out of a FF.\r\n\r\nFor example, the assignment to `led` in [this code](https://github.com/tomverbeure/cxxrtl_eval/blob/6516b811e66b56022ef14bd6fbd00fedf8b18130/blink_basic/blink.v#L9), results in the following generated code:\r\n\r\n```cpp\r\nstruct p_blink : public module {\r\n\t// \\init: 0\r\n\t// \\src: blink.v:4.16-4.23\r\n\twire<12> p_counter {0u};\r\n\t// \\src: blink.v:2.32-2.35\r\n\t/*output*/ wire<1> p_led;                            // <<<<<<<<<<<<<<<<< wire, not value!\r\n\t// \\src: blink.v:2.20-2.23\r\n\t/*input*/ value<1> p_clk;\r\n\tvalue<1> prev_p_clk;\r\n\tbool posedge_p_clk() const {\r\n\t\treturn !prev_p_clk.slice<0>().val() && p_clk.slice<0>().val();\r\n\t}\r\n\r\n\tbool eval() override;\r\n\tbool commit() override;\r\n\tvoid debug_info(debug_items &items, std::string path = \"\") override;\r\n}; // struct p_blink\r\n``` \r\n\r\nIt also leads to the following Yosys warning, and wasted simulation cycles:\r\n```\r\nModule `blink' contains buffered combinatorial wires:\r\n  led\r\nWarning: Design contains buffered combinatorial wires, which require delta cycles during evaluation.\r\n```\r\n\r\nSince CXXRTL has get and set methods, it's not necessary anymore to force outputs to be wires for consistency, so it's better to make them values.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2020-09-04",
+  "closed_at": "2020-11-02",
+  "code_blocks": [
+    "struct p_blink : public module {\r\n\t// \\init: 0\r\n\t// \\src: blink.v:4.16-4.23\r\n\twire<12> p_counter {0u};\r\n\t// \\src: blink.v:2.32-2.35\r\n\t/*output*/ wire<1> p_led;                            // <<<<<<<<<<<<<<<<< wire, not value!\r\n\t// \\src: blink.v:2.20-2.23\r\n\t/*input*/ value<1> p_clk;\r\n\tvalue<1> prev_p_clk;\r\n\tbool posedge_p_clk() const {\r\n\t\treturn !prev_p_clk.slice<0>().val() && p_clk.slice<0>().val();\r\n\t}\r\n\r\n\tbool eval() override;\r\n\tbool commit() override;\r\n\tvoid debug_info(debug_items &items, std::string path = \"\") override;\r\n}; // struct p_blink",
+    "Module `blink' contains buffered combinatorial wires:\r\n  led\r\nWarning: Design contains buffered combinatorial wires, which require delta cycles during evaluation."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

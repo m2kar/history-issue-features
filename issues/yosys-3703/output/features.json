@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 3703,
+  "title": "issue while converting verilog of serial adder into aiger",
+  "features": [
+    {
+      "name": "async_reset_dff_with_output_reg",
+      "category": "timing",
+      "description": "Code should include an always block with clock and asynchronous reset sensitivity list using blocking assignments to output reg signals, which causes Yosys to create $_DFFSR_PPP_ cells that aigmap cannot handle",
+      "snippet": "output reg s,cout;\nalways @(posedge clk or posedge reset) begin\n  if (reset == 1) begin\n    s = 0;\n    cout = c;\n  end else begin\n    s = a ^ b ^ c;\n    cout = 0;\n  end\nend",
+      "tags": ["async_reset", "output_reg", "blocking_assignment", "dffsr"],
+      "source_bug_id": "yosys-3703",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3703",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "blocking_carry_chain_in_sequential_block",
+      "category": "data_model",
+      "description": "Code should include a sequential always block where a carry variable is computed via blocking assignment chain and conditionally initialized on first iteration, producing state feedback that generates unsupported DFFSR cells",
+      "snippet": "reg c,flag;\nalways @(posedge clk or posedge reset) begin\n  if (reset == 1) begin\n    flag = 0;\n  end else begin\n    if (flag == 0) begin\n      c = cin;\n      flag = 1;\n    end\n    cout = 0;\n    c = (a & b) | (c & b) | (a & c);\n  end\nend",
+      "tags": ["blocking_assignment", "carry_chain", "state_feedback", "flag_init", "dffsr"],
+      "source_bug_id": "yosys-3703",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3703",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

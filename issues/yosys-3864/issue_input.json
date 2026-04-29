@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3864,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3864",
+  "title": "nlatch Verliog code synthesis question",
+  "body": "### Version\n\nYosys 0.31+6 (git sha1 0b8f7285905, gcc 9.4.0-1ubuntu1~20.04.1 -0g -fPIC))\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe nlatch in the Verilog code cannot be synthesized into the nlatch std_cell when the nlatch cell exists in my lib.\r\n\r\nnlatch.ys :\r\n\r\nread_verilog nlatch.v\r\nhierarchy -top nlatch\r\nproc\r\nopt\r\ntechmap\r\nopt\r\ndfflibmap mycell.lib\r\nabc -liberty mycell.lib\r\nclean\r\nwrite_verilog nlatch.syn.v\r\n\r\ncoding e.g.\r\n\r\nmodule nlatch1(a,b,c);\r\n\r\ninput a;\r\ninput b;\r\noutput c;\r\n\r\n    reg  c;\r\n\r\n    always @(a,b) begin\r\n        if (~a) begin\r\n            c <= b;\r\n        end  \r\n    end\r\n\r\nendmodule\n\n### Expected Behavior\n\nmodule nlatch1(a,b,c);\r\ninput a,b;\r\noutput c;\r\n\r\nnlatch c_reg ( .CLK(a), .D(b), .Q(c) );\r\n\r\nendmodule\n\n### Actual Behavior\n\nmodule nlatch1(a,b,c);\r\ninput a;\r\nwire a;\r\ninput b;\r\nwire b;\r\noutput c;\r\nreg c;\r\n\r\nalways @ *\r\n      if (!a)   c=b;\r\nendmodule",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-07-26",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

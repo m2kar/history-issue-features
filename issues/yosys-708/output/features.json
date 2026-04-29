@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 708,
+  "title": "$clog2 returns an unsigned type while the spec says it should be signed",
+  "features": [
+    {
+      "name": "clog2 result type signedness",
+      "category": "data_model",
+      "description": "Code should include a $clog2 function call used in an arithmetic expression where unsigned result causes underflow when compared against signed values",
+      "snippet": "localparam integer X = $clog2(1 << 17) - 18;\nwire [31:0] result = (X > 0) ? X : 0;",
+      "tags": ["clog2", "type_signedness", "unsigned_arithmetic", "underflow"],
+      "source_bug_id": "708",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/708",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "clog2 subtraction with negative result",
+      "category": "data_model",
+      "description": "Code should include a subtraction expression where $clog2 result minus a constant should produce a negative value but unsigned arithmetic causes underflow",
+      "snippet": "`define MAX(_a, _b) ((_a) > (_b) ? (_a) : (_b))\nlocalparam integer X = `MAX($clog2(1 << 17) - 18, 0);",
+      "tags": ["clog2", "subtraction", "unsigned_underflow", "macro_comparison"],
+      "source_bug_id": "708",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/708",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "mixed signed unsigned comparison with clog2",
+      "category": "control_flow",
+      "description": "Code should include a comparison between $clog2 expression result and a signed literal where unsigned underflow causes incorrect branch selection in ternary or if",
+      "snippet": "wire [31:0] a = $clog2(1 << 17);\nwire result = (a - 18 > 0) ? a - 18 : 0;",
+      "tags": ["clog2", "mixed_sign comparison", "ternary_operator", "unsigned_underflow"],
+      "source_bug_id": "708",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/708",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

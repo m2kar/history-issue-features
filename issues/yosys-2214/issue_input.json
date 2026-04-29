@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2214,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+  "title": "generate block scope resolution issues",
+  "body": "## Steps to reproduce the issue\r\n\r\n```Verilog\r\nmodule gen_test7;\r\n\treg [2:0] out1;\r\n\treg [2:0] out2;\r\n\twire [2:0] out3;\r\n\tgenerate\r\n\t\tbegin : cond\r\n\t\t\tinitial begin : init\r\n\t\t\t\treg signed [31:0] x;\r\n\t\t\t\tx = 2 ** 2;\r\n\t\t\t\tout1 = x;\r\n\t\t\tend\r\n\t\t\talways @* begin : proc\r\n\t\t\t\treg signed [31:0] x;\r\n\t\t\t\tx = 2 ** 1;\r\n\t\t\t\tout2 = x;\r\n\t\t\tend\r\n\t\t\tgenvar x;\r\n\t\t\tfor (x = 0; x < 3; x = x + 1) // Trouble!\r\n\t\t\t\tassign out3[x] = 1;\r\n\t\tend\r\n\tendgenerate\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n\tassert property (out1 == 4);\r\n\tassert property (out2 == 2);\r\n\tassert property (out3 == 7);\r\n`endif\r\nendmodule\r\n```\r\n```Verilog\r\nmodule gen_test8;\r\n\twire [1:0] x = 2'b11;\r\n\tgenerate\r\n\t\tbegin : A\r\n\t\t\tbegin : B\r\n\t\t\t\twire [1:0] y = 2'b00;\r\n\t\t\tend\r\n\t\t\tbegin : C\r\n\t\t\t\twire [1:0] z = 2'b01;\r\n\t\t\tend\r\n\t\t\twire [1:0] x = B.y ^ 2'b11 ^ C.z; // Trouble!\r\n\t\tend\r\n\tendgenerate\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n\tassert property (x == 3);\r\n\tassert property (A.x == 2);\r\n\tassert property (A.C.z == 1);\r\n\tassert property (A.B.y == 0);\r\n`endif\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nBoth modules should make it through the Verilog frontend successfully.\r\n\r\n## Actual behavior\r\n\r\nBoth fail, but for different reasons.\r\n\r\nI believe the first test case captures the same issue seen in #1456. The error is:\r\n```\r\ntests/simple/generate.v:183: ERROR: Left hand side of 1st expression of generate for-loop is not a gen var!\r\n```\r\n\r\nThe second test case yields:\r\n```\r\ntests/simple/generate.v:207: Warning: Identifier `\\B.y' is implicitly declared.\r\ntests/simple/generate.v:207: Warning: Identifier `\\C.z' is implicitly declared.\r\n```\r\nBut `B.y` should resolve to `A.B.y` given the context of its usage.\r\n\r\nI suspect some overhaul of the generate/block prefixing strategy might fix both of these issues.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-07-01",
+  "closed_at": "2020-08-18",
+  "code_blocks": [
+    "module gen_test7;\r\n\treg [2:0] out1;\r\n\treg [2:0] out2;\r\n\twire [2:0] out3;\r\n\tgenerate\r\n\t\tbegin : cond\r\n\t\t\tinitial begin : init\r\n\t\t\t\treg signed [31:0] x;\r\n\t\t\t\tx = 2 ** 2;\r\n\t\t\t\tout1 = x;\r\n\t\t\tend\r\n\t\t\talways @* begin : proc\r\n\t\t\t\treg signed [31:0] x;\r\n\t\t\t\tx = 2 ** 1;\r\n\t\t\t\tout2 = x;\r\n\t\t\tend\r\n\t\t\tgenvar x;\r\n\t\t\tfor (x = 0; x < 3; x = x + 1) // Trouble!\r\n\t\t\t\tassign out3[x] = 1;\r\n\t\tend\r\n\tendgenerate\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n\tassert property (out1 == 4);\r\n\tassert property (out2 == 2);\r\n\tassert property (out3 == 7);\r\n`endif\r\nendmodule",
+    "module gen_test8;\r\n\twire [1:0] x = 2'b11;\r\n\tgenerate\r\n\t\tbegin : A\r\n\t\t\tbegin : B\r\n\t\t\t\twire [1:0] y = 2'b00;\r\n\t\t\tend\r\n\t\t\tbegin : C\r\n\t\t\t\twire [1:0] z = 2'b01;\r\n\t\t\tend\r\n\t\t\twire [1:0] x = B.y ^ 2'b11 ^ C.z; // Trouble!\r\n\t\tend\r\n\tendgenerate\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n\tassert property (x == 3);\r\n\tassert property (A.x == 2);\r\n\tassert property (A.C.z == 1);\r\n\tassert property (A.B.y == 0);\r\n`endif\r\nendmodule",
+    "tests/simple/generate.v:183: ERROR: Left hand side of 1st expression of generate for-loop is not a gen var!",
+    "tests/simple/generate.v:207: Warning: Identifier `\\B.y' is implicitly declared.\r\ntests/simple/generate.v:207: Warning: Identifier `\\C.z' is implicitly declared."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

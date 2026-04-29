@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4592,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4592",
+  "title": "ABC full custom flow",
+  "body": "**Why?**\r\nThis is a spiritual successor to  #4343.  \r\nWe are trying to integrate a ABC+[Mockturtle](https://github.com/lsils/mockturtle) flow so we can use both logic optimizers in tandem.  \r\nAdditionally, I think it makes sense to also try to cover the custom liberty args in the ABC script as in #4343.  \r\nThis lead me to a more general solution that allows an essentially full customization of an ABC flow. Meaning everything besides the writeout of a snippet and the readback can be customized with whatever scripts the user want.\r\n\r\nIn principle this would also support the integration of more complex script that can directly invoke multiple ABC scripts and then use something like OpenSTA to evaluate them and hand Yosys the best version back.\r\n\r\n**How?**\r\nTo achieve this multiple changes are needed:\r\n- allow **multiple scripts** to be passed, one being the main `-script` and any number of additional `-helper`, all are copied to the temporary directory\r\n- introduce **additional placeholders** (similar to the delay that replaces `{D}`) defining the directory the script is in and the input and output file location\r\n- in addition to letting the user replace the ABC exe, the **flags are user defined**\r\n- let the user **select the file format** used for writte out (currently only BLIF) and which should be read back (currently BLIF or Verilog)\r\n\r\n**Example**\r\nAn example flow using the above features can be found here:\r\nhttps://github.com/pulp-platform/croc/blob/53882e795aeffaa1e2b205dfb1a563f466cad6e9/yosys/scripts/yosys_synthesis_mockturtle.tcl#L146\r\nIt first calls a shell script here:\r\nhttps://github.com/pulp-platform/croc/blob/phsauter/experimental/yosys/scripts/abc_mockturtle.tcl\r\n\r\nWhich in turn calls the ABC and mockturtle scripts.\r\n\r\n\r\n**Points of discussion:**\r\n- Do you think this approach/solution makes sense?\r\n- Should this be a separate command? `ABC` could be a specialization of it\r\n\r\n**Todo:**\r\n- [ ] integrate a test\r\n- [ ] refactor structural verilog reader (may be useful for others)\r\n- [ ] decide what should be options and what shoukd be only on scratchpad\r\n- [ ] add more write/read formats (eg AIGER)",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-09-10",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

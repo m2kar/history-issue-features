@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2824,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2824",
+  "title": "Synthesis produces incorrect logic (erroneously optimized to 0)",
+  "body": "The attached file contains what's needed to reproduce the issue :\r\n\r\n[synth_bug.tar.gz](https://github.com/YosysHQ/yosys/files/6636998/synth_bug.tar.gz)\r\n\r\nIt was tested on latest oss-cad-suite build from 20210610 ( Yosys 0.9+4081 git sha1 1667ad65 ).\r\n\r\nIn the above package, the makefile will synthesize two different top level, wrapping the same module.\r\nIn one case the same signal is fed to both the submodule input and in the other case they are different.\r\nThe submodule logic is basically a AND gate, but written using a `case` (It's from the picorv32 sources, with as many things trimmed as possible to still show the bug).\r\n\r\nWhen the two signals are separate, I expect an AND gate to be generated and that's the case. That's what in `synth.good.v`.\r\nIn the other case, it'd be the AND of 2 identicals signals and so this should be just a wire. And this is **NOT** the case ... looking in `synth.bad.v` you find `assign pcpi_int_wr = 1'h0;`  which is obviously wrong.\r\n\r\nThis  test case was narrowed down from the Hackaday Conference FPGA Badge  from 2019. The bitstream would build fine with the 2019 toolchain but would fail (it builds but the CPU misbehaves) with recent toolchain. The commit where it started breaking is the new opt dff pass merged in August 2020, however this is not what's actually causing the issue. This change just exposed it. The new DFF opt is just better at optimizing and instead of having 2 distinct FFs outputing to `pcpi_wr` and `pcpi_ready`, it realized it could use the same FF and this triggered this bug.  The final result in the SoC is that `pcpi_int_wr` is stuck to 0, causing `latched_write` to be 0 for PCPI instruction causing issues ... (this was confirmed in simulation and also on real hw with a logic analyzer looking at those signals).\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-06-11",
+  "closed_at": "2021-06-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4059,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4059",
+  "title": "write_cxxrtl: missing parameter when instantiating a Verilog blackbox module.",
+  "body": "### Version\n\nYosys 0.36+8 (git sha1 e6021b2b4, clang 16.0.6 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nGiven this `repro.v` file:\r\n\r\n```verilog\r\n(* cxxrtl_blackbox, cxxrtl_template = \"DATA_BITS\" *)\r\nmodule serial_tx(...);\r\n        parameter DATA_BITS = 8;\r\n        (* cxxrtl_width = \"DATA_BITS\" *) input [DATA_BITS - 1:0] data;\r\nendmodule\r\n\r\n(* top *)\r\nmodule top();\r\n        serial_tx #(.DATA_BITS(16)) tx (.data(16'b0));\r\nendmodule\r\n```\r\n\r\nRun `yosys repro.v -o repro.cc`.\r\n\n\n### Expected Behavior\n\nA `repro.cc` file is created.\n\n### Actual Behavior\n\nYosys fails with the following error:\r\n```\r\nERROR: Cell `top.tx' does not have a parameter `DATA_BITS', which is required by the templated module `$paramod\\serial_tx\\DATA_BITS=s32'00000000000000000000000000010000'.\r\n```\r\n\r\nThe error can also be reproduced by these commands:\r\n```\r\nread_verilog -defer repro.v\r\nwrite_cxxrtl repro.cc\r\n```\r\n\r\nHowever, removing `-defer` will produce the expected behavior.",
+  "labels": [
+    "pending-verification",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2023-12-08",
+  "closed_at": null,
+  "code_blocks": [
+    "(* cxxrtl_blackbox, cxxrtl_template = \"DATA_BITS\" *)\r\nmodule serial_tx(...);\r\n        parameter DATA_BITS = 8;\r\n        (* cxxrtl_width = \"DATA_BITS\" *) input [DATA_BITS - 1:0] data;\r\nendmodule\r\n\r\n(* top *)\r\nmodule top();\r\n        serial_tx #(.DATA_BITS(16)) tx (.data(16'b0));\r\nendmodule",
+    "ERROR: Cell `top.tx' does not have a parameter `DATA_BITS', which is required by the templated module `$paramod\\serial_tx\\DATA_BITS=s32'00000000000000000000000000010000'."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

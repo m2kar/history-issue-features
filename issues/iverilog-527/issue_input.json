@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 527,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/527",
+  "title": "SystemVerilog reduction operation fails with expr_type_ != IVL_VT_NO_TYPE",
+  "body": "Minimal failing example:\r\n```systemverilog\r\ntypedef struct packed {\r\n    union packed {\r\n        logic[2:0] a;\r\n        logic[2:0] b;\r\n    } u;\r\n} s1;\r\n\r\nmodule top(input s1 inp, output logic out);\r\n    assign out = | inp.u.a;\r\nendmodule\r\n```\r\nFails with the following\r\n```\r\n$ iverilog test.sv -o build/a.out -g2012\r\ntest.sv:10: assert: elab_expr.cc:6330: failed assertion expr_type_ != IVL_VT_NO_TYPE\r\nAborted (core dumped)\r\n```\r\n\r\nHowever, `assign out = | (inp.u.a | 0)` succeeds. As does a union by itself:\r\n```systemverilog\r\ntypedef union packed {\r\n    logic[2:0] a;\r\n    logic[2:0] b;\r\n} s1;\r\n\r\nmodule top(input s1 inp, output logic out);\r\n    assign out = | inp.a;\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-06-22",
+  "closed_at": "2021-07-31",
+  "code_blocks": [
+    "typedef struct packed {\r\n    union packed {\r\n        logic[2:0] a;\r\n        logic[2:0] b;\r\n    } u;\r\n} s1;\r\n\r\nmodule top(input s1 inp, output logic out);\r\n    assign out = | inp.u.a;\r\nendmodule",
+    "$ iverilog test.sv -o build/a.out -g2012\r\ntest.sv:10: assert: elab_expr.cc:6330: failed assertion expr_type_ != IVL_VT_NO_TYPE\r\nAborted (core dumped)",
+    "typedef union packed {\r\n    logic[2:0] a;\r\n    logic[2:0] b;\r\n} s1;\r\n\r\nmodule top(input s1 inp, output logic out);\r\n    assign out = | inp.a;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

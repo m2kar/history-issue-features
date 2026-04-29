@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2296,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2296",
+  "title": "Constant arg loop elaboration in function with some non-constant args",
+  "body": "## Steps to reproduce the issue\r\n\r\n```Verilog\r\nmodule top;\r\n\tfunction automatic [31:0] operation;\r\n\t\tinput reg [3:0] rounds;\r\n\t\tinput integer x;\r\n\t\tinteger i;\r\n\t\tbegin\r\n\t\t\tfor (i = 0; i < rounds[3:0]; i = i + 1)\r\n\t\t\t\tx = x * 2;\r\n\t\t\toperation = x;\r\n\t\tend\r\n\tendfunction\r\n\r\n\twire a;\r\n\tassign a = 2;\r\n\r\n\tparameter A = 3;\r\n\r\n\twire [31:0] x;\r\n\tassign x = operation(A, a);\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n    assert property (a == 2);\r\n    assert property (A == 3);\r\n    assert property (x == 16);\r\n`endif\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe loop in `operation` should be successfully elaborated given that is invoked with `rounds` as a constant.\r\n\r\n## Actual behavior\r\n\r\n```\r\ntest.v:7: ERROR: 2nd expression of generate for-loop is not constant!\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-07-24",
+  "closed_at": "2020-07-26",
+  "code_blocks": [
+    "module top;\r\n\tfunction automatic [31:0] operation;\r\n\t\tinput reg [3:0] rounds;\r\n\t\tinput integer x;\r\n\t\tinteger i;\r\n\t\tbegin\r\n\t\t\tfor (i = 0; i < rounds[3:0]; i = i + 1)\r\n\t\t\t\tx = x * 2;\r\n\t\t\toperation = x;\r\n\t\tend\r\n\tendfunction\r\n\r\n\twire a;\r\n\tassign a = 2;\r\n\r\n\tparameter A = 3;\r\n\r\n\twire [31:0] x;\r\n\tassign x = operation(A, a);\r\n\r\n// `define VERIFY\r\n`ifdef VERIFY\r\n    assert property (a == 2);\r\n    assert property (A == 3);\r\n    assert property (x == 16);\r\n`endif\r\nendmodule",
+    "test.v:7: ERROR: 2nd expression of generate for-loop is not constant!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

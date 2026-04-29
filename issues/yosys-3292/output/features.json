@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 3292,
+  "title": "ERROR: Multiple edge sensitive events found for this signal!",
+  "features": [
+    {
+      "name": "always_ff with async reset and self-referencing condition",
+      "category": "timing",
+      "description": "Code should include an always_ff block with edge-sensitive event control (posedge clk or posedge rstTrigger) where a signal assigned within the block is also used as a condition in an else-if branch within the same block",
+      "snippet": "always @(posedge clk or posedge rstTrigger)\n\tif (rstTrigger || !locked) begin\n\t\trst <= 1'b1;\n\tend\n\telse if (rst) begin\n\t\trst <= (count >= 10000 ? 1'b0 : 1'b1);\n\tend\n\telse begin\n\t\trst <= 1'b0;\n\tend",
+      "tags": ["always_ff", "async_reset", "self_reference", "edge_sensitive"],
+      "source_bug_id": "yosys-3292",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3292",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "sv2v converted always_ff to always procedural block",
+      "category": "preprocess",
+      "description": "Code should include a signal assigned in an always block with edge-sensitive event control that is also used in a combinational condition within the same block, producing conflicting edge sensitivity",
+      "snippet": "always @(posedge clk or posedge rstTrigger)\n\tif (rstTrigger || !locked) begin\n\t\tcount <= 0;\n\t\trst <= 1'b1;\n\tend\n\telse if (rst) begin\n\t\tcount <= count + 1;\n\t\trst <= (count >= CYCLE_OF_RESET_SEQUENCE ? 1'b0 : 1'b1);\n\tend",
+      "tags": ["sv2v_conversion", "always_ff", "always", "procedural_block"],
+      "source_bug_id": "yosys-3292",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3292",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

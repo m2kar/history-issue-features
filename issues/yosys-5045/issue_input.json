@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5045,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5045",
+  "title": "techlibs/lattice: add missing clock muxes to ECP5 block ram blackboxes",
+  "body": "## _What are the reasons/motivation for this change?_\r\n\r\nFixes #3952 , missing parameters on ECP5 EBR blackboxes.\r\n\r\n## _Explain how this is achieved._\r\n\r\nprjtrellis documentation shows that EBR clock inputs have optional inverters. The bram techmap outputs those parameters, and nextpnr consumes them. But for whatever reason, Diamond doesn't include those parameters in its blackbox models. This makes synth_lattice fail when targeting ECP5 with a design that maps block RAMs.\r\n\r\nThis change fixes up the ECP5 bram blackbox models at generation time, by adding in the missing parameters.\r\n\r\n## _If applicable, please suggest to reviewers how they can test the change._\r\n\r\n1. Grab this `synth.v` https://gist.github.com/danderson/3e80ce79da41673de1ee0dff22e0e596 . The Verilog is a bit verbose, but it's just a basic 1kiB block RAM with registered output.\r\n\r\n2. With yosys@main: `yosys -p 'read_verilog -sv -defer synth.v; hierarchy -top mkTop; synth_lattice -family ecp5'`\r\n\r\nObserve synthesis failure with error:\r\n\r\n```\r\n4.47.1. Analyzing design hierarchy..\r\nTop module:  \\mkTop\r\nERROR: Module `DP16KD' referenced in module `mkTop' in cell `ram_.RAM.0.0' does not have a parameter named 'CLKAMUX'.\r\n```\r\n\r\n3. Apply this patch to yosys install tree, run same thing again: `yosys -p 'read_verilog -sv -defer synth.v; hierarchy -top mkTop; synth_lattice -family ecp5'`\r\n\r\nObserve synthesis now succeeds.\r\n\r\n4. Also compare passing `-abc9` to `synth_lattice` before and after. Before: \r\n\r\n```\r\n4.43.2. Executing ABC9_OPS pass (helper functions for ABC9).\r\n/usr/bin/../share/yosys/lattice/common_sim.vh:0: ERROR: Can't find object for defparam `CLKAMUX`!\r\n```\r\n\r\nAfter: synthesis succeeds.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-21",
+  "closed_at": "2025-08-25",
+  "code_blocks": [
+    "4.47.1. Analyzing design hierarchy..\r\nTop module:  \\mkTop\r\nERROR: Module `DP16KD' referenced in module `mkTop' in cell `ram_.RAM.0.0' does not have a parameter named 'CLKAMUX'.",
+    "4.43.2. Executing ABC9_OPS pass (helper functions for ABC9).\r\n/usr/bin/../share/yosys/lattice/common_sim.vh:0: ERROR: Can't find object for defparam `CLKAMUX`!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

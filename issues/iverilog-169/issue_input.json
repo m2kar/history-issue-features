@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 169,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/169",
+  "title": "$dumpvars of a signal that goes through the resolve list ends up with wrong scope",
+  "body": "Everyone,\r\nI've been working on a fairly big design and I've been using iverilog and vvp to simulate it.\r\nI've recently switched to version 10 to make use of the support for multi-dimensional arrays, but I noticed an issue on the scope properties of signals dumped by $dumpvars directives. In practice, some signals (not all), ended up with a totally wrong scope in the header of the generated VCD file.\r\nSo, I decided to spend some time debugging the problem and I came up with a possible cause and solution for it. Here's a description, sorry if some of the details are not exactly right, but I looked at the code for the first time only a few days ago.\r\n\r\nThe vvp code maintains a data structure (special vpiHandle called __vpiScope) that has information about each scope. As part of that class, there is a vector (intern) that is supposed to\r\nmaintain a list of all the signals that are part of that scope (through special vpiHandle called __vpiSignal). Each signal's vpiHandle though has a \"within\" pointer that is supposed to point to the scope handle. This way you can get to the signal scope using the vpiHandle\r\nof the signal, which is what the $dumpvars directive does. \r\nWhen a net is compiled, the vpiHandle of the signal is created and added to the vector (intern) of the scope, but the pointer for each vpiHandle to its scope is not updated. It happens that the vpiHandle points to the current scope instead.\r\nWhen the design is compiled, during the first pass, and a net is compiled, it just happens that the current scope is also the correct scope for the signal, so the problem doesn't show.\r\nWhen instead a net goes through the \"resolve list\" of issues to resolve, the current scope now does not match and the issue above appears.\r\nThe original scope of the signal is available to the do_compile_net function, so to solve the issue I just set the signal vpiHandle pointer to the correct scope. What makes it slightly more complicated is that only the vpiHandle for signals (__vpiSignal) has the scope pointer, so I had to do a dynamic cast, which I have seen doing in other parts of the code.\r\n\r\nI don't know if the scope of each signal vpiHandle happens to be used only for $dumpvars directives and nothing more. Moreover, the issue appears only on nets that go through the resolve_list. This is maybe why nobody has seen the issue so far, but in our design this happens for thousands of signals, so maybe I'm not seeing the complete picture here.\r\n\r\nI have a commit that solves the issue for you to review, but the problem might involve more cases (for example, the code for real variables seems pretty similar).\r\n\r\nThank you,\r\nAldo Bottelli",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-11-04",
+  "closed_at": "2017-11-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

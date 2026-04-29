@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3154,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3154",
+  "title": "Unexpected answer when indexing and argument-passing \"upto\" buses",
+  "body": "## Steps to reproduce the issue\r\n\r\nGiven the following program:\r\n```verilog\r\nmodule evil;\r\n\r\n    localparam [0:4] A = 5'b01100;\r\n    localparam [0:3] B = 4'b1100;\r\n    localparam [0:3] R = foo(A, B);\r\n\r\n    initial begin\r\n        $display(\"============ R=%x    =============\", R);\r\n        $display(\"============ R[0]=%x =============\", R[0]);\r\n        $display(\"============ R[1]=%x =============\", R[1]);\r\n        $display(\"============ R[2]=%x =============\", R[2]);\r\n        $display(\"============ R[3]=%x =============\", R[3]);\r\n    end\r\n\r\n\tfunction automatic [0:3] foo(\r\n\t\tinput [0:4] argA,\r\n\t\tinput [0:3] argB);\r\n\t\treg [0:3] res;\r\n        reg [31:0] i, j;\r\n\t\tbegin\r\n\t\t\tres = 4'b0;\r\n            for (i = 0; i < 4; i = i + 1)\r\n            for (j = 0; j < 5; j = j + 1)\r\n                res[i] = res[i] | ((argA[j] && argB[i]) && (i == j));\r\n\t\t\tfoo = res;\r\n\t\tend\r\n\tendfunction\r\n\r\nendmodule\r\n```\r\n\r\nCall `yosys evil.v -p 'hierarchy -top evil; proc' | grep ====` will trigger unexpected behavior.\r\n\r\n## Expected behavior\r\n\r\nI consider the following to be the correct answer for `R`, which is the same answer produced by `Verilator 4.216 2021-12-05`:\r\n```\r\n============ R=4    =============\r\n============ R[0]=0 =============\r\n============ R[1]=1 =============\r\n============ R[2]=0 =============\r\n============ R[3]=0 =============\r\n```\r\n\r\n## Actual behavior\r\n\r\nUsing `Yosys 0.12+57 (git sha1 0feba821a, gcc 11.1.0 -march=x86-64 -mtune=generic -O2 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -fPIC -Os)` yields:\r\n```\r\n============ R=c    =============\r\n============ R[0]=1 =============\r\n============ R[1]=1 =============\r\n============ R[2]=0 =============\r\n============ R[3]=0 =============\r\n```\r\n\r\n*Probably* \"upto\" buses are indexed in the reversed way by Yosys?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-11",
+  "closed_at": "2022-02-11",
+  "code_blocks": [
+    "module evil;\r\n\r\n    localparam [0:4] A = 5'b01100;\r\n    localparam [0:3] B = 4'b1100;\r\n    localparam [0:3] R = foo(A, B);\r\n\r\n    initial begin\r\n        $display(\"============ R=%x    =============\", R);\r\n        $display(\"============ R[0]=%x =============\", R[0]);\r\n        $display(\"============ R[1]=%x =============\", R[1]);\r\n        $display(\"============ R[2]=%x =============\", R[2]);\r\n        $display(\"============ R[3]=%x =============\", R[3]);\r\n    end\r\n\r\n\tfunction automatic [0:3] foo(\r\n\t\tinput [0:4] argA,\r\n\t\tinput [0:3] argB);\r\n\t\treg [0:3] res;\r\n        reg [31:0] i, j;\r\n\t\tbegin\r\n\t\t\tres = 4'b0;\r\n            for (i = 0; i < 4; i = i + 1)\r\n            for (j = 0; j < 5; j = j + 1)\r\n                res[i] = res[i] | ((argA[j] && argB[i]) && (i == j));\r\n\t\t\tfoo = res;\r\n\t\tend\r\n\tendfunction\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

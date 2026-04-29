@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2752,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2752",
+  "title": "Add support for the SystemVerilog bind keyword",
+  "body": "EDIT: This used to be a large patch set, but it's now mostly merged. The remaining commit has the following commit message:\r\n\r\n**Implement bind elaboration in the hierarchy pass**\r\n\r\nThis is surprisingly finicky, because of the difference between `bind`\r\ndirectives that target modules and those that target specific\r\ninstances of those modules (i.e. specific cells).\r\n\r\nIn the first case, we can just operate on the module in place. In the\r\nsecond, we have to make fresh copies of the target module and the\r\n\"path of cells\" from the bind directive down to it. For instance, in\r\nsomething like this:\r\n\r\n    bind $root.foo.bar_i.baz_i qux bound_i (.*);\r\n\r\n(where `bar_i` and `baz_i` are instances of modules called `bar` and `baz`,\r\nrespectively), we need to make a fresh clone of `baz` (let's call it\r\n`baz1`) into which we insert an instance of `qux`. But we can't just\r\nmodify bar to re-type its `baz_i` cell from `baz` to `baz1`: what if there\r\nare other instances of `bar` in the design? So we then need to make a\r\nfresh clone of `bar` (let's call it `bar1`). Since `foo` here refers to the\r\nmodule, rather than a particular instance, we *can* now modify `foo` to\r\nre-type it's `bar_i` cell from `bar` to `bar1` (phew!).\r\n\r\nTo avoid some extra un-needed renames, we actually count the number of\r\ntimes each cell type appears in the design (see `get_cell_type_counts`).\r\nIf the design in the example above didn't actually use `bar` except as\r\n`bar_i` in module `foo`, we actually operate in place rather than\r\nrenaming.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-13",
+  "closed_at": "2023-07-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

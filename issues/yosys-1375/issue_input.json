@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1375,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1375",
+  "title": "Adding dffeas_init to better determine init value for this cell",
+  "body": "@eddiehung \r\nThis PR is to solve #1368 . The dffinit pass used in _synth_intel_ with -highlow argument is causing issues in multi-bit values (parameters as strings are causing some problems). \r\nI'm removing -highlow argument and generating the parameter needed for dffeas with __dffeas_init__. In such way, Yosys can dump the cell with the parameter _power_up_ = bit and then, convert that bit into what the VQM expects.\r\n\r\nI ran synthesis test only succesfully. Please advise if I should run any other test.\r\n\r\n* Run Yosys.\r\n```bash\r\nread_verilog -sv pattern_gen.v\r\nsynth_intel -family max10 -top pattern_gen -vqm pattern_gen.vqm\r\n```\r\n* Run Quartus with generated VQM:\r\n```bash\r\nquartus_map pattern_gen --part=EP4CE22F17C6\r\n```\r\n* Log:\r\n```bash\r\n    Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 4 warnings\r\n    Info: Peak virtual memory: 941 megabytes\r\n    Info: Processing ended: Thu Sep 12 15:05:09 2019\r\n    Info: Elapsed time: 00:00:16\r\n    Info: Total CPU time (on all processors): 00:00:41\r\n```\r\n\r\nBelow is an excerpt of generated VQM for both Quartus and Yosys:\r\n``` bash\r\nQuartus:\r\ndffeas \\ctr[0]~I (\r\n        .clk(\\clk~input ),\r\n        .d(\\Selector66~0 ),\r\n        .clrn(\\rst_n~input ),\r\n        .q(\\ctr[0] ));\r\ndefparam \\ctr[0]~I .power_up = \"low\";\r\ndefparam \\ctr[0]~I .is_wysiwyg = \"true\";\r\n\r\nYosys:\r\n  dffeas syn__346_ (\r\n    .aload(1'b0),\r\n    .asdata(1'b0),\r\n    .clk(clk),\r\n    .clrn(rst_n),\r\n    .d(syn__000_[0]),\r\n    .ena(1'b1),\r\n    .prn(1'b1),\r\n    .q(data[0]),\r\n    .sclr(1'b0),\r\n    .sload(1'b0)\r\n  );\r\n  defparam syn__346_.is_wysiwyg = \"TRUE\";\r\n  defparam syn__346_.power_up = \"low\";\r\n\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-09-12",
+  "closed_at": "2019-09-12",
+  "code_blocks": [
+    "Info: Quartus Prime Analysis & Synthesis was successful. 0 errors, 4 warnings\r\n    Info: Peak virtual memory: 941 megabytes\r\n    Info: Processing ended: Thu Sep 12 15:05:09 2019\r\n    Info: Elapsed time: 00:00:16\r\n    Info: Total CPU time (on all processors): 00:00:41"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

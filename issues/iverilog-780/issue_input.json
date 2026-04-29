@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 780,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/780",
+  "title": "Prevent non-blocking writes to fields of automatic structs",
+  "body": "The `PEIdent::has_aa_term()` method still uses the old `symbol_search()`\r\nand will fail to find the variable if part of the identifier path is a\r\nmember select of a variable.\r\n\r\nAs a result such writes to fields of automatic structs can be classified as\r\nstatic and it is possible to do non-blocking assignments to them. E.g.\r\n\r\n```SystemVerilog\r\ntask automatic t;\r\n  struct packed {\r\n    logic x;\r\n  } s;\r\n  s <= ...; // This fails\r\n  s.x <= ...; // This works, but should fail\r\nendtask\r\n```\r\n\r\nSwitch to the new symbol search to make sure this case is handled\r\ncorrectly. The new symbol search will correctly handle identifier paths\r\nthat have a trailing item after the variable, while the old symbol search\r\nwill always return an error in that case.\r\n\r\nNote that while it is not allowed to do a non-blocking write to a class\r\nobject automatic variable, it is allowed to do a non-blocking write to a\r\nproperty of a class object that is stored in an automatic variable, as the\r\nnon-blocking write is supposed to capture a reference to the object and not\r\nreference the variable. E.g.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  int x;\r\nendclass\r\n\r\ntask automatic t;\r\n  C c;\r\n  c <= ...; // Not allowed\r\n  c.x <= ...; // Allowed\r\nendtask\r\n```\r\n\r\nNon-blocking access to class properties is not yet support in\r\nIcarus in general, but the error handling for that needs to be done\r\nsomewhere else.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-06",
+  "closed_at": "2022-10-14",
+  "code_blocks": [
+    "task automatic t;\r\n  struct packed {\r\n    logic x;\r\n  } s;\r\n  s <= ...; // This fails\r\n  s.x <= ...; // This works, but should fail\r\nendtask",
+    "class C;\r\n  int x;\r\nendclass\r\n\r\ntask automatic t;\r\n  C c;\r\n  c <= ...; // Not allowed\r\n  c.x <= ...; // Allowed\r\nendtask"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

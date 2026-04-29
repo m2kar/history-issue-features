@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4743,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4743",
+  "title": "Inconsistent simulation before and after yosys synthesis",
+  "body": "### Version\n\nYosys 0.44 (git sha1 80ba43d26, g++ 11.4.0-2ubuntu1~20.04 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n1. Install the necessary dependencies (skip this step if you have already installed `verilator` and `zip`):\r\n```\r\nsudo apt-get install zip verilator\r\n```\r\n2. Download the attached `.zip` archive. Then change to the directory where this archive is located and unpack it:\r\n```\r\nunzip files.zip\r\n```\r\n3. Go to `files` directory:\r\n```\r\ncd files\r\n```\r\n4. Launch `yosys` like this:\r\n```\r\nyosys -p\"read_verilog test_07_14_00_1.v; proc; opt -nodffe; memory; pmuxtree; flatten -scopename; opt -nodffe -fast; aigmap; write_verilog test_07_14_00_1_dut.v\"\r\n```\r\n5. Change the top module name of the synthesized module:\r\n```\r\nsed -i 's/module test/module test_dut/g' test_07_14_00_1_dut.v\r\n```\r\n6. Launch `verilator` like this:\r\n```\r\nverilator test_07_14_00_1.v test_07_14_00_1_dut.v test_07_14_00_1_testbench.sv -Wno-fatal +1364-2005ext+v +1800-2017ext+sv --binary --top-module test_testbench\r\n```\r\n7. Launch the simulation:\r\n```\r\n./obj_dir/Vtest_testbench\r\n```\r\n[files.zip](https://github.com/user-attachments/files/17753753/files.zip)\r\n\n\n### Expected Behavior\n\nThe expected behavior is the successful simulation result (without any discrepancies between the source model and the synthesized model).\n\n### Actual Behavior\n\n`verilator` gives the following output:\r\n```\r\n \\in1_gold = 1\r\n \\in2_gold = 1\r\n \\in_gold = 1\r\n \\ctrl_gold = 1\r\nDUT Error at time                   30\r\n \\out :\r\nExpected value 0, Got Value 1\r\n[3500] %Fatal: test_07_14_00_1_testbench.sv:78: Assertion failed in TOP.test_testbench\r\n%Error: test_07_14_00_1_testbench.sv:78: Verilog $stop\r\nAborting...\r\nAborted (core dumped)\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2024-11-14",
+  "closed_at": "2024-11-14",
+  "code_blocks": [
+    "yosys -p\"read_verilog test_07_14_00_1.v; proc; opt -nodffe; memory; pmuxtree; flatten -scopename; opt -nodffe -fast; aigmap; write_verilog test_07_14_00_1_dut.v\"",
+    "sed -i 's/module test/module test_dut/g' test_07_14_00_1_dut.v",
+    "verilator test_07_14_00_1.v test_07_14_00_1_dut.v test_07_14_00_1_testbench.sv -Wno-fatal +1364-2005ext+v +1800-2017ext+sv --binary --top-module test_testbench",
+    "\\in1_gold = 1\r\n \\in2_gold = 1\r\n \\in_gold = 1\r\n \\ctrl_gold = 1\r\nDUT Error at time                   30\r\n \\out :\r\nExpected value 0, Got Value 1\r\n[3500] %Fatal: test_07_14_00_1_testbench.sv:78: Assertion failed in TOP.test_testbench\r\n%Error: test_07_14_00_1_testbench.sv:78: Verilog $stop\r\nAborting...\r\nAborted (core dumped)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

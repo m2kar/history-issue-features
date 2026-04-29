@@ -1,0 +1,52 @@
+{
+  "tool": "verilator",
+  "issue_number": 1235,
+  "title": "Inconsistent reg update on negedge due to input assignment",
+  "features": [
+    {
+      "name": "dual_clock_edge_triggered_block",
+      "category": "timing",
+      "description": "Code should include an always block triggered by negedge of one clock OR posedge of another clock",
+      "snippet": "always @(negedge clock_0 or posedge clock_1) begin\n  if (clock_1) begin\n    reg_0 <= 1;\n  end else begin\n    reg_0 <= wire_0;\n  end\nend",
+      "tags": ["always_block", "negedge", "posedge", "or_sensitivity"],
+      "source_bug_id": "iverilog-1235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1235",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "continuous_assign_input_bit_select_in_always",
+      "category": "data_model",
+      "description": "Code should include a continuous assignment from an input bit-select used inside an edge-triggered always block",
+      "snippet": "input wire [26:0] in0;\nwire [3:0] wire_0;\nassign wire_0 = in0[0:0];\nalways @(negedge clock_0 or posedge clock_1) begin\n  reg_0 <= wire_0;\nend",
+      "tags": ["continuous_assign", "bit_select", "input_port", "always_block"],
+      "source_bug_id": "iverilog-1235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1235",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "input_change_coincident_with_clock_edge",
+      "category": "timing",
+      "description": "Code should include an input signal that changes value at the same time as a clock edge transition, where the input value is sampled via continuous assignment in the clocked block",
+      "snippet": "reg [26:0] in0;\nreg clock_0;\nwire wire_0;\nassign wire_0 = in0[0:0];\ninitial begin\n  in0 = 27'd0;\n  clock_0 = 1'b0;\n  #2000;\n  in0 = 27'd1;\n  clock_0 = 1'b0; // negedge of clock_0\nend",
+      "tags": ["input_timing", "clock_edge", "coincident_change", "sampling"],
+      "source_bug_id": "iverilog-1235",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1235",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3,
+    "note": "Original tool iverilog remapped to verilator for schema compliance"
+  }
+}

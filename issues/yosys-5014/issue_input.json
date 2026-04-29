@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5014,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5014",
+  "title": "fsm_expand deleting design if state register is not initialised",
+  "body": "### Version\n\nYosys 0.51+85 (git sha1 1113c8c95, g++ 11.4.0-1ubuntu1~22.04 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n[example.zip](https://github.com/user-attachments/files/19693381/example.zip)\n\nI'm sorry for including a large file because it is related to `fsm_expand`, I don't know how to create a minimal example. \n\nRunning the following steps:\n```\nread_verilog -sv example.sv\nhierarchy -auto-top; flatten; proc; opt -nodffe -nosdff; clean -purge\nfsm -expand\nopt -full\nstat\n```\n\nAnd keep `current_state` on `line 1875` of the file as is will optimise away the whole design.\n\nHowever, if we initialise `line 1875` with `logic [3:0] current_state = 4'b0;`, the module will remain. \n\nI can tell is depends on the `fsm_expand` as if running without the `-expnad` flag, the module will not get optimised. \n\n### Expected Behavior\n\nThe `fsm -expand` should not depend on the register initialisation nor on optimising the whole circuit away. \n\n### Actual Behavior\n\nThe design gets optimised away. ",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2025-04-10",
+  "closed_at": null,
+  "code_blocks": [
+    "read_verilog -sv example.sv\nhierarchy -auto-top; flatten; proc; opt -nodffe -nosdff; clean -purge\nfsm -expand\nopt -full\nstat"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

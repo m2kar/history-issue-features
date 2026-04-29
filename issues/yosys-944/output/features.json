@@ -1,0 +1,48 @@
+{
+  "tool": "yosys",
+  "issue_number": 944,
+  "title": "Add pmux2shiftx command",
+  "features": [
+    {
+      "name": "dense case statement with contiguous selector values",
+      "category": "control_flow",
+      "description": "Code should include a combinational case statement where the selector covers all contiguous values from 0 to 2^n-1, creating a dense parallel multiplexer pattern suitable for shift-based optimization",
+      "snippet": "input [2:0] S1;\ninput [9:0] A, B, C, D, E, F, G, H;\noutput reg [9:0] X;\nalways @* begin\n  case (S1)\n    3'd0: X = A;\n    3'd1: X = B;\n    3'd2: X = C;\n    3'd3: X = D;\n    3'd4: X = E;\n    3'd5: X = F;\n    3'd6: X = G;\n    3'd7: X = H;\n  endcase\nend",
+      "tags": ["case", "combinational", "dense_mux", "parallel_mux"],
+      "source_bug_id": "944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/944",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "sparse case statement with non-contiguous selector values",
+      "category": "control_flow",
+      "description": "Code should include a combinational case statement where the selector values are non-contiguous with large gaps, creating a sparse parallel multiplexer that requires offset subtraction and bit manipulation for shift-based conversion",
+      "snippet": "input [5:0] S2;\ninput [9:0] I, J, K, L, M, N;\noutput reg [9:0] X;\nalways @* begin\n  case (S2)\n    6'd46: X = I;\n    6'd47: X = J;\n    6'd48: X = K;\n    6'd52: X = L;\n    6'd53: X = M;\n    6'd54: X = N;\n  endcase\nend",
+      "tags": ["case", "combinational", "sparse_mux", "non_contiguous"],
+      "source_bug_id": "944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/944",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "multiple case statements driving same output in combinational block",
+      "category": "control_flow",
+      "description": "Code should include two or more combinational case statements within the same always block that both assign to the same output variable, exercising last-assignment-wins semantics and multi-mux merging optimization",
+      "snippet": "input [2:0] S1;\ninput [5:0] S2;\ninput [9:0] A, B, C, D, E, F, G, H;\ninput [9:0] I, J, K, L, M, N;\noutput reg [9:0] X;\nalways @* begin\n  case (S1)\n    3'd0: X = A;\n    3'd1: X = B;\n    3'd2: X = C;\n    default: X = D;\n  endcase\n  case (S2)\n    6'd10: X = I;\n    6'd11: X = J;\n    6'd20: X = K;\n  endcase\nend",
+      "tags": ["case", "combinational", "multiple_case", "last_assignment_wins", "mux_merge"],
+      "source_bug_id": "944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/944",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

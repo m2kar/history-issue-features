@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 983,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/983",
+  "title": "Initial implementation of elaboration system tasks",
+  "body": "(IEEE1800-2017 section 20.11)\r\nThis PR allows us to use $info/$warning/$error/$fatal **at elaboration time** within a generate block.\r\nThis is very useful to stop a synthesis of a parametrized block when an illegal combination of parameters is chosen.\r\n\r\nSome notes regarding this PR:\r\n1. While it is not 100% complete, it is functional, and provides a useful enhancement as-is.\r\n2. I added a new parser token, TOK_ELAB_TASK to prevent shift/reduce conflicts beween module instanciations within generate blocks and the new system tasks.\r\n3. I added a new AST node, AST_TECALL, so that elaboration system tasks won't get handled by normal system task calls.\r\n4. I chose not to add it within Ast::simplify() because this is a huge functiion, and I'm not sure I won't break anything. The use of a new AST node certainly helps avoiding this.\r\n\r\nKnown limitations:\r\n1. Test runs, but I don't know how to fail the regression if the test output is not as expected.\r\n2. Test doesn't check for $error and $fatal since it will fail the test regression.\r\n3. $info/$warning do not handle the full parameters as $display() does, only a simple message. We need to add a full $display() parser for that, perhaps take it from another Verilog open source codebase with an appropriate license. In addition, we might want to call simplify() on AST_TECALL's children in case some expressions appear as part of the tasks' parameters.\r\n4. $info/$warning are tested within if/case/for statements in a generate blocks, but are silently ignoredwhen put directly in a generate block with none of the enclosing statements above.\r\n\r\nPlease see corresponding Verilator bug:\r\nhttps://www.veripool.org/issues/1429-Verilator-Feature-request-elaboration-tasks\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-03",
+  "closed_at": "2019-06-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

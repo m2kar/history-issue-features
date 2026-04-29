@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 283,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/283",
+  "title": "Expression evaluates to 1'bx instead of expected 1'b0",
+  "body": "The following code outputs and assigns `y` to 1'bx instead of 1'b0. This happens in iverilog version 10.3 and also happens in version 10.0 (11/23/14) on edaplayground. However, this seems to execute fine in version 9.6 and 9.7 on edaplayground.\r\n\r\nI have a link to the design loaded in [edaplayground](https://www.edaplayground.com/x/5SMW).\r\n\r\n```verilog\r\nmodule testbench;\r\n   wire y;\r\n   reg  clk;\r\n   reg [15:0] wire0; // Reducing the size of wire0 to 15 bits seems to fix the output.\r\n   reg        reg1 = 1'h0;\r\n   assign y = reg1;\r\n   initial\r\n     begin\r\n        clk = 1'h0;\r\n        wire0 = 1'h0;\r\n        #10 $finish;\r\n     end\r\n   always #5 clk = ~clk;\r\n   always @(posedge clk) $strobe(\"%b\", y);\r\n   // Problematic line, should assign 1'b0 but assigns 1'bx.\r\n   always @(posedge clk) reg1 <= (wire0 >> {wire0 ~^ 1'b1, wire0});\r\nendmodule\r\n```\r\n\r\nAfter running\r\n\r\n```\r\niverilog testbench.v -o im && ./im\r\n```\r\n\r\nthe output is `x` instead of `0`.\r\n\r\nIf the always block is not used, and the expression is assigned to `y` directly, the result is the expected 1'b0. Any changes to the expression seems to fix the result as well.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-12",
+  "closed_at": "2019-11-16",
+  "code_blocks": [
+    "module testbench;\r\n   wire y;\r\n   reg  clk;\r\n   reg [15:0] wire0; // Reducing the size of wire0 to 15 bits seems to fix the output.\r\n   reg        reg1 = 1'h0;\r\n   assign y = reg1;\r\n   initial\r\n     begin\r\n        clk = 1'h0;\r\n        wire0 = 1'h0;\r\n        #10 $finish;\r\n     end\r\n   always #5 clk = ~clk;\r\n   always @(posedge clk) $strobe(\"%b\", y);\r\n   // Problematic line, should assign 1'b0 but assigns 1'bx.\r\n   always @(posedge clk) reg1 <= (wire0 >> {wire0 ~^ 1'b1, wire0});\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

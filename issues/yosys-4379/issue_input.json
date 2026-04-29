@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4379,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4379",
+  "title": "frontend: Fixes verific import around range order",
+  "body": "Test Case\r\n```\r\nmodule packed_dimensions_range_ordering (\r\n    input  wire [0:4-1] in,\r\n    output wire [4-1:0] out\r\n);\r\n  assign out = in;\r\nendmodule : packed_dimensions_range_ordering\r\n\r\nmodule instanciates_packed_dimensions_range_ordering (\r\n    input  wire [4-1:0] in,\r\n    output wire [4-1:0] out\r\n);\r\n  packed_dimensions_range_ordering U0 (\r\n      .in (in),\r\n      .out(out)\r\n  );\r\nendmodule : instanciates_packed_dimensions_range_ordering\r\n```\r\n\r\n```\r\n// with verific, does not pass formal\r\nmodule instanciates_packed_dimensions_range_ordering(in, out);\r\n  input [3:0] in;\r\n  wire [3:0] in;\r\n  output [3:0] out;\r\n  wire [3:0] out;\r\n\r\n  assign out = { in[0], in[1], in[2], in[3] };\r\nendmodule\r\n\r\n// with surelog, passes formal\r\nmodule instanciates_packed_dimensions_range_ordering(in, out);\r\n  input [3:0] in;\r\n  wire [3:0] in;\r\n  output [3:0] out;\r\n  wire [3:0] out;\r\n\r\n  assign out = in;\r\nendmodule\r\n```\r\n\r\nScript\r\n```\r\nverific -sv test.sv\r\nverific -import -vv instanciates_packed_dimensions_range_ordering\r\nhierarchy -top instanciates_packed_dimensions_range_ordering\r\nflatten\r\nopt\r\nclean -purge\r\nwrite_verilog -simple-lhs -noattr -noexpr result3.v\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-08",
+  "closed_at": "2024-05-09",
+  "code_blocks": [
+    "module packed_dimensions_range_ordering (\r\n    input  wire [0:4-1] in,\r\n    output wire [4-1:0] out\r\n);\r\n  assign out = in;\r\nendmodule : packed_dimensions_range_ordering\r\n\r\nmodule instanciates_packed_dimensions_range_ordering (\r\n    input  wire [4-1:0] in,\r\n    output wire [4-1:0] out\r\n);\r\n  packed_dimensions_range_ordering U0 (\r\n      .in (in),\r\n      .out(out)\r\n  );\r\nendmodule : instanciates_packed_dimensions_range_ordering",
+    "// with verific, does not pass formal\r\nmodule instanciates_packed_dimensions_range_ordering(in, out);\r\n  input [3:0] in;\r\n  wire [3:0] in;\r\n  output [3:0] out;\r\n  wire [3:0] out;\r\n\r\n  assign out = { in[0], in[1], in[2], in[3] };\r\nendmodule\r\n\r\n// with surelog, passes formal\r\nmodule instanciates_packed_dimensions_range_ordering(in, out);\r\n  input [3:0] in;\r\n  wire [3:0] in;\r\n  output [3:0] out;\r\n  wire [3:0] out;\r\n\r\n  assign out = in;\r\nendmodule",
+    "verific -sv test.sv\r\nverific -import -vv instanciates_packed_dimensions_range_ordering\r\nhierarchy -top instanciates_packed_dimensions_range_ordering\r\nflatten\r\nopt\r\nclean -purge\r\nwrite_verilog -simple-lhs -noattr -noexpr result3.v"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

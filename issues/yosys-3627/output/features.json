@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 3627,
+  "title": "blockram inference on ECP5 results in large amount of supporting logic",
+  "features": [
+    {
+      "name": "ecp5 dual_port ram 256x16",
+      "category": "data_model",
+      "description": "Code should include a dual-port RAM inferred from a reg array with exactly 256 entries of 16 bits, matching the DP16KD resource on ECP5",
+      "snippet": "reg [15:0] result_1_RAM [0:256-1];",
+      "tags": ["ram", "ecp5", "blockram", "unpacked_array"],
+      "source_bug_id": "3627",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3627",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ram read_as_write in write always block",
+      "category": "data_model",
+      "description": "Code should include a RAM read operation where the result is assigned to a register inside the same always block that contains the conditional RAM write logic",
+      "snippet": "always @(posedge clk) begin\n  if (wr[24:24])\n    result_1_RAM[wr[23:16]] <= wr[15:0];\n  result_1 <= result_1_RAM[r];\nend",
+      "tags": ["ram", "read_as_write", "inference"],
+      "source_bug_id": "3627",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3627",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "write enable single bit slice select",
+      "category": "data_model",
+      "description": "Code should include a write enable condition that extracts a single bit using bit-indexing on a multi-bit signal, where the bit index is itself a constant",
+      "snippet": "if (wr[24:24]) begin\n  result_1_RAM[wr[23:16]] <= wr[15:0];\nend",
+      "tags": ["ram", "write_enable", "bit_slice", "conditional_write"],
+      "source_bug_id": "3627",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3627",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ram dual_port with separate read write addresses",
+      "category": "data_model",
+      "description": "Code should include a dual-port RAM where write address comes from a bit-slice of one signal and read address comes from a different input signal",
+      "snippet": "result_1_RAM[wr[23:16]] <= wr[15:0];\nresult_1 <= result_1_RAM[r];",
+      "tags": ["ram", "dual_port", "separate_addresses", "bit_slice"],
+      "source_bug_id": "3627",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3627",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

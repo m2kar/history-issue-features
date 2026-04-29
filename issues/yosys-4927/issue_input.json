@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4927,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4927",
+  "title": "Wrong error message mentioning defparam when overriding localparam",
+  "body": "### Version\n\nYosys 0.50+56 (git sha1 9106d6b3b, g++ 14.2.1 -march=x86-64 -mtune=generic -O2 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -ffile-prefix-map=/home/prostboa/Dev/AUR/yosys-git/src=/usr/src/debug/yosys-git -flto=auto -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nTry to synthesize this (erroneous) design:\n\n```verilog top.v\n\nmodule comp #(\n\tlocalparam LP = 32\n) (\n\toutput wire [LP-1:0] odata\n);\n\n\tassign odata = 0;\n\nendmodule\n\nmodule top #(\n\tparameter LP = 32\n) (\n\toutput wire [LP-1:0] oport\n);\n\n\twire [LP-1:0] owire;\n\n\tcomp #(\n\t\t.LP(LP)\n\t )\n\tcomp_inst (\n\t\t.odata(owire)\n\t);\n\n\tassign oport = owire;\n\nendmodule\n```\n\nSynthesize with this command:\n\n```sh\nyosys -l yosys.log -p \"synth_xilinx -arch xc7 -top top ; write_json top.json\" top.v\n```\n\n### Expected Behavior\n\nThe error message should indicate that overriding localparams is illegal, and indicate the name of the related parameter.\nSo the root cause of the error can be found even in a very large design.\n\n\n### Actual Behavior\n\nThe error message mentions defparams, which is very misleading because defparam is a verilog keyword that is not used in the design.\nThe error message is extremely difficult to understand and does not indicate what parameter is related to the issue:\n\n```\n2.4.2. Executing AST frontend in derive mode using pre-parsed AST for module `\\comp'.\nGenerating RTLIL representation for module `$paramod\\comp'.\ntop.v:0: ERROR: Module name in defparam contains non-constant expressions!\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2025-03-03",
+  "closed_at": null,
+  "code_blocks": [
+    "### Expected Behavior\n\nThe error message should indicate that overriding localparams is illegal, and indicate the name of the related parameter.\nSo the root cause of the error can be found even in a very large design.\n\n\n### Actual Behavior\n\nThe error message mentions defparams, which is very misleading because defparam is a verilog keyword that is not used in the design.\nThe error message is extremely difficult to understand and does not indicate what parameter is related to the issue:"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

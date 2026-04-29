@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3950,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3950",
+  "title": "In cxxrtl case item expressions are compared in an unexpected order",
+  "body": "### Version\n\nYosys 0.33+65 (git sha1 934c82254, clang 14.0.0-1ubuntu1.1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nVerilog file `top.v`:\r\n```Verilog\r\nmodule top (\r\n    input clk,\r\n    input [1:0] select,\r\n    output reg [1:0] result\r\n);\r\nalways @(posedge clk) begin\r\n    case (select)\r\n        2'b00: result <= 2'b11;\r\n        2'b01: result <= 2'b10;\r\n        2'b10: result <= 2'b01;\r\n        default: result <= 2'b00;\r\n    endcase\r\nend\r\nendmodule\r\n```\r\nCommand:\r\n```\r\nyosys -p \"read_verilog -formal top.v; hierarchy -check -top top; write_cxxrtl top.cpp\"\r\n```\n\n### Expected Behavior\n\nAccording to section 9.5 of Verilog Standard:\r\n> The case expression given in parentheses shall be evaluated exactly once and before any of the case item expressions. The case item expressions shall be evaluated and compared **in the exact order in which they are given**. If there is a default case item, it is ignored during this linear search. During the linear search, if one of the case item expressions matches the case expression given in parentheses, then the statement associated with that case item shall be executed, and the linear search shall terminate. \n\n### Actual Behavior\n\nBy checking `p_top::eval()` in `top.cpp`, I found it first evaluates the third item in the case expression.\r\n```cpp\r\np_result.next =\r\n\t(eq_uu<1>(p_select, value<2>{0x2u})\r\n\t\t? value<2>{0x1u}\r\n\t\t: (eq_uu<1>(p_select, value<2>{0x1u}) ? value<2>{0x2u} : (logic_not<1>(p_select) ? value<2>{0x3u} : value<2>{0u})));\r\n```\r\n\r\n---\r\n\r\nIn the situation above, the comparison order won't lead to incorrect results in the simulation. However, the order does matter when there are overlaps between case items.\r\n\r\nHere is another example I found in Verilog Standard:\r\n<img width=\"880\" alt=\"image\" src=\"https://github.com/YosysHQ/yosys/assets/43945722/f3393a4a-f97a-4261-ac8f-7265ed61fc60\">\r\n\r\nTherefore, it may be necessary to address this issue.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-22",
+  "closed_at": "2023-09-22",
+  "code_blocks": [
+    "module top (\r\n    input clk,\r\n    input [1:0] select,\r\n    output reg [1:0] result\r\n);\r\nalways @(posedge clk) begin\r\n    case (select)\r\n        2'b00: result <= 2'b11;\r\n        2'b01: result <= 2'b10;\r\n        2'b10: result <= 2'b01;\r\n        default: result <= 2'b00;\r\n    endcase\r\nend\r\nendmodule",
+    "yosys -p \"read_verilog -formal top.v; hierarchy -check -top top; write_cxxrtl top.cpp\"",
+    "p_result.next =\r\n\t(eq_uu<1>(p_select, value<2>{0x2u})\r\n\t\t? value<2>{0x1u}\r\n\t\t: (eq_uu<1>(p_select, value<2>{0x1u}) ? value<2>{0x2u} : (logic_not<1>(p_select) ? value<2>{0x3u} : value<2>{0u})));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

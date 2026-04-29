@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 824,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/824",
+  "title": " Fix variable initialization in class methods",
+  "body": "\r\n\r\nUp to 1800-2017 the grammar in the LRM allowed an optional lifetime\r\nqualifier for class declarations. Icarus supports this and uses this as the\r\ndefault lifetime for methods of the class. But the LRM never specified what\r\nthis qualifier should do actually actually. [Starting with 1800-2023 the\r\nqualifier will be removed from the grammar](https://accellera.mantishub.io/view.php?id=3561).\r\n\r\nFurthermore the LRM states that methods of a class are supposed to have\r\nautomatic storage and static storage is forbidden.\r\n\r\nThis currently works in Icarus for the most part since the liftime attached\r\nto class methods is ignored during elaboration in most places. Where it\r\ndoes not work is for variable initializers where it results in broken code\r\nbeing generated and vvp crashes at runtime. E.g.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  task t;\r\n    int x = 10;\r\n  endtask\r\nendclass\r\n```\r\n\r\nKeep the optional lifetime qualifier for classes in the grammar for now, to\r\nensure backwards compatibility in case somebody is actually using it. But\r\nignore it and print a warning if it is specified.\r\n\r\nIn addition set the default lifetime for all classes to automatic. This\r\nmakes sure that variable initialization in classes works as expected.\r\n\r\nAlso print an error when trying to overwrite the class method lifetime\r\nas static since that this is not allowed by the standard. Note that a class\r\nmethod with static lifetime is different different from a static class\r\nmethod. E.g.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  task static t; endtask // Class method with static lifetime, forbidden\r\n  static task t; endtask // Static class method, allowed\r\nendclass\r\n```\r\n ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-22",
+  "closed_at": "2022-12-25",
+  "code_blocks": [
+    "class C;\r\n  task t;\r\n    int x = 10;\r\n  endtask\r\nendclass",
+    "class C;\r\n  task static t; endtask // Class method with static lifetime, forbidden\r\n  static task t; endtask // Static class method, allowed\r\nendclass"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1491,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1491",
+  "title": "Yosys unable to synthesize shift register",
+  "body": "## Steps to reproduce the issue\r\n\r\nGiven a file test.v:\r\n\r\n```\r\nmodule top (hz100, reset, pb, ss7, ss6, ss5, ss4, ss3, ss2, ss1, ss0,\r\n            left, right, red, green, blue);\r\n  input hz100, reset;\r\n  input [20:0] pb;\r\n  output [7:0] ss7,ss6,ss5,ss4,ss3,ss2,ss1,ss0;\r\n  output [7:0] left, right;\r\n  output red, green, blue;\r\n  \r\n  crop c1 (pb[1], reset, ss7);\r\n  \r\nendmodule\r\n\r\nmodule crop (collide, reset, crop);\r\n  input wire collide;\r\n  input wire reset;\r\n  output reg [7:0] crop;\r\n  \r\n  always @(posedge collide, posedge reset)\r\n    if (reset)\r\n      crop <= 8'hff;\r\n    else\r\n      crop <= crop >> 1;\r\n  \r\nendmodule\r\n```\r\n\r\nThe file was synthesized and a BLIF was produced using the following command:\r\nyosys -p \"synth_ice40 -abc9 -blif test.blif\" test.v\r\n\r\nThe version of Yosys used was Yosys 0.9+932 (git sha1 3c6a566, gcc 6.3.0-18+deb9u1 -fPIC -Og).\r\n\r\n## Expected behavior\r\n\r\nUpon asserting `reset`, the value of `ss7` is supposed to be set to `8'hff`, and I can shift out bits to the right by asserting `pb[1]`.\r\n\r\n## Actual behavior\r\n\r\n`ss7` remains 0.\r\n\r\nUpon further inspection of the BLIF file, it seems that the flip flops in my design are being ignored. From the statistics printed out by Yosys:\r\n\r\n```\r\n3.48. Printing statistics.\r\n\r\n=== top ===\r\n   Number of wires:                 19\r\n   Number of wire bits:            116\r\n   Number of public wires:          19\r\n   Number of public wire bits:     116\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  0\r\n```\r\n\r\n...when there should be at least 8 SB_DFFRs to implement the shift register in the crop module.\r\n\r\nIt works if I do `crop <= crop - 1;` and `crop <= crop << 1`, just not `crop <= crop >> 1`.",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-11-14",
+  "closed_at": "2019-11-17",
+  "code_blocks": [
+    "module top (hz100, reset, pb, ss7, ss6, ss5, ss4, ss3, ss2, ss1, ss0,\r\n            left, right, red, green, blue);\r\n  input hz100, reset;\r\n  input [20:0] pb;\r\n  output [7:0] ss7,ss6,ss5,ss4,ss3,ss2,ss1,ss0;\r\n  output [7:0] left, right;\r\n  output red, green, blue;\r\n  \r\n  crop c1 (pb[1], reset, ss7);\r\n  \r\nendmodule\r\n\r\nmodule crop (collide, reset, crop);\r\n  input wire collide;\r\n  input wire reset;\r\n  output reg [7:0] crop;\r\n  \r\n  always @(posedge collide, posedge reset)\r\n    if (reset)\r\n      crop <= 8'hff;\r\n    else\r\n      crop <= crop >> 1;\r\n  \r\nendmodule",
+    "3.48. Printing statistics.\r\n\r\n=== top ===\r\n   Number of wires:                 19\r\n   Number of wire bits:            116\r\n   Number of public wires:          19\r\n   Number of public wire bits:     116\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  0"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

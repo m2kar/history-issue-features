@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2529,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2529",
+  "title": "verilog: significant block scoping improvements",
+  "body": "This change set contains a number of bug fixes and improvements related to scoping and resolution in generate and procedural blocks. While many of the frontend changes are interdependent, it may be possible bring the techmap changes in under a separate PR.\r\n\r\nDeclarations within unnamed generate blocks previously encountered issues because the data declarations were left un-prefixed, breaking proper scoping. The LRM outlines behavior for generating names for unnamed generate blocks. The original goal was to add this implicit labelling, but doing so exposed a number of issues downstream. Additional testing highlighted other closely related scope resolution issues, which have been fixed. This change also adds support for block item declarations within unnamed blocks in SystemVerilog mode.\r\n\r\n1. Unlabled generate blocks are now implicitly named according to the LRM in `label_genblks`, which is invoked at the beginning of module elaboration\r\n2. The Verilog parser no longer wraps explicitly named generate blocks in a synthetic unnamed generate block to avoid creating extra hierarchy levels where they should not exist\r\n3. The techmap phase now allows special control identifiers to be used outside of the topmost scope, which is necessary because such wires and cells often appear in unlabeled generate blocks, which now prefix the declarations within\r\n4. Some techlibs required modifications because they relied on the previous invalid scope resolution behavior\r\n5. `expand_genblock` has been simplified, now only expanding the outermost scope, completely deferring the inspection and elaboration of nested scopes; names are now resolved by looking in the innermost scope and stepping outward\r\n6. Loop variables now always become localparams during unrolling, allowing them to be resolved and shadowed like any other identifier\r\n7. Identifiers in synthetic function call scopes are now prefixed and resolved in largely the same manner as other blocks\r\n     before: `$func$\\func_01$tests/simple/scopes.blk.v:60$5$\\blk\\x`\r\n      after: `$func$\\func_01$tests/simple/scopes.v:60$5.blk.x`\r\n8. Support identifiers referencing a local generate scope nested more than 1 level deep, i.e. `B.C.x` while within generate scope `A`, or using a prefix of a current or parent scope, i.e. `B.C.D.x` while in `A.B`, `A.B.C`, or `A.B.C.D`\r\n9. Variables can now be declared within unnamed blocks in SystemVerilog mode\r\n\r\nFixes #656\r\nFixes #2423\r\nFixes #2493",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-07",
+  "closed_at": "2021-02-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

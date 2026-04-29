@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 687,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/687",
+  "title": "Misleading warning when for loop index variable is of type logic inside always block",
+  "body": "I have this simple module:\r\n\r\n```\r\nmodule top;\r\n    logic [9:0] pipe = 0;\r\n    logic [4:0] i;\r\n    logic clk = 0;\r\n\r\n    always #1 clk = ~clk;\r\n\r\n    always_ff @(posedge clk) begin\r\n        for (i=0; i<9; i++) begin\r\n            pipe[i+1] <= pipe[i];\r\n        end\r\n        pipe[0] <= pipe[9];\r\n    end\r\n\r\n    initial begin\r\n        pipe[0] = 1'b1;\r\n        \r\n        for (int j=0; j<10; j++) begin\r\n            $display(pipe[9]);\r\n            #2;\r\n        end\r\n        \r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n\r\nWhen this code is run, I get the expected output, but also a warning concerning the index variable `i` of the for loop.\r\nAs far as I see this warning is misleading. The index i is used in the condition expression (`i<9`).\r\n\r\n```\r\niverilog -o Vtop.vvp -g2012 top.sv \r\ntop.sv:9: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_ff process.\r\nvvp Vtop.vvp\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n1\r\ntop.sv:24: $finish called at 20 (1s)\r\n```\r\n\r\nThen I changed `logic [4:0] i;` to just `int i;`. This seems to be the proper way to do this and I no longer get a warning:\r\n\r\n```\r\niverilog -o Vtop.vvp -g2012 top.sv \r\nvvp Vtop.vvp\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n1\r\ntop.sv:24: $finish called at 20 (1s)\r\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-04-15",
+  "closed_at": "2024-01-07",
+  "code_blocks": [
+    "module top;\r\n    logic [9:0] pipe = 0;\r\n    logic [4:0] i;\r\n    logic clk = 0;\r\n\r\n    always #1 clk = ~clk;\r\n\r\n    always_ff @(posedge clk) begin\r\n        for (i=0; i<9; i++) begin\r\n            pipe[i+1] <= pipe[i];\r\n        end\r\n        pipe[0] <= pipe[9];\r\n    end\r\n\r\n    initial begin\r\n        pipe[0] = 1'b1;\r\n        \r\n        for (int j=0; j<10; j++) begin\r\n            $display(pipe[9]);\r\n            #2;\r\n        end\r\n        \r\n        $finish;\r\n    end\r\nendmodule",
+    "iverilog -o Vtop.vvp -g2012 top.sv \r\ntop.sv:9: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_ff process.\r\nvvp Vtop.vvp\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n0\r\n1\r\ntop.sv:24: $finish called at 20 (1s)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

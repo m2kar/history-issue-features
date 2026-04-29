@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1242,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1242",
+  "title": "proc_prune: Promote partially redundant assignments.",
+  "body": "Before this commit, proc_prune would ignore partially redundant assignments.\r\neg.\r\n```\r\nmodule \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n    assign \\s 2'00 \r\n    assign \\s [0] 1'1\r\n  end\r\nend\r\n```\r\nwould be transformed into:\r\n```\r\nmodule \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n    assign \\s 2'00\r\n  end\r\n  connect \\s [0] 1'1\r\nend\r\n```\r\nThis is wrong because `\\s [0]` is now assigned concurrently twice. \r\n\r\nAfter this commit, proc_prune promotes the first assignment too:\r\n```\r\nmodule \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n  end\r\n  connect \\s [0] 1'1\r\n  connect \\s [1] 1'0\r\nend\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-08-01",
+  "closed_at": "2019-08-03",
+  "code_blocks": [
+    "module \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n    assign \\s 2'00 \r\n    assign \\s [0] 1'1\r\n  end\r\nend",
+    "module \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n    assign \\s 2'00\r\n  end\r\n  connect \\s [0] 1'1\r\nend",
+    "module \\top\r\n  wire width 2 \\s\r\n  process $group_0\r\n  end\r\n  connect \\s [0] 1'1\r\n  connect \\s [1] 1'0\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

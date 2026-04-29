@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4699,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4699",
+  "title": "pyosys: catch boost::python::error_already_set",
+  "body": "This catches exceptions from internal passes, printing them in a readable manner where the user would otherwise see an unspecified boost exception.\r\n\r\ne.g. consider the following pass in `pass.py`:\r\n```python\r\nimport libyosys as ys\r\n\r\nclass MyPass(ys.Pass):\r\n    def __init__(self):\r\n        super().__init__(\"my_pass\", \"\")\r\n\r\n    def py_help(self):\r\n        raise Exception(\"broken\")\r\n\r\np = MyPass()\r\n```\r\n\r\nPreviously, when invoked with `yosys -m pass.py -p \"help my_pass\"`, yosys would error with\r\n\r\n```\r\n-- Running command `help my_pass' --\r\nterminate called after throwing an instance of 'boost::python::error_already_set'\r\n```\r\n\r\nbut with this change it instead shows\r\n\r\n```\r\n-- Running command `help my_pass' --\r\nTraceback (most recent call last):\r\n  File \"<...>/pass.py\", line 8, in py_help\r\n    raise Exception(\"broken\")\r\nException: broken\r\nERROR: Python interpreter encountered an exception.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-04",
+  "closed_at": "2024-11-20",
+  "code_blocks": [
+    "import libyosys as ys\r\n\r\nclass MyPass(ys.Pass):\r\n    def __init__(self):\r\n        super().__init__(\"my_pass\", \"\")\r\n\r\n    def py_help(self):\r\n        raise Exception(\"broken\")\r\n\r\np = MyPass()"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

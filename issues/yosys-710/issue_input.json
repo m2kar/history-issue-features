@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 710,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/710",
+  "title": "Yosys fails to infer BRAM with complex enable logic",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun `synth_ice40` on the below design:\r\n\r\n```\r\nmodule top(input clk, input we, re, input [7:0] addr, wdata, output reg [7:0] rdata);\r\n\r\nreg [7:0] bram[0:255];\r\n(* keep *) reg dummy;\r\n\r\nalways @(posedge clk)\r\n\tif (reset)\r\n\t\tdummy <= 1'b0;\r\n\telse if (re)\r\n\t\trdata <= bram[addr];\r\n\telse if (we)\r\n\t\tbram[addr] <= wdata;\r\nendmodule\r\n\r\n```\r\n\r\n## Expected behavior\r\n\r\nBRAM is inferred, with both read and write enables ANDed with !reset\r\n\r\n## Actual behavior\r\n\r\nYosys fails to infer BRAM with the following message:\r\n\r\n```\r\n    Mapping to bram type $__ICE40_RAM4K_M0 (variant 1):\r\n      Write port #0 is in clock domain \\clk.\r\n        Mapped to bram port B1.\r\n      Read port #0 is in clock domain !~async~.\r\n        Bram port A1.1 has incompatible clock type.\r\n        Failed to map read port #0.\r\n    Mapping to bram type $__ICE40_RAM4K_M0 failed.\r\n```\r\nThis is because no flipflop is merged into the read port:\r\n```\r\nChecking cell `$memrd$\\bram$read_enable.v:10$6' in module `\\top': no (compatible) $dff found.\r\n```\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-11-28",
+  "closed_at": "2019-06-25",
+  "code_blocks": [
+    "module top(input clk, input we, re, input [7:0] addr, wdata, output reg [7:0] rdata);\r\n\r\nreg [7:0] bram[0:255];\r\n(* keep *) reg dummy;\r\n\r\nalways @(posedge clk)\r\n\tif (reset)\r\n\t\tdummy <= 1'b0;\r\n\telse if (re)\r\n\t\trdata <= bram[addr];\r\n\telse if (we)\r\n\t\tbram[addr] <= wdata;\r\nendmodule",
+    "Checking cell `$memrd$\\bram$read_enable.v:10$6' in module `\\top': no (compatible) $dff found."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

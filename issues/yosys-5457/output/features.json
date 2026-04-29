@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 5457,
+  "title": "Synthesis causing branch instructions to misbehave on RISC-V CPU",
+  "features": [
+    {
+      "name": "partially_dontcare_values_in_combinational_fsm",
+      "category": "data_model",
+      "description": "Code should include a combinational always block with default assignments using partially-defined values (x/dont-care) such as 2'b1x or 3'bxxx before a case statement that overrides them for specific states",
+      "snippet": "always @* begin\n  cede=0; instr_we=0; rf_we=0; pc_we=0;\n  alu_op=2'bxx; a_sel=2'bxx; b_sel=2'bxx; wd_sel=3'bxxx; pc_sel=2'bxx;\n  case (cpu_state)\n  S_BRANCH: begin\n    if (branch) begin pc_sel=2'b1x; pc_we=1; end\n  end\n  endcase\nend",
+      "tags": ["combinational_logic", "dontcare_values", "fsm", "partially_defined"],
+      "source_bug_id": "5457",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5457",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "branch_control_dependent_on_instr_bit",
+      "category": "control_flow",
+      "description": "Code should include a branch control unit where pc_we (program counter write enable) is conditionally set based on a branch signal, with pc_sel assigned a partially-defined value 2'b1x that could cause synthesis to incorrectly infer dependency on instruction bits",
+      "snippet": "S_BRANCH: begin\n  if (branch) begin\n    pc_sel=2'b1x;\n    pc_we=1;\n  end\n  else pc_we=0;\n  a_sel=0;\n  b_sel=0;\n  alu_op=2'b1x;\nend",
+      "tags": ["branch_control", "pc_we", "partially_defined_value", "riscv"],
+      "source_bug_id": "5457",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5457",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cpu_control_signals_default_undefined",
+      "category": "data_model",
+      "description": "Code should include a CPU control unit where multiple control signals (alu_op, a_sel, b_sel, wd_sel, pc_sel) are initialized to dont-care values (x) in a default combinational block before being overridden in specific FSM states",
+      "snippet": "alu_op=2'bxx;\na_sel=2'bxx;\nb_sel=2'bxx;\nwd_sel=3'bxxx;\npc_sel=2'bxx;",
+      "tags": ["cpu_control", "dontcare", "fsm", "control_signals"],
+      "source_bug_id": "5457",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5457",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

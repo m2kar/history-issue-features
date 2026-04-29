@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 689,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/689",
+  "title": "$rose() and $fell() are defined on the LSB of their arguments only",
+  "body": "## Steps to reproduce the issue\r\n\r\nIn the following example, both assertions should fail.\r\n\r\n    (* anyseq *) reg [1:0] X;\r\n    always @(posedge i_clk)\r\n    if (f_past_valid)\r\n    begin\r\n        assert($rose(X) == ((X)&&(!$past(X)));\r\n        assert($fell(X) == ((!X)&&($past(X)));\r\n    end\r\n\r\nValues causing them to fail should include the sequence 2'h0, 2'h2 for rose, and 2'h2, 2'h0 for fell.\r\n\r\n## Expected behavior\r\n\r\nAccording to the SVA 2012 specification, section 16.9.3 Sampled Value Functions, page 361,\r\n\r\n- $rose returns true if the LSB of the expression changed to 1.  Otherwise, it returns false.\r\n- $fell returns true if the LSB of the expression changed to 0.  Otherwise it returns false.\r\n\r\n## Actual behavior\r\n\r\nFrontends/ast/simplify.cc tests the entire value against zero, rather than just the LSB.\r\n\r\nSee this pull request for a suggested change: [#688](https://github.com/YosysHQ/yosys/pull/688)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-11-03",
+  "closed_at": "2018-11-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

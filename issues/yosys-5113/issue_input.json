@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5113,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5113",
+  "title": "simplify.cc: Fix mem leak",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nFrom #5020, LeakSanitizer: detected memory leaks in `Yosys::AST::AstNode::clone() const frontends/ast/ast.cc:256:18`.  Identified as being due to the redefinition of the wiretype attribute on the new AstNode when resolving recursive typedef.\r\n\r\nMinimal reproducer:\r\n```\r\nread_verilog -sv <<EOF\r\ntypedef logic T;\r\ntypedef T [3:0] S;\r\nmodule top;\r\n    S s;\r\nendmodule\r\nEOF\r\n```\r\n\r\n_Explain how this is achieved._\r\n\r\nDelete the wiretype attribute if it already exists, as is done just above.\r\n\r\nAlternatively, the `set_attribute()` method should just do this automatically?  There are enough calls to it that are immediately preceded by either this exact check, the inverse (only adding the attribute if it isn't already), or deleting all children and making the check unnecessary, that this seems like it should just be a standard operation. I pushed [a branch that does this](https://github.com/YosysHQ/yosys/tree/krys/alt_ast_asan) to check CI, so will see if that passes.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nBuild with ASAN, run minimal reproducer above.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-10",
+  "closed_at": "2025-05-12",
+  "code_blocks": [
+    "read_verilog -sv <<EOF\r\ntypedef logic T;\r\ntypedef T [3:0] S;\r\nmodule top;\r\n    S s;\r\nendmodule\r\nEOF"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

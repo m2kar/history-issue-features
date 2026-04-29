@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 946,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/946",
+  "title": "Add specify parser",
+  "body": "This adds `$specify2` and `$specify3` cell types for representing timing information from specify blocks in blackbox and whitebox cells. (This also means blackbox cells are not always empty now. They can contain`$specify[23]` cells.)\r\n\r\nConsider this example:\r\n\r\n```\r\nmodule test (\r\n\tinput EN, CLK,\r\n\tinput [3:0] D,\r\n\toutput reg [3:0] Q\r\n);\r\n\talways @(posedge CLK)\r\n\t\tif (EN) Q <= D;\r\n\r\n\tspecify\r\n\t\tif (EN) (CLK *> (Q : D)) = (1, 2:3:4);\r\n\tendspecify\r\nendmodule\r\n```\r\n\r\nRunning `./yosys -p 'read_verilog -specify test.v; prep; write_verilog -noattr -noexpr'` will produce the following output:\r\n\r\n```\r\nmodule test(EN, CLK, D, Q);\r\n  wire [3:0] _0_;\r\n  input CLK;\r\n  input [3:0] D;\r\n  input EN;\r\n  output [3:0] Q;\r\n  \\$dff  #(\r\n    .CLK_POLARITY(1'h1),\r\n    .WIDTH(32'd4)\r\n  ) _1_ (\r\n    .CLK(CLK),\r\n    .D(_0_),\r\n    .Q(Q)\r\n  );\r\n  \\$mux  #(\r\n    .WIDTH(32'd4)\r\n  ) _2_ (\r\n    .A(Q),\r\n    .B(D),\r\n    .S(EN),\r\n    .Y(_0_)\r\n  );\r\n  \\$specify3  #(\r\n    .DAT_DST_PEN(1'h0),\r\n    .DAT_DST_POL(1'h0),\r\n    .DST_WIDTH(32'd4),\r\n    .EDGE_EN(1'h0),\r\n    .EDGE_POL(1'h0),\r\n    .FULL(1'h1),\r\n    .SRC_DST_PEN(1'h0),\r\n    .SRC_DST_POL(1'h0),\r\n    .SRC_WIDTH(32'd1),\r\n    .T_FALL_MAX(32'sd4),\r\n    .T_FALL_MIN(32'sd2),\r\n    .T_FALL_TYP(32'sd3),\r\n    .T_RISE_MAX(32'sd1),\r\n    .T_RISE_MIN(32'sd1),\r\n    .T_RISE_TYP(32'sd1)\r\n  ) _3_ (\r\n    .DAT(D),\r\n    .DST(Q),\r\n    .EN(EN),\r\n    .SRC(CLK)\r\n  );\r\nendmodule\r\n```\r\n\r\nAlternatively, `yosys -p 'read_verilog -specify test.v; prep; write_verilog -noattr'`:\r\n\r\n```\r\nmodule test(EN, CLK, D, Q);\r\n  wire [3:0] _0_;\r\n  input CLK;\r\n  input [3:0] D;\r\n  input EN;\r\n  output [3:0] Q;\r\n  reg [3:0] Q;\r\n  always @(posedge CLK)\r\n      Q <= _0_;\r\n  assign _0_ = EN ? D : Q;\r\n  specify\r\n    if (EN) (CLK *> (Q : D)) = (1:1:1, 2:3:4);\r\n  endspecify\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-04-21",
+  "closed_at": "2019-05-06",
+  "code_blocks": [
+    "module test (\r\n\tinput EN, CLK,\r\n\tinput [3:0] D,\r\n\toutput reg [3:0] Q\r\n);\r\n\talways @(posedge CLK)\r\n\t\tif (EN) Q <= D;\r\n\r\n\tspecify\r\n\t\tif (EN) (CLK *> (Q : D)) = (1, 2:3:4);\r\n\tendspecify\r\nendmodule",
+    "module test(EN, CLK, D, Q);\r\n  wire [3:0] _0_;\r\n  input CLK;\r\n  input [3:0] D;\r\n  input EN;\r\n  output [3:0] Q;\r\n  \\$dff  #(\r\n    .CLK_POLARITY(1'h1),\r\n    .WIDTH(32'd4)\r\n  ) _1_ (\r\n    .CLK(CLK),\r\n    .D(_0_),\r\n    .Q(Q)\r\n  );\r\n  \\$mux  #(\r\n    .WIDTH(32'd4)\r\n  ) _2_ (\r\n    .A(Q),\r\n    .B(D),\r\n    .S(EN),\r\n    .Y(_0_)\r\n  );\r\n  \\$specify3  #(\r\n    .DAT_DST_PEN(1'h0),\r\n    .DAT_DST_POL(1'h0),\r\n    .DST_WIDTH(32'd4),\r\n    .EDGE_EN(1'h0),\r\n    .EDGE_POL(1'h0),\r\n    .FULL(1'h1),\r\n    .SRC_DST_PEN(1'h0),\r\n    .SRC_DST_POL(1'h0),\r\n    .SRC_WIDTH(32'd1),\r\n    .T_FALL_MAX(32'sd4),\r\n    .T_FALL_MIN(32'sd2),\r\n    .T_FALL_TYP(32'sd3),\r\n    .T_RISE_MAX(32'sd1),\r\n    .T_RISE_MIN(32'sd1),\r\n    .T_RISE_TYP(32'sd1)\r\n  ) _3_ (\r\n    .DAT(D),\r\n    .DST(Q),\r\n    .EN(EN),\r\n    .SRC(CLK)\r\n  );\r\nendmodule",
+    "module test(EN, CLK, D, Q);\r\n  wire [3:0] _0_;\r\n  input CLK;\r\n  input [3:0] D;\r\n  input EN;\r\n  output [3:0] Q;\r\n  reg [3:0] Q;\r\n  always @(posedge CLK)\r\n      Q <= _0_;\r\n  assign _0_ = EN ? D : Q;\r\n  specify\r\n    if (EN) (CLK *> (Q : D)) = (1:1:1, 2:3:4);\r\n  endspecify\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

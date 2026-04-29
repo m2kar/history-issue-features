@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4988,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4988",
+  "title": "Inconsistent 'x handling in opt_expr for muxes",
+  "body": "### Version\n\n0.51+107\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nuut.il\n```\nmodule \\uut\n  wire output 1 \\out\n  wire input 1 \\a\n  wire input 1 \\b\n  cell $mux \\mux\n    parameter \\WIDTH 1\n    connect \\A \\a\n    connect \\B \\b\n    connect \\S 1'x\n    connect \\Y \\out\n  end\nend\n```\nCall `yosys -p 'opt_expr -mux_undef [-keepdc]; dump' uut.il`\n\nFor reference:\n`yosys -p 'opt_expr; dump' uut.il` has `out` directly connected to `a`.\n`yosys -p 'opt_expr -keepdc; dump' uut.il` is unchanged.\n\n### Expected Behavior\n\n`yosys -p 'opt_expr -mux_undef' uut.il` shouldn't connect `out` to `a`, I would have expected it to connect `out` to `1'x` (which is what happens when both `A` and `B` are undef), but I'm not entirely sure.\n`yosys -p 'opt_expr -mux_undef -keepdc; dump' uut.il` should be unchanged.\n\n### Actual Behavior\n\n`opt_expr -mux_undef` with or without `-keepdc` gives\n```\nmodule \\uut\n  wire input 1 \\b\n  wire input 2 \\a\n  wire output 3 \\out\n  connect \\out \\a\nend\n```\ni.e. the same behaviour as `opt_expr` without `-keepdc`, completely ignoring the x bits..",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2025-04-03",
+  "closed_at": null,
+  "code_blocks": [
+    "module \\uut\n  wire output 1 \\out\n  wire input 1 \\a\n  wire input 1 \\b\n  cell $mux \\mux\n    parameter \\WIDTH 1\n    connect \\A \\a\n    connect \\B \\b\n    connect \\S 1'x\n    connect \\Y \\out\n  end\nend",
+    "module \\uut\n  wire input 1 \\b\n  wire input 2 \\a\n  wire output 3 \\out\n  connect \\out \\a\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

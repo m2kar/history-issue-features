@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4793,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4793",
+  "title": "Preservation of signedness flag on attribute values inconsistent",
+  "body": "### Version\n\na8a65db0bc4682883b57895afe9197ae5ed48089\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\n```\r\nread_rtlil <<EOF\r\nattribute \\a 32's00000000000000000000000000000100\r\nattribute \\b 32'00000000000000000000000000000100\r\nattribute \\c 5's00100\r\nattribute \\d 5'00100\r\nmodule \\top\r\nend\r\nEOF\r\nwrite_rtlil /tmp/save.il\r\ndesign -reset\r\nread_rtlil /tmp/save.il\r\nwrite_rtlil /tmp/save.il\r\ndesign -reset\r\nread_rtlil /tmp/save.il\r\ndump\r\n```\n\n### Expected Behavior\n\nValues of `a` and `b` are distinguishable\n\n### Actual Behavior\n\n```\r\nautoidx 1\r\n\r\nattribute \\d 5'00100\r\nattribute \\c 5's00100\r\nattribute \\b 4\r\nattribute \\a 4\r\nmodule \\top\r\nend\r\n```\r\n\r\nValues for `c` and `d` are distinguishable, not so for `a` and `b`\r\n\r\nThis is due to the autoint branch in `RTLIL_BACKEND::dump_const`",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2024-12-02",
+  "closed_at": null,
+  "code_blocks": [
+    "read_rtlil <<EOF\r\nattribute \\a 32's00000000000000000000000000000100\r\nattribute \\b 32'00000000000000000000000000000100\r\nattribute \\c 5's00100\r\nattribute \\d 5'00100\r\nmodule \\top\r\nend\r\nEOF\r\nwrite_rtlil /tmp/save.il\r\ndesign -reset\r\nread_rtlil /tmp/save.il\r\nwrite_rtlil /tmp/save.il\r\ndesign -reset\r\nread_rtlil /tmp/save.il\r\ndump",
+    "autoidx 1\r\n\r\nattribute \\d 5'00100\r\nattribute \\c 5's00100\r\nattribute \\b 4\r\nattribute \\a 4\r\nmodule \\top\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

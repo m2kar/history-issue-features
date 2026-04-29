@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2691,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2691",
+  "title": "verilog: modules can't override global type definitions",
+  "body": "## Steps to reproduce the issue\r\n\r\n```sv\r\ntypedef logic [7:0] global_t;\r\n\r\nmodule top;\r\n\ttypedef logic [3:0] global_t;\r\n\tglobal_t x = 8'h42;\r\n\talways @(*) assert(x == 4'h2);\r\nendmodule\r\n```\r\n\r\n`yosys -p 'prep -top top; sat -verify -prove-asserts' test.sv`\r\n\r\n## Expected behavior\r\n\r\nThe typedef in the module shadows the global typedef and results in `x` being 4 bits wide.\r\n\r\n## Actual behavior\r\n\r\nThe global typedef is used for `x`, making it 8 bits wide.\r\n\r\n## Cause\r\n\r\n[`AST::process()`](https://github.com/YosysHQ/yosys/blob/4f4e70876f06738fa7dda24e01ac296fe318264a/frontends/ast/ast.cc#L1226) appends the globals to the end of a module's children, which then [iterates over all its children](https://github.com/YosysHQ/yosys/blob/4f4e70876f06738fa7dda24e01ac296fe318264a/frontends/ast/simplify.cc#L844) as the first  step of simplification, causing the appended global typedefs to override the module-local ones.\r\n\r\nA quick fix would be to insert the globals *before* the module's real children, but this still causes multiple typedefs for the same name to exist in the same scope, which kind of breaks a verilog invariant. The proper solution would probably be more along the lines of adding the globals to `current_scope`, treating the global scope more like any other nested scope.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2021-03-20",
+  "closed_at": null,
+  "code_blocks": [
+    "typedef logic [7:0] global_t;\r\n\r\nmodule top;\r\n\ttypedef logic [3:0] global_t;\r\n\tglobal_t x = 8'h42;\r\n\talways @(*) assert(x == 4'h2);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 5409,
+  "title": "BRAM initialization error",
+  "features": [
+    {
+      "name": "readmemh initialization of 2D unpacked array RAM with width mismatch",
+      "category": "data_model",
+      "description": "Code should include a $readmemh call that initializes a unpacked array RAM where the hex file contains byte-oriented data but the RAM width is greater than 8 bits, causing data corruption",
+      "snippet": "reg [DATA_WIDTH-1:0] RAM[2**ADDR_WIDTH-1:0];\ninitial $readmemh(INIT_FILE, RAM);",
+      "tags": ["readmemh", "unpacked_array", "ram", "initialization", "data_corruption"],
+      "source_bug_id": "yosys-5409",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5409",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "BRAM generate block with conditional initialization based on parameter",
+      "category": "general",
+      "description": "Code should include a generate block that conditionally uses $readmemh versus a for-loop initialization based on a string parameter comparison",
+      "snippet": "generate\n  if (INIT_FILE != \"UNUSED\") begin\n    initial $readmemh(INIT_FILE, RAM);\n  end else begin\n    integer i;\n    initial\n      for (i = 0; i < 2**ADDR_WIDTH; i=i+1)\n        RAM[i] = 0;\n  end\nendgenerate",
+      "tags": ["generate", "readmemh", "conditional_initialization", "parameter"],
+      "source_bug_id": "yosys-5409",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5409",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "BRAM read operation with WE and RE both asserted handling",
+      "category": "timing",
+      "description": "Code should include a BRAM read logic that handles simultaneous WE and RE signals, outputting X when both are high",
+      "snippet": "if (RE) begin\n  if (WE) begin\n    DO <= {DATA_WIDTH{1'hx}};\n  end else begin\n    DO <= RAM[ADDR];\n  end\nend",
+      "tags": ["bram", "read_write_conflict", "x_propagation"],
+      "source_bug_id": "yosys-5409",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5409",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

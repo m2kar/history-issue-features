@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1163,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1163",
+  "title": "The return type of $bits should be `integer`, not an unsigned type.",
+  "body": "```SystemVerilog\r\nmodule top;\r\n    integer x;\r\n    localparam Y = 1'sb1;\r\n    localparam integer Z = 1'sb1;\r\n    initial begin\r\n        $display(\"%b\", $bits(x) ^ 1'sb1);\r\n        $display(\"%b\", $bits(x) ^ Y);\r\n        $display(\"%b\", $bits(x) ^ Z);\r\n        $display(\"%b\", integer'($bits(x)) ^ 1'sb1);\r\n        $display(\"%b\", integer'($bits(x)) ^ Y);\r\n        $display(\"%b\", integer'($bits(x)) ^ Z);\r\n    end\r\nendmodule\r\n```\r\n\r\nOn the above test case, `iverilog -g2012 test.v && ./a.out` outputs:\r\n```\r\n00000000000000000000000000100001\r\n00000000000000000000000000100001\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n```\r\nBy contrast, all commercial tools on edaplayground.com output:\r\n```\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n11111111111111111111111111011111\r\n```\r\n\r\nPer IEEE 1800-2017 Section 20.6.2:\r\n> The `$bits` system function returns the number of bits required to hold an expression as a bit stream. The return type is `integer`.\r\n\r\nHence, `$bits(x)` and `integer'($bits(x))` should be equivalent.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-09-01",
+  "closed_at": "2024-09-07",
+  "code_blocks": [
+    "module top;\r\n    integer x;\r\n    localparam Y = 1'sb1;\r\n    localparam integer Z = 1'sb1;\r\n    initial begin\r\n        $display(\"%b\", $bits(x) ^ 1'sb1);\r\n        $display(\"%b\", $bits(x) ^ Y);\r\n        $display(\"%b\", $bits(x) ^ Z);\r\n        $display(\"%b\", integer'($bits(x)) ^ 1'sb1);\r\n        $display(\"%b\", integer'($bits(x)) ^ Y);\r\n        $display(\"%b\", integer'($bits(x)) ^ Z);\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

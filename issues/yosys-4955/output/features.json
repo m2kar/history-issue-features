@@ -1,0 +1,41 @@
+[
+  {
+    "name": "defparam localparam override attempt",
+    "category": "data_model",
+    "description": "Code should include a defparam statement that targets a localparam in a child module instance, which is illegal and should produce a clear error message indicating the localparam cannot be overridden.",
+    "snippet": "module child #(parameter A=1, localparam B=2); initial $display(\"A=%d B=%d\", A, B); endmodule\n\nmodule parent;\n    defparam invalid_inst.B = 4;\n    child invalid_inst();\nendmodule",
+    "tags": ["defparam", "localparam", "parameter_override", "error_message", "hierarchy"],
+    "source_bug_id": "yosys-4955",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4955",
+    "construct_complexity": 2,
+    "root_cause": "defparam targeting localparam is semantically invalid but error message incorrectly states parameter does not exist",
+    "failure_mode": "misleading_error_message"
+  },
+  {
+    "name": "module hierarchy with defparam to child instance",
+    "category": "data_model",
+    "description": "Code should include a parent module that uses defparam to override a parameter in a child module instance, where the targeted parameter is declared as localparam making the override illegal.",
+    "snippet": "module parent;\n    defparam invalid_inst.B = 4;\n    child invalid_inst();\nendmodule",
+    "tags": ["defparam", "module_hierarchy", "instance_override", "child_module"],
+    "source_bug_id": "yosys-4955",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4955",
+    "construct_complexity": 2,
+    "root_cause": "defparam cannot be used to override localparam in child module instance",
+    "failure_mode": "illegal_defparam_operation"
+  },
+  {
+    "name": "module with mixed parameter and localparam",
+    "category": "data_model",
+    "description": "Code should include a module parameter section that mixes regular parameters with localparam declarations, demonstrating that localparam should not be overridable via defparam.",
+    "snippet": "module child #(parameter A=1, localparam B=2);\n    initial $display(\"A=%d B=%d\", A, B);\nendmodule",
+    "tags": ["localparam", "parameter", "module_declaration", "parameter_block"],
+    "source_bug_id": "yosys-4955",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4955",
+    "construct_complexity": 1,
+    "root_cause": "localparam is a constant and cannot be overridden via defparam",
+    "failure_mode": "invalid_override_attempt"
+  }
+]

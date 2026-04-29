@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1519,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1519",
+  "title": "submod: several bugfixes",
+  "body": "Should solve a number of issues:\r\n* Wire `c` is not detected as a primary output, and won't be made into a submod output port\r\n```\r\nmodule top(input a, output [1:0] b);\r\nwire c;\r\n(* submod=\"bar\" *) sub s1(a, c);\r\nassign b[0] = c;\r\nendmodule\r\n```\r\n* Wire `b` is only partially used, but the entire bus will be made into a submodule output port, causing driver-driver conflict for `b[0]`:\r\n```\r\nmodule top(input a, output [1:0] b);\r\n(* submod=\"bar\" *) sub s1(a, b[1]);\r\nassign b[0] = 1'b0;\r\nendmodule\r\n```\r\n* `(* init = ... *)` is copied, not moved, into submodule causing `check -noinit` to give out warnings:\r\n```\r\nmodule top(input d, c, (* init = 1'b1 *) output reg q);\r\n(* submod=\"bar\" *) DFF s1(.D(d), .C(c), .Q(q));\r\nendmodule\r\n\r\nmodule DFF(input D, C, output Q);\r\nparameter INIT = 1'b0;\r\nendmodule\r\n```\r\nsince top.q and top_bar.q would otherwise both have `(* init *)`\r\n\r\n* Add `submod -hidden`:\r\n```\r\n    -hidden\r\n        instead of creating submodule ports with public names, create ports with\r\n        private names so that a subsequent 'flatten; clean' call will restore the\r\n        original module with original public names.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-11-23",
+  "closed_at": "2020-03-03",
+  "code_blocks": [
+    "module top(input a, output [1:0] b);\r\nwire c;\r\n(* submod=\"bar\" *) sub s1(a, c);\r\nassign b[0] = c;\r\nendmodule",
+    "module top(input a, output [1:0] b);\r\n(* submod=\"bar\" *) sub s1(a, b[1]);\r\nassign b[0] = 1'b0;\r\nendmodule",
+    "module top(input d, c, (* init = 1'b1 *) output reg q);\r\n(* submod=\"bar\" *) DFF s1(.D(d), .C(c), .Q(q));\r\nendmodule\r\n\r\nmodule DFF(input D, C, output Q);\r\nparameter INIT = 1'b0;\r\nendmodule",
+    "-hidden\r\n        instead of creating submodule ports with public names, create ports with\r\n        private names so that a subsequent 'flatten; clean' call will restore the\r\n        original module with original public names."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

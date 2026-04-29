@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3304,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3304",
+  "title": "PROC_ARST can not identify the async reset",
+  "body": "## Steps to reproduce the issue\r\n\r\nCreate a file called `test.v` with the following contents:\r\n```\r\nmodule top (clk, rst_n, in, sel, out);\r\ninput clk, rst_n, sel, in;\r\noutput out;\r\n\r\nreg test[0:1];\r\n\r\nalways @(posedge clk or negedge rst_n) begin\r\n  if (!rst_n)\r\n    test[sel] <= 0;\r\n  else\r\n    test[sel] <= in;\r\nend\r\n\r\nassign out = test[0] & test[1];\r\n\r\nendmodule\r\n```\r\nThen run `yosys -p 'read_verilog test.v; proc;'.`\r\n\r\n( Yosys 0.17+0 (git sha1 d562bfd16, gcc 9.3.0-17ubuntu1~20.04 -fPIC -Os))\r\n\r\n## Expected behavior\r\n\r\nComplete with no issues.\r\n\r\n## Actual behavior\r\n\r\nThe following error printed:\r\n```\r\n2.5. Executing PROC_ARST pass (detect async resets in processes).\r\nFound async reset \\rst_n in `\\top.$proc$test.v:7$3'.\r\nERROR: Async reset \\rst_n yields non-constant value 1'm for signal \\test[0].\r\n```\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-05-09",
+  "closed_at": "2022-05-10",
+  "code_blocks": [
+    "module top (clk, rst_n, in, sel, out);\r\ninput clk, rst_n, sel, in;\r\noutput out;\r\n\r\nreg test[0:1];\r\n\r\nalways @(posedge clk or negedge rst_n) begin\r\n  if (!rst_n)\r\n    test[sel] <= 0;\r\n  else\r\n    test[sel] <= in;\r\nend\r\n\r\nassign out = test[0] & test[1];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

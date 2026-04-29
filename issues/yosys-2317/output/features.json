@@ -1,0 +1,52 @@
+{
+  "tool": "yosys",
+  "issue_number": 2317,
+  "title": "Fix generate scoping issues",
+  "features": [
+    {
+      "name": "nested generate with same-name wire shadowing",
+      "category": "control_flow",
+      "description": "Code should include nested generate blocks where an inner generate declares a wire using the same name as a wire declared in an outer generate block",
+      "snippet": "generate for(l0=0;l0<4;l0=l0+1) begin : g0 wire [31:0] data = data_in[63:32]; for(l1=0;l1<4;l1=l1+1) begin : g1 wire [7:0] data = data_in[63:56]; end end endgenerate",
+      "tags": ["generate", "nested_generate", "wire_shadowing", "same_name"],
+      "source_bug_id": "1456",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1456",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "genvar declared after nested initial block in generate",
+      "category": "control_flow",
+      "description": "Code should include a genvar declaration placed after nested initial/always blocks within a generate block, where the genvar is used in a for loop at the same scope level",
+      "snippet": "generate begin : cond initial begin : init reg signed [31:0] x; x = 2 ** 2; out1 = x; end always @* begin : proc reg signed [31:0] x; x = 2 ** 1; out2 = x; end genvar x; for (x = 0; x < 3; x = x + 1) assign out3[x] = 1; end endgenerate",
+      "tags": ["generate", "genvar", "nested_initial", "nested_always"],
+      "source_bug_id": "2214",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "partially-qualified scope reference in generate",
+      "category": "control_flow",
+      "description": "Code should include a partially-qualified generate scope reference like B.y that should resolve to parent.A.B.y given the local context",
+      "snippet": "generate begin : A begin : B wire [1:0] y = 2'b00; end begin : C wire [1:0] z = 2'b01; end wire [1:0] x = B.y ^ 2'b11 ^ C.z; end endgenerate",
+      "tags": ["generate", "scope_reference", "partially_qualified", "hierarchical"],
+      "source_bug_id": "2214",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2214",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3,
+    "note": "PR body had no code blocks; features extracted from resolved issues #1456 and #2214"
+  }
+}

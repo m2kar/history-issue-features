@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 114,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/114",
+  "title": "read_verilog is very slow when module has many for iterations in an always block",
+  "body": "read_verilog seems to take exponentially longer reading the following module depending on the number of iterations in the for loop:\n\n```\nmodule TestCase(\n  input wire clock,\n\n);\n\nlocalparam COUNT = 1600;\n\nreg buffer[0:COUNT-1];\n\nalways @(posedge clock) begin : GENERATE\n  integer ii;\n\n  for(ii = 0; ii < COUNT; ii = ii + 1) begin\n    buffer[ii] <= 1'b0;\n  end\nend\n\nendmodule\n```\n\nTime spent by 'yosys -p read_verilog test.v':\n- 100 iterations -> 0s\n- 200 iterations -> 2s\n- 400 iterations -> 8s\n- 800 iterations -> 36s\n- 1600 iterations -> 160s\n\nThe OS X performance tools ([Sample of yosys](https://github.com/cliffordwolf/yosys/files/110653/Sample.of.yosys.txt)) seem to implicate Yosys::AST_INTERNAL::ProcessGenerator::removeSignalFromCaseTree(const std::setRTLIL::SigBit &pattern, RTLIL::CaseRule *cs) which is calling Yosys::RTLIL::SigSpec::remove2(const RTLIL::SigSpec &pattern, RTLIL::SigSpec *other).  This form of remove2() calls to_sigbit_pool() to get a poolRTLIL::SigBit.  Inside to_sigbit_pool(), it creates a poolRTLIL::SigBit and then inserts each each bit of each chunk.  This insert seems to trigger a memory allocation via pool<>::insert calling pool<>::do_insert which does a push_back() on a new vector.  It seems that creating a pool on each call to remove2() is excessive in this case.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-01-30",
+  "closed_at": "2016-01-31",
+  "code_blocks": [
+    "module TestCase(\n  input wire clock,\n\n);\n\nlocalparam COUNT = 1600;\n\nreg buffer[0:COUNT-1];\n\nalways @(posedge clock) begin : GENERATE\n  integer ii;\n\n  for(ii = 0; ii < COUNT; ii = ii + 1) begin\n    buffer[ii] <= 1'b0;\n  end\nend\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

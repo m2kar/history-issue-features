@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 3092,
+  "title": "Yosys ABC error/segmentation fault in SymbiFlow",
+  "features": [
+    {
+      "name": "variable_index_write_to_unpacked_array_memory",
+      "category": "data_model",
+      "description": "Code should include a sequential always block that writes to an unpacked array of registers using a variable index counter",
+      "snippet": "reg [31:0]tags[31:0];\nreg [9:0]count = 0;\nalways @ (posedge clk) begin\n\tif (state == 0) begin\n\t\tcount <= count + 1;\n\t\ttags[count] <= 0;\n\tend else\n\t\ttags[0] <= 23;\nend",
+      "tags": ["unpacked_array", "variable_index", "memory_write", "sequential_block"],
+      "source_bug_id": "yosys-3092",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3092",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "mixed_fixed_and_variable_index_memory_access",
+      "category": "data_model",
+      "description": "Code should include an unpacked array memory where one index (zero) is read via continuous assignment while another index is written via a variable counter in a sequential block",
+      "snippet": "reg [31:0]tags[31:0];\nreg [9:0]count = 0;\nalways @ (posedge clk) begin\n\tif (state == 0) tags[count] <= 0;\n\telse tags[0] <= 23;\nend\nassign tag_out = tags[0];",
+      "tags": ["unpacked_array", "memory", "mixed_indexing", "read_write_conflict"],
+      "source_bug_id": "yosys-3092",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3092",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "fsm_with_non_power_of_two_localparam_states",
+      "category": "control_flow",
+      "description": "Code should include a finite state machine using localparam with non-power-of-two state values and a case statement to describe state transitions",
+      "snippet": "localparam IDLE = 1;\nlocalparam LOAD = 3;\nreg [3:0]state = IDLE;\nalways @ (posedge clk) begin\n\tcase(state)\n\t\tIDLE: begin\n\t\t\tif (way_tag_out) state <= LOAD;\n\t\tend\n\t\tLOAD: state <= IDLE;\n\tendcase\nend",
+      "tags": ["fsm", "localparam", "state_machine", "case_statement"],
+      "source_bug_id": "yosys-3092",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3092",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "trailing_comma_in_module_instantiation",
+      "category": "general",
+      "description": "Code should include a module instantiation with a trailing comma after the last port connection",
+      "snippet": "cacheway way_gen (\n\t.clk(clk),\n\t.en(way_en),\n\t.tag_we(way_tag_we),\n\t.tag_out(way_tag_out),\n);",
+      "tags": ["module_instantiation", "trailing_comma", "port_connection"],
+      "source_bug_id": "yosys-3092",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3092",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

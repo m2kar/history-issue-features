@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 566,
+  "title": "Sync reset",
+  "features": [
+    {
+      "name": "always block with posedge clk and negedge async reset sensitivity",
+      "category": "control_flow",
+      "description": "Code should include an always block with dual-edge sensitivity (posedge clk and negedge async reset) containing a multi-branch if-else chain for async reset, sync reset, and data assignment",
+      "snippet": "always @(posedge clk or negedge arst)\nif (arst == 1'b0)\n  q_reg <= 1'b0;\nelse if (srst == 1'b1)\n  q_reg <= 1'b0;\nelse\n  q_reg <= d;",
+      "tags": ["always", "posedge", "negedge", "sensitivity_list", "async_reset", "sync_reset", "if_else"],
+      "source_bug_id": "566",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/566",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "async reset signal tied to constant via module port connection",
+      "category": "general",
+      "description": "Code should include a module instantiation where the async reset port is connected to a constant value 1'b1, effectively disabling the async reset path",
+      "snippet": "test_m #() my_m (\n  .clk(clk),\n  .arst(1'b1),\n  .srst(rst),\n  .d(d),\n  .z(z)\n);",
+      "tags": ["module_instantiation", "constant_port", "async_reset", "port_connection"],
+      "source_bug_id": "566",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/566",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "reg with combined async and sync reset inference pattern",
+      "category": "data_model",
+      "description": "Code should include a reg declared inside a module with both async reset (via sensitivity list edge) and sync reset (via conditional branch) that exercises flip-flop type inference",
+      "snippet": "reg q_reg;\nassign z = q_reg;\nalways @(posedge clk or negedge arst)\n  if (!arst) q_reg <= 1'b0;\n  else if (srst) q_reg <= 1'b0;\n  else q_reg <= d;",
+      "tags": ["reg", "flip_flop_inference", "async_reset", "sync_reset", "nonblocking_assignment"],
+      "source_bug_id": "566",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/566",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

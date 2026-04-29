@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3165,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3165",
+  "title": "abc buffering doesn't work with techmap cell ",
+  "body": "The OpenROAD ASIC flows (Openlane and OpenROAD-flow-scripts) use abc buffering to manage fan out (`buffer -N X`). While looking at some timing issues in https://github.com/The-OpenROAD-Project/OpenLane/issues/870 I noticed that abc buffering seems to ignore `techmap -map YY` cells. I'm not sure if it's a yosys or abc bug, or if we are driving yosys incorrectly.\r\n\r\n## Steps to reproduce the issue\r\n\r\nThe yosys script is:\r\n\r\n```\r\nyosys -import\r\nset liberty_file trimmed.lib\r\nread_liberty -lib $liberty_file\r\nread_verilog -sv Microwatt_FP_DFFRFile.v\r\nsynth -top Microwatt_FP_DFFRFile\r\nopt -purge\r\n\r\nif { [info exists ::env(DO_TECHMAP)] && $::env(DO_TECHMAP) == 1 } {\r\n    techmap -map mux2_map.v\r\n}\r\n\r\ndfflibmap -liberty $liberty_file\r\nopt\r\nabc -D 5000 \\\r\n    -liberty trimmed.lib \\\r\n    -constr regfile.constr \\\r\n    -dff \\\r\n    -script \"+strash;ifraig;scorr;dc2;dretime;strash;&get,-n;&dch,-f;&nf,{D};&put;buffer,-N,5,-v\"\r\nsetundef -zero\r\nsplitnets\r\nopt_clean -purge\r\nhilomap -singleton -hicell sky130_fd_sc_hd__conb_1 HI -locell sky130_fd_sc_hd__conb_1 LO\r\ninsbuf -buf sky130_fd_sc_hd__buf_4 A X\r\nwrite_verilog -noattr -noexpr -nohex -nodec out.v\r\n```\r\n\r\nAnd the `mu2_map.v` is:\r\n\r\n```\r\nmodule \\$_MUX_ (\r\n    output Y,\r\n    input A,\r\n    input B,\r\n    input S\r\n    );\r\n  sky130_fd_sc_hd__mux2_1 _TECHMAP_MUX (\r\n      .X(Y),\r\n      .A0(A),\r\n      .A1(B),\r\n      .S(S)\r\n  );\r\nendmodule\r\n```\r\n\r\nFYI while debugging this issue, I realised that we don't need to manually techmap the muxes at all and I'll remove that from Openlane. The issue remains for other techmap'ed cells.\r\n\r\nIf we enable manual techmap'ing of muxes then nets on the mux inputs have massive fan outs:\r\n\r\n```\r\n# yosys doit.tcl > /dev/null\r\n# grep '\\.' out.v| sort | uniq -c | sort -n|tail -5\r\n      5     .S(_19223_),\r\n      5     .S(_19224_),\r\n      5     .S(_19225_),\r\n      5     .S(_19226_),\r\n   5120     .CLK(CLK),\r\n\r\n# DO_TECHMAP=1 yosys doit.tcl > /dev/null\r\n# grep '\\.' out.v| sort | uniq -c | sort -n|tail -20\r\n   1280     .S(R3[1]),\r\n   2560     .S(R1[0]),\r\n   2560     .S(R2[0]),\r\n   2560     .S(R3[0]),\r\n   5120     .CLK(CLK),\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-01-18",
+  "closed_at": null,
+  "code_blocks": [
+    "yosys -import\r\nset liberty_file trimmed.lib\r\nread_liberty -lib $liberty_file\r\nread_verilog -sv Microwatt_FP_DFFRFile.v\r\nsynth -top Microwatt_FP_DFFRFile\r\nopt -purge\r\n\r\nif { [info exists ::env(DO_TECHMAP)] && $::env(DO_TECHMAP) == 1 } {\r\n    techmap -map mux2_map.v\r\n}\r\n\r\ndfflibmap -liberty $liberty_file\r\nopt\r\nabc -D 5000 \\\r\n    -liberty trimmed.lib \\\r\n    -constr regfile.constr \\\r\n    -dff \\\r\n    -script \"+strash;ifraig;scorr;dc2;dretime;strash;&get,-n;&dch,-f;&nf,{D};&put;buffer,-N,5,-v\"\r\nsetundef -zero\r\nsplitnets\r\nopt_clean -purge\r\nhilomap -singleton -hicell sky130_fd_sc_hd__conb_1 HI -locell sky130_fd_sc_hd__conb_1 LO\r\ninsbuf -buf sky130_fd_sc_hd__buf_4 A X\r\nwrite_verilog -noattr -noexpr -nohex -nodec out.v",
+    "module \\$_MUX_ (\r\n    output Y,\r\n    input A,\r\n    input B,\r\n    input S\r\n    );\r\n  sky130_fd_sc_hd__mux2_1 _TECHMAP_MUX (\r\n      .X(Y),\r\n      .A0(A),\r\n      .A1(B),\r\n      .S(S)\r\n  );\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4829,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4829",
+  "title": "dfflibmap: Adds flop name preserving pass to match write_verilog",
+  "body": "\r\n\r\n_What are the reasons/motivation for this change?_\r\nWhen using the dfflibmap pass it prevents write_verilog from adding proper flop names based on the Q output port. This makes it harder to read timing reports in OpenROAD. This code only works on internal flop types and does not work for cells mapped to standard cell modules.\r\n\r\nSee code in write_verilog:\r\n```c++\r\nif (!norename && cell->name[0] == '$' && RTLIL::builtin_ff_cell_types().count(cell->type) && cell->hasPort(ID::Q) && !cell->type.in(ID($ff), ID($_FF_)))\r\n\t{\r\n\t\tRTLIL::SigSpec sig = cell->getPort(ID::Q);\r\n\t\tif (GetSize(sig) != 1 || sig.is_fully_const())\r\n\t\t\tgoto no_special_reg_name;\r\n\r\n\t\tRTLIL::Wire *wire = sig[0].wire;\r\n\r\n\t\tif (wire->name[0] != '\\\\')\r\n\t\t\tgoto no_special_reg_name;\r\n\r\n\t\tstd::string cell_name = wire->name.str();\r\n\r\n\t\tsize_t pos = cell_name.find('[');\r\n\t\tif (pos != std::string::npos)\r\n\t\t\tcell_name = cell_name.substr(0, pos) + \"_reg\" + cell_name.substr(pos);\r\n\t\telse\r\n\t\t\tcell_name = cell_name + \"_reg\";\r\n\r\n\t\tif (wire->width != 1)\r\n\t\t\tcell_name += stringf(\"[%d]\", wire->start_offset + sig[0].offset);\r\n\r\n\t\tif (active_module && active_module->count_id(cell_name) > 0)\r\n\t\t\t\tgoto no_special_reg_name;\r\n\r\n\t\treturn id(cell_name);\r\n\t}\r\n```\r\n\r\n_Explain how this is achieved._\r\n\r\nIf the user passes -infer_flop_names to dfflibmap then it will attempt to rename flops based on the Q input port of the flop. This follows a similar renaming as in write_verilog, but that only works on $DFF and $dff based cell.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nPass -infer_flop_names to dfflibmap",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-12-24",
+  "closed_at": "2025-01-02",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

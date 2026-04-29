@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 634,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/634",
+  "title": "Correctly handle data types on nets",
+  "body": "While a variable can have any data type the data type for nets is quite\r\nrestricted.\r\n\r\nThe SystemVerilog LRM section 6.7.1 (\"Net declarations with built-in net\r\ntypes\") requires that the data type of a wire is either a 4-state packed or\r\na unpacked struct or unpacked array of 4-state packed types.\r\n\r\nAs an extension to this iverilog allows real data type for wires as well as\r\n2-state packed types.\r\n\r\nAdd a check that reports an error if a net with any other type is declared.\r\n\r\nIn addition in Verilog a net can not have an explicit data type at all. It\r\ncan only have a packed dimension and a signed flag. As an extension to this\r\nIcarus also allows wires to be of `real` data type.\r\n\r\nNote that in Verilog mode the data type is checked in the parser since only\r\nthe parser knows whether the data type is an implicit type (`input reg [7:0]`\r\nand `input [7:0] x` elaborate the same). But for SystemVerilog the\r\ntype is checked during elaboration since due to forward typedefs and type\r\nparameters the type is not necessarily known in the parser.\r\n\r\nRelated to this in Verilog a module input port can only be a net and can not\r\nhave a data type. But in SystemVerilog it can be a net and have a data type.\r\nE.g. `input integer x`. Currently input ports that have the data type `reg` or\r\n`integer` get converted to a variable, in both Verilog and SystemVerilog mode.\r\nThis is not the correct behavior, in Verilog this type of input port is an error,\r\nbut in SystemVerilog it is allowed. In the latter case it should get elaborated\r\nas a net input port with the specified data type. Fix this by removing the code\r\nthat converts the net to a variable.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-03",
+  "closed_at": "2022-03-04",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1653,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1653",
+  "title": "EDIF backend issues with Xilinx Zynq target",
+  "body": "## Steps to reproduce the issue\r\n\r\nI've attached a design for the Zybo board. The design instantiates the PS7 cell and connects some LEDs and buttons to the PS7 EMIO GPIO pins. [counter_emio.zip](https://github.com/YosysHQ/yosys/files/4107624/counter_emio.zip)\r\n\r\nAfter synthesis in Yosys the output EDIF file fails to import in Vivado. There is a bunch of warning messages that a bus width does not match the array size which is 0:\r\n\r\n```\r\nWARNING: [EDIF 20-110] Size of bus 'DMA0DATYPE' specified in orig_name 'DMA0DATYPE[1:0]' does not match the array size '0'.\r\n```\r\n\r\nIndeed, when I look in the EDIF file in the library definition, there are statements like:\r\n```\r\n(port (array (rename DMA0DATYPE \"DMA0DATYPE[1:0]\") 0) (direction OUTPUT))\r\n```\r\nwhich clearly define a port with width range eg. 1:0 (width 2) but specify width of 0.\r\n\r\nI've also noticed that in the Yosys' verilog library the PS7 cell has all ports declared as 1-bit width vectors. This in turn makes them to be represented as arrays in EDIF which makes Vivado interpret them incorrectly throwing out errors like:\r\n```\r\nCRITICAL WARNING: [Timing 38-83] Timing library cell PS7 does not define port MAXIGP0ARESETN[0] which is referred to in the netlist. The library cell will be ignored and the cell will be treated as a black box for timing purposes.\r\n```\r\n\r\n## Expected behavior\r\n\r\nAn EDIF file for a design that uses the PS7 of Xilinx Zynq should be exported in a way that it can be imported by the vendor tool (Vivado).\r\n\r\n## Actual behavior\r\n\r\n- The exported EDIF file contains arrays with size of 0 which don't match bus widths.\r\n- The PS7 cell in yosys' library has 1-bit wide ports defined as vectors while they should be single wires.\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-24",
+  "closed_at": "2020-02-06",
+  "code_blocks": [
+    "(port (array (rename DMA0DATYPE \"DMA0DATYPE[1:0]\") 0) (direction OUTPUT))"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

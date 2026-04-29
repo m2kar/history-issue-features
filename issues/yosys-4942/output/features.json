@@ -1,0 +1,43 @@
+{
+  "tool": "yosys",
+  "issue_number": 4942,
+  "title": "ice40_dsp: fix log_assert issue",
+  "features": [
+    {
+      "name": "DSP output partial bit usage with nusers check",
+      "category": "data_model",
+      "description": "Code should include a DSP multiplier cell (SB_MAC16) where only lower bits of the 16-bit output are connected to downstream arithmetic, leaving upper bits unused. The design uses nusers() to identify unused wire bits during optimization.",
+      "snippet": "cell \\SB_MAC16 . parameter \\TOPOUTPUT_SELECT 2'11 connect \\O { $test $delete_wire$514 14'x ... } cell $add ... connect \\A $delete_wire$514 [1:0]",
+      "tags": ["ice40", "dsp", "sb_mac16", "unused-bits", "nusers", "bit-slice"],
+      "source_bug_id": "yosys-4942",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/4942",
+      "construct_complexity": 4,
+      "ub_type": null
+    },
+    {
+      "name": "Reverse iteration for unused bit detection",
+      "category": "control_flow",
+      "description": "Code should include a loop that iterates from the end of a signal backward to detect trailing unused bits, using nusers() to identify wire bits with no downstream consumers. Forward iteration from bit 0 fails to correctly identify unused bits in DSP output patterns.",
+      "snippet": "for (i = GetSize(O) - 1; i > 0 && nusers(O[i]) <= 1; i--);",
+      "tags": ["ice40", "dsp", "reverse-iteration", "unused-bits", "nusers"],
+      "source_bug_id": "yosys-4942",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/4942",
+      "construct_complexity": 3,
+      "ub_type": null
+    },
+    {
+      "name": "Empty wire insertion for bit offset alignment",
+      "category": "data_model",
+      "description": "Code should include logic that inserts empty wires (width > 0, no users) to maintain bit offset alignment when upper bits of a DSP output are unused but required for position mapping in downstream operations.",
+      "snippet": "if (nusers(O[j]) == 0) wire_width++; else { if (wire_width) sigH.append(module->addWire(NEW_ID, wire_width)); wire_width = 0; }",
+      "tags": ["ice40", "dsp", "bit-offset", "empty-wire", "alignment"],
+      "source_bug_id": "yosys-4942",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/4942",
+      "construct_complexity": 3,
+      "ub_type": null
+    }
+  ]
+}

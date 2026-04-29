@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 802,
+  "title": "write_verilog: correctly emit asynchronous transparent ports",
+  "features": [
+    {
+      "name": "async transparent memory read with constant clock",
+      "category": "timing",
+      "description": "Code should include an asynchronous memory read operation where the clock is a constant value (1'b0), which when incorrectly processed leads to always @(posedge constant) in generated Verilog",
+      "snippet": "$memrd cell with CLK_ENABLE=0, CLK=1'0, TRANSPARENT=1, EN=1'1; generates invalid always @(posedge 1'h0)",
+      "tags": ["memory", "async", "transparent", "clock", "write_verilog"],
+      "source_bug_id": "802",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/802",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "transparent memory read port in procedural block",
+      "category": "data_model",
+      "description": "Code should include a memory read with TRANSPARENT=1 parameter that drives an address register via non-blocking assignment in an always block with async sensitivity",
+      "snippet": "always @(posedge 1'h0) begin _0_ <= mem_r_addr; end",
+      "tags": ["memory", "transparent", "procedural", "non_blocking"],
+      "source_bug_id": "802",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/802",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "async memory port clock domain distinction",
+      "category": "timing",
+      "description": "Code should include logic that distinguishes synchronous vs asynchronous memory ports by checking CLK_ENABLE, where async ports should not add clock to sensitivity list",
+      "snippet": "parameter CLK_ENABLE 0; // async - clock should not be added to domain",
+      "tags": ["memory", "clock_enable", "async", "sensitivity_list"],
+      "source_bug_id": "802",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/802",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

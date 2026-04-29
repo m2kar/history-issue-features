@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 1427,
+  "title": "peepopt performs unsound optimization",
+  "features": [
+    {
+      "name": "dff_output_feedback_to_mux_select_with_full_case",
+      "category": "control_flow",
+      "description": "Code should include a feedback loop where a D flip-flop output signal drives the select line of a multiplexer that computes the flip-flop's next state value, combined with a full_case attribute on the multiplexer or case statement",
+      "snippet": "reg [1:0] fsm_addr;\nwire [1:0] fsm_addr_next;\nwire fsm_state;\nalways @(posedge clk) fsm_addr <= fsm_addr_next;\nassign fsm_addr_next = fsm_state ? fsm_addr : 2'b11;",
+      "tags": ["dff", "feedback", "mux", "full_case", "peepopt"],
+      "source_bug_id": "yosys-1427",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1427",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fsm_onehot_output_via_shift_with_state_feedback",
+      "category": "data_model",
+      "description": "Code should include an FSM with one-hot encoded output using shift left operation, where the FSM state is computed via a feedback multiplexer controlled by the state register itself",
+      "snippet": "reg [1:0] fsm_addr;\nreg fsm_state;\nwire [3:0] led;\nalways @(posedge clk) begin\n  fsm_state <= fsm_state ? 1'b1 : 1'b0;\n  fsm_addr <= fsm_state ? fsm_addr : 2'b11;\nend\nassign led = 4'b1 << fsm_addr;",
+      "tags": ["fsm", "onehot", "shift", "feedback", "peepopt"],
+      "source_bug_id": "yosys-1427",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1427",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

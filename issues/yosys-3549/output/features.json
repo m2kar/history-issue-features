@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 3549,
+  "title": "CXXRTL edge detector not working for non-input clocks",
+  "features": [
+    {
+      "name": "internally generated clock divider via always_ff toggle",
+      "category": "timing",
+      "description": "Code should include an always_ff block that generates an internal divided clock by toggling a logic signal on each posedge of the primary clock, creating a non-port clock source",
+      "snippet": "logic clkdiv;\nalways_ff @(posedge clk) clkdiv <= ~clkdiv;",
+      "tags": ["clock_divider", "always_ff", "posedge", "internal_clock", "toggle"],
+      "source_bug_id": "3549",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3549",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "sequential logic triggered on internally derived clock",
+      "category": "timing",
+      "description": "Code should include an always_ff block that uses a non-port, internally-computed logic signal as its clock (posedge sensitivity), rather than a primary input clock",
+      "snippet": "logic clkdiv;\nlogic [7:0] counter;\nalways_ff @(posedge clkdiv) counter <= counter + 1;",
+      "tags": ["always_ff", "derived_clock", "posedge", "non_input_clock", "sensitivity_list"],
+      "source_bug_id": "3549",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3549",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multi-clock design with primary input and internally derived clock domains",
+      "category": "timing",
+      "description": "Code should include two always_ff blocks in the same module where one block drives a logic signal used as the clock of the second block, creating chained clock domains with no direct port clock for the second domain",
+      "snippet": "input logic clk;\nlogic clkdiv;\nlogic [7:0] counter;\nalways_ff @(posedge clk)    clkdiv  <= ~clkdiv;\nalways_ff @(posedge clkdiv) counter <= counter + 1;",
+      "tags": ["multi_clock", "clock_domain", "always_ff", "posedge", "derived_clock", "chained_ff"],
+      "source_bug_id": "3549",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3549",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

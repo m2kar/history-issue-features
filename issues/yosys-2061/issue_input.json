@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2061,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2061",
+  "title": "ice40: opt_lut can break carry packing by moving SB_CARRY out to another input than I3",
+  "body": "## Steps to reproduce the issue\r\n\r\nHere's a fairly minimal example that show the issue :\r\n\r\n```\r\nmodule bug #(\r\n    parameter integer WIDTH = 12\r\n)(  \r\n    output reg  [WIDTH:0] cnt,\r\n    input  wire clk,\r\n    input  wire rst\r\n);\r\n    wire last_n;\r\n\r\n    assign last_n = cnt[WIDTH];\r\n\r\n    always @(posedge clk or posedge rst)\r\n        if (rst)\r\n            cnt <= 0;\r\n        else\r\n            cnt <= last_n ? ( cnt + { (WIDTH+1){last_n} } ) : 13'h1aaa;\r\n\r\nendmodule\r\n```\r\n\r\nBuild with : \r\n\r\n```\r\nyosys -p 'synth_ice40  -json bug.json; show' bug.v\r\n```\r\n\r\nAnd if you look at the LUT that generates bit 12, you'll see the carry out of the previous bit is connected to I2 instead of I3.\r\n\r\nThis prevents nextpnr to properly pack the carry chain.\r\n\r\nAFAICT this \"bug\" is added during the `opt_lut` pass. bit 12 doesn't have a SB_CARRY associated with it since we don't care about its carry output.\r\n\r\n## Expected behavior\r\n\r\nopt_lut should definitely optimize the two luts to a single one, but it should keep the carry out on I3.\r\n\r\n## Actual behavior\r\n\r\nThis is the invalid conversion that's done :\r\n\r\n![lut_opt](https://i.imgur.com/UufDphd.png)\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-16",
+  "closed_at": "2021-07-29",
+  "code_blocks": [
+    "module bug #(\r\n    parameter integer WIDTH = 12\r\n)(  \r\n    output reg  [WIDTH:0] cnt,\r\n    input  wire clk,\r\n    input  wire rst\r\n);\r\n    wire last_n;\r\n\r\n    assign last_n = cnt[WIDTH];\r\n\r\n    always @(posedge clk or posedge rst)\r\n        if (rst)\r\n            cnt <= 0;\r\n        else\r\n            cnt <= last_n ? ( cnt + { (WIDTH+1){last_n} } ) : 13'h1aaa;\r\n\r\nendmodule",
+    "yosys -p 'synth_ice40  -json bug.json; show' bug.v"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

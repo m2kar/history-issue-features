@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 1066,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/1066",
+  "title": "vvp: Improve concat performance",
+  "body": "A concat typically has multiple inputs. Whenever one of the input values\r\nchange the output value of the concat is updated and propagated to its\r\ndownstream consumers.\r\n\r\nWhen multiple inputs change within the same cycle each input will cause a\r\nupdate propagation. Depending of the overall structure of the design this\r\ncan cause a significant performance penalty.\r\n\r\nE.g. the following synthetic structure has a exponential runtime increase\r\nbased on the value of N.\r\n\r\n```SystemVerilog\r\nreg [N-1:0] x;\r\ngenerate for (genvar i = 0; i < N - 1; i++)\r\n  assign x[i+1] = ^{x[i],x[i]};\r\nendgenerate\r\n```\r\n\r\nTo improve this defer the value propagation of the concat to the end of the\r\ncurrent cycle, this allows multiple input updates to be included in a\r\nsingle output update.\r\n\r\nFor the example in report #1052 this reduced the runtime from 2 minutes to\r\nessentially 0.\r\n\r\nAlso replace individual bit access when copying the vector with the the set_vec()\r\nfunction, which can copy data word by word. This results in a small linear\r\nadditional performance improvement.\r\n\r\nThere is a small number of test cases that rely on the non-deferred updated\r\nof the concat operation and fail when switching to deferred updates. These\r\ntest cases are updated to be race condition free.\r\n\r\nResolves #1052.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-01-07",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "reg [N-1:0] x;\r\ngenerate for (genvar i = 0; i < N - 1; i++)\r\n  assign x[i+1] = ^{x[i],x[i]};\r\nendgenerate"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

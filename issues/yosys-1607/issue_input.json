@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1607,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1607",
+  "title": "ast: avoid intermediate wires/assigns when lowering to AST_MEMINIT",
+  "body": "Before this commit, every initial assignment to a memory generated\r\ntwo wires and four assigns in a process. For unknown reasons (I did\r\nnot investigate), large amounts of assigns cause quadratic slowdown\r\nlater in the AST frontend, in processAst/removeSignalFromCaseTree.\r\nAs a consequence, common and reasonable Verilog code, such as:\r\n\r\n    reg [`WIDTH:0] mem [0:`DEPTH];\r\n    integer i; initial for (i = 0; i <= `DEPTH; i++) mem[i] = 0;\r\n\r\ntook extremely long time to be processed; around 80 s for a 8-wide,\r\n8192-deep memory.\r\n\r\nAfter this commit, initial assignments where address and/or data are\r\nconstant (after `generate`) do not incur the cost of intermediate\r\nwires; expressions like `mem[i+1]=i^(i<<1)` are considered constant.\r\nThis results in speedups of orders of magnitude for common memory\r\nsizes; it now takes merely 0.4 s to process a 8-wide, 8192-deep\r\nmemory, and only 5.8 s to process a 8-wide, 131072-deep one.\r\n\r\nAs a bonus, this change also results in nontrivial speedups later\r\nin the synthesis pipeline, since pass sequencing issues meant that\r\nall of these intermediate wires were subject to transformations such\r\nas width reduction, even though they existed solely to be constant\r\nfolded away in `memory_collect`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-01",
+  "closed_at": "2020-03-27",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

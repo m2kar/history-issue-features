@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2809,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2809",
+  "title": "cxxrtl: Verilog frontend's handling of `$meminit` breaks a lot of assumptions",
+  "body": "Consider the following file:\r\n\r\n```\r\nmodule top(...);\r\ninput [3:0] ra;\r\noutput [15:0] rd;\r\nreg [15:0] mem[0:15];\r\nassign rd = mem[ra];\r\n\r\ninteger i, j;\r\ninitial begin\r\n        for (i = 0; i < 16; i++) begin\r\n                j = i;\r\n                mem[j] = j * j;\r\n        end\r\nend\r\nendmodule\r\n```\r\n\r\nBecause of how the Verilog frontend works (cannot fold the `j = i` assignment into the use in the memory initialization despite it being elaboration-time constant), this sample ends up with `$meminit` `ADDR` and `DATA` inputs connected to non-constants:\r\n\r\n- `ADDR` and `DATA` are connected to a temp wire that is set by an `STa` sync rule of a process\r\n- the sync rule, in turn, sources from a temp wire that is assigned from a case rule in the same process\r\n- the case rule, in turn, sources from a constant (for `ADDR` in this case) or from the output of a `$mul` cell (for `DATA`)\r\n- the `$mul` cell has constant inputs\r\n\r\nTo get this cursed netlist anywhere near usable state for cxxrtl proper (ie. get the `$meminit` inputs actually connected to constants), the following passes *need* to be run:\r\n\r\n- `proc_prune` to blast away the case rule\r\n- either `proc_dff` or `proc_dlatch` to blast away the sync rule\r\n- `opt_expr` to blast away the `$mul` cell\r\n- `opt_clean` to blast away the leftover `connect`s\r\n\r\n[NOTE: it's also not hard to make a testcase that also emits an actual switch and thus requires `proc_mux`, but it also triggers a completely unrelated unsoundness in verilog frontend, so uhhh...]\r\n\r\nFurther, because `opt_clean` refuses to operate on modules that contain processes, it is necessary to actually run the whole of `proc` on any module that just so happens to have a non-const `$meminit` input.\r\n\r\n(this is, by the way, why synth scripts have a `proc; opt_expr; opt_clean` sequence before actually doing anything interesting)\r\n\r\nIn practice, to make cxxrtl work with direct Verilog frontend output, this means that cxxrtl needs to check the incoming design for `$meminit` instances that have non-const inputs and, if found, run `proc; opt_expr; opt_clean` to fix them up.  This will also, by necessity, blast away all unrelated processes and render `-noproc` ineffective, but I see no good way around this.  At most, we can limit the effects to the modules that actually contain funny `$meminit` cells via selection.\r\n\r\nBy the way, `prepare_design()` also needs to be changed into a two-phase thing because there's a possibility that funny `$meminit` cells (or for that matter, reg init values via processes) will only appear in the design after the `hierarchy` call.",
+  "labels": [
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2021-05-31",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(...);\r\ninput [3:0] ra;\r\noutput [15:0] rd;\r\nreg [15:0] mem[0:15];\r\nassign rd = mem[ra];\r\n\r\ninteger i, j;\r\ninitial begin\r\n        for (i = 0; i < 16; i++) begin\r\n                j = i;\r\n                mem[j] = j * j;\r\n        end\r\nend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

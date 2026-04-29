@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1146,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1146",
+  "title": "infinant loop in recursive function causes crash",
+  "body": "Stumbled upon this last night, just isolated it.\r\nSo there is a divide by zero error, which results in 'bXXXX. this triggers an infinite loop. \r\nNo warning or output, iverilog returns non-zero\r\n```verilog\r\n// Icarus Verilog version 13.0 (devel) (s20221226-524-gdc6f9f204-dirty)\r\n`default_nettype none\r\nmodule bug_report_1146 ( clk, out );\r\n    input   wire    clk;\r\n    output  wire    out;\r\n\r\n    function automatic integer iterator_NaryRecursionVectorSize;\r\n        input integer base, lut_width, rt;   \r\n        iterator_NaryRecursionVectorSize=\r\n            base==1\r\n                ?rt\r\n                :iterator_NaryRecursionVectorSize(\r\n                    base / lut_width * lut_width == base\r\n                        ? base / lut_width\r\n                        : base / lut_width + 1\r\n                    ,lut_width\r\n                    ,rt + ((base / lut_width * lut_width == base)\r\n                        ? base / lut_width\r\n                        : (base / lut_width) + 1));\r\n    endfunction\r\n\r\n    // find the size of the vector needed\r\n    localparam STRUCTURE_SIZE = iterator_NaryRecursionVectorSize(5, 0, 0);\r\n    assign out = 1'b0;\r\nendmodule\r\n\r\nmodule mux_tb;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_report_1146 UUT( .clk(clk), .out(out) );\r\n    \r\n    always #1 clk <= ~clk;\r\n\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-07-15",
+  "closed_at": "2024-07-16",
+  "code_blocks": [
+    "// Icarus Verilog version 13.0 (devel) (s20221226-524-gdc6f9f204-dirty)\r\n`default_nettype none\r\nmodule bug_report_1146 ( clk, out );\r\n    input   wire    clk;\r\n    output  wire    out;\r\n\r\n    function automatic integer iterator_NaryRecursionVectorSize;\r\n        input integer base, lut_width, rt;   \r\n        iterator_NaryRecursionVectorSize=\r\n            base==1\r\n                ?rt\r\n                :iterator_NaryRecursionVectorSize(\r\n                    base / lut_width * lut_width == base\r\n                        ? base / lut_width\r\n                        : base / lut_width + 1\r\n                    ,lut_width\r\n                    ,rt + ((base / lut_width * lut_width == base)\r\n                        ? base / lut_width\r\n                        : (base / lut_width) + 1));\r\n    endfunction\r\n\r\n    // find the size of the vector needed\r\n    localparam STRUCTURE_SIZE = iterator_NaryRecursionVectorSize(5, 0, 0);\r\n    assign out = 1'b0;\r\nendmodule\r\n\r\nmodule mux_tb;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_report_1146 UUT( .clk(clk), .out(out) );\r\n    \r\n    always #1 clk <= ~clk;\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

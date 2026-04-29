@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3169,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3169",
+  "title": "Equivalence checking of Verilog module fails",
+  "body": "I am trying to verify changes I made to a Verilog module by using the yosys equivalence checking.\r\nAs a first step I am trying to compare the unmodified module with itself in order to make sure the equivalence checking is working out.\r\n\r\nThe module I am currently checking is found here:\r\n\r\n[dma_ram_demux_wr.v](https://github.com/alexforencich/verilog-pcie/blob/master/rtl/dma_ram_demux_wr.v)\r\n\r\nThe commands I am using in order to get the checking started are:\r\n\r\n```\r\nread_verilog dma_ram_demux_wr.v\r\nprep -flatten -top dma_ram_demux_wr\r\nsplitnets -ports;;\r\ndesign -stash gold\r\nread_verilog dma_ram_demux_wr.v\r\nprep -flatten -top dma_ram_demux_wr\r\nsplitnets -ports;;\r\ndesign -stash gate\r\ndesign -copy-from gold -as gold dma_ram_demux_wr\r\ndesign -copy-from gate -as gate dma_ram_demux_wr\r\nequiv_make gold gate equiv\r\nprep -flatten -top equiv\r\n\r\nopt_clean -purge\r\nshow -prefix equiv-prep -colors 1 -stretch\r\n\r\nopt -full\r\nequiv_simple -seq 5\r\nequiv_induct -seq 5\r\nequiv_status -assert\r\n```\r\n\r\nEventually the check fails with the following message:\r\n\r\n> ERROR: Found 196 unproven $equiv cells in 'equiv_status -assert'.\r\n\r\nI have tried increasing the number of steps involved up to 200, which didn't improve the situation.\r\nFor every step I am getting the following messages:\r\n\r\n> Proving existence of base case for step 1. (35677 clauses over 14018 variables)                                                                                                                                                               > Proving induction step 1. (79153 clauses over 30375 variables)                                                                                         \r\n> Proof for induction step failed. Extending to next time step.\r\n\r\nIt seems like Yosys is not able to solve the clauses. Am I missing something important here?\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-01-27",
+  "closed_at": "2022-10-11",
+  "code_blocks": [
+    "read_verilog dma_ram_demux_wr.v\r\nprep -flatten -top dma_ram_demux_wr\r\nsplitnets -ports;;\r\ndesign -stash gold\r\nread_verilog dma_ram_demux_wr.v\r\nprep -flatten -top dma_ram_demux_wr\r\nsplitnets -ports;;\r\ndesign -stash gate\r\ndesign -copy-from gold -as gold dma_ram_demux_wr\r\ndesign -copy-from gate -as gate dma_ram_demux_wr\r\nequiv_make gold gate equiv\r\nprep -flatten -top equiv\r\n\r\nopt_clean -purge\r\nshow -prefix equiv-prep -colors 1 -stretch\r\n\r\nopt -full\r\nequiv_simple -seq 5\r\nequiv_induct -seq 5\r\nequiv_status -assert"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

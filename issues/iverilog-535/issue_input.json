@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 535,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/535",
+  "title": "incomplete detection of number literal truncation with -gstrict-expr-width",
+  "body": "For each of the number literals, I am using the following stub:\r\n```Verilog\r\nmodule top;\r\n    localparam X = <number_literal_here>;\r\n    initial $display(\"%0d %0d %b\", $bits(X), X, X);\r\nendmodule\r\n```\r\n\r\nFor the number literal `4294967294`, I get `33 4294967294 011111111111111111111111111111110` without the flag, and `32 -2 11111111111111111111111111111110` with the flag, but no warnings are produced in the latter mode, despite truncation occurring. This appears to be due to `truncate_to_integer_width` tolerating 0 padding for such literals, despite the automatically added leading zero bit not being optional for the unsized signed decimals.\r\n\r\nInterestingly, iverilog does not, and apparently should not (based on commercial simulators), warn for the implicit zero-pad clipping occurring in literals like `32'sd4294967294` and `1'sd1`.\r\n\r\nFor the number literal `'bZ_01XZ01XZ_01XZ01XZ_01XZ01XZ_01XZ01XZ`, I get `33 X z01xz01xz01xz01xz01xz01xz01xz01xz` without the flag, and `32 X 01xz01xz01xz01xz01xz01xz01xz01xz` with the flag, but no warnings are produced in the latter mode, despite truncation occurring. If I change the most significant bit to a 1, I correctly get a warning with `-gstrict-expr-width`. If I instead explicitly size the literal to 32 bits, I correctly get a truncation warning in both modes. This appears to be due to `truncate_to_integer_width` basing the allowed padding off of the most significant bit, rather than the 31st (0-indexed) bit.",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-08-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module top;\r\n    localparam X = <number_literal_here>;\r\n    initial $display(\"%0d %0d %b\", $bits(X), X, X);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

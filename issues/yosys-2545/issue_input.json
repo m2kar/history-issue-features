@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2545,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2545",
+  "title": "Allow loading plugins \"by name\" from more than one source (alt: add a search path for plugins)",
+  "body": "When yosys is invoked with the flag `-m foo` or the command `plugin -i foo` is run &mdash; that is, with a non-absolute path to a dynamically loadable library &mdash; the loader will look for a file named `foo.so` by default in (among other places) `/usr/share/yosys/plugins`, where `$PREFIX/share/yosys` is also known as `YOSYS_DATDIR`.\r\n\r\nThe intention of this design is that this single location is global and shared across the system; tools like **[yosys-ghdl](https://github.com/ghdl/ghdl-yosys-plugin)** or **[yosys-bluespec](https://github.com/thoughtpolice/yosys-bluespec)** should by default be installed into such a location by invoking `cp ... $(yosys-config --datdir)/plugins` or whatever after compilation. Package managers should put the `.so` files in this directory, and so forth.\r\n\r\nThis is mostly true, except when using a package manager like **[Nix](https://nixos.org)**. To be very brief, Nix installs a package into a directory, and then marks that directory as read-only. This means that plugins cannot, later on, install their `.so` files into the same data directory of the yosys package. Nix users, therefore, can't simply install a plugin and then invoke a command like `yosys -m bluespec -p 'read_bluespec design.bsv'` &mdash; the location of the plugin file will be in another directory.\r\n\r\n---\r\n\r\nTo work around this as the Yosys maintainer for Nix, I've added a patch to Yosys that effectively makes yosys instead search a *list* of directories when looking for a \"named\" plugin. This patch **[is very simple](https://github.com/NixOS/nixpkgs/blob/2660037f8cdf6bb69bacbf3d9d2f9f72d056c8d6/pkgs/development/compilers/yosys/plugin-search-dirs.patch)**. It allows you to add a set of directories to the environment variable `NIX_YOSYS_PLUGIN_DIRS` separated by `:`, and Yosys will search them. So invoking\r\n\r\n```bash\r\n$ export NIX_YOSYS_PLUGIN_DIRS=/d1:/d2:...\r\n$ yosys -m bluespec\r\n```\r\n\r\nwill try to load `bluespec.so` from the following locations, in this order:\r\n\r\n```\r\nYOSYS_DATDIR/plugins/bluespec.so\r\n/d1/bluespec.so\r\n/d2/bluespec.so\r\n...\r\n```\r\n\r\n(Note this environment variable is private and undocumented. It is populated automatically by the Nix infrastructure, so users should be unaware of it. It only exists as a means to an end to make the Yosys UX for Nix users behave similarly to non-Nix users.)\r\n\r\n---\r\n\r\nThe specifics of this issue aren't really about Nix, though &mdash; the above situation could apply to a number of other scenarios i.e. a non-root user using a root-installed yosys, who wants to compile and load their own plugins. So in general, it would be nice to have a more general, proper solution implemented upstream, if it's welcome.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-01-17",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

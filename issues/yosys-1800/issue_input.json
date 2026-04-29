@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1800,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1800",
+  "title": "Problems with a module instantiation coding style supported by ISE and Vivado",
+  "body": "I was [comparing Yosys against ISE and Vivado](https://github.com/rodrigomelo9/yosys-versus), using examples provided by Xilinx. I found a few problems. Here one of them.\r\n\r\n## Steps to reproduce the issue\r\n\r\nThe conflicted file:\r\n\r\n```\r\n// A Verilog parameter allows to control the width of an instantitated\r\n// block describing register logic\r\n//\r\n// \r\n// File:parameter_1.v\r\n//\r\nmodule myreg (clk, clken, d, q);\r\n\r\n    parameter SIZE = 1;\r\n\r\n    input                  clk, clken;\r\n    input      [SIZE-1:0]  d;\r\n    output reg [SIZE-1:0]  q;\r\n    \r\n always @(posedge clk)\r\n    begin\r\n        if (clken)\r\n            q <= d;\r\n    end\r\n \r\nendmodule\r\n\r\nmodule parameter_1 (clk, clken, di, do);\r\n\r\n    parameter SIZE = 8;\r\n\r\n    input                  clk, clken;\r\n    input      [SIZE-1:0]  di;\r\n    output     [SIZE-1:0]  do;\r\n\r\n    myreg #8 inst_reg (clk, clken, di, do);\r\n\r\nendmodule\r\n```\r\n\r\nThe Yosys command to reproduce the problem and the message:\r\n\r\n```\r\n$ yosys -Q -p \"read_verilog examples/vivado/parameter_1.v\"\r\n\r\n-- Running command `read_verilog examples/vivado/parameter_1.v' --\r\n\r\n1. Executing Verilog-2005 frontend: examples/vivado/parameter_1.v\r\nParsing Verilog input from `examples/vivado/parameter_1.v' to AST representation.\r\nexamples/vivado/parameter_1.v:31: ERROR: syntax error, unexpected TOK_CONSTVAL, expecting '('\r\n```\r\n\r\nIt complains about `myreg #8 inst_reg (clk, clken, di, do);`, but it is supported by ISE and Vivado (not ignored):\r\n\r\n* ISE\r\n```\r\nSynthesizing Unit <myreg>.\r\n    Related source file is \"/home/ram/repos/yosys-versus/xilinx/examples/vivado/parameter_1.v\".\r\n        SIZE = 8\r\n    Found 8-bit register for signal <q>.\r\n    Summary:\r\n\tinferred   8 D-type flip-flop(s).\r\nUnit <myreg> synthesized.\r\n```\r\n* Vivado\r\n```\r\nINFO: [Synth 8-6157] synthesizing module 'myreg' [/home/ram/repos/yosys-versus/xilinx/examples/vivado/parameter_1.v:7]\r\n\tParameter SIZE bound to: 8 - type: integer \r\n```\r\n\r\nI didn't find something in favour of this behaviour on the Verilog 2001 standard ( and I haven't the 2005 standard to check here). It seems strange to me, I never saw this coding style in a real Verilog module, but I left here for your consideration. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-21",
+  "closed_at": "2020-03-21",
+  "code_blocks": [
+    "// A Verilog parameter allows to control the width of an instantitated\r\n// block describing register logic\r\n//\r\n// \r\n// File:parameter_1.v\r\n//\r\nmodule myreg (clk, clken, d, q);\r\n\r\n    parameter SIZE = 1;\r\n\r\n    input                  clk, clken;\r\n    input      [SIZE-1:0]  d;\r\n    output reg [SIZE-1:0]  q;\r\n    \r\n always @(posedge clk)\r\n    begin\r\n        if (clken)\r\n            q <= d;\r\n    end\r\n \r\nendmodule\r\n\r\nmodule parameter_1 (clk, clken, di, do);\r\n\r\n    parameter SIZE = 8;\r\n\r\n    input                  clk, clken;\r\n    input      [SIZE-1:0]  di;\r\n    output     [SIZE-1:0]  do;\r\n\r\n    myreg #8 inst_reg (clk, clken, di, do);\r\n\r\nendmodule",
+    "$ yosys -Q -p \"read_verilog examples/vivado/parameter_1.v\"\r\n\r\n-- Running command `read_verilog examples/vivado/parameter_1.v' --\r\n\r\n1. Executing Verilog-2005 frontend: examples/vivado/parameter_1.v\r\nParsing Verilog input from `examples/vivado/parameter_1.v' to AST representation.\r\nexamples/vivado/parameter_1.v:31: ERROR: syntax error, unexpected TOK_CONSTVAL, expecting '('",
+    "Synthesizing Unit <myreg>.\r\n    Related source file is \"/home/ram/repos/yosys-versus/xilinx/examples/vivado/parameter_1.v\".\r\n        SIZE = 8\r\n    Found 8-bit register for signal <q>.\r\n    Summary:\r\n\tinferred   8 D-type flip-flop(s).\r\nUnit <myreg> synthesized.",
+    "INFO: [Synth 8-6157] synthesizing module 'myreg' [/home/ram/repos/yosys-versus/xilinx/examples/vivado/parameter_1.v:7]\r\n\tParameter SIZE bound to: 8 - type: integer"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

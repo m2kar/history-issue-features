@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 5445,
+  "title": "Wrong behavior after dfflibmap with special cell",
+  "features": [
+    {
+      "name": "async reset DFF with active-low reset and reset-to-one behavior",
+      "category": "timing",
+      "description": "Code should include an always block with asynchronous reset using negedge resetn, where reset action sets register to 1",
+      "snippet": "always @(posedge clk or negedge resetn) begin\n  if (!resetn) r <= 1'b1;\n  else r <= 1'b0;\nend",
+      "tags": ["async_reset", "active_low_reset", "dff", "reset_value"],
+      "source_bug_id": "yosys-5445",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5445",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "liberty DFF cell with next_state formula and single QN output",
+      "category": "data_model",
+      "description": "Code should include a liberty library cell definition with DFF that has next_state defined as complement of D and only QN output pin",
+      "snippet": "cell(DFFRQN) {\n  ff(IQN, IQNN) { clocked_on: \"CK\";\n                  next_state: \"!D\";\n                  preset : \"!RN\"; }\n  pin(QN) { direction: output;\n            function: \"IQN\"; }\n}",
+      "tags": ["liberty", "dff", "next_state", "QN_output", "preset"],
+      "source_bug_id": "yosys-5445",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5445",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dfflibmap synthesis pass with liberty file containing DFF cells",
+      "category": "control_flow",
+      "description": "Code should include dfflibmap command with a liberty file that contains DFF cells with next_state logic, applied to a design with async reset flip-flop",
+      "snippet": "synth -top top\ndfflibmap -liberty cell.lib",
+      "tags": ["dfflibmap", "liberty", "synthesis", "async_reset"],
+      "source_bug_id": "yosys-5445",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5445",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

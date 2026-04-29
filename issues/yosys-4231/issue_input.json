@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4231,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4231",
+  "title": "Verilog asynchronous reset pattern leads to corrupted `$check`, `$print` control signals",
+  "body": "### Version\r\n\r\nYosys 0.38+92 (git sha1 f7737a12c, clang++ 11.1.0 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nmacOS\r\n\r\n### Reproduction Steps\r\n\r\n```\r\nread_verilog -sv <<EOF\r\n\r\nmodule top(q, d, clk, rst);\r\n\tinput wire clk;\r\n\tinput wire rst;\r\n\tinput wire [1:0] d;\r\n\toutput reg [1:0] q;\r\n\talways @(posedge clk, posedge rst) begin\r\n\t\tif (rst) begin\r\n\t\t\tq <= 0;\r\n\t\tend else begin\r\n\t\t\tq <= d;\r\n\t\t\t$display(\"q <= %x\", d);\r\n\t\t\tassert(!(d & (d - 1)));\r\n\t\tend\r\n\tend\r\nendmodule\r\n\r\nEOF\r\nproc\r\ndump t:$print t:$check\r\n```\r\n\r\n### Expected Behavior\r\n\r\nThe emitted `$print` and `$check` cells are conditioned on `!rst` and triggered by `clk` alone.\r\n\r\n### Actual Behavior\r\n\r\nThe `EN` port of the cells in question is driven high by a constant, both `rst` and `clk` are on the `TRG` port as triggers.\r\n\r\n``` \r\n  attribute \\src \"<<EOF:13.4-13.26\"\r\n  cell $check $assert$<<EOF:13$3\r\n    parameter \\ARGS_WIDTH 0\r\n    parameter \\FORMAT \"\"\r\n    parameter \\PRIORITY 32'11111111111111111111111111111110\r\n    parameter \\TRG_POLARITY 2'11\r\n    parameter \\TRG_ENABLE 1\r\n    parameter \\TRG_WIDTH 2\r\n    parameter \\FLAVOR \"assert\"\r\n    connect \\ARGS { }\r\n    connect \\A $logic_not$<<EOF:13$6_Y\r\n    connect \\EN 1'1\r\n    connect \\TRG { \\rst \\clk }\r\n  end\r\n\r\n  attribute \\src \"<<EOF:12.4-12.27\"\r\n  cell $print $display$<<EOF:12$2\r\n    parameter \\ARGS_WIDTH 2\r\n    parameter \\FORMAT \"q <= {2:>01hu}\\n\"\r\n    parameter \\PRIORITY 32'11111111111111111111111111111111\r\n    parameter \\TRG_POLARITY 2'11\r\n    parameter \\TRG_ENABLE 1\r\n    parameter \\TRG_WIDTH 2\r\n    connect \\ARGS \\d\r\n    connect \\EN 1'1\r\n    connect \\TRG { \\rst \\clk }\r\n  end\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2024-02-23",
+  "closed_at": null,
+  "code_blocks": [
+    "read_verilog -sv <<EOF\r\n\r\nmodule top(q, d, clk, rst);\r\n\tinput wire clk;\r\n\tinput wire rst;\r\n\tinput wire [1:0] d;\r\n\toutput reg [1:0] q;\r\n\talways @(posedge clk, posedge rst) begin\r\n\t\tif (rst) begin\r\n\t\t\tq <= 0;\r\n\t\tend else begin\r\n\t\t\tq <= d;\r\n\t\t\t$display(\"q <= %x\", d);\r\n\t\t\tassert(!(d & (d - 1)));\r\n\t\tend\r\n\tend\r\nendmodule\r\n\r\nEOF\r\nproc\r\ndump t:$print t:$check",
+    "attribute \\src \"<<EOF:13.4-13.26\"\r\n  cell $check $assert$<<EOF:13$3\r\n    parameter \\ARGS_WIDTH 0\r\n    parameter \\FORMAT \"\"\r\n    parameter \\PRIORITY 32'11111111111111111111111111111110\r\n    parameter \\TRG_POLARITY 2'11\r\n    parameter \\TRG_ENABLE 1\r\n    parameter \\TRG_WIDTH 2\r\n    parameter \\FLAVOR \"assert\"\r\n    connect \\ARGS { }\r\n    connect \\A $logic_not$<<EOF:13$6_Y\r\n    connect \\EN 1'1\r\n    connect \\TRG { \\rst \\clk }\r\n  end\r\n\r\n  attribute \\src \"<<EOF:12.4-12.27\"\r\n  cell $print $display$<<EOF:12$2\r\n    parameter \\ARGS_WIDTH 2\r\n    parameter \\FORMAT \"q <= {2:>01hu}\\n\"\r\n    parameter \\PRIORITY 32'11111111111111111111111111111111\r\n    parameter \\TRG_POLARITY 2'11\r\n    parameter \\TRG_ENABLE 1\r\n    parameter \\TRG_WIDTH 2\r\n    connect \\ARGS \\d\r\n    connect \\EN 1'1\r\n    connect \\TRG { \\rst \\clk }\r\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

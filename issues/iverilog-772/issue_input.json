@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 772,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/772",
+  "title": "Correctly handle unpacked array typedefs for ports",
+  "body": "If the type of a port is an array type it currently always gets evaluated\r\nin the scope where the port is declared.\r\n\r\nBut if the type is a typedef it might be declared in a different scope and\r\nmust be evaluated in that scope. E.g. the following will declare an array\r\nport with 10 entries and an element type of a 5 bit vector, while it should\r\ndeclare one with 4 entries and an element type of a 2 bit vector.\r\n\r\n```SystemVerilog\r\nlocalparam A = 2;\r\nlocalparam B = 4;\r\ntypedef [A-1:0] T[B];\r\n\r\nmodule test (\r\n  T x\r\n);\r\n\r\nlocalparam A = 5;\r\nlocalparam B = 10;\r\n\r\nendmodule\r\n```\r\n\r\nThis is in part due to array types being given special handling. This was\r\nnecessary before because each base type required slightly different\r\nhandling and so the base type had to be extracted from the array type.\r\n\r\nThis has now been consolidated and all data types are treated the same.\r\nThe only exception is the vector type which still needs special handling to\r\nsupport separate definition of port direction and type.\r\n\r\nAs a result it is possible to remove the special handling of the array\r\ntype. This solves the problem of evaluating the type in the wrong scope.\r\n\r\nSome special handling needs to be retained though to be able to\r\ndifferentiate between array dimensions that are part of a type and array\r\ndimensions that are part of port declaration. This is again necessary to\r\ncorrectly support separate definition of port direction and type. E.g. in\r\nthe example below port `x` and `y` get treated slightly differently, even\r\nthough the resulting signals will be identical.\r\n\r\n```SystemVerilog\r\ntypedef logic [7:0] T[1:0];\r\n...\r\ninput T x;\r\ninput [7:0] y[1:0];\r\n```\r\n\r\nAlso make sure that nested unpacked array types are supported. E.g.\r\n\r\n```SystemVerilog\r\ntypedef int T1[1:0];\r\ntypedef T1 T2[3:0];\r\nT2 x[7:0];\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-09-18",
+  "closed_at": "2022-10-04",
+  "code_blocks": [
+    "localparam A = 2;\r\nlocalparam B = 4;\r\ntypedef [A-1:0] T[B];\r\n\r\nmodule test (\r\n  T x\r\n);\r\n\r\nlocalparam A = 5;\r\nlocalparam B = 10;\r\n\r\nendmodule",
+    "typedef logic [7:0] T[1:0];\r\n...\r\ninput T x;\r\ninput [7:0] y[1:0];",
+    "typedef int T1[1:0];\r\ntypedef T1 T2[3:0];\r\nT2 x[7:0];"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

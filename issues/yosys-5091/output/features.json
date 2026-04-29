@@ -1,0 +1,46 @@
+[
+  {
+    "name": "box_topological_ordering",
+    "category": "general",
+    "description": "Code should include multiple hierarchical boxes where output-to-input dependencies between boxes require correct topological ordering during ABC synthesis. Boxes whose outputs feed other boxes' inputs must be processed first.",
+    "snippet": "module boxA(output [15:0] y, input clk); wire [15:0] a; assign y = a; endmodule\nmodule boxB(output [15:0] y, input clk); wire [15:0] b; assign y = b; endmodule\nmodule top(input clk, output [15:0] z);\n  wire [15:0] w;\n  boxA a(.y(w), .clk(clk));\n  boxB b(.y(z), .clk(clk));\n  assign z = w;\nendmodule",
+    "tags": ["ABC", "topological_order", "hierarchy"],
+    "source_bug_id": "yosys-5091",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5091",
+    "construct_complexity": 4
+  },
+  {
+    "name": "abc_aiger_black_box_mapping",
+    "category": "general",
+    "description": "Code should include black-box module declarations that get mapped to AIGER format for ABC synthesis. ABC requires boxes to have properly declared input/output widths that align with TFI (true fan-in) circuit structure.",
+    "snippet": "module blackbox(output [15:0] y, input [15:0] x, input clk); endmodule\nmodule top(input [15:0] in, output [15:0] out, input clk);\n  wire [15:0] mid;\n  blackbox bb(.y(mid), .x(in), .clk(clk));\n  assign out = mid;\nendmodule",
+    "tags": ["ABC", "AIGER", "blackbox", "mapping"],
+    "source_bug_id": "yosys-5091",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5091",
+    "construct_complexity": 3
+  },
+  {
+    "name": "cross_box_wire_dependencies",
+    "category": "general",
+    "description": "Code should include wire connections spanning multiple box boundaries where internal signals of one box fan out to inputs of other boxes. This creates TFI (true fan-in) relationships that ABC topological order must respect.",
+    "snippet": "module innerA(output [7:0] a_out, input clk); assign a_out = 8'hAB; endmodule\nmodule innerB(output [7:0] b_out, input [7:0] b_in); assign b_out = b_in; endmodule\nmodule innerC(output [7:0] c_out, input [7:0] c_in); assign c_out = c_in; endmodule\nmodule top(output [7:0] result, input clk);\n  wire [7:0] wire1, wire2;\n  innerA ia(.a_out(wire1), .clk(clk));\n  innerB ib(.b_out(wire2), .b_in(wire1));\n  innerC ic(.c_out(result), .c_in(wire2));\nendmodule",
+    "tags": ["ABC", "TFI", "fanout", "hierarchy"],
+    "source_bug_id": "yosys-5091",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5091",
+    "construct_complexity": 4
+  },
+  {
+    "name": "synth_ice40_abc_flow",
+    "category": "general",
+    "description": "Code should include SystemVerilog constructs that exercise the synth_ice40 flow with ABC synthesis. The ICE40 architecture uses ABC internally for AIG mapping, which requires proper box ordering.",
+    "snippet": "module cpu(output [15:0] out, input clk, input reset);\n  logic [15:0] reg_val;\n  always_ff @(posedge clk) begin\n    if (reset) reg_val <= 16'b0;\n    else reg_val <= reg_val + 16'b1;\n  end\n  assign out = reg_val;\nendmodule",
+    "tags": ["synth_ice40", "ABC", "register"],
+    "source_bug_id": "yosys-5091",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5091",
+    "construct_complexity": 3
+  }
+]

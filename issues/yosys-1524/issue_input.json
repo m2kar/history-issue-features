@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1524,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1524",
+  "title": "Gowin: add and test DFF init values",
+  "body": "In the previous Gowin patch, it was found that DFF init behavior was not supported in hardware and removed. Upon closer inspection it was found that in fact the hardware initializes to the reset value. In the vendor tools, the following code\r\n```verilog\r\nmodule myDFF (output reg Q = 1, input CLK, D);\r\n\talways @(posedge CLK)\r\n\t\tQ <= D;\r\nendmodule\r\n```\r\nSynthesizes to the following DFFS with the reset tied to ground.\r\n```verilog\r\nDFFS Q_0 (\r\n\t.Q(Q_c),\r\n\t.D(D_c),\r\n\t.CLK(CLK_c),\r\n\t.SET(GND)\r\n);\r\n```\r\nThis pull request adds the same behavior to all Gowin flip-flops that don't use a reset.\r\nIn case a reset is used, the wire init parameter is only removed if it is compatible with the reset value.\r\n\r\nThis PR also adds tests for all DFF types and their init values, and fixed a few typos in previously untested DFF types.\r\n\r\nFinally, it fixes a small discrepancy in the help. A `-noiopads` option was mentioned, but not actually implemented. Now it is.\r\n\r\nOne thing I don't like about this PR is that the test code is basically a copy of `cell_sim.v` with different names. Directly using the cell library resulted in weird issues.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-11-25",
+  "closed_at": "2019-12-03",
+  "code_blocks": [
+    "module myDFF (output reg Q = 1, input CLK, D);\r\n\talways @(posedge CLK)\r\n\t\tQ <= D;\r\nendmodule",
+    "DFFS Q_0 (\r\n\t.Q(Q_c),\r\n\t.D(D_c),\r\n\t.CLK(CLK_c),\r\n\t.SET(GND)\r\n);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

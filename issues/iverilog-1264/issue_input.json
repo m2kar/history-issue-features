@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 1264,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/1264",
+  "title": "Fix and refactor conversion from `double` to `uint64_t` (fixes test br1029b on x86-64-v4)",
+  "body": "## Issue\r\nWhen compiling with `-march=x86-64-v4` or `-march=znver4`, test case `br1029b` fail to pass. Based on PR #919 and discussion in #917, I think the following https://github.com/steveicarus/iverilog/blob/db82380cecf9943fcc397818e6899b7146442127/vvp/vthread.cc#L2383-L2386 is the root cause. Basically there are still direct double-to-unsigned-integer casts (undefined behavior) in `vpi_vthr_vector.cc` and `vthread.cc`.\r\n\r\n## This PR fixes:\r\n- Replaced custom rounding with rounding functions from standard library (`<cmath>` is already included in the code and I noticed that c++11 is in the default flags).\r\n- Used a common utility header for `vlg_round_to_u64` to safely cast form `double` to `uint64_t` and reuse across files.\r\n- Refactor binary string value conversion logic that used in `vpi_callback.cc` and `vpi_vthr_vector.c`.\r\n\r\nI have tested this PR locally on my x86 machine both with and without `-march=x86-64-v4`. Test case `br1029b` passes in both configurations, and no regressions were introduced. It probably needs to be tested on other architectures as well but I don't have ARM machines at the moment.\r\n\r\nPlease let me know if there are any comments and feel free to make edits.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-29",
+  "closed_at": "2026-02-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

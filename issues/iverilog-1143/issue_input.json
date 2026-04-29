@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1143,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1143",
+  "title": "incomplete for statement produces no output.",
+  "body": "when I try to skip the 'step assignment' statement in a for loop,  Iverilog reports no errors and vpp does not generate any output. In most other languages, this statement is optional, but I can not find any text in IEEE 1364-2005 regarding if this is an optional statement or not. This code works properly when building with gowin designer, I have not tested other tool chains.  This was difficult to track down.\r\n```verilog\r\n// Icarus Verilog version 13.0 (devel) (s20221226-524-gdc6f9f204-dirty)\r\n//`define NOBUG\r\n\r\nmodule bug_module(clk, out);\r\n    input   wire clk;\r\n    output  wire out;\r\n    function automatic integer f_bug;\r\n        input integer value;\r\n        begin\r\n            `ifdef NOBUG\r\n                for( f_bug = 0; value > 0; f_bug = f_bug + 1 ) begin    // No bug\r\n            `else\r\n                for( f_bug = 0; value > 0; ) begin    // bug\r\n            `endif\r\n                if( value == 1 ) begin\r\n                    f_bug = 0;\r\n                    value = 0;\r\n                end\r\n            end\r\n        end\r\n    endfunction\r\n    localparam lp = f_bug(1);\r\n    reg r = 0;\r\n    always @(posedge clk) r <= ~r;\r\n    assign out = r;\r\nendmodule\r\n\r\nmodule test;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_module UUT( .clk(clk), .out(out) );\r\n\r\n    always #1 clk <= ~clk;\r\n    always @(posedge clk) begin\r\n        $display(\"%b\", out);\r\n    end\r\n\r\n    initial begin\r\n        $dumpfile(\"UUT.vcd\");\r\n        $dumpvars(0, test);\r\n        $display(\"starting mux_tb.v\");\r\n        #8 $display( \"***WARNING*** Forcing simulation to end\");\r\n        $finish;\r\n    end\r\nendmodule\r\n```\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-07-08",
+  "closed_at": "2024-07-11",
+  "code_blocks": [
+    "// Icarus Verilog version 13.0 (devel) (s20221226-524-gdc6f9f204-dirty)\r\n//`define NOBUG\r\n\r\nmodule bug_module(clk, out);\r\n    input   wire clk;\r\n    output  wire out;\r\n    function automatic integer f_bug;\r\n        input integer value;\r\n        begin\r\n            `ifdef NOBUG\r\n                for( f_bug = 0; value > 0; f_bug = f_bug + 1 ) begin    // No bug\r\n            `else\r\n                for( f_bug = 0; value > 0; ) begin    // bug\r\n            `endif\r\n                if( value == 1 ) begin\r\n                    f_bug = 0;\r\n                    value = 0;\r\n                end\r\n            end\r\n        end\r\n    endfunction\r\n    localparam lp = f_bug(1);\r\n    reg r = 0;\r\n    always @(posedge clk) r <= ~r;\r\n    assign out = r;\r\nendmodule\r\n\r\nmodule test;\r\n    reg     clk = 0;\r\n    wire    out;\r\n\r\n    bug_module UUT( .clk(clk), .out(out) );\r\n\r\n    always #1 clk <= ~clk;\r\n    always @(posedge clk) begin\r\n        $display(\"%b\", out);\r\n    end\r\n\r\n    initial begin\r\n        $dumpfile(\"UUT.vcd\");\r\n        $dumpvars(0, test);\r\n        $display(\"starting mux_tb.v\");\r\n        #8 $display( \"***WARNING*** Forcing simulation to end\");\r\n        $finish;\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

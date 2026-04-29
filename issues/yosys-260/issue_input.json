@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 260,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/260",
+  "title": "Hiding temp variables from “show” output",
+  "body": "Let's say we have this module:\r\n\r\n```verilog\r\nmodule padder (input [N-1:0] a, input [N-1:0] b, input c_in,\r\n               output reg [N-1:0] s, output reg c_out);\r\n   parameter N = 4;\r\n\r\n   genvar i;\r\n   genvar j;\r\n   reg [N-1:0] p;\r\n   reg [N-1:0] g;\r\n   reg [N  :0] c;\r\n   for (i = 0; i < N; i = i + 1) begin\r\n      assign p[i] = a[i] | b[i];\r\n      assign g[i] = a[i] & b[i];\r\n   end\r\n   assign c[0] = c_in;\r\n   for (i = 0; i < N; i = i + 1) begin\r\n      reg [i:0] temp;\r\n      assign temp[0] = &{p[i:0], c_in}; // post-mortem: Oops, a bug here!\r\n      for (j = 1; j <= i; j = j + 1)\r\n        assign temp[j] = &{g[j-1], p[i:j]};\r\n      assign c[i+1] = |{temp, g[i]};\r\n   end\r\n   for (i = 0; i < N; i = i + 1)\r\n     assign s[i] = ^{a[i], b[i], c[i]};\r\n   assign c_out = c[N];\r\nendmodule\r\n```\r\n\r\nNow, if we load this module and run ``show``, we will get this:\r\n\r\n![default show result](https://files.progarm.org/yosys_adder_default.svg)\r\n\r\nWhich is alright, but I want to hide genblocks (they are there just to aggregate the values, so I am not interested in seeing them on the graph). That is, I want ``reduce_and``-s to be connected directly to ``reduce_or``-s, without passing through ``$genblock$padder.v:*.temp``.\r\n\r\nAfter reading [Yosys AppNote 011](http://www.clifford.at/yosys/files/yosys_appnote_011_design_investigation.pdf) my expectation was that it should be possible (given how flexible the whole thing is).\r\n\r\nI tried this:\r\n```\r\nshow -colors 42 padder/* padder/*genblock* %d\r\n```\r\n\r\nBut the result is not what I wanted:\r\n![attempt to hide genblocks](https://files.progarm.org/yosys_adder_nogenblocks.svg)\r\n\r\nSo is it just me being unable to figure out how to do that, or is this kind of thing missing?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-11-03",
+  "closed_at": "2016-11-04",
+  "code_blocks": [
+    "module padder (input [N-1:0] a, input [N-1:0] b, input c_in,\r\n               output reg [N-1:0] s, output reg c_out);\r\n   parameter N = 4;\r\n\r\n   genvar i;\r\n   genvar j;\r\n   reg [N-1:0] p;\r\n   reg [N-1:0] g;\r\n   reg [N  :0] c;\r\n   for (i = 0; i < N; i = i + 1) begin\r\n      assign p[i] = a[i] | b[i];\r\n      assign g[i] = a[i] & b[i];\r\n   end\r\n   assign c[0] = c_in;\r\n   for (i = 0; i < N; i = i + 1) begin\r\n      reg [i:0] temp;\r\n      assign temp[0] = &{p[i:0], c_in}; // post-mortem: Oops, a bug here!\r\n      for (j = 1; j <= i; j = j + 1)\r\n        assign temp[j] = &{g[j-1], p[i:j]};\r\n      assign c[i+1] = |{temp, g[i]};\r\n   end\r\n   for (i = 0; i < N; i = i + 1)\r\n     assign s[i] = ^{a[i], b[i], c[i]};\r\n   assign c_out = c[N];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

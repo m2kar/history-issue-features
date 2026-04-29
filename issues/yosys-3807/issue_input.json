@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3807,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3807",
+  "title": "Synthesis bug or maybe wrong understanding",
+  "body": "### Version\n\nYosys 0.30+16\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```\r\n    case (s_sevenSegSelReg)\r\n      3'd4    : begin\r\n//                  nSevenSeg <= { {6{1'b1}}, {2{toggleReg}} };\r\n                  nSevenSeg[7:2] <= 6'b111111;\r\n                  nSevenSeg[1]   <= toggleReg;\r\n                  nSevenSeg[0]   <= toggleReg;\r\n                end\r\n      3'd1    : nSevenSeg <= ~s_segs3;\r\n      3'd2    : nSevenSeg <= ~s_segs2;\r\n      3'd3    : nSevenSeg <= ~s_segs1;\r\n      default : nSevenSeg <= 8'hFF;\r\n    endcase\r\n```\r\nIn this verilog description the marked-out line does not reproduce the same behavior as the \"alternative\" below it.\n\n### Expected Behavior\n\nI would expect that both versions produce the same hardware, but they do not the marked out line produces a different implementation as the not-marked out lines.\n\n### Actual Behavior\n\nWhen I use the not-marked out lines I get the expected behavior, however, when I use the marked-out line I get following behavior:\r\n```\r\nnSevenSeg[7:1] <= 7'b0000000;\r\nnSevenSeg[0] <= toggleReg;\r\n```\r\nI attached the complete module for debugging.\r\n[rgbarray.zip](https://github.com/YosysHQ/yosys/files/11772835/rgbarray.zip)\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-16",
+  "closed_at": "2023-06-18",
+  "code_blocks": [
+    "case (s_sevenSegSelReg)\r\n      3'd4    : begin\r\n//                  nSevenSeg <= { {6{1'b1}}, {2{toggleReg}} };\r\n                  nSevenSeg[7:2] <= 6'b111111;\r\n                  nSevenSeg[1]   <= toggleReg;\r\n                  nSevenSeg[0]   <= toggleReg;\r\n                end\r\n      3'd1    : nSevenSeg <= ~s_segs3;\r\n      3'd2    : nSevenSeg <= ~s_segs2;\r\n      3'd3    : nSevenSeg <= ~s_segs1;\r\n      default : nSevenSeg <= 8'hFF;\r\n    endcase",
+    "nSevenSeg[7:1] <= 7'b0000000;\r\nnSevenSeg[0] <= toggleReg;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

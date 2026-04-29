@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4708,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4708",
+  "title": "read_verilog does not accept module port lists with .port_identifier",
+  "body": "### Version\n\nYosys 0.46 (git sha1 e97731b9d, g++ 12.2.0-14 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```\r\ncat > same_port.v << EOT\r\nmodule same_port (.a(i), .b(i)); // Name 'i' is declared inside the\r\n                    // module as a inout port. Names 'a' and 'b' are\r\n                    // defined for port connections.\r\ninout i;\r\nwire i;\r\nendmodule\r\nEOT\r\nyosys -p \"read_verilog same_port.v\"\r\n```\n\n### Expected Behavior\n\nNo crash.\r\nIEEE Std 1354-2001 Version C gives the following BNF:\r\n```\r\nport ::=\r\n  [ port expression ]\r\n  | .port_identifier([port_expression])\r\n```\r\nand the same_port.v example file above is straight from the standard, p.187,\r\nwith the last three lines to complete the picture.\r\n\r\nVivado and iverilog both handle this case correctly.\r\n\n\n### Actual Behavior\n\n```\r\n\r\n /----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.46 (git sha1 e97731b9d, g++ 12.2.0-14 -fPIC -O3)\r\n\r\n-- Running command `read_verilog same_port.v' --\r\n\r\n1. Executing Verilog-2005 frontend: same_port.v\r\nParsing Verilog input from `same_port.v' to AST representation.\r\nsame_port.v:1: ERROR: syntax error, unexpected TOK_ID, expecting '.'\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2024-11-05",
+  "closed_at": null,
+  "code_blocks": [
+    "cat > same_port.v << EOT\r\nmodule same_port (.a(i), .b(i)); // Name 'i' is declared inside the\r\n                    // module as a inout port. Names 'a' and 'b' are\r\n                    // defined for port connections.\r\ninout i;\r\nwire i;\r\nendmodule\r\nEOT\r\nyosys -p \"read_verilog same_port.v\"",
+    "/----------------------------------------------------------------------------\\\r\n |  yosys -- Yosys Open SYnthesis Suite                                       |\r\n |  Copyright (C) 2012 - 2024  Claire Xenia Wolf <claire@yosyshq.com>         |\r\n |  Distributed under an ISC-like license, type \"license\" to see terms        |\r\n \\----------------------------------------------------------------------------/\r\n Yosys 0.46 (git sha1 e97731b9d, g++ 12.2.0-14 -fPIC -O3)\r\n\r\n-- Running command `read_verilog same_port.v' --\r\n\r\n1. Executing Verilog-2005 frontend: same_port.v\r\nParsing Verilog input from `same_port.v' to AST representation.\r\nsame_port.v:1: ERROR: syntax error, unexpected TOK_ID, expecting '.'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

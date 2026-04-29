@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3177,
+  "title": "Generated verilog can create output nets without defined nettype",
+  "features": [
+    {
+      "name": "output port without explicit wire in generated verilog",
+      "category": "data_model",
+      "description": "Code should include an output port declaration without explicit wire type, which is valid Verilog but fails when combined with default_nettype none",
+      "snippet": "module foo(output a); assign a = 1'b0; endmodule",
+      "tags": ["port", "output", "wire", "default_nettype", "generated_verilog"],
+      "source_bug_id": "3177",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3177",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "default_nettype none with implicit nets",
+      "category": "preprocess",
+      "description": "Code should include a default_nettype none directive followed by code with implicitly-defined nets",
+      "snippet": "`default_nettype none\nmodule bar(input clk); wire a; assign a = clk; endmodule",
+      "tags": ["default_nettype", "implicit_net", "preprocess"],
+      "source_bug_id": "3177",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3177",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cross-file implicit net with default_nettype none",
+      "category": "data_model",
+      "description": "Code should include two files where one has output ports without wire and another has default_nettype none, causing interop failure",
+      "snippet": "// File 1: gen.v - generated output without wire\nmodule gen(output o); assign o = 1'b0; endmodule\n// File 2: top.sv - default_nettype none\n`default_nettype none\nmodule top; endmodule",
+      "tags": ["cross_file", "default_nettype", "implicit_net", "interop"],
+      "source_bug_id": "3177",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3177",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

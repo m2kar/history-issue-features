@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5005,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5005",
+  "title": "The empty module caused `write_aiger2` to throw the error:   `ERROR: Assert 'driverCell_' failed in ./kernel/rtlil.h:1673.`",
+  "body": "### Version\n\nYosys 0.51+107 (git sha1 f03b44959, clang++ 14.0.0-1ubuntu1.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following Verilog code in `bug.v` triggers an assertion failure when using `write_aiger2`:\n\n```verilog\nmodule top(input a, output b);\n  begin\n    \n  end\nendmodule\n```\n\nTo reproduce the issue, run:\n\n```\nread_verilog bug.v\nwrite_aiger2\n```\n\nThis results in the error:\n\n```\nERROR: Assert 'driverCell_' failed in ./kernel/rtlil.h:1673.\n```\n\nHowever, using `write_aiger` instead of `write_aiger2` works without errors:\n\n```\nread_verilog bug.v\nwrite_aiger\n```\n\nAdditionally, the same `bug.v` file can be successfully parsed by Verilator:\n\n```\nverilator -lint-only bug.v  # success\n```\n\nIt appears that `write_aiger2` is not handling empty modules correctly, while `write_aiger` and Verilator handle the case gracefully.\n\n### Expected Behavior\n\n`write_aiger2` should run successfully without triggering an assertion.\n\n### Actual Behavior\n\n`write_aiger2` triggers an assertion.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-09",
+  "closed_at": "2025-04-09",
+  "code_blocks": [
+    "module top(input a, output b);\n  begin\n    \n  end\nendmodule",
+    "ERROR: Assert 'driverCell_' failed in ./kernel/rtlil.h:1673."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

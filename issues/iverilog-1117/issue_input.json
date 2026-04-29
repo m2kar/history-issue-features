@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1117,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1117",
+  "title": "Nested generate statement not reported as syntax error",
+  "body": "Please consider the following example.\r\n```verilog\r\nmodule top (y, x);\r\n  output y;\r\n  input x;\r\n  genvar i;\r\n\r\ngenerate\r\ngenerate\r\nfor (i=0; i<1; i=i+1) begin\r\n  assign y = x;\r\nend\r\nendgenerate\r\nendgenerate\r\n\r\nendmodule\r\n```\r\niverilog (latest master, `ef7f0a8`) accepts this code and generates `a.out` without any errors or warnings.\r\nVerilator as well as other commercial simulators available on https://www.edaplayground.com/ complained about syntax error of nested generate regions.\r\n\r\nAccording to IEEE Std 1364™-2005, Annex A:\r\n- \"generate_region\" can produce the keywords `generate` and `endgenerate`.\r\n- \"generate_region\" is derived from \"non_port_module_item\"\r\n- \"module_or_generate_item\" -> \"loop_generate_construct\" -> \"generate_block\" -> \"module_or_generate_item\" -> ... There can not be any \"generate_region\" in \"module_or_generate_item\".\r\n\r\nRelated BNF:\r\n```\r\ngenerate_region ::=\r\n    generate { module_or_generate_item } endgenerate\r\n\r\nmodule_or_generate_item ::=\r\n    ... | { attribute_instance } loop_generate_construct\r\n\r\nloop_generate_construct ::=\r\n    for ( genvar_initialization ; genvar_expression ; genvar_iteration )\r\n        generate_block\r\n\r\ngenerate_block ::=\r\n    module_or_generate_item\r\n    | begin [ : generate_block_identifier ] { module_or_generate_item } end\r\n\r\nnon_port_module_item ::=\r\n    module_or_generate_item\r\n        | generate_region\r\n```\r\nTherefore, the code above is not valid Verilog. Maybe iverilog can report syntax error on such input files?",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2024-04-13",
+  "closed_at": "2024-12-29",
+  "code_blocks": [
+    "module top (y, x);\r\n  output y;\r\n  input x;\r\n  genvar i;\r\n\r\ngenerate\r\ngenerate\r\nfor (i=0; i<1; i=i+1) begin\r\n  assign y = x;\r\nend\r\nendgenerate\r\nendgenerate\r\n\r\nendmodule",
+    "generate_region ::=\r\n    generate { module_or_generate_item } endgenerate\r\n\r\nmodule_or_generate_item ::=\r\n    ... | { attribute_instance } loop_generate_construct\r\n\r\nloop_generate_construct ::=\r\n    for ( genvar_initialization ; genvar_expression ; genvar_iteration )\r\n        generate_block\r\n\r\ngenerate_block ::=\r\n    module_or_generate_item\r\n    | begin [ : generate_block_identifier ] { module_or_generate_item } end\r\n\r\nnon_port_module_item ::=\r\n    module_or_generate_item\r\n        | generate_region"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 802,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/802",
+  "title": "write_verilog: correctly emit asynchronous transparent ports",
+  "body": "This commit fixes two related issues:\r\n  * For asynchronous ports, clock is no longer added to domain list.\r\n    (This would lead to absurd constructs like `always @(posedge 0)`.\r\n  * The logic to distinguish synchronous and asynchronous ports is\r\n    changed to correctly use or avoid clock in all cases.\r\n\r\nBefore this commit, the following RTLIL snippet (after memory_collect)\r\n\r\n    cell $memrd $2\r\n      parameter \\MEMID \"\\\\mem\"\r\n      parameter \\ABITS 2\r\n      parameter \\WIDTH 4\r\n      parameter \\CLK_ENABLE 0\r\n      parameter \\CLK_POLARITY 1\r\n      parameter \\TRANSPARENT 1\r\n      connect \\CLK 1'0\r\n      connect \\EN 1'1\r\n      connect \\ADDR \\mem_r_addr\r\n      connect \\DATA \\mem_r_data\r\n    end\r\n\r\nwould lead to invalid Verilog:\r\n\r\n    reg [1:0] _0_;\r\n    always @(posedge 1'h0) begin\r\n      _0_ <= mem_r_addr;\r\n    end\r\n    assign mem_r_data = mem[_0_];\r\n\r\nNote that there are two potential pitfalls remaining after this\r\nchange:\r\n  * For asynchronous ports, the \\EN input and \\TRANSPARENT parameter\r\n    are silently ignored. (Per discussion in #760 this is the correct\r\n    behavior.)\r\n  * For synchronous transparent ports, the \\EN input is ignored. This\r\n    matches the behavior of the $mem simulation cell. Again, see #760.\r\n\r\n(The diff is more readable [like this](https://github.com/YosysHQ/yosys/pull/802/files?w=1)).",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-01-29",
+  "closed_at": "2019-02-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

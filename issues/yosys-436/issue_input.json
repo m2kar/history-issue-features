@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 436,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/436",
+  "title": "SMTIO crashes with IndexError: string index out of range",
+  "body": "When running\r\n\r\nyosys-smtbmc --presat -s yices -t 24 --dump-smt2 wbm2axisp_bmc.smt2 --dump-vcd wbm2axisp_bmc.vcd wbm2axisp.smt2\r\n\r\nI'm getting the following error,\r\n\r\n```\r\n...\r\n##      0   0:00:00  BMC failed!\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 1227, in <module>\r\n    print_failed_asserts(i)\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 961, in print_failed_asserts\r\n    if print_failed_asserts_worker(topmod, \"s%d\" % state, topmod, extrainfo):\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 935, in print_failed_asserts_worker\r\n    if smt.get(\"(|%s_a| %s)\" % (mod, state)) in [\"true\", \"#b1\"]:\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 562, in get\r\n    return self.parse(self.read())[0][1]\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 527, in parse\r\n    return worker(stmt)[0]\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 498, in worker\r\n    if stmt[0] == '(':\r\nIndexError: string index out of range\r\n```\r\n\r\nIf you look into smtio.py, near line 498, there's no bounds checking in the parse(self, stmt): worker(stmt) function.  I think this is what's going on.\r\n\r\nDan",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2017-10-18",
+  "closed_at": "2017-10-21",
+  "code_blocks": [
+    "...\r\n##      0   0:00:00  BMC failed!\r\nTraceback (most recent call last):\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 1227, in <module>\r\n    print_failed_asserts(i)\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 961, in print_failed_asserts\r\n    if print_failed_asserts_worker(topmod, \"s%d\" % state, topmod, extrainfo):\r\n  File \"/usr/local/bin/yosys-smtbmc\", line 935, in print_failed_asserts_worker\r\n    if smt.get(\"(|%s_a| %s)\" % (mod, state)) in [\"true\", \"#b1\"]:\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 562, in get\r\n    return self.parse(self.read())[0][1]\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 527, in parse\r\n    return worker(stmt)[0]\r\n  File \"/usr/local/bin/../share/yosys/python3/smtio.py\", line 498, in worker\r\n    if stmt[0] == '(':\r\nIndexError: string index out of range"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2645,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2645",
+  "title": "ABC pass mangles synthesized logic on big endian architectures",
+  "body": "## Steps to reproduce the issue\r\nUsing a recent yosys commit (e.g. 9cdc6b5f), apply the following patch (suggested by @mwkmwkmwk on IRC):\r\n\r\n```\r\ndiff --git a/tests/techmap/shiftx2mux.ys b/tests/techmap/shiftx2mux.ys\r\nindex f749e79b..0f8f42a4 100644\r\n--- a/tests/techmap/shiftx2mux.ys\r\n+++ b/tests/techmap/shiftx2mux.ys\r\n@@ -70,6 +70,7 @@ EOT\r\n \r\n proc\r\n pmux2shiftx\r\n+write_rtlil gold.il\r\n design -save gold\r\n \r\n \r\n@@ -77,6 +78,7 @@ design -load gold\r\n techmap\r\n abc -lut 6\r\n select -assert-count 16 t:$lut\r\n+write_rtlil gate1.il\r\n \r\n design -stash gate\r\n design -import gold -as gold\r\n@@ -89,6 +91,7 @@ design -load gold\r\n techmap\r\n abc9 -lut 6\r\n select -assert-count 16 t:$lut\r\n+write_rtlil gate2.il\r\n \r\n design -stash gate\r\n design -import gold -as gold\r\n```\r\n\r\nThen build yosys on a BE architecture, e.g. ppc64 or s390x.\r\n\r\nOnce build completes, run `make test` to execute the test suite\r\n\r\n## Expected behavior\r\n\r\ntests succeeds\r\n\r\n## Actual behavior\r\n\r\n`tests/techmap/shiftx2mux.ys` fails with \"`ERROR: Called with -verify and proof did fail!!`\"\r\n\r\nPlease also see [yosys-shiftx2mux-test.tar.gz](https://github.com/YosysHQ/yosys/files/6103922/yosys-shiftx2mux-test.tar.gz) which contains two folders containing logging and `*.il` files generated during the (patched as per above) test: one for `x86_64` (where the test succeeds), and one for `s390x`, where it fails before reaching the second gate.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2021-03-08",
+  "closed_at": null,
+  "code_blocks": [
+    "diff --git a/tests/techmap/shiftx2mux.ys b/tests/techmap/shiftx2mux.ys\r\nindex f749e79b..0f8f42a4 100644\r\n--- a/tests/techmap/shiftx2mux.ys\r\n+++ b/tests/techmap/shiftx2mux.ys\r\n@@ -70,6 +70,7 @@ EOT\r\n \r\n proc\r\n pmux2shiftx\r\n+write_rtlil gold.il\r\n design -save gold\r\n \r\n \r\n@@ -77,6 +78,7 @@ design -load gold\r\n techmap\r\n abc -lut 6\r\n select -assert-count 16 t:$lut\r\n+write_rtlil gate1.il\r\n \r\n design -stash gate\r\n design -import gold -as gold\r\n@@ -89,6 +91,7 @@ design -load gold\r\n techmap\r\n abc9 -lut 6\r\n select -assert-count 16 t:$lut\r\n+write_rtlil gate2.il\r\n \r\n design -stash gate\r\n design -import gold -as gold"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

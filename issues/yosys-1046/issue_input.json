@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1046,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1046",
+  "title": "Optimizing DFFs whose initial value prevents their value from changing",
+  "body": "I'm pretty new to the Yosys codebase so this is only a proof of concept implementation which invokes SAT solver to optimize-away DFFs in the cases that boil down:\r\n\r\n````\r\nmodule top(\r\n    input  clk,\r\n    input  a,\r\n    output b\r\n);\r\n  \r\n    reg b_reg;\r\n    initial begin\r\n        b_reg <= 0;\r\n    end\r\n\r\n    assign b = b_reg;\r\n    always @(posedge clk) begin\r\n        b_reg <= a && b_reg;\r\n    end\r\nendmodule\r\n````\r\n\r\nHere, the b_reg initial value of 0 is preventing the register value from ever changing. I used SAT solver to check for these situations since expressions for the DFF next value can be more complex and end up in this simple form only after minimization.\r\n\r\nI invoked the SAT solver using string command via Pass::call, since it seemed that I would need to either copy or refactor a lot of the code from the ``passes/sat/sat.cc`` module. The generated SAT problem for the example above is:\r\n\r\n ``sat -ignore_unknown_cells -prove $0\\b_reg[0:0][0] 0 -set b_reg[0] 0``\r\n\r\nSo for the multi-bit registers, the above check would be run for each of the individual bits. If the SAT solver proves that a portion of the register cannot change its value, that portion of the register is replaced by a constant.\r\n\r\nAgain, I'm not familiar with the codebase so I'll be willing to put in some more work into the implementation if this approach makes sense and I could be given some guidelines on how to fit it naturally into Yosys. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-28",
+  "closed_at": "2019-06-28",
+  "code_blocks": [
+    "module top(\r\n    input  clk,\r\n    input  a,\r\n    output b\r\n);\r\n  \r\n    reg b_reg;\r\n    initial begin\r\n        b_reg <= 0;\r\n    end\r\n\r\n    assign b = b_reg;\r\n    always @(posedge clk) begin\r\n        b_reg <= a && b_reg;\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

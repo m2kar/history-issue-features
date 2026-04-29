@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 190,
+  "title": "Autotest.sh and part select",
+  "features": [
+    {
+      "name": "little_endian_vector_declaration_with_part_select",
+      "category": "data_model",
+      "description": "Code should include a vector declaration with little-endian indexing [0:N-1] instead of standard [N-1:0], combined with part select operations via indexed variables",
+      "snippet": "reg [0:63] lego0_q;\nalways @(posedge clk) begin\n  for (i0=0; i0<=15; i0=i0+1) begin\n    lego0_q[i0] <= lego0_q[i0];\n  end\nend",
+      "tags": ["vector", "little_endian", "part_select", "for_loop"],
+      "source_bug_id": "yosys-190",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/190",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "multiple_always_blocks_same_register_part_select",
+      "category": "timing",
+      "description": "Code should include multiple separate always @(posedge clk) blocks operating on different part-select ranges of the same register",
+      "snippet": "always @(posedge clk) begin\n  if (rst) begin\n    for (i0=0; i0<=15; i0=i0+1) lego0_q[i0] <= 0;\n  end\nend\nalways @(posedge clk) begin\n  if (rst) begin\n    for (i3=48; i3<=63; i3=i3+1) lego0_q[i3] <= 0;\n  end\nend",
+      "tags": ["always_ff", "multiple_blocks", "part_select", "non_blocking"],
+      "source_bug_id": "yosys-190",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/190",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "part_select_reset_to_constant_vs_pass_through",
+      "category": "control_flow",
+      "description": "Code should include a register with part selects where reset assigns constant 0, and normal mode passes through an input signal",
+      "snippet": "reg [0:63] lego0_q;\nalways @(posedge clk) begin\n  if (rst) begin\n    for (i3=48; i3<=63; i3=i3+1) lego0_q[i3] <= 0;\n  end\n  else begin\n    for (i3=48; i3<=63; i3=i3+1) lego0_q[i3] <= lego0foo_i[i3];\n  end\nend",
+      "tags": ["reset", "part_select", "input_passthrough", "conditional"],
+      "source_bug_id": "yosys-190",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/190",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

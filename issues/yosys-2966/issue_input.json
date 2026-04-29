@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2966,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2966",
+  "title": "readmem[hb] spuriously called with module parameter default value",
+  "body": "## Steps to reproduce the issue\r\n\r\n```\r\n$ yosys -V\r\nYosys 0.9+4052 (git sha1 687f381b69, gcc 10.3.0 -fPIC -Os)\r\n$ cat top.v\r\n`default_nettype none\r\n\r\nmodule Parametrized(input wire clk, output wire led);\r\n    parameter FILENAME = \"\";\r\n\r\n    reg [31:0] rom [0:8191];\r\n\r\n    initial begin;\r\n        $readmemh(FILENAME, rom, 0, 8191);\r\n    end\r\n\r\n    always @(posedge clk) begin\r\n        led <= rom[0][0];\r\n    end\r\nendmodule\r\n\r\nmodule top(input wire clk, output wire led);\r\n    Parametrized #(\"/tmp/foo\") pm(clk, led);\r\nendmodule\r\n$ yosys -Q -p \"synth_ice40 -top top\" top.v\r\n\r\n-- Parsing `top.v' using frontend `verilog' --\r\n\r\n1. Executing Verilog-2005 frontend: top.v\r\nParsing Verilog input from `top.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Parametrized'.\r\ntop.v:0: ERROR: Can not open file `` for \\$readmemh.\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe design should IMO synthesize, with the top.led wire being set to some value dependent on `/tmp/foo`.\r\n\r\nI am not sure what the standards say here, but this is something I've discovered when using Bluespec's standard library with Yosys, eg. in [BRAM1Load.v](https://github.com/B-Lang-org/bsc/blob/main/src/Verilog/BRAM1Load.v#L16).\r\n\r\n## Actual behavior\r\n\r\nYosys attempts to `readmemh(\"\", ...)` and fails - ie., seems to do a `readmemh` with the default parameter value of FILENAME. This happens even when `top` doesn't have a `Parametrized` instance, so it seems to be done at a very early pass when `Parametrized` is being read and parsed as a module, before it gets instantiated into `top` as `pm`.\r\n\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-08-15",
+  "closed_at": null,
+  "code_blocks": [
+    "$ yosys -V\r\nYosys 0.9+4052 (git sha1 687f381b69, gcc 10.3.0 -fPIC -Os)\r\n$ cat top.v\r\n`default_nettype none\r\n\r\nmodule Parametrized(input wire clk, output wire led);\r\n    parameter FILENAME = \"\";\r\n\r\n    reg [31:0] rom [0:8191];\r\n\r\n    initial begin;\r\n        $readmemh(FILENAME, rom, 0, 8191);\r\n    end\r\n\r\n    always @(posedge clk) begin\r\n        led <= rom[0][0];\r\n    end\r\nendmodule\r\n\r\nmodule top(input wire clk, output wire led);\r\n    Parametrized #(\"/tmp/foo\") pm(clk, led);\r\nendmodule\r\n$ yosys -Q -p \"synth_ice40 -top top\" top.v\r\n\r\n-- Parsing `top.v' using frontend `verilog' --\r\n\r\n1. Executing Verilog-2005 frontend: top.v\r\nParsing Verilog input from `top.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Parametrized'.\r\ntop.v:0: ERROR: Can not open file `` for \\$readmemh."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

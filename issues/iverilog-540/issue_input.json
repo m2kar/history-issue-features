@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 540,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/540",
+  "title": "inaccurate combination if signedness of non-ANSI style port declarations",
+  "body": "Per 23.2.2.1 of IEEE 1800-2017:\r\n\r\n> The signed attribute can be attached either to a port declaration or the corresponding net or variable declaration or to both. If either the port or the net/variable is declared as signed, then the other shall also be considered signed.\r\n\r\nContrary to this specification, iverilog appears to only consider the signedness of the data declaration, rather considering the port signed if either declaration marks it as such.\r\n\r\n```SystemVerilog\r\nmodule top(\r\n    o___one, o___two,\r\n    o__signed_one, o__signed_two,\r\n    o__unsigned_one, o__unsigned_two,\r\n    o_signed__one, o_signed__two,\r\n    o_signed_signed_one, o_signed_signed_two,\r\n    o_signed_unsigned_one, o_signed_unsigned_two,\r\n    o_unsigned__one, o_unsigned__two,\r\n    o_unsigned_signed_one, o_unsigned_signed_two,\r\n    o_unsigned_unsigned_one, o_unsigned_unsigned_two\r\n);\r\n\r\n`define TEST_RAW(name, port, data) \\\r\n    output port name; \\\r\n    wire data name; \\\r\n    assign name = 1'sb1; \\\r\n    wire [$bits(name):0] tmp_``name = name; \\\r\n    initial #1 $display(`\"name %b %b`\", name, tmp_``name);\r\n\r\n`define TEST_SG(port_sg, data_sg) \\\r\n    `TEST_RAW(o_``port_sg``_``data_sg``_one, port_sg      , data_sg      ) \\\r\n    `TEST_RAW(o_``port_sg``_``data_sg``_two, port_sg [1:0], data_sg [1:0]) \\\r\n\r\n    `TEST_SG(        ,         )\r\n    `TEST_SG(        ,   signed)\r\n    `TEST_SG(        , unsigned)\r\n    `TEST_SG(  signed,         )\r\n    `TEST_SG(  signed,   signed)\r\n    `TEST_SG(  signed, unsigned)\r\n    `TEST_SG(unsigned,         )\r\n    `TEST_SG(unsigned,   signed)\r\n    `TEST_SG(unsigned, unsigned)\r\nendmodule\r\n```",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-09-05",
+  "closed_at": "2021-09-10",
+  "code_blocks": [
+    "module top(\r\n    o___one, o___two,\r\n    o__signed_one, o__signed_two,\r\n    o__unsigned_one, o__unsigned_two,\r\n    o_signed__one, o_signed__two,\r\n    o_signed_signed_one, o_signed_signed_two,\r\n    o_signed_unsigned_one, o_signed_unsigned_two,\r\n    o_unsigned__one, o_unsigned__two,\r\n    o_unsigned_signed_one, o_unsigned_signed_two,\r\n    o_unsigned_unsigned_one, o_unsigned_unsigned_two\r\n);\r\n\r\n`define TEST_RAW(name, port, data) \\\r\n    output port name; \\\r\n    wire data name; \\\r\n    assign name = 1'sb1; \\\r\n    wire [$bits(name):0] tmp_``name = name; \\\r\n    initial #1 $display(`\"name %b %b`\", name, tmp_``name);\r\n\r\n`define TEST_SG(port_sg, data_sg) \\\r\n    `TEST_RAW(o_``port_sg``_``data_sg``_one, port_sg      , data_sg      ) \\\r\n    `TEST_RAW(o_``port_sg``_``data_sg``_two, port_sg [1:0], data_sg [1:0]) \\\r\n\r\n    `TEST_SG(        ,         )\r\n    `TEST_SG(        ,   signed)\r\n    `TEST_SG(        , unsigned)\r\n    `TEST_SG(  signed,         )\r\n    `TEST_SG(  signed,   signed)\r\n    `TEST_SG(  signed, unsigned)\r\n    `TEST_SG(unsigned,         )\r\n    `TEST_SG(unsigned,   signed)\r\n    `TEST_SG(unsigned, unsigned)\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1162,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1162",
+  "title": "Allow attributes on individual switch cases in RTLIL",
+  "body": "The parser changes are slightly awkward. Consider the following IL:\r\n\r\n    process $0\r\n      <point 1>\r\n      switch \\foo\r\n        <point 2>\r\n        case 1'1\r\n          assign \\bar \\baz\r\n          <point 3>\r\n          ...\r\n        case\r\n      end\r\n    end\r\n\r\nBefore this commit, attributes are valid in <point 1>, and <point 3>\r\niff it is immediately followed by a `switch`. (They are essentially\r\nattached to the switch.) But, after this commit, and because switch\r\ncases do not have an ending delimiter, <point 3> becomes ambiguous:\r\nthe attribute could attach to either the following `case`, or to\r\nthe following `switch`. This isn't expressible in LALR(1) and results\r\nin a reduce/reduce conflict.\r\n\r\nTo address this, attributes inside processes are now valid anywhere\r\ninside the process: in <point 1> and <point 3> a part of case body,\r\nand in <point 2> as a separate rule. As a consequence, attributes\r\ncan now precede `assign`s, which is made illegal in the same way it\r\nis illegal to attach attributes to `connect`.\r\n\r\nAttributes are tracked separately from the parser state, so this\r\ndoes not affect collection of attributes at all, other than allowing\r\nthem on `case`s. The grammar change serves purely to allow attributes\r\nin more syntactic places.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-07-08",
+  "closed_at": "2019-07-09",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

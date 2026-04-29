@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3604,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3604",
+  "title": "Incorrect return value from `$bits` function",
+  "body": "### Version\n\nYosys 0.24+10 (git sha1 3ebc50dee, gcc 9.3.0-22 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWhile processing a single element of `typedef struct packed` by a `$bits` function, it returns size of a whole structure.\r\nExample design:\r\n```verilog\r\nmodule top(output int o);\r\n\r\n\ttypedef struct packed {\r\n\t\tlogic [1:0][15:0] v_2x16;\r\n\t\tlogic [1:0] \t  v_2bit;\r\n\t} struct_2el;\r\n\r\n\tstruct_2el array;\r\n\r\n\tassign o = $bits(array.v_2x16[0]);\r\nendmodule\r\n```\r\nExecuted commands:\r\n```bash\r\n$ yosys\r\nyosys> read_verilog -sv -dump_vlog2 top.sv\r\n```\r\n\r\nIt should return a size of single `[15:0]` element of `v_2x16`.\n\n### Expected Behavior\n\nYosys should inffer a value equal to a size of an expression passed to `$bits`:\r\n```verilog\r\nassign o = 16;\r\n```\n\n### Actual Behavior\n\nYosys inffers a value equal to the size of a whole structure:\r\n```verilog\r\nassign o = 34;\r\n```",
+  "labels": [
+    "SystemVerilog",
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-30",
+  "closed_at": "2023-02-15",
+  "code_blocks": [
+    "module top(output int o);\r\n\r\n\ttypedef struct packed {\r\n\t\tlogic [1:0][15:0] v_2x16;\r\n\t\tlogic [1:0] \t  v_2bit;\r\n\t} struct_2el;\r\n\r\n\tstruct_2el array;\r\n\r\n\tassign o = $bits(array.v_2x16[0]);\r\nendmodule",
+    "assign o = 16;",
+    "assign o = 34;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

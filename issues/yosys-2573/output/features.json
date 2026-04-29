@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 2573,
+  "title": "verilog: refactored constant function evaluation",
+  "features": [
+    {
+      "name": "function call in constant expression context",
+      "category": "data_model",
+      "description": "Code should include a function with only constant arguments called within a concatenation that is assigned to a constant signal",
+      "snippet": "function automatic [1:0] cast_fn;\n    input reg [1:0] inp;\n    cast_fn = inp;\nendfunction\n\nlocalparam [1:0] X = {1'b0, cast_fn(2'b01)};",
+      "tags": ["function", "constant_evaluation", "localparam", "concatenation"],
+      "source_bug_id": "2562",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/2573",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested function calls with constant args in constant context",
+      "category": "data_model",
+      "description": "Code should include nested function calls where the outer function is called in a constant context but inner arguments are not constant",
+      "snippet": "function automatic [1:0] inner_fn;\n    input reg [1:0] inp;\n    inner_fn = inp;\nendfunction\n\nfunction automatic [1:0] outer_fn;\n    input reg [1:0] inp;\n    outer_fn = inner_fn(inp);\nendfunction\n\nwire [1:0] val;\nlocalparam [3:0] P = {outer_fn(val), 2'b00};",
+      "tags": ["nested_function", "constant_context", "function_call"],
+      "source_bug_id": "2562",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/2573",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "simple passthrough function in localparam assignment",
+      "category": "data_model",
+      "description": "Code should include a simple function that just assigns its input, used in a localparam constant assignment via concatenation",
+      "snippet": "function automatic [7:0] cast_8;\n    input reg [7:0] inp;\n    cast_8 = inp;\nendfunction\n\nlocalparam [15:0] C = {cast_8(8'hAB), 8'h00};",
+      "tags": ["function", "passthrough", "localparam", "concatenation"],
+      "source_bug_id": "2562",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/2573",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

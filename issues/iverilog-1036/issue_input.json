@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1036,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1036",
+  "title": "[Bug report] Segmentation fault when using out-of-scope variable in slices",
+  "body": "Hi there!\r\n\r\nI encountered a segmentation fault when using an out-of-scope variable with some slicing.\r\n\r\nHere is an example:\r\n\r\n`tb.sv`:\r\n```\r\nmodule testbench;\r\n\r\n  bit [31:0] first_words [64 / 32];\r\n  bit [31:0] second_words [32 / 32];\r\n\r\n  bit [63:0] first;\r\n  bit [31:0] second;\r\n\r\n  top dut(first, second);\r\n\r\n  always_comb begin\r\n    for (int first_word_id = 0; first_word_id < 64 / 32; first_word_id++) begin : reset_generator\r\n      first_words[first_word_id] = first[32*first_word_id +: 32];\r\n    end\r\n    for (int second_word_id = 0; second_word_id < 32 / 32; second_word_id++) begin : reset_generator\r\n      second_words[second_word_id] = second[32*first_word_id +: 32]; // Note the usage of first_word_id here\r\n    end\r\n  end\r\n\r\nendmodule\r\n```\r\n\r\n`top.sv`:\r\n```\r\nmodule top(first, second);\r\n  output [63:0] first;\r\n  wire [63:0] first;\r\n  output [31:0] second;\r\n  wire [31:0] second;\r\nendmodule\r\n```\r\n\r\nCommand: `iverilog -g2012 -o out top.sv tb.sv`\r\n\r\nResult:\r\n```\r\ntb.sv:16: error: Unable to bind wire/reg/memory `first_word_id' in `testbench.$ivl_for_loop1.reset_generator'\r\nSegmentation fault\r\n```\r\n\r\nThe bug is still present in the most recent version of Icarus (`c9548f0`), and I'm running on Ubuntu 22.04.\r\n\r\nThanks!\r\nFlavien",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2023-11-18",
+  "closed_at": "2023-12-28",
+  "code_blocks": [
+    "module testbench;\r\n\r\n  bit [31:0] first_words [64 / 32];\r\n  bit [31:0] second_words [32 / 32];\r\n\r\n  bit [63:0] first;\r\n  bit [31:0] second;\r\n\r\n  top dut(first, second);\r\n\r\n  always_comb begin\r\n    for (int first_word_id = 0; first_word_id < 64 / 32; first_word_id++) begin : reset_generator\r\n      first_words[first_word_id] = first[32*first_word_id +: 32];\r\n    end\r\n    for (int second_word_id = 0; second_word_id < 32 / 32; second_word_id++) begin : reset_generator\r\n      second_words[second_word_id] = second[32*first_word_id +: 32]; // Note the usage of first_word_id here\r\n    end\r\n  end\r\n\r\nendmodule",
+    "module top(first, second);\r\n  output [63:0] first;\r\n  wire [63:0] first;\r\n  output [31:0] second;\r\n  wire [31:0] second;\r\nendmodule",
+    "tb.sv:16: error: Unable to bind wire/reg/memory `first_word_id' in `testbench.$ivl_for_loop1.reset_generator'\r\nSegmentation fault"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

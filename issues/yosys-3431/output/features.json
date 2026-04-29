@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 3431,
+  "title": "Wrong smt-lib model behavior since yosys v0.15",
+  "features": [
+    {
+      "name": "variable_part_select_on_packed_array_memory_write",
+      "category": "data_model",
+      "description": "Code should include a variable part-select assignment on a packed array memory element where the index is computed dynamically",
+      "snippet": "reg [(FIFO_DEPTH * DATA_WIDTH) - 1:0] mem_n;\nmem_n[write_pointer_q * DATA_WIDTH+:DATA_WIDTH] = data_i;",
+      "tags": ["packed_array", "variable_part_select", "memory_write", "part_select_assignment"],
+      "source_bug_id": "3431",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3431",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fifo_circular_buffer_with_pointer_arithmetic",
+      "category": "data_model",
+      "description": "Code should include a circular buffer implementation with read and write pointer management using modulo-style wraparound",
+      "snippet": "reg [ADDR_DEPTH - 1:0] read_pointer_q;\nreg [ADDR_DEPTH - 1:0] write_pointer_q;\nif (write_pointer_q == (FIFO_DEPTH[ADDR_DEPTH - 1:0] - 1))\n    write_pointer_n = 1'sb0;\nelse\n    write_pointer_n = write_pointer_q + 1;",
+      "tags": ["circular_buffer", "pointer_arithmetic", "wraparound", "fifo"],
+      "source_bug_id": "3431",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3431",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "packed_array_memory_with_concat_dimension",
+      "category": "data_model",
+      "description": "Code should include a packed array memory where the total width is computed via multiplication of depth and data width parameters",
+      "snippet": "parameter [31:0] DATA_WIDTH = 32;\nparameter [31:0] DEPTH = 2;\nreg [(DEPTH * DATA_WIDTH) - 1:0] mem_q;",
+      "tags": ["packed_array", "parameterized_memory", "concat_dimension", "memory"],
+      "source_bug_id": "3431",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3431",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "combinational_memory_write_with_gate_clock",
+      "category": "control_flow",
+      "description": "Code should include a combinational always block that computes memory updates and uses a gate_clock signal to control sequential memory storage",
+      "snippet": "reg gate_clock;\nalways @(*) begin\n    mem_n = mem_q;\n    gate_clock = 1'b1;\n    if (push_i && ~full_o) begin\n        mem_n[write_pointer_q * DATA_WIDTH+:DATA_WIDTH] = data_i;\n        gate_clock = 1'b0;\n    end\nend",
+      "tags": ["combinational_logic", "gate_clock", "memory_update", "sequential_storage"],
+      "source_bug_id": "3431",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3431",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

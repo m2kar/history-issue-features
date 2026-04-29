@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1360,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1360",
+  "title": "Instantiating an interface without params fails, BLIF can't find module top",
+  "body": "## Steps to reproduce the issue\r\n\r\nYosys has unit tests that instantiate SystemVerilog interfaces with parameters. When there are none the BLIF backend fails with `Can't find top module '\\top'` (possibly because the hierarchy pass is removing too much, see logs at the end).\r\n\r\nThis example works `yosys -p \"read_verilog -sv ./top.sv; synth_ice40 -blif out.blif\"`:\r\n\r\n```systemverilog\r\nmodule top(input clk);\r\n  MyInterface #(.PARAM(0)) MyInterfaceInstance();\r\nendmodule\r\n\r\ninterface MyInterface #(PARAM = 0)();\r\n  logic not_an_empty_interface;\r\nendinterface\r\n```\r\n\r\nThis one doesn't, there is no parameter:\r\n\r\n```systemverilog\r\nmodule top(input clk);\r\n  MyInterface MyInterfaceInstance();\r\nendmodule\r\n\r\ninterface MyInterface();\r\n  logic not_an_empty_interface;\r\nendinterface\r\n```\r\n\r\n## Expected behavior\r\n\r\nShouldn't need to add a dummy parameter and set it to a dummy value when instantiating an interface.\r\n\r\n## Actual behavior\r\n\r\nThe BLIF backend ultimately fails with this error:\r\n\r\n>3.49. Executing BLIF backend.\r\nERROR: Can't find top module `\\top'!\r\n\r\nBut earlier there is a difference in the hierarchy pass.\r\nWith a param, \\MyInterface gets removed but the param'd one stays:\r\n\r\n>2.2.2. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     \\MyInterface\r\n\r\n>2.2.3. Executing AST frontend in derive mode using pre-parsed AST for module `\\MyInterface'.\r\nParameter \\PARAM = 0\r\nGenerating RTLIL representation for module `$paramod\\MyInterface\\PARAM=0'.\r\nGenerating RTLIL representation for module `\\top'.\r\n\r\n>2.2.4. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     \\MyInterface\r\n\r\n>2.2.5. Executing AST frontend in derive mode using pre-parsed AST for module `\\MyInterface'.\r\nParameter \\PARAM = 0\r\nFound cached RTLIL representation for module `$paramod\\MyInterface\\PARAM=0'.\r\n\r\n>2.2.6. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     $paramod\\MyInterface\\PARAM=0\r\n\r\n>2.2.7. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     $paramod\\MyInterface\\PARAM=0\r\nRemoving unused module `\\MyInterface'.\r\nRemoved 1 unused modules.\r\n\r\n[Full log with param](https://gist.github.com/tux3/ec3dc4e668889da70bc6ef5e15ffc99a)\r\n\r\nWithout a param, \\MyInterface is gone by `2.2.4`:\r\n\r\n>2.2.2. Analyzing design hierarchy..\r\nTop module:  \\top\r\nUsed module:     \\MyInterface\r\nGenerating RTLIL representation for module `\\top'.\r\n\r\n>2.2.3. Analyzing design hierarchy..\r\nTop module:  \\top\r\n\r\n>2.2.4. Analyzing design hierarchy..\r\nTop module:  \\top\r\nRemoving unused module `\\MyInterface'.\r\nRemoved 1 unused modules.\r\n\r\n[Full log without param](https://gist.github.com/tux3/2acef33665b0e5a32a91cc58132d2e5a)\r\n\r\nIf you need any more information, I'll be more than happy to provide it. Thanks!",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-09-07",
+  "closed_at": "2019-09-20",
+  "code_blocks": [
+    "module top(input clk);\r\n  MyInterface #(.PARAM(0)) MyInterfaceInstance();\r\nendmodule\r\n\r\ninterface MyInterface #(PARAM = 0)();\r\n  logic not_an_empty_interface;\r\nendinterface",
+    "module top(input clk);\r\n  MyInterface MyInterfaceInstance();\r\nendmodule\r\n\r\ninterface MyInterface();\r\n  logic not_an_empty_interface;\r\nendinterface"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

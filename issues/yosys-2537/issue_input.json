@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2537,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2537",
+  "title": "Add buffer option to spice backend",
+  "body": "I'm experimenting with doing mixed signal simulations with NgSpice and Yosys, similar to https://www.isotel.eu/mixedsim/intro/concept.html\r\n\r\nInstead of a custom synth script, I'm basically trying to use the output of `synth` directly. Either way you end up having to define all the subcircuit models.\r\n\r\nRather than CMOS transistors, my models use the XSPICE event-driven digital models, which should be much faster than a full analog CMOS simulation. However, Yosys currently inserts DC sources to connect nets together, which is incompatible with digital signals.\r\n\r\nSo this PR introduces a `-buf` option that allows you to specify a subcircuit implementation instead of the DC source. From there you can just use the digital `d_buffer` cell to implement it. The default still uses the DC source, which works fine for analog simulations.\r\n\r\nIf there is any interest I could prepare a PR to upstream the XSPICE cell library, and maybe a `synth_xspice` command. My library basically implements most of the internal fine cells produced by `synth`, but needs an extra `dfflegalize` to handle all the flops that are not supported. Library: https://gist.github.com/pepijndevos/2f41507b821b9a3db65beb68d3330b3b Synth commands:\r\n```\r\nread_verilog -lib -icells +/simcells.v\r\nsynth -flatten\r\ndfflegalize -cell \\$_DFFSR_PPP_ 0\r\nstat\r\nwrite_spice -buf __BUF_ blinky.cir\r\n```\r\n\r\n![image](https://user-images.githubusercontent.com/168609/104481868-8f3da700-55c6-11eb-897b-662dba5bb257.png)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-01-13",
+  "closed_at": "2021-01-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

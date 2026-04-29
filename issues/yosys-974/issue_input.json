@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 974,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/974",
+  "title": "Autotest fails on design with $splitcmplxassign",
+  "body": "## Steps to reproduce the issue\r\n\r\n``bash tests/tools/autotest.sh -v -n 10 -p prep test2.v`` fails on the following test case:\r\n\r\n```\r\nmodule test (din, dout);\r\n        input   wire    [DIM_1*DIM_2-1:0] din;\r\n        output  reg     [DIM_1*DIM_2-1:0] dout;\r\n\r\n        integer i, j;\r\n        parameter integer DIM_1 = 17;\r\n        parameter integer DIM_2 = 7;\r\n\r\n        reg [DIM_1-1:0] din_array  [DIM_2-1:0];\r\n        reg [DIM_1-1:0] dout_array [DIM_2-1:0];\r\n\r\n        always @* begin\r\n                for (i = 0; i < DIM_2; i=i+1) begin\r\n                        din_array[i] = din[DIM_1*i +: DIM_1];\r\n                        dout[DIM_1*i +: DIM_1] = dout_array[i];\r\n                end\r\n        end\r\n\r\n        always @* begin\r\n                for (i = 0; i < DIM_2; i=i+1)\r\n                        dout_array[i] = din_array[i];\r\n\r\n                for (i = 0; i < DIM_2-1; i=i+3) begin\r\n                        for (j = 0 ; j < DIM_1-1; j=j+1) begin\r\n                                // WE THINK HERE IS THE BUG\r\n                                {dout_array[i][j+1], dout_array[i][j]} = dout_array[i][j] + dout_array[i+1][j];\r\n                        end\r\n                end\r\n        end\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nAutotest fails not.\r\n\r\n## Actual behavior\r\n\r\nAutotest fails.",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2019-04-30",
+  "closed_at": "2019-05-03",
+  "code_blocks": [
+    "module test (din, dout);\r\n        input   wire    [DIM_1*DIM_2-1:0] din;\r\n        output  reg     [DIM_1*DIM_2-1:0] dout;\r\n\r\n        integer i, j;\r\n        parameter integer DIM_1 = 17;\r\n        parameter integer DIM_2 = 7;\r\n\r\n        reg [DIM_1-1:0] din_array  [DIM_2-1:0];\r\n        reg [DIM_1-1:0] dout_array [DIM_2-1:0];\r\n\r\n        always @* begin\r\n                for (i = 0; i < DIM_2; i=i+1) begin\r\n                        din_array[i] = din[DIM_1*i +: DIM_1];\r\n                        dout[DIM_1*i +: DIM_1] = dout_array[i];\r\n                end\r\n        end\r\n\r\n        always @* begin\r\n                for (i = 0; i < DIM_2; i=i+1)\r\n                        dout_array[i] = din_array[i];\r\n\r\n                for (i = 0; i < DIM_2-1; i=i+3) begin\r\n                        for (j = 0 ; j < DIM_1-1; j=j+1) begin\r\n                                // WE THINK HERE IS THE BUG\r\n                                {dout_array[i][j+1], dout_array[i][j]} = dout_array[i][j] + dout_array[i+1][j];\r\n                        end\r\n                end\r\n        end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

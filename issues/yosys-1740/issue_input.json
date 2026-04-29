@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1740,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1740",
+  "title": "Better document exists-forall problem support",
+  "body": "General\r\n====\r\nI don't see much in the documentation aside from:\r\n\r\n> FIXME: Add information about $assert,$assume,$live,$fair,$cover,$equiv,$initstate,$anyconst,$anyseq,$allconst,$allseqcells\r\n\r\nSome of these have somewhat decent descriptions at https://symbiyosys.readthedocs.io/en/latest/verilog.html#unconstrained-variables .\r\n\r\nQuestions to Clarify\r\n====\r\nLooking over commit b13e6bd375dc19fc2d6a3e67cdc6c045da732200, I'm not super clear on what exactly are `ex_state_eq` and `ex_input_eq` and their role in the problem formulation.\r\n\r\nI suppose that's partly a consequence of my lack of understanding of the whole process for setting up the problem for solving (the yosys-smtbmc part, I guess).  A general overview of how the emitted SMTLIBv2 differs from normal, how yosys-smtbmc treats it differently, etc. would be very helpful.\r\n\r\nFor example, I see things like (`backends/smt2/smt2.cc`):\r\n```\r\nex_state_eq.push_back(stringf(\"(= %s %s)\", get_bv(cell->getPort(\"\\\\Y\")).c_str(), get_bv(cell->getPort(\"\\\\Y\"), \"other_state\").c_str()));\r\n```\r\n\r\nI wonder what exactly is the purpose of `other_state`.  Is the equality constraint between application with `state` and application with `other_state`, (or, rather with `s0` and `s0_` in `examples/smtbmc/demo8`), what ensures that it is the *same* constant chosen both in the outer (i.e. outside `forall`) and inner (inside `forall`) scope?\r\n\r\nHowever it really works, this seems to be a funny way of defining an exists-forall problem. Doesn't it make more sense to just `declare-const` the existentially-quantified variable?\r\n\r\nAlso, it seems that `$anyseq` and `$allseq` support sequential circuits--I mean, that's the raison d'etre. Yet `backends/smt2/smtio.py` seems to imply that unrolling circuits in exists-forall problems is not supported.  Is that true?",
+  "labels": [],
+  "state": "open",
+  "created_at": "2020-03-05",
+  "closed_at": null,
+  "code_blocks": [
+    "ex_state_eq.push_back(stringf(\"(= %s %s)\", get_bv(cell->getPort(\"\\\\Y\")).c_str(), get_bv(cell->getPort(\"\\\\Y\"), \"other_state\").c_str()));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

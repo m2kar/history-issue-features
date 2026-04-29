@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2114,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2114",
+  "title": "systemverilog typedef enum in package can not be used in interface",
+  "body": "## Steps to reproduce the issue\r\n\r\n```systemverilog\r\n// top.sv\r\n\r\npackage pkg;\r\n    typedef enum bit [1:0] {\r\n        CODE_NOOP = 2'd0,\r\n        CODE_PASS = 2'd1,\r\n        CODE_FAIL = 2'd2,\r\n        CODE_DONE = 2'd3\r\n    } status_code;\r\nendpackage\r\n\r\nmodule top(\r\n    input [1:0] sin,\r\n    output [1:0] sout,\r\n);\r\n    my_if u_my_if();\r\n    a u_a(.sin, .my_if(u_my_if));\r\n    b u_b(.sout, .my_if(u_my_if));\r\nendmodule\r\n\r\ninterface my_if();\r\n    pkg::status_code status;\r\n    modport in  (input  status);\r\n    modport out (output status);\r\nendinterface\r\n\r\nmodule a(\r\n    input [1:0] sin,\r\n    my_if.out my_if\r\n);\r\n    assign my_if.status = sin;\r\nendmodule\r\n\r\nmodule b(\r\n    output [1:0] sout,\r\n    my_if.in my_if\r\n);\r\n    assign sout = my_if.status;\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nIf `pkg::status_code status;` is changed to `bit [1:0] status;` verilog frontend is working fine\r\n```\r\n Yosys 0.9+2406 (git sha1 bd2ecc2d, gcc 7.5.0-3ubuntu1~18.04 -fPIC -Os)\r\n\r\n\r\nyosys> read_verilog -sv top.sv\r\n1. Executing Verilog-2005 frontend: top.sv\r\nParsing SystemVerilog input from `top.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\nGenerating RTLIL representation for module `\\my_if'.\r\nGenerating RTLIL representation for module `\\a'.\r\ntop.sv:30: Warning: Identifier `\\my_if.status' is implicitly declared.\r\nGenerating RTLIL representation for module `\\b'.\r\ntop.sv:37: Warning: Identifier `\\my_if.status' is implicitly declared.\r\nSuccessfully finished Verilog frontend.\r\n```\r\n\r\n## Actual behavior\r\n\r\nFrom yosys master\r\n```\r\n Yosys 0.9+2406 (git sha1 bd2ecc2d, gcc 7.5.0-3ubuntu1~18.04 -fPIC -Os)\r\n\r\n\r\nyosys> read_verilog -sv top.sv\r\n1. Executing Verilog-2005 frontend: top.sv\r\nParsing SystemVerilog input from `top.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\nGenerating RTLIL representation for module `\\my_if'.\r\ntop.sv:22: ERROR: Unknown identifier `\\pkg::status_code' used as type name\r\n```\r\n",
+  "labels": [
+    "SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2020-06-06",
+  "closed_at": "2023-02-12",
+  "code_blocks": [
+    "// top.sv\r\n\r\npackage pkg;\r\n    typedef enum bit [1:0] {\r\n        CODE_NOOP = 2'd0,\r\n        CODE_PASS = 2'd1,\r\n        CODE_FAIL = 2'd2,\r\n        CODE_DONE = 2'd3\r\n    } status_code;\r\nendpackage\r\n\r\nmodule top(\r\n    input [1:0] sin,\r\n    output [1:0] sout,\r\n);\r\n    my_if u_my_if();\r\n    a u_a(.sin, .my_if(u_my_if));\r\n    b u_b(.sout, .my_if(u_my_if));\r\nendmodule\r\n\r\ninterface my_if();\r\n    pkg::status_code status;\r\n    modport in  (input  status);\r\n    modport out (output status);\r\nendinterface\r\n\r\nmodule a(\r\n    input [1:0] sin,\r\n    my_if.out my_if\r\n);\r\n    assign my_if.status = sin;\r\nendmodule\r\n\r\nmodule b(\r\n    output [1:0] sout,\r\n    my_if.in my_if\r\n);\r\n    assign sout = my_if.status;\r\nendmodule",
+    "Yosys 0.9+2406 (git sha1 bd2ecc2d, gcc 7.5.0-3ubuntu1~18.04 -fPIC -Os)\r\n\r\n\r\nyosys> read_verilog -sv top.sv\r\n1. Executing Verilog-2005 frontend: top.sv\r\nParsing SystemVerilog input from `top.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\nGenerating RTLIL representation for module `\\my_if'.\r\nGenerating RTLIL representation for module `\\a'.\r\ntop.sv:30: Warning: Identifier `\\my_if.status' is implicitly declared.\r\nGenerating RTLIL representation for module `\\b'.\r\ntop.sv:37: Warning: Identifier `\\my_if.status' is implicitly declared.\r\nSuccessfully finished Verilog frontend.",
+    "Yosys 0.9+2406 (git sha1 bd2ecc2d, gcc 7.5.0-3ubuntu1~18.04 -fPIC -Os)\r\n\r\n\r\nyosys> read_verilog -sv top.sv\r\n1. Executing Verilog-2005 frontend: top.sv\r\nParsing SystemVerilog input from `top.sv' to AST representation.\r\nGenerating RTLIL representation for module `\\top'.\r\nGenerating RTLIL representation for module `\\my_if'.\r\ntop.sv:22: ERROR: Unknown identifier `\\pkg::status_code' used as type name"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

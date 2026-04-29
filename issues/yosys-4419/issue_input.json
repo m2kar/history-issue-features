@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4419,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4419",
+  "title": "CXXRTL: >20x compile time regression with clang++-18",
+  "body": "### Version\n\nYosys 0.39+4 (git sha1 3231c1cd9, clang++ 16.0.6 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThis zip file contains the full dut.cpp from `write_cxxrtl`, which shows a 24x compile time regression:\r\n[dut-full.zip](https://github.com/YosysHQ/yosys/files/15454860/dut-full.zip)\r\n\r\nOr, this zip file contains a reduced dut.cpp (900k instead of 9M), which shows a 6x compile time regression:\r\n[dut-reduced.zip](https://github.com/YosysHQ/yosys/files/15454862/dut-reduced.zip)\r\n\r\nGood:\r\n\r\n```bash\r\ntime clang++-17 -O3 -c -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime dut.cpp\r\n```\r\n\r\nBad:\r\n\r\n```bash\r\ntime clang++-18 -O3 -c -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime dut.cpp\r\n```\r\n\r\nThe full dut.cpp can be reproduced from Verilog source by:\r\n\r\n```bash\r\ngit clone git@github.com:Wren6991/Hazard3.git hazard3\r\ncd hazard3\r\ngit checkout 5b31e2679\r\ngit submodule update --init -- scripts\r\n. sourceme\r\ncd test/sim/tb_cxxrtl\r\nmake\r\n```\r\n\r\nThe reduced DUT has the hierarchy trimmed to just the `hazard3_decode` module, and all optional instruction extensions disabled.\r\n\r\nThis reproduces at -Og and above, but not at -O0.\n\n### Expected Behavior\n\nCompile takes 45 seconds, as with clang++-16, clang++-17.\n\n### Actual Behavior\n\nCompile takes 18 minutes with clang++-18.\r\n\r\nI dithered on whether to report this here, but it seems like there is something about CXXRTL's code generation that hits some pathologically slow case in clang++-18, and maybe this could be improved from the CXXRTL side.\r\n\r\nAlternatively if there is some recommended set of clang/llvm flags to use with CXXRTL to disable problematic passes and stop the compile time from blowing up, documenting that would also be helpful.\r\n\r\nclang++-18 is the default clang++ as of Ubuntu 24.04 LTS, so I imagine more people will start hitting this.",
+  "labels": [
+    "bug",
+    "pending-verification",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2024-05-27",
+  "closed_at": null,
+  "code_blocks": [
+    "time clang++-17 -O3 -c -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime dut.cpp",
+    "time clang++-18 -O3 -c -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime dut.cpp",
+    "git clone git@github.com:Wren6991/Hazard3.git hazard3\r\ncd hazard3\r\ngit checkout 5b31e2679\r\ngit submodule update --init -- scripts\r\n. sourceme\r\ncd test/sim/tb_cxxrtl\r\nmake"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

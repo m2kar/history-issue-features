@@ -1,0 +1,57 @@
+[
+  {
+    "name": "duplicate_signal_definition_in_scope",
+    "category": "data_model",
+    "description": "Code should include no duplicate definitions of the same signal name at the same scope level, whether via reg/wire declarations or initial/always procedural blocks. A signal must be defined exactly once per scope to avoid Verilator duplicate-definition errors.",
+    "snippet": "module test;\n  initial begin\n    genclock = 1;\n  end\n  reg genclock = 1;  // ERROR: duplicate definition of genclock\nendmodule",
+    "tags": [
+      "duplicate-definition",
+      "scope",
+      "reg-declaration",
+      "initial-block",
+      "verilator-incompatible"
+    ],
+    "source_bug_id": "yosys-5122",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/pull/5122",
+    "construct_complexity": 2,
+    "ub_type": null
+  },
+  {
+    "name": "ifdef_initial_then_reg_definition",
+    "category": "preprocess",
+    "description": "Code should include no case where a signal is initialized in an `ifdef block via initial statement and then re-declared as reg outside that block at the same scope level. This creates conflicting definitions that Verilator rejects.",
+    "snippet": "`ifdef VLOGTB_HIER\n  initial begin genclock = 1; end\n`endif\nreg genclock = 1;  // Conflict: genclock also initialized above",
+    "tags": [
+      "ifdef",
+      "conditional-generation",
+      "initial-block",
+      "reg-declaration",
+      "conflict",
+      "verilator-incompatible"
+    ],
+    "source_bug_id": "yosys-5122",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/pull/5122",
+    "construct_complexity": 3,
+    "ub_type": null
+  },
+  {
+    "name": "auto_generated_testbench_clock_declaration",
+    "category": "general",
+    "description": "Code should include a bootstrap clock signal generated via a procedural initial block that is driven unconditionally at time zero. This is a common pattern in auto-generated testbenches where genclock drives simulation timing before the design clock takes over.",
+    "snippet": "initial begin\n  genclock = 1;\n  #5 genclock = 0;\n  forever #5 genclock = ~genclock;\nend",
+    "tags": [
+      "testbench",
+      "clock-generation",
+      "initial-block",
+      "procedural-driving",
+      "simulation-timing"
+    ],
+    "source_bug_id": "yosys-5122",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/pull/5122",
+    "construct_complexity": 2,
+    "ub_type": null
+  }
+]

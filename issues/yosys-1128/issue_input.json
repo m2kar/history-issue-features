@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1128,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1128",
+  "title": "opt_clean removes $_BUF_ cells with keep attribute",
+  "body": "## Steps to reproduce the issue\r\n\r\nVerilog file (test.v):\r\n```verilog\r\nmodule test (\r\n    input i,\r\n    output o\r\n);\r\n    wire w1;\r\n    wire w2;\r\n\r\n    assign w1 = ~i;\r\n    assign w2 = w1;\r\n    assign o = ~w2;\r\nendmodule\r\n```\r\n\r\nYosys script:\r\n```\r\nread_verilog test.v\r\ninsbuf\r\n# select just the $_BUF_ from w1 to w2 as @buf\r\nselect -set buf w:w1 %coe1 w:w1 %d\r\n# set the keep attribute for the $_BUF_ from w1 to w2\r\nsetattr -set keep 1 @buf\r\nopt_clean\r\nstat\r\n```\r\n\r\n## Expected behavior\r\n\r\nI expect the `$_BUF_` cell with the keep attribute to remain after `opt_clean`, so I would expect `stat` to show 1 `$_BUF_` cell.\r\n\r\n## Actual behavior\r\n\r\nAll the `$_BUF_` cells are removed by `opt_clean`, and `stat` shows no `$_BUF_` cells.\r\n\r\n## Additional notes\r\n\r\nI ran into this because I wanted to use `submod` to extract a submodule from a circuit where one of the outputs of the submodule was going to be directly connected to one of the inputs (for example, making a submodule using `w1` and `w2` in my example Verilog above). Selecting just the wire doesn't get the desired effect with `submod`, so I added a buffer with `insbuf`. Unfortunately `submod` runs `opt_clean` as its first step so the buffer is removed even when it is marked as keep.\r\n\r\nI was able to fix this myself by changing https://github.com/YosysHQ/yosys/blob/master/passes/opt/opt_clean.cc#L483 to\r\n```c++\r\nif (cell->type.in(\"$pos\", \"$_BUF_\") && !cell->has_keep_attr()) {\r\n```\r\nI would have sent a PR for this, but I'm not sure if ignoring keep attributes on `$_BUF_` cells is intended behavior or not. If it is intended, would you it be okay to add a command line argument to `submod` that skips `opt_clean`?\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-24",
+  "closed_at": "2019-06-26",
+  "code_blocks": [
+    "module test (\r\n    input i,\r\n    output o\r\n);\r\n    wire w1;\r\n    wire w2;\r\n\r\n    assign w1 = ~i;\r\n    assign w2 = w1;\r\n    assign o = ~w2;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

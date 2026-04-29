@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1460,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1460",
+  "title": "synth_xilinx infers RAM32X1D instead of RAM32M",
+  "body": "## Steps to reproduce the issue\r\n\r\nThe following code:\r\n\r\n```\r\nmodule register_file(\r\n    input wire clk,\r\n    input wire write_enable,\r\n    input wire [63:0] write_data,\r\n    input wire [4:0] write_reg,\r\n    input wire [4:0] read1_reg,\r\n    input wire [4:0] read2_reg,\r\n    input wire [4:0] read3_reg,\r\n    output reg [63:0] read1_data,\r\n    output reg [63:0] read2_data,\r\n    output reg [63:0] read3_data\r\n    );\r\n\r\n    reg [63:0] registers[0:31];\r\n\r\n    always @(posedge clk) begin\r\n      if (write_enable == 1'b1) begin\r\n        registers[write_reg] <= write_data;\r\n      end\r\n    end\r\n\r\n    always @(all) begin\r\n      read1_data <= registers[read1_reg];\r\n      read2_data <= registers[read2_reg];\r\n      read3_data <= registers[read3_reg];\r\n    end\r\nendmodule\r\n```\r\n\r\nWhen built with:\r\n\r\n```\r\nyosys -p \"read_verilog register_file.v; synth_xilinx\"\r\n```\r\n\r\nConsumes 192 RAM32X1D (dual-port 32 x 1-bit RAM) instances:\r\n\r\n```\r\n=== register_file ===\r\n\r\n   Number of wires:                 12\r\n   Number of wire bits:            280\r\n   Number of public wires:          10\r\n   Number of public wire bits:     278\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                193\r\n     BUFG                            1\r\n     RAM32X1D                      192\r\n```\r\n\r\nIt seems like this could also use 32 RAM32M (quad-port 32 x 2-bit RAM) instances. If I'm reading it right, we currently use 384 LUTs, and with RAM32M instances we'd use 128 LUTs, 3x less.\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-10-20",
+  "closed_at": "2019-12-17",
+  "code_blocks": [
+    "module register_file(\r\n    input wire clk,\r\n    input wire write_enable,\r\n    input wire [63:0] write_data,\r\n    input wire [4:0] write_reg,\r\n    input wire [4:0] read1_reg,\r\n    input wire [4:0] read2_reg,\r\n    input wire [4:0] read3_reg,\r\n    output reg [63:0] read1_data,\r\n    output reg [63:0] read2_data,\r\n    output reg [63:0] read3_data\r\n    );\r\n\r\n    reg [63:0] registers[0:31];\r\n\r\n    always @(posedge clk) begin\r\n      if (write_enable == 1'b1) begin\r\n        registers[write_reg] <= write_data;\r\n      end\r\n    end\r\n\r\n    always @(all) begin\r\n      read1_data <= registers[read1_reg];\r\n      read2_data <= registers[read2_reg];\r\n      read3_data <= registers[read3_reg];\r\n    end\r\nendmodule",
+    "yosys -p \"read_verilog register_file.v; synth_xilinx\"",
+    "=== register_file ===\r\n\r\n   Number of wires:                 12\r\n   Number of wire bits:            280\r\n   Number of public wires:          10\r\n   Number of public wire bits:     278\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                193\r\n     BUFG                            1\r\n     RAM32X1D                      192"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4402,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4402",
+  "title": "read_verilog doesn't respect `signed` keyword",
+  "body": "### Version\n\nYosys 0.39+165\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nConsider the following code. When the input is `wire0 = 6'b111101`, it is a negative number less than `0`. Therefore, `reg1` takes the value of `$unsigned((-var3))`, which is `-0`, and the output `y` is 0. However, when using Yosys synthesis, the output result is 1.\n\n```\nmodule top (y, clk, wire0);\n  // Output signal y\n  output wire y;\n  // Clock input signal\n  input wire clk;\n  // Signed input signal wire0\n  input wire signed wire0;\n\n  // Register for the output y\n  reg reg1;\n  // Register used for logical operations\n  reg var3;\n  \n  // Assign reg1 to output y\n  assign y = reg1;\n  always @(posedge clk) begin\n    // Update reg1 on the rising edge of the clock\n    // If wire0 is less than or equal to 0, take the negative of var3 (converted to unsigned)\n    // Otherwise, perform a bitwise XOR on the signed var2 after applying a bitwise NOT\n    reg1 = ($signed(wire0 <= 0) ? $unsigned(-var3) : (^~$signed(var2)));\n  end\nendmodule\n\n\n\n```\n\ntestbench\n```\n`include \"syn_yosys.v\"\n\n`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg clk;\n  reg signed [5:0] wire0;\n  wire y;\n\n\n  top uut (\n    .y(y),\n    .clk(clk),\n    .wire0(wire0)\n  );\n\n\n  initial begin\n\n    clk = 0;\n    wire0 = 6'b111101; \n\n\n    forever #5 clk = ~clk;\n  end\n\n\n  initial begin\n\n    #100;\n    $display(\"y = %d\", y);\n    $finish;\n  end\n\n  initial\n    begin\n      $dumpfile(\"wave_yosys.vcd\");\n      $dumpvars(0, testbench);\n    end\nendmodule\n\n```\nHere is the directory structure of the attachment. The `syn_yosys.v` file is the synthesized file. \n\nIn the `identity` directory, execute the following commands:\n```\niverilog -o identity_main identity_testbench.v > icarus_stderr.log 2>&1\nvvp -n identity_main -lxt2 > vvp_identity.log\n```\n\nIn the `syn_yosys` directory, execute the following commands:\n```\niverilog -o yosys_main yosys_testbench.v > icarus_stderr.log 2>&1\nvvp -n yosys_main -lxt2 > vvp_yosys.log\n```\n\n### Expected Behavior\n\nConsistent with the pre synthesis simulation, the result output is 0\n\n### Actual Behavior\n\nInconsistent output before and after synthesis",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2024-05-18",
+  "closed_at": null,
+  "code_blocks": [
+    "module top (y, clk, wire0);\n  // Output signal y\n  output wire y;\n  // Clock input signal\n  input wire clk;\n  // Signed input signal wire0\n  input wire signed wire0;\n\n  // Register for the output y\n  reg reg1;\n  // Register used for logical operations\n  reg var3;\n  \n  // Assign reg1 to output y\n  assign y = reg1;\n  always @(posedge clk) begin\n    // Update reg1 on the rising edge of the clock\n    // If wire0 is less than or equal to 0, take the negative of var3 (converted to unsigned)\n    // Otherwise, perform a bitwise XOR on the signed var2 after applying a bitwise NOT\n    reg1 = ($signed(wire0 <= 0) ? $unsigned(-var3) : (^~$signed(var2)));\n  end\nendmodule",
+    "`include \"syn_yosys.v\"\n\n`timescale 1ns / 1ps\n\nmodule testbench;\n\n  reg clk;\n  reg signed [5:0] wire0;\n  wire y;\n\n\n  top uut (\n    .y(y),\n    .clk(clk),\n    .wire0(wire0)\n  );\n\n\n  initial begin\n\n    clk = 0;\n    wire0 = 6'b111101; \n\n\n    forever #5 clk = ~clk;\n  end\n\n\n  initial begin\n\n    #100;\n    $display(\"y = %d\", y);\n    $finish;\n  end\n\n  initial\n    begin\n      $dumpfile(\"wave_yosys.vcd\");\n      $dumpvars(0, testbench);\n    end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

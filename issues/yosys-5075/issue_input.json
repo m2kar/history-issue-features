@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5075,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5075",
+  "title": "fix missing sign extension before shift operation for signed values",
+  "body": "This PR fixes the issue described in https://github.com/YosysHQ/yosys/issues/5074. Now, for expressions like `assign t = a op b`, when the width of the expression is larger than the width of `a` and `a` is signed, `a` will first be sign-extended before performing the shift operation. \r\n\r\nThe fix is implemented by applying the above logic in the `shr_su` function：\r\n```cpp\r\ntemplate<size_t BitsY, size_t BitsA, size_t BitsB>\r\nCXXRTL_ALWAYS_INLINE\r\nvalue<BitsY> shr_su(const value<BitsA> &a, const value<BitsB> &b) {\r\n\tif (BitsY > BitsA) {\r\n\t\tvalue<BitsY> extended_a = a.template scast<BitsY>();\r\n\t\treturn extended_a.shr(b);\r\n\t}\r\n\treturn a.shr(b).template scast<BitsY>();\r\n}\r\n```\r\n\r\nAfter the fix, the CXXRTL produces results consistent with other simulators for the test case related to https://github.com/YosysHQ/yosys/issues/5074.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-04-29",
+  "closed_at": "2025-05-03",
+  "code_blocks": [
+    "template<size_t BitsY, size_t BitsA, size_t BitsB>\r\nCXXRTL_ALWAYS_INLINE\r\nvalue<BitsY> shr_su(const value<BitsA> &a, const value<BitsB> &b) {\r\n\tif (BitsY > BitsA) {\r\n\t\tvalue<BitsY> extended_a = a.template scast<BitsY>();\r\n\t\treturn extended_a.shr(b);\r\n\t}\r\n\treturn a.shr(b).template scast<BitsY>();\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

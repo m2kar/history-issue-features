@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1990,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1990",
+  "title": "Dynamic bit write with signed expression fails",
+  "body": "Minimised from an example by @smunaut \r\n\r\n```verilog\r\nmodule top(input [7:0] wr_mask, output reg [7:0] mem_dm_w);\r\n\r\n\tlocalparam DATA_WIDTH = 32;\r\n\tlocalparam MASK_WIDTH = 8;\r\n\tlocalparam NW = 2;\r\n\r\n\talways @(*)\r\n\tbegin : map\r\n\t\tinteger n, x, o;\r\n\r\n\t\t// Map actual bits\r\n\t\tfor (n=0; n<MASK_WIDTH; n=n+1)\r\n\t\tbegin\r\n\t\t\t// Determine position\r\n\t\t\tx = n % NW;\t// Which SPRAM\r\n\t\t\to = n / NW;\t// Which nibble inside that SPRAM\r\n\r\n\t\t\t// Map IO\r\n\t\t\tmem_dm_w[( 4*x)+   o    ] = ~wr_mask[n];\r\n\t\tend\r\n\tend\r\nendmodule\r\n```\r\ngives\r\n```\r\nERROR: Found error in internal cell \\top.$shl$signed_bitsel.v:0$134 ($shl) at kernel/rtlil.cc:850:\r\n  attribute \\src \"signed_bitsel.v:0\"\r\n  cell $shl $shl$signed_bitsel.v:0$134\r\n    parameter \\Y_WIDTH 8\r\n    parameter \\B_WIDTH 32\r\n    parameter \\A_WIDTH 8\r\n    parameter \\B_SIGNED 1\r\n    parameter \\A_SIGNED 0\r\n    connect \\Y $shl$signed_bitsel.v:0$134_Y\r\n    connect \\B $add$signed_bitsel.v:19$133_Y\r\n    connect \\A $and$signed_bitsel.v:0$131_Y\r\n  end\r\n```\r\n\r\nThis appears to be a regression caused by #1851, reverting the merge commit causes it to build fine.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-23",
+  "closed_at": "2020-05-08",
+  "code_blocks": [
+    "module top(input [7:0] wr_mask, output reg [7:0] mem_dm_w);\r\n\r\n\tlocalparam DATA_WIDTH = 32;\r\n\tlocalparam MASK_WIDTH = 8;\r\n\tlocalparam NW = 2;\r\n\r\n\talways @(*)\r\n\tbegin : map\r\n\t\tinteger n, x, o;\r\n\r\n\t\t// Map actual bits\r\n\t\tfor (n=0; n<MASK_WIDTH; n=n+1)\r\n\t\tbegin\r\n\t\t\t// Determine position\r\n\t\t\tx = n % NW;\t// Which SPRAM\r\n\t\t\to = n / NW;\t// Which nibble inside that SPRAM\r\n\r\n\t\t\t// Map IO\r\n\t\t\tmem_dm_w[( 4*x)+   o    ] = ~wr_mask[n];\r\n\t\tend\r\n\tend\r\nendmodule",
+    "ERROR: Found error in internal cell \\top.$shl$signed_bitsel.v:0$134 ($shl) at kernel/rtlil.cc:850:\r\n  attribute \\src \"signed_bitsel.v:0\"\r\n  cell $shl $shl$signed_bitsel.v:0$134\r\n    parameter \\Y_WIDTH 8\r\n    parameter \\B_WIDTH 32\r\n    parameter \\A_WIDTH 8\r\n    parameter \\B_SIGNED 1\r\n    parameter \\A_SIGNED 0\r\n    connect \\Y $shl$signed_bitsel.v:0$134_Y\r\n    connect \\B $add$signed_bitsel.v:19$133_Y\r\n    connect \\A $and$signed_bitsel.v:0$131_Y\r\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

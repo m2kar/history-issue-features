@@ -1,0 +1,51 @@
+{
+  "tool": "iverilog",
+  "issue_number": 1036,
+  "title": "[Bug report] Segmentation fault when using out-of-scope variable in slices",
+  "features": [
+    {
+      "name": "out_of_scope_loop_variable_in_slice",
+      "category": "control_flow",
+      "description": "Code should include a for loop that references a loop variable declared in another for loop's scope, used in a slice operation with dynamic index",
+      "snippet": "for (int i = 0; i < 4; i++) begin : loop\n  for (int j = 0; j < 2; j++) begin : loop\n    data[j] = arr[32*i +: 32];\n  end\nend",
+      "tags": ["for_loop", "scope", "slice", "dynamic_index"],
+      "source_bug_id": "iverilog-1036",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1036",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "variable_part_select_with_cross_scope_reference",
+      "category": "data_model",
+      "description": "Code should include a dynamic slice operation (variable+:width) that references a loop variable from a different for loop's scope",
+      "snippet": "bit [31:0] arr[2];\nfor (int i = 0; i < 2; i++) begin\n  for (int j = 0; j < 2; j++) begin\n    arr[j] = data[32*i +: 32];\n  end\nend",
+      "tags": ["variable_part_select", "dynamic_slice", "cross_scope", "for_loop"],
+      "source_bug_id": "iverilog-1036",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1036",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    },
+    {
+      "name": "duplicate_named_blocks_in_different_loops",
+      "category": "control_flow",
+      "description": "Code should include two separate for loops with identical named blocks, where one loop's variable is accessed outside its scope",
+      "snippet": "for (int i = 0; i < 2; i++) begin : lbl\n  for (int j = 0; j < 2; j++) begin : lbl\n    data = arr[8*i +: 8];\n  end\nend",
+      "tags": ["for_loop", "named_block", "duplicate_label", "scope_error"],
+      "source_bug_id": "iverilog-1036",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1036",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "segfault"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

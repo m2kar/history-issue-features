@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2020,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2020",
+  "title": "ROM memories initialized with $readmemh not using $memrd cells",
+  "body": "I have a question about memory handling. The following SystemVerilog is interpreted by the frontend as a memory - the `$memrd`, `$memwr` and `$meminit` cells are generated:\r\n```verilog\r\nmodule ram(input clk, wr, input [7:0] idata, input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    initial $readmemh(\"image.hex\", mem);\r\n    always_ff @(posedge clk)\r\n        if (wr) mem[addr] <= idata;\r\nendmodule\r\n```\r\nBut if I remove the write port, this gets converted to separate values:\r\n```verilog\r\nmodule rom(input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    initial $readmemh(\"image.hex\", mem);\r\nendmodule\r\n```\r\nI can prevent this from happening by using `-nomem2reg`, but it is said that this is dangerous. Why is it happening? Is there something wrong with the second code, which prevents the use of memories?\r\n\r\nFor some reason, if I initialize the memory with a for loop, memory cells are generated:\r\n```verilog\r\nmodule test(input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    integer i;\r\n    initial for(i = 0; i < 16; i = i + 1) mem[i] = i;\r\nendmodule\r\n```\r\nI would very like the second code to be interpreted as memory in DigitalJS. When it's not, I get poor performance in DigitalJS and can't use the memory inspection GUI.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-03",
+  "closed_at": "2020-05-29",
+  "code_blocks": [
+    "module ram(input clk, wr, input [7:0] idata, input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    initial $readmemh(\"image.hex\", mem);\r\n    always_ff @(posedge clk)\r\n        if (wr) mem[addr] <= idata;\r\nendmodule",
+    "module rom(input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    initial $readmemh(\"image.hex\", mem);\r\nendmodule",
+    "module test(input [3:0] addr, output [7:0] data);\r\n    logic [7:0] mem[0:15];\r\n    assign data = mem[addr];\r\n    integer i;\r\n    initial for(i = 0; i < 16; i = i + 1) mem[i] = i;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

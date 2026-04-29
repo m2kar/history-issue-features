@@ -1,0 +1,92 @@
+[
+  {
+    "name": "multi_clock_async_sensitivity_false_positive_reset_detection",
+    "category": "control_flow",
+    "description": "Code should include always block with multiple posedge clocks where one clock signal is used in an if condition inside the block, triggering false async reset detection that incorrectly simplifies the condition to a constant.",
+    "snippet": "always @(posedge clk_a or posedge clk_b) begin if (clk_b) x <= 1; else x <= 0; end",
+    "tags": [
+      "proc",
+      "async_reset_detection",
+      "false_positive",
+      "multi_clock",
+      "always_block"
+    ],
+    "source_bug_id": "yosys-5083",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5083",
+    "construct_complexity": 4,
+    "ub_type": null
+  },
+  {
+    "name": "conditional_clock_branch_erasure_by_proc_pass",
+    "category": "control_flow",
+    "description": "Code should include if statement checking a clock signal inside an always block sensitive to that same clock, where Yosys proc pass incorrectly replaces the branch condition with constant 1'h0, making the true branch unreachable.",
+    "snippet": "always @(posedge c0 or posedge c1) begin if (c1) $display(\"c1 true\"); else $display(\"c1 false\"); end",
+    "tags": [
+      "proc",
+      "clock_branch",
+      "constant_folding",
+      "always_block",
+      "sensitivity_list"
+    ],
+    "source_bug_id": "yosys-5083",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5083",
+    "construct_complexity": 3,
+    "ub_type": null
+  },
+  {
+    "name": "partial_width_reg_assignment_with_clock_dependent_conditional",
+    "category": "control_flow",
+    "description": "Code should include partial-width slice assignment to a register (e.g., reg[28:26] <= 2) inside an if-else branch that is conditional on a signal also used in the always block's sensitivity list, triggering false reset detection.",
+    "snippet": "always @(posedge clock_0 or posedge clock_2) begin if (clock_2) begin end else begin if (in0) reg_10[28:26] <= 2; else reg_10[28:27] <= 1; end end",
+    "tags": [
+      "proc",
+      "partial_width_assignment",
+      "reset_detection",
+      "conditional_assignment",
+      "always_block"
+    ],
+    "source_bug_id": "yosys-5083",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5083",
+    "construct_complexity": 5,
+    "ub_type": null
+  },
+  {
+    "name": "signed_reg_partial_slice_assignment",
+    "category": "data_model",
+    "description": "Code should include signed register with partial slice assignment (non-contiguous or narrower than full reg width) inside conditional branches of a clocked always block.",
+    "snippet": "reg signed [28:26] reg_10; reg_10[28:26] <= 2; reg_10[28:27] <= 1;",
+    "tags": [
+      "signed",
+      "partial_slice",
+      "procedural_assignment",
+      "conditional",
+      "always_block"
+    ],
+    "source_bug_id": "yosys-5083",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5083",
+    "construct_complexity": 3,
+    "ub_type": null
+  },
+  {
+    "name": "display_in_always_block_with_multi_clock_sensitivity",
+    "category": "general",
+    "description": "Code should include $display statement inside always block sensitive to multiple clocks where one clock's conditional branch is incorrectly optimized, causing display of wrong branch on clock edge.",
+    "snippet": "always @(posedge c0 or posedge c1) begin $display(\"triggered\"); if (c1) $display(\"c1 branch\"); else $display(\"c0 branch\"); end",
+    "tags": [
+      "display",
+      "multi_clock",
+      "sensitivity_list",
+      "branching",
+      "simulation"
+    ],
+    "source_bug_id": "yosys-5083",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5083",
+    "construct_complexity": 2,
+    "ub_type": null
+  }
+]

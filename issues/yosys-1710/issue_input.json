@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1710,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1710",
+  "title": "Warnings generated for unevaluated ternary operands",
+  "body": "## Steps to reproduce the issue\r\n\r\nSimply run Yosys on the following Verilog file:\r\n```Verilog\r\nmodule Example;\r\n\r\n    parameter FLAG = 1;\r\n    wire [3:0] inp;\r\n\r\n    reg out1;\r\n    initial out1 = FLAG ? &inp[2:0] : &inp[4:0];\r\n\r\n    reg out2;\r\n    initial\r\n        if (FLAG)\r\n            out2 = &inp[2:0];\r\n        else\r\n            out2 = &inp[4:0];\r\n\r\n    wire out3;\r\n    assign out3 = FLAG ? &inp[2:0] : &inp[4:0];\r\n\r\n    wire out4;\r\n    generate\r\n        if (FLAG)\r\n            assign out4 = &inp[2:0];\r\n        else\r\n            assign out4 = &inp[4:0];\r\n    endgenerate\r\n\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nGiven that all of the conditions in this example are constant expressions, I would expect Yosys to not generate any warnings for any of the out of range accesses (`&inp[4:0]`).\r\n\r\n## Actual behavior\r\n\r\nYosys does not generated any warnings for the uses in the `else` branches. However, warnings are generated for the unevaluated operands of the ternary expressions. Is this behavior deliberate? If the ternaries had used non-constant expressions, then warnings should of course be generated.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-02-17",
+  "closed_at": "2020-02-28",
+  "code_blocks": [
+    "module Example;\r\n\r\n    parameter FLAG = 1;\r\n    wire [3:0] inp;\r\n\r\n    reg out1;\r\n    initial out1 = FLAG ? &inp[2:0] : &inp[4:0];\r\n\r\n    reg out2;\r\n    initial\r\n        if (FLAG)\r\n            out2 = &inp[2:0];\r\n        else\r\n            out2 = &inp[4:0];\r\n\r\n    wire out3;\r\n    assign out3 = FLAG ? &inp[2:0] : &inp[4:0];\r\n\r\n    wire out4;\r\n    generate\r\n        if (FLAG)\r\n            assign out4 = &inp[2:0];\r\n        else\r\n            assign out4 = &inp[4:0];\r\n    endgenerate\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

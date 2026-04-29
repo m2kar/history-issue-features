@@ -1,0 +1,41 @@
+[
+  {
+    "name": "dff_with_const_undefined_input",
+    "category": "data_model",
+    "description": "Code should include a DFF cell with a constant undefined (x) value as its D input, which triggers removal optimization in opt_dff when the output feeds into another DFF",
+    "snippet": "cell $dff \\dffb\n    parameter \\CLK_POLARITY 1\n    parameter \\WIDTH 1\n    connect \\CLK \\clk\n    connect \\D 1'x\n    connect \\Q \\qb\n  end",
+    "tags": ["dff", "undefined-input", "opt_dff", "cell-removal"],
+    "source_bug_id": "yosys-5164",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5164",
+    "construct_complexity": 2,
+    "ub_type": null,
+    "ub_quote": null
+  },
+  {
+    "name": "dff_chain_with_feedback_wire",
+    "category": "data_model",
+    "description": "Code should include a chain of two DFFs where the first DFF's D input is the Q output of the second DFF, creating a feedback pattern that causes opt_dff to remove the second DFF while ModWalker still holds references",
+    "snippet": "cell $dff \\dffa\n    connect \\D \\qb\n    connect \\Q \\qa\n  end\n  cell $dff \\dffb\n    connect \\D 1'x\n    connect \\Q \\qb\n  end",
+    "tags": ["dff", "chain", "feedback", "opt_dff", "use-after-free"],
+    "source_bug_id": "yosys-5164",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5164",
+    "construct_complexity": 3,
+    "ub_type": null,
+    "ub_quote": null
+  },
+  {
+    "name": "opt_dff_sat_after_dff_chain",
+    "category": "control_flow",
+    "description": "Code should include running opt_dff with -sat option on a design containing a chain of DFFs with undefined inputs, which exposes the use-after-free when cell removal occurs while ModWalker maintains stale references",
+    "snippet": "read_rtlil <<EOT\nmodule \\test\n  wire \\clk\n  wire \\qa\n  wire \\qb\n  cell $dff \\dffa\n    connect \\D \\qb\n    connect \\Q \\qa\n  end\n  cell $dff \\dffb\n    connect \\D 1'x\n    connect \\Q \\qb\n  end\nend\nEOT\nopt_dff -sat",
+    "tags": ["opt_dff", "-sat", "dff-chain", "pass-sequence", "use-after-free"],
+    "source_bug_id": "yosys-5164",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/5164",
+    "construct_complexity": 4,
+    "ub_type": null,
+    "ub_quote": null
+  }
+]

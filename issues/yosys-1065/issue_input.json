@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1065,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1065",
+  "title": "opt_clean: Driver-driver conflict warning on unknown module",
+  "body": "## Steps to reproduce the issue\r\n\r\n`./yosys -p \"proc; opt -fast\" conflict.v -q`\r\n\r\n```\r\nmodule top(input clk);\r\nwire ce = 1'b1;\r\nreg q = 1'b0;\r\nalways @(posedge clk)\r\n    if (ce) q <= 1'b0;\r\n\r\n(* keep *)\r\nunknown_module u(.i(q));\r\nendmodule\r\n```\r\n\r\nProduces the warning: `Warning: Driver-driver conflict for \\q between cell u.i and constant 1'0 in top: Resolved using constant.`\r\n\r\n## ~Expected~ Desired behavior\r\n\r\nI've been thinking, and right now I can't see why this warning message would be helpful.\r\n1. If connection was to an output port, then resolving it to be constant `1'b0` doesn't help the situation.\r\n2. If it was an input port, then this is perfectly legitimate and nothing needed to be done anyway.\r\n\r\nIs it reasonable to suppress this warning for unknown modules?\r\n\r\n## Actual behavior\r\n\r\nProduces the warning: `Warning: Driver-driver conflict for \\q between cell u.i and constant 1'0 in top: Resolved using constant.`\r\n\r\n#####\r\n\r\nActually, this came about when I was trying to create instantiations of temporary `$__name_` modules, and then when `opt` was run on them, I was getting these errors.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-04",
+  "closed_at": "2019-06-05",
+  "code_blocks": [
+    "module top(input clk);\r\nwire ce = 1'b1;\r\nreg q = 1'b0;\r\nalways @(posedge clk)\r\n    if (ce) q <= 1'b0;\r\n\r\n(* keep *)\r\nunknown_module u(.i(q));\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

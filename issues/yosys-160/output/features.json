@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 160,
+  "title": "Synthesizing counter using LUT4 and CARRY",
+  "features": [
+    {
+      "name": "feedback_counter_with_ice40_primitives",
+      "category": "data_model",
+      "description": "Code should include a feedback counter using ice40 primitives (SB_LUT4, SB_CARRY, SB_DFFE) where the adder output feeds back through a register",
+      "snippet": "wire [1:0] inst0_O;\nwire [1:0] inst1_O;\nSB_LUT4 #(.LUT_INIT(16'hC33C)) inst0 (.I0(1'b0), .I1(I0[0]), .I2(I1[0]), .I3(1'b0), .O(inst0_O));\nSB_CARRY inst1 (.I0(I0[0]), .I1(I1[0]), .CI(1'b0), .CO(inst1_CO));\nSB_DFFE #(.INIT(1'b0)) inst (.C(CLK), .E(CE), .D(I[0]), .Q(Q));",
+      "tags": ["ice40", "primitive", "counter", "feedback", "lut4", "carry", "dffe"],
+      "source_bug_id": "160",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/160",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "constant_concatenation_feedback_optimization",
+      "category": "control_flow",
+      "description": "Code should include a concatenation using constant values like {1'b0,1'b1} in a feedback path where the result feeds back through a register",
+      "snippet": "wire [1:0] adder_out;\nwire [1:0] reg_out;\nadder inst0 (.I0(reg_out), .I1({1'b0,1'b1}), .O(adder_out));\nregister inst1 (.I(adder_out), .O(reg_out), .CLK(CLK), .CE(CE));",
+      "tags": ["concatenation", "constant", "feedback", "optimization"],
+      "source_bug_id": "160",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/160",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

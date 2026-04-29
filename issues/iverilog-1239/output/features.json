@@ -1,0 +1,46 @@
+{
+  "tool": "verilator",
+  "issue_number": 1239,
+  "title": "packed array error",
+  "features": [
+    {
+      "name": "generate loop driving unpacked array element with always_ff",
+      "category": "control_flow",
+      "description": "Code should include a generate loop with genvar iterating over an unpacked array, where each generated always_ff block drives a different element of the array using the genvar as index",
+      "snippet": "genvar i;\nreg [7:0] arr[11:0];\nfor (i = 0; i < 12; i++) begin\n  always_ff @(posedge clk) begin\n    arr[i] <= 0;\n  end\nend",
+      "tags": ["generate_loop", "unpacked_array", "always_ff", "genvar_index"],
+      "source_bug_id": "iverilog-1239",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1239",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "output unpacked array port with generate loop driving",
+      "category": "data_model",
+      "description": "Code should include an output unpacked array port where array elements are driven by separate generated always_ff processes within a generate loop using genvar indexing",
+      "snippet": "output reg [7:0] out_arr[11:0];\ngenvar i;\nfor (i = 0; i < 12; i++) begin\n  always_ff @(posedge clk) begin\n    out_arr[i] <= 0;\n  end\nend",
+      "tags": ["output_port", "unpacked_array", "generate_loop", "always_ff"],
+      "source_bug_id": "iverilog-1239",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1239",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "two unpacked arrays driven by generate loop with cmd_latch logic",
+      "category": "data_model",
+      "description": "Code should include two unpacked arrays where one is driven by a generate loop with always_ff and the other is driven by a separate always_ff process that latches values from the first array on a cmd_latch signal",
+      "snippet": "reg [7:0] counter[11:0];\noutput reg [7:0] latched_out[11:0];\ngenvar i;\nfor (i = 0; i < 12; i++) begin\n  always_ff @(posedge clk) begin\n    if (cmd_latch) begin\n      latched_out[i] <= counter[i];\n      counter[i] <= 0;\n    end\n  end\nend",
+      "tags": ["unpacked_array", "generate_loop", "cmd_latch", "latching"],
+      "source_bug_id": "iverilog-1239",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1239",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

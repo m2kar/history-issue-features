@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2007,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2007",
+  "title": "[Draft] MIF file generator from Yosys INIT parameter for Intel memory cells",
+  "body": "Since Quartus requires either an hex file or a mif file, to be created as part of the synhtesized memories, for all families, this PR takes the Yosys `INIT` parameter and converts it to a Quartus MIF file.\r\nA `PicoSoC` example has been used to test this pass as shown [here](https://twitter.com/dhdezr73/status/1175991636955938816).  Also, as a quick example, consider this module:\r\n```verilog\r\n`default_nettype none\r\n`define _MEM_INIT_\r\nmodule ram #(parameter DW=8, AW=10)\r\n   (input  wire [DW-1:0]  i_din,\r\n    input  wire [AW-1:0]  i_wain, i_rain,\r\n    output logic [DW-1:0] o_dout,\r\n    input  wire           i_clk, i_en);\r\n\r\n`ifdef _ZERO_INIT_\r\n   var logic [DW-1:0]     array [(2**AW)-1:0] /* synthesis syn_ramstyle = \"MLAB\"*/ = '{default:0};\r\n`endif\r\n\r\n`ifdef _MEM_INIT_\r\n   logic [DW-1:0]     array [(2**AW)-1:0] /* synthesis syn_ramstyle = \"MLAB\"*/;\r\n   initial $readmemh(\"f0.hex\", array);\r\n`endif\r\n\r\n   always_ff @(posedge i_clk) begin\r\n      if (i_en) array[i_wain] <= i_din;\r\n   end\r\n\r\n   always_ff @(posedge i_clk) o_dout <= array[i_rain];\r\nendmodule // ram\r\n```\r\nwith `f0.hex` as:\r\n```\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n1FF\r\n1DE\r\n1AD\r\n100\r\n```\r\nBoth Quartus and MIFGen creates a MIF file with the same contents (left Yosys, right Quartus).\r\n![image](https://user-images.githubusercontent.com/10665129/80445532-27311e80-88da-11ea-806d-09f69d044352.png)\r\n\r\nI'm creating this PR as a draft, because there is still some work needed in the testing side, and some other improvements that might be needed to cover all Intel memory blocks. This might be of interest to @ZirconiumX .",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-28",
+  "closed_at": "2022-05-10",
+  "code_blocks": [
+    "`default_nettype none\r\n`define _MEM_INIT_\r\nmodule ram #(parameter DW=8, AW=10)\r\n   (input  wire [DW-1:0]  i_din,\r\n    input  wire [AW-1:0]  i_wain, i_rain,\r\n    output logic [DW-1:0] o_dout,\r\n    input  wire           i_clk, i_en);\r\n\r\n`ifdef _ZERO_INIT_\r\n   var logic [DW-1:0]     array [(2**AW)-1:0] /* synthesis syn_ramstyle = \"MLAB\"*/ = '{default:0};\r\n`endif\r\n\r\n`ifdef _MEM_INIT_\r\n   logic [DW-1:0]     array [(2**AW)-1:0] /* synthesis syn_ramstyle = \"MLAB\"*/;\r\n   initial $readmemh(\"f0.hex\", array);\r\n`endif\r\n\r\n   always_ff @(posedge i_clk) begin\r\n      if (i_en) array[i_wain] <= i_din;\r\n   end\r\n\r\n   always_ff @(posedge i_clk) o_dout <= array[i_rain];\r\nendmodule // ram"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

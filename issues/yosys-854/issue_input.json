@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 854,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/854",
+  "title": "Very close verilogs do not SAT solve equivalent",
+  "body": "## Steps to reproduce the issue\r\n\r\nI have two files option1.v and option2.v. I use the check2.ys for SAT solver checking. I think that the verilog should be the same (the parenthesis should not change semantics), but it does not SAT solve.\r\nWhy???\r\n\r\n::::::::::::::\r\noption1.v\r\n::::::::::::::\r\nmodule option1(a, y);\r\n  input [1:0] a;\r\n  output [1:0] y;\r\n\r\n  assign y = ~^a;\r\nendmodule\r\n::::::::::::::\r\noption2.v\r\n::::::::::::::\r\nmodule option1(a, y);\r\n  input [1:0] a;\r\n  output [1:0] y;\r\n\r\n  assign y = ~(^a);\r\nendmodule\r\n::::::::::::::\r\ncheck2.ys\r\n::::::::::::::\r\n\r\nread_verilog -sv ./option1.v  ; prep; memory -nomap; rename -top gold; design -stash gold;\r\nread_verilog -sv ./option2.v ; prep; memory -nomap; rename -top gate; design -stash gate;\r\ndesign -copy-from gold -as gold gold\r\ndesign -copy-from gate -as gate gate\r\n\r\nmiter -equiv -make_assert -flatten gold gate equiv\r\nhierarchy -top equiv\r\nsat -prove-asserts -show-inputs -max 2 -verify -set-init-undef -ignore_unknown_cells equiv\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-05",
+  "closed_at": "2019-03-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

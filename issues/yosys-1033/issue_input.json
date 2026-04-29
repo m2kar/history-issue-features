@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1033,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1033",
+  "title": "Over-eager inference of distributed RAM for synth_xilinx",
+  "body": "## Steps to reproduce the issue\r\n\r\nUnpacked arrays (even a 1-bit one) is inferred into distributed RAM.\r\nOn ca469473.\r\n\r\n`./yosys -p synth_xilinx dram.v -DUNPACKED`\r\n\r\n```\r\nmodule dram(input [3:0] i, output [4:0] o);\r\n`ifdef UNPACKED\r\nreg val [0:0];\r\n`else\r\nreg [0:0] val;\r\n`endif\r\ninitial val[0] = 1'h1;\r\nassign o = i + val[0];\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nResult of: `./yosys -p synth_xilinx dram.v`\r\n```\r\n   Number of cells:                 10\r\n     LUT1                            1\r\n     MUXCY                           4\r\n     XORCY                           5\r\n```\r\n\r\n## Actual behavior\r\n\r\n```\r\n   Number of cells:                 12\r\n     LUT2                            2\r\n     MUXCY                           4\r\n     RAM64X1D                        1\r\n     XORCY                           5\r\n```\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-05-23",
+  "closed_at": "2019-05-23",
+  "code_blocks": [
+    "module dram(input [3:0] i, output [4:0] o);\r\n`ifdef UNPACKED\r\nreg val [0:0];\r\n`else\r\nreg [0:0] val;\r\n`endif\r\ninitial val[0] = 1'h1;\r\nassign o = i + val[0];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

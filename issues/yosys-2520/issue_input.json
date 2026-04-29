@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2520,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2520",
+  "title": "CXXRTL RFE: better debug messages for out-of-bound memory access",
+  "body": "Right now, when there's a memory out-of-bound access, you get a message like this:\r\n\r\n```\r\ntb: ./FirEngine.cpp:480: virtual bool cxxrtl_design::p_FirEngine::eval(): Assertion `tmp_2.valid && \"out of bounds write\"' failed.\r\n```\r\n\r\nWhen you track this down in the .cpp file, you get something like this:\r\n\r\n```verilog\r\n\t// \\src: ../../spinal/FirEngine.v:0.0-0.0\r\n\t// cell $memwr$\\u_mem$../../spinal/FirEngine.v:0$87\r\n\tauto tmp_2 = memory_index(i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__ADDR.curr, 0, 186);\r\n\tCXXRTL_ASSERT(tmp_2.valid && \"out of bounds write\");\r\n\tif (tmp_2.valid) {\r\n\t\tmemory_p_u__mem.update(tmp_2.index, i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__DATA.curr, i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__EN.curr, 87);\r\n\t}\r\n```\r\n\r\nIt's not very descriptive, and the signals that matter are also not debug_items, so you can't dump them in a VCD file.\r\n\r\nThis needs better debug options, such as a print message that indicates the hierarchical name of the RAM, which address is being read or written, and which value is being written.\r\n\r\ndebug_items would be useful as well.\r\n",
+  "labels": [
+    "enhancement",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2021-01-03",
+  "closed_at": null,
+  "code_blocks": [
+    "tb: ./FirEngine.cpp:480: virtual bool cxxrtl_design::p_FirEngine::eval(): Assertion `tmp_2.valid && \"out of bounds write\"' failed.",
+    "// \\src: ../../spinal/FirEngine.v:0.0-0.0\r\n\t// cell $memwr$\\u_mem$../../spinal/FirEngine.v:0$87\r\n\tauto tmp_2 = memory_index(i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__ADDR.curr, 0, 186);\r\n\tCXXRTL_ASSERT(tmp_2.valid && \"out of bounds write\");\r\n\tif (tmp_2.valid) {\r\n\t\tmemory_p_u__mem.update(tmp_2.index, i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__DATA.curr, i_memwr_24__5c_u__mem_24__2e__2e__2f__2e__2e__2f_spinal_2f_FirEngine_2e_v_3a_199_24_1__EN.curr, 87);\r\n\t}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

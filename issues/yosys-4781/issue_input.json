@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4781,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4781",
+  "title": "proc_dff: bit-granularity optimizations and refactoring",
+  "body": "`proc_dff` converts processes (sets of sync rules) into flip-flops through what is essentially structural pattern matching. As part of this it tries to make some optimizations to the sync rules so that it can produce simpler flip-flops (e.g. `$adff` and `$dff` instead of `$aldff` and `$dffsr`). These optimizations were previously applied in a fairly adhoc manner sprinkled throughout the inference which made it a pain to improve and have confidence in the correctness, as well as limiting the extent to which the optimizations could be applied. They were applied on full signals as found in the lhs of sync rules and thus could miss potential for optimization where different parts of a signal are best matched by different flip-flops.\r\n\r\nMotivated by a pattern I saw with sv2v where a struct is lowered to one wire and may be partially reset even though the whole thing gets assigned at once, this example was being lowered to an `$aldff`, even though actually it is just the combination of a `$dffe` and an `$adff` in different parts of it.\r\n```verilog\r\nmodule top(input wire clk, input wire rst, output reg [7:0] q, input wire [7:0] d);\r\nalways @(posedge clk or posedge rst) begin\r\n\tif (rst) q[3:0] <= '0;\r\n\telse     q <= d;\r\nend\r\nendmodule\r\n```\r\n\r\nThis pr refactors `proc_dff` into three parts that are iterated on whilst there are still signals needing DFFs: extracting the relevant sync rules from the process, optimizing them and then generating flip-flop cells. The optimizations narrow the width of the signal that the flop is currently being generated for to the largest range of bits starting at the LSB that can have all the same optimizations applied as the LSB. This means that range is as optimized as it can be. The bits that are removed doing this are not deleted from the process and so are considered as a target in the next iteration. It is probably easiest to see the optimizations and choices of flip-flops by looking at the code which should be fairly well documented. For standard use-cases this should give basically the same results as before this change, it just allows supporting more corner cases.\r\n\r\nThis pr also fixes an issue in `opt_dff` where sigmap wasn't being used so it would fail to fold some muxes into enable signals. This caused test failures with the `proc_dff` changes. It also adds test cases for these new `proc_dff` optimizations.\r\n\r\nTo test this, it would be good to try running reasonable size verilog designs (ideally with async resets) through proc and checking the inferred flops are not a regression from previous Yosys. I believe Amaranth doesn't use sync processes so `read_verilog` ~~and `yosys-slang`~~ is probably the main interfaces affected by this.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2024-11-28",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input wire clk, input wire rst, output reg [7:0] q, input wire [7:0] d);\r\nalways @(posedge clk or posedge rst) begin\r\n\tif (rst) q[3:0] <= '0;\r\n\telse     q <= d;\r\nend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

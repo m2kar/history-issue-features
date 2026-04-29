@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 192,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/192",
+  "title": "Signedness of B operand of shift",
+  "body": "There is `techlibs/common/simlib.v` file in distribution. It contains shift module:\n\n```\nmodule \\$shift (A, B, Y);\nparameter A_SIGNED = 0;\nparameter B_SIGNED = 0;\n...\n    if (B_SIGNED) begin:BLOCK1\n        assign Y = $signed(B) < 0 ? A << -B : A >> B;\n    end else begin:BLOCK2\n        assign Y = A >> B;\n    end\n\n```\n\nAccording to IEEE 1364-2005 5.1.12.\n\n> The right operand is always treated as an unsigned number and has no effect on the signedness of\n> the result.\n\nThus B should always be implicitly converted to unsigned, and following code is meaningless:\n\n```\n    if (B_SIGNED) begin:BLOCK1\n        assign Y = $signed(B) < 0 ? A << -B : A >> B;\n\n```\n\nOr is there any special case that I miss?\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-07-12",
+  "closed_at": "2016-07-13",
+  "code_blocks": [
+    "module \\$shift (A, B, Y);\nparameter A_SIGNED = 0;\nparameter B_SIGNED = 0;\n...\n    if (B_SIGNED) begin:BLOCK1\n        assign Y = $signed(B) < 0 ? A << -B : A >> B;\n    end else begin:BLOCK2\n        assign Y = A >> B;\n    end",
+    "if (B_SIGNED) begin:BLOCK1\n        assign Y = $signed(B) < 0 ? A << -B : A >> B;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

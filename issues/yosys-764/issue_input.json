@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 764,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/764",
+  "title": "Double indirection not supported for memories?",
+  "body": "I am writing a formal specification for a CPU instruction that performs double indirection. I.e. it does `reg = mem[mem[op]];`\r\n\r\nI am trying to write an assertion like this:\r\n```sv\r\nassert (fi_w_data == mem[mem[a_regY] + i_imm5]);\r\n```\r\nThis fails, indicating a logic loop. I have worked around this by rewriting it as:\r\n```sv\r\nassert (fi_w_data == mem[$past(mem[a_regY]) + i_imm5]);\r\n```\r\nAs I understand, this effectively adds a register, but without the need to explicitly declare variables, expand processes, etc. So this register breaks the logic loop.\r\n\r\nAs I also understand, the only case where the `mem[mem[r]]` construct would be absolutely *necessary* is if you had a dual read port asynchronous memory where the data of the first port is chained to the address of the second port. In all other cases, there is at least one cycle between reads, and so the `$past` trick will work (although it might get messy with intervening writes..?).\r\n\r\nCan you please explain the nature of this limitation? Is this a real logic loop according to Verilog semantics or is this an artifact of the way Yosys lowers Verilog features? Is my workaround 'correct'? \r\n\r\nWhat would I have to do if I had the dual read port asynchronous memory as described above and wanted to verify it? Yes, probably not a very good idea, but I think it is synthesizable with LUTRAM and enough duplication, so this can in principle be encountered in a real world design.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2018-12-24",
+  "closed_at": null,
+  "code_blocks": [
+    "assert (fi_w_data == mem[mem[a_regY] + i_imm5]);",
+    "assert (fi_w_data == mem[$past(mem[a_regY]) + i_imm5]);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5135,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5135",
+  "title": "ast, read_verilog: ownership in AST, use C++ styles for parser and lexer",
+  "body": "The purpose of this PR is to clarify resource ownership (responsibility for construction and deletion) in the AST by distinguishing between owning pointers (`std::unique_ptr<AstNode>`) and non-owning pointers (`AstNode*`).\r\n\r\n## Core idea\r\n\r\n`struct AstNode` now holds these members:\r\n\r\n```cpp\r\nstd::vector<std::unique_ptr<AstNode>> children;\r\nstd::map<RTLIL::IdString, std::unique_ptr<AstNode>> attributes;\r\n```\r\n\r\nThere are no more `new AstNode` and corresponding `delete` statements present in the codebase. `std::unique_ptr<AstNode>` falling out of scope triggers `~AstNode`, destroying its children, too. Assigning `nullptr` to it behaves the same way. This should eliminate `AstNode` allocations being reported as leaking on `yosys` termination by `valgrind`.\r\n\r\n## Damage\r\n\r\nThis implied returning `std::unique_ptr<AstNode>` from parse rules. Prior to this PR, the return data type for parse rules is auto-generated with the bison `%union` directive. The auto-generated code handling it relies on each union member type having an `T& operator=(T&);`, but `std::unique_ptr<...>` [deletes](https://en.cppreference.com/w/cpp/memory/unique_ptr/operator%3D) its own for good reason.\r\n\r\nThat's why I refactored the parser and lexer with their `C++` modes causing a greater code change.\r\n\r\nLocations in AST and parser values now use the same custom data type with `std::shared_ptr<std::string> filename;`. This reduces filename copying in the frontend greatly. I'm seeing 6-20% memory usage improvements in `read_verilog` as a result, at a cost of a `1%` performance regression, which may be avoidable.\r\n\r\nSuperior location tracking without global state will allow proper column ranges in errors in a simple followup PR.\r\n\r\n~~Somehow, syntax errors now don't quote characters, so you get `ERROR: syntax error, unexpected ;` instead of `ERROR: syntax error, unexpected ';'`.~~ fixed\r\n\r\n## Testing\r\n\r\nThis PR has a high risk of creating new yosys segfaults in edge cases not hit by our test suite. More extensive testing will be needed. However, I would argue that crashes are more desirable than a mix of \"everything somehow works out\" and straight up silent data corruption.\r\n\r\n## TODOs\r\n\r\n- [x] Source locations are temporarily completely broken. This breaks tests\r\n- [x] Extend source location diagnostics testing on main prior to merging this. See #5183\r\n- [x] Can global variables be eliminated from the parser by moving them into the generated parser class?\r\n- [x] Ensure there are no Makefile dependency errors\r\n- [ ] ~~Extend ownership in ast and parser to attribute lists and strings. Containers already basically *are* owned pointers, but maybe should be still pointed to with `std::unique_ptr` to avoid accidental copies~~ strings done, attribute lists low prio followup\r\n- [x] Play around with memory and address sanitizers to see if we're cutting down on the leaks - address sanitizer clean, memory sanitizer complains\r\n- [ ] ~~Try reduce the perf regression likely caused by mandatory source location construction for all nodes~~\r\n- [x] Fix the internal docs for the verilog frontend\r\n- [x] ~~Workaround for older bison versions due to `parse.error` ?~~ Declare correct required bison version",
+  "labels": [
+    "merge-after-release"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-21",
+  "closed_at": "2025-08-12",
+  "code_blocks": [
+    "std::vector<std::unique_ptr<AstNode>> children;\r\nstd::map<RTLIL::IdString, std::unique_ptr<AstNode>> attributes;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

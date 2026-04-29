@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4266,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4266",
+  "title": "Yosys not removing DFF with constant input and replacing with a constant driver.",
+  "body": "### Version\r\n\r\nYosys 0.34+43 (git sha1 d21c464ae, gcc 9.4.0-1ubuntu1~20.04.2 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\n- I have an rv32i cpu core design in verilog which I am trying to synthesize using Yosys targeting the sky130 library.\r\n- For ease of doing gate level simulation, I am currently hard-coding the instructions for the test program.\r\n- The synthesis commands used in Yosys is given below:\r\n- (Required files are attached at the end of the below section)\r\n\r\n```\r\nread_liberty -lib ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib\r\n\r\nread_verilog ./riscv_pipelined_Final.v\r\n\r\nhierarchy -check -top riscv_core\r\nsynth -top riscv_core\r\nstat\r\n\r\ndfflibmap -liberty ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib\r\nopt\r\nstat\r\n\r\nabc -liberty ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib -script +strash;scorr;ifraig;retime,{D};strash;dch,-f;map,-M,1,{D}\r\nflatten\r\nsetundef -undriven -init -zero\r\nopt_clean -purge\r\nrename -enumerate\r\nstat\r\nwrite_verilog -noattr ./synth/riscv_pipelined_Final_netlist.v\r\n```\r\n\r\n### Expected Behavior\r\n\r\n- DFF with constant input are reducible to a sequential constant, but it seems like Yosys is not removing some of the DFF with constant inputs in the design and replacing them with constant drivers.\r\n\r\n\r\n### Actual Behavior\r\n\r\n- While I was doing basic checks of the synthesis output netlist, I found that there are three DFF instances that have a constant input of 1'h0.\r\n![DFF_with_constant_inputs](https://github.com/YosysHQ/yosys/assets/79094513/b6897f95-558f-46e1-b1b5-db30b53c46ad)\r\n\r\n- In the ABC result, I can see that there are three **_const0_** cells (which I believe must correspond to the above three DFF instances\r\n![ABC_Results_const0](https://github.com/YosysHQ/yosys/assets/79094513/d9cdf1a8-87aa-4e99-94ec-de2c0aaeed7d)\r\n\r\n\r\n- I even tried adding another **opt** command  (which should by default run **opt_dff**) after the **abc** command, but these 3 DFF instances with constant input are kept as is.\r\n\r\n- Please find attached the following:\r\n   - Zip file with all files to repro the issue: [yosys_issue_4266.zip](https://github.com/YosysHQ/yosys/files/14528891/yosys_issue_4266.zip)\r\n\r\n - For taking a quick look, attaching some of the files directly here:\r\n   - Yosys log file: [yosys_synthesis_log.log](https://github.com/YosysHQ/yosys/files/14522803/yosys_synthesis_log.log)\r\n   - The generated netlist: [riscv_pipelined_Final_netlist.txt](https://github.com/YosysHQ/yosys/files/14522823/riscv_pipelined_Final_netlist.txt)\r\n   - Source RTL: [riscv_pipelined_Final.txt](https://github.com/YosysHQ/yosys/files/14522827/riscv_pipelined_Final.txt)\r\n   - Sky130 Lib file: [sky130_fd_sc_hd__tt_025C_1v80.lib.txt](https://github.com/YosysHQ/yosys/files/14522869/sky130_fd_sc_hd__tt_025C_1v80.lib.txt)\r\n\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2024-03-07",
+  "closed_at": "2024-03-26",
+  "code_blocks": [
+    "read_liberty -lib ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib\r\n\r\nread_verilog ./riscv_pipelined_Final.v\r\n\r\nhierarchy -check -top riscv_core\r\nsynth -top riscv_core\r\nstat\r\n\r\ndfflibmap -liberty ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib\r\nopt\r\nstat\r\n\r\nabc -liberty ./lib/sky130_fd_sc_hd__tt_025C_1v80.lib -script +strash;scorr;ifraig;retime,{D};strash;dch,-f;map,-M,1,{D}\r\nflatten\r\nsetundef -undriven -init -zero\r\nopt_clean -purge\r\nrename -enumerate\r\nstat\r\nwrite_verilog -noattr ./synth/riscv_pipelined_Final_netlist.v"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

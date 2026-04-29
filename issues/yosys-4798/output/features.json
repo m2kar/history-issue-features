@@ -1,0 +1,38 @@
+[
+  {
+    "name": "generate_for_with_3D_packed_array_xor",
+    "category": "control_flow",
+    "description": "Code should include a generate-for loop iterating over 2D array indices with XOR operations across packed 3D array dimensions. The bug occurs when Yosys infers wide MUX structures instead of simple LUT4 when this pattern is used with modulo indexing in the loop body.",
+    "snippet": "genvar row, col;\ngenerate\nfor (row = 0; row < 5; row++) begin\n  for (col = 0; col < 5; col++) begin\n    assign o_state[row][col] = i_state[row][col] ^ sum_sheet[(col - 1) % 5];\n  end\nend\nendgenerate",
+    "tags": ["generate-for", "3D-array", "xor", "modulo-indexing", "ecp5", "widelut"],
+    "source_bug_id": "yosys-4798",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4798",
+    "construct_complexity": 4,
+    "ub_type": null
+  },
+  {
+    "name": "array_slice_concatenation_with_modulo",
+    "category": "data_model",
+    "description": "Code should include array slicing combined with modulo-based index computation and concatenation of the slices. This pattern triggers wide MUX inference in Yosys when the -nowidelut flag is not used, causing exponential growth in LUT usage on ECP5 FPGAs.",
+    "snippet": "{sum_sheet[(col + 1) % 5][62:0], sum_sheet[(col + 1) % 5][63:63]}",
+    "tags": ["array-slice", "modulo", "concatenation", "ecp5", "widelut"],
+    "source_bug_id": "yosys-4798",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4798",
+    "construct_complexity": 3,
+    "ub_type": null
+  },
+  {
+    "name": "xor_chain_across_array_dimension",
+    "category": "general",
+    "description": "Code should include a chain of XOR operations folding across one array dimension to compute a reduction, then using that result in subsequent XOR operations. This reduction pattern combined with generate-for loops triggers inefficient wide MUX synthesis on ECP5.",
+    "snippet": "assign sum_sheet[i] = i_state[0][i] ^ i_state[1][i] ^ i_state[2][i] ^ i_state[3][i] ^ i_state[4][i];",
+    "tags": ["xor-reduction", "generate-for", "ecp5", "widelut"],
+    "source_bug_id": "yosys-4798",
+    "tool": "yosys",
+    "issue_url": "https://github.com/YosysHQ/yosys/issues/4798",
+    "construct_complexity": 3,
+    "ub_type": null
+  }
+]

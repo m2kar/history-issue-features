@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 87,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/87",
+  "title": "Performance issues with memory initialization",
+  "body": "I have two performance issues with the memory initialization. I am not sure if there are good and easy solutions, or even it is worth it to improve (while I do think these are moderate size applications), but just want to report these issues to motivate some discussion.\n\nFirst, the verilog frontend runs really slow if there is an `initial` block with a moderate-sized `$readmemh` function (e.g., 4096 \\* 32). I attach an example here\n\nhttps://github.com/gaomy3832/yosys_tests/blob/master/rom.v\nhttps://github.com/gaomy3832/yosys_tests/blob/master/rom_ram.dat\n\nIf I run `./yosys -p \"read_verilog rom.v;\"`, it takes about 15 min.\n\n```\nCPU: user 875.76s system 0.06s, MEM: 110.15 MB total, 86.50 MB resident\nYosys 0.5+332 (git sha1 ddcfc99, clang 3.4-1ubuntu3 -fPIC -Os)\nTime spent: 100% 2x read_verilog (875 sec)\n```\n\nAnother issue is a little complex. What I want to do is to techmap the BRAM into my custom 1-bit cells (i.e., split the columns). For example, mapping a 64 \\* 8 BRAM into eight 64 \\* 1 BRAMs. If I want to preserve the initial values, I need to extract each column from the `INIT` parameter, which I assume is stored in row major format. So I try to use a constant function to do the transpose, see the example code here\n\nhttps://github.com/gaomy3832/yosys_tests/blob/master/transpose.v\n\nIf I run `./yosys -p \"read_verilog transpose.v\"`, it doesn't finish after 30 min (I have to kill it).\n\nI am not sure if using constant function is the best solution, so please let me know if yosys supports a better way to do the work.\n\nA final note for my environment, I ran these tests on a server-class CPU (Xeon E5-2630) so my system should have enough processing power. I've also disabled tcl, abc, and readline when compiling, but I don't think it has any significant effect. \n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-09-30",
+  "closed_at": "2015-10-01",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

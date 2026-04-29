@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 938,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/938",
+  "title": "Crash occurs in case when use write_firrtl command for design with $memwr and $memrd cells.",
+  "body": "Automated test case:\r\nhttps://github.com/YosysHQ/yosys-tests/tree/master/backends/write_firrtl_mem\r\n\r\nIn case when I had $memwr cell in the design I had this report:  \r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  dict::at()\r\nAborted (core dumped)\r\n\r\nThe difference from #922 is that I don't use memory_collect command here.\r\n\r\n## Steps to reproduce the issue\r\ntop.v:\r\n```\r\nmodule top\r\n(\r\n\tinput [7:0] data_a,\r\n\tinput [6:1] addr_a,\r\n\tinput we_a, clk,\r\n\toutput reg [7:0] q_a\r\n);\r\n\t// Declare the RAM variable\r\n\treg [7:0] ram[63:0];\r\n\r\n\t// Port A\r\n\talways @ (posedge clk)\r\n\tbegin\r\n\t\tif (we_a)\r\n\t\tbegin\r\n\t\t\tram[addr_a] <= data_a;\r\n\t\t\tq_a <= data_a;\r\n\t\tend\r\n\t\t\tq_a <= ram[addr_a];\r\n\tend\r\n\r\nendmodule\r\n```\r\nscript:\r\nread_verilog ../top.v\r\nproc\r\nmemory_dff -nordff\r\nopt_reduce\r\nclean\r\nwrite_firrtl firrtl.firrtl\r\n\r\n## Expected behavior\r\n\r\nFirrtl backend successfully executed.\r\n\r\n## Actual behavior\r\n\r\nyosys> write_firrtl f.f\r\n\r\n4. Executing FIRRTL backend.\r\n\r\n4.1. Executing PMUXTREE pass.\r\nyosys> write_firrtl f.f\r\n\r\n5. Executing FIRRTL backend.\r\n\r\n5.1. Executing PMUXTREE pass.\r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  dict::at()\r\nAborted (core dumped)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-04-16",
+  "closed_at": "2019-05-01",
+  "code_blocks": [
+    "module top\r\n(\r\n\tinput [7:0] data_a,\r\n\tinput [6:1] addr_a,\r\n\tinput we_a, clk,\r\n\toutput reg [7:0] q_a\r\n);\r\n\t// Declare the RAM variable\r\n\treg [7:0] ram[63:0];\r\n\r\n\t// Port A\r\n\talways @ (posedge clk)\r\n\tbegin\r\n\t\tif (we_a)\r\n\t\tbegin\r\n\t\t\tram[addr_a] <= data_a;\r\n\t\t\tq_a <= data_a;\r\n\t\tend\r\n\t\t\tq_a <= ram[addr_a];\r\n\tend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

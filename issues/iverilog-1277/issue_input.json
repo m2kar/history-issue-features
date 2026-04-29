@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1277,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1277",
+  "title": "Multidimensional indicies are not properly supported.",
+  "body": "Trying to create byte-enabled memory, like this: [(link)](https://stackoverflow.com/questions/58305689/how-implement-store-byte-and-store-half-word-in-realistic-approach)\n\n```\n...\n//    [shw][sby][dat]    [   word_count   ]\nlogic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0]; // same as [31:0] \n\nalways_ff@(posedge clk_i) begin : mem_write\n    // Unfortunately implicit bit truncation will crash your simulation,\n    // hence the 7 magic constant instead of 31:2.\n    err = 1'b0;\n    if(we) begin \n        case(be)\n        // sw\n        4'b1111: mem[a[7:2]] <= wd; // this is fine\n        // sh zone\n        4'b1100: mem[a[7:2]][a[1]] <= wd[31:16]; //this works too\n        4'b0011: mem[a[7:2]][a[0]] <= wd[15:0]; \n        // sb zone\n        4'b1000: mem[a[7:2]][a[1]][a[1]] <= wd[31:24]; //throws an iverilog error but works in other simulators\n       ...\n```\nCompiles just fine with verilator with no warnings.\n\nVersion: `Icarus Verilog version 13.0 (devel) ()`\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2025-09-16",
+  "closed_at": null,
+  "code_blocks": [
+    "...\n//    [shw][sby][dat]    [   word_count   ]\nlogic [1:0][1:0][7:0] mem[2**MEM_WIDTH-1:0]; // same as [31:0] \n\nalways_ff@(posedge clk_i) begin : mem_write\n    // Unfortunately implicit bit truncation will crash your simulation,\n    // hence the 7 magic constant instead of 31:2.\n    err = 1'b0;\n    if(we) begin \n        case(be)\n        // sw\n        4'b1111: mem[a[7:2]] <= wd; // this is fine\n        // sh zone\n        4'b1100: mem[a[7:2]][a[1]] <= wd[31:16]; //this works too\n        4'b0011: mem[a[7:2]][a[0]] <= wd[15:0]; \n        // sb zone\n        4'b1000: mem[a[7:2]][a[1]][a[1]] <= wd[31:24]; //throws an iverilog error but works in other simulators\n       ..."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

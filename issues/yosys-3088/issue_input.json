@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3088,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3088",
+  "title": "Spaces in quoted file paths",
+  "body": "## Steps to reproduce the issue\r\nTo handle spaces in mapping files I used quotes, now it starts to read the file but causes error later.\r\nYosys was compiled in msys2-64 with tcl support.\r\n` Yosys 0.11+47 (git sha1 113c94384, x86_64-w64-mingw32-g++ 10.3.0 -Os)`\r\nI've created directory \"c:/space dir\", installed yosys in subdirectory yosys_bin\r\nThen loaded file \"test.v\" with module\r\n```\r\nmodule test( inio,  outio);\r\ninput wire inio ;\r\noutput wire outio;\r\nassign outio = ~inio;\r\nendmodule\r\n```\r\nYosys fails to read file when file path is specified with quotes.\r\nIt opens the file, but fails later at some point:\r\n`read_verilog \"c:/space dir/test.v\"`\r\n\r\n\r\nThe same happens with space-paths in techmap command after some preparation\r\n```\r\nread_verilog test.v\r\nsynth -run coarse\r\ntechmap -map \"c:/space dir/yosys_bin/share/yosys/efinix/cells_map.v\r\n```\r\n\r\n## Expected behavior\r\n\r\n> yosys> read_verilog test.v\r\n> 1. Executing Verilog-2005 frontend: test.v\r\n> Parsing Verilog input from `test.v' to AST representation.\r\n> Generating RTLIL representation for module `\\test'.\r\n> Successfully finished Verilog frontend.\r\n\r\n> yosys> techmap -map cells_map.v\r\n> \r\n> 4. Executing TECHMAP pass (map to technology primitives).\r\n> \r\n> 4.1. Executing Verilog-2005 frontend: cells_map.v\r\n> Parsing Verilog input from `cells_map.v' to AST representation.\r\n> Generating RTLIL representation for module `\\$_DFFE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_SDFFE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_SDFFCE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_DLATCH_N_'.\r\n> Generating RTLIL representation for module `\\$_DLATCH_P_'.\r\n> Generating RTLIL representation for module `\\$lut'.\r\n> Successfully finished Verilog frontend.\r\n> \r\n> 4.2. Continuing TECHMAP pass.\r\n> No more expansions possible.\r\n> <suppressed ~53 debug messages>\r\n\r\n## Actual behavior\r\n\r\n> yosys> read_verilog \"c:/space dir/test.v\"\r\n> \r\n> 1. Executing Verilog-2005 frontend: c:/space dir/test.v\r\n> Parsing Verilog input from `c:/space dir/test.v' to AST representation.\r\n> Generating RTLIL representation for module `\\test'.\r\n> ERROR: Found control character or space (0x20) in string '$not$c:/space dir/test.v:5$1' which is not allowed in RTLIL identifiers\r\n\r\n> yosys> techmap -map \"c:/space dir/yosys_bin/share/yosys/efinix/cells_map.v\"\r\n> \r\n> 3. Executing TECHMAP pass (map to technology primitives).\r\n> \r\n> 3.1. Executing Verilog-2005 frontend: c:/space dir/yosys_bin/share/yosys/efinix/cells_map.v\r\n> Parsing Verilog input from `c:/space dir/yosys_bin/share/yosys/efinix/cells_map.v' to AST representation.\r\n> Generating RTLIL representation for module `\\$_DFFE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_SDFFE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_SDFFCE_xxxx_'.\r\n> Generating RTLIL representation for module `\\$_DLATCH_N_'.\r\n> ERROR: Found control character or space (0x20) in string '$logic_not$c:/space dir/yosys_bin/share/yosys/efinix/cells_map.v:61$2' \r\n> which is not allowed in RTLIL identifiers\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-25",
+  "closed_at": "2022-08-18",
+  "code_blocks": [
+    "module test( inio,  outio);\r\ninput wire inio ;\r\noutput wire outio;\r\nassign outio = ~inio;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

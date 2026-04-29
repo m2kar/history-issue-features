@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 4651,
+  "title": "FSM pass equivalence bug",
+  "features": [
+    {
+      "name": "fsm_state_reg_with_reset_and_compound_condition",
+      "category": "data_model",
+      "description": "Code should include a multi-bit state register with reset that has conditional updates based on compound boolean conditions involving other registers",
+      "snippet": "reg [1:0] state;\nwire _GEN = state == 2'h0;\nwire _GEN_0 = state == 2'h1;\nwire _GEN_1 = _GEN_0 & ~(step[2]);\nalways @(posedge clock) begin\n  if (reset) state <= 2'h0;\n  else if (_GEN) begin\n    if (io_start) state <= 2'h1;\n  end\n  else begin\n    if (_GEN_0 & step[2]) state <= 2'h2;\n  end\nend",
+      "tags": ["fsm", "state_register", "reset", "multi_bit", "compound_condition"],
+      "source_bug_id": "yosys-4651",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4651",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fsm_state_transition_outside_reset_branch",
+      "category": "control_flow",
+      "description": "Code should include an FSM where state transitions occur in an else branch that is evaluated after reset, with conditions depending on internal step counters",
+      "snippet": "always @(posedge clock) begin\n  if (reset) begin\n    state <= 2'h0;\n    step <= 3'h0;\n  end\n  else if (_GEN) begin\n    if (io_start) state <= 2'h1;\n  end\n  else begin\n    if (_GEN_0 & step[2]) state <= 2'h2;\n    if (_GEN_1) step <= step + 3'h1;\n  end\nend",
+      "tags": ["fsm", "state_transition", "step_counter", "else_branch"],
+      "source_bug_id": "yosys-4651",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4651",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "fsm_pass_with_async2sync_dffunmap",
+      "category": "preprocess",
+      "description": "Code should include a yosys synthesis script using fsm pass followed by async2sync and dffunmap, which exposes the reset initialization bug in multi-bit state registers",
+      "snippet": "proc; memory; fsm; techmap;\nasync2sync;\ndffunmap;\nflatten -wb",
+      "tags": ["fsm_pass", "async2sync", "dffunmap", "yosys_synthesis"],
+      "source_bug_id": "yosys-4651",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4651",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

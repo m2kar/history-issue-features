@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 1944,
+  "title": "cxxrtl: eliding wires connected to a $memwr impacts model behaviour",
+  "features": [
+    {
+      "name": "memory write with process-driven enable wire",
+      "category": "data_model",
+      "description": "Code should include a memory write operation where the enable signal is driven by a process (initial block with sync init) rather than directly from a register output",
+      "snippet": "wire en;\nreg [7:0] data;\ninitial begin en = 0; end\nalways @(posedge clk) if (en) mem[addr] = data;",
+      "tags": ["memory_write", "process_driven_signal", "enable_signal"],
+      "source_bug_id": "yosys-1944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1944",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory write port with replicated enable signal",
+      "category": "data_model",
+      "description": "Code should include a memory write where the enable signal is replicated to match the memory width (8 bits in this case)",
+      "snippet": "wire [7:0] en_replicated = {8{en}};\nmemory mem (en_replicated, addr, data, clk);",
+      "tags": ["memory_write", "replicated_enable", "memory_port"],
+      "source_bug_id": "yosys-1944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1944",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "multiple processes driving memory write control signals",
+      "category": "control_flow",
+      "description": "Code should include multiple separate initial/always processes that drive different memory write control signals (address, enable, data) which then feed into a single memory write port",
+      "snippet": "wire [1:0] mem_addr, w_addr;\nwire mem_en, w_en;\nwire [7:0] mem_data, w_data;\ninitial mem_addr = 0;\ninitial mem_en = 0;\ninitial mem_data = 0;\nalways_comb begin mem_addr = w_addr; mem_en = w_en; mem_data = w_data; end",
+      "tags": ["memory_write", "multiple_processes", "control_signals"],
+      "source_bug_id": "yosys-1944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1944",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "wire assignment chain from input to memory port",
+      "category": "control_flow",
+      "description": "Code should include a chain of wire assignments where input ports are assigned to intermediate wires which are then connected to memory write ports",
+      "snippet": "input [1:0] w_addr;\ninput w_en;\nwire [1:0] mem_w_addr;\nwire mem_w_en;\nassign mem_w_addr = w_addr;\nassign mem_w_en = w_en;",
+      "tags": ["wire_assignment", "memory_port", "input_routing"],
+      "source_bug_id": "yosys-1944",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1944",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

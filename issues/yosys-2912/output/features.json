@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 2912,
+  "title": "memory_share: Ports with write enable wired straight to input wrongly skipped for SAT-based port sharing.",
+  "features": [
+    {
+      "name": "memory dual write ports with shared enable",
+      "category": "data_model",
+      "description": "Code should include a memory with two write ports driven by conditional logic using the same write enable signal",
+      "snippet": "reg[3:0] mem[0:15];\nalways @(posedge clk)\n        if(we)\n                mem[wa1] <= wd1;\n        else\n                mem[wa2] <= wd2;",
+      "tags": ["memory", "write_port", "conditional_write", "dual_port"],
+      "source_bug_id": "yosys-2912",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2912",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "write enable signal from module input",
+      "category": "timing",
+      "description": "Code should include a write enable signal that is directly connected to a module input port with no intermediate driver",
+      "snippet": "input we;\n... if(we) mem[wa1] <= wd1;",
+      "tags": ["write_enable", "module_input", "unbuffered"],
+      "source_bug_id": "yosys-2912",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2912",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "memory read port sharing with write ports",
+      "category": "control_flow",
+      "description": "Code should include a memory with concurrent read and write ports where write enable affects port eligibility for sharing",
+      "snippet": "reg[3:0] mem[0:15];\nassign rd = mem[ra];\nalways @(posedge clk) if(we) mem[wa1] <= wd1;",
+      "tags": ["memory_share", "read_port", "write_enable", "sat_optimization"],
+      "source_bug_id": "yosys-2912",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2912",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1752,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1752",
+  "title": "Parameter with data type of 'logic' gives syntax errors.",
+  "body": "## Steps to reproduce the issue\r\n\r\nCopy the following code to a new file (For example \"example.sv\")\r\n```\r\nmodule example\r\n  #(\r\n    parameter integer               COUNTBITS = 8,\r\n    parameter logic [COUNTBITS-1:0] MAXCOUNT  = 8'b1000000\r\n  ) (\r\n  input  wire        CLK, \r\n  output wire [15:0] LD\r\n  );\r\n\r\n  wire                clock;\r\n  reg [15:0]          leds;\r\n  reg [COUNTBITS-1:0] counter;\r\n\r\n  assign LD    = leds;\r\n  assign clock = CLK;\r\n\r\n  always @(posedge clock) begin\r\n    counter <= counter + 1;\r\n    if (counter[COUNTBITS-1] == MAXCOUNT)\r\n      leds <= 16'h8000 >> counter[COUNTBITS-2:COUNTBITS-5];\r\n    else\r\n      leds <= 16'h0001 << counter[COUNTBITS-2:COUNTBITS-5];\r\n  end\r\nendmodule\r\n```\r\n\r\nInside yosys, run\r\n```\r\nyosys> read -sv example.sv\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe file is loaded without errors\r\n\r\n## Actual behavior\r\n\r\nAfter the loading the file, the following error appears and yosys exits\r\n\r\n```\r\nyosys> read -sv example.sv\r\n1. Executing Verilog-2005 frontend: example.v\r\nParsing SystemVerilog input from `example.sv' to AST representation.\r\nexample.sv:4: ERROR: syntax error, unexpected TOK_LOGIC\r\n```\r\n\r\n## Comments\r\n\r\n1) Removing the logic data type to the parameter \"MAXCOUNT\" fixes the issue\r\n2) The Vivado compiler doesn't give any problems with the data type of the parameter",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-09",
+  "closed_at": "2021-03-01",
+  "code_blocks": [
+    "module example\r\n  #(\r\n    parameter integer               COUNTBITS = 8,\r\n    parameter logic [COUNTBITS-1:0] MAXCOUNT  = 8'b1000000\r\n  ) (\r\n  input  wire        CLK, \r\n  output wire [15:0] LD\r\n  );\r\n\r\n  wire                clock;\r\n  reg [15:0]          leds;\r\n  reg [COUNTBITS-1:0] counter;\r\n\r\n  assign LD    = leds;\r\n  assign clock = CLK;\r\n\r\n  always @(posedge clock) begin\r\n    counter <= counter + 1;\r\n    if (counter[COUNTBITS-1] == MAXCOUNT)\r\n      leds <= 16'h8000 >> counter[COUNTBITS-2:COUNTBITS-5];\r\n    else\r\n      leds <= 16'h0001 << counter[COUNTBITS-2:COUNTBITS-5];\r\n  end\r\nendmodule",
+    "yosys> read -sv example.sv\r\n1. Executing Verilog-2005 frontend: example.v\r\nParsing SystemVerilog input from `example.sv' to AST representation.\r\nexample.sv:4: ERROR: syntax error, unexpected TOK_LOGIC"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

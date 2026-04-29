@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5324,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5324",
+  "title": "Make `IdString` indices known at compile-time for `ID::` constants",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nThis allows clang to compile `OptMergeWorker::cell_input_hash()`'s chain of if and `in()` calls into a single jump table. But there are a lot more optimizations that could be done in the future when well-known `IdString` indices are compile-time constants. For example we could precompute the hashes of those indices at compile time for faster dict lookups.\r\n\r\n_Explain how this is achieved._\r\n\r\n* Introduce an enum with values for the entries in `constids(_d).inc`.\r\n* Introduce global IdStrings for each of those values.\r\n* Prepopulate the global lookup tables with name/value pairs for those well-known values.\r\n* Unfortunately, if the `ID::` constants are `IdString`s, then when you use one of those constants the compiler still doesn't know its index at compile time, because in theory some code could change the index. We really want the `ID::` constants to be constexpr, but we can't make `IdString`s constexpr because the `~IdString()` destructor is necessarily nontrivial. So instead, change the `ID::...` constants to be a new class `StaticIdString`. This class can be constexpr. For compatibility it implicitly converts to `const IdString &` by returning a reference to the appropriate global `IdString`. It contains a compile-time constant index. For selected functions that accept `const IdString &` but want to take advantage of a known-at-compile-time index when inlined, we overload those functions with a version accepting `StaticIdString`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-09-03",
+  "closed_at": "2025-09-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

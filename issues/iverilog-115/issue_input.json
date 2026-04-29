@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 115,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/115",
+  "title": "BLIF backend aborts on case with single branch",
+  "body": "This code\n\n```\nmodule mod();\n\nreg state, next_state;\n\nalways @* begin\n  next_state = 0;\n  case (state)\n    0: next_state = state;\n  endcase\nend\n\nendmodule\n```\n\ncauses Iverilog to die with a message\n\n```\n$ iverilog -Wall -tblif mod.v\nmod.v:3: assert: /home/Yura/src/iverilog/synth2.cc:668: failed assertion sel_need >= 2\n```\n\nThe fix may be as simple as\n\n```\ndiff --git a/synth2.cc b/synth2.cc\nindex b42fc44..709043f 100644\n--- a/synth2.cc\n+++ b/synth2.cc\n@@ -854,6 +854,10 @@ bool NetCase::synth_async(Design*des, NetScope*scope,\n       if (default_statement && (sel_width > sel_need))\n            sel_need += 1;\n\n+      // Case statement with a single branch\n+      if (sel_need < 2)\n+           sel_need = 2;\n+\n        // The mux size is always an exact power of 2.\n       if (sel_need >= 8*sizeof(unsigned)) {\n           cerr << get_fileline() << \": sorry: mux select width of \"\n```\n\nThis will be suboptimal when sel_need == 0 (i.e. single comparison to 0) because in that case you can keep just 1 bit. But this case is not practical so I think it's not a big deal.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-07-12",
+  "closed_at": "2016-07-22",
+  "code_blocks": [
+    "module mod();\n\nreg state, next_state;\n\nalways @* begin\n  next_state = 0;\n  case (state)\n    0: next_state = state;\n  endcase\nend\n\nendmodule",
+    "$ iverilog -Wall -tblif mod.v\nmod.v:3: assert: /home/Yura/src/iverilog/synth2.cc:668: failed assertion sel_need >= 2",
+    "diff --git a/synth2.cc b/synth2.cc\nindex b42fc44..709043f 100644\n--- a/synth2.cc\n+++ b/synth2.cc\n@@ -854,6 +854,10 @@ bool NetCase::synth_async(Design*des, NetScope*scope,\n       if (default_statement && (sel_width > sel_need))\n            sel_need += 1;\n\n+      // Case statement with a single branch\n+      if (sel_need < 2)\n+           sel_need = 2;\n+\n        // The mux size is always an exact power of 2.\n       if (sel_need >= 8*sizeof(unsigned)) {\n           cerr << get_fileline() << \": sorry: mux select width of \""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 107,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/107",
+  "title": "Help needed setting up a PLL",
+  "body": "Hi Clifford, first of all thanks for your great work with the open FPGA toolchain (and with OpenScad!) :-)\n\nI'm trying to set up a PLL with the ICEstick board. For the sake of simplicity the first attempt is to make an LED blink at Fclk/16 (DIVR=15, DIVF=0, DIVQ=0).\n\n![screenshot from 2015-12-05 01-49-37](https://cloud.githubusercontent.com/assets/1636266/11604857/7e6a1ae2-9af2-11e5-8ba8-c5b6d138ce74.png)  \n(from the [Lattice docs](http://www.latticesemi.com/~/media/LatticeSemi/Documents/ApplicationNotes/IK/iCE40sysCLOCKPLLDesignandUsageGuide.pdf?document_id=47778) page 7)\n\nHere is the code I'm working with:\n\n``` verilog\nmodule program(\n    input   clk, // set_io clk 21\n    output  LED // set_io LED 99\n);\n\n    wire clk;\n    wire LED;\n\n    wire clk_new;\n    wire BYPASS;\n    wire RESETB;\n\n    SB_PLL40_CORE #(\n        .FEEDBACK_PATH(\"PHASE_AND_DELAY\"),\n        .DELAY_ADJUSTMENT_MODE_FEEDBACK(\"FIXED\"),\n        .DELAY_ADJUSTMENT_MODE_RELATIVE(\"FIXED\"),\n        .PLLOUT_SELECT(\"SHIFTREG_0deg\"),\n        .SHIFTREG_DIV_MODE(1'b0),\n        .FDA_FEEDBACK(4'b0000),\n        .FDA_RELATIVE(4'b0000),\n        .DIVR(4'b1111),\n        .DIVF(7'b0000000),\n        .DIVQ(3'b000),\n        .FILTER_RANGE(3'b001),\n    ) uut (\n        .REFERENCECLK   (clk),\n        .PLLOUTCORE     (clk_new),\n        .BYPASS         (BYPASS),\n        .RESETB         (RESETB)\n        //.LOCK (LOCK )\n    );\n\n    assign LED = clk_new;\n    assign BYPASS = 0;\n    assign RESETB = 0;\n\nendmodule\n```\n\nUnfortunately the LED remains fully off. I've tried setting BYPASS=1 and then the LED is visibly on.\nIt probably is something dumb... but as a newbie I cannot spot it, so your help would be very much appreciated.\n\nAlso, I wanted to check with you whether it is normal that the clock input is not assigned to a Global Buffer by default:  \n![screenshot from 2015-12-05 01-57-38](https://cloud.githubusercontent.com/assets/1636266/11604924/c55e9ddc-9af3-11e5-97a2-d33078bf1345.png)  \nWhat is the proper way to force CLK to be a GB?\n\nThanks plenty,\nCarlos\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-12-05",
+  "closed_at": "2015-12-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

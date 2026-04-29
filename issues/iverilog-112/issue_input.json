@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 112,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/112",
+  "title": "Access of huge 3-dimensional packed memory ignores third dimension in certain circumstances.",
+  "body": "## Description and Links\n\n[Here is the link to the line in question](https://github.com/uarc/core0/blob/e27c93e87d252a536336cd08566c24cdeec99c3c/src/conveyor_control.sv#L104). In this circumstance, this block executes due to a received interrupt. Unfortunately, although the smaller conveyor_heads packed array is updated correctly (indicating that this branch was in fact taken on the clock), the data that was supposed to be written to conveyors[1] was instead written to conveyors[0]. [This is an image of the waveform in GTKWAVE](http://i.imgur.com/mXG94zv.png). [Here is an image showing the values of each conveyor with conveyors highlighted, though slightly cut off](http://i.imgur.com/vMo1VxZ.png).\n\nAs can be seen from the waveform and values, the active conveyor updates appropriately, but the values are written to the wrong conveyor.\n## First thoughts\n\nSupposing that it might be fixed by changing the order from big endian to little endian, I changed the conveyors order to [0:1] from [1:0]. This resulted in iverilog always writing to the [1] instead of the [0] location. By this assumption, it seems that the array indexing is occasionally ignored for packed arrays. This was true for the conveyor_heads reg as well as the conveyors reg.\n## Temporary solution\n\nI changed the [1:0] to specify an unpacked array, as it was unnecessary in this case. With unpacked arrays, this issue does not happen, but it MAY happen with packed arrays without notice, though only sometimes. [Here](https://github.com/uarc/core0/commit/9f21258e2c0e8ddc527531a3c170e7a4886b2f07) is the commit in which I fixed the issue, if anyone else encounters this and needs to fix it.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-07-02",
+  "closed_at": "2016-07-10",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

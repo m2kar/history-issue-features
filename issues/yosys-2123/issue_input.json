@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2123,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2123",
+  "title": "Allow constant functions within generate if condition",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun Yosys on the following file (`read_verilog` is sufficient):\r\n```Verilog\r\nmodule Example(out);\r\n    parameter OUTPUT = \"FOO\";\r\n    output wire [11:0] out;\r\n    function automatic [31:0] flip;\r\n        input [11:0] inp;\r\n        flip = ~inp;\r\n    endfunction\r\n    generate\r\n        if (flip(OUTPUT) == flip(\"BAR\")) /* trouble here */\r\n            assign out = OUTPUT;\r\n        else\r\n            assign out = 0;\r\n    endgenerate\r\nendmodule\r\n\r\nmodule top(out);\r\n    wire [11:0] o1, o2, o3, o4;\r\n    Example          e1(o1);\r\n    Example #(\"FOO\") e2(o2);\r\n    Example #(\"BAR\") e3(o3);\r\n    Example #(\"BAZ\") e4(o4);\r\n    output wire [12 * 4 - 1 :0] out;\r\n    assign out = {o1, o2, o3, o4};\r\nendmodule\r\n```\r\n\r\n`top` is not necessary to reproduce the bug, but is useful to ensure the module is being instantiated correctly.\r\n\r\n## Expected behavior\r\n\r\nGiven that `flip` is a constant function, its use should be permitted within the condition of an `if_generate_construct`. Yosys should successfully read the modules and produce a result which yields the appropriate values on the output port of `top`.\r\n\r\n## Actual behavior\r\n\r\nOn ` Yosys 0.9+2406 (git sha1 83f84afc, clang 11.0.0 -fPIC -Os)` I get:\r\n```\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing Verilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Example'.\r\ntest.v:9: ERROR: Condition for generate if is not constant!\r\n```\r\n\r\nIt works as expected if the troublesome line is replaced with:\r\n```Verilog\r\n        if (OUTPUT == \"BAR\")\r\n```\r\nMore interestingly, it also works if the line is replaced with:\r\n```Verilog\r\n        localparam X = flip(OUTPUT) == flip(\"BAR\");\r\n        if (X)\r\n```\r\n\r\nWhile the `localparam` workaround is serviceable for the time being, I wanted to make this issue known.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-06-08",
+  "closed_at": "2020-06-30",
+  "code_blocks": [
+    "module Example(out);\r\n    parameter OUTPUT = \"FOO\";\r\n    output wire [11:0] out;\r\n    function automatic [31:0] flip;\r\n        input [11:0] inp;\r\n        flip = ~inp;\r\n    endfunction\r\n    generate\r\n        if (flip(OUTPUT) == flip(\"BAR\")) /* trouble here */\r\n            assign out = OUTPUT;\r\n        else\r\n            assign out = 0;\r\n    endgenerate\r\nendmodule\r\n\r\nmodule top(out);\r\n    wire [11:0] o1, o2, o3, o4;\r\n    Example          e1(o1);\r\n    Example #(\"FOO\") e2(o2);\r\n    Example #(\"BAR\") e3(o3);\r\n    Example #(\"BAZ\") e4(o4);\r\n    output wire [12 * 4 - 1 :0] out;\r\n    assign out = {o1, o2, o3, o4};\r\nendmodule",
+    "1. Executing Verilog-2005 frontend: test.v\r\nParsing Verilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Example'.\r\ntest.v:9: ERROR: Condition for generate if is not constant!",
+    "if (OUTPUT == \"BAR\")",
+    "localparam X = flip(OUTPUT) == flip(\"BAR\");\r\n        if (X)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

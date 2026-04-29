@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 359,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/359",
+  "title": "Add some lint-like coding style warnings",
+  "body": "**Description**\r\n1、Case statement does not have a ‘default’-- “others => null” branch；\r\n2、Variables not used\r\n3、Assign to the same signal more than once within the same statement block.\r\n4、Sensitivity lists are complete and do not include unnecessary signals.\r\nMissing Signals, Unneeded Signals, Sliced Signals, Duplicate Signals\r\n\r\n**Expected behaviour**\r\niverilog should report an error or give a warning\r\n\r\n**the code is below**\r\n```\r\nmodule up3down5(clock, data_in, up, down, carry_out, borrow_out, count_out, parity_out);\r\n\r\ninput [8:0] data_in;\r\ninput clock, up, down;\r\n\r\noutput reg [8:0] count_out;\r\noutput reg carry_out, borrow_out, parity_out;\r\n\r\nreg [9:0] cnt_up, cnt_dn;\r\nreg [9:0] cnt_up1, cnt_dn1;\t\t\t                ///////////error 2\r\nreg [8:0] count_nxt;\r\n\r\nalways @(posedge clock)\r\nbegin\r\n\tcnt_dn = count_out - 3'b 101;\r\n\tcnt_up = count_out + 2'b 11;\r\n\r\n```\r\n\tcase ({up,down})\r\n\t\t2'b 00 : count_nxt = data_in;\r\n\t\t2'b 01 : count_nxt = cnt_dn;\r\n\t\t2'b 10 : count_nxt = cnt_up;\r\n\t\t2'b 11 : count_nxt = count_out;\r\n\t\t//default : count_nxt = 9'bX;                  ///////////error 1\r\n\tendcase\r\n\r\n\tparity_out  <= ^count_nxt;\r\n\tcarry_out   <= up & cnt_up[9];\r\n\tborrow_out  <= down & cnt_dn[9];\r\n\tcount_out   <= count_nxt;\r\n\tcnt_up1 <= count_nxt;\t               \t\t      ///////////error 3\r\n\tcnt_up1 <= cnt_up;\t               \t\t          ///////////error 4\r\n\r\n```\r\nend\r\n\r\nendmodule\r\n```\r\n**error1: Case statement does not have a ‘default’-- “others => null” branch；\r\nerror2:  Variables not used；\r\nerror3/error4：Assign to the same signal more than once within the same statement block.**\r\n",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2020-08-12",
+  "closed_at": null,
+  "code_blocks": [
+    "module up3down5(clock, data_in, up, down, carry_out, borrow_out, count_out, parity_out);\r\n\r\ninput [8:0] data_in;\r\ninput clock, up, down;\r\n\r\noutput reg [8:0] count_out;\r\noutput reg carry_out, borrow_out, parity_out;\r\n\r\nreg [9:0] cnt_up, cnt_dn;\r\nreg [9:0] cnt_up1, cnt_dn1;\t\t\t                ///////////error 2\r\nreg [8:0] count_nxt;\r\n\r\nalways @(posedge clock)\r\nbegin\r\n\tcnt_dn = count_out - 3'b 101;\r\n\tcnt_up = count_out + 2'b 11;",
+    "end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

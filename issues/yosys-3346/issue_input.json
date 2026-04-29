@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3346,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3346",
+  "title": "ABC9/Aiger: Assert `count_id(cell->name) == 0' failed in kernel/rtlil.cc:2027",
+  "body": "## Steps to reproduce the issue\r\n\r\nHere's the smallest testcase I was able to cobble together. Sorry, it's basically an entire large project - most attempts at minifying it further made the bug not manifest anymore.\r\n\r\n```\r\n$ wget https://hackerspace.pl/~q3k/yosys-abc9-aiger-issue.tar.xz\r\n$ tar xf yosys-abc9-aiger-issue.tar.xz\r\n$ cd yosys-abc9-aiger-issue/\r\n$ yosys -s synth.ys\r\n```\r\n\r\n## Expected behavior\r\n\r\nNo crash.\r\n\r\n## Actual behavior\r\n\r\n```\r\n[...]\r\n20.43.17.5. Executing ABC9.\r\n[...]\r\n20.43.17.6. Executing AIGER frontend.\r\n[...]\r\nERROR: Assert `count_id(cell->name) == 0' failed in kernel/rtlil.cc:2027.\r\n```\r\n\r\n## Preliminary investigation\r\n\r\nIt seems like the issue is at the post_process stage of the AIGER frontend when loading the result from ABC:\r\n\r\n```\r\n#6  0x00005555556d2ee4 in Yosys::RTLIL::Module::add (this=this@entry=0x555562ebb9a0, cell=cell@entry=0x555561699c10) at kernel/rtlil.cc:2027\r\n#7  0x00005555556d305c in Yosys::RTLIL::Module::rename (this=this@entry=0x555562ebb9a0, cell=cell@entry=0x555561699c10, new_name=...) at kernel/rtlil.cc:2125\r\n#8  0x00005555557bcc57 in Yosys::AigerReader::post_process (this=this@entry=0x7fffffffcea8) at frontends/aiger/aigerparse.cc:976\r\n#9  0x00005555557be680 in Yosys::AigerReader::parse_xaiger (this=this@entry=0x7fffffffcea8) at frontends/aiger/aigerparse.cc:518\r\n#10 0x00005555557c2157 in Yosys::AigerFrontend::execute (this=this@entry=0x555555ea6200 <Yosys::AigerFrontend>, f=@0x7fffffffd038: 0x5555575fb1c0, \r\n```\r\n\r\nIt seems like when the frontend renames LUTs based on their connected Y wire, it attempts to rename two different cells to the same name. This is after adding some debug log()s:\r\n\r\n```\r\nRenaming $lut$aiger244019$22639 to $lut\\qf100_frontend.forkDMem_fifoReqRAMA_rv$port1__read[36]\r\nRenaming $lut$aiger244019$26516 to $lut\\qf100_frontend.forkDMem_fifoReqRAMA_rv$port1__read[36]\r\n```\r\n\r\nI can also reproduce the same error by manually running `read_aiger` against the intermediary files like so:\r\n\r\n```\r\nyosys -p 'read_aiger -xaiger -map /tmp/yosys-abc-wPrLSV/input.sym -wideports /tmp/yosys-abc-wPrLSV/output.aig'\r\n```\r\n\r\n**Interestingly, disabling `-wideports` causes the error to not manifest.** Commenting out the cell rename loop in post_process also allows the design to synthesize fully (but not sure if correctly).",
+  "labels": [
+    "ABC"
+  ],
+  "state": "open",
+  "created_at": "2022-05-29",
+  "closed_at": null,
+  "code_blocks": [
+    "[...]\r\n20.43.17.5. Executing ABC9.\r\n[...]\r\n20.43.17.6. Executing AIGER frontend.\r\n[...]\r\nERROR: Assert `count_id(cell->name) == 0' failed in kernel/rtlil.cc:2027.",
+    "#6  0x00005555556d2ee4 in Yosys::RTLIL::Module::add (this=this@entry=0x555562ebb9a0, cell=cell@entry=0x555561699c10) at kernel/rtlil.cc:2027\r\n#7  0x00005555556d305c in Yosys::RTLIL::Module::rename (this=this@entry=0x555562ebb9a0, cell=cell@entry=0x555561699c10, new_name=...) at kernel/rtlil.cc:2125\r\n#8  0x00005555557bcc57 in Yosys::AigerReader::post_process (this=this@entry=0x7fffffffcea8) at frontends/aiger/aigerparse.cc:976\r\n#9  0x00005555557be680 in Yosys::AigerReader::parse_xaiger (this=this@entry=0x7fffffffcea8) at frontends/aiger/aigerparse.cc:518\r\n#10 0x00005555557c2157 in Yosys::AigerFrontend::execute (this=this@entry=0x555555ea6200 <Yosys::AigerFrontend>, f=@0x7fffffffd038: 0x5555575fb1c0,",
+    "Renaming $lut$aiger244019$22639 to $lut\\qf100_frontend.forkDMem_fifoReqRAMA_rv$port1__read[36]\r\nRenaming $lut$aiger244019$26516 to $lut\\qf100_frontend.forkDMem_fifoReqRAMA_rv$port1__read[36]",
+    "yosys -p 'read_aiger -xaiger -map /tmp/yosys-abc-wPrLSV/input.sym -wideports /tmp/yosys-abc-wPrLSV/output.aig'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

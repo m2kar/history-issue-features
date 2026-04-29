@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 338,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/338",
+  "title": "Feature suggestion: search path for `readmemb`",
+  "body": "**Problem**: I am generating some Verilog code, and putting it under a directory called `build/verilog/Foo`. (All build products go under `build`.) There are several files here, and one uses `$readmemb` in order to initialize some BRAMs from a `.hex` file. The `.hex` file is also inside `build/verilog/Foo` next to the Verilog. The verilog file simply instantiates the file using `$readmemb(\"file.hex\",...);`, i.e. it is all relative to `build/verilog/Foo`.\r\n\r\nHowever, I would like to execute `yosys` in the *top level directory*, not under `build/Verilog/Foo`. However, if I do this, I get:\r\n\r\n```\r\nyosys> read_verilog build/verilog/Foo/*.v\r\n\r\n2. Executing Verilog-2005 frontend.\r\nParsing Verilog input from `build/verilog/Foo/Foo_blockRamFile.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Foo_blockRamFile'.\r\nERROR: Can not open file `./unit.hex` for \\$readmemb at build/verilog/Foo/Foo_blockRamFile.v:29.\r\n```\r\n\r\nI asked about this on IRC. However, looking [at the code](https://github.com/cliffordwolf/yosys/blob/f3324ed0cc35590e4d0042f6265b83bab0af37bf/frontends/ast/simplify.cc#L2578), this is roughly to be expected: `ifstream` will not resolve this for you, and the parser simply looks at the cell in order to extract the file name and pass it to `ifstream::open()`.\r\n\r\n---\r\n\r\nI have currently worked around this by instead A) making all paths in my synthesis scripts absolute (based on the current build directory; technically I could make it relative but it's a little uglier in my case) and B) making my build `cd` into the right place before calling `yosys`.\r\n\r\nHowever, I'm wondering if there's any interest, perhaps, in some kind of \"search path\" option, so that Yosys can look for such files in another directory. This is perhaps a bit narrow and specific, so a more general concept of \"search path\" (including, but not limited to, `$readmemb` & co) may be more appropriate.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2017-04-11",
+  "closed_at": "2022-08-16",
+  "code_blocks": [
+    "yosys> read_verilog build/verilog/Foo/*.v\r\n\r\n2. Executing Verilog-2005 frontend.\r\nParsing Verilog input from `build/verilog/Foo/Foo_blockRamFile.v' to AST representation.\r\nGenerating RTLIL representation for module `\\Foo_blockRamFile'.\r\nERROR: Can not open file `./unit.hex` for \\$readmemb at build/verilog/Foo/Foo_blockRamFile.v:29."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

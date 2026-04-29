@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5567,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5567",
+  "title": "SystemVerilog interface signals being omitted during synthesis",
+  "body": "### Version\n\n0.57+244\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWhen using sby for testing an AXI lite module I'm seeing a few different error messages from yosys. With the full file with nothing commented out I'm getting the error message:\nSBY 14:58:44 [sby_output/sby_prove] base: formal_axil_slave.sv:192: ERROR: Failed to resolve identifier \\AXIL.ARREADY for width detection!\n\nWhen commenting that offending line out to bypass that error message I get what appears to be the true problem:\nformal_axil_slave.sv:125: Warning: Identifier `\\AXIL.AWVALID' is implicitly declared.\nformal_axil_slave.sv:125: Warning: Identifier `\\AXIL.AWREADY' is implicitly declared.\nformal_axil_slave.sv:126: Warning: Identifier `\\AXIL.WVALID' is implicitly declared.\nformal_axil_slave.sv:126: Warning: Identifier `\\AXIL.WREADY' is implicitly declared.\nformal_axil_slave.sv:127: Warning: Identifier `\\AXIL.ARVALID' is implicitly declared.\nformal_axil_slave.sv:127: Warning: Identifier `\\AXIL.RREADY' is implicitly declared.\nformal_axil_slave.sv:129: Warning: Identifier `\\AXIL.BVALID' is implicitly declared.\nformal_axil_slave.sv:129: Warning: Identifier `\\AXIL.BREADY' is implicitly declared.\nformal_axil_slave.sv:130: Warning: Identifier `\\AXIL.RVALID' is implicitly declared.\nformal_axil_slave.sv:170: Warning: Identifier `\\AXIL.BRESP' is implicitly declared.\nformal_axil_slave.sv:171: Warning: Identifier `\\AXIL.RRESP' is implicitly declared.\nformal_axil_slave.sv:184: Warning: Identifier `\\AXIL.AWADDR' is implicitly declared.\nformal_axil_slave.sv:189: Warning: Identifier `\\AXIL.WDATA' is implicitly declared.\nformal_axil_slave.sv:254: Warning: Identifier `\\AXIL.ARREADY' is implicitly declared.\n\nThis all compiles with Verilator and is able to pass tests in cocotb, here is the core file set for just the sby test:\n[sby_files.zip](https://github.com/user-attachments/files/24293800/sby_files.zip)\n\nI run the above with:\nsby axil_regs_half_duplex.sby -f --prefix sby_output/sby\n\nThis may relate to the following issue due to the SV interface being used at the top level but I'm not sure how it gets parsed in this case:\nhttps://github.com/YosysHQ/yosys/issues/5366\n\n\n### Expected Behavior\n\nSignals in the SystemVerilog interface are used for the connections in the design rather than being omitted.\n\n### Actual Behavior\n\nThe interface signals seem to be optimised out/removed before they can be used as connections in the design.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-12-22",
+  "closed_at": "2026-01-11",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

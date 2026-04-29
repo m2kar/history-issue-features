@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 5046,
+  "title": "std::out_of_range crash in Verilog backend after alumacc pass",
+  "features": [
+    {
+      "name": "arithmetic cells with interlocked add/sub output-input chaining",
+      "category": "data_model",
+      "description": "Code should include a $add cell whose output wire feeds back as input to a $sub cell, creating interlocked arithmetic operations",
+      "snippet": "cell $add $add$753\n  parameter \\A_SIGNED 0 \\A_WIDTH 2 \\B_SIGNED 0 \\B_WIDTH 2 \\Y_WIDTH 2\n  connect \\A $sub_Y\n  connect \\Y $auto$bugpoint.cc:258:simplify_something$928\nend\ncell $sub $sub$752\n  parameter \\A_SIGNED 0 \\A_WIDTH 2 \\B_SIGNED 0 \\B_WIDTH 2 \\Y_WIDTH 2\n  connect \\A $auto$bugpoint.cc:258:simplify_something$923\n  connect \\Y $sub_Y\nend",
+      "tags": ["arithmetic", "add", "sub", "cell_chaining", "rtlil"],
+      "source_bug_id": "5046",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5046",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "alumacc pass followed by write_verilog on arithmetic design",
+      "category": "timing",
+      "description": "Code should include an RTLIL design with $add and $sub cells that is first processed by the alumacc pass then output via write_verilog backend",
+      "snippet": "read_rtlil design.rtlil; alumacc; write_verilog -sv output.v",
+      "tags": ["alumacc", "write_verilog", "pass_sequence", "backend_crash"],
+      "source_bug_id": "5046",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5046",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ]
+}

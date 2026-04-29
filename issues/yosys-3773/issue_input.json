@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3773,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3773",
+  "title": "Yosys synthesis breaks CPU functionality",
+  "body": "### Version\r\n\r\nYosys 0.29+11 (git sha1 acfdc5cc4246 gcc 9.4.0-1ubuntu1~20.04.1 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nHi there!\r\n\r\nI noticed that for one specific CPU written in SystemVerilog and whose pickled version is in the following archive, the CPU behaves incorrectly for some inputs, _only_ when it passes through Yosys, without any expected functional transformation.\r\n\r\n[cva6_vanilla.zip](https://github.com/YosysHQ/yosys/files/11522073/cva6_vanilla.zip)\r\n\r\nThe Yosys script is the following (I also tried without the `-sv` for the back-end, without better success):\r\n```\r\nyosys read_verilog -defer -sv $VERILOG_INPUT\r\nyosys hierarchy -top $TOP_MODULE -check\r\nyosys proc\r\nyosys opt -purge\r\nyosys write_verilog -sv -noattr $VERILOG_OUTPUT\r\n```\r\n\r\nHere are the waveforms:\r\n[waveforms.zip](https://github.com/YosysHQ/yosys/files/11522085/waveforms.zip)\r\n\r\nThe RISC-V ELF file running is the following:\r\n[app_buggy.zip](https://github.com/YosysHQ/yosys/files/11522094/app_buggy.zip)\r\n\r\nIt seems that the first instruction that behaves incorrectly is the  `fmadd.d\tf3,f10,f4,f6,rup` at `PC=0x8001f7e8`.\r\n\r\n\r\n### Expected Behavior\r\n\r\nWe expect the CPU to write the value `0x7ff80..0` to the SRAM address `0x3`.\r\n\r\n![waveform](https://github.com/YosysHQ/yosys/assets/28906668/908ff67f-70dc-4ec5-a764-dfbe35642d21)\r\n\r\n\r\n### Actual Behavior\r\n\r\nThe CPU writes `0x7ff00..0` instead.\r\n\r\n### Comparing the VCD files\r\n\r\nI compared the two VCD files automatically, but Yosys naturally introduces mismatches that are usually benign (such as  identifying constants), hence analyzing from the mismatches is challenging. In this log, I show you the first mismatch for each signal whose name matches between the CPU that went though Yosys and the one which did not:\r\n[vcd_mismatches.log](https://github.com/YosysHQ/yosys/files/11522102/vcd_mismatches.log)\r\n\r\n### Why should the problem come from Yosys?\r\n\r\nTwo other suspicious utilities are sv2v (used just before Yosys) and Verilator (used just after).\r\nThe problem does not seem to come from sv2v, since the output of sv2v still behaves correctly.\r\nThe problem also does not seem to come from Verilator, because using Modelsim leads to the same result.\r\n\r\nThanks!",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-05-20",
+  "closed_at": null,
+  "code_blocks": [
+    "yosys read_verilog -defer -sv $VERILOG_INPUT\r\nyosys hierarchy -top $TOP_MODULE -check\r\nyosys proc\r\nyosys opt -purge\r\nyosys write_verilog -sv -noattr $VERILOG_OUTPUT"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

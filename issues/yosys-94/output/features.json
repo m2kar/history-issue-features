@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 94,
+  "title": "check pass falsely warns of undriven wire",
+  "features": [
+    {
+      "name": "output wire driven only by submodule instance port",
+      "category": "general",
+      "description": "Code should include an output wire that is driven exclusively through a submodule instantiation's port connection, with no assign or always block driving it directly",
+      "snippet": "module S (input [7:0] in, output reg [7:0] out);\n  always @(*) out = in;\nendmodule\n\nmodule top (input [31:0] in, output [31:0] out);\n  S S_0 (in[31:24], out[31:24]),\n    S_1 (in[23:16], out[23:16]),\n    S_2 (in[15:8], out[15:8]),\n    S_3 (in[7:0], out[7:0]);\nendmodule",
+      "tags": ["module_instantiation", "output_wire", "port_connection", "undriven_wire"],
+      "source_bug_id": "94",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/94",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "comma-separated multi-instance declaration driving output slices",
+      "category": "general",
+      "description": "Code should include multiple instances of the same module declared in a comma-separated instantiation list, where each instance drives a different bit slice of a shared output wire",
+      "snippet": "S S_0 (in[31:24], out[31:24]),\n  S_1 (in[23:16], out[23:16]),\n  S_2 (in[15:8], out[15:8]),\n  S_3 (in[7:0], out[7:0]);",
+      "tags": ["module_instantiation", "multi_instance", "bit_slice", "output_wire"],
+      "source_bug_id": "94",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/94",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "hierarchical module with combinational case statement",
+      "category": "control_flow",
+      "description": "Code should include a submodule implementing a combinational lookup table using a full case statement inside an always @(*) block with nonblocking assignments",
+      "snippet": "module S (input [7:0] in, output reg [7:0] out);\n  always @(*)\n    case (in)\n      8'h00: out <= 8'h63;\n      8'h01: out <= 8'h7c;\n      8'h02: out <= 8'h77;\n      default: out <= 8'h00;\n    endcase\nendmodule",
+      "tags": ["always_comb", "case_statement", "lookup_table", "nonblocking_assignment"],
+      "source_bug_id": "94",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/94",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

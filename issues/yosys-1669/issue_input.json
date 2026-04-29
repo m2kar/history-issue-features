@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1669,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1669",
+  "title": "Make RTLIL attributes accessible via pyosys",
+  "body": "Currently, the pyosys wrapper generator disregards any information on inheritance. As most of the RTLIL classes (Module, Cell, Wire, ...) derive their attribute capabilites from AttrObject, their accessors are lost during wrapper generation.\r\n\r\nThis patch adds a basic notion of inheritance to the wrapper generation process. Now one can do:\r\n\r\n```\r\n[thasti@pc]$ cat test.v \r\nmodule test();\r\n    (* my_attr = 1 *) wire attrwire;\r\nendmodule\r\n\r\n[thasti@pc]$ cat yo.py \r\nfrom pyosys import libyosys as ys\r\n\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog test.v\", design)\r\nmod = design.module(ys.IdString(\"\\\\test\"))\r\nprint(\"Module Source Attribute: %s \" % mod.get_src_attribute())\r\nwire = mod.wire(ys.IdString(ys.IdString(\"\\\\attrwire\")))\r\nprint(\"All Wire Attributes: %s\" % wire.attributes)\r\n\r\n[thasti@pc]$ python yo.py \r\n\r\n-- Running command `read_verilog test.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing Verilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nSuccessfully finished Verilog frontend.\r\nModule Source Attribute: test.v:1 \r\nAll Wire Attributes: {IdString \"\\my_attr\": Const \"00000000000000000000000000000001\", IdString \"\\src\": Const \"0111010001100101011100110111010000101110011101100011101000110010\"}\r\n[thasti@pc]$ \r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-30",
+  "closed_at": "2020-02-10",
+  "code_blocks": [
+    "[thasti@pc]$ cat test.v \r\nmodule test();\r\n    (* my_attr = 1 *) wire attrwire;\r\nendmodule\r\n\r\n[thasti@pc]$ cat yo.py \r\nfrom pyosys import libyosys as ys\r\n\r\ndesign = ys.Design()\r\nys.run_pass(\"read_verilog test.v\", design)\r\nmod = design.module(ys.IdString(\"\\\\test\"))\r\nprint(\"Module Source Attribute: %s \" % mod.get_src_attribute())\r\nwire = mod.wire(ys.IdString(ys.IdString(\"\\\\attrwire\")))\r\nprint(\"All Wire Attributes: %s\" % wire.attributes)\r\n\r\n[thasti@pc]$ python yo.py \r\n\r\n-- Running command `read_verilog test.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test.v\r\nParsing Verilog input from `test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test'.\r\nSuccessfully finished Verilog frontend.\r\nModule Source Attribute: test.v:1 \r\nAll Wire Attributes: {IdString \"\\my_attr\": Const \"00000000000000000000000000000001\", IdString \"\\src\": Const \"0111010001100101011100110111010000101110011101100011101000110010\"}\r\n[thasti@pc]$"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

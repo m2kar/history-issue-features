@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2565,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2565",
+  "title": "Yosys doesn't allow some delay specifications",
+  "body": "  I have Verilog that I want to be common & the same for simulation and synthesis, but there's an incompatibility when Yosys gets to this #DELAY in procedural continuous assignment.\r\n\r\n  ```\r\n  assign #(DELAY_RISE, DELAY_FALL) Y = computed;\r\n  ```\r\n  ### Actual behavior:\r\n  \r\n  ERROR: syntax error, unexpected ','\r\n  \r\n  ### Expected behavior:\r\n  \r\n  I guess Yosys is supposed to throw away the DELAY specification (it's not for synthesis). It accepts a single DELAY value no problem. Can we enhance it to accept a pair or a triplet; that is, with commas as below in **A.2.2.3**?\r\n  \r\n  Incidentally Yosys also accepts:\r\n  \r\n  ```\r\n  assign #(DELAY_RISE : DELAY_RISE : DELAY_FALL) Y = computed;\r\n  ```\r\n  ...this is min-typical-max form, which is different and isn't for my use case.\r\n  \r\n  ### Workaround:\r\n  \r\n  I've not had a need to use `ifdef SYNTHESIS so far. But without fixing this front-end parsing, I might have to use it.\r\n  \r\n  ### Background:\r\n  \r\n  I looked in the LRM. (Yes, I must be enthused about this.) Some technical definitions:\r\n  \r\n  ```\r\n  delay3 ::= (From Annex A - A.2.2.3)\r\n  # delay_value | # ( delay_value [ , delay_value [ , delay_value ] ] )\r\n  delay2 ::=\r\n  # delay_value | # ( delay_value [ , delay_value ] )\r\n  delay_value ::=\r\n    unsigned_number\r\n  | parameter_identifier\r\n  | specparam_identifier\r\n  | mintypmax_expression\r\n  ```\r\n  ```\r\n  mintypmax_expression ::=\r\n    expression\r\n  | expression : expression : expression\r\n  ```\r\n  \r\n  Also we can see the reason for existing constraint in a front-end parser file:\r\n  \r\n  ```\r\n  non_opt_delay:\r\n\t  '#' TOK_ID { delete $2; } |\r\n\t  '#' TOK_CONSTVAL { delete $2; } |\r\n\t  '#' TOK_REALVAL { delete $2; } |\r\n\t  '#' '(' expr ')' { delete $3; } |\r\n\t  '#' '(' expr ':' expr ':' expr ')' { delete $3; delete $5; delete $7; };\r\n  ```\r\n\r\n  There's no good reason for rejecting the delay2 or delay3 format, is there?\r\n  \r\n  _If you're good with it, do you want me to do the PR?_ Thanks\r\n",
+  "labels": [
+    "enhancement",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-27",
+  "closed_at": "2021-02-24",
+  "code_blocks": [
+    "assign #(DELAY_RISE, DELAY_FALL) Y = computed;",
+    "assign #(DELAY_RISE : DELAY_RISE : DELAY_FALL) Y = computed;",
+    "non_opt_delay:\r\n\t  '#' TOK_ID { delete $2; } |\r\n\t  '#' TOK_CONSTVAL { delete $2; } |\r\n\t  '#' TOK_REALVAL { delete $2; } |\r\n\t  '#' '(' expr ')' { delete $3; } |\r\n\t  '#' '(' expr ':' expr ':' expr ')' { delete $3; delete $5; delete $7; };"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1241,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1241",
+  "title": "Partial initialization of reg unexpectedly overridden with x",
+  "body": "Below is the problematic code `test.v`:\n\n```verilog\n`timescale 1ns/1ps\nmodule qfhclxakch(in1, clock_0, clock_2, out99);\n  input wire [1:0] in1;\n  input wire clock_0;\n  input wire clock_2;\n  output wire [27:14] out99;\n  wire [8:0] _133_;\n  reg [21:0] reg_1;\n  \n  initial begin\n    reg_1 = 22'h000000;\n  end\n\n  assign _133_ = in1[1] ? { 8'h00, in1[0] } : reg_1[13:4];\n  assign out99 = reg_1[13:0];\n\n  always @(negedge clock_0, posedge clock_2)\n    if (clock_2) reg_1 <= 22'h0003cb;\n    else reg_1 <= { reg_1[21:13], _133_, reg_1[3:0] };\n\nendmodule\n```\n\nAnd the corresponding testbench file `tb.v`:\n\n```verilog\n`timescale 1ns/1ps\nmodule tb_qfhclxakch;\n\n  reg  [1:0] in1;\n  reg        clock_0;\n  reg        clock_2;\n  wire [27:14] out99;\n\n  qfhclxakch dut (\n      .in1     (in1),\n      .clock_0 (clock_0),\n      .clock_2 (clock_2),\n      .out99   (out99)\n  );\n\n  initial begin\n    {in1, clock_0, clock_2} = 0;\n    #2000;\n    $display(\"reg1: %b\", dut.reg_1);\n    \n    $finish;\n  end\nendmodule\n```\n\nThe following commands reproduce the issue:\n\n```\niverilog test.v tb.v \n./a.out\n```\n\niverilog produces the following output:\n\n```\nreg1: 000000000xxxxxxxxx0000\ntb.v:21: $finish called at 2000000 (1ps)\n```\n\nIt can be seen that the initialization of `reg_1` in `test.v` is only partially effective, as the bits in the \\[12:4] range are initialized to `x`. I suspect the issue is related to the line `reg_1 <= { reg_1[21:13], _133_, reg_1[3:0] };`, since `_133_` corresponds to that range. I'm not sure whether this behavior is expected.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-02",
+  "closed_at": "2025-05-02",
+  "code_blocks": [
+    "`timescale 1ns/1ps\nmodule qfhclxakch(in1, clock_0, clock_2, out99);\n  input wire [1:0] in1;\n  input wire clock_0;\n  input wire clock_2;\n  output wire [27:14] out99;\n  wire [8:0] _133_;\n  reg [21:0] reg_1;\n  \n  initial begin\n    reg_1 = 22'h000000;\n  end\n\n  assign _133_ = in1[1] ? { 8'h00, in1[0] } : reg_1[13:4];\n  assign out99 = reg_1[13:0];\n\n  always @(negedge clock_0, posedge clock_2)\n    if (clock_2) reg_1 <= 22'h0003cb;\n    else reg_1 <= { reg_1[21:13], _133_, reg_1[3:0] };\n\nendmodule",
+    "`timescale 1ns/1ps\nmodule tb_qfhclxakch;\n\n  reg  [1:0] in1;\n  reg        clock_0;\n  reg        clock_2;\n  wire [27:14] out99;\n\n  qfhclxakch dut (\n      .in1     (in1),\n      .clock_0 (clock_0),\n      .clock_2 (clock_2),\n      .out99   (out99)\n  );\n\n  initial begin\n    {in1, clock_0, clock_2} = 0;\n    #2000;\n    $display(\"reg1: %b\", dut.reg_1);\n    \n    $finish;\n  end\nendmodule",
+    "reg1: 000000000xxxxxxxxx0000\ntb.v:21: $finish called at 2000000 (1ps)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

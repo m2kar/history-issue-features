@@ -26,6 +26,16 @@ RAW_DIR = ROOT / "raw"
 REPOS = {
     "verilator": "verilator/verilator",
     "circt": "llvm/circt",
+    "iverilog": "steveicarus/iverilog",
+    "yosys": "YosysHQ/yosys",
+}
+
+# 基线数据在 mirtl-pocs 中使用 "icarus" 命名，项目内统一用 "iverilog"
+BASELINE_NAME = {
+    "verilator": "verilator",
+    "circt": "circt",
+    "iverilog": "icarus",
+    "yosys": "yosys",
 }
 
 BASELINE_DIR = Path("/edazz/mirtl-pocs/issues")
@@ -54,7 +64,7 @@ def save_crawl_state(state: dict):
 
 def copy_baseline(tool: str) -> bool:
     """复制基线数据到 raw/ 目录."""
-    src = BASELINE_DIR / f"{tool}.jsonl"
+    src = BASELINE_DIR / f"{BASELINE_NAME.get(tool, tool)}.jsonl"
     dst = RAW_DIR / f"{tool}.jsonl"
     if not src.exists():
         print(f"  Baseline not found: {src}")
@@ -212,7 +222,7 @@ def deduplicate_jsonl(tool: str):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action="store_true", help="Full crawl (copy baseline + incremental)")
-    parser.add_argument("--repo", choices=["verilator", "circt"], help="Only crawl specific repo")
+    parser.add_argument("--repo", choices=list(REPOS.keys()), help="Only crawl specific repo")
     parser.add_argument("--dedup-only", action="store_true", help="Only deduplicate existing data")
     args = parser.parse_args()
 

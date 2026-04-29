@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 5548,
+  "title": "opt_dff: skip convertion to dffe for keep wires",
+  "features": [
+    {
+      "name": "keep attribute on wire feeding mux-driven flip-flop",
+      "category": "preprocess",
+      "description": "Code should include a wire marked with (* keep *) attribute that serves as output of a MUX, where the MUX feeds a register (flip-flop) and the MUX select signal is derived from the register output",
+      "snippet": "(* keep *) wire ff_d;\nreg ff_q;\nwire select_i;\nassign ff_d = select_i ? data_i : ff_q;\nalways @(posedge clk_i) ff_q <= ff_d;",
+      "tags": ["keep", "attribute", "mux", "flip-flop", "dffe"],
+      "source_bug_id": "5548",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5548",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "dffe conversion when mux select becomes register enable",
+      "category": "data_model",
+      "description": "Code should include a flip-flop driven by a MUX where the MUX select signal becomes the enable signal in an enable flop (dffe) conversion",
+      "snippet": "wire select_i;\nwire data_i;\nwire ff_q;\n\\$_MUX_ mux (.A(ff_q), .B(data_i), .S(select_i), .Y(ff_d));\n\\$_DFFE_PP_ dffe (.C(clk_i), .D(data_i), .E(select_i), .Q(ff_q));",
+      "tags": ["mux", "dffe", "enable", "conversion", "opt_dff"],
+      "source_bug_id": "5548",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/5548",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 219,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/219",
+  "title": "SystemVerilog explicit resizing and signedness",
+  "body": "Consider the following Verilog file `Main.sv`:\r\n\r\n```\r\nmodule Main();\r\n\r\n   logic[2:0] a = 3'b111;\r\n   logic signed[2:0] a_signed = 3'b111;\r\n\r\n   logic[2:0] b = 0;\r\n\r\n   logic[3:0] c0;\r\n   logic[3:0] c1;\r\n\r\n   initial begin\r\n      c0 = 4'($signed(a)) + b;\r\n      c1 = 4'(a_signed) + b;\r\n\r\n      $display(\"c0: %b\", c0);\r\n      $display(\"c1: %b\", c1);\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule\r\n```\r\n\r\nDoing `iverilog -g2012 Main.sv && ./a.out` results in\r\n\r\n```\r\nc0: 0111\r\nc1: 0111\r\n```\r\n\r\nIs this really correct? Consider what the SystemVerilog-2017 standard (I don't have access to the 2012 version) says on p. 133:\r\n\r\n> The signedness shall pass through unchanged, i.e., the signedness of the result shall be the self-determined signedness of the expression inside the cast.\r\n\r\nShouldn't both `c0` and `c1` be `1111`?",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2018-12-03",
+  "closed_at": "2018-12-15",
+  "code_blocks": [
+    "module Main();\r\n\r\n   logic[2:0] a = 3'b111;\r\n   logic signed[2:0] a_signed = 3'b111;\r\n\r\n   logic[2:0] b = 0;\r\n\r\n   logic[3:0] c0;\r\n   logic[3:0] c1;\r\n\r\n   initial begin\r\n      c0 = 4'($signed(a)) + b;\r\n      c1 = 4'(a_signed) + b;\r\n\r\n      $display(\"c0: %b\", c0);\r\n      $display(\"c1: %b\", c1);\r\n\r\n      $finish();\r\n   end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

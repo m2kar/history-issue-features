@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2528,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2528",
+  "title": "Case labels with different width than case expression don't match",
+  "body": "## Steps to reproduce the issue\r\n\r\ntest.v:\r\n```\r\nmodule top(output reg a, b, c);\r\n\talways @* begin\r\n\t\ta = 0;\r\n\t\tb = 0;\r\n\t\tcase (2'b0)\r\n\t\t\t1'b0:    a = 1;\r\n\t\t\tdefault: b = 1;\r\n\t\tendcase\r\n\t\tc = 1'b0 == 2'b0;\r\n\tend\r\nendmodule\r\n\r\n```\r\nRun:\r\n`yosys -p \"synth_ice40 -abc2 -blif test.blif\" test.v`\r\n\r\n## Expected behavior\r\n\r\nI expect that a==1, b==0 and c==1.\r\n\r\n## Actual behavior\r\n\r\nIn the case statement equality seems to be determined differently. 2'b0 is not equal to 1'b0 in the case statement. But they are equal for the equality operator (==).\r\nSo the result I get is a==0, b==1 and c==1.\r\n\r\nIt seems to behave correctly if the case expression is not a literal or constant, like this:\r\n```\r\nwire [1:0] test_wire = 0;\r\n...\r\ncase (test_wire)\r\n\t1'b0:  ...\r\n\tdefault:  ...\r\nendcase\r\n\r\n```\r\nIn this case the label 1'b0 will be chosen, even though its width doesn't match the two bit width of the wire.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-06",
+  "closed_at": "2021-05-25",
+  "code_blocks": [
+    "module top(output reg a, b, c);\r\n\talways @* begin\r\n\t\ta = 0;\r\n\t\tb = 0;\r\n\t\tcase (2'b0)\r\n\t\t\t1'b0:    a = 1;\r\n\t\t\tdefault: b = 1;\r\n\t\tendcase\r\n\t\tc = 1'b0 == 2'b0;\r\n\tend\r\nendmodule",
+    "wire [1:0] test_wire = 0;\r\n...\r\ncase (test_wire)\r\n\t1'b0:  ...\r\n\tdefault:  ...\r\nendcase"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

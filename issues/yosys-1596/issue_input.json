@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1596,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1596",
+  "title": "Yosys crashes on an Internal cell import error when implementing a shift under Verific",
+  "body": "## Steps to reproduce the issue\r\n\r\nWhen using the SymbioticEDA Suite, release 2019106A, Yosys crashes when processing the following Verilog.\r\n\r\n```verilog\r\nmodule\tmcve(i_a, i_b, o_r);\r\n\tinput\twire\t[31:0]\ti_a;\r\n\tinput\twire\t[4:0]\ti_b;\r\n\toutput\twire\t[32:0]\to_r;\r\n\r\n\twire\tsigned\t[32:0]\tw_pre_asr_input, w_pre_asr_shifted;\r\n\r\n\tassign\tw_pre_asr_input = { i_a, 1'b0 };\r\n\tassign\tw_pre_asr_shifted = w_pre_asr_input >>> i_b;\r\n\r\n\tassign \to_r = w_pre_asr_shifted;\r\nendmodule\r\n```\r\n\r\nYosys then crashes when run with,\r\n\r\n```\r\nyosys -p 'read -sv mcve.v; prep -top mcve'\r\n```\r\n\r\n## Expected behavior\r\n\r\nI expect it to prepare the design for formal verification without problems.  (These commands were originally part of an SBY file ...)\r\n\r\n## Actual behavior\r\n\r\nWhen running, I get the following error,\r\n\r\n```text\r\nERROR: Found error in internal cell \\mcve.$verific$shift_right_4$mcve.v:9$4 ($sshr) at kernel/rtlil.cc:790:\r\n  attribute \\src \"mcve.v:9\"\r\n  cell $sshr $verific$shift_right_4$mcve.v:9$4\r\n    parameter \\Y_WIDTH 33\r\n    parameter \\B_WIDTH 5\r\n    parameter \\A_WIDTH 33\r\n    parameter \\B_SIGNED 1\r\n    parameter \\A_SIGNED 1\r\n    connect \\Y \\w_pre_asr_shifted\r\n    connect \\B \\i_b\r\n    connect \\A \\w_pre_asr_input\r\n  end\r\n```\r\n\r\nWhen run under SymbiYosys, the proof fails with an ERROR.  There are no problems when running under the non-commercial version.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-12-26",
+  "closed_at": "2020-01-02",
+  "code_blocks": [
+    "module\tmcve(i_a, i_b, o_r);\r\n\tinput\twire\t[31:0]\ti_a;\r\n\tinput\twire\t[4:0]\ti_b;\r\n\toutput\twire\t[32:0]\to_r;\r\n\r\n\twire\tsigned\t[32:0]\tw_pre_asr_input, w_pre_asr_shifted;\r\n\r\n\tassign\tw_pre_asr_input = { i_a, 1'b0 };\r\n\tassign\tw_pre_asr_shifted = w_pre_asr_input >>> i_b;\r\n\r\n\tassign \to_r = w_pre_asr_shifted;\r\nendmodule",
+    "yosys -p 'read -sv mcve.v; prep -top mcve'",
+    "ERROR: Found error in internal cell \\mcve.$verific$shift_right_4$mcve.v:9$4 ($sshr) at kernel/rtlil.cc:790:\r\n  attribute \\src \"mcve.v:9\"\r\n  cell $sshr $verific$shift_right_4$mcve.v:9$4\r\n    parameter \\Y_WIDTH 33\r\n    parameter \\B_WIDTH 5\r\n    parameter \\A_WIDTH 33\r\n    parameter \\B_SIGNED 1\r\n    parameter \\A_SIGNED 1\r\n    connect \\Y \\w_pre_asr_shifted\r\n    connect \\B \\i_b\r\n    connect \\A \\w_pre_asr_input\r\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

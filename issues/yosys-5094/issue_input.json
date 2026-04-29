@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5094,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5094",
+  "title": "gatemate: Set unused BRAM inputs to 'bx",
+  "body": "As discussed with @mmicko, these changes will reduce the number of CPEs to realize fixed values at the block RAM inputs, if not used.\r\n\r\n_What are the reasons/motivation for this change?_\r\n\r\nIn order to realize fixed values such as zero clamping at the block RAM inputs, we must insert additional CPEs. In many cases, however, these are superfluous: If, for example, a `CC_BRAM_20K` is only configured for a data bus width of 5 bits, the upper bits [15:5] are ignored and do not need to be assigned with zeros.\r\n\r\n_Explain how this is achieved._\r\n\r\nWe change `{A,B}_{BM,DI}` for all `CC_BRAM_{20K,40K}` in `techlibs/gatemate/brams_map.v` to fill the upper bits with `'x`.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\n```\r\n// Single Port RAM (NO_CHANGE)\r\nmodule bram_sp_nc (input we, clk, input [9:0] di, input [7:0] addr, output reg [9:0] dox);\r\n  reg [9:0] memory [0:2**8-1];\r\n\r\n  always @(posedge clk) begin\r\n    if (we)\r\n      memory[addr] <= di;\r\n    else\r\n      dox <= memory[addr];\r\n  end\r\nendmodule\r\n```\r\n\r\nResults in`10'hxxx` being placed before the data bus and bit enable mask instead of `10'h000`:\r\n\r\n```\r\n// ...\r\nCC_BRAM_20K #(\r\n// ...\r\n  .A_BM({ 10'hxxx, _07_, _07_, _07_, _07_, _07_, _07_, _07_, _07_, _07_, _07_ }),\r\n  .A_DI({ 10'hxxx, _05_ }),\r\n// ...\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-06",
+  "closed_at": "2025-05-06",
+  "code_blocks": [
+    "// Single Port RAM (NO_CHANGE)\r\nmodule bram_sp_nc (input we, clk, input [9:0] di, input [7:0] addr, output reg [9:0] dox);\r\n  reg [9:0] memory [0:2**8-1];\r\n\r\n  always @(posedge clk) begin\r\n    if (we)\r\n      memory[addr] <= di;\r\n    else\r\n      dox <= memory[addr];\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

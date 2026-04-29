@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 547,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/547",
+  "title": "`stat` does not appear to output anything when -v or -q is supplied",
+  "body": "## Steps to reproduce the issue\r\n\r\nWith any design at all, write a `.ys` or `.tcl` script that simply synthesizes (or really does anything) and runs `stat` at the end, to output cell information about the selected hierarchy. Next, invoke `yosys` with an argument like `-v2`, and watch how `stat` does nothing. Here is a sample script:\r\n\r\n```\r\nread_verilog *.v\r\n\r\nhierarchy; proc; fsm; opt; memory; opt\r\ntechmap; opt;\r\n\r\nstat\r\n```\r\n\r\nAt the end during the `STAT` pass, there will be no information output at all. This is because `-v` implies `-q` at all levels, which only results in warnings or errors being output (along with the selected log level, iff `-v`)\r\n\r\n## Expected behavior\r\n\r\nI would expect `stat` to always output information about the design, **regardless of if I am executing quietly or at a particular verbosity level**.\r\n\r\nThis is simply because *I literally asked* for the output, by inserting the command explicitly! If there is some implicit usage of `stat` where numbers are printed *without* my explicit usage -- I would like these to respect the verbosity/quiet settings, but otherwise, I think it's reasonable to respect the users request to \"Print lots of output\"\r\n\r\n## Actual behavior\r\n\r\n`stat` returns no output in quiet mode.\r\n\r\n## Motivation\r\n\r\nI have a `.tcl` script which drives `yosys` on a large design in order to report cell count of the final synthesis results -- but I don't care about most of the passes or their output (especially the nested logs). I only care about the stats at the end, more or less. Synthesis takes a few minutes -- thus, I would simply like to run `yosys` at `-v1` to give a \"high level overview\" of where the compilation is at a glance while waiting, and still get the stats at the end. (As a happy coincidence, running at `-v1` produces relatively little output to where I can also trivially see any warnings very easily; I could use `-w` for this, but it's just a nice side bonus of the output being way shorter!)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-05-11",
+  "closed_at": "2018-05-12",
+  "code_blocks": [
+    "read_verilog *.v\r\n\r\nhierarchy; proc; fsm; opt; memory; opt\r\ntechmap; opt;\r\n\r\nstat"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

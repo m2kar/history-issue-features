@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1030,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1030",
+  "title": "Arithmetic shift changes to logic shift after wait statement",
+  "body": "When using an if statement on a wire (here \"result\") the arithmetic right shift operator does not return an arithmetic shift anymore but a logic shift after a wait statement. Even if the wait statement is #0 (tested with #0, #1, #200);\r\n\r\nThis is the minimum required code, that is needed in order to reproduce this bug.\r\nAt the first if, the result is as expected  \"**_1_** 1100100000011001010101010101010\"\r\nAt the second if the result is unexpectedly \"**_0_** 1100100000011001010101010101010\" .\r\n\r\nCode:\r\n```verilog\r\nmodule Bug;\r\n\r\nlocalparam shiftRightArithmetic = 6'b000111;\r\nlocalparam equals               = 6'b001010;\r\n\r\nreg[5:0]  code = shiftRightArithmetic;\r\nreg[31:0] bitstring = 32'b11001000000110010101010101010101;\r\nreg[31:0] shiftAmount = 32'd1;\r\n\r\nwire[31:0] result = code[5:0] == shiftRightArithmetic   ? $signed(bitstring) >>> $signed(shiftAmount) : \r\n                    code[5:0] == equals                 ? $signed(bitstring) == $signed(shiftAmount) : 0;\r\n\r\ninitial begin\r\n    if(result != 32'b11100100000011001010101010101010) //result is fine\r\n        $display(\"1 Arithmetic right-shift not working: \\n Bitstring:%b \\n places:  %d \\n result:   %b \\n expected: %b\\n\", bitstring, shiftAmount, result, 32'b11100100000011001010101010101010);\r\n    #0 \r\n    if(result != 32'b11100100000011001010101010101010) //result is not fine\r\n        $display(\"2 Arithmetic right-shift not working: \\n Bitstring:%b \\n places:  %d \\n result:   %b \\n expected: %b\\n\", bitstring, shiftAmount, result, 32'b11100100000011001010101010101010);\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nresult from command line:\r\n![image](https://github.com/steveicarus/iverilog/assets/50293046/be45348c-57b0-49c8-8c18-54e972072fe0)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-11-14",
+  "closed_at": "2023-11-15",
+  "code_blocks": [
+    "module Bug;\r\n\r\nlocalparam shiftRightArithmetic = 6'b000111;\r\nlocalparam equals               = 6'b001010;\r\n\r\nreg[5:0]  code = shiftRightArithmetic;\r\nreg[31:0] bitstring = 32'b11001000000110010101010101010101;\r\nreg[31:0] shiftAmount = 32'd1;\r\n\r\nwire[31:0] result = code[5:0] == shiftRightArithmetic   ? $signed(bitstring) >>> $signed(shiftAmount) : \r\n                    code[5:0] == equals                 ? $signed(bitstring) == $signed(shiftAmount) : 0;\r\n\r\ninitial begin\r\n    if(result != 32'b11100100000011001010101010101010) //result is fine\r\n        $display(\"1 Arithmetic right-shift not working: \\n Bitstring:%b \\n places:  %d \\n result:   %b \\n expected: %b\\n\", bitstring, shiftAmount, result, 32'b11100100000011001010101010101010);\r\n    #0 \r\n    if(result != 32'b11100100000011001010101010101010) //result is not fine\r\n        $display(\"2 Arithmetic right-shift not working: \\n Bitstring:%b \\n places:  %d \\n result:   %b \\n expected: %b\\n\", bitstring, shiftAmount, result, 32'b11100100000011001010101010101010);\r\nend\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

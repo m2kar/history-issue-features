@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5198,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5198",
+  "title": "add linecoverage command to generate lcov report from selection",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nCreating a useful coverage metric for formal verification is hard, but a simple sanity check coverage metric is to look for any logic that does not feed into any assertions at all. (Similarly to line coverage in software, a line being covered doesn't tell you much about how good your tests are, but a line not being covered at all tells you something about how bad they are.) With the select command it's already easy to find these logic elements, but for better user access this information needs to be exported somehow.\r\n\r\n_Explain how this is achieved._\r\n\r\nThis command takes a selection (the covered elements, for whatever idea of \"covered\" the user has - this doesn't implement the coverage metric) and dumps a report in `lcov` format. (The bare-bones lcov format is easy to create and plenty of tools understand it, and we already generate it in MCY as well.) Any line that is found on a src attribute of a design element not in the selection is marked as uncovered.\r\n\r\nLine coverage is an imperfect metric and the provenance of netlist elements can be a bit vague as well, so there are several aspects to consider when constructing the selection and using this command:\r\n1) The design needs to be flattened to see which portions of higher level modules are covered by assertions in submodules. We'll need to use `design -save` and `design -load` to undo these transformations in flows that don't flatten, e.g. for the `smtbmc` engine in SBY.\r\n2) Several (sometimes structurally completely independent) design elements can have the same source location. This is particularly bad for `always` blocks, where all inferred registers will have the entirety of the block as source (cf. `reg1` and `reg2` in the testcase). Since \"covered\" is weak information but \"uncovered\" is strong information, I chose to have any uncovered element override the line's status.\r\n3) There are several cells in the netlist that don't represent design logic that is expected to count for coverage - e.g. `$scopeinfo` cells, or `$assume` cells and their associated logic implementing the assumed property. I suggest always including any cells and wires that do not feed into any output signals in the selection, so that these are ignored.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\nCurrently my suggested script for exporting structural assertion coverage would be this:\r\n```\r\nprep -flatten -top <top>\r\nselect -set covered t:$assert %ci*\r\nselect -set irrelevant o:* %ci* %n\r\nlinecoverage -lcov coverage.lcov @covered @irrelevant %u\r\n```\r\nIf you have any designs that include formal properties, I would appreciate feedback if those selections produce output that matches your expectations of coverage.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-26",
+  "closed_at": "2025-07-17",
+  "code_blocks": [
+    "prep -flatten -top <top>\r\nselect -set covered t:$assert %ci*\r\nselect -set irrelevant o:* %ci* %n\r\nlinecoverage -lcov coverage.lcov @covered @irrelevant %u"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

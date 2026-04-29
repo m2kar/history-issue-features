@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5042,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5042",
+  "title": "The `value<N>` in CXXRTL does not automatically truncate the value to fit within the bit-width range.",
+  "body": "### Version\n\nYosys 0.52+32 (git sha1 9d3d0a433, clang++ 14.0.0-1ubuntu1.1 -fsanitize=address -fsanitize=undefined -fPIC -O3 -O1 -fno-omit-frame-pointer -fno-optimize-sibling-calls -fsanitize=address,undefined)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following is the problematic `main.cpp` code, which I’ve condensed into just a few lines for the developer’s convenience:\n\n```cpp\n#include <iostream>\n#include <cxxrtl/cxxrtl.h>\n\nusing namespace std;\n\nint main() {\n\tauto a = cxxrtl::value<1>(511u);\n\tcout << a << endl;\n\treturn 0;\n}\n```\n\nThe issue can reproduce with the following command:\n\n```bash\nclang++ -w -g -O3 -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp -o a.out\n./a.out\n```\n\nI discovered this issue while comparing the output of CXXRTL with Verilator and Icarus Verilog. When a CXXRTL `value<N>` is assigned a value greater than its declared bit-width (in the example above, `a` is a 1-bit wide variable assigned the value `511`), CXXRTL does not automatically truncate the value to fit the bit-width. Both Verilator and Icarus Verilog truncate the value to `1`, but CXXRTL outputs `1'1ff`.\n\n### Expected Behavior\n\nCXXRTL's output should perhaps be consistent with Verilator and Icarus Verilog, i.e., `1'1`.\n\n### Actual Behavior\n\nCXXRTL outputs `1'1ff`.",
+  "labels": [
+    "cxxrtl",
+    "fuzzer"
+  ],
+  "state": "open",
+  "created_at": "2025-04-19",
+  "closed_at": null,
+  "code_blocks": [
+    "#include <iostream>\n#include <cxxrtl/cxxrtl.h>\n\nusing namespace std;\n\nint main() {\n\tauto a = cxxrtl::value<1>(511u);\n\tcout << a << endl;\n\treturn 0;\n}",
+    "clang++ -w -g -O3 -std=c++14 -I $(yosys-config --datdir)/include/backends/cxxrtl/runtime main.cpp -o a.out\n./a.out"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

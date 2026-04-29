@@ -1,0 +1,59 @@
+{
+  "tool": "iverilog",
+  "issue_number": 685,
+  "title": "Handle signedness and width expansion for class properties and methods",
+  "features": [
+    {
+      "name": "queue_method_return_signedness",
+      "category": "data_model",
+      "description": "Code should include a queue with signed integer elements where a built-in method like pop_front() is called, causing the signed return value to be incorrectly treated as unsigned",
+      "snippet": "int q[$];\nq.push_back(-1);\n$display(q.pop_front());",
+      "tags": ["queue", "method_call", "signedness", "pop_front"],
+      "source_bug_id": "685",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/685",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "class_property_sign_extension",
+      "category": "data_model",
+      "description": "Code should include a class with a signed shortint property that is used in an arithmetic operation with an unsigned literal, causing incorrect sign extension",
+      "snippet": "class C;\n  shortint x = -1;\nendclass\nC c = new;\n$display(c.x + 32'h0);",
+      "tags": ["class", "property", "shortint", "sign_extension", "arithmetic"],
+      "source_bug_id": "685",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/685",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "ternary_width_expansion_class_property",
+      "category": "control_flow",
+      "description": "Code should include a ternary operator with a class property on one branch and a wide literal on the other, causing width mismatch that crashes vvp",
+      "snippet": "class C;\n  shortint x = -1;\nendclass\nC c = new;\nint x;\nbit a = 1'b1;\nx = a ? c.x : 64'h0;",
+      "tags": ["ternary", "class_property", "width_expansion", "vvp_crash"],
+      "source_bug_id": "685",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/685",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "context_dependent_signedness",
+      "category": "data_model",
+      "description": "Code should include an arithmetic operation where unsigned operands cause the entire expression to be treated as unsigned, losing the signedness of the original value",
+      "snippet": "logic signed [15:0] a = -1;\nlogic [31:0] b = 32'h0;\n$display(a + b);",
+      "tags": ["signedness", "arithmetic", "context", "unsigned_operand"],
+      "source_bug_id": "685",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/pull/685",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

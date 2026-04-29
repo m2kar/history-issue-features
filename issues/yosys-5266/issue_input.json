@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5266,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5266",
+  "title": "Run ABC passes in parallel",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nFor large circuits `AbcPass` can run ABC hundreds or thousands of times, once per unique `clkdomain_t`. Some of those ABC runs take a while. Running those ABCs in parallel is possible, because the cells assigned to each ABC run are disjoint. This PR improves the runtime of `AbcPass` on one of our large circuits by 5x (which translates into a 3x speedup of synthesis end-to-end).\r\n\r\n_Explain how this is achieved._\r\n\r\nThis builds on PR #5239.\r\n\r\nReading and writing RTLIL are not thread-safe for various reasons, and fixing that would be difficult. So for now we stick with reading and writing RTLIL on the main thread. We split up the per-clkdomain work into a \"prepare\" phase which builds the gate netlist and removes the corresponding cells from the module, a \"run ABC\" phase which actually runs ABC, and an \"extract\" phase which processes the results of an ABC run to create fresh cells in the module. Everything happens on the main thread other than the \"run ABC\" phases. For parallelism, we create a set of worker threads which pull work from a concurrent queue fed by the main thread.\r\n\r\nTo simplify things and also provide a small performance boost, the writing of `lutdefs.txt` and `stdcells.genlib` is factored out so it happens just once per pass instead of once per ABC run.\r\n\r\nWriting thread-safe code in C++ is very scary, especially in a large existing project like Yosys not designed for multithreading. Fortunately the \"run ABC\" phase is not large and mostly self-contained so the risk of this PR may be acceptable.\r\n\r\nOne thread safety problem I had to tackle was logging. `Yosys::log()` is not thread-safe and making it thread-safe would be very invasive. The obvious approach of putting locks around everything would slow down the single-threaded case and not scale well for parallel threads, plus the desired behavior of some of the logging functions w.r.t. concurrent logging calls is not clear. So I've created a `DeferredLogs` class which exposes a `log()` function which simply captures the logs for a particular work item into a buffer. Eventually, back on the main thread, those deferred logs are printed via the standard `log()` function. If log timing is enabled then the timestamps are not meaningful; we can fix that by extending the logging API so callers can pass in previously captured timestamps, but I'd prefer to do that after my logging PR #5243 has been merged.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nThe existing Yosys test suite exercises this code fairly well. If we take this PR and especially if we carry on down the road of adding more parallelism, it would be good to run the Yosys test suite with TSAN regularly.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-08-04",
+  "closed_at": "2025-09-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

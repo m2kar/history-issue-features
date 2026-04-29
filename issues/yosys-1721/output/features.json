@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 1721,
+  "title": "deminout: Don't demote inouts with unused bits",
+  "features": [
+    {
+      "name": "inout port with partially used bits",
+      "category": "data_model",
+      "description": "Code should include an inout port where only some bits are used by assignments, with unused bits that should remain high-z rather than being driven to 'x'",
+      "snippet": "module top(input clk, inout [7:0] x);\nreg [3:0] ctr;\nalways @(posedge clk) ctr <= ctr + 1'b1;\nassign x[7:4] = ctr;\nendmodule",
+      "tags": ["inout", "partial_bit_assignment", "high_z", "unused_bits"],
+      "source_bug_id": "1721",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1721",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "inout bit-range slice assignment",
+      "category": "data_model",
+      "description": "Code should include an inout vector port where only an upper or lower bit slice is assigned, leaving the other slice unused",
+      "snippet": "inout [7:0] x;\nassign x[7:4] = ctr;",
+      "tags": ["inout", "bit_slice", "partial_assignment", "unused_bits"],
+      "source_bug_id": "1721",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1721",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "inout to output demotion with mixed usage",
+      "category": "timing",
+      "description": "Code should include an inout port used in two contexts: as output in an assign statement and left unused in other bit positions",
+      "snippet": "inout [7:0] x;\nassign x[7:4] = ctr;",
+      "tags": ["inout", "demotion", "mixed_usage", "high_z"],
+      "source_bug_id": "1721",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1721",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 899,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/899",
+  "title": "Optimization too aggressive?",
+  "body": "## Steps to reproduce the issue\r\n\r\nSynthesizing this:\r\n\r\n```\r\nmodule TOP(input CLK, output reg LED);\r\n\r\nreg [31:0] r[4];\r\nreg [1:0]  rd;\r\nreg [1:0]  step;\r\n\r\ninitial\r\nbegin\r\n  r[0] = 0;\r\n  r[1] = 0;\r\n  r[2] = 0;\r\n  r[3] = 0;\r\n  rd = 0;\r\n  step = 0;\r\nend\r\n\r\nalways @(posedge CLK)\r\nbegin\r\n  case (step)\r\n    0: begin\r\n      step <= 1;\r\n      rd <= 0;\r\n    end\r\n    1: begin\r\n      if (rd != 0)\r\n        r[rd] <= 1;\r\n      step <= 2;\r\n    end\r\n    2: begin\r\n      if (r[1] == 1)\r\n        LED <= 1;\r\n      rd <= 1;\r\n      step <= 1;\r\n    end\r\n  endcase\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nwith Yosys 0.8+ 299 (git sha1 ccfa2fe0, clang 6.0.0 -fPIC -Os):\r\n\r\n```\r\nyosys -p \"read_verilog -noautowire top.v\" -p 'synth_ice40 -top top -blif top.blif'\r\n```\r\n\r\nresults in an empty design.\r\n\r\n## Expected behavior\r\n\r\nDesign is not empty.\r\nLED goes to 1, the second time the FSM is in state 2.\r\n\r\n## Actual behavior\r\n\r\nDesign is empty.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-25",
+  "closed_at": "2019-03-26",
+  "code_blocks": [
+    "module TOP(input CLK, output reg LED);\r\n\r\nreg [31:0] r[4];\r\nreg [1:0]  rd;\r\nreg [1:0]  step;\r\n\r\ninitial\r\nbegin\r\n  r[0] = 0;\r\n  r[1] = 0;\r\n  r[2] = 0;\r\n  r[3] = 0;\r\n  rd = 0;\r\n  step = 0;\r\nend\r\n\r\nalways @(posedge CLK)\r\nbegin\r\n  case (step)\r\n    0: begin\r\n      step <= 1;\r\n      rd <= 0;\r\n    end\r\n    1: begin\r\n      if (rd != 0)\r\n        r[rd] <= 1;\r\n      step <= 2;\r\n    end\r\n    2: begin\r\n      if (r[1] == 1)\r\n        LED <= 1;\r\n      rd <= 1;\r\n      step <= 1;\r\n    end\r\n  endcase\r\nend\r\n\r\nendmodule",
+    "yosys -p \"read_verilog -noautowire top.v\" -p 'synth_ice40 -top top -blif top.blif'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

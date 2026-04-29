@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3187,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3187",
+  "title": "Nexus: error related to optimization around comparison / ccu2.   Includes \"equiv\" check script.",
+  "body": "## Steps to reproduce the issue\r\n\r\nUnpack the attached zip file [ccu2.zip](https://github.com/YosysHQ/yosys/files/8009883/ccu2.zip) and `cd` into the directory `bug`, then run:\r\n```\r\nyosys pool.ys\r\nyosys eq.ys\r\n```\r\nThe first reads `cfu.v` and produces `mapped.v` for Nexus.   The second is a fairly standard equiv checking.   It should prove equivalence.\r\n\r\nThen, edit `pool.ys` to *remove* the `-noccu2` option from the `synth_nexus` command, and rerun the same two yosys commands.\r\n\r\nIt will not be able to prove equivalence.\r\n\r\nThe key computation is:\r\n```\r\n  assign \\$2  = in1[7:0] ^  8'h80;\r\n  assign \\$4  = in0[7:0] ^  8'h80;\r\n  assign \\$6  = \\$2  >  \\$4 ;\r\n  assign result0  = \\$6  ?  in1[7:0] : in0[7:0];\r\n```\r\nThe MSB of in0 and in1 are each inverted before preforming an unsigned comparison, to get the effect of a signed comparison.\r\n\r\nIn the original design, without `-noccu2`, we see the wrong input getting selected, as if the MSB inversion did not happen.\r\n\r\n## Expected behavior\r\n\r\nI would expect it to prove equivalence with or without the `-noccu2` option.\r\n\r\n## Actual behavior\r\n\r\nIt cannot prove equivalence when `-noccu2` is *not* used.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-06",
+  "closed_at": "2022-02-06",
+  "code_blocks": [
+    "assign \\$2  = in1[7:0] ^  8'h80;\r\n  assign \\$4  = in0[7:0] ^  8'h80;\r\n  assign \\$6  = \\$2  >  \\$4 ;\r\n  assign result0  = \\$6  ?  in1[7:0] : in0[7:0];"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

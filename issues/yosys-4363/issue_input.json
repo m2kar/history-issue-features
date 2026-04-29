@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4363,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4363",
+  "title": "Spurious warnings \"select out of bounds on signal\" when there is no such thing ...",
+  "body": "### Version\n\nYosys 0.40+33 (git sha1 34d9a7451, clang++ 14.0.0-1ubuntu1.1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n\r\n```\r\nwget https://people.osmocom.org/tnt/stuff/ice40_spram_gen.v\r\nyosys -p 'read_verilog ice40_spram_gen.v; synth_ice40; write_verilog x.v' -l out.log\r\n```\n\n### Expected Behavior\n\nSynthesis without warning that point to non existent problems.\n\n### Actual Behavior\n\nThe log output contains tons of \r\n\r\n```\r\nice40_spram_gen.v:93: Warning: Range [0:-3] select out of bounds on signal `\\mem_di_w': Setting 3 LSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [1:-2] select out of bounds on signal `\\mem_di_w': Setting 2 LSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [2:-1] select out of bounds on signal `\\mem_di_w': Setting 1 LSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [32:29] select out of bounds on signal `\\mem_di_w': Setting 1 MSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [33:30] select out of bounds on signal `\\mem_di_w': Setting 2 MSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [34:31] select out of bounds on signal `\\mem_di_w': Setting 3 MSB bits to undef.\r\nice40_spram_gen.v:93: Warning: Range [0:-3] select out of bounds on signal `\\mem_di_w': Setting 3 LSB bits to undef.\r\n[...]\r\n```\r\n\r\nThis is line 93:\r\n```\r\n            mem_di_w[(16*x)+(4*o)+:4] =  wr_data[4*n+:4];\r\n```\r\n\r\n`x` and `o` are both positive integer so I'm not even sure how yosys would come up with `[0:-3]` ... \r\n\r\nA bit later in the loop, there is access to another signal (of the same dimensions) with the same range and that one works fine.\r\n\r\n```\r\n            rd_data[4*n+:4]    = mem_do_w[(16*x)+(4*o)+:4];\r\n```\r\n\r\n\r\nDefinitions:\r\n\r\n```\r\n    wire [MDW-1:0] mem_do_w;\r\n    reg  [MDW-1:0] mem_di_w;\r\n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2024-04-29",
+  "closed_at": null,
+  "code_blocks": [
+    "wget https://people.osmocom.org/tnt/stuff/ice40_spram_gen.v\r\nyosys -p 'read_verilog ice40_spram_gen.v; synth_ice40; write_verilog x.v' -l out.log",
+    "mem_di_w[(16*x)+(4*o)+:4] =  wr_data[4*n+:4];",
+    "rd_data[4*n+:4]    = mem_do_w[(16*x)+(4*o)+:4];",
+    "wire [MDW-1:0] mem_do_w;\r\n    reg  [MDW-1:0] mem_di_w;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

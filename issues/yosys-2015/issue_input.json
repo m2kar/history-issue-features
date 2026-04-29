@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2015,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2015",
+  "title": "qbfsat: Add an iterative bisection optimization method and make it the default.",
+  "body": "Overview:\r\n----\r\nIt turns out that Z3's SMT optimization implementation (see #1746 ) sadly really does not support optimizing quantified variables, even though it appears to work for simple examples.\r\n\r\nThis PR adds an alternative: An iterated bisection method.  This method adds a thresholding comparator to the module and `$assume`s that the wire to be optimized is either less-than-or-equal-to (if minimizing) or greater-than-or-equal-to (if maximizing) some constant value.  `yosys-smtbmc` is called multiple times, each time solving an instance of the problem with a different constant threshold value.\r\n\r\nAlgorithm summary:\r\n----\r\nFirst, we solve an instance of the problem with no constraint on the value of the wire to be optimized.  If we cannot find a solution, the problem is UNSAT.  Otherwise, we recover the value of the wire to be optimized under the assignment of the model found by the solver and use this as our starting point for the constant threshold value.\r\n\r\nFrom now on we add the threshold constraint before solving.  If we're maximizing, we first grow the threshold value, doubling it each solver iteration, until we find a value for which we get UNSAT.\r\n\r\nFinally, we bisect the space between success and failure, each time getting closer to a true optimum (assuming no timeouts or `unknown`s).\r\n\r\nDepends:\r\n----\r\n- [x] PR #1996",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-03",
+  "closed_at": "2020-05-25",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

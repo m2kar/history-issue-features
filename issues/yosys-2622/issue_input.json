@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2622,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2622",
+  "title": "Expansion of unsized single bit value not working in port map",
+  "body": "Unsized single bit values preceded by an apostrophe expand to fill the entire width of the target vector in system verilog\r\n\r\ne.g. `logic [1:0] foo = '1; // Equivalent to = 2'b11`\r\n\r\nYosys appears to incorrectly only assign the lowest bit in the vector, when this style of assignment is used in a port map.\r\n\r\nN.B. I assume this is related to #2570 , but I don't really know anything about how the yosys verilog frontend works, so can't provide an opinion!\r\n\r\n## Steps to reproduce the issue\r\n\r\nSave the following source as broken.sv:\r\n```\r\nmodule hier\r\n(\r\n    input [1:0] in,\r\n    output [1:0] out,\r\n);\r\n    assign out = in;\r\nendmodule\r\n\r\nmodule broken\r\n(\r\n    output [1:0] out\r\n);\r\n\r\n    hier inst\r\n    (\r\n        .in('1),\r\n        .out(out)\r\n    );\r\nendmodule\r\n```\r\nRun `yosys -p \"read_verilog -sv broken.sv; synth_ice40; write_verilog\"`\r\n\r\nObserve the value assigned to `out`\r\n\r\nI am running the following build of yosys:\r\n`Yosys 0.9+3981 (git sha1 0e0f8429, clang 11.0.0 -fPIC -Os)`\r\n\r\n## Expected behavior\r\n\r\n`out` is assigned 2'h3\r\n\r\n## Actual behavior\r\n\r\n`out` is assigned 2'h1\r\n\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-03-01",
+  "closed_at": "2021-10-26",
+  "code_blocks": [
+    "module hier\r\n(\r\n    input [1:0] in,\r\n    output [1:0] out,\r\n);\r\n    assign out = in;\r\nendmodule\r\n\r\nmodule broken\r\n(\r\n    output [1:0] out\r\n);\r\n\r\n    hier inst\r\n    (\r\n        .in('1),\r\n        .out(out)\r\n    );\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

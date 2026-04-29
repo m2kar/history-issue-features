@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 727,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/727",
+  "title": "Handle non-blocking event control to lvalue concatenation",
+  "body": "A non-blocking event controlled assignment consists of 3 steps.\r\n\r\n * Setup event\r\n * Perform assignment\r\n * Clear event\r\n\r\nThis works fine if the lvalue is a singular value. If the lvalue is a\r\nconcatenation multiple assignments are generated and the event is cleared\r\nafter each assignment. As a result only the first assignment is event\r\ncontrolled. All other assignments will be regular non-blocking assignments.\r\n\r\nE.g.\r\n\r\n```SystemVerilog\r\nreg x, y;\r\nevent e;\r\n{x,y} <= @e 2'b11;\r\n#1\r\n$display(x, y); // x will be 1'b1, y will be 1'bx\r\n```\r\n\r\nTo resolve this the event needs to be cleared after all assignments have\r\nbeen done. This requires changes to both tgt-vvp and the vvp runtime.\r\n\r\ntgt-vvp is updated to only insert a single `%evctl/c` instruction for each\r\nevent controlled non-blocking assignment.\r\n\r\nThe vvp runtime is not updated to implicitly clear the event in the\r\n`%assign/vec4/e` instruction and instead rely on the explicit `%evctl/c`.\r\n\r\nThere is also a small bug where event control assignments to an array\r\nelement with a dynamic part select goes to the wrong array element. E.g.\r\n\r\n```SystemVerilog\r\nreg [3:0] a[1:0];\r\ninteger i = 0;\r\nevent e;\r\na[1][i+:2] <= @e 2'b10; // Will write to the wrong array element\r\n->e;\r\n```\r\nFix this as well.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-04",
+  "closed_at": "2022-06-06",
+  "code_blocks": [
+    "reg x, y;\r\nevent e;\r\n{x,y} <= @e 2'b11;\r\n#1\r\n$display(x, y); // x will be 1'b1, y will be 1'bx",
+    "reg [3:0] a[1:0];\r\ninteger i = 0;\r\nevent e;\r\na[1][i+:2] <= @e 2'b10; // Will write to the wrong array element\r\n->e;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

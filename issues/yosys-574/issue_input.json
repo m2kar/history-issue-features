@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 574,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/574",
+  "title": "Possible Miscompile during Block RAM Inference?",
+  "body": "## Steps to reproduce the issue\r\nTo test something regarding BRAM inference, I created a `yosys` script that duplicates the commands of `synth_ice40` _up until the `fine`_ label, at which point I write out to a file.\r\n\r\nI compile a verilog module called `bram.v` (a generic inferable block RAM) using two scripts- `bram.ys`, which uses the `synth_ice40` command directly, and `bram-man.ys` which is described in the previous paragraph. Just out of curiosity, I also provide an `extra` target in the Makefile, which finishes up synthesis using `synth_ice40 -run fine:`. Here is a test case: [bram.zip](https://github.com/YosysHQ/yosys/files/2147669/bram.zip)\r\n\r\n## Expected behavior\r\nSince the commands being run in each script are nominally the same I would have expected both scripts to have similar output, with inferred BRAM mapped to `SB_RAM40_4K` in both files.\r\n\r\n## Actual behavior\r\nInstead, the synthesis script `bram-man.ys` almost matches the input `bram.v` file, as if most (but not all) optimizations and passes were ignored on the design; write enables got lifted out of the `always` block, however. As expected, if you run `make extra`, yosys ultimately maps memory to a rather large amount of flip-flops instead.\r\n\r\nIs this a bug, or does `synth_ice40` do more than provide a thin wrapper around the listed commands in the manual on page 134-135?\r\n\r\n## Version\r\n```\r\nWilliam@William-THINK MINGW64 ~/src/iverilog\r\n$ yosys -V\r\nYosys 0.7+606 (git sha1 7e5801be, x86_64-w64-mingw32-g++ 7.3.0 -Os)\r\n```\r\n\r\n(This commit may not match anything in tree- see #573)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-06-29",
+  "closed_at": "2018-06-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

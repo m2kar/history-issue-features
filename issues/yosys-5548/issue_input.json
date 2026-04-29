@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5548,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5548",
+  "title": "opt_dff: skip convertion to dffe for keep wires",
+  "body": "Assuming a module with a FF input marked as `keep` like this:\r\n```verilog\r\nmodule test (\r\n    input  wire clk_i,\r\n    input  wire data_i,\r\n    input  wire select_i,\r\n    output wire out_o\r\n);\r\n    (* keep *) wire ff_d;\r\n    reg ff_q;\r\n\r\n    assign ff_d = select_i ? data_i : ff_q;\r\n    always @(posedge clk_i) ff_q <= ff_d;\r\n\r\n    assign out_o = ff_q;\r\nendmodule\r\n```\r\n\r\nCurrently `opt_dff` will convert this unconditionally into a enable flop but because the signal is marked as `keep` no actual optimization is possible and the preceding MUX must be kept.  \r\nThis results in something like this:\r\n```verilog\r\nmodule test(clk_i, data_i, select_i, out_o);\r\n  input clk_i;\r\n  wire clk_i;\r\n  input data_i;\r\n  wire data_i;\r\n  (* keep = 32'd1 *)\r\n  (* unused_bits = \"0\" *)\r\n  wire ff_d;\r\n  wire ff_q;\r\n  output out_o;\r\n  wire out_o;\r\n  input select_i;\r\n  wire select_i;\r\n  \\$_MUX_  mux  (\r\n    .A(ff_q),\r\n    .B(data_i),\r\n    .S(select_i),\r\n    .Y(ff_d)\r\n  );\r\n  \\$_DFFE_PP_  dffe  (\r\n    .C(clk_i),\r\n    .D(data_i),\r\n    .E(select_i),\r\n    .Q(ff_q)\r\n  );\r\n  assign out_o = ff_q;\r\nendmodule\r\n```\r\nNote that `ff_d` is kept but is not functional anymore, instead the control signal directly controls the enable of the FF.  \r\n\r\nIn my opinion, this violates what `keep` is meant to do (even though technically it is 'kept') as it changes the signals functions.  \r\nSometimes it is important to keep these kind of signals exactly as-is, for example if constraints need to be applied at a later stage.\r\n\r\n\r\nWhile searching for places to perform optimizations in `opt_dff`, it checks if the signal is marked as `keep` and skips it (does not add it to `bit2mux` which is then used to check for the specific optimizations).  \r\nThis should disable this specific dff->dffe conversion but also all others that may violate the `keep` (this could lose some optimization potential but since `keep` signals should be sparse, the penalty is likely extremely small).\r\n\r\n_Make sure your change comes with tests. If not possible, share how a reviewer might evaluate it._\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-12-15",
+  "closed_at": null,
+  "code_blocks": [
+    "module test (\r\n    input  wire clk_i,\r\n    input  wire data_i,\r\n    input  wire select_i,\r\n    output wire out_o\r\n);\r\n    (* keep *) wire ff_d;\r\n    reg ff_q;\r\n\r\n    assign ff_d = select_i ? data_i : ff_q;\r\n    always @(posedge clk_i) ff_q <= ff_d;\r\n\r\n    assign out_o = ff_q;\r\nendmodule",
+    "module test(clk_i, data_i, select_i, out_o);\r\n  input clk_i;\r\n  wire clk_i;\r\n  input data_i;\r\n  wire data_i;\r\n  (* keep = 32'd1 *)\r\n  (* unused_bits = \"0\" *)\r\n  wire ff_d;\r\n  wire ff_q;\r\n  output out_o;\r\n  wire out_o;\r\n  input select_i;\r\n  wire select_i;\r\n  \\$_MUX_  mux  (\r\n    .A(ff_q),\r\n    .B(data_i),\r\n    .S(select_i),\r\n    .Y(ff_d)\r\n  );\r\n  \\$_DFFE_PP_  dffe  (\r\n    .C(clk_i),\r\n    .D(data_i),\r\n    .E(select_i),\r\n    .Q(ff_q)\r\n  );\r\n  assign out_o = ff_q;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

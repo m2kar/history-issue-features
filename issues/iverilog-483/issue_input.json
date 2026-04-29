@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 483,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/483",
+  "title": "$bits on item in a generate block fails when used in a constant expression",
+  "body": "```SystemVerilog\r\nmodule top;\r\n\tparameter ENABLE = 1;\r\n\tif (ENABLE) begin : blk\r\n\t\twire [7:0] w;\r\n\tend\r\n\twire [7:0] x;\r\n\twire [$bits(blk.w)-1:0] y;\r\n\twire [$bits(x)-1:0] z;\r\n\tinitial begin\r\n\t\t$display(\"blk.w: %b (%0d bits)\", blk.w, $bits(blk.w));\r\n\t\t$display(\"x: %b (%0d bits)\", x, $bits(x));\r\n\t\t$display(\"y: %b (%0d bits)\", y, $bits(y));\r\n\t\t$display(\"z: %b (%0d bits)\", z, $bits(z));\r\n\tend\r\nendmodule\r\n```\r\n\r\nWhen simulating the above test case, most tools produce:\r\n```\r\nblk.w: zzzzzzzz (8 bits)\r\nx: zzzzzzzz (8 bits)\r\ny: zzzzzzzz (8 bits)\r\nz: zzzzzzzz (8 bits)\r\n```\r\n\r\nHowever, iverilog (both version 11.0 and the latest master) produces:\r\n```\r\nblk.w: zzzzzzzz (8 bits)\r\nx: zzzzzzzz (8 bits)\r\ny: xx (0 bits)\r\nz: zzzzzzzz (8 bits)\r\n```\r\nNotice that `$bits(blk.w)` correctly evaluates to `8` in the `$display` call, but not in the declaration of `y`.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-02-09",
+  "closed_at": "2024-04-06",
+  "code_blocks": [
+    "module top;\r\n\tparameter ENABLE = 1;\r\n\tif (ENABLE) begin : blk\r\n\t\twire [7:0] w;\r\n\tend\r\n\twire [7:0] x;\r\n\twire [$bits(blk.w)-1:0] y;\r\n\twire [$bits(x)-1:0] z;\r\n\tinitial begin\r\n\t\t$display(\"blk.w: %b (%0d bits)\", blk.w, $bits(blk.w));\r\n\t\t$display(\"x: %b (%0d bits)\", x, $bits(x));\r\n\t\t$display(\"y: %b (%0d bits)\", y, $bits(y));\r\n\t\t$display(\"z: %b (%0d bits)\", z, $bits(z));\r\n\tend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

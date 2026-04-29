@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3288,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3288",
+  "title": "BTOR Support for $slice",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun the `splice` pass in a synthesis script that later uses `write_btor` pass. \r\n\r\n```\r\nread_verilog -sv test.v;\r\nhierarchy -top test;\r\nhierarchy -check;\r\nproc; opt;\r\nopt_expr -mux_undef; opt;\r\nrename -hide;\r\nsplice; opt;\r\nmemory;\r\nflatten;\r\nsplitnets -driver;\r\nsetundef -zero -undriven;\r\nopt; dffunmap;\r\nwrite_btor test.btor;\r\n```\r\nThe Verilog design requires just a simple slicing like cnt[2:1] at any point.\r\n```\r\nmodule test (clk, rst, add, cnt);\r\n    input clk;\r\n    input rst;\r\n    input [3:0] add;\r\n    output reg [3:0] cnt;\r\n    \r\n    initial cnt = 0;\r\n    always @(posedge clk) begin\r\n        cnt <= cnt + add;\r\n        if (rst) cnt <= 0;\r\n    end\r\n    assert property (cnt != 4'b0100);\r\n    assume property (add[2:1] == 2'b00);\r\nendmodule\r\n```\r\n## Expected behavior\r\n\r\nYosys produces a BTOR file called `test.btor`. The BTOR format supports `slice` and the Yosys BTOR backend generates them implicitly when the `splice` pass is not called.\r\n\r\n## Actual behavior\r\n\r\n```\r\n...\r\n16. Executing BTOR backend.\r\nERROR: Unsupported cell type $slice for cell test.$auto$splice.cc:78:get_sliced_signal$12.\r\n```",
+  "labels": [],
+  "state": "open",
+  "created_at": "2022-04-22",
+  "closed_at": null,
+  "code_blocks": [
+    "read_verilog -sv test.v;\r\nhierarchy -top test;\r\nhierarchy -check;\r\nproc; opt;\r\nopt_expr -mux_undef; opt;\r\nrename -hide;\r\nsplice; opt;\r\nmemory;\r\nflatten;\r\nsplitnets -driver;\r\nsetundef -zero -undriven;\r\nopt; dffunmap;\r\nwrite_btor test.btor;",
+    "module test (clk, rst, add, cnt);\r\n    input clk;\r\n    input rst;\r\n    input [3:0] add;\r\n    output reg [3:0] cnt;\r\n    \r\n    initial cnt = 0;\r\n    always @(posedge clk) begin\r\n        cnt <= cnt + add;\r\n        if (rst) cnt <= 0;\r\n    end\r\n    assert property (cnt != 4'b0100);\r\n    assume property (add[2:1] == 2'b00);\r\nendmodule",
+    "...\r\n16. Executing BTOR backend.\r\nERROR: Unsupported cell type $slice for cell test.$auto$splice.cc:78:get_sliced_signal$12."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2912,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2912",
+  "title": "memory_share: Ports with write enable wired straight to input wrongly skipped for SAT-based port sharing.",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun `proc; opt -full; memory_share; dump` on:\r\n\r\n```\r\nmodule top(...);\r\ninput [3:0] ra;\r\noutput [3:0] rd;\r\ninput [3:0] wa1, wa2;\r\ninput [3:0] wd1, wd2;\r\ninput we, clk;\r\n\r\nreg[3:0] mem[0:15];\r\n\r\nassign rd = mem[ra];\r\n\r\nalways @(posedge clk)\r\n        if(we)\r\n                mem[wa1] <= wd1;\r\n        else\r\n                mem[wa2] <= wd2;\r\n\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe two trivially shareable write ports are merged into one (as happens when `opt -full` is run after `memory_share` instead of before).\r\n\r\n## Actual behavior\r\n\r\nThe ports are not shared — the first port (with `wa1` address) is considered ineligible for merging because its enable is directly wired to module input and does not have a driver.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-04",
+  "closed_at": "2021-08-04",
+  "code_blocks": [
+    "module top(...);\r\ninput [3:0] ra;\r\noutput [3:0] rd;\r\ninput [3:0] wa1, wa2;\r\ninput [3:0] wd1, wd2;\r\ninput we, clk;\r\n\r\nreg[3:0] mem[0:15];\r\n\r\nassign rd = mem[ra];\r\n\r\nalways @(posedge clk)\r\n        if(we)\r\n                mem[wa1] <= wd1;\r\n        else\r\n                mem[wa2] <= wd2;\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

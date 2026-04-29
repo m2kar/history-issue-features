@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3821,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3821",
+  "title": "CXXRTL: bus error when performing the \">>>\" operation",
+  "body": "### Version\n\nYosys 0.30+33 (git sha1 f9257d319, gcc 8.3.0-6 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nVerilog file `top.v`:\r\n```verilog\r\nmodule top (\r\n    output reg [2:0] shr,\r\n    input clk,\r\n    input wire signed [2:0] i1,\r\n    input wire signed [2:0] i2\r\n  );\r\n  always @(posedge clk)\r\n    shr <= (i1 >>> i2);\r\nendmodule\r\n```\r\n\r\nC++ file `replay.cpp`:\r\n```cpp\r\n#include \"top.cpp\"\r\n#include <iostream>\r\n\r\nint main()\r\n{\r\n\tcxxrtl_design::p_top top;\r\n\ttop.step();\r\n\r\n\t// Set inputs\r\n\ttop.p_i1.set<uint8_t>(4u);\r\n\ttop.p_i2.set<uint8_t>(4u);\r\n\r\n\ttop.p_clk.set(false);\r\n\ttop.step();\r\n\ttop.p_clk.set(true);\r\n\ttop.step();\r\n\r\n\t// Check outputs\r\n\tstd::cout << \"shr = \" << top.p_shr.get<uint32_t>() << \"\\n\";\r\n\r\n\treturn 0;\r\n}\r\n```\r\n\r\nRun:\r\n```\r\nyosys -p \"read_verilog top.v; write_cxxrtl top.cpp\"\r\ng++ replay.cpp -I$(yosys-config --datdir)/include\r\n./a.out\r\n```\n\n### Expected Behavior\n\nThe program should print the value of `shr` and exit.\n\n### Actual Behavior\n\nThe program exited unexpectedly due to a \"bus error\":\r\n```\r\nProgram received signal SIGBUS, Bus error.\r\n```\r\nat\r\nhttps://github.com/YosysHQ/yosys/blob/f9257d319271917aac30f7bfb4f5b154ff559b18/backends/cxxrtl/cxxrtl.h#L450",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-24",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "module top (\r\n    output reg [2:0] shr,\r\n    input clk,\r\n    input wire signed [2:0] i1,\r\n    input wire signed [2:0] i2\r\n  );\r\n  always @(posedge clk)\r\n    shr <= (i1 >>> i2);\r\nendmodule",
+    "#include \"top.cpp\"\r\n#include <iostream>\r\n\r\nint main()\r\n{\r\n\tcxxrtl_design::p_top top;\r\n\ttop.step();\r\n\r\n\t// Set inputs\r\n\ttop.p_i1.set<uint8_t>(4u);\r\n\ttop.p_i2.set<uint8_t>(4u);\r\n\r\n\ttop.p_clk.set(false);\r\n\ttop.step();\r\n\ttop.p_clk.set(true);\r\n\ttop.step();\r\n\r\n\t// Check outputs\r\n\tstd::cout << \"shr = \" << top.p_shr.get<uint32_t>() << \"\\n\";\r\n\r\n\treturn 0;\r\n}",
+    "yosys -p \"read_verilog top.v; write_cxxrtl top.cpp\"\r\ng++ replay.cpp -I$(yosys-config --datdir)/include\r\n./a.out"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

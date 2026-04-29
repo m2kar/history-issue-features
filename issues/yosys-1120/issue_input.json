@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1120,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1120",
+  "title": "Infinite loop when techmap file has implicitly declared identifier",
+  "body": "## Steps to reproduce the issue\r\n\r\n`./yosys -p \"techmap -map tm.v\" top.v -f \"verilog -icells\"`\r\n\r\n`top.v`:\r\n```\r\nmodule top(input [31:0] A, input [4:0] B, output Y);\r\n\\$shiftx #(.A_WIDTH(32), .B_WIDTH(5), .A_SIGNED(0), .B_SIGNED(0), .Y_WIDTH(1)) u0 (.A(A), .B(B), .Y(Y));\r\nendmodule\r\n```\r\n\r\n`tm.v`:\r\n```\r\nmodule \\$shiftx (A, B, Y);\r\n  parameter A_SIGNED = 0;\r\n  parameter B_SIGNED = 0;\r\n  parameter A_WIDTH = 500;\r\n  parameter B_WIDTH = 1;\r\n  parameter Y_WIDTH = 1;\r\n\r\n  input [A_WIDTH-1:0] A;\r\n  input [B_WIDTH-1:0] B;\r\n  output [Y_WIDTH-1:0] Y;\r\n\r\n  wire [A_WIDTH-1:0] A_forward;\r\n  assign A_forward[A_WIDTH-1] = A[WIDTH-1];\r\nendmodule\r\n```\r\n\r\n\r\n## Expected behavior\r\n\r\nNo infinite loop. \r\n\r\n## Actual behavior\r\n\r\nInfinite loop. I actually missed the warning message because of all the other logging.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-20",
+  "closed_at": "2019-06-21",
+  "code_blocks": [
+    "module top(input [31:0] A, input [4:0] B, output Y);\r\n\\$shiftx #(.A_WIDTH(32), .B_WIDTH(5), .A_SIGNED(0), .B_SIGNED(0), .Y_WIDTH(1)) u0 (.A(A), .B(B), .Y(Y));\r\nendmodule",
+    "module \\$shiftx (A, B, Y);\r\n  parameter A_SIGNED = 0;\r\n  parameter B_SIGNED = 0;\r\n  parameter A_WIDTH = 500;\r\n  parameter B_WIDTH = 1;\r\n  parameter Y_WIDTH = 1;\r\n\r\n  input [A_WIDTH-1:0] A;\r\n  input [B_WIDTH-1:0] B;\r\n  output [Y_WIDTH-1:0] Y;\r\n\r\n  wire [A_WIDTH-1:0] A_forward;\r\n  assign A_forward[A_WIDTH-1] = A[WIDTH-1];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

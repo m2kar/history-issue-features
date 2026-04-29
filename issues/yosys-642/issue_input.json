@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 642,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/642",
+  "title": "Yosys segfault on $past(X,parameter_value-1)",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun yosys, and read the attached file using read_verilog -formal mcve.v.\r\n\r\n    module testing(clk, in, out);\r\n        parameter DEPTH=10;\r\n        input wire clk, in;\r\n        output reg out;\r\n    \r\n        always @(posedge clk)\r\n            out <= $past(in,DEPTH-1);\r\n    endmodule\r\n\r\n## Expected behavior\r\n\r\nI would have expected this to implement $past(in,9) without the segfault, or if this wasn't supported it should provide a description of what caused the segfault and why.\r\n\r\n## Actual behavior\r\n\r\nSegfault\r\n\r\n## Analysis\r\n\r\nI traced this bug down as far as line [1788 of simplify.cc](https://github.com/YosysHQ/yosys/blob/master/frontends/ast/simplify.cc#L1788).  That's the line where the second argument of $past is processed.  The value returned is given as the constant zero, rather than the constant nine.  When the code the enters the [loop at 1803](https://github.com/YosysHQ/yosys/blob/master/frontends/ast/simplify.cc#L1803), the number of iterations is zero.  As a result, outreg is left as NULL and the segfault takes place on [line 1834](https://github.com/YosysHQ/yosys/blob/master/frontends/ast/simplify.cc#L1834).\r\n\r\nDan",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-09-26",
+  "closed_at": "2018-09-30",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

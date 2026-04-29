@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 560,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/560",
+  "title": "tranif1 not working",
+  "body": "The simple modeling of an sram cell using transif1 switch not working properly... I got this example from Moorby Thomas text book on verilog... the issue is that the transif1 switch can't set the value of  cross coupled inverters (the storage element),  the default drive strength should be strong drive (I think) which should the win the battle again (pull0, pull1) strengthed inverters... notice that if you run the iverilog on the sram code below, you get HiZ at all time\r\nthis is incorrect...\r\n\r\n/* the code of an sram cell modeling*/\r\nmodule sram (output dataOut, \r\n\tinput address, dataIn, write);\r\n tri w1, w3, w4;\r\n bufif1 g1(w1, dataIn, write);\r\n tranif1 g2(w4, w1, address);\r\n not (pull0, pull1) g3(w3,w4),g4(w4,w3);\r\n buf g5(dataOut,w1);\r\nendmodule\r\n\r\nmodule wave_sram #(parameter d=100);\r\nwire dataOut;\r\nreg addr, dataIn, write;\r\n\r\nsram c(dataOut, addr, dataIn, write);\r\n\r\ninitial\r\nbegin\r\n\t$dumpfile(\"sram.vcd\");\r\n\t$dumpvars;\r\n\t#d dis;\r\n\t#d addr=1;    #d dis;\r\n\t#d dataIn=1;  #d dis;\r\n\t#d write=1;   #d dis;\r\n\t#d write=0;   #d dis;\r\n\t#d write='bx; #d dis;\r\n\t#d addr ='bx; #d dis;\r\n\t#d addr = 1;  #d dis;\r\n\t#d write =0;  #d dis;\r\n\r\nend\r\n\r\ntask dis;\r\n $display($stime,, \"addr=%v d_In=%v write=%v d_out = %v \",\r\n\t addr, dataIn, write, dataOut,\r\n\t \"(134)=%b%b%b\", c.w1, c.w3, c.w4,\r\n\t \"  w134=%v %v %v\", c.w1, c.w3, c.w4);\r\nendtask\r\nendmodule",
+  "labels": [
+    "Bug"
+  ],
+  "state": "open",
+  "created_at": "2021-11-07",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

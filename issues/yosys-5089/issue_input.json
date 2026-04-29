@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5089,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5089",
+  "title": "cutpoint: Re-add whole module optimization",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\n#4854 inadvertently removed the optimization for when a whole module was selected.\r\n\r\n_Explain how this is achieved._\r\n\r\nAdds whole module optimization back, as well as a test script for it.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nRun following script:\r\n```\r\nread_verilog << EOT\r\n(* blackbox *)\r\nmodule bb (input a, b, output o);\r\nendmodule\r\n\r\nmodule sub_mod(input a, b, output o);\r\n    bb bb2 (.a (a), .b (b), .o (o));\r\nendmodule\r\nEOT\r\n\r\nhierarchy -top sub_mod\r\ncutpoint sub_mod\r\n```\r\n\r\nWith latest Yosys (before this change):\r\n```\r\n3. Executing CUTPOINT pass.\r\nRemoving cell sub_mod.bb2, making all cell outputs cutpoints.\r\nMaking wire sub_mod.$auto$rtlil.cc:3769:Anyseq$2 a cutpoint.\r\nMaking output wire sub_mod.o a cutpoint.\r\nMaking wire sub_mod.b a cutpoint.\r\nMaking wire sub_mod.a a cutpoint.\r\n```\r\nNote that `sub_mod.$auto$rtlil.cc:3769:Anyseq$2` was added by cutpoint when removing cell `sub_mod.bb2`, only to be removed immediately after.\r\n\r\nWith Yosys before #4854 (e.g. 0.51), and with this change:\r\n```\r\n3. Executing CUTPOINT pass.\r\nMaking all outputs of module sub_mod cut points, removing module contents.\r\n```",
+  "labels": [
+    "merge-soon"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-05",
+  "closed_at": "2025-05-15",
+  "code_blocks": [
+    "read_verilog << EOT\r\n(* blackbox *)\r\nmodule bb (input a, b, output o);\r\nendmodule\r\n\r\nmodule sub_mod(input a, b, output o);\r\n    bb bb2 (.a (a), .b (b), .o (o));\r\nendmodule\r\nEOT\r\n\r\nhierarchy -top sub_mod\r\ncutpoint sub_mod",
+    "3. Executing CUTPOINT pass.\r\nRemoving cell sub_mod.bb2, making all cell outputs cutpoints.\r\nMaking wire sub_mod.$auto$rtlil.cc:3769:Anyseq$2 a cutpoint.\r\nMaking output wire sub_mod.o a cutpoint.\r\nMaking wire sub_mod.b a cutpoint.\r\nMaking wire sub_mod.a a cutpoint.",
+    "3. Executing CUTPOINT pass.\r\nMaking all outputs of module sub_mod cut points, removing module contents."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

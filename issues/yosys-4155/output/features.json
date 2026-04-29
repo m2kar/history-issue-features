@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 4155,
+  "title": "Error at ICE40_DSP pass: coAssert `nusers(O.extract_end(i)) <= 1' failed in ./passes/pmgen/ice40_dsp_pm.h:388.",
+  "features": [
+    {
+      "name": "SB_MAC16 dual 8x8 multiplier configuration",
+      "category": "data_model",
+      "description": "Code should include an SB_MAC16 instantiation configured via defparam for dual 8x8 unsigned multiplication with TOPOUTPUT_SELECT=2 and BOTOUTPUT_SELECT=2",
+      "snippet": "SB_MAC16 mult8x8 (.A({input_2a_8, input_1a_8}), .B({input_2b_8, input_1b_8}), .O(output_32), .CLK(clk));\ndefparam mult8x8.TOPOUTPUT_SELECT = 2'b10;\ndefparam mult8x8.BOTOUTPUT_SELECT = 2'b10;\ndefparam mult8x8.A_SIGNED = 1'b0;\ndefparam mult8x8.B_SIGNED = 1'b0;",
+      "tags": ["sb_mac16", "dual_multiplier", "ice40", "defparam"],
+      "source_bug_id": "yosys-4155",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4155",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "input concatenation for MAC16 bus formation",
+      "category": "data_model",
+      "description": "Code should include concatenation of two 8-bit inputs into a 16-bit bus used as SB_MAC16 A or B port",
+      "snippet": "wire [7:0] input_1a_8, input_1b_8, input_2a_8, input_2b_8;\nwire [15:0] a_bus = {input_2a_8, input_1a_8};\nwire [15:0] b_bus = {input_2b_8, input_1b_8};",
+      "tags": ["concatenation", "mac16_input", "bus_formation"],
+      "source_bug_id": "yosys-4155",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4155",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "output part-selection to split MAC32 result",
+      "category": "data_model",
+      "description": "Code should include part-selection of a 32-bit wire to extract two 16-bit multiplication results from SB_MAC16",
+      "snippet": "wire [31:0] output_32;\nassign output_1_16 = output_32[15:0];\nassign output_2_16 = output_32[31:16];",
+      "tags": ["part_select", "output_split", "mac16_output"],
+      "source_bug_id": "yosys-4155",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4155",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "syn_hier hard attribute on module instantiating DSP",
+      "category": "preprocess",
+      "description": "Code should include a module with synthesis syn_hier attribute set to hard that instantiates a DSP primitive",
+      "snippet": "module video_modulator(output reg [5:0] luma) /* synthesis syn_hier = \"hard\" */;\n    SB_MAC16 mult8x8 (...);\nendmodule",
+      "tags": ["synthesis_attribute", "syn_hier", "hard", "dsp_instantiation"],
+      "source_bug_id": "yosys-4155",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4155",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ]
+}

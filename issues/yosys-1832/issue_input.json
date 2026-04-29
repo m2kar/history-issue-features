@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1832,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1832",
+  "title": "Clean up pseudo-private member usage in `passes/cmds/design.cc`.",
+  "body": "Mostly straightforward.\r\n\r\nThe interesting parts are things like (orig. line 233):\r\n```\r\n\t\t\tif (copy_to_design->modules_.count(prefix))\r\n\t\t\t\tdelete copy_to_design->modules_.at(prefix);\r\n```\r\nchanging to:\r\n```\r\n\t\t\tif (copy_to_design->module(prefix) != nullptr)\r\n\t\t\t\tcopy_to_design->remove(copy_to_design->module(prefix));\r\n```\r\n\r\nThe `if` condition is a standard change.  But the mechanics change from `delete`ing it to `remove()`ing it.  `remove()` does `delete` it, too, but it also erases the entry in `modules_` (which should have been done before, no?) and notifies any monitors.\r\n\r\nSimilarly, the lines changed to e.g:\r\n```\r\n\t\t\t\t\t\tRTLIL::Module *t = fmod->clone();\r\n\t\t\t\t\t\tt->name = trg_name;\r\n\t\t\t\t\t\tt->design = copy_to_design;\r\n\t\t\t\t\t\tt->attributes.erase(\"\\\\top\");\r\n\t\t\t\t\t\tcopy_to_design->add(t);\r\n```\r\nnow use the proper `add()` method rather than brute forcing it into `modules_` directly.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-28",
+  "closed_at": "2020-03-30",
+  "code_blocks": [
+    "if (copy_to_design->modules_.count(prefix))\r\n\t\t\t\tdelete copy_to_design->modules_.at(prefix);",
+    "if (copy_to_design->module(prefix) != nullptr)\r\n\t\t\t\tcopy_to_design->remove(copy_to_design->module(prefix));",
+    "RTLIL::Module *t = fmod->clone();\r\n\t\t\t\t\t\tt->name = trg_name;\r\n\t\t\t\t\t\tt->design = copy_to_design;\r\n\t\t\t\t\t\tt->attributes.erase(\"\\\\top\");\r\n\t\t\t\t\t\tcopy_to_design->add(t);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

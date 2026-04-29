@@ -1,0 +1,24 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5166,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5166",
+  "title": "Unexpected splitnets -ports behavior after #5095 (name single bit arrays as arrays)",
+  "body": "### Version\n\nc21cd300a07d3b00cb12eccc0fa3f66c31c89bf0\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n#5095 recently added the ability to treat single bit verilog arrays, i.e. `wire x [0:0];`, as multi bit arrays for the purposes of naming. However, this seems to not work how I'd expect for `splitnets -ports`.\n\ntest case TCL:\n```\nyosys verific -sv test_module.sv\nyosys verific -import test_module\nyosys splitnets -ports -format \"__:\"\nyosys write_verilog out.v\n```\n\ntest case SV:\n```\nmodule test_module (\n  a,\n  b,\n  x,\n  y\n);\n  input logic [0:0] a;\n  output logic [0:0] b;\n  input logic [1:0] x;\n  output logic [1:0] y;\n  assign b = a;\n  assign y = x;\nendmodule\n```\n\n\n### Expected Behavior\n\nContents of out.v:\n\n```\nmodule test_module(b_0_, x_0_, x_1_, y_0_, y_1_, a_0_);\n  input a_0_;\n  wire a_0_;\n  output b_0_;\n  wire b_0_;\n  input x_0_;\n  wire x_0_;\n  input x_1_;\n  wire x_1_;\n  output y_0_;\n  wire y_0_;\n  output y_1_;\n  wire y_1_;\n  assign b = a;\nendmodule\n```\n\n### Actual Behavior\n\nContents of out.v:\n\n```\n\nmodule test_module(b, x_0_, x_1_, y_0_, y_1_, a);\n  input [0:0] a;\n  wire [0:0] a;\n  output [0:0] b;\n  wire [0:0] b;\n  input x_0_;\n  wire x_0_;\n  input x_1_;\n  wire x_1_;\n  output y_0_;\n  wire y_0_;\n  output y_1_;\n  wire y_1_;\n  assign b = a;\nendmodule\n```\n\nWould it be possible for the [0:0] array ports to be split with the provided naming convention as well?",
+  "labels": [
+    "bug",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2025-06-04",
+  "closed_at": "2025-06-11",
+  "code_blocks": [
+    "yosys verific -sv test_module.sv\nyosys verific -import test_module\nyosys splitnets -ports -format \"__:\"\nyosys write_verilog out.v",
+    "module test_module (\n  a,\n  b,\n  x,\n  y\n);\n  input logic [0:0] a;\n  output logic [0:0] b;\n  input logic [1:0] x;\n  output logic [1:0] y;\n  assign b = a;\n  assign y = x;\nendmodule",
+    "module test_module(b_0_, x_0_, x_1_, y_0_, y_1_, a_0_);\n  input a_0_;\n  wire a_0_;\n  output b_0_;\n  wire b_0_;\n  input x_0_;\n  wire x_0_;\n  input x_1_;\n  wire x_1_;\n  output y_0_;\n  wire y_0_;\n  output y_1_;\n  wire y_1_;\n  assign b = a;\nendmodule",
+    "module test_module(b, x_0_, x_1_, y_0_, y_1_, a);\n  input [0:0] a;\n  wire [0:0] a;\n  output [0:0] b;\n  wire [0:0] b;\n  input x_0_;\n  wire x_0_;\n  input x_1_;\n  wire x_1_;\n  output y_0_;\n  wire y_0_;\n  output y_1_;\n  wire y_1_;\n  assign b = a;\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

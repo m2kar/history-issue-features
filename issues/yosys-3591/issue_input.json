@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3591,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3591",
+  "title": "Suboptimal muxcover result due to incorrect / overly pessimistic cost estimate",
+  "body": "### Version\n\nYosys 0.23 (git sha1 7ce5011c2, clang 14.0.0-1ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```\r\nread_verilog << EOF\r\nmodule test (A, S, Y);\r\n\tparameter INPUTS = 6;\r\n\r\n\tinput [INPUTS-1:0] A;\r\n\tinput [$clog2(INPUTS)-1:0] S;\r\n  \r\n\twire [15:0] AA = {{(16-INPUTS){1'b0}}, A};\r\n\twire [3:0] SS = {{(4-$clog2(INPUTS)){1'b0}}, S};\r\n  \r\n\toutput Y = SS[3] ? (SS[2] ? SS[1] ? (SS[0] ? AA[15] : AA[14])\r\n  \t\t\t\t\t  : (SS[0] ? AA[13] : AA[12])\r\n\t\t\t\t  : SS[1] ? (SS[0] ? AA[11] : AA[10])\r\n\t\t\t\t\t  : (SS[0] ? AA[9] : AA[8]))\r\n  \t\t\t : (SS[2] ? SS[1] ? (SS[0] ? AA[7] : AA[6])\r\n\t\t\t\t   \t  : (SS[0] ? AA[5] : AA[4])\r\n\t\t\t\t  : SS[1] ? (SS[0] ? AA[3] : AA[2])\r\n\t\t\t\t\t  : (SS[0] ? AA[1] : AA[0]));\r\nendmodule\r\nEOF\r\n\r\nprep\r\nsimplemap t:\\$mux\r\nmuxcover\r\n```\n\n### Expected Behavior\n\n1 MUX8 (total cost: 460)\n\n### Actual Behavior\n\n3 MUX2, 1 MUX4 (total cost: 520)\r\n\r\nForcing the MUX8 implementation by running `debug muxcover -mux8 ; show` instead of just `muxcover` reveals that an unnecessary/trivial decode mux and buffer are added which results in an overly pessimistic assumed total cost of 550 instead of 460 for the MUX8 implemenation.\r\n\r\nI've tried to look into this, and it seems like `prepare_decode_mux` prepares the unnecessary decode mux when called with `A = S[0]`, `B = $auto$muxcover.cc:203:prepare_decode_mux$22` (which is a new wire added by a previous call of `prepare_decode_mux`), and `sel = S[2]`. It is only later that `implement_decode_mux` assigns a buffered copy of `S[0]` to `$auto$muxcover.cc:203:prepare_decode_mux$22` which renders the decode mux unnecessary. While the decode mux and buffer get optimized away by a subsequent `opt`, the suboptimal mux implementation itself remains. I am not sure how to fix this though, because I am not yet very familiar with the code.\r\n\r\nThe issue also occurs for `parameter INPUTS = 5` but not `parameter INPUTS = 7` Similarly, e.g. for `parameter INPUTS = 14` an implementation with 1 MUX2 and 2 MUX8 (total cost 1020) is chosen instead of 1 MUX16 (total cost 940).",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2022-12-16",
+  "closed_at": "2023-02-27",
+  "code_blocks": [
+    "read_verilog << EOF\r\nmodule test (A, S, Y);\r\n\tparameter INPUTS = 6;\r\n\r\n\tinput [INPUTS-1:0] A;\r\n\tinput [$clog2(INPUTS)-1:0] S;\r\n  \r\n\twire [15:0] AA = {{(16-INPUTS){1'b0}}, A};\r\n\twire [3:0] SS = {{(4-$clog2(INPUTS)){1'b0}}, S};\r\n  \r\n\toutput Y = SS[3] ? (SS[2] ? SS[1] ? (SS[0] ? AA[15] : AA[14])\r\n  \t\t\t\t\t  : (SS[0] ? AA[13] : AA[12])\r\n\t\t\t\t  : SS[1] ? (SS[0] ? AA[11] : AA[10])\r\n\t\t\t\t\t  : (SS[0] ? AA[9] : AA[8]))\r\n  \t\t\t : (SS[2] ? SS[1] ? (SS[0] ? AA[7] : AA[6])\r\n\t\t\t\t   \t  : (SS[0] ? AA[5] : AA[4])\r\n\t\t\t\t  : SS[1] ? (SS[0] ? AA[3] : AA[2])\r\n\t\t\t\t\t  : (SS[0] ? AA[1] : AA[0]));\r\nendmodule\r\nEOF\r\n\r\nprep\r\nsimplemap t:\\$mux\r\nmuxcover"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

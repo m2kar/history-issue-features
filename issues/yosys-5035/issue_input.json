@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5035,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5035",
+  "title": "Wide mux cells ($_MUX4_ et al) are incorrectly marked as evaluable",
+  "body": "### Version\n\n0.52\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nRun the below script\n```\nread_rtlil << EOF\nmodule \\gold\n\n  wire input 1 \\A\n  wire input 2 \\B\n  wire input 3 \\C\n  wire input 4 \\D\n  wire input 5 \\S\n  wire input 6 \\T\n  wire output 7 \\Y\n\n  cell $_MUX4_ \\UUT\n    connect \\A \\A\n    connect \\B \\B\n    connect \\C \\C\n    connect \\D \\D\n    connect \\S \\S\n    connect \\T \\T\n    connect \\Y \\Y\n  end\nend\nEOF\n\neval -set-undef -table A,S,T\n```\n(This isn't a perfect test, since the `eval` command doesn't actually check `is_evaluable` and returns values for non evaluable cells such as `$_FF_`, but it's a close enough proxy for the purposes of this bug report)\n\n### Expected Behavior\n\nShould return a result, as with\n```\nread_rtlil << EOF\nmodule \\gold\n\n  wire input 1 \\A\n  wire input 2 \\B\n  wire input 3 \\S\n  wire output 4 \\Y\n\n  cell $_MUX_ \\UUT\n    connect \\A \\A\n    connect \\B \\B\n    connect \\S \\S\n    connect \\Y \\Y\n  end\nend\nEOF\n\neval -set-undef -table A,S\n```\n\n### Actual Behavior\n\nHangs forever.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-04-16",
+  "closed_at": null,
+  "code_blocks": [
+    "read_rtlil << EOF\nmodule \\gold\n\n  wire input 1 \\A\n  wire input 2 \\B\n  wire input 3 \\C\n  wire input 4 \\D\n  wire input 5 \\S\n  wire input 6 \\T\n  wire output 7 \\Y\n\n  cell $_MUX4_ \\UUT\n    connect \\A \\A\n    connect \\B \\B\n    connect \\C \\C\n    connect \\D \\D\n    connect \\S \\S\n    connect \\T \\T\n    connect \\Y \\Y\n  end\nend\nEOF\n\neval -set-undef -table A,S,T",
+    "read_rtlil << EOF\nmodule \\gold\n\n  wire input 1 \\A\n  wire input 2 \\B\n  wire input 3 \\S\n  wire output 4 \\Y\n\n  cell $_MUX_ \\UUT\n    connect \\A \\A\n    connect \\B \\B\n    connect \\S \\S\n    connect \\Y \\Y\n  end\nend\nEOF\n\neval -set-undef -table A,S"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

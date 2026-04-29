@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 726,
+  "title": "write_verilog: inline internal cells that are used exactly once",
+  "features": [
+    {
+      "name": "unary plus with double signed cast in expression",
+      "category": "data_model",
+      "description": "Code should include a $signed expression with nested unary operators like + $signed(- value) that would benefit from single-use inlining",
+      "snippet": "wire [16:0] _04_;\nassign _04_ = + $signed(_05_);\nwire [17:0] _07_;\nassign _07_ = $signed(_03_) + $signed(_04_);",
+      "tags": ["signed_conversion", "unary_operator", "inlining"],
+      "source_bug_id": "yosys-726",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/726",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "concatenation assignment on left-hand side",
+      "category": "data_model",
+      "description": "Code should include a concatenation assignment on the LHS where the concatenated result comes from a single-use wire, benefiting from inlining",
+      "snippet": "wire [16:0] _02_;\nassign _02_ = + $signed(_07_);\nassign _02_ = + $signed(_07_);\nwire [16:0] _02_;\nwire co;\nwire [15:0] o;\n{ co, o } = _02_;",
+      "tags": ["concatenation_lhs", "assignment", "inlining"],
+      "source_bug_id": "yosys-726",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/726",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "casez with equality comparisons as selectors",
+      "category": "control_flow",
+      "description": "Code should include a casez statement with multiple equality comparisons as selector expressions that can be inlined",
+      "snippet": "casez ({ 1'h1, sel == 2'h2, sel == 1'h1, sel == 0'b0 })\n  4'bzzz1: o = a | b;\n  4'bzz1z: o = a & b;\n  4'bz1zz: o = a ^ b;\n  4'b1zzz: { co, o } = _02_;\nendcase",
+      "tags": ["casez", "equality_comparison", "selector", "inlining"],
+      "source_bug_id": "yosys-726",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/726",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "single use wire assignments with operators",
+      "category": "data_model",
+      "description": "Code should include wire assignments where an intermediate wire is driven by a single cell and consumed exactly once by another expression, eligible for inlining",
+      "snippet": "wire [15:0] _00_;\nassign _00_ = a & b;\nwire _06_;\nassign _06_ = sel == 0'b0;\nwire _10_;\nassign _10_ = a | b;",
+      "tags": ["wire_assignment", "single_use", "inlining"],
+      "source_bug_id": "yosys-726",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/726",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

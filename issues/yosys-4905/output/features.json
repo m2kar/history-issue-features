@@ -1,0 +1,55 @@
+{
+  "tool": "yosys",
+  "issue_number": 4905,
+  "title": "synth_gatemate output netlist incompatible with Gatemate PnR",
+  "features": [
+    {
+      "name": "initial_block_with_write_task",
+      "category": "control_flow",
+      "description": "Code should include an initial block containing $write system task calls. The $write task is a non-synthesizable integrated task that writes formatted strings during simulation. When present in a netlist for PnR tools like Gatemate, this causes incompatibility as PnR tools cannot process such initial blocks. The feature demonstrates the need to eliminate or avoid $write tasks in synthesizable output netlists.",
+      "snippet": "initial begin if (1'h1) begin $write(\"Preloading $paramod\\\\serving_ram from %s\\n\", $unsigned(88'h636f72655f34362e686578)); end end",
+      "tags": ["initial-block", "write-task", "non-synthesizable", "gatemate"],
+      "source_bug_id": "yosys-4905",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4905",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "unsigned_cast_in_write_argument",
+      "category": "data_model",
+      "description": "Code should include a $unsigned() function call used within a $write task argument. This cast operation converts a value to unsigned type for display formatting. Such type conversions are common in display tasks but represent non-synthesizable constructs that should be eliminated before PnR.",
+      "snippet": "$unsigned(88'h636f72655f34362e686578)",
+      "tags": ["unsigned-cast", "write-task", "type-conversion"],
+      "source_bug_id": "yosys-4905",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4905",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "conditional_write_initial_block",
+      "category": "control_flow",
+      "description": "Code should include an if statement inside an initial block controlling a $write task. The condition is a constant expression (1'h1), which means the write will always execute. Such conditionally-controlled display tasks are non-synthesizable and should be removed for PnR compatibility.",
+      "snippet": "if (1'h1) begin $write(\"Preloading $paramod\\\\serving_ram from %s\\n\", $unsigned(88'h636f72655f34362e686578)); end",
+      "tags": ["conditional-write", "initial-block", "constant-condition", "non-synthesizable"],
+      "source_bug_id": "yosys-4905",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4905",
+      "construct_complexity": 2,
+      "ub_type": null
+    },
+    {
+      "name": "hex_encoded_string_literal_in_write",
+      "category": "general",
+      "description": "Code should include a hex-encoded string literal inside a $write task. The string contains encoded data (e.g., 'core_46.hex') represented as hex values. These display-formatted strings with encoded parameter names are non-synthesizable constructs used for debugging output and should not appear in PnR-compatible netlists.",
+      "snippet": "\"Preloading $paramod$76ca5ad6cddf78bc518e7753a546bede55c5cafa\\\\serving_ram from %s\\n\"",
+      "tags": ["hex-string", "write-task", "string-literal", "encoded-data"],
+      "source_bug_id": "yosys-4905",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4905",
+      "construct_complexity": 2,
+      "ub_type": null
+    }
+  ]
+}

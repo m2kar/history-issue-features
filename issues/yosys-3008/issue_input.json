@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3008,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3008",
+  "title": "Lattice ECP5: primitive instantiation sometimes yields 'cells_not_processed'",
+  "body": "**Context**: using Yosys toolchain on MSYS2, with VHDL source files, using Yosys GHDL plugin. Tried on Linux as well with the latest toolchain built from git, same result.\r\n\r\nThe exact same primitive instantiation ('ODDRX1F') in the exact same source file, but in two different projects, works in one project, but yields a  'cells_not_processed' attribute in another (again, the source file instantiating it is the same, but there are different source files otherwise).\r\n\r\nIn Yosys report, this can be seen as 'ODDRX1F' appearing in all uppercase in the cells list when it's correctly processed (first project), and as 'oddrx1f' in all lowercase when it's not processed correctly (second project). I looked at the JSON output, and the difference is this:\r\n\r\nFirst project where it's OK (just pasting the part with a difference):\r\n\r\n> \"ODDRX1F\": {\r\n>       \"attributes\": {\r\n>         \"blackbox\": \"00000000000000000000000000000001\",\r\n>         \"src\": \"D:\\\\Programs\\\\msys64\\\\mingw64\\\\bin\\\\../share/yosys/ecp5/cells_bb.v:250.1-255.10\"\r\n>       },\r\n> \r\n\r\nSecond project where it's  not:\r\n\r\n> \"ODDRX1F\": {\r\n>       \"attributes\": {\r\n>         \"blackbox\": \"00000000000000000000000000000001\",\r\n>         \"cells_not_processed\": \"00000000000000000000000000000001\",\r\n>         \"src\": \"D:\\\\Programs\\\\msys64\\\\mingw64\\\\bin\\\\../share/yosys/ecp5/cells_bb.v:250.1-255.10\"\r\n>       },\r\n\r\nSo as one can see, the only difference seems to be the  \"cells_not_processed\" attribute in the case which fails.\r\n\r\nAnother difference in the JSON files is that in the second case, there is an additional cell (in all lowercase) like this:\r\n\r\n> oddrx1f\": {\r\n>       \"attributes\": {\r\n>         \"blackbox\": \"00000000000000000000000000000001\"\r\n>       },\r\n\r\nThe instantiation is again in the same source file (a SDRAM controller), and it is like so:\r\n\r\n> SDRAM_Clock: ODDRX1F\r\n> \t\tport map (SCLK => Clock, RST => Reset, D0 => '0', D1 => '1', Q => SDRAM_CLK);\r\n\r\nThanks for any pointers. I do not see why this would be treated in a different way in both projects while the instantiation is exactly the same in the same source file.\r\n\r\nI encountered a similar issue with another primitive: DP16KD.\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2021-09-14",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

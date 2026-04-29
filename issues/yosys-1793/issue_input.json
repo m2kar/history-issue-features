@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1793,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1793",
+  "title": "rmports doesn't remove unused module output.",
+  "body": "## Steps to reproduce the issue\r\n    module TOP(a, b, y);\r\n      input [3:0] a, b;\r\n      output [2:0] y;\r\n      reg [2:0] tmp;\r\n      wire NC;\r\n      sub p(a, b, {NC, tmp});\r\n      assign y = tmp;\r\n    endmodule\r\n    \r\n    module sub(as, bs, ys);\r\n      input [3:0] as, bs;\r\n      output [3:0] ys;\r\n      assign ys = as & bs;\r\n    endmodule\r\n\r\n```\r\nread_verilog test.v\r\nprep\r\nsplitnets\r\nrmports\r\ndelete w:NC\r\nclean -purge\r\nrmports\r\nsplitnets -ports\r\nrmports\r\nclean -purge\r\nopt_clean -purge\r\n\r\n```\r\n## Expected behavior\r\nmodule sub should have 3bit wide output ys instead of 4.\r\n\r\n## Actual behavior\r\nmodule sub ys[3] is not used by design and according to \"help rmports\"\r\n\r\n> This pass identifies ports in the selected modules which are not used or\r\n> driven and removes them.\r\n> ",
+  "labels": [],
+  "state": "open",
+  "created_at": "2020-03-20",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

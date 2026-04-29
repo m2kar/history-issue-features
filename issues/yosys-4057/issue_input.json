@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4057,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4057",
+  "title": "peepopt: Fix padding for the peepopt_shiftmul_right pattern",
+  "body": "The previous version could easily generate a large amount of padding when the constant factor was significantly larger than the width of the shift data input. This could lead to huge amounts of logic being generated before then being optimized away at a huge performance and memory cost.\r\n\r\nAdditionally and more critically, when the input width was not a multiple of the constant factor, the input data was padded with 'x bits to such a multiple before interspersing the 'x padding needed to align the selectable windows to power-of-two offsets.\r\n\r\nSuch a final padding would not be correct for shifts besides $shiftx, and the previous version did attempt to remove that final padding at the end so that the native zero/sign/x-extension behavior of the shift cell would be used, but since the last selectable window also got power-of-two padding appended after the padding the code is trying to remove got added, it did not actually fully remove it in some cases.\r\n\r\nI changed the code to only add 'x padding between selectable windows, leaving the last selectable window unpadded. This omits the need to add final padding to a multiple of the constant factor in the first place. In turn, that means the only 'x bits added are actually impossible to select. As a side effect no padding is added when the constant factor is equal to or larger than the width of the shift data input, also solving the reported performance bug.\r\n\r\nThis fixes #4056",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-12-06",
+  "closed_at": "2023-12-07",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

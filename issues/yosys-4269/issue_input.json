@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4269,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4269",
+  "title": "Avoid `module_not_derived` on internal cells in techmap result",
+  "body": "With the following\r\n\r\n```\r\nread_verilog <<EOF\r\nmodule top(a, b, y);\r\n\tinput wire [7:0] a;\r\n\tinput wire [7:0] b;\r\n\toutput wire [7:0] y;\r\n\tassign y = a + b;\r\nendmodule\r\nEOF\r\nprep\r\nalumacc\r\ntechmap -max_iter 1\r\ndump t:$lcu\r\n```\r\n\r\nyou get\r\n\r\n```\r\n  attribute \\module_not_derived 1\r\n  attribute \\src \"test.v:5.13-5.18|.../yosys/share/techmap.v:286.27-286.69\"\r\n  cell $lcu $auto$alumacc.cc:485:replace_alu$2.lcu\r\n    parameter \\WIDTH 8\r\n    connect \\CO $auto$alumacc.cc:502:replace_alu$4\r\n    connect \\CI 1'0\r\n    connect \\G $techmap$auto$alumacc.cc:485:replace_alu$2.$and$/Users/pk/repos/yosys/share/techmap.v:286$84_Y\r\n    connect \\P $auto$alumacc.cc:501:replace_alu$3\r\n  end\r\n```\r\n\r\nwhere the `module_not_derived` attribute is misplaced. It doesn't make sense on an internall cell and `hierarchy` won't clean it.\r\n\r\nTo address this, we want `read_verilog -icells` not to place the attribute on internal cells, and we want `techmap` to use the frontend in the `-icells` mode instead of fixing up the cell types after the fact.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-03-07",
+  "closed_at": "2026-01-26",
+  "code_blocks": [
+    "read_verilog <<EOF\r\nmodule top(a, b, y);\r\n\tinput wire [7:0] a;\r\n\tinput wire [7:0] b;\r\n\toutput wire [7:0] y;\r\n\tassign y = a + b;\r\nendmodule\r\nEOF\r\nprep\r\nalumacc\r\ntechmap -max_iter 1\r\ndump t:$lcu",
+    "attribute \\module_not_derived 1\r\n  attribute \\src \"test.v:5.13-5.18|.../yosys/share/techmap.v:286.27-286.69\"\r\n  cell $lcu $auto$alumacc.cc:485:replace_alu$2.lcu\r\n    parameter \\WIDTH 8\r\n    connect \\CO $auto$alumacc.cc:502:replace_alu$4\r\n    connect \\CI 1'0\r\n    connect \\G $techmap$auto$alumacc.cc:485:replace_alu$2.$and$/Users/pk/repos/yosys/share/techmap.v:286$84_Y\r\n    connect \\P $auto$alumacc.cc:501:replace_alu$3\r\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

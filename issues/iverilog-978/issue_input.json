@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 978,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/978",
+  "title": "Unexpected change in stdout chatter between 11.0 and 12.0",
+  "body": "I accidentally (!) ran some of my Verilog test suites recently under Debian testing (Trixie).  This includes iverilog 12.0, where I normally use iverilog 11.0 found in Debian stable (bookworm).\r\nI got unexpected failures due to differences in the stdout chatter between iverilog 11.0 and 12.0.\r\n\r\nTo reproduce, first create two files\r\n```\r\ncat > basal.v << EOT\r\nmodule test;\r\ninitial begin\r\n    \\$display(\"Hello\", 2+2);\r\n\\`ifdef FIN\r\n    \\$finish();\r\n\\`endif\r\nend\r\nendmodule\r\nEOT\r\ncat > bb.sh << EOT\r\niverilog -V | awk 'FNR==1{print \\$0}'\r\niverilog -Wall -o basal basal.v && vvp basal\r\niverilog -DFIN -Wall -o basal basal.v && vvp basal\r\necho \"--\"\r\nEOT\r\n```\r\nHere are my results on Debian stable\r\n```\r\n$ sh -x bb.sh\r\n+ iverilog -V\r\n+ awk FNR==1{print $0}\r\nIcarus Verilog version 11.0 (stable) ()\r\n+ iverilog -Wall -o basal basal.v\r\n+ vvp basal\r\nHello          4\r\n+ iverilog -DFIN -Wall -o basal basal.v\r\n+ vvp basal\r\nHello          4\r\n+ echo --\r\n--\r\n```\r\nand Debian testing\r\n```\r\n$ sh -x bb.sh\r\n+ iverilog -V\r\n+ awk FNR==1{print $0}\r\nIcarus Verilog version 12.0 (stable) ()\r\n+ iverilog -Wall -o basal basal.v\r\n+ vvp basal\r\nHello          4\r\n+ iverilog -DFIN -Wall -o basal basal.v\r\n+ vvp basal\r\nHello          4\r\nbasal.v:5: $finish called at 0 (1s)\r\n+ echo --\r\n--\r\n```\r\nSee the extra \"basal.v:5: $finish called at 0 (1s)\"?\r\nAny test bench that captures stdout from such a Verilog program is potentially sensitive to this version change.  That includes the simple case of comparing the output against a gold file.\r\n\r\nIn some cases I can and probably will rearrange my test benches so the Verilog program calls $fwrite() instead of just $display(), manage the output file name with plusargs, and ignore the stdout chatter.  But not every use-case can be shoehorned into that paradigm.\r\n\r\nAssuming this change in default behavior is intentional, is there a (backwards-compatible) way to turn it off?  I expect Users of both iverilog versions to be able to run my regression tests, and I'm not a fan of the complexity rabbit-hole of autoconf-style detection of program versions.\r\n\r\nObligatory xkcd: https://xkcd.com/1172/\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-28",
+  "closed_at": "2023-07-28",
+  "code_blocks": [
+    "cat > basal.v << EOT\r\nmodule test;\r\ninitial begin\r\n    \\$display(\"Hello\", 2+2);\r\n\\`ifdef FIN\r\n    \\$finish();\r\n\\`endif\r\nend\r\nendmodule\r\nEOT\r\ncat > bb.sh << EOT\r\niverilog -V | awk 'FNR==1{print \\$0}'\r\niverilog -Wall -o basal basal.v && vvp basal\r\niverilog -DFIN -Wall -o basal basal.v && vvp basal\r\necho \"--\"\r\nEOT"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2574,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2574",
+  "title": "Accept disable case for SVA liveness properties.",
+  "body": "This PR handles default disable clauses for live/fair properties that caused those properties to fail.\r\n\r\nConsider this example of a storage device that becomes `1'b1` forever, fulfilling the property semantics:\r\n``` systemverilog\r\n        var logic tmp;\r\n        always_ff @(posedge clk) begin\r\n                if (!rstn) tmp <= 1'b0;\r\n                else       tmp <= 1'b1;\r\n        end\r\n        assign a = tmp;\r\n        ap0: assert property (@(posedge clk) disable iff (!rstn)\r\n                              s_eventually nexttime a);\r\n```\r\n\r\nWithout this PR, `SBY` in `live` mode fails to prove the property. By looking into the model, the RTL semantics are wrong due missing `clocking.disable_sig`.\r\n\r\n```\r\nSBY 16:36:56 [liveness_test] engine_0: Status returned by engine: FAIL\r\n```\r\n\r\nSince proving liveness in Yosys, without aiger or super prove is not possible, I am not adding any kind of test to this PR but will add it to SymbiYosys repo.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-02-04",
+  "closed_at": "2021-02-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

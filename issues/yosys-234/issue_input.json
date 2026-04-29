@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 234,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/234",
+  "title": "for loops take long for yosys to compile",
+  "body": "Hello,\n\nI made an observation on the time yosys invests on my code. This is not about the time the FPGA needs to execute it.\n\nThe implementation of for loops is apparently not in a way that the typical assembly/C programmer expects. The _extra time_ (and memory) yosys needs to rewrite a for-begin-end construct is not a constant but it depends on the number of lines embraced by the loop and, in particular so, on number of iterations. And that dependency is considerably worse than linear.\n\nExample:\n\n```\nmodule takeslong (input iCE_CLK);\n    reg [220:0] i;\n    reg v=0;\n    reg [5:0] w=0;\n    always @( posedge iCE_CLK ) begin\n        for( i=0; i<50000; i=i+1) begin\n            if (v) begin\n                v <= ~v;\n                w <= w+1;\n            end\n        end\n    end\nendmodule\n```\n\nThe above featuring 50000 iterations does not complete the RTLIL representation stage after 5 minutes, with one or two lines. With 10000 iterations and only the v line it takes 8 seconds, with 10000 and both lines it is close to 20 seconds.  1000 iterations are instantaneous.\n\nI presume I could somehow work around using the for loop in the first place, but this iCEstick will attract more and more typical IT folks that will enjoy, say, implementing something like the https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes and they were all raised/brain-washed with for loops. My heart beats for all those folks interested in application acceleration who are much alike me very much prone to fall into this trap. Can they be helped? Is this a bug/dysfeature of yosys? Or if not, would it be possible for yosys to warn about an inappropriate use of the for loop rather than just eating up all system resources (>100GB of memory on my main project that is problem-freely synthesising with ISE)?\n\nMany thanks and regards,\n\nSteffen\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-09-19",
+  "closed_at": "2016-09-19",
+  "code_blocks": [
+    "module takeslong (input iCE_CLK);\n    reg [220:0] i;\n    reg v=0;\n    reg [5:0] w=0;\n    always @( posedge iCE_CLK ) begin\n        for( i=0; i<50000; i=i+1) begin\n            if (v) begin\n                v <= ~v;\n                w <= w+1;\n            end\n        end\n    end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

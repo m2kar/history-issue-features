@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1074,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1074",
+  "title": "SAT command. \"The options -max, -all, and -max_undef are not supported for temporal induction proofs!\" error message is reported not in all cases. ",
+  "body": "## Steps to reproduce the issue\r\n\r\ntest case:\r\n```\r\nmodule top\r\n(\r\n input x,\r\n input y,\r\n input cin,\r\n\r\n output reg A,\r\n output cout\r\n );\r\n parameter X = 1;\r\n wire o;\r\n\r\n initial A = 0;\r\n initial cout = 0;\r\n\r\n\r\n\r\n`ifndef BUG\r\nalways @(posedge cin)\r\n\tA <= o;\r\n\r\nassign cout =  cin? y : x;\r\n\r\nmiddle u_mid (.x(x),.o(o));\r\nu_rtl inst_u_rtl (.x(x),.o(o));\r\n`else\r\nassign {cout,A} =  cin - y * x;\r\n`endif\r\n\r\nendmodule\r\n\r\nmodule middle\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule\r\n\r\nmodule u_rtl\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule\r\n```\r\n\r\nscripts:\r\n\r\n```\r\nread_verilog ../top.v\r\nproc\r\nsat -all -prove x 1 -tempinduct middle\r\n```\r\nor \r\n\r\n```\r\nread_verilog ../top.v\r\nproc\r\nsat -max 5 -all -prove x 1 -tempinduct middle\r\n```\r\n\r\n\r\n## Expected behavior\r\n\r\nERROR: The options -max, -all, and -max_undef are not supported for temporal induction proofs!\r\n\r\n\r\n## Actual behavior\r\n\r\nNo error message.\r\n\r\n\r\nIs it the bug or we need change text of this message?\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2019-06-06",
+  "closed_at": null,
+  "code_blocks": [
+    "module top\r\n(\r\n input x,\r\n input y,\r\n input cin,\r\n\r\n output reg A,\r\n output cout\r\n );\r\n parameter X = 1;\r\n wire o;\r\n\r\n initial A = 0;\r\n initial cout = 0;\r\n\r\n\r\n\r\n`ifndef BUG\r\nalways @(posedge cin)\r\n\tA <= o;\r\n\r\nassign cout =  cin? y : x;\r\n\r\nmiddle u_mid (.x(x),.o(o));\r\nu_rtl inst_u_rtl (.x(x),.o(o));\r\n`else\r\nassign {cout,A} =  cin - y * x;\r\n`endif\r\n\r\nendmodule\r\n\r\nmodule middle\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule\r\n\r\nmodule u_rtl\r\n(\r\n\tinput x,\r\n\tinput y,\r\n\toutput o\r\n);\r\n\r\nassign o = x + y;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

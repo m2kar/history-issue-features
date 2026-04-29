@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3954,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3954",
+  "title": "Write first RAM using blocking assignments synthesized as Read first RAM",
+  "body": "### Version\n\nYosys 0.33+34\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nBelow Write first RTL RAM is written using blocking assignments synthesized as write first RAM.\r\n**Yosys.ys**\r\nread_verilog -nomem2reg asym_ram_write_first_dc.v\r\nsynth_xilinx -edif example.edif -top asym_ram_write_first_dc\r\nwrite_verilog -noexpr -nodec asym_ram_write_first_dc_post_synth.v\r\n\r\n**RTL**\r\n\r\nmodule asym_ram_write_first_dc (clkB, enaB, weB, addrB,diB, doB);\r\n\r\nparameter WIDTHB = 1;\r\nparameter SIZEB = 8;\r\nparameter ADDRWIDTHB = 3;\r\n\r\ninput clkB;\r\ninput weB;\r\ninput enaB;\r\ninput [ADDRWIDTHB-1:0] addrB;\r\ninput [WIDTHB-1:0] diB;\r\noutput [WIDTHB-1:0] doB;\r\n(* ram_style = \"block\" *)\r\nreg [WIDTHB-1:0] RAM [0:SIZEB-1];\r\nreg [WIDTHB-1:0] readB;\r\nalways @(posedge clkB)\r\nbegin\r\n    if (enaB) \r\n    begin\r\n        if (weB)\r\n            RAM[addrB] = diB;\r\n            readB = RAM[addrB];\r\n    end\r\nend\r\nassign doB = readB;\r\n\r\nendmodule\r\n\r\n\n\n### Expected Behavior\n\nThis RTL testcase should be synthesized in write first MODE .\n\n### Actual Behavior\n\nBut it is synthesized as read-first MODE. As verilog-frontend somehow does not recognizes the correct read/write order in blocking assignments.\r\n![image](https://github.com/YosysHQ/yosys/assets/43933912/81fed59c-1e6d-4a35-8916-13c25b0f7bf4)\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-09-25",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

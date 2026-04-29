@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1002,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1002",
+  "title": "Determining the index of a onehot vector",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following module, whose purpose is to output the index of the one-hot vector value given to it.\r\n\r\n```\r\nmodule onehot(i_in, o_out);\r\n\tparameter\tLG = 7;\r\n\tlocalparam\tWID = (1<<LG);\r\n\t//\r\n\tinput\twire\t[WID-1:0]\ti_in;\r\n\toutput\treg\t[LG-1:0]\to_out;\r\n\r\n\t//\r\n\tinteger\tN;\r\n\r\n\talways @(*)\r\n\tbegin\r\n\t\to_out = 0;\r\n\t\tfor(N=0; N<WID; N=N+1)\r\n\t\tbegin\r\n\t\t\tif (i_in[N])\r\n\t\t\t\to_out = o_out | N[LG-1:0];\r\n\t\tend\r\n\tend\r\nendmodule\r\n```\r\n\r\nThis module can be synthesized and displayed with Yosys using:\r\n\r\n```\r\nyosys -p 'read -sv onehot.v ; hierarchy -top onehotsel -chparam LG 3; synth_xilinx; stat; show'\r\n```\r\n\r\n## Expected behavior\r\n\r\nFor LG = 3 and LG = 4, Yosys has no problems: the design synthesizes fine, and you can see and examine the logic via the show command.\r\n\r\n## Actual behavior\r\n\r\nIf LG is anything larger than 4, Yosys sets the output vector to all ones, discarding all of the logic within.  Given that LG=5, the first failing value, hits the 32-bit wordsize my guess is that these two are somehow related.\r\n\r\nThe SymbioticEDA Suite, version 20190416A, has no problems parsing or synthesizing this design, so this seem specific to the open source version.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-05-10",
+  "closed_at": "2019-05-12",
+  "code_blocks": [
+    "module onehot(i_in, o_out);\r\n\tparameter\tLG = 7;\r\n\tlocalparam\tWID = (1<<LG);\r\n\t//\r\n\tinput\twire\t[WID-1:0]\ti_in;\r\n\toutput\treg\t[LG-1:0]\to_out;\r\n\r\n\t//\r\n\tinteger\tN;\r\n\r\n\talways @(*)\r\n\tbegin\r\n\t\to_out = 0;\r\n\t\tfor(N=0; N<WID; N=N+1)\r\n\t\tbegin\r\n\t\t\tif (i_in[N])\r\n\t\t\t\to_out = o_out | N[LG-1:0];\r\n\t\tend\r\n\tend\r\nendmodule",
+    "yosys -p 'read -sv onehot.v ; hierarchy -top onehotsel -chparam LG 3; synth_xilinx; stat; show'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

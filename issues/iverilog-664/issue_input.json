@@ -1,0 +1,22 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 664,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/664",
+  "title": "Correctly handle separate port type declaration for integer types ",
+  "body": "When using non-ANSI style port declarations it is possible to declare the\r\nport direction and the data type for the port in separate statements. E.g.\r\n\r\n```SystemVerilog\r\ninput x;\r\nreg x;\r\n```\r\n\r\nWhen using packed array dimensions they must match for both declarations.\r\nE.g.\r\n\r\n```SystemVerilog\r\ninput [3:0] x;\r\nreg [3:0] x;\r\n```\r\n\r\nBut this only applies for vector types, i.e. the packed dimension is\r\nexplicitly declared. It does not apply to the atom2, `integer` and `time` types,\r\nwhich have an implicit packed dimension.\r\n\r\nThe current implementation requires that even for atom2, `integer` and `time`\r\ntypes the implicit dimension needs to be explicitly declared in the port\r\ndirection. E.g. the following will result in a elaboration error\r\ncomplaining about a packed dimension mismatch.\r\n\r\n```SystemVerilog\r\nmodule test;\r\n  output x;\r\n  integer x;\r\nendmodule\r\n```\r\n\r\nCurrently the parser creates a vector_type_t for `time` and `integer`. This\r\nmeans that e.g. `time` and `reg [63:0]` are indistinguishable during\r\nelaboration, even though they require different behavior.\r\n\r\nSimilarly the atom2_type_t type is deconstructed into base type, range\r\nand signdness in the parser. This makes it impossible to e.g. differentiate\r\nbetween `bit signed [31:0]` and `int` during elaboration.\r\n\r\nInstead of breaking the data type apart pass it as the data_type_t of the\r\nsignal and use the elaborate_type() method in the signal elaboration to\r\ngenerate the netvector_t. Also let the atom2_type_t handle the `integer`\r\nand `time` types. Since it no longer exclusively handles 2-state types,\r\nrename it to atom_type_t.\r\n\r\nThis also fixes a problem with the vlog95 target unit tests. The vlog95\r\ntarget translates\r\n\r\n```SystemVerilog\r\nmodule test(output integer x);\r\nendmodule\r\n```\r\n\r\nto\r\n\r\n```SystemVerilog\r\nmodule test(x);\r\n  output x;\r\n  integer x;\r\nendmodule\r\n```\r\n\r\nwhich then fails when being elaborated again. There were some regression\r\ntests that were failing because of this that will now pass.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-03-28",
+  "closed_at": "2022-04-10",
+  "code_blocks": [
+    "input x;\r\nreg x;",
+    "input [3:0] x;\r\nreg [3:0] x;",
+    "module test;\r\n  output x;\r\n  integer x;\r\nendmodule",
+    "module test(output integer x);\r\nendmodule",
+    "module test(x);\r\n  output x;\r\n  integer x;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2423,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2423",
+  "title": "yosys does not support local variables as loop iterator",
+  "body": "## Steps to reproduce the issue\r\n\r\n```systemverilog\r\n`timescale 1us/1us\r\n\r\nmodule test(aclk, in, out);\r\n    input bit aclk;\r\n    input bit in;\r\n    output bit out;\r\n    parameter DEPTH = 3;\r\n\r\n    bit flipflop[DEPTH:0];\r\n\r\n    assign flipflop[0] = in;\r\n    assign out = flipflop[DEPTH];\r\n\r\n    always_ff @(posedge aclk) begin\r\n        integer i;\r\n        for (i = 1; i < DEPTH; i++) begin\r\n            flipflop[i] <= flipflop[i -1];\r\n        end\r\n    end\r\nendmodule\r\n```\r\n\r\n```ini\r\n[options]\r\nmode prove\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -formal -sv test.sv\r\nprep -top test\r\n\r\n[files]\r\ntest.sv\r\n```\r\n\r\n## Expected behavior\r\n\r\nThe loop works as it does in verilator and other tools:\r\n\r\n```\r\n$ verilator -Wall test.sv  --cc\r\n$\r\n```\r\n\r\nFor that matter they support:\r\n\r\n```\r\nfor (integer i = 1; i < DEPTH; i++)\r\n```\r\n\r\n## Actual behavior\r\n\r\n```\r\nSBY 22:01:42 [test] base: Warning: wire '\\i' is assigned in a block at test.sv:16.14-16.19.\r\nSBY 22:01:42 [test] base: Warning: wire '\\i' is assigned in a block at test.sv:16.32-16.35.\r\nSBY 22:01:42 [test] base: test.sv:16: ERROR: Left hand side of 1st expression of procedural for-loop is not a register!\r\n```",
+  "labels": [
+    "enhancement",
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2020-10-31",
+  "closed_at": "2021-02-04",
+  "code_blocks": [
+    "`timescale 1us/1us\r\n\r\nmodule test(aclk, in, out);\r\n    input bit aclk;\r\n    input bit in;\r\n    output bit out;\r\n    parameter DEPTH = 3;\r\n\r\n    bit flipflop[DEPTH:0];\r\n\r\n    assign flipflop[0] = in;\r\n    assign out = flipflop[DEPTH];\r\n\r\n    always_ff @(posedge aclk) begin\r\n        integer i;\r\n        for (i = 1; i < DEPTH; i++) begin\r\n            flipflop[i] <= flipflop[i -1];\r\n        end\r\n    end\r\nendmodule",
+    "for (integer i = 1; i < DEPTH; i++)",
+    "SBY 22:01:42 [test] base: Warning: wire '\\i' is assigned in a block at test.sv:16.14-16.19.\r\nSBY 22:01:42 [test] base: Warning: wire '\\i' is assigned in a block at test.sv:16.32-16.35.\r\nSBY 22:01:42 [test] base: test.sv:16: ERROR: Left hand side of 1st expression of procedural for-loop is not a register!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

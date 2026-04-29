@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1205,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1205",
+  "title": "Use $__ICE40_FULL_ADDER throughout synth_ice40",
+  "body": "ice40 has a special carry structure that taps the input of a LUTs, rather than the output:\r\n![image](https://user-images.githubusercontent.com/6740044/61389113-3116f300-a86d-11e9-8c09-2a31204740fc.png)\r\n(from [Lattice datasheet](http://www.latticesemi.com/~/media/LatticeSemi/Documents/DataSheets/iCE/iCE40LPHXFamilyDataSheet.pdf])) thus requiring the LUT input ordering to be preserved.\r\n\r\nCurrently, in non `abc9` flows this done by instantiating a directly `SB_CARRY` and `SB_LUT` cell for each adder bit. Then during techmapping, these cells are treated as regular module instantiations and are transformed into PI/POs and thus not touched by the techmapper.\r\n\r\nAfter techmapping, `ice40_unlut` then converts those `SB_LUT` cells back into Yosys internal cells `$lut` and `opt_lut` then attempts to merge `$lut` cells together while preserving the input order for those attached to an `SB_CARRY`.\r\n\r\nIn #1186, a new `$__ICE40_FULL_ADDER` cell (encapsulating the `SB_CARRY` and `SB_LUT`) was instantiated instead for `abc9` flows, necessary because `abc9` (a) now has knowledge of the logic and delay through these cells; and (b) the has the capability to optimise either of them away independently. Thus, there was a need to wrap them together as one all-or-nothing atomic unit for optimisation.\r\n\r\nAs suggested by @whitequark [here](https://github.com/YosysHQ/yosys/pull/1186#issuecomment-511519300) it may be effective to utilise `$__ICE40_FULL_ADDER` beyond `abc9`.\r\n\r\nI don't believe it will make any difference to `abc` (or any other techmappers in their current form) but it could help clean up some of the code surrounding `ice40_opt`, `ice40_unlut`, `opt_lut`, etc.\r\n\r\nAlso necessary is a way to identify `SB_CARRY` and `SB_LUT` patterns that are instantiated by the user (rather than inferred from behavioural code) so that they also get the same treatment.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2019-07-17",
+  "closed_at": "2019-08-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

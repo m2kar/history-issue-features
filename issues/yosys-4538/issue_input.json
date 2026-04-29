@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4538,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4538",
+  "title": "verific: Add bottom and top bound properties to wire",
+  "body": "### What are the reasons/motivation for this change?\r\nHaving bound properties for wires would help detect underflow and overflow in cases where the user is more restrictive than the RTLIL representation.\r\nFor example, the following VHDL\r\n\r\n`signal a : INTEGER range 0 to 6;\r\n`\r\nis represented in RTLIL as:\r\n`wire width 3 input 1 \\a\r\n`because to represent decimal 6 you need at least 3 bits.\r\nHowever, decimal 7 can also be represented, which would be an overflow as per the user specified range, and that user constraint would get lost without this attribute.\r\nThis patch helps ensure that those user constraints are maintained and accessible in the RTLIL representation.\r\n### Explain how this is achieved.\r\nWith the Verific API, we get the bounds information and create attributes (named `bottom_bound` and `top_bound`).\r\nThose attributes are of the same bit width as the wire they belong to.\r\nIf at least one the bound is negative, both constants are flagged as signed.\r\n#### Supporting changes\r\nprintattrs.cc: Updated the logic to print attributes for signed constants.\r\nRTLIL::Const: The constructor was modified to use `long long` instead of `int`. This is necessary because to support VHDL 2019 integers with bit widths up to 64, the Verific API’s `TypeRange::GetScalarRangeLeftBound()` method returns a `long long`.\r\n### Discarded options\r\nWe decided that bound attributes for enumeration types will not be added in this PR.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-08-14",
+  "closed_at": "2024-09-12",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

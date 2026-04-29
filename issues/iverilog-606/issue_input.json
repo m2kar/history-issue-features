@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 606,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/606",
+  "title": "myhdl co-simulation does not start on Windows -  Unable to find myhdl.vpi.vpi module on the search path",
+  "body": "This is not a typo - The error message you receive is that `myhdl.vpi.vpi` cannot be found on the search path\r\n\r\nThe myhdl test insfrastructure is agnostic to the platform you're running on (Linux, Windows).\r\nIt always generate a command line like `vvp -v -m ../myhdl.vpi tb_test.o`\r\n\r\nBut on the receiving end, `vvp` is not agnostic to the platform.\r\n\r\nThe issue is that in `vvp/vpi_modules.cc`, the routine `vpip_load_module` first tries to determine if the name has at least one directory character in it, where the separation character is platform-dependent:\r\n\r\n```\r\n#ifdef __MINGW32__\r\n      const char sep = '\\\\';\r\n#else\r\n      const char sep = '/';\r\n#endif\r\n\r\n      if (strchr(name, sep)) {\r\n```\r\n\r\nYou might want to consider something more robust, but for now I've just worked around the issue by using two possible separation characters on Windows:\r\n\r\n```\r\n      if ((strchr(name, sep))\r\n#ifdef __MINGW32__\r\n          || (strchr(name, '/'))\r\n#endif  \r\n          ) {\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-02-07",
+  "closed_at": "2022-03-25",
+  "code_blocks": [
+    "#ifdef __MINGW32__\r\n      const char sep = '\\\\';\r\n#else\r\n      const char sep = '/';\r\n#endif\r\n\r\n      if (strchr(name, sep)) {",
+    "if ((strchr(name, sep))\r\n#ifdef __MINGW32__\r\n          || (strchr(name, '/'))\r\n#endif  \r\n          ) {"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

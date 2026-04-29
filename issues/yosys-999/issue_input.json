@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 999,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/999",
+  "title": "initialize more registers in setundef -init",
+  "body": "## Steps to reproduce the issue\r\nCurrently, setundef -init misses some registers that are also assigned to something:\r\n\r\nRunning the following Verilog code:\r\n\r\n    module register #(\r\n    \tparameter DEPTH = 10\r\n    ) (\r\n    \tinput wire clk,\r\n    \tinput wire in,\r\n    \toutput wire out\r\n    );\r\n    \treg [DEPTH-1:0] regs;\r\n    \talways @(posedge clk) regs <= { regs[DEPTH-2:0], in};\r\n    \tassign out = regs[DEPTH-1];\r\n    endmodule\r\n\r\nthrough this script:\r\n\r\n    read_verilog register.v\r\n    prep\r\n    setundef -zero -init\r\n\r\n## Expected behavior\r\n\r\nThe register `regs` should be initialized to zero (attribute init set to 0).\r\n\r\n    attribute \\src \"register.v:6\"\r\n    wire output 3 \\out\r\n    attribute \\init 10'0000000000\r\n    attribute \\src \"register.v:8\"\r\n    wire width 10 \\regs\r\n\r\n\r\n## Actual behavior\r\n\r\n`out` is initialized to zero.\r\n\r\n    attribute \\init 1'0\r\n    attribute \\src \"register.v:6\"\r\n    wire output 3 \\out\r\n    attribute \\src \"register.v:8\"\r\n    wire width 10 \\regs\r\n\r\n\r\n## Fix\r\nThis PR tries to fix the issue by waiting to erase from `ffbits` until all wires have been looked at.\r\n\r\nWith this PR applied, both `regs` and `out` get the `init` attribute. I am not sure if having the attribute on `out` as well is problematic. Comments?\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-09",
+  "closed_at": "2019-06-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

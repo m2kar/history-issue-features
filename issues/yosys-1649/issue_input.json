@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1649,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1649",
+  "title": "Width detection fails for genvar used with conditional operator",
+  "body": "I am trying to synthesize https://github.com/jotego/jt12/blob/master/hdl/mixer/jt12_comb.v for the ice40. It seems there is an issue with genvar width detection inside a conditional operator when synthesizing using yosys. I am running git hash f165a748\r\n\r\nI have created a simpler example which shows the issue:\r\n\r\n```\r\nmodule delay #(parameter width=2, taps=1)(\r\n       input clk,\r\n       input [width-1:0] d_in,\r\n       output reg [width-1:0] d_out\r\n);\r\n\r\ngenerate\r\n        genvar k;\r\n        reg [width-1:0] mem[0:taps-1];\r\n\r\n        for (k=0;k<taps;k=k+1) begin : delay_gen\r\n                always @(posedge clk) begin\r\n                        mem[k] <= k==0 ? d_in : mem[k-1]; // <<<<<<<<< ERROR IS HERE\r\n                end\r\n        end\r\nendgenerate\r\n\r\nalways @(posedge clk) begin\r\n        b <= mem[taps-1];\r\nend\r\n\r\nendmodule\r\n\r\n\r\nmodule top (input clk, input wire [3:0] a, output wire [3:0] b);\r\n        delay #(.width(4), .taps(1))  d(clk, a, b);\r\nendmodule\r\n```\r\n\r\nrunning ` yosys -p \"synth_ice40 -top top\" genvar_test.v`, I get:\r\n\r\n```\r\n... license info removed for brevity ...\r\n\r\n Yosys 0.9+1706 (git sha1 f165a748, clang 6.0.0-1ubuntu2 -fPIC -Os)\r\n\r\n\r\n-- Parsing `genvar_test.v' using frontend `verilog' --\r\n\r\n1. Executing Verilog-2005 frontend: genvar_test.v\r\nParsing Verilog input from `genvar_test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\delay'.\r\nWarning: wire '\\b' is assigned in a block at genvar_test.v:19.\r\nWarning: Replacing memory \\mem with list of registers. See genvar_test.v:13\r\ngenvar_test.v:13: ERROR: Failed to resolve identifier \\mem[-1] for width detection!\r\n```\r\n\r\n## Expected behavior\r\n\r\nIt should synthesize because `mem[k-1]` is unreachable for k==0. Replacing the conditional operator line with a full `if`/`else`/`end` allows yosys to synthesize the code correctly. It's not totally clear to me from the verilog 2005 standard if conditional operators are allowed with genvars, but it seems to be roughly supported anyway.\r\n\r\n## Actual behavior\r\n\r\nSee error output above.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-01-21",
+  "closed_at": "2021-06-08",
+  "code_blocks": [
+    "module delay #(parameter width=2, taps=1)(\r\n       input clk,\r\n       input [width-1:0] d_in,\r\n       output reg [width-1:0] d_out\r\n);\r\n\r\ngenerate\r\n        genvar k;\r\n        reg [width-1:0] mem[0:taps-1];\r\n\r\n        for (k=0;k<taps;k=k+1) begin : delay_gen\r\n                always @(posedge clk) begin\r\n                        mem[k] <= k==0 ? d_in : mem[k-1]; // <<<<<<<<< ERROR IS HERE\r\n                end\r\n        end\r\nendgenerate\r\n\r\nalways @(posedge clk) begin\r\n        b <= mem[taps-1];\r\nend\r\n\r\nendmodule\r\n\r\n\r\nmodule top (input clk, input wire [3:0] a, output wire [3:0] b);\r\n        delay #(.width(4), .taps(1))  d(clk, a, b);\r\nendmodule",
+    "... license info removed for brevity ...\r\n\r\n Yosys 0.9+1706 (git sha1 f165a748, clang 6.0.0-1ubuntu2 -fPIC -Os)\r\n\r\n\r\n-- Parsing `genvar_test.v' using frontend `verilog' --\r\n\r\n1. Executing Verilog-2005 frontend: genvar_test.v\r\nParsing Verilog input from `genvar_test.v' to AST representation.\r\nGenerating RTLIL representation for module `\\delay'.\r\nWarning: wire '\\b' is assigned in a block at genvar_test.v:19.\r\nWarning: Replacing memory \\mem with list of registers. See genvar_test.v:13\r\ngenvar_test.v:13: ERROR: Failed to resolve identifier \\mem[-1] for width detection!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

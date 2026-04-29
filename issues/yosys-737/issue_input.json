@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 737,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/737",
+  "title": "Using expressions in attributes results in dropped attributes",
+  "body": "## Steps to reproduce the issue\r\n\r\nUse yosys to read this verilog file :\r\n\r\n```verilog\r\nmodule bug (\r\n    input wire iw,\r\n    output wire ow\r\n);\r\n\r\n    localparam j = 2; \r\n\r\n    (* A=2 *)\r\n    (* B=j+1 *)\r\n    SB_LUT4 #(\r\n        .LUT_INIT(16'h0001)\r\n    ) test_I (\r\n        .I0(iw),\r\n        .I1(),  \r\n        .I2(),  \r\n        .I3(),  \r\n        .O(ow)  \r\n    );\r\n\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nIn the resulting .json or .blif, the cell should have two attributes `A` & `B`.\r\n\r\n## Actual behavior\r\n\r\nBut in reality, only `B` will end up being present.\r\n\r\nAnd dumping the AST tree using `read_verilog -dump_ast1 bug.v`, you can see it too : \r\n\r\n```\r\n      AST_CELL <bug.v:11> [0xea98f0] str='\\test_I'\r\n        ATTR \\B:\r\n          AST_ADD <bug.v:10> [0xea9d70]\r\n            AST_IDENTIFIER <bug.v:10> [0xea9ea0] str='\\j'\r\n            AST_CONSTANT <bug.v:10> [0xea9fb0] bits='00000000000000000000000000000001'(32) signed range=[31:0] int=1\r\n        AST_CELLTYPE <bug.v:11> [0xea9a00] str='\\SB_LUT4'\r\n        AST_PARASET <bug.v:12> [0xea9b10] str='\\LUT_INIT'\r\n          AST_CONSTANT <bug.v:12> [0xea9c40] bits='0000000000000001'(16) range=[15:0] int=1\r\n        AST_ARGUMENT <bug.v:14> [0xeaa1d0] str='\\I0'\r\n          AST_IDENTIFIER <bug.v:14> [0xeaa0c0] str='\\iw'\r\n        AST_ARGUMENT <bug.v:15> [0xeaa2e0] str='\\I1'\r\n        AST_ARGUMENT <bug.v:16> [0xeaa3f0] str='\\I2'\r\n        AST_ARGUMENT <bug.v:17> [0xeaa500] str='\\I3'\r\n        AST_ARGUMENT <bug.v:18> [0xeaa720] str='\\O'\r\n          AST_IDENTIFIER <bug.v:18> [0xeaa610] str='\\ow'\r\n```\r\n\r\nOnly `B` is present.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-13",
+  "closed_at": "2018-12-16",
+  "code_blocks": [
+    "module bug (\r\n    input wire iw,\r\n    output wire ow\r\n);\r\n\r\n    localparam j = 2; \r\n\r\n    (* A=2 *)\r\n    (* B=j+1 *)\r\n    SB_LUT4 #(\r\n        .LUT_INIT(16'h0001)\r\n    ) test_I (\r\n        .I0(iw),\r\n        .I1(),  \r\n        .I2(),  \r\n        .I3(),  \r\n        .O(ow)  \r\n    );\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

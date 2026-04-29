@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4455,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4455",
+  "title": "peepopt: limit padding from shiftadd",
+  "body": "Related to #4445 and #4448.  \r\nThe padding created in shiftadd increases the input to the shift operations. During `techmap` the shift operation will be implemented as a logarithmic shifter with all `$_MUX_` cells, even if it muxes between two identical inputs (constants). This is then later optimized away. For large constant shifts a lot of padding is added, significantly inflating the number of temporary `$_MUX_` cells, thus increasing the runtime and memory usage.\r\n\r\nI think this would also solve #4445 but you may still want to add #4448 since it deals with a internal representation limit and theoretically you could still run into it with only this PR (though you would now need a signal that is millions of bits wide).\r\n\r\nHere some numbers (script and module below):\r\n```\r\nshift by  5k bits -> 840MB   50s\r\nshift by 20k bits -> 3.5GB  340s\r\n```\r\n\r\n```sv\r\nmodule top(\r\n\tinput logic signed [25:0] shift,\r\n\tinput logic [31:0] data,\r\n\toutput logic [31:0] out\r\n);\r\n\talways_comb begin\r\n\t\tout = data[shift-20000+:16];\r\n\tend\r\nendmodule\r\n```\r\n\r\n```\r\nread_verilog -sv test.sv\r\nproc\r\nopt_expr\r\nopt_clean\r\nwreduce\r\npeepopt\r\nopt_clean\r\ntechmap\r\nstat\r\nopt_clean\r\nopt_expr\r\nstat\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-06-14",
+  "closed_at": "2024-07-06",
+  "code_blocks": [
+    "module top(\r\n\tinput logic signed [25:0] shift,\r\n\tinput logic [31:0] data,\r\n\toutput logic [31:0] out\r\n);\r\n\talways_comb begin\r\n\t\tout = data[shift-20000+:16];\r\n\tend\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

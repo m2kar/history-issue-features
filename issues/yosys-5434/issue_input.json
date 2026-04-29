@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5434,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5434",
+  "title": "pyosys: uv for non-wheel builds, update instructions",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\n@Ravenslofty noted that unlike the previous setup, users may have to manually manage a virtual environment to get the new Python build dependencies (pybind11 and cxxheaderparser,) and that is cumbersome.\r\n\r\nWhile pybind11 can in fact be installed via package managers, it tends to be out of date more often than not. cxxheaderparser is not in any package manager that isn't Nix.\r\n\r\nI considered just handling the ImportError to instruct the user on creating a venv but that's also just kind of cumbersome. \r\n\r\n_Explain how this is achieved._\r\n\r\n- add `uv` to list of dependencies: saves builders from manually having to manage a venv for python build dependencies\r\n  - when building wheels, pip automatically creates the environment with those dependencies, so no need for uv\r\n  - when running simply `make ENABLE_PYOSYS=1`, this is not the case. people attempting to `pip3 install --upgrade pybind11 cxxheaderparser` to add it to their system packages will be met with a scare message about \"breaking system packages\"\r\n  - if someone really prefers to provide their own dependencies (such as within Nix,) passing `PYOSYS_USE_UV=0` suppresses this behavior\r\n- update installation instructions to drop boost and add tox instead\r\n\r\nNaturally, uv is not required if you're not building Yosys with Python support.\r\n\r\n_Make sure your change comes with tests. If not possible, share how a reviewer might evaluate it._\r\n\r\nOn an Ubuntu 22.04 installation (Ubuntu 20.04 also in theory but the Bison on there is out of date so you have to build that on your own), running the instructions in Readme.md should be enough to allow `make ENABLE_PYOSYS=1` to build successfully without further intervention.\r\n\r\nI validated that statement as follows:\r\n\r\n```bash\r\ndocker run --rm -ti docker.io/ubuntu:22.04 bash -c \"\r\n    apt-get update &&\r\n    DEBIAN_FRONTEND=noninteractive apt-get install -y git build-essential clang lld bison flex libfl-dev libreadline-dev gawk tcl-dev libffi-dev graphviz xdot pkg-config python3-dev zlib1g-dev curl &&\r\n    curl -LsSf https://astral.sh/uv/install.sh | sh &&\r\n    source \\$HOME/.local/bin/env &&\r\n    git clone --recursive --branch pyosys_tweaks https://github.com/donn/yosys &&\r\n    cd yosys &&\r\n    make ENABLE_PYOSYS=1 -j\\$(nproc) &&\r\n    ./yosys -H\r\n\"\r\n```\r\n\r\n---\r\n\r\n* Also bec `macos-13` is being sunset by EOY, I updated the wheels CI script to use `macos-15` and `macos-15-intel` before I forget about them, and for consistency updated the other CI scripts as well. https://github.blog/changelog/2025-09-19-github-actions-macos-13-runner-image-is-closing-down/",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-10-18",
+  "closed_at": "2025-11-04",
+  "code_blocks": [
+    "docker run --rm -ti docker.io/ubuntu:22.04 bash -c \"\r\n    apt-get update &&\r\n    DEBIAN_FRONTEND=noninteractive apt-get install -y git build-essential clang lld bison flex libfl-dev libreadline-dev gawk tcl-dev libffi-dev graphviz xdot pkg-config python3-dev zlib1g-dev curl &&\r\n    curl -LsSf https://astral.sh/uv/install.sh | sh &&\r\n    source \\$HOME/.local/bin/env &&\r\n    git clone --recursive --branch pyosys_tweaks https://github.com/donn/yosys &&\r\n    cd yosys &&\r\n    make ENABLE_PYOSYS=1 -j\\$(nproc) &&\r\n    ./yosys -H\r\n\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

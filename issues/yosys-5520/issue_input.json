@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5520,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5520",
+  "title": "bug: plugin link fails",
+  "body": "### Version\n\n0.59+130\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n1. Create the following plugin:\n```c\n#include \"kernel/yosys.h\"\n\nUSING_YOSYS_NAMESPACE\nPRIVATE_NAMESPACE_BEGIN\n\nstruct HelloWorldPass : public Pass {\n    HelloWorldPass() : Pass(\"hello_world\", \"print modules in design\") { }\n\n    void help() override\n    {\n        // Called when user runs:   help hello_world\n        log(\"Usage: hello_world\\n\");\n        log(\"Prints the names of all modules in the current design.\\n\");\n    }\n\n    void execute(std::vector<std::string> args, RTLIL::Design *design) override\n    {\n        log_header(design, \"Executing HELLO_WORLD pass.\\n\");\n\n        if (args.size() != 1) {\n            log_cmd_error(\"This pass takes no arguments.\\n\");\n        }\n\n        log(\"Modules in current design:\\n\");\n        for (auto module : design->modules()) {\n            if (!design->selected(module))\n                continue;\n            log(\"  %s\\n\", log_id(module));\n        }\n    }\n} HelloWorldPass;\n\nPRIVATE_NAMESPACE_END\n```\n\n2. Compile with: `yosys-config --build hello.so hello.cc`\n\n3. Export LD library: `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD`\n\n4. Run with: `yosys -m ./hello.so -p \"hello_world\"`\n\n5. Yosys returns the following error:\n```sh\nYosys 0.59+130 (git sha1 c43246bba, clang 18.1.3 -fPIC -O3)\nyosys: symbol lookup error: ./hello.so: undefined symbol: _ZN5Yosys4PassC2ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_\n```\n\n### Expected Behavior\n\nPlugin prints `Hello World` to console\n\n### Actual Behavior\n\n```sh\nYosys 0.59+130 (git sha1 c43246bba, clang 18.1.3 -fPIC -O3)\nyosys: symbol lookup error: ./hello.so: undefined symbol: _ZN5Yosys4PassC2ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES6_\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-11-27",
+  "closed_at": "2025-11-29",
+  "code_blocks": [
+    "#include \"kernel/yosys.h\"\n\nUSING_YOSYS_NAMESPACE\nPRIVATE_NAMESPACE_BEGIN\n\nstruct HelloWorldPass : public Pass {\n    HelloWorldPass() : Pass(\"hello_world\", \"print modules in design\") { }\n\n    void help() override\n    {\n        // Called when user runs:   help hello_world\n        log(\"Usage: hello_world\\n\");\n        log(\"Prints the names of all modules in the current design.\\n\");\n    }\n\n    void execute(std::vector<std::string> args, RTLIL::Design *design) override\n    {\n        log_header(design, \"Executing HELLO_WORLD pass.\\n\");\n\n        if (args.size() != 1) {\n            log_cmd_error(\"This pass takes no arguments.\\n\");\n        }\n\n        log(\"Modules in current design:\\n\");\n        for (auto module : design->modules()) {\n            if (!design->selected(module))\n                continue;\n            log(\"  %s\\n\", log_id(module));\n        }\n    }\n} HelloWorldPass;\n\nPRIVATE_NAMESPACE_END"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

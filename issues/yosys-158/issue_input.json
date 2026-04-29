@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 158,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/158",
+  "title": "Speeding up auto-wires",
+  "body": "Hello, just getting started with yosys and very impressed with it.\n\nI tried reading in a netlist with read_verilog and found it was extremely slow. After some debug, I narrowed down the problem to this loop in simplify.cc:\n\n``` C++\n    if (type == AST_IDENTIFIER) {\n        if (current_scope.count(str) == 0) {\n            for (auto node : current_ast_mod->children) {\n                if ((node->type == AST_PARAMETER || node->type == AST_LOCALPARAM || node->type == AST_WIRE || node->type == AST_AUTOWIRE || node->type == AST_GENVAR ||\n                        node->type == AST_MEMORY || node->type == AST_FUNCTION || node->type == AST_TASK || node->type == AST_DPI_FUNCTION) && str == node->str) {\n                    current_scope[node->str] = node;\n                    break;\n                }\n            }\n        }\n```\n\nEvery time it encounters an undeclared wire, it searches all children of the current module. This seems unnecessary, as all the declared wires and previously created autowires are already in current_scope. Deleting the loop fixed the performance issue.\n\nTo reproduce what I'm seeing, start with a netlist. For debug purposes, I reduced mine to a few 10s of thousands of cells. Running read_verilog with none of the single bit wires declared took 23 seconds. Declaring all of those wires reduced it to 2 seconds. Removing the loop above and removing the wire declarations also took 2 seconds.\n\nJust wanted to point this out in case this optimization is valid. There might be some reason I'm not seeing that this loop needs to be there, for example to find whether the identifier matches another type that is not already in current_scope. In that case, this can be ignored, or maybe there's another way to speed up the netlist case.\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-05-04",
+  "closed_at": "2016-05-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 515,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/515",
+  "title": "buffer pointer does not roll back to zero",
+  "body": "I wrote a simplified version of the buffer as described below: \r\ntakes 1 byte inputs and outputs 3 bytes, \r\nstores 8 bytes of data\r\n\r\nI expect buffer to wrap around and output last, first and second bytes after array index rdPntr+1 and rdPntr+2 overflow(ie. o_data[23:0] = \"070001\"). **Verilator** and **simulator of vivado** give the expected output. However, **iverilog** displays \"07xxxx\" in wave trace as i attached below.\r\n\r\ncode: \r\n```\r\nmodule lineBuffer(\r\ninput   i_clk,\r\ninput   i_rst,\r\ninput [7:0] i_data,\r\ninput   i_data_valid,\r\noutput [23:0] o_data,\r\ninput i_rd_data\r\n);\r\n\r\nreg [7:0] line [7:0]; //line buffer\r\nreg [2:0] wrPntr;\r\nreg [2:0] rdPntr;\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_data_valid)\r\n        line[wrPntr] <= i_data;\r\nend\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_rst)\r\n        wrPntr <= 'd0;\r\n    else if(i_data_valid)\r\n        wrPntr <= wrPntr + 'd1;\r\nend\r\n\r\nassign o_data = {line[rdPntr],line[rdPntr+1],line[rdPntr+2]};\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_rst)\r\n        rdPntr <= 'd0;\r\n    else if(i_rd_data)\r\n        rdPntr <= rdPntr + 'd1;\r\nend\r\n\r\n\r\nendmodule\r\n```\r\niverilog trace:\r\n![Screenshot from 2021-05-13 22-29-18](https://user-images.githubusercontent.com/35190700/118178209-5ad6dc00-b43c-11eb-9ebf-6a7131c1a0d5.png)\r\n\r\nverilator trace:\r\n![Screenshot from 2021-05-13 22-24-17](https://user-images.githubusercontent.com/35190700/118178275-704c0600-b43c-11eb-92d1-5e292318aec9.png)\r\n\r\niverilog v11.0\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-05-13",
+  "closed_at": "2021-05-16",
+  "code_blocks": [
+    "module lineBuffer(\r\ninput   i_clk,\r\ninput   i_rst,\r\ninput [7:0] i_data,\r\ninput   i_data_valid,\r\noutput [23:0] o_data,\r\ninput i_rd_data\r\n);\r\n\r\nreg [7:0] line [7:0]; //line buffer\r\nreg [2:0] wrPntr;\r\nreg [2:0] rdPntr;\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_data_valid)\r\n        line[wrPntr] <= i_data;\r\nend\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_rst)\r\n        wrPntr <= 'd0;\r\n    else if(i_data_valid)\r\n        wrPntr <= wrPntr + 'd1;\r\nend\r\n\r\nassign o_data = {line[rdPntr],line[rdPntr+1],line[rdPntr+2]};\r\n\r\nalways @(posedge i_clk)\r\nbegin\r\n    if(i_rst)\r\n        rdPntr <= 'd0;\r\n    else if(i_rd_data)\r\n        rdPntr <= rdPntr + 'd1;\r\nend\r\n\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

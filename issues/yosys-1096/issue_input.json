@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1096,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1096",
+  "title": "Yosys only checks the local directory for $readmemh files",
+  "body": "## Steps to reproduce the issue\r\n\r\nCreate a project with a subdirectory, `subd`.  Place the following mcve into that subdirectory:\r\n\r\n```verilog\r\nmodule\tmemdev(i_clk, i_addr, o_data);\r\n\tparameter\tDW=32;\r\n\tparameter\tHEXFILE=\"rom.hex\";\r\n\tinput\twire\t\t\ti_clk;\r\n\tinput\twire\t[4:0]  \ti_addr;\r\n\toutput\treg\t[(DW-1):0]\to_data;\r\n\r\n\treg\t[(DW-1):0]\tmem\t[0:31];\r\n\tinitial\t$readmemh(HEXFILE, mem);\r\n\talways @(posedge i_clk)\r\n\t\to_data <= mem[sw_addr];\r\n\r\nendmodule\r\n```\r\n\r\nAlso, place the `rom.hex` file into the same subdirectory.\r\n\r\nNow imagine that this Verilog file is part of a larger project with many pieces.  You might wish to synthesize it from the basic directory rather than the subdirectory using a command such as,\r\n\r\n`yosys -p 'read -sv subd/mcve.v; synth'`\r\n\r\n## Expected behavior\r\n\r\nI would expect an option to have the hex file read from either the local directory, the directory that the `.v` file is found within, or otherwise a configurable parameter indicating where the associated data files might be found.\r\n\r\n## Actual behavior\r\n\r\nYosys currently checks files relative to the location where yosys was called only.  As a result, it cannot find this hex file.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-06-14",
+  "closed_at": "2022-08-22",
+  "code_blocks": [
+    "module\tmemdev(i_clk, i_addr, o_data);\r\n\tparameter\tDW=32;\r\n\tparameter\tHEXFILE=\"rom.hex\";\r\n\tinput\twire\t\t\ti_clk;\r\n\tinput\twire\t[4:0]  \ti_addr;\r\n\toutput\treg\t[(DW-1):0]\to_data;\r\n\r\n\treg\t[(DW-1):0]\tmem\t[0:31];\r\n\tinitial\t$readmemh(HEXFILE, mem);\r\n\talways @(posedge i_clk)\r\n\t\to_data <= mem[sw_addr];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

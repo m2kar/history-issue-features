@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1698,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1698",
+  "title": "Masked array index in for loop.",
+  "body": "```\r\nmodule guard1 ( o_flops, in_flops, clk );\r\n    input                 clk;\r\n    input       [0:3]     in_flops;\r\n    output      [0:3]     o_flops;\r\n\r\n    reg  flops  [0:3];\r\n\r\n    integer i;\r\n    always @(posedge clk) begin\r\n        for(i=0; i<4; i=i+1) begin\r\n            flops[i] <= i<3 ? flops[i+1] : flops[i];  // Not working\r\n            // flops[i] <= i<3 ? flops[i] : in_flops[i];  // Working\r\n            // flops[i] <= in_flops[i]; // Working\r\n        end\r\n    end\r\n\r\n    assign o_flops = {flops[3], flops[2], flops[1], flops[0]};\r\n\r\nendmodule\r\n\r\n```\r\n## Expected behavior\r\n\r\nMemory access to invalid location [4] should obey mask i<3.\r\n\r\n## Actual behavior\r\n\r\nFor loop evaluates [i+1] with value 3, leading invalid location [4]. \r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-02-12",
+  "closed_at": "2020-02-12",
+  "code_blocks": [
+    "module guard1 ( o_flops, in_flops, clk );\r\n    input                 clk;\r\n    input       [0:3]     in_flops;\r\n    output      [0:3]     o_flops;\r\n\r\n    reg  flops  [0:3];\r\n\r\n    integer i;\r\n    always @(posedge clk) begin\r\n        for(i=0; i<4; i=i+1) begin\r\n            flops[i] <= i<3 ? flops[i+1] : flops[i];  // Not working\r\n            // flops[i] <= i<3 ? flops[i] : in_flops[i];  // Working\r\n            // flops[i] <= in_flops[i]; // Working\r\n        end\r\n    end\r\n\r\n    assign o_flops = {flops[3], flops[2], flops[1], flops[0]};\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

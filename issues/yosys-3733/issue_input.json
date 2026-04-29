@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3733,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3733",
+  "title": "Add outputs before inputs to the sigmap in the AIGER backend.",
+  "body": "## Summary\r\nThis change fixes an issue where the input port ordering isn't maintained when writing an AIGER file if an output is directly connected to an input.\r\n\r\nFor example, if the inputs are `[a, b, c]` and `b` is connected to an output, then `b` gets moved to the end, and the inputs in the AIG are incorrectly ordered `[a, c, b]`.\r\n\r\n## Reproducible example\r\nVerilog file `/tmp/circuit.v`:\r\n```verilog\r\nmodule circuit(a, b, c, out);\r\n  input a;\r\n  input b;\r\n  input c;\r\n  wire a;\r\n  wire b;\r\n  wire c;\r\n  output [2:0] out;\r\n  wire [2:0] out;\r\n  assign out[0] = b;\r\n  assign out[1] = a & c;\r\nendmodule\r\n```\r\nCommand: `yosys -p \"read_verilog -sv /tmp/circuit.v; aigmap; write_aiger -ascii -symbols /tmp/circuit.aig\"`\r\n\r\n### Output\r\n\r\nThe AIGER file shows the following snippet in the symbol table, showing that the inputs are being ordered `[a, c, b]`:\r\n```\r\ni0 a\r\ni1 c\r\ni2 b\r\n```\r\n\r\n### Expected output\r\n\r\nThe AIGER file shows the following snippet in the symbol table, showing that the inputs are being ordered `[a, b, c]`:\r\n```\r\ni0 a\r\ni1 b\r\ni2 c\r\n```\r\n\r\n## Debugging\r\nThe root cause seems to be that the [disjoint set data structure (called sigmap)](https://github.com/YosysHQ/yosys/blob/7efc50367ed8f582001a5a293a9cd51f788f6a13/backends/aiger/aiger.cc#L45) is being used to identify when some bits are the same. In this case, input `b` and output `out[0]` are identified to be the same. Each collection of bits has a canonical representative, which is the most recent bit that was added to the sigmap. Because the output bits are [being added to the sigmap](https://github.com/YosysHQ/yosys/blob/7efc50367ed8f582001a5a293a9cd51f788f6a13/backends/aiger/aiger.cc#L127-L130) after [the input bits are](https://github.com/YosysHQ/yosys/blob/7efc50367ed8f582001a5a293a9cd51f788f6a13/backends/aiger/aiger.cc#L122-L125), the canonical representative of an input/output bit pair that are identified to be the same is always the output bit. In this case, the canonical representative of `{b, out[0]}` is `out[0]`.\r\n\r\nIn the AIGER backend, the [input bits are being sorted](https://github.com/YosysHQ/yosys/blob/7efc50367ed8f582001a5a293a9cd51f788f6a13/backends/aiger/aiger.cc#L318). Sorting is defined on bits by sorting first on the associated wire, then by position. Because the canonical representative of `b` is `out[0]`, `b` is sorted after the other inputs as its wire attribute is taken to be the output wire.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-04-19",
+  "closed_at": "2023-05-22",
+  "code_blocks": [
+    "module circuit(a, b, c, out);\r\n  input a;\r\n  input b;\r\n  input c;\r\n  wire a;\r\n  wire b;\r\n  wire c;\r\n  output [2:0] out;\r\n  wire [2:0] out;\r\n  assign out[0] = b;\r\n  assign out[1] = a & c;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

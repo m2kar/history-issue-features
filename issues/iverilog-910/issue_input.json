@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 910,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/910",
+  "title": "Issues with seeing driven signal in VCD (PLI application)",
+  "body": "So I have a simple test design with clk port. My Rather simple PLI C program scans for ports, and then registers necessary callbacks, and one of the callbacks shown below:\r\n```\r\nstatic PLI_INT32 clk_lo(p_cb_data data)\r\n{\r\n  static int cnt = 0;\r\n\r\n  printf(\"clk_lo called!\\n\");\r\n  vpiHandle cbH;\r\n\r\n  s_cb_data cb;\r\n  s_vpi_value val;\r\n  s_vpi_vecval vecVal;\r\n  s_vpi_time tim, tim2;\r\n\r\n\r\n  tim.high = 0;\r\n  tim.low = t_delta;\r\n  tim.type = vpiSimTime;\r\n\r\n  tim2.high = 0;\r\n  tim2.low = 0;\r\n  tim2.type = vpiSimTime;\r\n\r\n  // int value = 1;\r\n\r\n  vecVal.aval = 1;\r\n  vecVal.bval = 0;\r\n  val.format = vpiVectorVal;\r\n  val.value.vector = &vecVal;\r\n\r\n  vpi_put_value(clk, &val, NULL, vpiNoDelay);\r\n\r\n  cb.reason = cbAfterDelay;\r\n  cb.cb_rtn = &clk_hi;\r\n  cb.time = &tim;\r\n\r\n  if (cnt < 10) {\r\n    if ((cbH = vpi_register_cb (&cb)) == NULL)\r\n      printf (\"cannot register clk_hi call-back\\n\"); }\r\n\r\n    // vpi_free_object(cbH); // make sure you call it to clear cbH\r\n\r\n    cnt++;\r\n    return 0;\r\n  }\r\n```\r\n\r\nJust calls another callback, and most importantly sets clk port of my DUT with a value 1.\r\n\r\nDurign a compile and run, I do not see any issues, the top print statement \"clk_lo called!\" prints 10 times or so, which is what is planned. In other words, app seems to run fine.\r\n\r\nHowever, my problem is that when I do view VCD dump, I see all top signals of design, but dont see clk being toggled.\r\n\r\nHere is what is added in DUT (later I plan to add it to separate top file maybe, but for now it doesnt matter and below code appears at the end of design):\r\n```\r\ninitial\r\n begin\r\n    $dumpfile(\"test.vcd\");\r\n    $dumpvars(0, dut_top);\r\n end\r\n```\r\n\r\ni compile everything and run with:\r\n```\r\niverilog -o dut_top.vvp -s dut_top -s dut_top ./src/top.v \r\nvvp -M ../vip/build/ -m ../vip/build/libdut_top.vpi.so ./dut_top.vvp\r\n```\r\n\r\nSo what am I missing? why my signal seems to be driven and PLI C program runs OK, but VCD file not capturing the changes?",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-04-23",
+  "closed_at": "2023-04-23",
+  "code_blocks": [
+    "static PLI_INT32 clk_lo(p_cb_data data)\r\n{\r\n  static int cnt = 0;\r\n\r\n  printf(\"clk_lo called!\\n\");\r\n  vpiHandle cbH;\r\n\r\n  s_cb_data cb;\r\n  s_vpi_value val;\r\n  s_vpi_vecval vecVal;\r\n  s_vpi_time tim, tim2;\r\n\r\n\r\n  tim.high = 0;\r\n  tim.low = t_delta;\r\n  tim.type = vpiSimTime;\r\n\r\n  tim2.high = 0;\r\n  tim2.low = 0;\r\n  tim2.type = vpiSimTime;\r\n\r\n  // int value = 1;\r\n\r\n  vecVal.aval = 1;\r\n  vecVal.bval = 0;\r\n  val.format = vpiVectorVal;\r\n  val.value.vector = &vecVal;\r\n\r\n  vpi_put_value(clk, &val, NULL, vpiNoDelay);\r\n\r\n  cb.reason = cbAfterDelay;\r\n  cb.cb_rtn = &clk_hi;\r\n  cb.time = &tim;\r\n\r\n  if (cnt < 10) {\r\n    if ((cbH = vpi_register_cb (&cb)) == NULL)\r\n      printf (\"cannot register clk_hi call-back\\n\"); }\r\n\r\n    // vpi_free_object(cbH); // make sure you call it to clear cbH\r\n\r\n    cnt++;\r\n    return 0;\r\n  }",
+    "initial\r\n begin\r\n    $dumpfile(\"test.vcd\");\r\n    $dumpvars(0, dut_top);\r\n end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

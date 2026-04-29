@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1004,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1004",
+  "title": "Lack of parameter expansion causing warnings",
+  "body": "Take a minimal example below:\r\n\r\n```sv\r\nmodule minimal ();\r\n    localparam FOO = 3;\r\n\r\n    logic v [0:FOO-1];\r\n    logic nv [0:FOO-1];\r\n\r\n    integer i; \r\n    always_comb begin\r\n        for (i=0; i<FOO; i=i+1) begin\r\n            nv[i] = 1'b0;\r\n            if (v[i]) nv[i] = 1'b1;\r\n        end\r\n    end\r\n\r\nendmodule: minimal\r\n```\r\n`iverilog` compiles above successfully without any warnings or errors, as expected.\r\n\r\nNow if I change the `localparam FOO = 3` declaration to `localparam FOO = 3 + 1`, I get the following warning:\r\n\r\n```\r\nminimal.sv:9: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_comb process.\r\n```\r\n\r\nObservation: Any form of parameter expansion prints the above warning. Examples: `parameter FOO = BAR + BAZ`, `localparam FOO = BAR + 1`, etc.\r\n\r\nTested with: `iverilog v12.0 (devel) (s20150603-1658-g74c52d6fa)` and  `iverilog v13.0 (devel) (s20221226-114-ge9646bbbd)`. Command used: `iverilog -g2012 -ominimal minimal.sv`\r\n\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2023-09-28",
+  "closed_at": "2024-01-07",
+  "code_blocks": [
+    "module minimal ();\r\n    localparam FOO = 3;\r\n\r\n    logic v [0:FOO-1];\r\n    logic nv [0:FOO-1];\r\n\r\n    integer i; \r\n    always_comb begin\r\n        for (i=0; i<FOO; i=i+1) begin\r\n            nv[i] = 1'b0;\r\n            if (v[i]) nv[i] = 1'b1;\r\n        end\r\n    end\r\n\r\nendmodule: minimal",
+    "minimal.sv:9: warning: A for statement must use the index (i) in the condition expression to be synthesized in an always_comb process."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

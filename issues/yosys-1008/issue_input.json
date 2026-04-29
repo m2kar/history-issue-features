@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1008,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1008",
+  "title": "Create $(LIBDIR) to fix broken build in isolated environments",
+  "body": "While building yosys with libyosys+pyosys enabled in an isolated build environment (for distribution packaging), the install step fails at various places. I propose some fixes in this PR:\r\n\r\n1. Installation fails at `strip libyosys.so`. This is caused by this copy line:\r\n\r\n```\r\n$(INSTALL_SUDO) cp libyosys.so $(DESTDIR)$(LIBDIR)\r\n```\r\n\r\nWhile on a regular system, this folder will exist (and `cp` will copy the file into it), in an isolated environment it might not. This makes libyosys.so end up as a file called 'lib' in $(DESTDIR)/$(PREFIX), and then the 'strip' command fails.\r\nThis PR explicitly creates the directory before copying, and also appends slashes to related copy-calls, making already the copy-step fail if the directory does not exist.\r\n\r\n2. After fixing the first issue, calling `ldconfig` without sudo (as installation happens to an isolated area) will fail, and as I'm not so sure it's a good idea to have it in the Makefile I removed this call as well. I agree it should be called, but either it has to be done manually or the Makefile would need to check if INSTALL_SUDO is actually sudo...\r\n\r\n3. The way of installing the python package is not compatible with this approach as well:\r\n- PREFIX is completely ignored for the Python stuff, instead it uses python-config --prefix\r\n- It installs to `dist-packages`, which is Debian specific and also only supposed to be used for packages installed with the distribution.\r\n\r\n The canonical solution to these problems would be to make a proper Python package and then use setuptools to install them at the right location. I at least factored out PYTHON_PREFIX so build scripts can override this part, and used `site-packages` instead of `dist-packages`.\r\n\r\nLet me know if you're unhappy with any of these changes, I'd be happy to work on that.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-14",
+  "closed_at": "2019-05-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

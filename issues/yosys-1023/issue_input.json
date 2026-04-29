@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1023,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1023",
+  "title": "proc_clean regression",
+  "body": "## Steps to reproduce the issue\r\n\r\n`./yosys -p \"read_verilog -icells top.v; techmap\" -g` fails on master (b5a29460) works fine on yosys-0.8, and from memory, ~2 weeks ago.\r\n\r\n```\r\nmodule mux_case_5_1(i, s, o);\r\n  input [4:0] i;\r\n  output o;\r\n  input [2:0] s;\r\n  \\$shiftx  #(\r\n    .A_SIGNED(32'd0),\r\n    .A_WIDTH(32'd1),\r\n    .B_SIGNED(32'd0),\r\n    .B_WIDTH(32'sd0),\r\n    .Y_WIDTH(32'd1)\r\n  ) _34_ (\r\n    .A(i[4]),\r\n    .B(),\r\n    .Y(o)\r\n  );\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\nNo ERROR. Even if the result is actually nothing...\r\n\r\n## Actual behavior\r\n\r\n```\r\n<<SNIP>>\r\n2.4.8. Executing PROC_CLEAN pass (remove empty switches from decision trees).\r\nRemoving empty process `$paramod$2c8d16adbbfd7d0174db5fcfe6c817b9d0ad9b77\\_90_shift_shiftx.$proc$<techmap.v>:145$45'.\r\nCleaned up 0 empty switches.\r\nFinding unused cells or wires in module $paramod$2c8d16adbbfd7d0174db5fcfe6c817b9d0ad9b77\\_90_shift_shiftx..\r\n  removing unused non-port wire \\B.\r\n  removing unused non-port wire $0\\i[31:0].\r\n  removing unused non-port wire $0\\overflow[0:0].\r\n  removing unused non-port wire $0\\buffer[0:0].\r\nRemoved 0 unused cells and 4 unused wires.\r\nERROR: Assert `port_declared == true' failed in kernel/rtlil.cc:1352.\r\n```\r\n\r\nNote that `\\B` above is actually a port, making that statement false.\r\n\r\nBonus points: Running `yosys` in the way above without the `-g` argument hides the error outright, i.e.:\r\n```\r\nGenerating RTLIL representation for module `\\_90_lut'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2.2. Continuing TECHMAP pass.\r\n$\r\n```\r\n",
+  "labels": [
+    "fix-pending",
+    "regression"
+  ],
+  "state": "closed",
+  "created_at": "2019-05-22",
+  "closed_at": "2019-05-27",
+  "code_blocks": [
+    "module mux_case_5_1(i, s, o);\r\n  input [4:0] i;\r\n  output o;\r\n  input [2:0] s;\r\n  \\$shiftx  #(\r\n    .A_SIGNED(32'd0),\r\n    .A_WIDTH(32'd1),\r\n    .B_SIGNED(32'd0),\r\n    .B_WIDTH(32'sd0),\r\n    .Y_WIDTH(32'd1)\r\n  ) _34_ (\r\n    .A(i[4]),\r\n    .B(),\r\n    .Y(o)\r\n  );\r\nendmodule",
+    "<<SNIP>>\r\n2.4.8. Executing PROC_CLEAN pass (remove empty switches from decision trees).\r\nRemoving empty process `$paramod$2c8d16adbbfd7d0174db5fcfe6c817b9d0ad9b77\\_90_shift_shiftx.$proc$<techmap.v>:145$45'.\r\nCleaned up 0 empty switches.\r\nFinding unused cells or wires in module $paramod$2c8d16adbbfd7d0174db5fcfe6c817b9d0ad9b77\\_90_shift_shiftx..\r\n  removing unused non-port wire \\B.\r\n  removing unused non-port wire $0\\i[31:0].\r\n  removing unused non-port wire $0\\overflow[0:0].\r\n  removing unused non-port wire $0\\buffer[0:0].\r\nRemoved 0 unused cells and 4 unused wires.\r\nERROR: Assert `port_declared == true' failed in kernel/rtlil.cc:1352.",
+    "Generating RTLIL representation for module `\\_90_lut'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2.2. Continuing TECHMAP pass.\r\n$"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

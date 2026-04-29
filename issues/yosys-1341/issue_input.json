@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1341,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1341",
+  "title": "0.9 generates .json parameter that nextpnr can't parse due to extra <space> character (worked in 0.8)",
+  "body": "## Steps to reproduce the issue\r\nSee [gist files](https://gist.github.com/ret/3b762574d65b05736adf7d7382cc48b5) to help reproduce.\r\n\r\nThe issue is present in `Yosys 0.9+1 (git sha1 a0b666f2, clang 10.0.1 -fPIC -Os)`. Worked in `Yosys 0.8+     615 (git sha1 a02d1720, clang 10.0.1 -fPIC -Os)`\r\n\r\n## Expected behavior\r\nNo extra spaces in .json parameter (PULLUP), i.e. `\"1\"`.\r\n\r\n## Actual behavior\r\nExtra space `\"1 \"` in .json parameter (PULLUP), which `nextpnr` fails on.\r\n\r\n## Details\r\n`Yosys 0.9+1 (git sha1 a0b666f2, clang 10.0.1 -fPIC -Os)` produces an extra space in `\"1 \"` for the `PULLUP` parameter below:\r\n```json\r\n\r\n        \"uart_0__rx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 1,\r\n            \"PULLUP\": \"1 \"\r\n          },\r\n\t  ...\r\n\r\n        \"uart_0__tx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 25,\r\n            \"PULLUP\": \"1 \"\r\n          },\r\n          ...\r\n```\r\n\r\nThis trips up nextpnr to error out with\r\n```console\r\nERROR: expected numeric value for parameter 'PULLUP' on cell 'uart_0__rx_0'\r\n```\r\n\r\nVersion `Yosys 0.8+     615 (git sha1 a02d1720, clang 10.0.1 -fPIC -Os)` did not produce the extra space:\r\n```json\r\n\r\n        \"uart_0__rx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 1,\r\n            \"PULLUP\": \"1\"\r\n          },\r\n\t  ...\r\n\r\n        \"uart_0__tx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 25,\r\n            \"PULLUP\": \"1\"\r\n          },\r\n          ...\r\n```\r\nReverting https://github.com/YosysHQ/yosys/commit/15fae357f6c7a5c205d2733cd0b2640eecd17a2d removes the problem (as a workaround).\r\n\r\nI believe https://github.com/YosysHQ/yosys/blob/master/backends/json/json.cc#L102 may be the problematic line and will send a separate pull request to change it to add the space only if `state == 1`.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-08-29",
+  "closed_at": "2019-08-29",
+  "code_blocks": [
+    "\"uart_0__rx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 1,\r\n            \"PULLUP\": \"1 \"\r\n          },\r\n\t  ...\r\n\r\n        \"uart_0__tx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 25,\r\n            \"PULLUP\": \"1 \"\r\n          },\r\n          ...",
+    "ERROR: expected numeric value for parameter 'PULLUP' on cell 'uart_0__rx_0'",
+    "\"uart_0__rx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 1,\r\n            \"PULLUP\": \"1\"\r\n          },\r\n\t  ...\r\n\r\n        \"uart_0__tx_0\": {\r\n          ...\r\n          \"parameters\": {\r\n            \"IO_STANDARD\": \"SB_LVTTL\",\r\n            \"PIN_TYPE\": 25,\r\n            \"PULLUP\": \"1\"\r\n          },\r\n          ..."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

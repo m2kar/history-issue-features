@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 982,
+  "title": "INIT attribute not set on FDRE when shift register inference",
+  "features": [
+    {
+      "name": "wide register with explicit initializer in LFSR shift pattern",
+      "category": "data_model",
+      "description": "Code should include a multi-bit register (width > 16) explicitly initialized to a known value (e.g. zero), used in a shift register feedback loop where the shift-and-feedback logic is applied every clock edge",
+      "snippet": "reg [24:1] state = 24'b0;\nalways @(posedge clk)\n  state <= { state[23:1], state[24] ~^ state[23] ~^ state[22] ~^ state[17] };",
+      "tags": ["register", "initializer", "lfsr", "shift_register", "xnor_feedback"],
+      "source_bug_id": "982",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/982",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "concatenation-based shift with multi-tap XOR/XNOR feedback",
+      "category": "control_flow",
+      "description": "Code should include a non-blocking assignment using concatenation to perform a shift operation, where the inserted bit is computed from multiple taps of the same register combined with XNOR operators",
+      "snippet": "state <= { state[23:1], state[24] ~^ state[23] ~^ state[22] ~^ state[17] };",
+      "tags": ["concatenation", "shift", "xnor", "feedback", "lfsr"],
+      "source_bug_id": "982",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/982",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "register init value propagation across sequential optimization boundary",
+      "category": "data_model",
+      "description": "Code should include a register with a known binary initializer where the register feeds a shift-chain, so that synthesis tools must propagate the init attribute through shift-register inference optimization passes",
+      "snippet": "reg [24:1] state = 24'b0;\nalways @(posedge clk)\n  state <= { state[23:1], feedback_bit };\nassign dout = state[24];",
+      "tags": ["register_init", "init_attribute", "shift_inference", "synthesis_attribute"],
+      "source_bug_id": "982",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/982",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

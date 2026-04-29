@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1456,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1456",
+  "title": "Verilog reader fails on nested generates that each declare wire with same name",
+  "body": "# Repro instructions\r\n\r\ntest4.v:\r\n```Verilog\r\nmodule test4 (data_in);\r\n\r\ninput wire [127:0] data_in;\r\n\r\ngenvar l0;\r\ngenvar l1;\r\n\r\ngenerate\r\nfor(l0=0;l0<4;l0=l0+1)\r\n  begin : g0\r\n    wire [31:0] data = data_in[63:32];\r\n\r\n    for(l1=0;l1<4;l1=l1+1)\r\n      begin : g1\r\n        wire [7:0] data = data_in[63:56];\r\n      end\r\n\r\n  end\r\nendgenerate\r\n\r\nendmodule\r\n```\r\n\r\nExecute:\r\n\r\n    yosys -p \"read_verilog -sv test4.v\"\r\n\r\n# Actual Result\r\n\r\n```\r\n Yosys 0.9+932 (git sha1 0d037bf, gcc 5.4.0-6ubuntu1~16.04.11 -Og -fPIC)\r\n\r\n\r\n-- Running command `read_verilog -sv test4.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test4.v\r\nParsing SystemVerilog input from `test4.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test4'.\r\ntest4.v:11: ERROR: Failed to detect width of signal access `\\g0[0].data'!\r\n```\r\n\r\n# Expected Result\r\n\r\nNo error.\r\n\r\nIt works fine on iverilog, verilator, and a bunch of commercial tools.",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-10-18",
+  "closed_at": "2020-08-18",
+  "code_blocks": [
+    "module test4 (data_in);\r\n\r\ninput wire [127:0] data_in;\r\n\r\ngenvar l0;\r\ngenvar l1;\r\n\r\ngenerate\r\nfor(l0=0;l0<4;l0=l0+1)\r\n  begin : g0\r\n    wire [31:0] data = data_in[63:32];\r\n\r\n    for(l1=0;l1<4;l1=l1+1)\r\n      begin : g1\r\n        wire [7:0] data = data_in[63:56];\r\n      end\r\n\r\n  end\r\nendgenerate\r\n\r\nendmodule",
+    "Yosys 0.9+932 (git sha1 0d037bf, gcc 5.4.0-6ubuntu1~16.04.11 -Og -fPIC)\r\n\r\n\r\n-- Running command `read_verilog -sv test4.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test4.v\r\nParsing SystemVerilog input from `test4.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test4'.\r\ntest4.v:11: ERROR: Failed to detect width of signal access `\\g0[0].data'!"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

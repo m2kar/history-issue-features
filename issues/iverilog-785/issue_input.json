@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 785,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/785",
+  "title": "Improve handling of type identifier references ",
+  "body": "Currently when referencing a typedef this gets replaced with the\r\n`data_type_t` that the typedef points to. This works for most cases, but\r\nthere are some corner cases where it breaks down.\r\n\r\nE.g. it is possible to have a scoped type identifier which references a\r\ntype defined in a package. For such type identifiers, only the data_type_t\r\nitself is remembered, but not the package scope. This will cause the type\r\nidentifier to be elaborated in the wrong scope.\r\n\r\nFurthermore type identifiers of vector types used for module or task port\r\nmight not be elaborated in the correct scope.\r\n\r\nIntroduce a new `typeref_t` which has `data_type_t` as a base type and can\r\nbe used as the data type for a signal. A new instance of a `typeref_t` is\r\ncreated when referencing a type identifier. The `typeref_t` remembers both\r\nthe data type and the scope of the type identifier.\r\n\r\nWhen elaborating the `typeref_t` the elaboration is passed through to the\r\nreferenced `data_type_t`. But special care is taken to lookup the right\r\nscope first.\r\n\r\nWith the new approach also typedefs of typedefs are supported. This\r\npreviously did not work because chained typedefs all reference the same\r\n`data_type_t`, but each typedef sets the `name` field of the `data_type_t`.\r\nSo the second typedef overwrites the first typedef and a lookup of the\r\nscope of the first typedef by name will fail as it will return the scope of\r\nthe second typedef.\r\n\r\nThis refactoring also allows to define clear ownership of a data_type_t\r\ninstance. This e.g. means that an array type owns its base type and the\r\nbase type can be freed when the array type itself is freed. The same is\r\ntrue for signals and class properties, they now own their data type and the\r\ndata type can be freed when the signal or property is freed.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-15",
+  "closed_at": "2022-10-17",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

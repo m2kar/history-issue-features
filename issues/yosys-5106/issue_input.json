@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5106,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5106",
+  "title": "read_verilog: conflicting drivers for integers set in multiple processes",
+  "body": "### Version\n\nYosys 0.51 (git sha1 c4b5190229616f7ebf8197f43990b4429de3e420, g++ 14.2.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```v\nmodule bug (\n\tclk_a,\n\tclk_b,\n);\n\tinput wire clk_a;\n\tinput wire clk_b;\n\tinteger i;\n\talways @(posedge clk_a) begin\n\t\ti = 1;\n\tend\n\n\talways @(posedge clk_b) begin\n\t\ti = 2;\n\tend\nendmodule\n```\n`read_verilog bug.v; proc; check`\n\nThis is notable as it seems to be a realistic pattern to iterate over `integer i` from 0 to whatever in two distinct processes, like in `techlibs/quicklogic/qlf_k6n10f/sram1024x18_mem.v`. I intuitively expect it to be valid Verilog and can't figure out anything clearly to the contrary, even if the standard ominously says \"If loops in two or more parallel processes use the same loop control variable, there is a potential of one loop modifying the variable while other loops are still using it.\" \n\n### Expected Behavior\n\nNo warnings\n\n### Actual Behavior\n\n```\nWarning: multiple conflicting drivers for bad.\\i [31]:\n    port Q[31] of cell $procdff$4 ($dff)\n    port Q[31] of cell $procdff$3 ($dff)\nWarning: multiple conflicting drivers for bad.\\i [30]:\n```\netc",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2025-05-08",
+  "closed_at": null,
+  "code_blocks": [
+    "module bug (\n\tclk_a,\n\tclk_b,\n);\n\tinput wire clk_a;\n\tinput wire clk_b;\n\tinteger i;\n\talways @(posedge clk_a) begin\n\t\ti = 1;\n\tend\n\n\talways @(posedge clk_b) begin\n\t\ti = 2;\n\tend\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

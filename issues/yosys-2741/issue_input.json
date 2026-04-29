@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2741,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2741",
+  "title": "hierarchy -chparam cannot decode string parameter value",
+  "body": "## Steps to reproduce the issue\r\nexample.v\r\n```verilog\r\nmodule example #(\r\n    // TEST can be \"PASS\" or \"INV\"\r\n    parameter TEST = \"PASS\"\r\n)(\r\n    input a,\r\n    output b\r\n);\r\n\r\nalways @(*)\r\n    if(TEST==\"PASS\")\r\n        b = a;\r\n    else\r\n        b = ~a;\r\n\r\nendmodule\r\n```\r\n```tcl\r\nread -formal example.v\r\n\r\nhierarchy -top example -chparam TEST \"PASS\"\r\nprep -top example\r\n```\r\nI am yosys with cmd `yosys design.ys`\r\n## Expected behavior\r\nParameter TEST is expected assign with value \"PASS\"\r\n\r\n## Actual behavior\r\nBut I got\r\n```bash\r\n\r\n Yosys 0.9+4052 (git sha1 d061b0e4, clang 6.0.0-1ubuntu2 -fPIC -Os)\r\n\r\n\r\n-- Executing script file `design.ys' --\r\n\r\n1. Executing Verilog-2005 frontend: example.v\r\nParsing formal SystemVerilog input from `example.v' to AST representation.\r\nStoring AST representation for module `$abstract\\example'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\nERROR: Can't decode value '\"PASS\"'!\r\n```\r\nI check the help of cmd **hierarchy**, it says\r\n```text\r\n    -chparam name value \r\n       elaborate the top module using this parameter value. Modules on which\r\n       this parameter does not exist may cause a warning message to be output.\r\n       This option can be specified multiple times to override multiple\r\n       parameters. String values must be passed in double quotes (\").\r\n```\r\nThen I try cmd `chparam -set TEST \"PASS\"`, it works fine\r\nAny idea?\r\n\r\n\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2021-05-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module example #(\r\n    // TEST can be \"PASS\" or \"INV\"\r\n    parameter TEST = \"PASS\"\r\n)(\r\n    input a,\r\n    output b\r\n);\r\n\r\nalways @(*)\r\n    if(TEST==\"PASS\")\r\n        b = a;\r\n    else\r\n        b = ~a;\r\n\r\nendmodule",
+    "Yosys 0.9+4052 (git sha1 d061b0e4, clang 6.0.0-1ubuntu2 -fPIC -Os)\r\n\r\n\r\n-- Executing script file `design.ys' --\r\n\r\n1. Executing Verilog-2005 frontend: example.v\r\nParsing formal SystemVerilog input from `example.v' to AST representation.\r\nStoring AST representation for module `$abstract\\example'.\r\nSuccessfully finished Verilog frontend.\r\n\r\n2. Executing HIERARCHY pass (managing design hierarchy).\r\nERROR: Can't decode value '\"PASS\"'!",
+    "-chparam name value \r\n       elaborate the top module using this parameter value. Modules on which\r\n       this parameter does not exist may cause a warning message to be output.\r\n       This option can be specified multiple times to override multiple\r\n       parameters. String values must be passed in double quotes (\")."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

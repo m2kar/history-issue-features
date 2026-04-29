@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 790,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/790",
+  "title": "Default case statement assertions skips prior case states",
+  "body": "## Steps to reproduce the issue\r\n\r\nRun SymbiYosys on the following file, using the SymbiYosys configuration below:\r\n\r\n```\r\nmodule mcve(i_clk, i_value, o_value);\r\n\tinput\twire\t\ti_clk;\r\n\tinput\twire\t[1:0]\ti_value;\r\n\toutput\treg\t[3:0]\to_value;\r\n\r\n\tinitial\to_value = 0;\r\n\talways @(posedge i_clk)\r\n\tcase(i_value)\r\n\t2'b00: o_value <= 4'h1;\r\n\t2'b01: o_value <= 4'h2;\r\n\t2'b10: o_value <= 4'h4;\r\n\t2'b11: o_value <= 4'h8;\r\n\tendcase\r\n\r\n\talways @(*)\r\n\tcase(o_value)\r\n\t4'h0: begin end\r\n\t4'h1: assert(o_value == 4'h1);\r\n\t4'h2: assert(o_value == 4'h2);\r\n\t4'h4: assert(o_value == 4'h4);\r\n\t4'h8: assert(o_value == 4'h8);\r\n\tdefault: assert(0);\r\n\tendcase\r\nendmodule\r\n```\r\n\r\n```\r\n[options]\r\nmode prove\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -formal mcve.v\r\nprep -top mcve\r\n\r\n[files]\r\nmcve.v\r\n```\r\n\r\n## Expected behavior\r\n\r\nAt issue is the `default: assert(0);` statement.  If the `4'h0` case statement contains only `begin end`, then the `assert(0)` will fail even the `o_value` is `4'h0`.  If there is any statement between `begin end` this behavior goes away.\r\n\r\nThis proof should pass\r\n\r\n## Actual behavior\r\n\r\nThe proof fails, with `o_value == 0` at the `default: assert(0)` statement.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-01-18",
+  "closed_at": "2019-01-19",
+  "code_blocks": [
+    "module mcve(i_clk, i_value, o_value);\r\n\tinput\twire\t\ti_clk;\r\n\tinput\twire\t[1:0]\ti_value;\r\n\toutput\treg\t[3:0]\to_value;\r\n\r\n\tinitial\to_value = 0;\r\n\talways @(posedge i_clk)\r\n\tcase(i_value)\r\n\t2'b00: o_value <= 4'h1;\r\n\t2'b01: o_value <= 4'h2;\r\n\t2'b10: o_value <= 4'h4;\r\n\t2'b11: o_value <= 4'h8;\r\n\tendcase\r\n\r\n\talways @(*)\r\n\tcase(o_value)\r\n\t4'h0: begin end\r\n\t4'h1: assert(o_value == 4'h1);\r\n\t4'h2: assert(o_value == 4'h2);\r\n\t4'h4: assert(o_value == 4'h4);\r\n\t4'h8: assert(o_value == 4'h8);\r\n\tdefault: assert(0);\r\n\tendcase\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

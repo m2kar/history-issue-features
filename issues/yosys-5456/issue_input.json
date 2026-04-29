@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5456,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5456",
+  "title": "proc_mux: use assignment action locations for mux src",
+  "body": "Synthesis users often aim try to reduce the FPGA resource usage or chip area by tracking down what in their designs is causing cells to be emitted by looking at the src attributes Yosys emits. Prior to this PR, the multiplexers created by `proc_mux` to select the correct values from cases of Verilog switches would be labeled with the source range of the entire switch together with the source range of the entire case (see Note 1). After this PR, the src attribute for such a multiplexer covers exactly the assignments that it implements.\r\n\r\nTo do this, I'm introducing \"RTLIL\" state that can't be roundtripped through textual RTLIL, specifically, the `Const src` field of the new `struct SyncAction`. Generally the `proc` passes are considered inseparable from `read_verilog`, `proc` converts `Process`es into cells. I don't believe there is a use case where a user would like to print out RTLIL with processes in it and actually do anything with it. OpenROAD flow scripts does write out canonical pre-synthesis RTLIL but running proc ahead of this seems to be a valid change (see Note 2). If it's attempted, the RTLIL backend has a warning that action sources will be lost. When they are lost, the case src range is used, which I consider still an upgade over the current state of things. I'm also open to alternative approaches.\r\n\r\nBefore undrafting:\r\n\r\n- [ ] Fix verific\r\n- [x] Evaluate performance impact and improve if needed\r\n- [x] Write notes about how `proc_mux` works\r\n\r\nNote 1: Also the latter of which was referring only to the end of the case. For example, the `$pmux` at `module tiny2` from the included `tests/proc/proc_mux_src.v`.\r\nNote 2: See https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts/blob/b2918bafbddf77a231fdd5c530cf9d72c1737199/flow/scripts/synth_canonicalize.tcl which refers to https://github.com/The-OpenROAD-Project/OpenROAD-flow-scripts/blob/b2918bafbddf77a231fdd5c530cf9d72c1737199/flow/scripts/synth_preamble.tcl",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-11-02",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

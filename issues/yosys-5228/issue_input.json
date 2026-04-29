@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5228,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5228",
+  "title": "Hang during synthesis:  Yosys enters an infinite loop during $dffe enable generation (or other pass), with no termination.",
+  "body": "### Version\n\nYosys 0.55+23 (git sha1 e57a2b944, g++ 9.4.0-1ubuntu1~20.04.3 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nMinimal Reproduction Example:\n\n```verilog\nmodule top (\n    input wire1,\n    input wire2,\n    input wire3,\n    output reg y\n);\n    wire wire4,wire5,wire6,wire7,wire8;\n    //wire c,     j,    k,     e,    g;\n    reg reg1,reg2,reg3,reg4;\n    //reg l, n, d, f;\n\n    always @(posedge wire1 or negedge wire4) begin\n        if (wire4) begin\n            y = wire5 > reg1;\n            reg1 = (reg1 | wire5) ? wire6 ? wire2 : wire3 ? 0 : reg2 : 0;      \n        end\n    end\n\n    always @(wire2) begin\n        reg3 = wire6;\n    end\n\n    always @(wire7 or wire8 or reg4) begin\n        if (wire7) begin\n            reg1 = 0;\n        end else begin\n            reg3 = wire8;\n            reg1 = reg4;\n        end\n    end\n\nendmodule\n```\n\nYosys script:\n```\nread_verilog ;\nhierarchy ;proc;opt; abc;clean\nsynth;\n```\n\n\nYosys enters an infinite loop during synthesis of a module with multiple assignment points to a register and asynchronous control logic. This causes the synthesis process to hang, continuously printing the same Adding EN signal... log lines without termination.\n\n### Expected Behavior\n\nsynth successfully\n\n### Actual Behavior\n\nResults in non-terminating log output like:\nAdding EN signal on $auto$ff.cc:266:slice$19444669 ($dffe) ...\nAdding EN signal on $auto$ff.cc:266:slice$19444674 ($dffe) ...\n...\n\n<img width=\"1234\" height=\"283\" alt=\"Image\" src=\"https://github.com/user-attachments/assets/0ce35b60-234c-42ce-bc40-77657eb1ab78\" />",
+  "labels": [
+    "bug",
+    "fuzzer"
+  ],
+  "state": "open",
+  "created_at": "2025-07-14",
+  "closed_at": null,
+  "code_blocks": [
+    "module top (\n    input wire1,\n    input wire2,\n    input wire3,\n    output reg y\n);\n    wire wire4,wire5,wire6,wire7,wire8;\n    //wire c,     j,    k,     e,    g;\n    reg reg1,reg2,reg3,reg4;\n    //reg l, n, d, f;\n\n    always @(posedge wire1 or negedge wire4) begin\n        if (wire4) begin\n            y = wire5 > reg1;\n            reg1 = (reg1 | wire5) ? wire6 ? wire2 : wire3 ? 0 : reg2 : 0;      \n        end\n    end\n\n    always @(wire2) begin\n        reg3 = wire6;\n    end\n\n    always @(wire7 or wire8 or reg4) begin\n        if (wire7) begin\n            reg1 = 0;\n        end else begin\n            reg3 = wire8;\n            reg1 = reg4;\n        end\n    end\n\nendmodule",
+    "read_verilog ;\nhierarchy ;proc;opt; abc;clean\nsynth;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

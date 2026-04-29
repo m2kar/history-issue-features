@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3788,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3788",
+  "title": "ABC bundled with yosys-0.29 release fails to build: error: ‘intptr_t’ was not declared in this scope; did you mean ‘abc::intptr_t’?",
+  "body": "### Version\n\nYosys 0.29 (git sha1 9c5a60eb201, gcc 12.2.1_p20230428-r1 -O2 -mcpu=power9 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n1. Get the release tar.gz of yosys-0.29 and unpack it\r\n2. Get the `abc.tar.gz` from the release assets and unpack it as `abc` in the above\r\n3. Try to build (note that this requires to set `ABCREV=default`)\r\n\n\n### Expected Behavior\n\nEverything builds\n\n### Actual Behavior\n\nThe build of ABC fails with\r\n```\r\nIn file included from src/base/abci/abc.c:69:\r\n/usr/include/unistd.h:1076:20: error: ‘intptr_t’ was not declared in this scope; did you mean ‘abc::intptr_t’?\r\n 1076 | extern void *sbrk (intptr_t __delta) __THROW;\r\n      |                    ^~~~~~~~\r\n      |                    abc::intptr_t\r\nIn file included from /usr/lib/gcc/powerpc64-unknown-linux-gnu/12/include/stdint.h:9,\r\n                 from ./src/misc/util/abc_global.h:108,\r\n                 from ./src/misc/vec/vec.h:29,\r\n                 from ./src/base/abc/abc.h:34,\r\n                 from src/base/abci/abc.c:21:\r\n/usr/include/stdint.h:87:33: note: ‘abc::intptr_t’ declared here\r\n   87 | typedef long int                intptr_t;\r\n      |                                 ^~~~~~~~\r\n```\r\nThe reason for this is that `abc/src/misc/util/abc_global.h` includes `<stdint.h>` inside of `ABC_NAMESPACE_HEADER_START`, which incorrectly attributes all declarations in stdint to the `abc` namespace.\r\nThe following patch fixes the issue:\r\n```\r\n--- yosys-yosys-0.29/abc/src/misc/util/abc_global.h.orig        2023-05-28 15:09:21.134631999 +0200\r\n+++ yosys-yosys-0.29/abc/src/misc/util/abc_global.h     2023-05-28 15:09:51.882987655 +0200\r\n@@ -94,8 +94,6 @@\r\n ///                         PARAMETERS                               ///\r\n ////////////////////////////////////////////////////////////////////////\r\n \r\n-ABC_NAMESPACE_HEADER_START\r\n-\r\n ////////////////////////////////////////////////////////////////////////\r\n ///                         BASIC TYPES                              ///\r\n ////////////////////////////////////////////////////////////////////////\r\n@@ -143,6 +141,8 @@ ABC_NAMESPACE_HEADER_START\r\n \r\n #endif\r\n \r\n+ABC_NAMESPACE_HEADER_START\r\n+\r\n /**\r\n  * Pointer difference type; replacement for ptrdiff_t.\r\n  * This is a signed integral type that is the same size as a pointer.\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-05-28",
+  "closed_at": "2023-06-05",
+  "code_blocks": [
+    "In file included from src/base/abci/abc.c:69:\r\n/usr/include/unistd.h:1076:20: error: ‘intptr_t’ was not declared in this scope; did you mean ‘abc::intptr_t’?\r\n 1076 | extern void *sbrk (intptr_t __delta) __THROW;\r\n      |                    ^~~~~~~~\r\n      |                    abc::intptr_t\r\nIn file included from /usr/lib/gcc/powerpc64-unknown-linux-gnu/12/include/stdint.h:9,\r\n                 from ./src/misc/util/abc_global.h:108,\r\n                 from ./src/misc/vec/vec.h:29,\r\n                 from ./src/base/abc/abc.h:34,\r\n                 from src/base/abci/abc.c:21:\r\n/usr/include/stdint.h:87:33: note: ‘abc::intptr_t’ declared here\r\n   87 | typedef long int                intptr_t;\r\n      |                                 ^~~~~~~~"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

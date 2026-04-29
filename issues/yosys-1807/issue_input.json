@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1807,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1807",
+  "title": "Problems with primitive instantiation using synth_xilinx (executing XILINX_DFFOPT)",
+  "body": "I was [comparing Yosys against ISE and Vivado](https://github.com/rodrigomelo9/yosys-versus), using examples provided by Xilinx. I found a problem instantiating the LUT2 primitive in 2 of 3 cases.\r\n\r\nTo check with iverilog and for the generic `synth` command, I used the following blackbox definition (`blackboxes.v`) and it works:\r\n```\r\n(* blackbox *)\r\nmodule LUT2 (O, I0, I1);\r\n    parameter [3:0] INIT = 4'h0;\r\n    output O;\r\n    input I0;\r\n    input I1;\r\nendmodule\r\n```\r\n\r\nI have three examples from Xilinx:\r\n* primitive_1.v\r\n```\r\nmodule v_primitive_1 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    (* INIT=\"1\" *)\r\n\t LUT2 inst (.I0(I0), .I1(I1), .O(O));\r\n\r\nendmodule\r\n```\r\n* primitive_2.v:\r\n```\r\nmodule v_primitive_2 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    LUT2 #(4'h1) inst (.I0(I0), .I1(I1), .O(O));\r\n\r\nendmodule\r\n```\r\n* primitive_3.v:\r\n```\r\nmodule v_primitive_3 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    LUT2 inst (.I0(I0), .I1(I1), .O(O));\r\n    defparam inst.INIT = 4'h1;\r\n\r\nendmodule\r\n```\r\n\r\nThe cases `primitive_1.v` and `primitive_2.v` fail:\r\n```\r\n$ yosys -Q -p \"read_verilog primitive_1.v; synth_xilinx -top v_primitive_1\"\r\n...\r\n3.47.4. Continuing TECHMAP pass.\r\nNo more expansions possible.\r\n\r\n3.48. Executing XILINX_DFFOPT pass (optimize FF control signal usage).\r\nOptimizing FFs in v_primitive_1.\r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  dict::at()\r\nAborted\r\n```\r\n\r\n> **Note:** the file `primitive_1.v` has as description *The INIT value is specified with an attribute, which is rejected by XST*",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-03-23",
+  "closed_at": "2020-04-21",
+  "code_blocks": [
+    "(* blackbox *)\r\nmodule LUT2 (O, I0, I1);\r\n    parameter [3:0] INIT = 4'h0;\r\n    output O;\r\n    input I0;\r\n    input I1;\r\nendmodule",
+    "module v_primitive_1 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    (* INIT=\"1\" *)\r\n\t LUT2 inst (.I0(I0), .I1(I1), .O(O));\r\n\r\nendmodule",
+    "module v_primitive_2 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    LUT2 #(4'h1) inst (.I0(I0), .I1(I1), .O(O));\r\n\r\nendmodule",
+    "module v_primitive_3 (I0,I1,O);\r\n    input I0,I1;\r\n    output O;\r\n\r\n    LUT2 inst (.I0(I0), .I1(I1), .O(O));\r\n    defparam inst.INIT = 4'h1;\r\n\r\nendmodule",
+    "$ yosys -Q -p \"read_verilog primitive_1.v; synth_xilinx -top v_primitive_1\"\r\n...\r\n3.47.4. Continuing TECHMAP pass.\r\nNo more expansions possible.\r\n\r\n3.48. Executing XILINX_DFFOPT pass (optimize FF control signal usage).\r\nOptimizing FFs in v_primitive_1.\r\nterminate called after throwing an instance of 'std::out_of_range'\r\n  what():  dict::at()\r\nAborted"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

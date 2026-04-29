@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 986,
+  "title": "Circuit takes long time to read (and synth)",
+  "features": [
+    {
+      "name": "deep generate loop with internal cell instantiation",
+      "category": "general",
+      "description": "Code should include a generate for-loop that instantiates internal Yosys cell primitives (e.g. $_DFFE_PP_) in a long chain of depth 100 or more, exercising read_verilog -icells and opt_clean scalability",
+      "snippet": "genvar w, d;\nfor (w = 0; w < width; w=w+1) begin\n    assign int[w][0] = i[w];\n    for (d = 0; d < depth; d=d+1) begin\n        \\$_DFFE_PP_ r(.C(clk), .D(int[w][d]), .E(1'b1), .Q(int[w][d+1]));\n    end\nend",
+      "tags": ["generate_loop", "internal_cell", "icells", "shift_register_chain", "scalability"],
+      "source_bug_id": "986",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/986",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "parameterized shift register with dynamic bit select",
+      "category": "data_model",
+      "description": "Code should include a parameterized register array used as a shift register where the output is selected dynamically via a variable index into the shift register state, creating variable-length shift register behavior",
+      "snippet": "reg [depth-1:0] int [width-1:0];\ngenvar w, d;\nfor (w = 0; w < width; w=w+1) begin\n    for (d = 0; d < depth; d=d+1)\n        initial int[w][d] <= ~((d+w) % 2);\n    always @(posedge clk) if (e) int[w] <= { int[w][depth-2:0], i[w] };\n    assign q[w] = int[w][l];\nend",
+      "tags": ["shift_register", "dynamic_index", "parameterized_array", "initial_block"],
+      "source_bug_id": "986",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/986",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "generate loop with initial blocks on register array elements",
+      "category": "control_flow",
+      "description": "Code should include a generate for-loop that applies initial blocks to individual elements of a multi-dimensional register array, producing many initial processes that stress synthesis tools",
+      "snippet": "reg [depth-1:0] int [width-1:0];\ngenvar w, d;\nfor (w = 0; w < width; w=w+1) begin\n    for (d = 0; d < depth; d=d+1)\n        initial int[w][d] <= ~((d+w) % 2);\nend",
+      "tags": ["generate_loop", "initial_block", "multi_dimensional_array", "many_processes"],
+      "source_bug_id": "986",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/986",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "nested generate for-loops with parameterized large depth",
+      "category": "general",
+      "description": "Code should include nested generate for-loops iterating over parameterized dimensions where depth values exceed 100, causing quadratic explosion in generated instances that stress opt_clean and synthesis passes",
+      "snippet": "module sr #(parameter width=1, depth=130) (input clk, input [width-1:0] i, input e, output [width-1:0] q);\ngenerate\n    reg [depth-1:0] int [width-1:0];\n    genvar w, d;\n    for (w = 0; w < width; w=w+1) begin\n        for (d = 0; d < depth; d=d+1) begin\n        end\n    end\nendgenerate\nendmodule",
+      "tags": ["generate_loop", "nested_loop", "large_parameter", "instance_explosion"],
+      "source_bug_id": "986",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/986",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5071,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5071",
+  "title": "sim: run_cosim_fst leaks memory",
+  "body": "### Version\n\nmain\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nsee #5020 tests/sat/grom.ys\n\n### Expected Behavior\n\nno leaks detected\n\n### Actual Behavior\n\n`run_cosim_fst passes` a callback lambda to reconstructAllAtTimes which throws when it runs out of FST, dodging the `free(scatterptr);` in `libs/fst/fstapi.cc`. These function calls happen in sequence with indentation signifying stack depth:\n\n```\nSimWorker::run_cosim_fst\n    FstData::reconstructAllAtTimes(,,,lambda throws)\n        FstData::callback = lambda throws\n        fstReaderIterBlocks2(,reconstruct_clb_attimes,reconstruct_clb_varlen_attimes,,);\n            calloc(scatterptr) etc\n            reconstruct_clb_attimes\n                reconstruct_callback_attimes\n                    callback()\n                        throw fst_end_of_data_exception\n    catch(fst_end_of_data_exception)\n```\n\nIt seems like we should use fstReaderSetLimitTimeRange instead of handling the end time by throwing in a callback\n\nCC @mmicko ",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-28",
+  "closed_at": "2025-06-04",
+  "code_blocks": [
+    "SimWorker::run_cosim_fst\n    FstData::reconstructAllAtTimes(,,,lambda throws)\n        FstData::callback = lambda throws\n        fstReaderIterBlocks2(,reconstruct_clb_attimes,reconstruct_clb_varlen_attimes,,);\n            calloc(scatterptr) etc\n            reconstruct_clb_attimes\n                reconstruct_callback_attimes\n                    callback()\n                        throw fst_end_of_data_exception\n    catch(fst_end_of_data_exception)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

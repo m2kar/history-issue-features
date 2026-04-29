@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 993,
+  "title": "Yosys aborts with exception in peephole optimizers pass",
+  "features": [
+    {
+      "name": "comparison result assigned to multi-bit register",
+      "category": "data_model",
+      "description": "Code should include a comparison expression (==) whose 1-bit result is stored in a multi-bit register wider than 1 bit",
+      "snippet": "reg [1:0] reg1 = 0;\nalways @(posedge clk) begin\n   reg1 <= wire1 == 1;\nend",
+      "tags": ["comparison", "multi_bit_reg", "width_mismatch", "nonblocking_assignment"],
+      "source_bug_id": "993",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/993",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "part-select of register used as shift amount",
+      "category": "data_model",
+      "description": "Code should include a single-bit part-select (e.g. [1:1]) on a multi-bit register that is then used as the shift amount in a shift-right operation",
+      "snippet": "reg [1:0] reg1 = 0;\nreg [1:0] reg2 = 0;\nalways @(posedge clk) begin\n   reg2 <= 1 >> reg1[1:1];\nend",
+      "tags": ["part_select", "shift_right", "register", "nonblocking_assignment"],
+      "source_bug_id": "993",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/993",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "constant shifted by part-select of comparison result register",
+      "category": "control_flow",
+      "description": "Code should include a shift-right of a constant literal by a part-select of a register that was assigned a comparison result, creating a dataflow chain from comparison through part-select into shift",
+      "snippet": "reg [1:0] reg1 = 0;\nreg [1:0] reg2 = 0;\nalways @(posedge clk)\n   reg1 <= wire1 == 1;\nalways @(posedge clk)\n   reg2 <= 1 >> reg1[1:1];",
+      "tags": ["comparison_chain", "part_select", "shift_right", "constant_operand", "dataflow"],
+      "source_bug_id": "993",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/993",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

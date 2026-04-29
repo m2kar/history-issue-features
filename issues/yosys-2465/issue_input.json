@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2465,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2465",
+  "title": "SMT2 Backend Treats Non-POT-Sized Memories as next higher POT",
+  "body": "## Steps to reproduce the issue\r\n\r\nThis is a simplified version of `syncram_9_4.v` from https://github.com/YosysHQ/yosys-bench/tree/master/verilog/benchmarks_small/ram:\r\n\r\n```\r\nmodule syncram_9_4 (\r\n    clk,\r\n    addr_in,\r\n    data_out    \r\n);\r\n\r\ninput clk;\r\ninput [8:0] addr_in;\r\noutput reg [3:0] data_out;\r\n\r\nreg [3:0] mem [0:8];\r\n\r\nalways @(posedge clk)\r\nbegin\r\n  data_out <= mem[addr_in];\r\nend\r\n\r\nendmodule\r\n```\r\n\r\nReading, creating a Miter circuit comparing two instances of this module and writing to SMT2 with this Yosys script:\r\n\r\n```\r\nread_verilog syncram_9_4.v\r\nmiter -equiv -make_assert syncram_9_4 syncram_9_4 miter\r\nprep -top miter\r\nsetundef -zero -init -undriven -params\r\nwrite_smt2 miter.smt2\r\n```\r\nNote that `setundef` adds zero-initialization to all memory lines.\r\n\r\nNow running through `yosys-smtbmc`:\r\n\r\n```\r\nyosys-smtbmc -s boolector --dump-vlogtb tb.v miter.smt2\r\n```\r\n\r\nFor some reason, `yices` does not like this smt2 file (`Unexpected EOF response from solver.`), so I am using boolector. If I am doing anything wrong, please tell me :)\r\n\r\n## Expected behavior\r\n\r\nThe assertions should pass.\r\n\r\n## Actual behavior\r\n\r\n```\r\n##   0:00:00  BMC failed!\r\n##   0:00:00  Assert failed in miter: $auto$miter.cc:233:create_miter_equiv$5\r\n##   0:00:00  Status: FAILED (!)\r\n```\r\n\r\n## Analysis\r\nWhen writing the memory to SMT2, its actual size is never written, only its number of address bits. This can be seen when changing the memory's size in the original source, e.g. to `reg [4-1:0] mem [0:9];`. The diff between the two smt2 files is:\r\n\r\n```\r\n--- miter_9.smt2\t2020-12-01 16:07:26.124944308 +0100\r\n+++ miter_10.smt2\t2020-12-01 16:07:39.286427423 +0100\r\n@@ -32,6 +32,7 @@\r\n   (= (bvand (select (|syncram_9_4#3#0| state) #b0110) #b1111) #b0000) ; mem[6]\r\n   (= (bvand (select (|syncram_9_4#3#0| state) #b0111) #b1111) #b0000) ; mem[7]\r\n   (= (bvand (select (|syncram_9_4#3#0| state) #b1000) #b1111) #b0000) ; mem[8]\r\n+  (= (bvand (select (|syncram_9_4#3#0| state) #b1001) #b1111) #b0000) ; mem[9]\r\n ))\r\n (define-fun |syncram_9_4_h| ((state |syncram_9_4_s|)) Bool true)\r\n (define-fun |syncram_9_4_t| ((state |syncram_9_4_s|) (next_state |syncram_9_4_s|)) Bool (and\r\n```\r\nThe added line is due to `setundef` initializing the new memory location. As both a 9-entry and a 10-entry memory have an address width of 4 bits, the actual memory did not change.\r\n\r\nThe memory's size is therefore rounded up to the next power of two. It no longer has 9 lines, but 16. As these lines do not exist in the design, they are not initialized by `setundef`.  The solver is free to choose any initialization for them, as can be seen in the generated testbench:\r\n```\r\n    UUT.gate.mem[4'b1010] = 4'b0111;\r\n    UUT.gold.mem[4'b1010] = 4'b1000;\r\n```\r\nAs the solver was free to choose different initializations, the assertion failed.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2020-12-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module syncram_9_4 (\r\n    clk,\r\n    addr_in,\r\n    data_out    \r\n);\r\n\r\ninput clk;\r\ninput [8:0] addr_in;\r\noutput reg [3:0] data_out;\r\n\r\nreg [3:0] mem [0:8];\r\n\r\nalways @(posedge clk)\r\nbegin\r\n  data_out <= mem[addr_in];\r\nend\r\n\r\nendmodule",
+    "read_verilog syncram_9_4.v\r\nmiter -equiv -make_assert syncram_9_4 syncram_9_4 miter\r\nprep -top miter\r\nsetundef -zero -init -undriven -params\r\nwrite_smt2 miter.smt2",
+    "##   0:00:00  BMC failed!\r\n##   0:00:00  Assert failed in miter: $auto$miter.cc:233:create_miter_equiv$5\r\n##   0:00:00  Status: FAILED (!)",
+    "UUT.gate.mem[4'b1010] = 4'b0111;\r\n    UUT.gold.mem[4'b1010] = 4'b1000;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

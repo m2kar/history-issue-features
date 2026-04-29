@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4875,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4875",
+  "title": "async2sync fails on check cells with async reset",
+  "body": "### Version\n\nYosys 0.49+3 (git sha1 9d4630484, g++ 14.2.1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nThe following SBY file declares an assertion that should only be triggered when `rst_n` is high within a block triggered asynchronously by `posedge clk` and `negedge rst_n`. This should be supported in `multiclock off` mode as `async2sync` should be able to handle a single async reset, converting it to a sync reset.\n\n```\n[options]\nmode bmc\n\n[engines]\nsmtbmc\n\n[script]\nread -sv test.sv\nprep -top top\n\n[file test.sv]\nmodule top(input wire clk);\n\talways_ff @(posedge clk or negedge rst_n) begin\n\t\tif (rst_n) begin\n\t\t\tassert(1'b1);\n\t\tend\n\tend\nendmodule\n```\n\n### Expected Behavior\n\nSBY/Yosys accept the design and the proof passes. This happens fine with 9f27923782e0c9c8fb6298778929271eb06bcb02, a commit from just before `$check` cells were added. Although I haven't bisected to determine exactly when this issue was introduced, I assume its with `$check` cells as they are not able to be lowered correctly in this case.\n\n### Actual Behavior\n\nSBY reports an error from `async2sync`:\n```\nERROR: $check cell _witness_.check_assert_test_sv_4_2 with TRG_WIDTH > 1 is not support by async2sync, use clk2fflogic.\n```\n\nThis is because the trigger input is `{rst_n, clk}`. It would be good to be able to support this case otherwise embedding assertions within async reset blocks is broken.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-29",
+  "closed_at": "2025-03-24",
+  "code_blocks": [
+    "[options]\nmode bmc\n\n[engines]\nsmtbmc\n\n[script]\nread -sv test.sv\nprep -top top\n\n[file test.sv]\nmodule top(input wire clk);\n\talways_ff @(posedge clk or negedge rst_n) begin\n\t\tif (rst_n) begin\n\t\t\tassert(1'b1);\n\t\tend\n\tend\nendmodule",
+    "ERROR: $check cell _witness_.check_assert_test_sv_4_2 with TRG_WIDTH > 1 is not support by async2sync, use clk2fflogic."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

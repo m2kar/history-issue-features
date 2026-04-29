@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 982,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/982",
+  "title": "INIT attribute not set on FDRE when shift register inference",
+  "body": "## Steps to reproduce the issue\r\n\r\n`yosys -p \"synth_xilinx; dump t:FDRE\" lfsr_24.v`\r\n\r\n```\r\nmodule lfsr_24 (input clk, output dout);\r\n  reg [24:1] state = 24'b0;\r\n  always @(posedge clk)\r\n    state <= { state[24-1:1], state[24] ~^ state[23] ~^ state[22] ~^ state[17] };\r\n  assign dout = state[24];\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n\r\n`FDRE` to have `INIT` parameter set to `1'b0`\r\n\r\n## Actual behavior\r\n\r\n`FDRE` has `INIT` parameter set to `1'bx`\r\n```\r\n<<SNIP>>\r\n  cell \\FDRE $auto$simplemap.cc:420:simplemap_dff$18.fpga_srl_1\r\n    parameter \\INIT 1'x\r\n    connect \\C \\clk\r\n    connect \\CE 1'1\r\n    connect \\D $auto$simplemap.cc:420:simplemap_dff$18.T0\r\n    connect \\Q \\state [16]\r\n    connect \\R 1'0\r\n  end\r\n<<SNIP>>\r\n```\r\nWorks when shift register inference disabled (`synth_xilinx -nosrl`).\r\nCould this be related to #956 (though there are no warning messages as that issue has)\r\n\r\nBut I did notice this:\r\n```\r\n2.27. Executing DFFINIT pass (set INIT param on FF cells).\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$18.fpga_srl_1.INIT (port=Q, net=\\state [16]) to 1'x.\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$40.INIT (port=Q, net=\\state [22]) to 1'0.\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$41.INIT (port=Q, net=\\state [23]) to 1'0.\r\nRemoving init attribute from wire lfsr_24.state.\r\nRemoved 0 unused cells and 47 unused wires.\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-05-02",
+  "closed_at": "2019-05-03",
+  "code_blocks": [
+    "module lfsr_24 (input clk, output dout);\r\n  reg [24:1] state = 24'b0;\r\n  always @(posedge clk)\r\n    state <= { state[24-1:1], state[24] ~^ state[23] ~^ state[22] ~^ state[17] };\r\n  assign dout = state[24];\r\nendmodule",
+    "<<SNIP>>\r\n  cell \\FDRE $auto$simplemap.cc:420:simplemap_dff$18.fpga_srl_1\r\n    parameter \\INIT 1'x\r\n    connect \\C \\clk\r\n    connect \\CE 1'1\r\n    connect \\D $auto$simplemap.cc:420:simplemap_dff$18.T0\r\n    connect \\Q \\state [16]\r\n    connect \\R 1'0\r\n  end\r\n<<SNIP>>",
+    "2.27. Executing DFFINIT pass (set INIT param on FF cells).\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$18.fpga_srl_1.INIT (port=Q, net=\\state [16]) to 1'x.\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$40.INIT (port=Q, net=\\state [22]) to 1'0.\r\nSetting lfsr_24.$auto$simplemap.cc:420:simplemap_dff$41.INIT (port=Q, net=\\state [23]) to 1'0.\r\nRemoving init attribute from wire lfsr_24.state.\r\nRemoved 0 unused cells and 47 unused wires."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

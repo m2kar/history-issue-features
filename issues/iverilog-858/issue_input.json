@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 858,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/858",
+  "title": "Consolidate class property handling",
+  "body": "There are currently two mechanisms for handling class properties. One that\r\nis used when a class property is accessed through an object and other when\r\na class property is used freestanding in a class method.\r\n\r\nBoth are very similar, but there are some small differences. E.g. one\r\nsupports arrays, the other supports nested properties.\r\n\r\n```SystemVerilog\r\nclass B;\r\n  int x;\r\nendclass\r\n\r\nclass C;\r\n  B b;\r\n  B ba[2];\r\n  task t;\r\n    ba[0] = new; // Does work\r\n    this.ba[0] = new; // Does not work\r\n    b.x = 10; // Does not work\r\n    this.b.x = 10; // Does work\r\n  endtask\r\n```\r\n\r\nThere is another problem where free standing properties take precedence\r\nover local variables. E.g.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  int x = 1;\r\n  task t();\r\n    int x = 2;\r\n    $display(x); // Should print 2, will print 1\r\n  endtask\r\nendclass\r\n```\r\n\r\nThe class property elaboration also ignores the package scope of the\r\nidentifier resulting in access to a class property being elaborated if\r\nthere is a property of the same name as the scoped identifier. E.g.\r\n\r\n```SystemVerilog\r\npackage P;\r\n  int x = 2;\r\nendpackage\r\n\r\nclass C;\r\n  int x = 1;\r\n  task t;\r\n    $display(P::x); // Should print 2, will print 1\r\n  endtask\r\nendclass\r\n```\r\n\r\nConsolidate the two implementation to use the same code path. This is\r\nmainly done by letting the symbol search return a result for free standing\r\nproperties as if the property had been specified on the `this` object. I.e.\r\n`prop` and `this.prop` will return the same result from the symbol search.\r\n\r\nThe main motivation behind this PR is fixing the shadowing problem. There\r\nare still a few other problems around nested and array class properties\r\nwhich makes it difficult to write meaningful regressions tests yet.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-01-07",
+  "closed_at": "2023-01-16",
+  "code_blocks": [
+    "class B;\r\n  int x;\r\nendclass\r\n\r\nclass C;\r\n  B b;\r\n  B ba[2];\r\n  task t;\r\n    ba[0] = new; // Does work\r\n    this.ba[0] = new; // Does not work\r\n    b.x = 10; // Does not work\r\n    this.b.x = 10; // Does work\r\n  endtask",
+    "class C;\r\n  int x = 1;\r\n  task t();\r\n    int x = 2;\r\n    $display(x); // Should print 2, will print 1\r\n  endtask\r\nendclass",
+    "package P;\r\n  int x = 2;\r\nendpackage\r\n\r\nclass C;\r\n  int x = 1;\r\n  task t;\r\n    $display(P::x); // Should print 2, will print 1\r\n  endtask\r\nendclass"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

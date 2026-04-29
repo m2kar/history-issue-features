@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 962,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/962",
+  "title": "Execution does not stop after $finish call",
+  "body": "Hi, I have noticed that Icarus seems to finish the current simulation cycle instead of exiting immediately after a call to `$finish`. E.g., consider the following module illustrating this:\r\n\r\n```systemverilog\r\nmodule test;\r\n\r\nlogic x = 1;\r\n\r\ninitial begin\r\n $monitor(\"monitor: \", x);\r\n $finish(x);\r\nend\r\n\r\ninitial x = 0;\r\n\r\n// still happens with the following variants:\r\n//\r\n// initial x <= 0;\r\n// initial #0 x = 0;\r\n// initial x = #0 0;\r\n//\r\n// but not with longer delays:\r\n//\r\n// initial #1 x = 0;\r\n// initial x = #1 0;\r\n\r\ninitial $display(\"display: \", x);\r\n\r\nendmodule\r\n```\r\n\r\nThe output from running the above is:\r\n\r\n```\r\n> iverilog test.sv && ./a.out\r\ntest.sv:7: $finish(1) called at 0 (1s)\r\ndisplay: 0\r\nmonitor: 0\r\n```\r\n\r\nThe standard just says the following about `$finish`:\r\n\r\n> The `$finish` system task causes the simulator to exit and pass control back to the host operating system.\r\n\r\nIt seems that at least the four commercial simulators on EDA Playground interpret this as \"exit immediately\" rather than \"finish the current simulation cycle and then finish\".\r\n\r\nSince the standard does not say much it is open to interpretation, but is it possible that \"exit immediately\" is a more convincing read than \"finish what you are doing and then exit\"?\r\n\r\nE.g., with the \"finish what you are doing and then exit\" interpretation, we can have long/infinite executions after a `$finish$` call and delay the exit/never actually exit:\r\n\r\n```systemverilog\r\nmodule test2;\r\n\r\ninitial $finish;\r\n\r\ninitial forever;\r\n\r\nendmodule\r\n```",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2023-06-26",
+  "closed_at": null,
+  "code_blocks": [
+    "module test;\r\n\r\nlogic x = 1;\r\n\r\ninitial begin\r\n $monitor(\"monitor: \", x);\r\n $finish(x);\r\nend\r\n\r\ninitial x = 0;\r\n\r\n// still happens with the following variants:\r\n//\r\n// initial x <= 0;\r\n// initial #0 x = 0;\r\n// initial x = #0 0;\r\n//\r\n// but not with longer delays:\r\n//\r\n// initial #1 x = 0;\r\n// initial x = #1 0;\r\n\r\ninitial $display(\"display: \", x);\r\n\r\nendmodule",
+    "module test2;\r\n\r\ninitial $finish;\r\n\r\ninitial forever;\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

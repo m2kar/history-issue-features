@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 528,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/528",
+  "title": "CLK_POLARITY set 0 for memrd and memwr cells on inferred memory",
+  "body": "Yosys does not detect that operations happen on posedge (CLK_POLARITY = 0).  Also, appears to be async operation (CLK_ENABLE = 0).\r\n\r\n## Steps to reproduce the issue\r\n\r\nBelow is a small test case.\r\n\r\nNote that I modeled the write and read ports following comments in `verilog_backend.cc`.\r\n\r\n~~~~\r\nmodule dpram(rclk, ren, radr, rdat, wclk, wen, wadr, wdat);\r\ninput         rclk;\r\ninput         ren;\r\ninput  [4:0]  radr;\r\noutput [31:0] rdat;\r\ninput         wclk;\r\ninput         wen;\r\ninput  [4:0]  wadr;\r\ninput  [31:0] wdat;\r\n\r\nreg [31:0] memory[0:31];\r\n\r\nalways @(posedge wclk)\r\n  if (wen)\r\n    memory[wadr] <= wdat;\r\n\r\nreg [DBITS-1:0] rdat_tmp;\r\n\r\nalways @(posedge rclk)\r\n   if (ren) rdat_tmp <= memory[radr];\r\nassign rdat = dat_tmp;\r\n\r\nendmodule\r\n~~~~\r\n\r\nThis is the output that I see from initial proc pass.  Future opt and memory passes do not change what is wrong.\r\n\r\n~~~~\r\n  cell $memrd $memrd$\\memory$../VerilogDesign_dpram/dpram.v:24$7\r\n    parameter \\ABITS 5\r\n    parameter \\CLK_ENABLE 0 // <-- why 0?\r\n    parameter \\CLK_POLARITY 0 // <-- why 0?\r\n    parameter \\MEMID \"\\\\memory\"\r\n    parameter \\TRANSPARENT 0\r\n    parameter \\WIDTH 6\r\n    connect \\ADDR \\radr\r\n    connect \\CLK 1'x <-- why?\r\n    connect \\DATA $memrd$\\memory$../VerilogDesign_dpram/dpram.v:24$7_DATA\r\n    connect \\EN 1'x <-- wrong\r\n  end\r\n\r\n  attribute \\src \"../VerilogDesign_dpram/dpram.v:18\"\r\n  cell $memwr $memwr$\\memory$../VerilogDesign_dpram/dpram.v:18$8\r\n    parameter \\ABITS 5\r\n    parameter \\CLK_ENABLE 0 // <-- why 0?\r\n    parameter \\CLK_POLARITY 0 // <-- why 0?\r\n    parameter \\MEMID \"\\\\memory\"\r\n    parameter \\PRIORITY 8\r\n    parameter \\WIDTH 6\r\n    connect \\ADDR $memwr$\\memory$../VerilogDesign_dpram/dpram.v:18$1_ADDR\r\n    connect \\CLK 1'x\r\n    connect \\DATA $memwr$\\memory$../VerilogDesign_dpram/dpram.v:18$1_DATA\r\n    connect \\EN $memwr$\\memory$../VerilogDesign_dpram/dpram.v:18$1_EN\r\n  end\r\n~~~~\r\n\r\n## Expected behavior\r\n\r\nCLK_ENABLE = 1 for both ports\r\nCLK_POLARITY = 1 for both ports\r\nEN set for read port\r\nCLK set for write port\r\n\r\n## Actual behavior\r\n\r\n(inverse of above)\r\n\r\nCLK_ENABLE = 0 for both ports\r\nCLK_POLARITY = 0 for both ports\r\nEN not set for read port\r\nCLK nto set for write port\r\n\r\n\r\n\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-04-05",
+  "closed_at": "2018-04-05",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

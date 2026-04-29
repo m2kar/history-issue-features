@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 868,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/868",
+  "title": "Add initial support for packed array and packed struct assignment patterns",
+  "body": "SystemVerilog allows to use assignment patterns to assign a value to a\r\npacked array or packed struct typed variable.\r\n\r\nThis is similar to using a concatenation, with the difference that for\r\nconcatenations the values are evaluated in a self-determined context and\r\nfor assignment patterns they are evaluated in a context defined by the\r\nelement type of the packed array or the member type of the struct.\r\nThis means that the value is for example automatically width expanded or\r\ntruncated if it does not have the same size as the element type. Automatic\r\ntype conversion is also done when allowed. E.g.\r\n\r\n```SystemVerilog\r\nbit [3:0][3:0] x = '{1'b1, 32'h2, 3.0, \"TEST\"};\r\n$display(\"%x\", x); // -> 1234\r\n```\r\n\r\nNested assignment patterns are also supported. E.g.\r\n\r\n```SystemVerilog\r\nstruct packed {\r\n  byte x;\r\n  bit [2:0][3:0] y;\r\n} x = '{1, '{2, 3, 4}};\r\n$display(\"%x\", x); // -> 1234\r\n```\r\n\r\nAdd support for using assignment patterns as the right hand side value.\r\nSince the complete type of the target variable is required to correctly\r\nevaluate the assignment pattern it is handled as a special case in\r\n`elab_rval_expression()`. For other types of expressions for packed values\r\nonly the total width of the target value is provided to the rvalue\r\nelaboration function.\r\n\r\nSystemVerilog also supports assignment patterns for the left hand side in\r\nassignments. This is not yet supported.\r\n\r\nAlso not yet supported is specifying array elements by index, struct members by\r\nname as well as the `default` keyword. Such as\r\n```SystemVerilog\r\nbit [3:0][3:0] x = '{1:1, default: 0};\r\n```\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-02-04",
+  "closed_at": "2023-02-09",
+  "code_blocks": [
+    "bit [3:0][3:0] x = '{1'b1, 32'h2, 3.0, \"TEST\"};\r\n$display(\"%x\", x); // -> 1234",
+    "struct packed {\r\n  byte x;\r\n  bit [2:0][3:0] y;\r\n} x = '{1, '{2, 3, 4}};\r\n$display(\"%x\", x); // -> 1234",
+    "bit [3:0][3:0] x = '{1:1, default: 0};"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

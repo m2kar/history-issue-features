@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 380,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/380",
+  "title": "Bugs in VPI interface",
+  "body": "I'm trying to build the checkpoint feature for cocotb+Icarus (#378 ). During this process I ran into some issues and after talking with cocotb folks it seems to be Icarus bugs in VPI. I've made MRFE for the 3 cases based on simple_dff example of cocotb. \r\n[Icarus_VPI_MRFE.zip](https://github.com/steveicarus/iverilog/files/5424274/Icarus_VPI_MRFE.zip)\r\n\r\nThere are 3 cases:\r\n\r\n1) If the instant name has the same name as a generate block inside that module (inside the module that is instantiated), this causes an infinite loop in the search process. You can reproduce the bug by using other_dff.sv in the MRFE. \r\n\r\nTo be more specific, @ktbarrett made a more simplified test and then @garmin-mjames suggested a potential cause for the bug:\r\n\"Looks like for some reason icarus is adding the this_name vpiModule handle 4 times instead of the 4 vpiScope handles this_name[0] through this_name[3].\r\n\r\nI added a call to vpi_get_str(vpiFullName, new_hdl) in create_gpi_obj_from_handle and it's returning dff.this_name for each one no matter how deep it goes:\r\n```\r\nVpiCbHdl.cpp:893  in next_handle                     vpi_scan found 'dff.this_name.this_name.this_name.this_name'\r\nVpiImpl.cpp:266  in create_gpi_obj_from_handle      VPI: Created GPI object dff.this_name from type vpiModule(32)\r\n```\r\nIcarus doesn't have a proper gen scope array scope, only gen scope. I don't know if this is related to the apparent bug.\"\r\n\r\n(please refer to https://github.com/cocotb/cocotb/issues/2150 for more details).\r\n\r\n2) If there is an always block that has a name, e.g. always @(posedge clk) begin: some_name, this results in a warning that it's unable to create some_name via any registered implementation. You can reproduce the bug by using other_dff2.sv in the MRFE. \r\n\r\nFor this one @garmin-mjames mentioned \"Icarus is returning vpiNamedBegin rather than vpiAlways (which is supported)\"\r\n\r\n(please refer to https://github.com/cocotb/cocotb/issues/2152 for more details).\r\n\r\n3) If there is a function inside a module, I get VPI: Implementation does not know how to iterate over vpiFunction(20). You can reproduce the bug by using other_dff.sv in the MRFE. I found that it recognizes function as a MODULE which I think it shouldn't. \r\n\r\nAlso @ktbarrett mentioned: \"we shouldn't be ever finding a function. Where it fails we call vpi_get(vpiType, handle). Where handle was previously discovered as not a vpiFunction. This implies that running that on the same handle returns a different result. This may be another bug.\"\r\n\r\nI think it would be very beneficial if we can fix these issues on the VPI interface, and be able to revive the checkpoint feature for cocotb as an extension. For my own case, this feature is the most beneficial for Icarus, as it's slower compared to the QuestaSim or other not-open-source tools. ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-10-22",
+  "closed_at": "2020-10-23",
+  "code_blocks": [
+    "VpiCbHdl.cpp:893  in next_handle                     vpi_scan found 'dff.this_name.this_name.this_name.this_name'\r\nVpiImpl.cpp:266  in create_gpi_obj_from_handle      VPI: Created GPI object dff.this_name from type vpiModule(32)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

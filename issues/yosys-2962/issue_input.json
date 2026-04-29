@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2962,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2962",
+  "title": "proc_prune sometimes does invalid assignment promotions leading to multiply-driven wires",
+  "body": "## Steps to reproduce the issue\r\n\r\nReduced from an nMigen testcase, run `proc` on:\r\n\r\n```\r\nmodule \\top\r\n   wire width 4 input 1 \\a\r\n   wire width 2 input 2 \\b\r\n   wire input 3 \\clk\r\n   wire width 4 output 4 \\q\r\n   wire input 5 \\en\r\n   wire width 4 \\nq\r\n   process \\p\r\n     assign \\nq \\a\r\n     assign \\nq [1:0] \\b\r\n     switch \\en\r\n       case 1'1\r\n         assign \\nq [3] 1'0\r\n     end\r\n     sync posedge \\clk\r\n       update \\q \\nq\r\n   end\r\nend\r\n```\r\n\r\n## Expected behavior\r\n\r\n`nq[1:0]` connected to `b`, `nq[2]` connected to `a[2]`, `nq[3]` connected to a mux output, no other drivers on nq.\r\n\r\n## Actual behavior\r\n\r\n`nq` ends up with multiple drivers on low two bits, connected to both `b` and `a[1:0]`. The problem happens in `proc_prune` when it decides to promote the `nq[1:0] <- b` assignment into a connect, while leaving other assignments into the same bits.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-08-13",
+  "closed_at": "2021-08-14",
+  "code_blocks": [
+    "module \\top\r\n   wire width 4 input 1 \\a\r\n   wire width 2 input 2 \\b\r\n   wire input 3 \\clk\r\n   wire width 4 output 4 \\q\r\n   wire input 5 \\en\r\n   wire width 4 \\nq\r\n   process \\p\r\n     assign \\nq \\a\r\n     assign \\nq [1:0] \\b\r\n     switch \\en\r\n       case 1'1\r\n         assign \\nq [3] 1'0\r\n     end\r\n     sync posedge \\clk\r\n       update \\q \\nq\r\n   end\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

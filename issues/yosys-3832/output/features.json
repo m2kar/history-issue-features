@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 3832,
+  "title": "Extraction of FSM from VHDL",
+  "features": [
+    {
+      "name": "fsm with multiple independent transition conditions per state",
+      "category": "control_flow",
+      "description": "Code should include an FSM implementation where each state has multiple independent conditional transitions (not mutually exclusive if-statements for different input conditions)",
+      "snippet": "typedef enum {S0, S1, S2, S3, S4, S5} state_t;\nstate_t state = S0;\nalways_ff @(posedge clk) begin\n  unique case (state)\n    S0: begin\n      if (up) state <= S1;\n      if (down) state <= S5;\n    end\n    S1: begin\n      if (up) state <= S2;\n      if (down) state <= S0;\n    end\n    // ... other states\n  endcase\nend",
+      "tags": ["fsm", "case_statement", "multiple_transitions", "conditional"],
+      "source_bug_id": "3832",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3832",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "no_output"
+    },
+    {
+      "name": "enumerated type state machine with non-exclusive conditions",
+      "category": "data_model",
+      "description": "Code should include an FSM using enumerated type for states where multiple inputs can cause transitions that are not if-else exclusive",
+      "snippet": "typedef enum bit [2:0] {S0=3'b000, S1=3'b001, S2=3'b010, S3=3'b011, S4=3'b100, S5=3'b101} state_t;\nstate_t state;\ninitial state = S0;\nalways_ff @(posedge clk) begin\n  if (rst) state <= S0;\n  else begin\n    unique case (1'b1)\n      state == S0: begin\n        if (up) state <= S1;\n        if (down) state <= S5;\n      end\n    endcase\n  end\nend",
+      "tags": ["fsm", "enum", "state_machine", "non_exclusive_conditions"],
+      "source_bug_id": "3832",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3832",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "no_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

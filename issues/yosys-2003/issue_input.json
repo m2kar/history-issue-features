@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2003,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2003",
+  "title": "opt_expr prevents driver/constant conflict warning",
+  "body": "```verilog\r\nmodule top(input [3:0] a, output [3:0] y);\r\n\twire [3:0] x = a + 1;\r\n\twire [3:0] tmp = 0;\r\n\tassign tmp = x;\r\n\tassign y = tmp | x;\r\nendmodule\r\n```\r\n\r\nRunning `yosys -qp \"opt_clean\" driver_constant.v` gives\r\n```\r\nWarning: Driver-driver conflict for $add$driver_constant.v:2$1_Y [3] between cell $add$driver_constant.v:2$1.Y and constant 1'0 in top: Resolved using constant.\r\nWarning: Driver-driver conflict for $add$driver_constant.v:2$1_Y [2] between cell $add$driver_constant.v:2$1.Y and constant 1'0 in top: Resolved using constant.\r\nWarning: Driver-driver conflict for $add$driver_constant.v:2$1_Y [1] between cell $add$driver_constant.v:2$1.Y and constant 1'0 in top: Resolved using constant.\r\nWarning: Driver-driver conflict for $add$driver_constant.v:2$1_Y [0] between cell $add$driver_constant.v:2$1.Y and constant 1'0 in top: Resolved using constant.\r\n```\r\n\r\nRunning `yosys -qp \"opt_expr; opt_clean\" driver_constant.v` gives no warnings.\r\n\r\nIt seems wrong for something that has the possibility to cause significant unexpected behaviour (and arguably should be an error), to not even produce a warning depending on the sequence of passes called.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2020-04-25",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input [3:0] a, output [3:0] y);\r\n\twire [3:0] x = a + 1;\r\n\twire [3:0] tmp = 0;\r\n\tassign tmp = x;\r\n\tassign y = tmp | x;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

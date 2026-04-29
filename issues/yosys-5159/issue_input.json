@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5159,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5159",
+  "title": "Fix `proc` handling of whiteboxes",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nWith the recent change to selections (#4768), a number of passes now give a warning when they ignore boxed modules, instead of doing so silently.  #5142 reveals that many of the `proc_*` passes ignore boxes, raising warnings when `abc9_ops` calls `proc` on the derived modules.  It seems like the major `proc_*` passes handled boxes but some of the newer optimizations used `selected_modules`, potentially without realizing that it was silently ignoring boxes.\r\n\r\n_Explain how this is achieved._\r\n\r\nAll of the `proc_*` passes have now been updated to be consistent, universally accepting all selected modules, including boxes.\r\n\r\n```c++\r\nfor (auto mod : design->all_selected_modules()) {\r\n    // ...\r\n    for (auto proc : mod->selected_processes()) {\r\n        // ...\r\n    }\r\n    // ...\r\n}\r\n```\r\n\r\n`opt_expr`, which is called at the end of `proc` by default, *also* emits a warning if the selection includes boxes.  However, unlike the `proc_*` passes, *none* of the `opt_*` passes operate on boxes.  Rather than changing `opt_expr` I instead changed `abc9_ops` to call `proc -noopt` and skip the `opt_expr` call entirely.\r\n\r\nThese two changes are sufficient to close #5142.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nFollowing the instructions for #5142 should not produce any warnings with the changes from this PR, and none of the existing tests should break.",
+  "labels": [
+    "merge-before-release"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-31",
+  "closed_at": "2025-06-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

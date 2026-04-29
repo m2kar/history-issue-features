@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3963,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3963",
+  "title": "Improved `sim` handling of `$display`/`$print` ",
+  "body": "This contains 3 changes that improve support for `$display` calls / `$print` cells in the context of simulating formal verification counterexample and cover traces using `sim` (used by SBY with `fst on` or `vcd_sim on`, will become the default in the future):\r\n\r\n## 0e92cc1\r\nAdds printed output to the JSON summary that SBY parses. This includes source and hierarchy information of the `$print` cell which might be useful even for other `sim` uses. I still have to add functionality to SBY to actually do anything with this data.\r\n\r\n## 8c89b46cb\r\nPrior to this, `$display` calls inside initial statements were not emitted as `$print` cells and generated an error if they were not using constant values. During FV it's common to have constant-but-solver-determined values (`rand const reg` or `$anyconst`) and outputting those in a structured way using $display in an initial block is something I very much want to do. This change still produces an elaboration time output when the values are constant but downgrades the error otherwise to an info message for calls that output the formatted string. In both cases it emits a $print cell so that the output during simulation is complete. It remains an error to use non-constant inputs for formatting functions that return the formatted string.\r\n\r\n## 1dbd3cc01\r\nThe current handling of `%m` statically inserts the module name, while the SV spec says that the hierarchical name should be output. Printing the hierarchical name is very useful when inserting debug logging to a module instantiated several times in the design. Since the hierarchical name is not known at the time the format string is processed, this requires actually keeping it as a format arg. To support it during `sim`, I added an argument to `render()` so `sim` can supply the correct hierarchical name. For the other elaboration time calls to `render()` I keep using the module name as the hierarchical name isn't statically known in that context.\r\n\r\nAdditionally `render()` assumed that the time is always `0` as it was only used for constant elaboration time calls before #3915, but since this isn't the case anymore I added another argument so that `sim` can supply the correct simulation time.\r\n\r\nWhat is still missing, and the main reason this is a draft PR, is hierarchical `%m` support for CXXRTL. As I haven't really used CXXRTL so far I'm not sure what needs to be done and wanted to get some feedback on the general approach before I figure out what to do there. I'd also want to add some tests for the added functionality.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-09-28",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

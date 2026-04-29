@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3820,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3820",
+  "title": "CXXRTL: incorrect result of shl operator",
+  "body": "### Version\r\n\r\nYosys 0.30+33 (git sha1 f9257d319, gcc 8.3.0-6 -fPIC -Os)\r\n\r\n### On which OS did this happen?\r\n\r\nLinux\r\n\r\n### Reproduction Steps\r\n\r\nVerilog file `top.v`:\r\n```verilog\r\nmodule top (\r\n    output [5:0] o,\r\n    input clk,\r\n    input [2:0] i1,\r\n    input [2:0] i2\r\n  );\r\n  wire [2:0] shl_res;\r\n  reg [2:0] gt_res;\r\n  assign o = {shl_res, gt_res};\r\n  assign shl_res = (i2 <<< i1);\r\n  always @(posedge clk)\r\n    gt_res <= (i1 > shl_res);\r\nendmodule\r\n```\r\n\r\nC++ file `replay.cpp`:\r\n```cpp\r\n#include \"top.cpp\"\r\n#include <iostream>\r\n\r\nint main()\r\n{\r\n\tcxxrtl_design::p_top top;\r\n\tcxxrtl::debug_items items;\r\n\ttop.debug_info(items);\r\n\r\n\ttop.step();\r\n\r\n\t// Set inputs\r\n\ttop.p_i2.set<uint8_t>(4u);\r\n\ttop.p_i1.set<uint8_t>(1u);\r\n\r\n\ttop.p_clk.set(false);\r\n\ttop.step();\r\n\ttop.p_clk.set(true);\r\n\ttop.step();\r\n\ttop.debug_eval();\r\n\r\n\t// Check outputs\r\n\tstd::cout << \"shl_res = \" << top.p_shl__res.get<uint32_t>() << \"\\n\";\r\n\tstd::cout << \"gt_res = \" << top.p_gt__res.get<uint32_t>() << \"\\n\";\r\n\tstd::cout << \"o = \" << top.p_o.get<uint32_t>() << \"\\n\";\r\n\r\n\treturn 0;\r\n}\r\n```\r\n\r\nRun:\r\n```\r\nyosys -p \"read_verilog top.v; write_cxxrtl top.cpp\"\r\ng++ replay.cpp -I$(yosys-config --datdir)/include\r\n./a.out\r\n```\r\n\r\n### Expected Behavior\r\n\r\n`shl_res` should have been truncated to 3-bit.\r\n```\r\nshl_res = 0\r\ngt_res = 1\r\no = 1\r\n```\r\n\r\n### Actual Behavior\r\n\r\n```\r\nshl_res = 8\r\ngt_res = 0\r\no = 64\r\n```",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-24",
+  "closed_at": "2024-01-20",
+  "code_blocks": [
+    "module top (\r\n    output [5:0] o,\r\n    input clk,\r\n    input [2:0] i1,\r\n    input [2:0] i2\r\n  );\r\n  wire [2:0] shl_res;\r\n  reg [2:0] gt_res;\r\n  assign o = {shl_res, gt_res};\r\n  assign shl_res = (i2 <<< i1);\r\n  always @(posedge clk)\r\n    gt_res <= (i1 > shl_res);\r\nendmodule",
+    "#include \"top.cpp\"\r\n#include <iostream>\r\n\r\nint main()\r\n{\r\n\tcxxrtl_design::p_top top;\r\n\tcxxrtl::debug_items items;\r\n\ttop.debug_info(items);\r\n\r\n\ttop.step();\r\n\r\n\t// Set inputs\r\n\ttop.p_i2.set<uint8_t>(4u);\r\n\ttop.p_i1.set<uint8_t>(1u);\r\n\r\n\ttop.p_clk.set(false);\r\n\ttop.step();\r\n\ttop.p_clk.set(true);\r\n\ttop.step();\r\n\ttop.debug_eval();\r\n\r\n\t// Check outputs\r\n\tstd::cout << \"shl_res = \" << top.p_shl__res.get<uint32_t>() << \"\\n\";\r\n\tstd::cout << \"gt_res = \" << top.p_gt__res.get<uint32_t>() << \"\\n\";\r\n\tstd::cout << \"o = \" << top.p_o.get<uint32_t>() << \"\\n\";\r\n\r\n\treturn 0;\r\n}",
+    "yosys -p \"read_verilog top.v; write_cxxrtl top.cpp\"\r\ng++ replay.cpp -I$(yosys-config --datdir)/include\r\n./a.out"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3540,
+  "title": "write_smt2: Error when using \"-nobv\" option",
+  "features": [
+    {
+      "name": "multi-bit DFF with async reset",
+      "category": "timing",
+      "description": "Code should include a multi-bit D flip-flop with asynchronous reset using posedge clk or negedge rstn sensitivity",
+      "snippet": "reg [2:0] p;\nalways @(posedge clk or negedge rstn) begin\n    if (!rstn)\n        p <= 3'b001;\n    else\n        p <= {p[1:0],p[2]};\nend",
+      "tags": ["dff", "async_reset", "multi_bit", "register_rotation"],
+      "source_bug_id": "yosys-3540",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3540",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "dffunmap followed by write_smt2 -nobv",
+      "category": "control_flow",
+      "description": "Code should include a synthesis sequence where dffunmap is called before write_smt2 with the -nobv option to trigger unsupported $dff cell type",
+      "snippet": "read_verilog top.v\nprep\nasync2sync\ndffunmap\nwrite_smt2 -nobv",
+      "tags": ["yosys_command", "dffunmap", "write_smt2", "-nobv", "synthesis_pass"],
+      "source_bug_id": "yosys-3540",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3540",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "bit rotation via concatenation and slicing",
+      "category": "data_model",
+      "description": "Code should include a register rotation implemented using concatenation {p[1:0],p[2]} and bit-slicing double_gnt[5:3] | double_gnt[2:0]",
+      "snippet": "wire [5:0] double_req;\nwire [5:0] double_gnt;\nassign double_req = {req,req};\nassign double_gnt = double_req & ~(double_req - p);\nassign grant = double_gnt[5:3] | double_gnt[2:0];",
+      "tags": ["bit_rotation", "concatenation", "bit_slicing", "arithmetic_operation"],
+      "source_bug_id": "yosys-3540",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3540",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

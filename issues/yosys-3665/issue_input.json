@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3665,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3665",
+  "title": "Sort cells topologically",
+  "body": "Sorting cells topologically to speed things up in some cases.\r\n\r\nTODOs:\r\n- [x] Add code for sorting cells topologically\r\n- [x] Create a small example design that demonstrates the issue\r\n- [x] Add runtime option (scratchpad flag) for restoring old behavior\r\n- [ ] Double-check that there are no passes for which topological sort order is the worst case\r\n- [ ] Add a `module->rcells()` method for iterating over the cells in reverse sort order\r\n\r\nShort demo:\r\n\r\n```\r\nclaire@lamarr:~/Work/yosys$ cat demo.sv \r\nmodule test (input [7:0] A, B, output [7:0] X);\r\n  wire [7:0] B1, B2, C1, C2, D1, D2, E1, E2;\r\n  assign X = B1 + B2;\r\n  assign B1 = C1 + D2, B2 = C2 + D1;\r\n  assign C1 = D1 + A, C2 = A + D2;\r\n  assign D1 = E1 + B, D2 = E2 + B;\r\n  assign E1 = A + B, E2 = B + A;\r\nendmodule\r\n\r\nclaire@lamarr:~/Work/yosys$ git diff\r\ndiff --git a/passes/opt/opt_merge.cc b/passes/opt/opt_merge.cc\r\nindex e9d98cd43..15c172bbe 100644\r\n--- a/passes/opt/opt_merge.cc\r\n+++ b/passes/opt/opt_merge.cc\r\n@@ -256,6 +256,9 @@ struct OptMergeWorker\r\n                bool did_something = true;\r\n                while (did_something)\r\n                {\r\n+                       static int count = 0;\r\n+                       log_warning(\"ping %d\\n\", count++);\r\n+\r\n                        std::vector<RTLIL::Cell*> cells;\r\n                        cells.reserve(module->cells_.size());\r\n                        for (auto &it : module->cells_) {\r\n\r\nclaire@lamarr:~/Work/yosys$ ./yosys -qp 'read_verilog demo.sv; scratchpad -set toposort_cells 0;; opt_merge'\r\nWarning: ping 0\r\nWarning: ping 1\r\nWarning: ping 2\r\nWarning: ping 3\r\nWarning: ping 4\r\n\r\nclaire@lamarr:~/Work/yosys$ ./yosys -qp 'read_verilog demo.sv; scratchpad -set toposort_cells 1;; opt_merge'\r\nWarning: ping 0\r\nWarning: ping 1\r\n```\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2023-02-09",
+  "closed_at": null,
+  "code_blocks": [
+    "claire@lamarr:~/Work/yosys$ cat demo.sv \r\nmodule test (input [7:0] A, B, output [7:0] X);\r\n  wire [7:0] B1, B2, C1, C2, D1, D2, E1, E2;\r\n  assign X = B1 + B2;\r\n  assign B1 = C1 + D2, B2 = C2 + D1;\r\n  assign C1 = D1 + A, C2 = A + D2;\r\n  assign D1 = E1 + B, D2 = E2 + B;\r\n  assign E1 = A + B, E2 = B + A;\r\nendmodule\r\n\r\nclaire@lamarr:~/Work/yosys$ git diff\r\ndiff --git a/passes/opt/opt_merge.cc b/passes/opt/opt_merge.cc\r\nindex e9d98cd43..15c172bbe 100644\r\n--- a/passes/opt/opt_merge.cc\r\n+++ b/passes/opt/opt_merge.cc\r\n@@ -256,6 +256,9 @@ struct OptMergeWorker\r\n                bool did_something = true;\r\n                while (did_something)\r\n                {\r\n+                       static int count = 0;\r\n+                       log_warning(\"ping %d\\n\", count++);\r\n+\r\n                        std::vector<RTLIL::Cell*> cells;\r\n                        cells.reserve(module->cells_.size());\r\n                        for (auto &it : module->cells_) {\r\n\r\nclaire@lamarr:~/Work/yosys$ ./yosys -qp 'read_verilog demo.sv; scratchpad -set toposort_cells 0;; opt_merge'\r\nWarning: ping 0\r\nWarning: ping 1\r\nWarning: ping 2\r\nWarning: ping 3\r\nWarning: ping 4\r\n\r\nclaire@lamarr:~/Work/yosys$ ./yosys -qp 'read_verilog demo.sv; scratchpad -set toposort_cells 1;; opt_merge'\r\nWarning: ping 0\r\nWarning: ping 1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

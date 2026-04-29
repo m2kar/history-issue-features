@@ -1,0 +1,77 @@
+{
+  "tool": "yosys",
+  "issue_number": 30,
+  "title": "MUXOPT does not scale",
+  "features": [
+    {
+      "name": "large genvar for loop in generate block",
+      "category": "control_flow",
+      "description": "Code should include a generate block with a genvar for loop that iterates a large number of times based on a parameter",
+      "snippet": "parameter BITS = 32;\ngenerate genvar i;\nfor (i = 0; i < BITS; i = i + 1) begin end",
+      "tags": ["generate", "genvar", "for_loop", "parameter_sized"],
+      "source_bug_id": "yosys-30",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "performance_degradation"
+    },
+    {
+      "name": "variable width part select in expression",
+      "category": "data_model",
+      "description": "Code should include a variable-width part select where both the start and end indices depend on a genvar or loop variable",
+      "snippet": "input [BITS-1:0] in;\nwire [BITS-1:i] slice = in[BITS-1:BITS-1-i];",
+      "tags": ["part_select", "variable_index", "genvar_dependency"],
+      "source_bug_id": "yosys-30",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "performance_degradation"
+    },
+    {
+      "name": "dynamic concatenation with replication in comparison",
+      "category": "data_model",
+      "description": "Code should include a concatenation with replication where the repeat count depends on a genvar variable, used in a comparison expression",
+      "snippet": "if (in[BITS-1:BITS-1-i] == { { i { 1'b0 } }, 1'b1 })",
+      "tags": ["concatenation", "replication", "dynamic_size", "comparison"],
+      "source_bug_id": "yosys-30",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "performance_degradation"
+    },
+    {
+      "name": "priority encoding via multiple always blocks with cross-iteration if conditions",
+      "category": "control_flow",
+      "description": "Code should include multiple always @(*) blocks each containing an if statement where conditions span different iterations of a generate loop, creating a priority encoding pattern",
+      "snippet": "for (i = 0; i < BITS; i = i + 1) begin\nalways @(*) if (condition_based_on_i) out = i;\nend",
+      "tags": ["priority_encoding", "generate", "if_statement", "mux_tree"],
+      "source_bug_id": "yosys-30",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "performance_degradation"
+    },
+    {
+      "name": "mux tree triggered by large parameter with clog2 sizing",
+      "category": "data_model",
+      "description": "Code should include a module with parameter sized by $clog2 of another parameter, creating a MUX tree structure that scales exponentially with the parameter",
+      "snippet": "parameter BITS = 32;\nlocalparam OUT_BITS = $clog2(BITS) + 1;\noutput reg [OUT_BITS-1:0] out;",
+      "tags": ["mux_tree", "clog2", "parameter_sizing", "scaling"],
+      "source_bug_id": "yosys-30",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/30",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "performance_degradation"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 1,
+    "features_extracted": 5,
+    "features_after_dedup": 5
+  }
+}

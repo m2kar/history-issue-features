@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 257,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/257",
+  "title": "Fix redefinition of YYLTYPE struct caused by wrong include order",
+  "body": "cfparse.h defines the YYLTYPE struct in case it has not been defined, and\r\nalso declares an extern YYLTYPE cflloc which is used in cflexor.\r\n\r\nAs cfparse_misc.h defines an extended YYLTYPE, the cflloc instance in\r\ncfparse.c has this extended type, i.e. there is a type mismatch.\r\n\r\nChanging the include order in cflexor causes both cflexor.c and\r\ncfparse.c to use the definition from cfparse_misc.h.\r\n\r\nThis has been uncovered by GCC when using LTO:\r\n```\r\ngcc -flto=8 main.o substit.o cflexor.o cfparse.o -o iverilog \r\ncfparse.h:105:16: warning: type of 'cflloc' does not match original declaration [-Wlto-type-mismatch]\r\n  105 | extern YYLTYPE cflloc;\r\n      |                ^\r\ncfparse.c:1162:9: note: type 'struct cfltype' should match type 'struct YYLTYPE'\r\n 1162 | YYLTYPE yylloc\r\n      |         ^\r\ncfparse.c:1162:9: note: 'cflloc' was previously declared here\r\ncfparse.c:1162:9: note: code may be misoptimized unless '-fno-strict-aliasing' is used\r\n\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-07-26",
+  "closed_at": "2019-08-02",
+  "code_blocks": [
+    "gcc -flto=8 main.o substit.o cflexor.o cfparse.o -o iverilog \r\ncfparse.h:105:16: warning: type of 'cflloc' does not match original declaration [-Wlto-type-mismatch]\r\n  105 | extern YYLTYPE cflloc;\r\n      |                ^\r\ncfparse.c:1162:9: note: type 'struct cfltype' should match type 'struct YYLTYPE'\r\n 1162 | YYLTYPE yylloc\r\n      |         ^\r\ncfparse.c:1162:9: note: 'cflloc' was previously declared here\r\ncfparse.c:1162:9: note: code may be misoptimized unless '-fno-strict-aliasing' is used"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

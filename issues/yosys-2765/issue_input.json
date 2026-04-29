@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2765,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2765",
+  "title": "opt_mem: Nuke write ports with EN == 0",
+  "body": "Const-0-EN write ports can result from some contrived always-false conditions, like this:\r\n\r\n```\r\nmodule top(...);\r\n\r\ninput clk;\r\ninput [3:0] wa;\r\ninput [15:0] wd;\r\ninput [3:0] ra;\r\noutput [15:0] rd;\r\n\r\nreg [15:0] mem[0:15];\r\n\r\ninteger i;\r\nreg x;\r\n\r\nalways @(posedge clk) begin\r\n        for (i = 0; i < 2; i = i + 1) begin\r\n                x = i == 1;\r\n                if (x)\r\n                        mem[wa] <= wd;\r\n        end\r\nend\r\n\r\nassign rd = mem[ra];\r\n\r\nendmodule\r\n```\r\n\r\nLet's add some code to `opt_mem` to detect this case and blow them away.",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2021-05-20",
+  "closed_at": "2021-05-23",
+  "code_blocks": [
+    "module top(...);\r\n\r\ninput clk;\r\ninput [3:0] wa;\r\ninput [15:0] wd;\r\ninput [3:0] ra;\r\noutput [15:0] rd;\r\n\r\nreg [15:0] mem[0:15];\r\n\r\ninteger i;\r\nreg x;\r\n\r\nalways @(posedge clk) begin\r\n        for (i = 0; i < 2; i = i + 1) begin\r\n                x = i == 1;\r\n                if (x)\r\n                        mem[wa] <= wd;\r\n        end\r\nend\r\n\r\nassign rd = mem[ra];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3360,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3360",
+  "title": "synth_xilinx miscompilation: outputs are dropped if another output bit is driven 'Z'",
+  "body": "## Steps to reproduce the issue\r\n\r\nWith the following `repro.il`:\r\n\r\n```\r\nautoidx 1\r\nmodule \\repro\r\n  wire width 2 output 1 \\foo\r\n  connect \\foo 2'1z\r\nend\r\n```\r\n\r\nRun `yosys -p 'read_rtlil repro.il; synth_xilinx; write_rtlil repro_synth.il'`\r\n\r\nThis produces a warning `Warning: Wire repro.$iopadmap$foo [1] is used but has no driver.`, which points to the problem - excerpt from `repro_synth.il`:\r\n\r\n```\r\nmodule \\repro\r\n  attribute \\unused_bits \"0\"\r\n  wire width 2 $iopadmap$foo\r\n  wire width 2 output 1 \\foo\r\n  attribute \\keep 1\r\n  cell \\OBUF $iopadmap$repro.foo\r\n    connect \\I $iopadmap$foo [1]\r\n    connect \\O \\foo [1]\r\n  end\r\n  attribute \\keep 1\r\n  cell \\OBUFT $iopadmap$repro.foo[0]\r\n    connect \\I 1'x\r\n    connect \\O \\foo [0]\r\n    connect \\T 1'1\r\n  end\r\nend\r\n```\r\n\r\n`\\foo[1]` is driven by `$iopadmap$foo[1]`, but `$iopadmap$foo` is never assigned anywhere.\r\n\r\n```\r\n$ yosys --version\r\nYosys 0.17+67 (git sha1 01cb02c81, gcc 12.1.0 -march=x86-64 -mtune=generic -O2 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -fvar-tracking-assignments -ffile-prefix-map=/build/yosys-git/src=/usr/src/debug -fPIC -Os)\r\n```\r\n\r\n## Expected behavior\r\n\r\nBit 0 of `\\foo` outputs `Z`, bit 1 outputs `1`.\r\n\r\n## Actual behavior\r\n\r\nAll non-`Z` bits of `\\foo` are connected to a net with no driver.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-06-05",
+  "closed_at": "2022-06-07",
+  "code_blocks": [
+    "autoidx 1\r\nmodule \\repro\r\n  wire width 2 output 1 \\foo\r\n  connect \\foo 2'1z\r\nend",
+    "module \\repro\r\n  attribute \\unused_bits \"0\"\r\n  wire width 2 $iopadmap$foo\r\n  wire width 2 output 1 \\foo\r\n  attribute \\keep 1\r\n  cell \\OBUF $iopadmap$repro.foo\r\n    connect \\I $iopadmap$foo [1]\r\n    connect \\O \\foo [1]\r\n  end\r\n  attribute \\keep 1\r\n  cell \\OBUFT $iopadmap$repro.foo[0]\r\n    connect \\I 1'x\r\n    connect \\O \\foo [0]\r\n    connect \\T 1'1\r\n  end\r\nend",
+    "$ yosys --version\r\nYosys 0.17+67 (git sha1 01cb02c81, gcc 12.1.0 -march=x86-64 -mtune=generic -O2 -fno-plt -fexceptions -fstack-clash-protection -fcf-protection -fvar-tracking-assignments -ffile-prefix-map=/build/yosys-git/src=/usr/src/debug -fPIC -Os)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

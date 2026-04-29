@@ -1,0 +1,51 @@
+{
+  "tool": "iverilog",
+  "issue_number": 216,
+  "title": "Wrong index underflow values.",
+  "features": [
+    {
+      "name": "inline arithmetic expression as vector bit-select index causing underflow",
+      "category": "data_model",
+      "description": "Code should include a vector bit-select where the index is an inline arithmetic expression (e.g. narrow_reg - constant) that can underflow, to expose whether the simulator evaluates the expression in a wider context producing out-of-bounds X instead of wrapping",
+      "snippet": "reg [2:0] index = 0;\nreg [8:0] buffer = 9'b101010101;\nwire prev1;\nwire prev2;\nassign prev1 = buffer[index - 1];\nassign prev2 = buffer[index - 2];",
+      "tags": ["bit_select", "array_index", "arithmetic_expression", "underflow", "narrow_register", "wrong_output"],
+      "source_bug_id": "216",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/216",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "narrow register subtraction underflow wrap-around semantics",
+      "category": "data_model",
+      "description": "Code should include a subtraction on a narrow-width register (e.g. reg [2:0]) where the result underflows, verifying that modular wrap-around is preserved and the result stays within the declared bit-width",
+      "snippet": "reg [2:0] idx = 0;\nwire [2:0] wrapped;\nassign wrapped = idx - 1;\n// wrapped should be 3'b111 (7) when idx == 0",
+      "tags": ["narrow_register", "subtraction", "underflow", "wrap_around", "modular_arithmetic"],
+      "source_bug_id": "216",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/216",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "explicit intermediate wire truncation before array index use",
+      "category": "data_model",
+      "description": "Code should include an explicit intermediate wire with a declared bit-width used to truncate an arithmetic expression before the result is applied as an array or vector bit-select index, ensuring the index stays in-bounds through forced truncation",
+      "snippet": "reg [2:0] index = 0;\nreg [8:0] buffer = 9'b101010101;\nwire [2:0] index1;\nwire [2:0] index2;\nassign index1 = index - 1;\nassign index2 = index - 2;\nwire val1;\nwire val2;\nassign val1 = buffer[index1];\nassign val2 = buffer[index2];",
+      "tags": ["intermediate_wire", "bit_truncation", "array_index", "bit_select", "explicit_width"],
+      "source_bug_id": "216",
+      "tool": "iverilog",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/216",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

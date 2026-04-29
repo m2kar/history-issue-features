@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 25,
+  "title": "\"make test\" produces error at test_intermout_always_ff_6_test",
+  "features": [
+    {
+      "name": "always_ff with intermediate output ports",
+      "category": "general",
+      "description": "Code should include an always_ff block that drives an output port which is also read internally within the same module (intermediate output pattern)",
+      "snippet": "module top (\n  input  logic clk,\n  input  logic d,\n  output logic q\n);\n  always_ff @(posedge clk)\n    q <= d & q;  // q is output AND used as feedback input\nendmodule",
+      "tags": ["always_ff", "intermediate_output", "feedback", "sequential", "output_port"],
+      "source_bug_id": "25",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/25",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    },
+    {
+      "name": "always_ff register chain with intermediate outputs",
+      "category": "general",
+      "description": "Code should include multiple always_ff registers where output ports serve as intermediate signals (both driven by flip-flops and fed back as combinational inputs to the same always_ff block)",
+      "snippet": "module top (\n  input  logic clk, rst,\n  input  logic [3:0] d,\n  output logic [3:0] q0, q1\n);\n  always_ff @(posedge clk or posedge rst)\n    if (rst) begin q0 <= 0; q1 <= 0; end\n    else begin\n      q0 <= d ^ q1;  // q1 is output used as feedback\n      q1 <= q0 | d;  // q0 is output used as feedback\n    end\nendmodule",
+      "tags": ["always_ff", "intermediate_output", "register_chain", "feedback", "sequential"],
+      "source_bug_id": "25",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/25",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "crash"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 0,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 72,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/72",
+  "title": "Bug: Wrong number of arguments error on expansion of macro with default arguments",
+  "body": "**pptest.sv**\n\n``` systemverilog\nmodule modname;\n`define macro1(arg1=d1) $info(`\"arg1`\");\n`define macro2(arg1=d1, arg2=d2) $info(`\"arg1 arg2`\");\n   initial begin\n      `macro1() // Works\n      `macro1(1) // Works\n\n      `macro2() // Cause wrong number of arguments error\n      `macro2(1) // Cause wrong number of arguments error\n      `macro2(1,2) // Works\n\n      `macro2(,) // Works\n      `macro2(1,) // Works\n      `macro2(1,2) // Works\n\n      `macro2(,2) // Works\n   end\nendmodule\n```\n\n**iverilog output:**\n\n``` console\n> iverilog -E pptest.sv && cat a.out \npptest.sv:8: error: wrong number of arguments for `macro2\npptest.sv:9: error: wrong number of arguments for `macro2\nmodule modname;\n\n\n   initial begin\n      $info(\"d1\"); // Works\n      $info(\"1\"); // Works\n\n       // Cause wrong number of arguments error\n       // Cause wrong number of arguments error\n      $info(\"1 2\"); // Works\n\n      $info(\"d1 d2\"); // Works\n      $info(\"1 d2\"); // Works\n      $info(\"1 2\"); // Works\n\n      $info(\"d1 2\"); // Works\n   end\nendmodule\n```\n\n**Correct preprocessor output:**\n\n``` console\n> vlog pptest.sv -E a.out; cat a.out \nModel Technology ModelSim ALTERA vlog 10.3c Compiler 2014.09 Sep 20 2014\nStart time: 09:59:36 on Jun 27,2015\nvlog pptest.sv -E a.out \n-- Compiling module modname\n\nTop level modules:\n    modname\nEnd time: 09:59:36 on Jun 27,2015, Elapsed time: 0:00:00\nErrors: 0, Warnings: 0\n\n`line 1 \"pptest.sv\" 0\nmodule modname;\n\n`line 2 \"pptest.sv\" 0\n\n\n`line 3 \"pptest.sv\" 0\n\n   initial begin\n       $info(\"d1\"); \n       $info(\"1\"); \n\n       $info(\"d1 d2\"); \n       $info(\"1 d2\"); \n       $info(\"1 2\"); \n\n       $info(\"d1 d2\"); \n       $info(\"1 d2\"); \n       $info(\"1 2\"); \n\n       $info(\"d1 2\"); \n   end\nendmodule\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-06-27",
+  "closed_at": "2015-06-27",
+  "code_blocks": [
+    "**iverilog output:**",
+    "**Correct preprocessor output:**"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

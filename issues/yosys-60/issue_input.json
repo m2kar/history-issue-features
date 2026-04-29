@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 60,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/60",
+  "title": "opt_rmdff with init attribute",
+  "body": "I am using yosys to handle some verilog code generated from Vivado HLS. The code has some weird style for FSM, and there is a reg with an initial value. After processing the code, I find there is a $dff cell with constant input, and this constant input is equal to the initial value. So I think the cell should be removed by opt_rmdff, but that is not the case. I dive in the code and see that opt_rmdff will skip the dff with init attribute, regardless of whether or not the initial value is equal to the constant. Is there any reason not to do so? If not, I suggest a simple fix to it as\n\n```\ndiff --git a/passes/opt/opt_rmdff.cc b/passes/opt/opt_rmdff.cc\nindex 5f52bb8..20966fd 100644\n--- a/passes/opt/opt_rmdff.cc\n+++ b/passes/opt/opt_rmdff.cc\n@@ -122,7 +122,7 @@ bool handle_dff(RTLIL::Module *mod, RTLIL::Cell *dff)\n                goto delete_dff;\n        }\n\n-       if (sig_d.is_fully_const() && !sig_r.size() && !has_init) {\n+       if (sig_d.is_fully_const() && !sig_r.size() && (!has_init || (has_init && val_init == sig_d.as_const()))) {\n                RTLIL::SigSig conn(sig_q, sig_d);\n                mod->connect(conn);\n                goto delete_dff;\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2015-04-18",
+  "closed_at": "2015-04-18",
+  "code_blocks": [
+    "diff --git a/passes/opt/opt_rmdff.cc b/passes/opt/opt_rmdff.cc\nindex 5f52bb8..20966fd 100644\n--- a/passes/opt/opt_rmdff.cc\n+++ b/passes/opt/opt_rmdff.cc\n@@ -122,7 +122,7 @@ bool handle_dff(RTLIL::Module *mod, RTLIL::Cell *dff)\n                goto delete_dff;\n        }\n\n-       if (sig_d.is_fully_const() && !sig_r.size() && !has_init) {\n+       if (sig_d.is_fully_const() && !sig_r.size() && (!has_init || (has_init && val_init == sig_d.as_const()))) {\n                RTLIL::SigSig conn(sig_q, sig_d);\n                mod->connect(conn);\n                goto delete_dff;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

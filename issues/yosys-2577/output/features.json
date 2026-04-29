@@ -1,0 +1,38 @@
+{
+  "tool": "yosys",
+  "issue_number": 2577,
+  "title": "ERROR: Assert `GetSize(subexpr) == 1' failed in backends/smt2/smt2.cc:410.",
+  "features": [
+    {
+      "name": "memory with zero address bits and width-mismatched write enable",
+      "category": "data_model",
+      "description": "Code should include a memory/array declaration with ABITS=0 (single entry) and WIDTH=3, where the write enable signal has width 3 instead of width 1, causing a port width mismatch that triggers an assertion failure in the SMT2 backend",
+      "snippet": "wire [2:0] data_out;\nwire [2:0] wr_en;\nwire [2:0] wr_data;\nreg [2:0] mem [0:0];\nassign mem[0] = wr_en[0] ? wr_data : 3'bxxx;\nassign data_out = mem[0];",
+      "tags": ["memory", "width_mismatch", "smt2_backend", "zero_address_bits"],
+      "source_bug_id": "yosys-2577",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2577",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    },
+    {
+      "name": "empty address port on memory with non-zero width data",
+      "category": "data_model",
+      "description": "Code should include a memory cell where the address port is an empty connection { } (width 0) but the data port has non-zero width, creating an inconsistent memory cell definition that triggers assertion failure when processed by the SMT2 backend",
+      "snippet": "wire [2:0] data_out;\nwire [2:0] wr_data;\nreg [2:0] mem [0:0];\nassign data_out = mem[0];\nassign mem[0] = wr_data;",
+      "tags": ["memory", "empty_address", "width_mismatch", "smt2_backend"],
+      "source_bug_id": "yosys-2577",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2577",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "internal_error"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

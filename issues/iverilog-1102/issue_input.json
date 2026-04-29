@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 1102,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/1102",
+  "title": "Require declaration before use for parameters, nets, variables, and named events",
+  "body": "Traditionally, when not using hierarchical names, Verilog has required declaration before use for parameters, nets, variables, and named events, apart from the special case of single bit implicit nets . This was never explicitly stated in any of the IEEE 1364 revisions, but was in early revisions of IEEE 1800 (although that text has been lost in later revisions), and most other simulators require it.\r\n\r\nIcarus Verilog has always allowed use before declaration. Mostly this is relatively harmless, allowing it to accept code that other tools will reject. It is possible to contrive a test case that will result in different behaviour, e.g.\r\n````\r\nlocalparam w = 8;\r\n\r\ntask t;\r\n  reg [w:1] v;\r\n  localparam w = 2;\r\nendtask;\r\n````\r\nwhere `iverilog` will make `v` 2 bits and other tools will make it 8 bits.\r\n\r\nThere is a bug report for this on the old SourceForge bug tracker, but as it is a change to long-standing behaviour, I'd like to get all the developers' approval for it.\r\n\r\nNote that I had to change 7 tests in the test suite for this:\r\n* sdf_interconnect[1-4] just needed the code reordering.\r\n* pr1909940 and pr1909940b are designed to test use before implicit declaration, so I changed them to CE.\r\n* for vhdl_fa4_test4 the VHDL pre-processor generates code that uses parameters before they are declared, so I changed it to NI.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-02-19",
+  "closed_at": "2024-04-06",
+  "code_blocks": [
+    "localparam w = 8;\r\n\r\ntask t;\r\n  reg [w:1] v;\r\n  localparam w = 2;\r\nendtask;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

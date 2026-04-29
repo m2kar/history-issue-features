@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5234,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5234",
+  "title": "fminit causes std::out_of_range",
+  "body": "### Version\n\n0.54+15\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWith the following SystemVerilog design:\n```systemverilog\nmodule counter(input clk, input rst, output logic is_full);\n\n\n    logic [1:0] ctr;\n    always @(posedge clk) begin\n        if (rst) begin\n            ctr <= 0;\n        end else begin\n            ctr <= ctr+1;\n        end\n    end\n    assign is_full = (ctr == 2'b11);\n\nendmodule\n```\nrun the following yosys script:\n```\nread_verilog -sv -formal reset.sv\n\nhierarchy -check -top counter\nprep -top counter\nfminit -seq rst 0,1\n```\nThe following output is given:\n```\nSBY 14:39:48 [reset_task1] base: terminate called after throwing an instance of 'std::out_of_range'\nSBY 14:39:48 [reset_task1] base: what():  vector::_M_range_check: __n (which is 1) >= this->size() (which is 1)\nSBY 14:39:48 [reset_task1] base: finished (returncode=-6)\nSBY 14:39:48 [reset_task1] base: task failed. ERROR\n```\n\n### Expected Behavior\n\nDocumentation of fminit is rather thin, but I would expect either an error about the sequence not being supported, or for the sequence to properly initialise.\n\n### Actual Behavior\n\nThe aforementioned ``std::out_of_range`` is given. \n\nThe error is not thrown if the sequence is 1,0, but re-appears if the sequence is 1,0,1 or similar. I think it's an issue from adding entries of the ``initdata`` vector in the ``fminit.cc`` pass, but am unsure about further details.",
+  "labels": [
+    "bug"
+  ],
+  "state": "open",
+  "created_at": "2025-07-16",
+  "closed_at": null,
+  "code_blocks": [
+    "module counter(input clk, input rst, output logic is_full);\n\n\n    logic [1:0] ctr;\n    always @(posedge clk) begin\n        if (rst) begin\n            ctr <= 0;\n        end else begin\n            ctr <= ctr+1;\n        end\n    end\n    assign is_full = (ctr == 2'b11);\n\nendmodule",
+    "SBY 14:39:48 [reset_task1] base: terminate called after throwing an instance of 'std::out_of_range'\nSBY 14:39:48 [reset_task1] base: what():  vector::_M_range_check: __n (which is 1) >= this->size() (which is 1)\nSBY 14:39:48 [reset_task1] base: finished (returncode=-6)\nSBY 14:39:48 [reset_task1] base: task failed. ERROR"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

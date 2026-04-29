@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 840,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/840",
+  "title": "Two assertions firing when dealing with generate with arrays of structs",
+  "body": "Again running in WSL2, and I did `git pull` about 10 minutes ago, so this is an issue reporting against 13.0  I'm attempting to code an efficient binary tree based search similar to how I've coded Wallace trees in the past.  I pass in an array [N-1:0] of the structure to search, then I allocate an array [2*N-1] of the same structure., then I fill the first N positions of the local structure with the input elements (leaving the N-1 elements at the end empty) then do a N-1 comparisons, each comparison comparing adjacent elements, chosing one, and copying it to the next empty position.\r\n\r\nAnyways, I tried using generate to construct this (as I have in the past using Verilog) and I found that I could trigger two different assertions in `elab_expr.cc`.  I used generate instead of always_comb to try to get around some of the other assertions I've been having \"fun\" with.\r\n\r\nThe first assertion is as follows:\r\n\r\n```\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ cat struct_array_assert_test1.sv\r\ntypedef struct packed {logic x;} s;\r\n\r\nmodule struct_array_assert_test1\r\n(\r\n  input  s [1:0]   a\r\n);\r\n\r\ns [1:0] b;\r\n\r\ngenerate\r\n  genvar i;\r\n  for(i=0;i<=2;i++)\r\n    assign b[i] = a[i];\r\nendgenerate\r\n\r\nendmodule\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ iverilog -g2012 struct_array_assert_test1.sv\r\nstruct_array_assert_test1.sv:13: assert: elab_net.cc:467: failed assertion rcl\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$\r\n```\r\n\r\nFor the second, if I change the definition of b from being 2 elements (i.e. N) to being 3 elements (i.e. 2*N-1) I get this:\r\n\r\n```\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ cat struct_array_assert_test2.sv\r\ntypedef struct packed {logic x;} s;\r\n\r\nmodule struct_array_assert_test1\r\n(\r\n  input  s [1:0]   a\r\n);\r\n\r\ns [2:0] b;\r\n\r\ngenerate\r\n  genvar i;\r\n  for(i=0;i<=2;i++)\r\n    assign b[i] = a[i];\r\nendgenerate\r\n\r\nendmodule\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ iverilog -g2012 struct_array_assert_test2.sv\r\nstruct_array_assert_test2.sv:13: assert: elab_expr.cc:6223: failed assertion rc\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$\r\n```\r\nThe equivalents using always_comb instead of generate don't cause these same errors.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-28",
+  "closed_at": "2024-01-08",
+  "code_blocks": [
+    "wlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ cat struct_array_assert_test1.sv\r\ntypedef struct packed {logic x;} s;\r\n\r\nmodule struct_array_assert_test1\r\n(\r\n  input  s [1:0]   a\r\n);\r\n\r\ns [1:0] b;\r\n\r\ngenerate\r\n  genvar i;\r\n  for(i=0;i<=2;i++)\r\n    assign b[i] = a[i];\r\nendgenerate\r\n\r\nendmodule\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ iverilog -g2012 struct_array_assert_test1.sv\r\nstruct_array_assert_test1.sv:13: assert: elab_net.cc:467: failed assertion rcl\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$",
+    "wlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ cat struct_array_assert_test2.sv\r\ntypedef struct packed {logic x;} s;\r\n\r\nmodule struct_array_assert_test1\r\n(\r\n  input  s [1:0]   a\r\n);\r\n\r\ns [2:0] b;\r\n\r\ngenerate\r\n  genvar i;\r\n  for(i=0;i<=2;i++)\r\n    assign b[i] = a[i];\r\nendgenerate\r\n\r\nendmodule\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$ iverilog -g2012 struct_array_assert_test2.sv\r\nstruct_array_assert_test2.sv:13: assert: elab_expr.cc:6223: failed assertion rc\r\nAborted\r\nwlye@AMR-BU-L02782:~/foton/tests/issue-xxx$"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

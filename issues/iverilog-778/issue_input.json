@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 778,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/778",
+  "title": "Improve parsing of package scoped identifiers ",
+  "body": "In order to avoid conflicts in the grammar the lexer distinguishes between\r\nidentifiers and type identifiers. To correctly classify an identifier the\r\nlexer needs to know in which scope a token is parsed. E.g. when the parser\r\nencounters a package scope operator it calls `lex_in_package_scope()` to tell\r\nthe lexer which scope the following identifier should be classified in.\r\n\r\nCurrently the `lex_in_package_scope()` is only used when a type identifiers is\r\nparsed, but on for normal identifiers. As a result it is not possible to\r\nreference variables or function from a package scope that have the same\r\nname as a type identifier in the current scope. E.g.\r\n\r\n```SystemVerilog\r\npackage P;\r\n  int T;\r\nendpackage\r\n\r\nmodule test;\r\n  typedef int T;\r\n  initial $display(P::T);\r\nendmodule\r\n```\r\n\r\nAnother problem is that in expressions both type identifiers and signal\r\nidentifiers can be referenced. As a result there are two rules in an\r\nexpression that can be reduced\r\n\r\n  * `<PACKAGE_TYPE> :: <TYPE_IDENTIFIER>`\r\n  * `<PACKAGE_TYPE> :: <IDENTIFIER>`\r\n\r\nThe way the rules are formulated at the moment the parser has to use token\r\nlookahead to decide which rule to follow before it can reduce the package\r\nscope operator. As a result the lexer detects the token before\r\nlex_in_package_scope() is called and the identifier does not get evaluated\r\nin the package scope, but in the current scope. Which can cause the\r\nidentifier to be misclassified. E.g.\r\n\r\n```SystemVerilog\r\npackage P;\r\n  typedef int T;\r\n  shortint X;\r\nendpackage\r\n\r\nmodule test;\r\n   typedef byte X;\r\n   initial $display($bits(P::T));\r\n   initial $display($bits(P::X));\r\nendmodule\r\n```\r\n\r\nHere `P::T` gets classified as a signal identifier and `P::X` gets classified\r\nas a type identifier.\r\n\r\nTo solve this introduce a common rule for the package scope operator. Using\r\nthe same rule everywhere allows the parser to reduce it unconditionally\r\nwithout using lookahead.\r\n\r\nNote that there are additional problems with resolving the type of a scoped\r\ntype identifiers in expressions, but this is a prerequisite to solve that.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-10-04",
+  "closed_at": "2022-10-14",
+  "code_blocks": [
+    "package P;\r\n  int T;\r\nendpackage\r\n\r\nmodule test;\r\n  typedef int T;\r\n  initial $display(P::T);\r\nendmodule",
+    "package P;\r\n  typedef int T;\r\n  shortint X;\r\nendpackage\r\n\r\nmodule test;\r\n   typedef byte X;\r\n   initial $display($bits(P::T));\r\n   initial $display($bits(P::X));\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

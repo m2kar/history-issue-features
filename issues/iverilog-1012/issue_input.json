@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1012,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1012",
+  "title": "vvp: internal error when concatenating verilog array elements",
+  "body": "The following verilog:\r\n```\r\nmodule ArraySliceWithNarrowStart(\r\n  input wire [159:0] a,\r\n  input wire start,\r\n  output wire [95:0] out\r\n);\r\n  wire [31:0] a_unflattened[0:4];\r\n  assign a_unflattened[0] = a[31:0];\r\n  assign a_unflattened[1] = a[63:32];\r\n  assign a_unflattened[2] = a[95:64];\r\n  assign a_unflattened[3] = a[127:96];\r\n  assign a_unflattened[4] = a[159:128];\r\n  wire [31:0] array_slice_6[0:2];\r\n  assign array_slice_6[0] = a_unflattened[{2'h0, start} > 3'h4 ? 3'h4 : {2'h0, start} + 3'h0];\r\n  assign array_slice_6[1] = a_unflattened[{2'h0, start} > 3'h3 ? 3'h4 : {2'h0, start} + 3'h1];\r\n  assign array_slice_6[2] = a_unflattened[{2'h0, start} > 3'h2 ? 3'h4 : {2'h0, start} + 3'h2];\r\n  assign out = {array_slice_6[2], array_slice_6[1], array_slice_6[0]};\r\nendmodule\r\n```\r\ntriggers the following error in vvp:\r\n```\r\ninternal error: port 0 expects wid=32, got wid=0\r\nvvp: concat.cc:54: virtual void vvp_fun_concat::recv_vec4(vvp_net_ptr_t, const vvp_vector4_t&, vvp_context_t): Assertion `0' failed.\r\n```\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2023-10-20",
+  "closed_at": "2024-01-09",
+  "code_blocks": [
+    "module ArraySliceWithNarrowStart(\r\n  input wire [159:0] a,\r\n  input wire start,\r\n  output wire [95:0] out\r\n);\r\n  wire [31:0] a_unflattened[0:4];\r\n  assign a_unflattened[0] = a[31:0];\r\n  assign a_unflattened[1] = a[63:32];\r\n  assign a_unflattened[2] = a[95:64];\r\n  assign a_unflattened[3] = a[127:96];\r\n  assign a_unflattened[4] = a[159:128];\r\n  wire [31:0] array_slice_6[0:2];\r\n  assign array_slice_6[0] = a_unflattened[{2'h0, start} > 3'h4 ? 3'h4 : {2'h0, start} + 3'h0];\r\n  assign array_slice_6[1] = a_unflattened[{2'h0, start} > 3'h3 ? 3'h4 : {2'h0, start} + 3'h1];\r\n  assign array_slice_6[2] = a_unflattened[{2'h0, start} > 3'h2 ? 3'h4 : {2'h0, start} + 3'h2];\r\n  assign out = {array_slice_6[2], array_slice_6[1], array_slice_6[0]};\r\nendmodule",
+    "internal error: port 0 expects wid=32, got wid=0\r\nvvp: concat.cc:54: virtual void vvp_fun_concat::recv_vec4(vvp_net_ptr_t, const vvp_vector4_t&, vvp_context_t): Assertion `0' failed."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

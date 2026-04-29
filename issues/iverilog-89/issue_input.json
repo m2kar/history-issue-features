@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 89,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/89",
+  "title": "Inferring latches",
+  "body": "for incomplete if and case statements currently does not work. \nTestcase:\n\n```\nmodule top(                                                    \n   (* PAD=\"1\"*)                                                \n   input wire c,                                               \n   (* PAD=\"2\"*)                                                \n   input wire i,                                               \n   (* PAD=\"3,4\"*)                                              \n   input wire [0:1]s,                                          \n   (* PAD=\"0\"*)                                                \n   output reg q,                                               \n   (* PAD=\"0\"*)\n   output reg r\n    /* */);\n\n/*\nsupposedly this should infer an async latch\nIt does not work.\ngenerates a mux with 1 undriven input wire _s13\nafter synth q=c&i\nthe z seems to propagate thru the mux, aswell\n(but maybe bug in tgt-atf)\n*/\nalways @(c,i)\n  begin\n    if(c==1)\n      q=i;\n  end\n\n\nalways @(s,i)\n  case(s[0:1])\n  2'b10:\n    r=i;\n  endcase\n\n\nendmodule\n\n```\n\nHere's a simple patch. http://members.aon.at/aklamme4/scratch/0001-Infer-Latches.patch\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-01-14",
+  "closed_at": "2016-03-12",
+  "code_blocks": [
+    "module top(                                                    \n   (* PAD=\"1\"*)                                                \n   input wire c,                                               \n   (* PAD=\"2\"*)                                                \n   input wire i,                                               \n   (* PAD=\"3,4\"*)                                              \n   input wire [0:1]s,                                          \n   (* PAD=\"0\"*)                                                \n   output reg q,                                               \n   (* PAD=\"0\"*)\n   output reg r\n    /* */);\n\n/*\nsupposedly this should infer an async latch\nIt does not work.\ngenerates a mux with 1 undriven input wire _s13\nafter synth q=c&i\nthe z seems to propagate thru the mux, aswell\n(but maybe bug in tgt-atf)\n*/\nalways @(c,i)\n  begin\n    if(c==1)\n      q=i;\n  end\n\n\nalways @(s,i)\n  case(s[0:1])\n  2'b10:\n    r=i;\n  endcase\n\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

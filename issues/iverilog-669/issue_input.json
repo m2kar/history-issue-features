@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 669,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/669",
+  "title": " Handle signed return types for built-in methods of SV types",
+  "body": "The result for the built-in methods for the SystemVerilog types is\r\ncurrently always unsigned. This can lead to incorrect behavior if the value\r\nis sign extended or passed as an argument to a system function (e.g.\r\n$display).\r\n\r\nFor most built-in methods this does not matter, since even though they have\r\na signed return type, they will not return a negative value. E.g. the\r\nstring `len()` or queue `size()` functions.\r\n\r\nIt does make a difference though for the queue `pop_front()` and\r\n`pop_back()` methods. Their return type is the element type of the queue.\r\nIf the element type is signed and the value in queue is negative is will be\r\nhandled incorrectly.\r\n\r\nE.g. the following will print `4294967295` rather than `-1`.\r\n```SystemVerilog\r\nint q[$];\r\nq.push_back(-1);\r\n$display(q.pop_front());\r\n```\r\n\r\nTo correctly support this consistently assign the actual data type of the\r\nbuilt-in method's return value to the `NetESFunc`, rather than just the width\r\nand base type. The width, base type and also the signedness can be derived\r\nfrom the data type.\r\n\r\nNote that assigning the actual data type is also required to support type\r\nchecking on the return value, e.g. as needed for enum types.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-03",
+  "closed_at": "2022-04-07",
+  "code_blocks": [
+    "int q[$];\r\nq.push_back(-1);\r\n$display(q.pop_front());"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

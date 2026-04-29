@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 418,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/418",
+  "title": "SV: void function leads to assert: elaborate.cc:3873:",
+  "body": "Hi,\r\n  I am getting below error if I declare a void function (that gets called under another function).\r\n\r\nRun as:\r\n> \tiverilog -DVW_IVLOG_GO2UVM -DBUG -DIVL_UVM -g2012 -I../ -o vw_ivl_go2uvm.vvp  -f flist.class 2>&1 | tee go2uvm_comp.log \t\r\n\r\n```log\r\nIverilog devel version\r\niverilog -DVW_IVLOG_GO2UVM -DBUG -DIVL_UVM -g2012 -I../ -o vw_ivl_go2uvm.vvp  -f flist.class 2>&1 | tee go2uvm_comp.log \t\r\n../ivl_uvm_sf.sv:26: assert: elaborate.cc:3873: failed assertion dscope->elab_stage() >= 3\r\nsh: line 1: 32154 Done                    /usr/local/lib/ivl/ivlpp -L -F\"/tmp/ivrlg25fd99de1\" -f\"/tmp/ivrlg5fd99de1\" -p\"/tmp/ivrli5fd99de1\"\r\n     32155 Aborted                 (core dumped) | /usr/local/lib/ivl/ivl -C\"/tmp/ivrlh5fd99de1\" -C\"/usr/local/lib/ivl/vvp.conf\" -- -\r\n```\r\n\r\nTest below, look for BUG, when you define you get this error, else not. \r\n\r\n```verilog\r\n`define IVL_UVM\r\n\r\ntypedef bit [1:0] uvm_severity;\r\nparameter UVM_INFO = 0;\r\n\r\npackage ivl_uvm_pkg;\r\n\r\n\r\n  function int uvm_report_enabled(int verbosity, \r\n                          uvm_severity severity=UVM_INFO, string id=\"\");\r\n    if (get_report_verbosity_level(severity, id) < verbosity) begin\r\n      return 0;\r\n    end else begin\r\n      return 1;\r\n    end\r\n  endfunction : uvm_report_enabled\r\n\r\n  `ifdef BUG\r\n  function void m_check_verbosity();\r\n  `else\r\n  function m_check_verbosity();\r\n  `endif\r\n  endfunction : m_check_verbosity\r\n\r\n  function int get_report_verbosity_level(uvm_severity severity=UVM_INFO, string id=\"\");\r\n    m_check_verbosity ();\r\n    return 1;\r\n  endfunction : get_report_verbosity_level\r\n\r\nendpackage : ivl_uvm_pkg\r\n\r\nmodule m;\r\n  import ivl_uvm_pkg::*;\r\n\r\nendmodule : m\r\n\r\n\r\n```\r\n\r\n",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2020-12-13",
+  "closed_at": "2020-12-13",
+  "code_blocks": [
+    "Iverilog devel version\r\niverilog -DVW_IVLOG_GO2UVM -DBUG -DIVL_UVM -g2012 -I../ -o vw_ivl_go2uvm.vvp  -f flist.class 2>&1 | tee go2uvm_comp.log \t\r\n../ivl_uvm_sf.sv:26: assert: elaborate.cc:3873: failed assertion dscope->elab_stage() >= 3\r\nsh: line 1: 32154 Done                    /usr/local/lib/ivl/ivlpp -L -F\"/tmp/ivrlg25fd99de1\" -f\"/tmp/ivrlg5fd99de1\" -p\"/tmp/ivrli5fd99de1\"\r\n     32155 Aborted                 (core dumped) | /usr/local/lib/ivl/ivl -C\"/tmp/ivrlh5fd99de1\" -C\"/usr/local/lib/ivl/vvp.conf\" -- -",
+    "`define IVL_UVM\r\n\r\ntypedef bit [1:0] uvm_severity;\r\nparameter UVM_INFO = 0;\r\n\r\npackage ivl_uvm_pkg;\r\n\r\n\r\n  function int uvm_report_enabled(int verbosity, \r\n                          uvm_severity severity=UVM_INFO, string id=\"\");\r\n    if (get_report_verbosity_level(severity, id) < verbosity) begin\r\n      return 0;\r\n    end else begin\r\n      return 1;\r\n    end\r\n  endfunction : uvm_report_enabled\r\n\r\n  `ifdef BUG\r\n  function void m_check_verbosity();\r\n  `else\r\n  function m_check_verbosity();\r\n  `endif\r\n  endfunction : m_check_verbosity\r\n\r\n  function int get_report_verbosity_level(uvm_severity severity=UVM_INFO, string id=\"\");\r\n    m_check_verbosity ();\r\n    return 1;\r\n  endfunction : get_report_verbosity_level\r\n\r\nendpackage : ivl_uvm_pkg\r\n\r\nmodule m;\r\n  import ivl_uvm_pkg::*;\r\n\r\nendmodule : m"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

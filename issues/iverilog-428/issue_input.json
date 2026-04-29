@@ -1,0 +1,21 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 428,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/428",
+  "title": "vpi_free_object() causes segfault",
+  "body": "I was working on a Verilator VPI test and comparing against iverilog when I hit this:\r\n```\r\nProgram terminated with signal SIGSEGV, Segmentation fault.\r\n#0  0x000055a214e6cc91 in vpi_free_object ()\r\nwarning: ~/SandBox/homecvs/v4/verilator/src/.gdbinit: No such file or directory\r\n(gdb) bt\r\n#0  0x000055a214e6cc91 in vpi_free_object ()\r\n#1  0x00007f68628c0c95 in TestVpiHandle::~TestVpiHandle() () from obj_iv/t_vpi_module/libvpi.so\r\n#2  0x00007f68628c0a6a in mon_check () from obj_iv/t_vpi_module/libvpi.so\r\n#3  0x00007f68628c0b4d in mon_check_vpi() () from obj_iv/t_vpi_module/libvpi.so\r\n#4  0x000055a214e781fa in vpip_execute_vpi_call(vthread_s*, __vpiHandle*) ()\r\n#5  0x000055a214e34a91 in of_VPI_CALL(vthread_s*, vvp_code_s*) ()\r\n#6  0x000055a214e2cd92 in vthread_run(vthread_s*) ()\r\n#7  0x000055a214e40a04 in schedule_simulate() ()\r\n#8  0x000055a214dfc093 in main ()\r\n```\r\n\r\nIf you checkout the PR below (or wait for it to land) you can run this to reproduce the problem:\r\n```\r\ntest_regress/t/t_vpi_module.pl --iv\r\n```\r\n\r\nAnd if you run this, you'll skip the two calls to `vpi_free_object()` which cause the problem:\r\n```\r\nCFLAGS=\"-DIS_ICARUS\" test_regress/t/t_vpi_module.pl --iv\r\n```\r\n\r\nAnd for clarity, here's what the Verilator test driver is running under the covers (in the `test_regress` directory):\r\n```\r\n$ vvp -n -m obj_iv/t_vpi_module/libvpi.so obj_iv/t_vpi_module/simiv\r\nSegmentation fault (core dumped)\r\n```\r\n\r\nFor reference:\r\nhttps://github.com/verilator/verilator/pull/2704",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-12-16",
+  "closed_at": "2020-12-17",
+  "code_blocks": [
+    "Program terminated with signal SIGSEGV, Segmentation fault.\r\n#0  0x000055a214e6cc91 in vpi_free_object ()\r\nwarning: ~/SandBox/homecvs/v4/verilator/src/.gdbinit: No such file or directory\r\n(gdb) bt\r\n#0  0x000055a214e6cc91 in vpi_free_object ()\r\n#1  0x00007f68628c0c95 in TestVpiHandle::~TestVpiHandle() () from obj_iv/t_vpi_module/libvpi.so\r\n#2  0x00007f68628c0a6a in mon_check () from obj_iv/t_vpi_module/libvpi.so\r\n#3  0x00007f68628c0b4d in mon_check_vpi() () from obj_iv/t_vpi_module/libvpi.so\r\n#4  0x000055a214e781fa in vpip_execute_vpi_call(vthread_s*, __vpiHandle*) ()\r\n#5  0x000055a214e34a91 in of_VPI_CALL(vthread_s*, vvp_code_s*) ()\r\n#6  0x000055a214e2cd92 in vthread_run(vthread_s*) ()\r\n#7  0x000055a214e40a04 in schedule_simulate() ()\r\n#8  0x000055a214dfc093 in main ()",
+    "test_regress/t/t_vpi_module.pl --iv",
+    "CFLAGS=\"-DIS_ICARUS\" test_regress/t/t_vpi_module.pl --iv",
+    "$ vvp -n -m obj_iv/t_vpi_module/libvpi.so obj_iv/t_vpi_module/simiv\r\nSegmentation fault (core dumped)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

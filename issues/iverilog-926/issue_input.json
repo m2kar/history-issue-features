@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 926,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/926",
+  "title": "better support for wire real bus",
+  "body": "Hi there,\r\n\r\nTrying to use iVerilog to simulate real-number models using `wire real` ports - sometimes these are arranged in busses.\r\n\r\nHowever, when we do so there are two problems.\r\n\r\nProblem 1 is that these real bus ports are not auto-dumped to VCD with the `$dumpvars(0,top);` command. They can be dumped to VCD only by explicitly naming each one - e.g. `$dumpvars(0,top.foo[3],top.foo[2],top.foo[1],top.foo[0]);`.\r\n\r\nProblem 2 is that real bus variables are inaccessible through cocotb. For example if I use the code below in cocotb I cannot write to the real variable A using something like `dut.A[1].value=2.0`.\r\n\r\nThese don't seem like massive problems - can someone help guide me to where to look in the iVerilog source code to try and understand these problems?\r\n\r\nThanks,\r\n\r\nSimon\r\n```\r\n\r\n`timescale 1ns/1ns\r\n\r\nmodule adder( A, C);\r\n`ifndef _2AA\r\n    input wire real A [1:0];\r\n    input wire real B;\r\n    output wire real C;\r\n    \r\n    assign C = A[1] + A[0];\r\n`endif\r\nendmodule \r\n\r\nmodule top ( );\r\n    real A [1:0];\r\n    real C;\r\n    wire real wr_A [1:0];\r\n    adder dut(\r\n        .A(wr_A),\r\n        .C(C)\r\n    );\r\n    assign wr_A=A;\r\n    \r\n    initial begin\r\n        A[0]=1;\r\n        A[1]=4;        \r\n\r\n        #100;\r\n        A[0]=3;\r\n        #100;        \r\n        A[1]=2;\r\n    end\r\n\r\n    initial begin\r\n        $dumpfile(\"adder.vcd\");\r\n        $dumpvars(0,top);\r\n        #400;\r\n        $finish();\r\n    end\r\nendmodule\r\n```",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "open",
+  "created_at": "2023-05-23",
+  "closed_at": null,
+  "code_blocks": [
+    "`timescale 1ns/1ns\r\n\r\nmodule adder( A, C);\r\n`ifndef _2AA\r\n    input wire real A [1:0];\r\n    input wire real B;\r\n    output wire real C;\r\n    \r\n    assign C = A[1] + A[0];\r\n`endif\r\nendmodule \r\n\r\nmodule top ( );\r\n    real A [1:0];\r\n    real C;\r\n    wire real wr_A [1:0];\r\n    adder dut(\r\n        .A(wr_A),\r\n        .C(C)\r\n    );\r\n    assign wr_A=A;\r\n    \r\n    initial begin\r\n        A[0]=1;\r\n        A[1]=4;        \r\n\r\n        #100;\r\n        A[0]=3;\r\n        #100;        \r\n        A[1]=2;\r\n    end\r\n\r\n    initial begin\r\n        $dumpfile(\"adder.vcd\");\r\n        $dumpvars(0,top);\r\n        #400;\r\n        $finish();\r\n    end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

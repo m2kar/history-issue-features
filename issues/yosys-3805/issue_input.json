@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3805,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3805",
+  "title": "DLatches do not synthesize in AIGER",
+  "body": "### Version\n\n0.24\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```\r\nmodule mux (\r\n  input wire select_1,\r\n  input wire select_0,\r\n  input wire in_0,\r\n  input wire in_1,\r\n  input wire in_2,\r\n  input wire in_3,\r\n  input clk,\r\n  output out\r\n);\r\n\r\nalways @(*) begin\r\n  if (!select_1 && !select_0) begin\r\n    out = in_0;\r\n  end else if (!select_1 && select_0) begin\r\n    out = in_1;\r\n  end else if (select_1 && !select_0) begin\r\n    out = in_2;\r\n  end else if (select_1 && select_0) begin\r\n    out = in_3;\r\n  end\r\nend\r\n\r\nendmodule\r\n```\r\n```\r\n\r\nread_verilog mux.vl;\r\n# Sets the top module and overrides parameters\r\nhierarchy -top mux;\r\nproc;\r\ncheck;\r\nwreduce;\r\nalumacc;\r\nfsm;\r\nmemory -nomap;\r\nmemory_map;\r\ntechmap;\r\n\r\nabc -fast;\r\nhierarchy -check;\r\nstat;\r\ncheck;\r\n\r\n# Maps the internal representation to aiger\r\naigmap;\r\nwrite_aiger -ascii -symbols impl.aag;\r\n```\n\n### Expected Behavior\n\nThe above code should synthesize to valid AIGER code.\n\n### Actual Behavior\n\nThe code cannot synthesize because there are D-Latches present:\r\n```\r\n17. Executing AIGER backend.\r\nERROR: Unsupported cell type: $_DLATCH_N_ ($auto$ff.cc:266:slice$230)\r\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-06-12",
+  "closed_at": null,
+  "code_blocks": [
+    "module mux (\r\n  input wire select_1,\r\n  input wire select_0,\r\n  input wire in_0,\r\n  input wire in_1,\r\n  input wire in_2,\r\n  input wire in_3,\r\n  input clk,\r\n  output out\r\n);\r\n\r\nalways @(*) begin\r\n  if (!select_1 && !select_0) begin\r\n    out = in_0;\r\n  end else if (!select_1 && select_0) begin\r\n    out = in_1;\r\n  end else if (select_1 && !select_0) begin\r\n    out = in_2;\r\n  end else if (select_1 && select_0) begin\r\n    out = in_3;\r\n  end\r\nend\r\n\r\nendmodule",
+    "read_verilog mux.vl;\r\n# Sets the top module and overrides parameters\r\nhierarchy -top mux;\r\nproc;\r\ncheck;\r\nwreduce;\r\nalumacc;\r\nfsm;\r\nmemory -nomap;\r\nmemory_map;\r\ntechmap;\r\n\r\nabc -fast;\r\nhierarchy -check;\r\nstat;\r\ncheck;\r\n\r\n# Maps the internal representation to aiger\r\naigmap;\r\nwrite_aiger -ascii -symbols impl.aag;",
+    "17. Executing AIGER backend.\r\nERROR: Unsupported cell type: $_DLATCH_N_ ($auto$ff.cc:266:slice$230)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

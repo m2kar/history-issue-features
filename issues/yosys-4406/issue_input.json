@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4406,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4406",
+  "title": "cxxrtl: Prevent wires with input or output ports from being aliased",
+  "body": "As explained in #4405, having outputs or inputs aliased causes a loss of information in `debug_info`.\r\n\r\nTo prevent this behavior, we stop assigning debug information at the beginning of the `debug_alias` option corresponding logic if the wire is an input and/or an output.\r\n\r\nOne implementation choice here was to choose, for an input that is tied to a constant, whether we should generate:\r\n```\r\nitems->add(path, \"a0\", \"src\\000sand_ti.v:1.18-1.20\\000\", p_a0, 0, debug_item::INPUT|debug_item::DRIVEN_COMB);\r\n```\r\nor\r\n```\r\nstatic const value<1> const_p_a0 = value<1>{0u};\r\nitems->add(path, \"a0\", \"src\\000sand_ti.v:1.18-1.20\\000\", const_p_a0);\r\n```\r\n\r\nThis patch is an implementation for the first one, because we can still query the constant later in the first whereas we would loose the `INPUT` and `DRIVEN_COMB` flags in the second one.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-21",
+  "closed_at": "2024-05-24",
+  "code_blocks": [
+    "items->add(path, \"a0\", \"src\\000sand_ti.v:1.18-1.20\\000\", p_a0, 0, debug_item::INPUT|debug_item::DRIVEN_COMB);",
+    "static const value<1> const_p_a0 = value<1>{0u};\r\nitems->add(path, \"a0\", \"src\\000sand_ti.v:1.18-1.20\\000\", const_p_a0);"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

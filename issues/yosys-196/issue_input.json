@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 196,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/196",
+  "title": "ERROR: Found error in internal cell \\top.$procdff$28 ($adff) at kernel/rtlil.cc:640",
+  "body": "```\nERROR: Found error in internal cell \\top.$procdff$28 ($adff) at kernel/rtlil.cc:640:\n  attribute \\src \"3pdrive.v:34\"\n  cell $adff $procdff$28\n    parameter \\CLK_POLARITY 1'1\n    parameter \\ARST_VALUE 3'000\n    parameter \\ARST_POLARITY 1'0\n    parameter \\WIDTH 3\n    connect \\CLK \\divcnt\n    connect \\ARST \\reset\n    connect \\Q \\state\n    connect \\D $procmux$18_Y\n  end\n```\n\nTo reproduce:\n\n``` verilog\nmodule top(p1h, p1l, p2h, p2l, p3h, p3l);\n\n    (* LOC=\"P3\" *) output p1h;\n    (* LOC=\"P4\" *) output p1l;\n    (* LOC=\"P5\" *) output p2h;\n    (* LOC=\"P6\" *) output p2l;\n    (* LOC=\"P7\" *) output p3h;\n    (* LOC=\"P8\" *) output p3l;\n\n    wire clk;\n    GP_LFOSC #(\n        .AUTO_PWRDN(0),\n        .OUT_DIV(1)\n    ) osc (\n        .CLKOUT(clk)\n    );\n\n    localparam DIVIDER = 1;//400;\n    reg [13:0] divcnt = DIVIDER;\n    always @(posedge clk)\n        if(divcnt == 0)\n            divcnt <= DIVIDER;\n        else\n            divcnt <= divcnt - 1;\n\n    wire reset;\n    GP_POR por(\n        .RST_DONE(reset)\n    );\n\n    reg  [2:0] state;\n    always @(posedge divcnt or negedge reset)\n        if(!reset)\n            state <= 0;\n        else\n            case(state)\n                0: state <= 1;\n                1: state <= 2;\n                2: state <= 3;\n                3: state <= 4;\n                4: state <= 5;\n                5: state <= 0;\n            endcase\n\n    reg  [5:0] phases;\n    always @(*) begin\n        phases <= 6'b000000;\n        case(state)\n            0: phases <= 6'b100100;\n            1: phases <= 6'b000110;\n            2: phases <= 6'b010010;\n            3: phases <= 6'b011000;\n            4: phases <= 6'b001001;\n            5: phases <= 6'b100001;\n        endcase\n    end\n\n    wire p1i, p2i, p3i;\n    assign {p1i, p1l, p2i, p2l, p3i, p3l} = phases;\n    assign {p1h, p2h, p3h} = ~{p1i, p2i, p3i};\n\nendmodule\n```\n\n```\nyosys 3pdrive.v -p \"synth_greenpak4 -json 3pdrive.json\"\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-08-06",
+  "closed_at": "2016-08-10",
+  "code_blocks": [
+    "ERROR: Found error in internal cell \\top.$procdff$28 ($adff) at kernel/rtlil.cc:640:\n  attribute \\src \"3pdrive.v:34\"\n  cell $adff $procdff$28\n    parameter \\CLK_POLARITY 1'1\n    parameter \\ARST_VALUE 3'000\n    parameter \\ARST_POLARITY 1'0\n    parameter \\WIDTH 3\n    connect \\CLK \\divcnt\n    connect \\ARST \\reset\n    connect \\Q \\state\n    connect \\D $procmux$18_Y\n  end"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

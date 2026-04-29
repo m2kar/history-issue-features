@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1855,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1855",
+  "title": "Source locations for some elements are missing or off by 1",
+  "body": "## Steps to reproduce the issue\r\n```\r\nmodule top(input a, output reg q);\r\n\talways @*\r\n\t\tif (1'b1)\r\n\t\t\tq = !a;\r\nendmodule\r\n```\r\n\r\n## Actual behavior\r\n\r\n`read_verilog -dump_ast1` gives:\r\n\r\n```\r\n    AST_MODULE <if.v:1.1-5.10> [0x55aa0194cf20] str='\\top'\r\n      AST_WIRE <if.v:1.18-1.19> [0x55aa0194c2e0] str='\\a' input port=1\r\n      AST_WIRE <if.v:1.32-1.33> [0x55aa0194c680] str='\\q' output reg port=2\r\n      AST_ALWAYS <if.v:2.2-4.11> [0x55aa0194c7c0]\r\n        AST_BLOCK <if.v:2.11-4.11> [0x55aa0194c900]\r\n          AST_CASE <if.v:3.3-4.11> [0x55aa0194cb80]\r\n            AST_REDUCE_BOOL <if.v:0.0-0.0> [0x55aa01945de0]\r\n              AST_CONSTANT <if.v:0.0-0.0> [0x55aa0194ca40] bits='1'(1) range=[0:0] int=1\r\n            AST_COND <if.v:3.7-3.11> [0x55aa0194c1a0]\r\n              AST_CONSTANT <if.v:0.0-0.0> [0x55aa019471d0] bits='1'(1) range=[0:0] int=1\r\n              AST_BLOCK <if.v:4.4-4.11> [0x55aa0194cde0]\r\n                AST_ASSIGN_EQ <if.v:4.4-4.10> [0x55aa0194bf20]\r\n                  AST_IDENTIFIER <if.v:4.4-4.5> [0x55aa01947860] str='\\q'\r\n                  AST_LOGIC_NOT <if.v:4.8-4.10> [0x55aa0194bde0]\r\n                    AST_IDENTIFIER <if.v:4.9-4.10> [0x55aa01947d40] str='\\a'\r\n```\r\n## Expected behavior\r\n\r\n`AST_IDENTIFIER <if.v:4.9-4.10> [0x55aa01947d40] str='\\a'` should be `AST_IDENTIFIER <if.v:4.9-4.9> [0x55aa01947d40] str='\\a'`\r\n\r\n`AST_BLOCK <if.v:4.4-4.11> [0x55aa0194cde0]` should be `AST_BLOCK <if.v:4.4-4.9> [0x55aa0194cde0]`.  4.11 is an invalid location.  This is actually an off-by-two error, but probably just two compounded off-by-one errors.\r\n\r\n## Credit\r\n\r\nThanks to @daveshah1 for the example.\r\n",
+  "labels": [],
+  "state": "open",
+  "created_at": "2020-04-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module top(input a, output reg q);\r\n\talways @*\r\n\t\tif (1'b1)\r\n\t\t\tq = !a;\r\nendmodule",
+    "AST_MODULE <if.v:1.1-5.10> [0x55aa0194cf20] str='\\top'\r\n      AST_WIRE <if.v:1.18-1.19> [0x55aa0194c2e0] str='\\a' input port=1\r\n      AST_WIRE <if.v:1.32-1.33> [0x55aa0194c680] str='\\q' output reg port=2\r\n      AST_ALWAYS <if.v:2.2-4.11> [0x55aa0194c7c0]\r\n        AST_BLOCK <if.v:2.11-4.11> [0x55aa0194c900]\r\n          AST_CASE <if.v:3.3-4.11> [0x55aa0194cb80]\r\n            AST_REDUCE_BOOL <if.v:0.0-0.0> [0x55aa01945de0]\r\n              AST_CONSTANT <if.v:0.0-0.0> [0x55aa0194ca40] bits='1'(1) range=[0:0] int=1\r\n            AST_COND <if.v:3.7-3.11> [0x55aa0194c1a0]\r\n              AST_CONSTANT <if.v:0.0-0.0> [0x55aa019471d0] bits='1'(1) range=[0:0] int=1\r\n              AST_BLOCK <if.v:4.4-4.11> [0x55aa0194cde0]\r\n                AST_ASSIGN_EQ <if.v:4.4-4.10> [0x55aa0194bf20]\r\n                  AST_IDENTIFIER <if.v:4.4-4.5> [0x55aa01947860] str='\\q'\r\n                  AST_LOGIC_NOT <if.v:4.8-4.10> [0x55aa0194bde0]\r\n                    AST_IDENTIFIER <if.v:4.9-4.10> [0x55aa01947d40] str='\\a'"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

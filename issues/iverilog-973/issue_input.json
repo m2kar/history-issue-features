@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 973,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/973",
+  "title": "Implement SDF INTERCONNECT",
+  "body": "This PR implements the SDF INTERCONNECT feature and adds three tests to the test suite. While this base implementation can already correctly simulate interconnection delays for GL designs, some features are still missing for greater usability, namely:\r\n\r\n- Support for interconnection delays of input/output vectors\r\n- Reannotation of already annotated intermodpaths\r\n\r\nI would prefer to add these features in a follow-up PR to keep this PR from growing too much. Note that there seems to be some issues with the CI as MINGW32 - i686 sometimes fails during the build process with the error:\r\n\r\n```\r\nmingw32-make: INTERNAL: Exiting with 1 jobserver tokens available; should be 3!\r\n==> ERROR: A failure occurred in build().\r\n```\r\n\r\nI believe that this is not caused by the changes in this PR.\r\n\r\n---\r\n\r\nThe changes in Icarus Verilog are the following:\r\n\r\nSDF VPI Module:\r\n\r\n- Implement `sdf_interconnect_delays()`\r\n  - Find port handles in the correct scope\r\n  - Get the intermodpath by calling `vpi_handle_multi(vpiInterModPath, port1_handle, port2_handle);`\r\n  - Place delays via `vpi_put_delays(intermodpath, &delays);`\r\n\r\nVVP:\r\n\r\n- Implement `__vpiInterModPath` for VPI access\r\n- Implement `vvp_fun_intermodpath` as net functor\r\n- Implement `vpi_handle_multi()` to return a `__vpiInterModPath`\r\n  - Find nets for given ports\r\n  - Create a `vvp_fun_intermodpath` and `__vpiInterModPath`\r\n  - Insert intermodpath into netlist\r\n  - return `__vpiInterModPath`\r\n\r\nThree tests were created to exercise the new feature:\r\n\r\n- sdf_interconnect1.v - A design with three buffers in series\r\n- sdf_interconnect2.v - A design with three buffers in parallel\r\n- sdf_interconnect3.v - A design with various buffers and xor gates\r\n\r\nDesigns 1 and 2 are trivial and can be checked by hand. Design 3 was checked by hand, but also compared with the CVC simulator and checked via my script in [this repository](https://github.com/mole99/interconnect-tests).\r\n\r\n~As soon as #989 is merged I will update the tests to also include IOPATH delays.~ Done\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-07-19",
+  "closed_at": "2023-09-02",
+  "code_blocks": [
+    "mingw32-make: INTERNAL: Exiting with 1 jobserver tokens available; should be 3!\r\n==> ERROR: A failure occurred in build()."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

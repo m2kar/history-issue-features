@@ -1,0 +1,22 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5151,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5151",
+  "title": "Incorrect handling of post-decrement operation in `always_comb`",
+  "body": "### Version\n\nYosys 0.53+70 (git sha1 3ef4c91c3, g++ 12.2.0-14+deb12u1 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n```sv\nmodule expr_postsub_comb (\n    input logic [7:0] in_val_m2,\n    input logic [7:0] sub_val_m2,\n    output logic [7:0] out_diff_m2,\n    output logic [7:0] var_out_m2\n);\n    logic [7:0] var_m2;\n      always_comb begin\n        var_m2 = in_val_m2;\n        out_diff_m2 = (var_m2--) - sub_val_m2;\n        var_out_m2 = var_m2;\n      end\nendmodule\n```\n\nsythesize with `yosys -p \"read_verilog -sv expr_postsub_comb.sv ; proc; opt ; write_verilog -sv -noattr synth.sv\"`\n\nsimulate with these values as input\n```\n  in_val_m2 = ff\n  sub_val_m2 = 11\n```\n\n\n### Expected Behavior\n\noutput of `out_diff_m2` should be `238`\n\n### Actual Behavior\n\noutput of `out_diff_m2` is in fact `236`",
+  "labels": [
+    "bug",
+    "fix-pending",
+    "SystemVerilog"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-30",
+  "closed_at": "2025-06-04",
+  "code_blocks": [
+    "module expr_postsub_comb (\n    input logic [7:0] in_val_m2,\n    input logic [7:0] sub_val_m2,\n    output logic [7:0] out_diff_m2,\n    output logic [7:0] var_out_m2\n);\n    logic [7:0] var_m2;\n      always_comb begin\n        var_m2 = in_val_m2;\n        out_diff_m2 = (var_m2--) - sub_val_m2;\n        var_out_m2 = var_m2;\n      end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

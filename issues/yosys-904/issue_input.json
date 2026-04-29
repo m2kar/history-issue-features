@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 904,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/904",
+  "title": "missing cells using task in Verilog",
+  "body": "## Steps to reproduce the issue\r\nThe Verilog is as follows.\r\n\r\nmodule tc (A, B, CIN, S, COUT);\r\ninput [3:0] A, B;\r\ninput CIN;\r\noutput [3:0] S;\r\noutput COUT;\r\nreg [3:0] S;\r\nreg COUT;\r\nreg [1:0] S0, S1, S2, S3;\r\n\r\ntask ADD;\r\ninput A, B, CIN;\r\noutput [1:0] C;\r\nreg [1:0] C;\r\nreg S, COUT;\r\n  begin\r\n    S = A ^ B ^ CIN;\r\n    COUT = (A&B) | (A&CIN) | (B&CIN);\r\n    C = {COUT, S};\r\n  end\r\nendtask\r\n\r\nalways @(A or B or CIN)\r\nbegin\r\n  ADD (A[0], B[0], CIN, S0);\r\n  ADD (A[1], B[1], S0[1], S1);\r\n  ADD (A[2], B[2], S1[1], S2);\r\n  ADD (A[3], B[3], S2[1], S3);\r\n  S = {S3[0], S2[0], S1[0], S0[0]};\r\n  COUT = S3[1];\r\nend\r\nendmodule\r\n\r\nThe yosys command to run the synthesis flow is as follows\r\nread_verilog tc.v\r\nproc\r\nopt\r\nfsm\r\nopt\r\nmemory\r\nopt\r\nsynth_xilinx -top tc\r\n\r\n## Expected behavior\r\n\r\nreport cells such as LUT. \r\n\r\n## Actual behavior\r\nreport 0 cells.\r\nThis is reported by the latest yosys from GitHub.\r\n=== tc ===\r\n\r\n   Number of wires:                  5\r\n   Number of wire bits:             14\r\n   Number of public wires:           5\r\n   Number of public wire bits:      14\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  0\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-28",
+  "closed_at": "2019-04-22",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

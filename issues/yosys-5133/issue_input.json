@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5133,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5133",
+  "title": "Maintain port ordering for functional backend",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nAs per https://github.com/YosysHQ/yosys/pull/5128#issuecomment-2896398286,\r\n```\r\nread_verilog << EOF\r\nmodule top (A, C, B, X, Z, Y);\r\n\r\ninput A, C, B;\r\noutput X, Z, Y;\r\n\r\nassign X = C;\r\nassign Y = B;\r\nassign Z = A;\r\n\r\nendmodule\r\nEOF\r\nhierarchy\r\nopt_clean\r\nwrite_functional_rosette\r\n```\r\nreturns ports in reverse alphabetical order:\r\n```racket\r\n(struct top_Inputs (C B A) #:transparent\r\n  ; C (bitvector 1)\r\n  ; B (bitvector 1)\r\n  ; A (bitvector 1)\r\n)\r\n(struct top_Outputs (Z Y X) #:transparent\r\n  ; Z (bitvector 1)\r\n  ; Y (bitvector 1)\r\n  ; X (bitvector 1)\r\n)\r\n```\r\n(without the `opt_clean` then the order is the same as input).\r\n\r\n\r\n_Explain how this is achieved._\r\n\r\n1. Use `module->ports` instead of `module->wires()` to get the ordered list of ports.\r\n2. Use reverse iterators to compensate for `hashlib::dict` iterating backwards.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-05-21",
+  "closed_at": "2025-08-05",
+  "code_blocks": [
+    "read_verilog << EOF\r\nmodule top (A, C, B, X, Z, Y);\r\n\r\ninput A, C, B;\r\noutput X, Z, Y;\r\n\r\nassign X = C;\r\nassign Y = B;\r\nassign Z = A;\r\n\r\nendmodule\r\nEOF\r\nhierarchy\r\nopt_clean\r\nwrite_functional_rosette",
+    "(struct top_Inputs (C B A) #:transparent\r\n  ; C (bitvector 1)\r\n  ; B (bitvector 1)\r\n  ; A (bitvector 1)\r\n)\r\n(struct top_Outputs (Z Y X) #:transparent\r\n  ; Z (bitvector 1)\r\n  ; Y (bitvector 1)\r\n  ; X (bitvector 1)\r\n)"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

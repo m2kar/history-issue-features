@@ -1,0 +1,33 @@
+{
+  "tool": "yosys",
+  "issue_number": 101,
+  "title": "Spurious write to BRAM after configuration on iCE40",
+  "features": [
+    {
+      "name": "bram initialization with subsequent write",
+      "category": "data_model",
+      "description": "Code should include BRAM (unpacked array of 512+ entries) with initial value written in an initial block, followed by a write to a different address in a clocked always block",
+      "snippet": "reg [7:0] ram[511:0];\ninitial begin ram[0] <= 8'hAA; end\nalways @(posedge clk) begin ram[7] <= 8'h55; end",
+      "tags": ["bram", "initial_block", "write", "unpacked_array"],
+      "source_bug_id": "101",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/101",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "bram read after init and write",
+      "category": "data_model",
+      "description": "Code should include a BRAM read from the initially-written address after a subsequent write operation to another address occurs",
+      "snippet": "reg [7:0] ram[511:0];\nreg [7:0] leds;\ninitial ram[0] <= 8'hAA;\nalways @(posedge clk) ram[7] <= 8'h55;\nalways @(posedge clk) leds <= ram[0];",
+      "tags": ["bram", "read", "initial_block", "write"],
+      "source_bug_id": "101",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/101",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

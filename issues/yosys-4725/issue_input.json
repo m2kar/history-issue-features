@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4725,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4725",
+  "title": "yosys docs vs. downstream distro-package maintainability",
+  "body": "### Link to page\n\nhttp://mirror.ini.cmu.edu/0003-fedora-yosys-doc-offline-patch.patch\n\n### Build number\n\na66e94c5d (\"Docs: Switch to furo-ys\")\n\n### Issue\n\nHi,\r\n\r\nI maintain the yosys package in Fedora, and I'm running into a bit of trouble building the documentation portion of the package.\r\n\r\nAs you may be aware, distro-packaging requires the assumption of everything being available for an offline build at compile time (i.e., fetching things from a live internet server during build via e.g. wget or curl is forbidden). Also, bundling other existing packages is (heavily) frowned upon.\r\n\r\n*Side note*: since yosys is the primary \"consumer\" of abc, we were able to justify packaging the yosys fork of abc in Fedora instead of the \"true\" upstream one, so that's one bullet dodged, but now I'm running into trouble with the documentation portion of the package:\r\n\r\nFirst, I had to patch out the various `badge.svg` images which are fetched directly over the Internet during build time ([this](http://mirror.ini.cmu.edu/0003-fedora-yosys-doc-offline-patch.patch) is the patch I'm applying for reference). So far, so good (the resulting pdf file may look a bit rough as a result, but the important content is still there).\r\n\r\nHowever, with commit `a66e94c5d` (\"Docs: Switch to furo-ys\") I'm finally finding myself in a bit of a pickle.\r\n\r\nNormally, python dependencies should be their own .rpm package, and funny enough, there's a `python3-furo` RPM already in the Fedora repositories. Unfortunately, use of the `furo_ys` fork presents a challenge for distro-packaging yosys:\r\n\r\n- since the docs are shipped as part of the package, they should be built from source; side-loading a pdf doc file built elsewhere violates at least the spirit, if not the letter as well, of the Fedora packaging guidelines\r\n\r\n- since building the docs now depends on `furo-ys`, that should come as its own RPM (and the \"standard\" furo actually does, but here we're using a fork, and this time I can't argue that the standard package should be replaced with furo-ys :(\r\n\r\n- I could try to bundle furo-ys sources with the yosys source RPM, build it, install it and then use it during `make docs` portion of building yosys, but at this point things start to look rather contrived, and doing any more of this sort of thing would quickly become unsustainable\r\n\r\nI'm wondering if there's another way that would ease downstream distro packaging without imposing too much additional hardship on maintaining the upstream documentation (e.g. limiting/eliminating \"live\" dependencies fetched over the network at build time, and also limiting/eliminating forked/bundled dependencies as much as possible) -- to the extent that downstream packages are considered useful by upstream maintainers. \r\n\r\nAny ideas or advice much appreciated!\r\n\r\nThanks,\r\n--Gabriel\r\n\n\n### Expected\n\n_No response_",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-11-09",
+  "closed_at": "2024-11-28",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

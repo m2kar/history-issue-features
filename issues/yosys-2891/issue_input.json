@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2891,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2891",
+  "title": "Verilog backend: pack identical signals in concatenation",
+  "body": "Hi!\r\n\r\nIn some cases, some source code or internal Yosys passes generate long arrays of signal copies.\r\nIt would be great of Yosys could pack them back when writing Verilog.\r\n\r\nFor instance for the trivial source code:\r\n\r\n```verilog\r\nmodule mymodule # (\r\n  parameter int unsigned Width = 16\r\n) (\r\n\tinput logic a_i,\r\n\toutput logic [Width-1:0] y_o\r\n);\r\n  assign y_o = {Width{a_i}};\r\nendmodule\r\n```\r\n\r\nApplying the Yosys commands:\r\n```\r\nyosys> read_verilog -sv mymodule.sv\r\nyosys> hierarchy -top mymodule\r\nyosys> write_verilog -noattr yosys_out.v\r\n```\r\n\r\nYields:\r\n```verilog\r\nmodule mymodule(a_i, y_o);\r\n  input a_i;\r\n  output [15:0] y_o;\r\n  assign y_o = { a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i };\r\nendmodule\r\n```\r\n\r\nIt would be extremely beneficial to get back instead something such as:\r\n```verilog\r\nmodule mymodule(a_i, y_o);\r\n  input a_i;\r\n  output [15:0] y_o;\r\n  assign y_o = {16{a_i}};\r\nendmodule\r\n```\r\n\r\nThe main motivation is that Verilator will complain if there are too many tokens in the same line.\r\n\r\nThanks for your time! :slightly_smiling_face: ",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2021-07-27",
+  "closed_at": null,
+  "code_blocks": [
+    "module mymodule # (\r\n  parameter int unsigned Width = 16\r\n) (\r\n\tinput logic a_i,\r\n\toutput logic [Width-1:0] y_o\r\n);\r\n  assign y_o = {Width{a_i}};\r\nendmodule",
+    "yosys> read_verilog -sv mymodule.sv\r\nyosys> hierarchy -top mymodule\r\nyosys> write_verilog -noattr yosys_out.v",
+    "module mymodule(a_i, y_o);\r\n  input a_i;\r\n  output [15:0] y_o;\r\n  assign y_o = { a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i, a_i };\r\nendmodule",
+    "module mymodule(a_i, y_o);\r\n  input a_i;\r\n  output [15:0] y_o;\r\n  assign y_o = {16{a_i}};\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1052,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1052",
+  "title": "Input default value handling is not consistent",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following design:\r\n\r\n```verilog\r\n//\r\n// a should have the value 1'b0 if it is not connected to a driving value\r\n//\tby the instantiating module.  Otherwise, it should have the\r\n//\tvalue given by the instantiating core\r\nmodule mcvrinit(input wire a = 1'b0, output wire b);\r\n\tassign\tb = a;\r\n\r\n\t// This should succeed if mcvrinit is the top-level\r\n\t// within the proof\r\n\talways @(*)\r\n\t\tcover(b != 1'b0);\r\n\r\nendmodule\r\n\r\nmodule parent(output wire b);\r\n\tmcvrinit initdefault(.b(b));\r\n\r\n\t// This should always succeed\r\n\t//\tSince initdefault.a has not been bound, it should\r\n\t//\tretain its initial value\r\n\talways @(*)\r\n\t\tassert(!b);\r\nendmodule\r\n\r\nmodule parentdef(output wire b);\r\n\tmcvrinit initdefault(.a(1'b1), .b(b));\r\n\r\n\t// This should always suceed\r\n\t//\tSince initdefault.a has now been bound to one,\r\n\t//\tit should override any initial value\r\n\talways @(*)\r\n\t\tassert(b);\r\nendmodule\r\n```\r\n\r\nand sby file\r\n\r\n```verilog\r\n[tasks]\r\nprf\r\ncvr\r\nprf2\r\n\r\n[options]\r\nprf: mode prove\r\ncvr: mode cover\r\nprf2: mode prove\r\ndepth 3\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -formal initdefault.sv\r\nprf: prep -top parent\r\ncvr: prep -top mcvrinit\r\nprf2: prep -top parentdef\r\n\r\n[files]\r\ninitdefault.sv\r\n```\r\n\r\n## Expected behavior\r\n\r\nI expect all three tests and their associated properties to pass\r\n\r\n1. The cover statement, checking whether b (really a) can be non-zero.  When `mcvrinit` is the top level, the default input value should be 'x in spite of whatever default is given.  When `parent` is the top level, this cover statement should fail.  (The failure is not checked by the sby file above)\r\n\r\n2. The assertion in parent should also pass.  In this case, the parent or instantiating module is not overriding the value of `a`, so it should be equal to one and hence so should `b`.\r\n\r\n3. The assertion in `parentdef` should also pass.  In this case, the default behavior has been overridden by the parent, and so `b==1` should always be true.\r\n\r\nSee IEEE Std 1800-2012 (the 2012 SVA standard), section 23.2.2.4 \"Default port values\" for more information regarding the expected behavior.\r\n\r\n## Actual behavior\r\n\r\nYosys (without Verific) assumes `a == 0` independent of the context.  As a result, the cover statement fails, the `parent` assertion passes whereas the `parentdef` assertion fails.\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2019-05-28",
+  "closed_at": null,
+  "code_blocks": [
+    "//\r\n// a should have the value 1'b0 if it is not connected to a driving value\r\n//\tby the instantiating module.  Otherwise, it should have the\r\n//\tvalue given by the instantiating core\r\nmodule mcvrinit(input wire a = 1'b0, output wire b);\r\n\tassign\tb = a;\r\n\r\n\t// This should succeed if mcvrinit is the top-level\r\n\t// within the proof\r\n\talways @(*)\r\n\t\tcover(b != 1'b0);\r\n\r\nendmodule\r\n\r\nmodule parent(output wire b);\r\n\tmcvrinit initdefault(.b(b));\r\n\r\n\t// This should always succeed\r\n\t//\tSince initdefault.a has not been bound, it should\r\n\t//\tretain its initial value\r\n\talways @(*)\r\n\t\tassert(!b);\r\nendmodule\r\n\r\nmodule parentdef(output wire b);\r\n\tmcvrinit initdefault(.a(1'b1), .b(b));\r\n\r\n\t// This should always suceed\r\n\t//\tSince initdefault.a has now been bound to one,\r\n\t//\tit should override any initial value\r\n\talways @(*)\r\n\t\tassert(b);\r\nendmodule",
+    "[tasks]\r\nprf\r\ncvr\r\nprf2\r\n\r\n[options]\r\nprf: mode prove\r\ncvr: mode cover\r\nprf2: mode prove\r\ndepth 3\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -formal initdefault.sv\r\nprf: prep -top parent\r\ncvr: prep -top mcvrinit\r\nprf2: prep -top parentdef\r\n\r\n[files]\r\ninitdefault.sv"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

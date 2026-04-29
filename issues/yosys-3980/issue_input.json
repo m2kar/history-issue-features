@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3980,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3980",
+  "title": "setparam makes hierarchy fail",
+  "body": "### Version\n\nYosys 0.33+103 (git sha1 aeb742b8b, gcc 11.4.0-1ubuntu1~22.04 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n`x.v`:\r\n```verilog\r\nmodule topmodule #(parameter top_param = 1) ();\r\n\r\nsubmodule #(.sub_param(top_param)) x();\r\n\r\nendmodule\r\nmodule submodule #(parameter sub_param = 1) ();\r\nendmodule \r\n```\r\n\r\n`synth.tcl`:\r\n```tcl\r\nyosys read_verilog -I. x.v\r\n\r\n# This works\r\nyosys hierarchy -check -top topmodule\r\n\r\n# Also works\r\nyosys hierarchy -check -top topmodule -chparam top_param 1\r\n\r\n# This fails\r\nyosys setparam -set top_param 1 topmodule\r\nyosys hierarchy -check -top topmodule\r\n```\r\n\r\nRun `yosys -c synth.tcl`\n\n### Expected Behavior\n\nAll three `hierarchy` commands work.\n\n### Actual Behavior\n\nRunning `hierarchy` after `setparam` fails.\r\n\r\nNB: the same behavior happens with v0.33 (Yosys 0.33 (git sha1 2584903a0, gcc 11.4.0-1ubuntu1~22.04 -fPIC -Os))",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-03",
+  "closed_at": "2023-10-04",
+  "code_blocks": [
+    "module topmodule #(parameter top_param = 1) ();\r\n\r\nsubmodule #(.sub_param(top_param)) x();\r\n\r\nendmodule\r\nmodule submodule #(parameter sub_param = 1) ();\r\nendmodule",
+    "yosys read_verilog -I. x.v\r\n\r\n# This works\r\nyosys hierarchy -check -top topmodule\r\n\r\n# Also works\r\nyosys hierarchy -check -top topmodule -chparam top_param 1\r\n\r\n# This fails\r\nyosys setparam -set top_param 1 topmodule\r\nyosys hierarchy -check -top topmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

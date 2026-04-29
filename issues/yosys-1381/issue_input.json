@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1381,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1381",
+  "title": "techmap-ing module with underspecified input port connections creates new undriven signal",
+  "body": "## Steps to reproduce the issue\r\n\r\n```\r\nread_verilog <<EOT\r\nmodule sub(input i, output o, input j);\r\nfoobar f(i, o, j);\r\nendmodule\r\nEOT\r\ndesign -stash techmap\r\n\r\nread_verilog <<EOT\r\n(* blackbox *)\r\nmodule sub(input i, output o, input j);\r\nendmodule\r\n\r\n(* blackbox *)\r\nmodule foobar(input i, output o, input j);\r\nendmodule\r\n\r\nmodule top(input i, output o);\r\nsub s0(i, o);\r\nendmodule\r\nEOT\r\n\r\n### techmap -map %techmap\r\nhierarchy -check\r\ncheck -assert\r\n```\r\nRemove `###` to error out on `check -assert`\r\n\r\n## Expected behavior\r\n\r\nIdentical behaviour as with `techmap` commented out -- no error.\r\n\r\n## Actual behavior\r\n\r\n```\r\n5. Executing CHECK pass (checking for obvious problems).\r\nchecking module top..\r\nWarning: Wire top.\\s0.j is used but has no driver.\r\nfound and reported 1 problems.\r\n```\r\nwhere resulting netlist is:\r\n```\r\nmodule \\top\r\n  attribute \\src \"<<EOT:9\"\r\n  wire input 1 \\i\r\n  attribute \\src \"<<EOT:9\"\r\n  wire output 2 \\o\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.i\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.j\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.o\r\n  attribute \\module_not_derived 1\r\n  attribute \\src \"<<EOT:10|<<EOT:2\"\r\n  cell \\foobar \\s0.f\r\n    connect \\i \\i\r\n    connect \\j \\s0.j\r\n    connect \\o \\o\r\n  end\r\nend\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-09-16",
+  "closed_at": "2019-09-20",
+  "code_blocks": [
+    "read_verilog <<EOT\r\nmodule sub(input i, output o, input j);\r\nfoobar f(i, o, j);\r\nendmodule\r\nEOT\r\ndesign -stash techmap\r\n\r\nread_verilog <<EOT\r\n(* blackbox *)\r\nmodule sub(input i, output o, input j);\r\nendmodule\r\n\r\n(* blackbox *)\r\nmodule foobar(input i, output o, input j);\r\nendmodule\r\n\r\nmodule top(input i, output o);\r\nsub s0(i, o);\r\nendmodule\r\nEOT\r\n\r\n### techmap -map %techmap\r\nhierarchy -check\r\ncheck -assert",
+    "5. Executing CHECK pass (checking for obvious problems).\r\nchecking module top..\r\nWarning: Wire top.\\s0.j is used but has no driver.\r\nfound and reported 1 problems.",
+    "module \\top\r\n  attribute \\src \"<<EOT:9\"\r\n  wire input 1 \\i\r\n  attribute \\src \"<<EOT:9\"\r\n  wire output 2 \\o\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.i\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.j\r\n  attribute \\src \"<<EOT:10|<<EOT:1\"\r\n  wire \\s0.o\r\n  attribute \\module_not_derived 1\r\n  attribute \\src \"<<EOT:10|<<EOT:2\"\r\n  cell \\foobar \\s0.f\r\n    connect \\i \\i\r\n    connect \\j \\s0.j\r\n    connect \\o \\o\r\n  end\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

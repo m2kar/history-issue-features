@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2039,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2039",
+  "title": "Verilog parameter propagation does not work",
+  "body": "Parameter propagation does not seem to be complete. The \"OPERATION_WIDTH\" parameter value from the \"ALU_Test_Top\" module seems to not be propagated to the \"output wire [OPERATION_WIDTH - 1:0] o_result\" line.\r\n\r\nSetting the default value of the \"OPERATION_WIDTH\" parameter in the \"ALU_Test\" module to 32 (i.e. replacing \"#(parameter OPERATION_WIDTH = 0)\" with \"#(parameter OPERATION_WIDTH = 32)\") makes the warning go away.\r\n\r\nThe above indicates that the parameter value is not propagated to the line \"output wire [OPERATION_WIDTH - 1:0] o_result\" and the default value is used instead.\r\n\r\n**Yosys Version**: 06104249406972de01d0360df63a32cafcdf2ec5\r\n\r\n## Steps to reproduce the issue\r\n\r\nRun the following command: yosys -f \"verilog -sv\" -p \"synth_ice40 -top ALU_Test_Top -json ALU_Test_Top.json\" ALU_Test.v ALU_Test_Top.v\r\n\r\nwith the below code:\r\n\r\n**ALU_Test_Top.v**\r\n```\r\n`default_nettype none   // Don't allow undeclared nets\r\nmodule ALU_Test_Top\r\n(\r\n    output wire [31:0] o_result,\r\n    output wire o_carry\r\n);\r\n    ALU_Test #(.OPERATION_WIDTH(32)) alu //Using 32'd32 produces the same behavior\r\n    (\r\n        .i_operand0(32'd1),\r\n        .i_operand1(32'd1),\r\n        .o_result(o_result),\r\n        .o_carry(o_carry)\r\n    );\r\nendmodule\r\n```\r\n**ALU_Test.v**\r\n```\r\n`default_nettype none   // Don't allow undeclared nets\r\nmodule ALU_Test\r\n#(parameter OPERATION_WIDTH = 0)\r\n(\r\n    input wire [OPERATION_WIDTH - 1:0] i_operand0,\r\n    inout wire [OPERATION_WIDTH - 1:0] i_operand1,\r\n    output wire [OPERATION_WIDTH - 1:0] o_result,\r\n    output wire o_carry\r\n);\r\n    assign o_result = i_operand0 + i_operand1;\r\n    assign o_carry = o_result[31];\r\nendmodule\r\n```\r\n\r\n\r\n## Expected behavior\r\n\r\nNo warnings\r\n\r\n## Actual behavior\r\n\r\nGetting a warning: \"**Warning**: Range select out of bounds on signal `\\o_result': Setting result bit to undef.\"\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-05-07",
+  "closed_at": "2020-05-08",
+  "code_blocks": [
+    "`default_nettype none   // Don't allow undeclared nets\r\nmodule ALU_Test_Top\r\n(\r\n    output wire [31:0] o_result,\r\n    output wire o_carry\r\n);\r\n    ALU_Test #(.OPERATION_WIDTH(32)) alu //Using 32'd32 produces the same behavior\r\n    (\r\n        .i_operand0(32'd1),\r\n        .i_operand1(32'd1),\r\n        .o_result(o_result),\r\n        .o_carry(o_carry)\r\n    );\r\nendmodule",
+    "`default_nettype none   // Don't allow undeclared nets\r\nmodule ALU_Test\r\n#(parameter OPERATION_WIDTH = 0)\r\n(\r\n    input wire [OPERATION_WIDTH - 1:0] i_operand0,\r\n    inout wire [OPERATION_WIDTH - 1:0] i_operand1,\r\n    output wire [OPERATION_WIDTH - 1:0] o_result,\r\n    output wire o_carry\r\n);\r\n    assign o_result = i_operand0 + i_operand1;\r\n    assign o_carry = o_result[31];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

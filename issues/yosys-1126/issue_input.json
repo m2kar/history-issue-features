@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1126,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1126",
+  "title": "Wrong bit vector indexing with constant function",
+  "body": "## Steps to reproduce the issue\r\n\r\nWhen Yosys is given verilog code that indexes a bit vector with a constant function, its output generation is wrong.\r\nFor instance:\r\n```\r\nmodule test(c);\r\n\r\ninput [9:0] c;\r\n\r\nfunction integer a(input integer b);\r\n    begin\r\n        a = b+1;\r\n    end\r\nendfunction\r\n\r\nlocalparam f = 5;\r\nwire [a(f)-1:0] d;\r\nassign d = c[a(f)-1:0]; // wrong behavior\r\nlocalparam e = a(f);\r\n// assign d = c[e-1:0]; // correct behavior\r\n```\r\nThe yosys (git fb8fab4a2) invocation:\r\n```\r\n./yosys -p \"read_verilog test.v; write_verilog test_synth.v; write_json test_synth.json\"\r\n```\r\n\r\n*Provide instructions for reproducing the issue. Make sure to include\r\nall necessary source files. (You can simply drag&drop a .zip file into\r\nthe issue editor.)*\r\n\r\n\r\n## Expected behavior\r\n\r\nVerilog output `test_synth.v` should be similar to the result obtained when the \"wrong\" line is replaced by the \"correct\" one (i.e., the function computation is moved to a localparam):\r\n```\r\nmodule test(c);\r\n  (* src = \"test.v:3\" *)\r\n  input [9:0] c;\r\n  (* src = \"test.v:12\" *)\r\n  wire [5:0] d;\r\n  assign d = c[5:0];\r\nendmodule\r\n```\r\n\r\n## Actual behavior\r\n\r\n `test_synth.v` contains (json output exhibits the same issue):\r\n```\r\n[...]\r\nwire [9:0] _10_ = c;                                                                                                                                                                                         \r\nassign _7_ = _10_[$signed(32'd0) +: 2];  \r\nassign d = { 4'h0, _7_ };  \r\n[...]\r\n```\r\n\r\n## Attached files\r\n\r\nSynthesis output files with the \"wrong\" and the \"correct\" indexing.\r\n\r\n[test.zip](https://github.com/YosysHQ/yosys/files/3318039/test.zip)\r\n\r\n\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2019-06-23",
+  "closed_at": "2021-03-01",
+  "code_blocks": [
+    "module test(c);\r\n\r\ninput [9:0] c;\r\n\r\nfunction integer a(input integer b);\r\n    begin\r\n        a = b+1;\r\n    end\r\nendfunction\r\n\r\nlocalparam f = 5;\r\nwire [a(f)-1:0] d;\r\nassign d = c[a(f)-1:0]; // wrong behavior\r\nlocalparam e = a(f);\r\n// assign d = c[e-1:0]; // correct behavior",
+    "./yosys -p \"read_verilog test.v; write_verilog test_synth.v; write_json test_synth.json\"",
+    "module test(c);\r\n  (* src = \"test.v:3\" *)\r\n  input [9:0] c;\r\n  (* src = \"test.v:12\" *)\r\n  wire [5:0] d;\r\n  assign d = c[5:0];\r\nendmodule",
+    "[...]\r\nwire [9:0] _10_ = c;                                                                                                                                                                                         \r\nassign _7_ = _10_[$signed(32'd0) +: 2];  \r\nassign d = { 4'h0, _7_ };  \r\n[...]"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

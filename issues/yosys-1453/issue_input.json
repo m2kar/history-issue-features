@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1453,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1453",
+  "title": "Verilog reader doesn't resolve scope correctly when new wire is declared with same named wire in assignment",
+  "body": "# Test1\r\n\r\n## Repro Instructions\r\n\r\n    yosys -p \"read_verilog test1.v\"\r\n\r\ntest1.v\r\n```\r\nmodule test1 (data);\r\n\r\ninput wire [127:0] data;\r\n\r\ngenerate if (1)\r\n  begin: g0\r\n        wire [31:0] data = data[63:32];\r\n  end\r\nendgenerate\r\n\r\nendmodule\r\n```\r\n\r\n## Actual Behavior\r\n\r\n```\r\n-- Running command `read_verilog -sv test1.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test1.v\r\nParsing Verilog input from `test1.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test1'.\r\ntest1.v:7: Warning: Range select [63:32] out of bounds on signal `\\g0.data': Setting all 32 result bits to undef.\r\nSuccessfully finished Verilog frontend.\r\n\r\nWarnings: 1 unique messages, 1 total\r\nEnd of script. Logfile hash: c42ece85ad\r\nCPU: user 0.01s system 0.00s, MEM: 42.18 MB total, 13.00 MB resident\r\nYosys 0.9+932 (git sha1 0d037bf, gcc 5.4.0-6ubuntu1~16.04.11 -Og -fPIC)\r\n```\r\n\r\n## Expected Behavior\r\n\r\nNo warning about an out of bounds signal select.\r\n\r\nCommercial tools, as well as iverilog, are doing this right. Verilator with --lint-only complains with a similar error:\r\n\r\n```\r\nvagrant@ubuntu-xenial:~/projects/bitec_dp$ /opt/verilator/bin/verilator --lint-only test1.v\r\n%Warning-SELRANGE: test1.v:7: Selection index out of range: 63:32 outside 31:0\r\n                   ... Use \"/* verilator lint_off SELRANGE */\" and lint_on around source to disable this message.\r\n%Error: test1.v:7: Wire inputs its own output, creating circular logic (wire x=x)\r\n%Error: Exiting due to 1 error(s), 1 warning(s)\r\n%Error: Command Failed /opt/verilator/bin/verilator_bin --lint-only test1.v\r\n```\r\n\r\n# Test 2\r\n\r\n## Repro Instructions\r\n\r\n    yosys -p \"read_verilog -sv test2.v\" \r\n\r\ntest2.v:\r\n```\r\nmodule test2 (data);\r\n\r\ninput wire [127:0] data;\r\n\r\ngenerate if (1)\r\n  begin: g0\r\n        wire [31:0] data = data[63:32];\r\n\r\n        if (1) begin : g1\r\n                wire [7:0] data = data[15:8];\r\n        end\r\n  end\r\nendgenerate\r\n\r\nendmodule\r\n```\r\n\r\n## Actual Behavior\r\n\r\n```\r\n-- Running command `read_verilog test2.v' --\r\n\r\n1. Executing Verilog-2005 frontend: test2.v\r\nParsing Verilog input from `test2.v' to AST representation.\r\nGenerating RTLIL representation for module `\\test2'.\r\ntest2.v:7: ERROR: Failed to detect width of signal access `\\g0.data'!\r\n```\r\n\r\n## Expected Behavior\r\n\r\nNo error.\r\n\r\nLike test1, iverilog has no issues with this, while verilator fails.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-10-17",
+  "closed_at": "2019-10-18",
+  "code_blocks": [
+    "module test1 (data);\r\n\r\ninput wire [127:0] data;\r\n\r\ngenerate if (1)\r\n  begin: g0\r\n        wire [31:0] data = data[63:32];\r\n  end\r\nendgenerate\r\n\r\nendmodule",
+    "vagrant@ubuntu-xenial:~/projects/bitec_dp$ /opt/verilator/bin/verilator --lint-only test1.v\r\n%Warning-SELRANGE: test1.v:7: Selection index out of range: 63:32 outside 31:0\r\n                   ... Use \"/* verilator lint_off SELRANGE */\" and lint_on around source to disable this message.\r\n%Error: test1.v:7: Wire inputs its own output, creating circular logic (wire x=x)\r\n%Error: Exiting due to 1 error(s), 1 warning(s)\r\n%Error: Command Failed /opt/verilator/bin/verilator_bin --lint-only test1.v",
+    "module test2 (data);\r\n\r\ninput wire [127:0] data;\r\n\r\ngenerate if (1)\r\n  begin: g0\r\n        wire [31:0] data = data[63:32];\r\n\r\n        if (1) begin : g1\r\n                wire [7:0] data = data[15:8];\r\n        end\r\n  end\r\nendgenerate\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 94,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/94",
+  "title": "Parameter used in assignment sizing",
+  "body": "I've looked through a lot of bugs/issues and didn't see this exact one, but please correct me if this is asked and answered already.\n\nAlso, I can't think of any cases off the top of my head where this is functionally required.  It is normally done (in my experience) simply to satisfy Spyglass or other linting tools by keeping LHS/RHS widths equal.\n\nThe issue I am seeing is that a parameter cannot be used when sizing the RHS of an assignment.  For instance:\n`dout = WIDTH'(din + 1);`\nwhere WIDTH is a parameter and I want to assign 'WIDTH bits' of the expression into dout.  This works fine if the parameter is replaced by a constant:\n`dout = 32'(din + 1);`\n\nMy understanding of parameters in 1364-2005 is that they are treated as constants after elaboration.  1364-2005, 4.10.1:\n\n> Parameters represent constants; hence, it is illegal to modify their value at run time. However, module parameters can be modified at compilation time to have values that are different from those specified in the declaration assignment. This allows customization of module instances. A parameter can be modified with the defparam statement or in the module instance statement. Typical uses of parameters are to specify delays and width of variables. See 12.2 for details on parameter value assignment.\n\nIf that's the case, WIDTH'(din + 1) would be a constant size and no size casting is performed.\n\nI'm fairly new to this level of detail of the spec, so I may be way off.\nI ran the below code with \"iverilog -g2012 param_sizing_fail.v\".\nIcarus Verilog version 10.0 (stable) (v10_0)\nErrors:\n\n> param_sizing_fail.v:10: syntax error\n> param_sizing_fail.v:10: error: malformed statement\n\nparam_sizing_fail.v contains:\n\n```\nmodule param_sizing_fail (\n  output logic [WIDTH-1:0]  dout,\n\n  input  wire  [WIDTH-1:0]  din\n  );\n\n  parameter            WIDTH = 32;\n\n  always @(*) begin\n    dout = WIDTH'(din + 1);\n  end\n\nendmodule\n```\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-03-23",
+  "closed_at": "2016-03-26",
+  "code_blocks": [
+    "module param_sizing_fail (\n  output logic [WIDTH-1:0]  dout,\n\n  input  wire  [WIDTH-1:0]  din\n  );\n\n  parameter            WIDTH = 32;\n\n  always @(*) begin\n    dout = WIDTH'(din + 1);\n  end\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

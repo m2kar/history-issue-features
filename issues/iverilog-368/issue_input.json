@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 368,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/368",
+  "title": "Assertion failure from within vthread.cc",
+  "body": "Consider the following SV design:\r\n\r\n```verilog\r\nmodule top;\r\n\ttask test_task;\r\n\tbegin\r\n\t\tfork\r\n\t\tbegin\r\n\t\t\t$display(\"Process #1\");\r\n\t\t\t#20\r\n\t\t\t$display (\"Process #1 -- completes\");\r\n\t\tend\r\n\r\n\t\tbegin\r\n\t\t\t// Here's a timeout task.  It should only complete if\r\n\t\t\t// something in process #1 fails to complete.  As such,\r\n\t\t\t// it operates as a failsafe.\r\n\t\t\t$display(\"Process #2\");\r\n\t\t\t#200\r\n\t\t\t$display(\"Process #2 -- completes\");\r\n\t\tend\r\n\r\n\t\tjoin_any;\r\n\t\tdisable fork;\r\n\r\n\t\t$display(\"Test task completes\");\r\n\tend endtask\r\n\r\n\tinitial\ttest_task;\r\nendmodule\r\n```\r\n\r\nThis function uses fork to create two subtasks: A primary and a secondary timeout.  In the original example this was drawn from, the primary depended on some external events, and so the secondary was a fail-safe in case those events didn't happen.  As soon as the first of the two tasks finishes, the design kills the other task and then outputs an error if the failsafe completed.\r\n\r\nI am building this test design using: `iverilog -g2012 ivtestcase.sv`, and then running it via `./a.out`.  When I do so, this design then fails with the message, `vvp: vthread.cc:3795: bool of_JOIN_DETACH(vthread_t, vvp_code_t): assertion 'thr->task_func_children.empty()' failed`.\r\n\r\nAny potential workarounds would also be appreciated.\r\n\r\nDan",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-09-07",
+  "closed_at": "2020-09-11",
+  "code_blocks": [
+    "module top;\r\n\ttask test_task;\r\n\tbegin\r\n\t\tfork\r\n\t\tbegin\r\n\t\t\t$display(\"Process #1\");\r\n\t\t\t#20\r\n\t\t\t$display (\"Process #1 -- completes\");\r\n\t\tend\r\n\r\n\t\tbegin\r\n\t\t\t// Here's a timeout task.  It should only complete if\r\n\t\t\t// something in process #1 fails to complete.  As such,\r\n\t\t\t// it operates as a failsafe.\r\n\t\t\t$display(\"Process #2\");\r\n\t\t\t#200\r\n\t\t\t$display(\"Process #2 -- completes\");\r\n\t\tend\r\n\r\n\t\tjoin_any;\r\n\t\tdisable fork;\r\n\r\n\t\t$display(\"Test task completes\");\r\n\tend endtask\r\n\r\n\tinitial\ttest_task;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

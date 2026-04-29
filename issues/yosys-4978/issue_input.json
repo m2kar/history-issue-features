@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4978,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4978",
+  "title": "muxcover pass stalls if $_MUX_ output is disconnected",
+  "body": "### Version\n\nYosys 0.50+14 (git sha1 eb5abf9c1, ccache clang++ 18.1.8 -fPIC -O3)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nNot sure how likely this is to come up in the wild, but while investigating #4590 (and its possible connection to #4722) I discovered that if muxcover gets called with a `$_MUX_` cell where the output (`Y`), and at least two inputs (`A`, `B`, `S`) are disconnected (set to `1'x`) then `muxcover` gets stuck in an infinite loop.\ne.g. stall_muxcover.il\n```\nmodule \\top\n\n  wire input 1 \\a\n  wire input 2 \\b\n  wire input 3 \\s\n  wire output 4 \\y\n\n  cell $_MUX_ \\badmux\n    connect \\A 1'x\n    connect \\B 1'x\n    connect \\S \\s\n    connect \\Y 1'x\n  end\nend\n```\nand calling\n`yosys -p muxcover stall_muxcover.il`\n\n### Expected Behavior\n\nNo infinite loop, maybe a log error, at the very least an assertion error.\n\n### Actual Behavior\n\n```\n-- Parsing `temp_tests/stall_muxcover.il' using frontend `rtlil' --\n\n1. Executing RTLIL frontend.\nInput filename: temp_tests/stall_muxcover.il\n\n-- Running command `muxcover' --\n\n2. Executing MUXCOVER pass (mapping to wider MUXes).\nCovering MUX trees in module top..\n  Treeifying 1 MUXes:\n^C\n```",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2025-04-01",
+  "closed_at": null,
+  "code_blocks": [
+    "module \\top\n\n  wire input 1 \\a\n  wire input 2 \\b\n  wire input 3 \\s\n  wire output 4 \\y\n\n  cell $_MUX_ \\badmux\n    connect \\A 1'x\n    connect \\B 1'x\n    connect \\S \\s\n    connect \\Y 1'x\n  end\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3611,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3611",
+  "title": "Possible cxxrtl simulation bug",
+  "body": "### Version\n\nYosys 0.13+10 (git sha1 36482680d, clang 13.0.0 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nhttps://og.kervella.org/sgen.tar.bz2\r\n\r\nThis code builds a simulation of the atari st shifter from the AtariST_Mister repository.  The issue is with the pxCtrEn signal (pcen in the log, obtained by running sftrun) which can be set by three things:\r\n- nReset -> 0, sets to 0\r\n- load_d2 -> 1, sets to 1\r\n- Reload ->  0, sets to the current value of load_d2\r\n\r\nnReset is set to 1 near the start.  The problematic behaviour is at cycle 189:\r\n     186 [LD:0 DE:0 D:0000] cidx=0 load1=0 load2=0 pcnt=e rd=f pcen=1 rdn=1 reload=0 s=0000000000000000 d=0123456789abcdef\r\n     187 [LD:0 DE:0 D:0000] cidx=0 load1=0 load2=0 pcnt=f rd=f pcen=1 rdn=1 reload=0 s=0000000000000000 d=0123456789abcdef\r\n     188 [LD:0 DE:0 D:0000] cidx=0 load1=0 load2=0 pcnt=0 rd=f pcen=1 rdn=1 reload=1 s=0000000000000000 d=0123456789abcdef\r\n     189 [LD:0 DE:0 D:0000] cidx=0 load1=0 load2=0 pcnt=1 rd=0 pcen=1 rdn=0 reload=0 s=0123456789abcdef d=0123456789abcdef\r\n     190 [LD:0 DE:0 D:0000] cidx=1 load1=0 load2=0 pcnt=2 rd=0 pcen=1 rdn=1 reload=0 s=123456789abcdef0 d=0123456789abcdef\r\n\r\nload_d2 (load2) is 0, reload goes from 1 to 0, yet pcen stays 1.\r\n\r\nThe verilog code is:\r\nreg pxCtrEn;\r\nalways @(negedge Reload, negedge nReset, posedge load_d2) begin\r\n        if (!nReset) pxCtrEn <= 1'b0;\r\n        else if (load_d2) pxCtrEn <= 1'b1;\r\n        else pxCtrEn <= load_d2;\r\nend\r\n\r\n\n\n### Expected Behavior\n\npcen goes to 0, which will resync the pixel counter for the next video line.\n\n### Actual Behavior\n\npcen stays at 1, and the next line is broken.\r\n",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2023-01-08",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

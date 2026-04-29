@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 685,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/685",
+  "title": "Handle signedness and width expansion for class properties and methods",
+  "body": "The result for the built-in methods for the SystemVerilog types is\r\ncurrently always unsigned. This can lead to incorrect behavior if the value\r\nis sign extended or passed as an argument to a system function (e.g.\r\n`$display`).\r\n\r\nE.g. the following will print `4294967295` rather than `-1`.\r\n```SystemVerilog\r\n int q[$];\r\n q.push_back(-1);\r\n $display(q.pop_front());\r\n ```\r\n    \r\nTo correctly support this consistently assign the actual data type of the\r\nbuilt-in method's return value to the `NetESFunc`, rather than just the width\r\nand base type. The width, base type and also the signedness can be derived\r\nfrom the data type.\r\n\r\nThe signedness of an expression can also change depending on its context.\r\nE.g. for an arithmetic operation with one unsigned operand all operands are\r\ntreated as unsigned.\r\n\r\nIn addition to methods this is currently also not considered for class properties\r\nThis can lead to incorrect behavior if the value is sign extended.\r\n\r\nE.g. the following will print 4294967295 rather than 65535.\r\n\r\n```SystemVerilog\r\nclass C;\r\n  shortint x = -1;\r\nendclass\r\n...\r\nC c = new;\r\n$display(c.x + 32'h0);\r\n```\r\n\r\nFurthermore the return value is not expanded to the width of its context.\r\nThis can cause vvp to crash with an exception when it expects a vector on\r\nthe stack to have a certain width.\r\n\r\nE.g.\r\n```SystemVerilog\r\nclass C;\r\n  shortint x = -1;\r\nendclass\r\n...\r\nC c = new;\r\nint x;\r\nbit a = 1'b1;\r\nx = a ? c.x : 64'h0;\r\n```\r\n\r\nSolve both of this by using `pad_to_width()` on a methods return value and\r\non class properties if it is a vectorable type. Since this needs to be done for\r\nany expression not just method calls or class properties move this call to\r\n`pad_to_width()` into a common path of the `elaborate_expr()` method of\r\nboth `PEIdent` and `PECallFunction`.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-04-14",
+  "closed_at": "2022-04-17",
+  "code_blocks": [
+    "int q[$];\r\n q.push_back(-1);\r\n $display(q.pop_front());",
+    "class C;\r\n  shortint x = -1;\r\nendclass\r\n...\r\nC c = new;\r\n$display(c.x + 32'h0);",
+    "class C;\r\n  shortint x = -1;\r\nendclass\r\n...\r\nC c = new;\r\nint x;\r\nbit a = 1'b1;\r\nx = a ? c.x : 64'h0;"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

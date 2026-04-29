@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5210,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5210",
+  "title": "`log_id_cache` memory leaks are problematic",
+  "body": "Every time `log_id()` is called the string is leaked into the `log_id_cache` until `log_pop()` or `log_reset_stack()` is called, typically at the end of a pass but not always even then. For passes that log a lot, this is bad. For some passes the situation is worse because they use `log_id()` in code not related to logging. For example:\n* `CheckPass` uses `log_id()` to [build strings](https://github.com/YosysHQ/yosys/blob/7b0c1fe491fd0c90b8b513a89cf033406c620185/passes/cmds/check.cc#L149) even if it ends up not reporting any warnings.\n* `SatGen::importSigSpecWorker()` (called by `SharePass`, at least) [uses](https://github.com/YosysHQ/yosys/blob/7b0c1fe491fd0c90b8b513a89cf033406c620185/kernel/satgen.h#L104) `log_id()` to build temporary strings used for lookups. Lots of lookups.\n\nThis causes memory usage to increase steadily during each pass, and for some passes very rapidly. When this string-copying was introduced, the performance impact was expected to be limited because `log_id()` was [expected to be used only for logging](https://github.com/YosysHQ/yosys/issues/1178#issuecomment-511362071), but see above.",
+  "labels": [],
+  "state": "open",
+  "created_at": "2025-07-03",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

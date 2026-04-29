@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 524,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/524",
+  "title": "iopadmap is confused by loops",
+  "body": "Here's a design I have, which, albeit unusual, seems entirely legal to me:\r\n```verilog\r\nmodule top(\r\n    inout  a,\r\n    inout  b,\r\n    input  dir,\r\n);\r\n\r\n    wire aout, bout;\r\n    GP_IOBUF iobufa(\r\n        .IO(a),\r\n        .OUT(aout),\r\n        .IN(bout),\r\n        .OE(dir)\r\n    );\r\n    GP_IOBUF iobufb(\r\n        .IO(b),\r\n        .OUT(bout),\r\n        .IN(aout),\r\n        .OE(!dir)\r\n    );\r\n\r\nendmodule\r\n```\r\n\r\nWhen I run:\r\n```\r\nyosys top.v -p \"synth_greenpak4 -part SLG46621V; show\"\r\n```\r\nI get:\r\n![screenshot_20180404_114903](https://user-images.githubusercontent.com/54771/38306526-607ae2ca-3800-11e8-8d36-ad8e2e600c26.png)\r\nwhich is obviously wrong IMO.\r\n\r\nIf, instead, I alter the pipeline to only apply the iopadmap pass to `dir`, then I get:\r\n![screenshot_20180404_121023](https://user-images.githubusercontent.com/54771/38306869-6a160dd6-3801-11e8-9ea5-85fc291196cc.png)\r\nwhich produces the correct post-PAR netlist.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-04-04",
+  "closed_at": "2018-05-15",
+  "code_blocks": [
+    "module top(\r\n    inout  a,\r\n    inout  b,\r\n    input  dir,\r\n);\r\n\r\n    wire aout, bout;\r\n    GP_IOBUF iobufa(\r\n        .IO(a),\r\n        .OUT(aout),\r\n        .IN(bout),\r\n        .OE(dir)\r\n    );\r\n    GP_IOBUF iobufb(\r\n        .IO(b),\r\n        .OUT(bout),\r\n        .IN(aout),\r\n        .OE(!dir)\r\n    );\r\n\r\nendmodule",
+    "yosys top.v -p \"synth_greenpak4 -part SLG46621V; show\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

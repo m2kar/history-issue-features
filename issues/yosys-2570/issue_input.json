@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 2570,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/2570",
+  "title": "2D Array assignment in port does not work",
+  "body": "2D array assignment doesn't seem to be working when assigned in a module port.\r\n\r\n## Steps to reproduce the issue\r\n\r\n1. Download and extract [broken.zip](https://github.com/YosysHQ/yosys/files/5900089/broken.zip). It contains one file broken.sv.\r\n2. Run `yosys -p \"read_verilog -sv broken.sv; synth_ice40; write_verilog\"`\r\n3. Observe the value assigned to `out`\r\n\r\nI have rebuilt from master, and verified that this behaviour still occurs, my version is:\r\n`Yosys 0.9+3882 (git sha1 beeaad19, clang 11.0.0 -fPIC -Os)`\r\n\r\nHere are the contents of broken.sv for reference:\r\n```\r\nmodule intermediate\r\n(    \r\n    output logic [3:0] out\r\n);\r\n    assign out = 4'hA;\r\nendmodule\r\n\r\nmodule broken\r\n(\r\n    output logic [3:0] out\r\n); \r\n    // Works - out is assigned 4'hA\r\n    //logic [3:0] vec [0:0];\r\n    //assign vec[0] = 4'hA;\r\n    //assign out = vec[0];\r\n\r\n    // Works - out is assigned 4'hA\r\n    //logic [3:0] vec;\r\n    //intermediate inst (.out(vec[3:0]));\r\n    //assign out = vec[3:0];\r\n\r\n    // Doesn't work - out is assigned 4'hX\r\n    logic [3:0] vec [0:0];\r\n    intermediate inst (.out(vec[0]));\r\n    assign out = vec[0];\r\nendmodule\r\n```\r\n\r\n## Expected behavior\r\n`out` is assigned is assigned 4'hA.\r\n\r\n## Actual behavior\r\n\r\n`out` is assigned is assigned 4'hX.\r\n",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2021-01-31",
+  "closed_at": "2021-10-26",
+  "code_blocks": [
+    "module intermediate\r\n(    \r\n    output logic [3:0] out\r\n);\r\n    assign out = 4'hA;\r\nendmodule\r\n\r\nmodule broken\r\n(\r\n    output logic [3:0] out\r\n); \r\n    // Works - out is assigned 4'hA\r\n    //logic [3:0] vec [0:0];\r\n    //assign vec[0] = 4'hA;\r\n    //assign out = vec[0];\r\n\r\n    // Works - out is assigned 4'hA\r\n    //logic [3:0] vec;\r\n    //intermediate inst (.out(vec[3:0]));\r\n    //assign out = vec[3:0];\r\n\r\n    // Doesn't work - out is assigned 4'hX\r\n    logic [3:0] vec [0:0];\r\n    intermediate inst (.out(vec[0]));\r\n    assign out = vec[0];\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

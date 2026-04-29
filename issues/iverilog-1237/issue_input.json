@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1237,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1237",
+  "title": "Case statement mismatch with signed 1-bit reg compared to unsigned constant",
+  "body": "Below is the code that triggers the problem (`test.v`):\n\n```verilog\nmodule test;\n\nreg signed in4;\ninitial begin\n  in4 = 1;\n\n  #1;\n\n  $display(\"in4: %0d\", in4);\n\n  case (0 ? 1'h0 : in4)\n    5'b0101: begin\n        $display(\"1\");\n    end\n\n    8'b000001: begin\n      $display(\"2\");\n    end\n\n    default: begin\n      $display(\"3\");\n    end\n  endcase\nend\n\nendmodule\n```\n\nRun the commands below to reproduce:\n\n```bash\niverilog test.v\n./a.out\n```\n\nThe program prints\n\n```\nin4: -1\n3\n```\n\nAccording to my understanding, the ternary operator should choose `in4`, because `0` is `false`.  \n`in4` is a **signed** value and its binary representation is `1'b1`.  \nHowever, when `in4` is compared with the unsigned value `8'b000001`, it is treated as unsigned (as explained here: [https://stackoverflow.com/questions/21340093/why-is-this-verilog-relational-statement-returning-true](https://stackoverflow.com/questions/21340093/why-is-this-verilog-relational-statement-returning-true)).  \nThus, `1'b1` is zero-extended to `8'b0000_0001`, making it equal to the second case branch.  \nTherefore, it should print `2` instead of `3`.",
+  "labels": [
+    "Bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-04-28",
+  "closed_at": "2025-06-25",
+  "code_blocks": [
+    "module test;\n\nreg signed in4;\ninitial begin\n  in4 = 1;\n\n  #1;\n\n  $display(\"in4: %0d\", in4);\n\n  case (0 ? 1'h0 : in4)\n    5'b0101: begin\n        $display(\"1\");\n    end\n\n    8'b000001: begin\n      $display(\"2\");\n    end\n\n    default: begin\n      $display(\"3\");\n    end\n  endcase\nend\n\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

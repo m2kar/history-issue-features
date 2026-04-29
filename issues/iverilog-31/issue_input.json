@@ -1,0 +1,18 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 31,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/31",
+  "title": "Bug, no bug, or just undefined, that is the question (real vs. signed and unsigned int)",
+  "body": "I'm not sure if this is a bug report or a request to explain the Verilog standard to me [[1](http://meta.wikimedia.org/wiki/Cunningham's_Law)].\n\nConsider the following test case:\n\n```\nmodule test(y1, y2, y3);\n        output [63:0] y1, y2, y3;\n        assign y1 = 1 ?  1 ?  -1 : 'd0 : 0.0;\n        assign y2 = 1 ? -1 :   1 ? 'd0 : 0.0;\n        assign y3 = 1 ? -1 : 'd0;\n        initial begin\n                #1;\n                $display(\"%b\", y1);\n                $display(\"%b\", y2);\n                $display(\"%b\", y3);\n        end\nendmodule\n```\n\nIn iverilog, xsim and modelsim the output is:\n\n```\n0000000000000000000000000000000011111111111111111111111111111111\n1111111111111111111111111111111111111111111111111111111111111111\n1111111111111111111111111111111111111111111111111111111111111111\n```\n\nSo the tools are consistent. But I do not understand why -1 is 32 bits in the first case and 64 bits in the two other cases. Imo it should be either\n\n(1) evaluated as part of a real expression and only converted to a bit pattern when it is assigned to `y*`. And as `y*` is a 64 bit signal the conversion should yield 64 set bits. Or\n\n(2) the -1 is not evaluated as part of a real expression. In this case the final size (64 bits) should be known to the negation operator, thus yielding 64 set bits.\n\nI'm trying to implement support for real values in Yosys in a way so that corner cases that are not sufficiently covered by the standard document show the same behavior as in iverilog. This makes it much easier for me to test the defined cases. But I'm having a hard time understanding how iverilog actually handles cases like this one..\n\nThanks in advance for educating me. ;)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2014-06-24",
+  "closed_at": "2014-06-24",
+  "code_blocks": [
+    "module test(y1, y2, y3);\n        output [63:0] y1, y2, y3;\n        assign y1 = 1 ?  1 ?  -1 : 'd0 : 0.0;\n        assign y2 = 1 ? -1 :   1 ? 'd0 : 0.0;\n        assign y3 = 1 ? -1 : 'd0;\n        initial begin\n                #1;\n                $display(\"%b\", y1);\n                $display(\"%b\", y2);\n                $display(\"%b\", y3);\n        end\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

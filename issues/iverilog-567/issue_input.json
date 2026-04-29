@@ -1,0 +1,20 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 567,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/567",
+  "title": "No error is reported when a negative value is assigned to a genvar when compiled with -g2001",
+  "body": "Hi!\r\n\r\nI have a code:\r\n```\r\nmodule arithmetic_right_shift_of_N_by_S_using_for_inside_generate\r\n#(parameter N = 8, S = 3)\r\n(\r\n  input  [N - 1:0] a, \r\n  output [N - 1:0] res\r\n);\r\n\r\n  wire signed [N - 1:0] a_s = a;\r\n  \r\n  genvar i;\r\n\r\n  // Bad version\r\n  generate\r\n    for (i = N - 1; i > -1; i --)\r\n      assign res[i] = i > (N - 1 - S) ? a_s[N - 1]\r\n                                      : a_s[i + S] ;\r\n  endgenerate\r\n\r\n //True version\r\n\r\n  /*\r\n   generate\r\n      for (i = 0; i < N; i ++)\r\n        if (i >= N - S)\r\n          assign res [i] = a_s[N - 1];\r\n        else\r\n          assign res [i] = a_s[i + S];\r\n    endgenerate\r\n  */\r\n  \r\nendmodule\r\n```\r\nAccording to the Verilog-2001 standard, all \"genvar\" variables are unsigned.\r\nThey cannot take negative values, but iverilog successfully compiles the module, although it should give an error. \r\nAlso, according to a friend, I know that iverilog can sometimes hang.\r\nFull file with testbench you can see in: https://github.com/cfcfty/verilog_test/blob/main/p017_arithmetic_shift_or_signed_divide_by_power_of_2.v\r\nI use IVerilog 11.0 stable on Linux and setting ` -g2005-sv `.\r\n\r\nThanks.",
+  "labels": [
+    "Enhancement"
+  ],
+  "state": "closed",
+  "created_at": "2021-12-10",
+  "closed_at": "2021-12-13",
+  "code_blocks": [
+    "module arithmetic_right_shift_of_N_by_S_using_for_inside_generate\r\n#(parameter N = 8, S = 3)\r\n(\r\n  input  [N - 1:0] a, \r\n  output [N - 1:0] res\r\n);\r\n\r\n  wire signed [N - 1:0] a_s = a;\r\n  \r\n  genvar i;\r\n\r\n  // Bad version\r\n  generate\r\n    for (i = N - 1; i > -1; i --)\r\n      assign res[i] = i > (N - 1 - S) ? a_s[N - 1]\r\n                                      : a_s[i + S] ;\r\n  endgenerate\r\n\r\n //True version\r\n\r\n  /*\r\n   generate\r\n      for (i = 0; i < N; i ++)\r\n        if (i >= N - S)\r\n          assign res [i] = a_s[N - 1];\r\n        else\r\n          assign res [i] = a_s[i + S];\r\n    endgenerate\r\n  */\r\n  \r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4405,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4405",
+  "title": "CXXRTL: Information loss when outputs are aliased",
+  "body": "### Version\n\nYosys 0.39\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nFor the following `and_ti.v` file:\r\n```\r\nmodule top(input a0, input a1, input b0, input b1, input z, output c0, output c1);\r\n    wire a0b0, a0b1, a1b0, a1b1;\r\n    wire a0b1z, a1b0z;\r\n    wire culprit;\r\n\r\n    assign a0b0 = a0 & b0;\r\n    assign a0b1 = a0 & b1;\r\n    assign a1b0 = a1 & b0;\r\n    assign a1b1 = a1 & b1;\r\n\r\n    //assign a1b0 = a1b0 ^ z;\r\n    //assign a0b1 = a0b1 ^ z;\r\n    assign a0b1z = a0b1 ^ z;\r\n    assign a1b0z = a1b0 ^ z;\r\n    \r\n    //assign c0 = a0b0 ^ (a0b1 ^ z);\r\n    //assign c1 = a1b1 ^ (a1b0 ^ z);\r\n    assign culprit = a1b1 ^ a1b0z; \r\n    assign c0 = culprit;\r\n    assign c1 = a0b0 ^ a0b1z;\r\nendmodule\r\n```\r\n\r\nThe workflow used is simple:\r\n```\r\nread_verilog and_ti.v \r\nwrite_cxxrtl -O6 -g4 -header cxxrtl_and_ti.cpp\r\n```\r\nGives the following debug information for the wires `c0` and `c1` :\r\n```\r\nitems->add(path + \"culprit\", debug_item(debug_eval_outline, p_culprit, 0), metadata_map({\r\n\t{ \"src\", \"and_ti.v:4.10-4.17\" },\r\n}));\r\n...\r\nitems->add(path + \"c1\", debug_item(p_c1, 0, debug_item::OUTPUT|debug_item::DRIVEN_COMB), metadata_map({\r\n\t{ \"src\", \"and_ti.v:1.79-1.81\" },\r\n}));\r\nitems->add(path + \"c0\", debug_item(debug_eval_outline, p_culprit, 0), metadata_map({\r\n\t{ \"src\", \"and_ti.v:4.10-4.17\" },\r\n}));\r\n```\r\n\r\nThere are other combinations of HDL or `-O` flags that can lead to this behavior, sometimes on an outline like here, sometimes on normal wires.\n\n### Expected Behavior\n\nThere exists a way to retrieve the information that `c0` is an output wire like for `c1`.\n\n### Actual Behavior\n\nThere is no way to know that `c0` is an output because it is aliased to another wire that is not an output. ",
+  "labels": [
+    "cxxrtl"
+  ],
+  "state": "closed",
+  "created_at": "2024-05-21",
+  "closed_at": "2024-05-24",
+  "code_blocks": [
+    "module top(input a0, input a1, input b0, input b1, input z, output c0, output c1);\r\n    wire a0b0, a0b1, a1b0, a1b1;\r\n    wire a0b1z, a1b0z;\r\n    wire culprit;\r\n\r\n    assign a0b0 = a0 & b0;\r\n    assign a0b1 = a0 & b1;\r\n    assign a1b0 = a1 & b0;\r\n    assign a1b1 = a1 & b1;\r\n\r\n    //assign a1b0 = a1b0 ^ z;\r\n    //assign a0b1 = a0b1 ^ z;\r\n    assign a0b1z = a0b1 ^ z;\r\n    assign a1b0z = a1b0 ^ z;\r\n    \r\n    //assign c0 = a0b0 ^ (a0b1 ^ z);\r\n    //assign c1 = a1b1 ^ (a1b0 ^ z);\r\n    assign culprit = a1b1 ^ a1b0z; \r\n    assign c0 = culprit;\r\n    assign c1 = a0b0 ^ a0b1z;\r\nendmodule",
+    "items->add(path + \"culprit\", debug_item(debug_eval_outline, p_culprit, 0), metadata_map({\r\n\t{ \"src\", \"and_ti.v:4.10-4.17\" },\r\n}));\r\n...\r\nitems->add(path + \"c1\", debug_item(p_c1, 0, debug_item::OUTPUT|debug_item::DRIVEN_COMB), metadata_map({\r\n\t{ \"src\", \"and_ti.v:1.79-1.81\" },\r\n}));\r\nitems->add(path + \"c0\", debug_item(debug_eval_outline, p_culprit, 0), metadata_map({\r\n\t{ \"src\", \"and_ti.v:4.10-4.17\" },\r\n}));"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

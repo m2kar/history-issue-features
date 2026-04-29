@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5176,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5176",
+  "title": "driver.cc: Don't split options on commas",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\ncxxopts has this 'cool feature' where you can use a comma separator between multiple arguments for the same option (see also https://github.com/jarro2783/cxxopts/issues/228), even if the comma is inside a quoted string.  This is problematic for some commands like `eval` which can use a comma.\r\n\r\nTake this very simple example `test.v`:\r\n```verilog\r\nmodule top(input a, b, output o);\r\nassign o = a ^ b;\r\nendmodule\r\n```\r\nSay you want to to call `yosys test.v -p prep -p 'eval -table a,b'`.  The arguments passed to main are\r\n```\r\nyosys\r\ntest.v\r\n-p\r\nprep\r\n-p\r\neval -table a,b\r\n```\r\nThe resulting `result[\"p\"]` is\r\n```\r\nprep\r\neval -table a\r\nb\r\n```\r\nWhich breaks the `eval` call, and then fails on the unrecognised `b` ccommand.\r\n\r\n_Explain how this is achieved._\r\n\r\nBy setting the `CXXOPTS_VECTOR_DELIMITER` to the null character `'\\0'`, no options are split by comma.  As far as I know we don't actually rely on or advertise this feature at all (given that it wasn't possible before switching to cxxopts), so removing it shouldn't be a problem.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nUse the test from above.  Without this change it fails, with this change it works as expected.\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-06-12",
+  "closed_at": "2025-06-13",
+  "code_blocks": [
+    "module top(input a, b, output o);\r\nassign o = a ^ b;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

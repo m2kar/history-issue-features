@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4034,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4034",
+  "title": "Split off evaluable/combinational flags in `celltypes.h`",
+  "body": "### Version\n\nYosys 0.34+23 (git sha1 59fbee400, clang++ 11.1.0 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux, macOS, Windows, BSD\n\n### Reproduction Steps\n\nLook into `kernel/celltypes.h` where formal cell types are registered, with the last argument to `setup_type` being whether the cell is evaluable (`CellTypes::cell_evaluable` then returns true for the cell).\r\n\r\nhttps://github.com/YosysHQ/yosys/blob/27ac91270991ad7c2304e5f90a5c1001c2f08ec1/kernel/celltypes.h#L90-L99\n\n### Expected Behavior\n\nFormal cells like `$assert` are registered as non-evaluable since the cell can have a side effect. This depends on the interpretation of 'evaluable' of course, but I suggest we adopt the definition of \"the cell is purely combinational and its output only depends on current inputs\", which I think is the most useful definition for writing optimization passes.\n\n### Actual Behavior\n\nFormal cells are registered evaluable. Even if we go with a definition of 'evaluable' for which this is right, I suggest we switch `$print` to evaluable as well (currently it's non-evaluable), since it's very much like `$assert` so this would be the consistent thing to do. The more consistent `CellTypes::cell_evaluable` is, the more useful it is.",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-11-16",
+  "closed_at": null,
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

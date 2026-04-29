@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3999,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3999",
+  "title": "Confusing error message when using default_nettype none and a local is defined in unnamed block in verilog mode",
+  "body": "### Version\n\nYosys 0.33+79 (git sha1 b52f6cb19, gcc 13.2.1 -march=x86-64 -mtune=generic -O2 -fno-plt -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n1. Save this code to `bug.v`:\r\n\r\n```\r\nmodule bug();\r\n  initial begin\r\n    integer i;\r\n    i = 0;\r\n  end\r\nendmodule\r\n```\r\n\r\n2. Run `yosys -p \"read_verilog bug.v\"`\r\n3. Observe bad diagnostic message: \"ERROR: Identifier  \\`\\i' is implicitly declared and \\`default_nettype is set to none\".\r\n\r\nIf default_nettype none is removed, then we get the expected error message: \"ERROR: Local declaration in unnamed block is only supported in SystemVerilog mode!\", added in https://github.com/YosysHQ/yosys/commit/81a9ee2360740dd05e6fc8215abd0e30837f2cda.\r\n\r\nLocal declarations in unnamed blocks is not allowed in old school verilog. I guess that causes the later usage to be on an undeclared variable, and that message has higher priority than the more useful message about the illegal local declaration, causing the bug.\n\n### Expected Behavior\n\n\"ERROR: Local declaration in unnamed block is only supported in SystemVerilog mode!\" is printed\n\n### Actual Behavior\n\n\"ERROR: Identifier \\`\\i' is implicitly declared and \\`default_nettype is set to none\" is printed",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "open",
+  "created_at": "2023-10-10",
+  "closed_at": null,
+  "code_blocks": [
+    "module bug();\r\n  initial begin\r\n    integer i;\r\n    i = 0;\r\n  end\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

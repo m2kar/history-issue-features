@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 806,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/806",
+  "title": " Elaborate class properties during signal phase instead of scope phase",
+  "body": "Elaboration uses a multi stage approach. Currently non-static class\r\nproperties are elaborated during the scope elaboration phase. This can\r\ncause problems if the type of a property is declared in a different scope.\r\nIn that case it is possible that the scope in which the type is defined has\r\nnot been elaborated yet and the type is not available. E.g.\r\n\r\n```SystemVerilog\r\npackage P;\r\n  typedef int T;\r\nendpackage\r\n\r\nclass C;\r\n  P::T x;\r\nendclass\r\n```\r\n\r\nAnother area where this is problematic is when a class has a property of a\r\nanother class that has a forward declaration. In this case the type of the\r\nforward declared class, which is created when the scope is elaborated, is\r\nnot available when the scope of the class that is using it is elaborated.\r\nE.g.\r\n\r\n```SystemVerilog\r\ntypedef class B;\r\n\r\nclass A;\r\n  B b;\r\nendclass\r\n\r\nclass B;\r\nendclass\r\n```\r\n\r\nTo avoid this elaborate the properties during the signal elaboration phase.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2022-12-11",
+  "closed_at": "2022-12-12",
+  "code_blocks": [
+    "package P;\r\n  typedef int T;\r\nendpackage\r\n\r\nclass C;\r\n  P::T x;\r\nendclass",
+    "typedef class B;\r\n\r\nclass A;\r\n  B b;\r\nendclass\r\n\r\nclass B;\r\nendclass"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

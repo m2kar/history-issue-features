@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "pull_request",
+  "issue_number": 863,
+  "issue_url": "https://github.com/steveicarus/iverilog/pull/863",
+  "title": "Add support for package export",
+  "body": "By default an identifier that has been imported into a package is not\r\navailable for imports by other packages. Only imports that have been\r\nexported can be imported again. E.g.\r\n\r\n```SystemVerilog\r\npackage P1;\r\n  int x;\r\nendpackage\r\n\r\npackage P2;\r\n  import P1::x;\r\n  export P1::x;\r\nendpackage\r\n\r\nmodule test;\r\n  import P2::x; // This will only work if x has been exported.\r\nendmodule\r\n```\r\n\r\nExports follow the same syntax as imports and allow both export of specific\r\nidentifiers or wildcard export. Export supports the special `*::*` target,\r\nwhich will export all imported items.\r\n\r\nAdd support for handling package exports.\r\n\r\nThere is one special cases that needs to be considered. Usually when using\r\nwildcard imports from multiple packages it is an error if there multiple\r\nimport candidates for an identifier. With exports it is possible that there\r\nare multiple candidates through different packets, but they all refer to\r\nthe same identifier. In this case it does not create a conflict. E.g.\r\n\r\n```SystemVerilog\r\npackage P1;\r\n  int x;\r\nendpackage\r\n\r\npackage P2;\r\n  import P1::x;\r\n  export P1::x;\r\nendpackage\r\n\r\npackage P3;\r\n   import P1::*;\r\n   import P2::*;\r\n   int y = x; // No import conflict\r\nendpackage\r\n```\r\n\r\nResolves #241.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-01-17",
+  "closed_at": "2023-01-29",
+  "code_blocks": [
+    "package P1;\r\n  int x;\r\nendpackage\r\n\r\npackage P2;\r\n  import P1::x;\r\n  export P1::x;\r\nendpackage\r\n\r\nmodule test;\r\n  import P2::x; // This will only work if x has been exported.\r\nendmodule",
+    "package P1;\r\n  int x;\r\nendpackage\r\n\r\npackage P2;\r\n  import P1::x;\r\n  export P1::x;\r\nendpackage\r\n\r\npackage P3;\r\n   import P1::*;\r\n   import P2::*;\r\n   int y = x; // No import conflict\r\nendpackage"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

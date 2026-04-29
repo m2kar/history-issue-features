@@ -1,0 +1,38 @@
+{
+  "tool": "iverilog",
+  "issue_number": 1141,
+  "title": "function being classified as non-constant",
+  "features": [
+    {
+      "name": "recursive_function_with_named_begin_block_and_macro_definition",
+      "category": "data_model",
+      "description": "Code should include a recursive function with a named begin/end block that defines a macro using `define inside the block",
+      "snippet": "function automatic [7:0] iterator_NaryRecursionGetUnitWidth;\n    input [7:0] base, lut_width, unit, results;\n    begin : block_NaryRecursionGetUnitWidth\n        `define next_level_unit_count (base / lut_width * lut_width == base ? base / lut_width : base / lut_width + 1)\n        if( base == 1 )\n            iterator_NaryRecursionGetUnitWidth = 0;\n        else\n            iterator_NaryRecursionGetUnitWidth = iterator_NaryRecursionGetUnitWidth(`next_level_unit_count, lut_width, unit, results + `next_level_unit_count);\n        `undef next_level_unit_count\n    end\nendfunction",
+      "tags": ["recursive_function", "named_begin_block", "macro_definition", "define_macro"],
+      "source_bug_id": "iverilog-1141",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1141",
+      "construct_complexity": 4,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "recursive_function_called_from_constant_function_in_wire_dimension",
+      "category": "control_flow",
+      "description": "Code should include a recursive function invoked through a wrapper function, used in a constant expression context such as a wire dimension",
+      "snippet": "function automatic [7:0] f_NaryRecursionGetUnitWidth;\n    input [7:0] base, lut_width, unit;\n    f_NaryRecursionGetUnitWidth = iterator_NaryRecursionGetUnitWidth(base, lut_width, unit, 0);\nendfunction\nwire [f_NaryRecursionGetUnitWidth(CHUNK_COUNT, GATE_XOR_LUT_WIDTH, unit_index)-1:0] unit_inputs;",
+      "tags": ["recursive_function", "constant_function", "wire_dimension", "wrapper_function"],
+      "source_bug_id": "iverilog-1141",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/1141",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 5,
+    "features_extracted": 2,
+    "features_after_dedup": 2
+  }
+}

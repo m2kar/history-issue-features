@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4655,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4655",
+  "title": "cxxrtl: fix vcd writer scope handling",
+  "body": "The vcd writer incorrectly treated two scope vectors as the same, whenever they have the same length of entries and the last item matches. This is however not always true, for example consider a current_scope of [\"top\", \"something0\", \"other_i\"] and a scope of [\"top\", \"something1\", \"other_i\"] as one might obtain from the following verilog file:\r\n```verilog\r\nmodule other2();\r\n    wire w_inner;\r\nendmodule\r\n\r\nmodule other();\r\n    other2 other_i();\r\nendmodule\r\n\r\n\r\nmodule top();\r\n    other something0();\r\n    other something1();\r\nendmodule\r\n```\r\nThe old code emitted a vcd of \r\n```\r\n$scope module top $end\r\n$scope module something0 $end\r\n$scope module other_i $end\r\n$var wire 1 ! w_inner $end\r\n$var wire 1 \" w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$upscope $end\r\n$enddefinitions $end\r\n#0\r\n0!\r\n0\"\r\n```\r\nnot changing the scope correctly for the two `w_inner` wires. This now correctly generates \r\n```\r\n$scope module top $end\r\n$scope module something0 $end\r\n$scope module other_i $end\r\n$var wire 1 ! w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$scope module something1 $end\r\n$scope module other_i $end\r\n$var wire 1 \" w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$upscope $end\r\n$enddefinitions $end\r\n#0\r\n0!\r\n0\"\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-10-11",
+  "closed_at": "2024-10-12",
+  "code_blocks": [
+    "module other2();\r\n    wire w_inner;\r\nendmodule\r\n\r\nmodule other();\r\n    other2 other_i();\r\nendmodule\r\n\r\n\r\nmodule top();\r\n    other something0();\r\n    other something1();\r\nendmodule",
+    "$scope module top $end\r\n$scope module something0 $end\r\n$scope module other_i $end\r\n$var wire 1 ! w_inner $end\r\n$var wire 1 \" w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$upscope $end\r\n$enddefinitions $end\r\n#0\r\n0!\r\n0\"",
+    "$scope module top $end\r\n$scope module something0 $end\r\n$scope module other_i $end\r\n$var wire 1 ! w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$scope module something1 $end\r\n$scope module other_i $end\r\n$var wire 1 \" w_inner $end\r\n$upscope $end\r\n$upscope $end\r\n$upscope $end\r\n$enddefinitions $end\r\n#0\r\n0!\r\n0\""
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

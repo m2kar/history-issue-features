@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 1381,
+  "title": "techmap-ing module with underspecified input port connections creates new undriven signal",
+  "features": [
+    {
+      "name": "underspecified module instantiation with internal submodule wiring",
+      "category": "control_flow",
+      "description": "Code should include a module instantiation where fewer ports are connected than declared, and the module internally wires all its ports to a submodule",
+      "snippet": "module sub(input i, output o, input j);\n  foobar f(i, o, j);\nendmodule\n\nmodule top(input i, output o);\nsub s0(i, o);\nendmodule",
+      "tags": ["module_instantiation", "underspecified_ports", "submodule_wiring"],
+      "source_bug_id": "yosys-1381",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1381",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "techmap transformation with blackbox module",
+      "category": "preprocess",
+      "description": "Code should include a techmap pass that replaces a module with a blackbox version, where the original module had complete port connections internally but the instantiation had underspecified connections",
+      "snippet": "design -stash techmap\nread_verilog <<EOT\n(* blackbox *)\nmodule sub(input i, output o, input j);\nendmodule\nEOT\ntechmap -map %techmap",
+      "tags": ["techmap", "blackbox", "module_transformation"],
+      "source_bug_id": "yosys-1381",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1381",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "undriven signal after transformation",
+      "category": "data_model",
+      "description": "Code should include a wire that is used in port connections but has no driver after techmap transformation",
+      "snippet": "wire \\s0.j;\ncell \\foobar \\s0.f\n  connect \\j \\s0.j",
+      "tags": ["undriven_signal", "wire_no_driver", "port_connection"],
+      "source_bug_id": "yosys-1381",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/1381",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 3,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

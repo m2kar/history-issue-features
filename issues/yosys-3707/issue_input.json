@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3707,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3707",
+  "title": "ice40: BRAM negedge read is one cycle late",
+  "body": "### Version\n\nYosys 0.26+50 (git sha1 0f2d226ae, gcc 10.2.1-6 -Og -fPIC)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nI'm working on a processor design, where the register file is read on negative clock edge (three read ports), and written on positive clock edge. Synthesized as 12 SB_RAM40_4KNR (since registers are 64 bits wide, and there's one copy for each read port). I've noticed that values read appear to be one cycle late. I expect the read values to be available and stable on positive clock edge (after some shallow combinational logic downstream of the BRAM read operation on previous negative edge), but it appears read values don't appear until the *second* positive edge after the negative edge when read address is available.\r\n\r\nI'm attaching a minimized example (with an extra  .txt suffix because of github).\r\n\r\n[top.v.txt](https://github.com/YosysHQ/yosys/files/11011546/top.v.txt)\r\n[top.pcf.txt](https://github.com/YosysHQ/yosys/files/11011547/top.pcf.txt)\r\n\r\nI synthesize this for ice40 and test on an \"iCE40-HX8K Breakout Board\". If I synthesize *without* BRAM, using \r\n\r\n`yosys -p 'synth_ice40 -noflatten -nobram -json top-ff.json' -f verilog top.v -L top-ff.ylog`\r\n\r\nfollowed by \r\n\r\n`nextpnr-ice40 --hx8k --package ct256 --json top-ff.json --pcf top.pcf --asc top-ff.asc --log top-ff.nlog`\r\n\r\nand load it with `icepack top-ff.asc top-ff.bin && iceprog top-ff.bin`\r\n\r\nthings work as expected: Leds light up in the pattern 11111001, and this also agrees with simulation using iverilog.\r\n\r\nBut if I synthesize in the intended way, striking the `-nobram` flag from the command line,\r\n```\r\nyosys -p 'synth_ice40 -noflatten -json top-bram.json' -f verilog top.v -L top-bram.ylog\r\nnextpnr-ice40 --hx8k --package ct256 --json top-bram.json --pcf top.pcf --asc top-bram.asc --log top-bram.nlog\r\nicepack top-bram.asc top-bram.bin\r\niceprog top-bram.bin\r\n```\r\n\r\nthe leds instead lights up in the pattern 11100101. The leds are assigned two at a time on consecutive cycles, on positive clock edge, starting from the right, so the middle four bits shows that there's an additional delay cycle compared with synthesis using flipflops. It's as if there's an extra flipflop added on the BRAM read ports.\r\n\r\nNot sure what further information is help for for tracking this down. next-pnr version is nextpnr-0.4-25-g445d3249. I'm also attaching the generated top-bram.json file (somewhat large, 17000 lines, but small compared to top-ff.json).\r\n[top-bram.json.txt](https://github.com/YosysHQ/yosys/files/11011613/top-bram.json.txt), and the Makefile I use (in case I mistyped some of the commands above).\r\n[Makefile.txt](https://github.com/YosysHQ/yosys/files/11011635/Makefile.txt)\r\n\r\nAny advice is appreciated, and let me know what I can do to aid debugging.\r\n\r\n\r\n\n\n### Expected Behavior\n\nLeds on the board lighting up as 11111001\n\n### Actual Behavior\n\nLeds on the board lighting up as 11100101, indicating a cycle of extra delay.  (This unexpected behavior appears only if use of BRAM is enabled using synthesis). ",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-03-19",
+  "closed_at": "2023-03-20",
+  "code_blocks": [
+    "yosys -p 'synth_ice40 -noflatten -json top-bram.json' -f verilog top.v -L top-bram.ylog\r\nnextpnr-ice40 --hx8k --package ct256 --json top-bram.json --pcf top.pcf --asc top-bram.asc --log top-bram.nlog\r\nicepack top-bram.asc top-bram.bin\r\niceprog top-bram.bin"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

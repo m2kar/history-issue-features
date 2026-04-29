@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2666,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2666",
+  "title": "bugpoint: add runner option",
+  "body": "This has been updated to the more general `-runner` option proposed below. *nix systems appear to have the `timeout` command available in general. I confirmed that with the recent zero-width chunk fix reverted, the following script\r\n```\r\nread_rtlil <<EOF\r\nmodule \\top\r\n  wire output 1 \\a\r\n  wire width 0 $dummy\r\n  cell \\abc \\abc\r\n    connect \\a \\a\r\n    connect \\b $dummy\r\n  end\r\n  wire width 1 \\foo\r\n  wire width 2 \\bar\r\nend\r\nEOF\r\n\r\nbugpoint -yosys \"./yosys\" -command opt_clean -runner \"timeout 5\"\r\n```\r\ncorrectly runs and produces\r\n```\r\nautoidx 5\r\nmodule \\top\r\n  wire width 0 $delete_wire$2\r\n  wire $delete_wire$4\r\n  cell \\abc \\abc\r\n    connect \\a $delete_wire$4\r\n    connect \\b $delete_wire$2\r\n  end\r\nend\r\n```\r\n\r\nFixes #2629 ",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-03-15",
+  "closed_at": "2021-03-17",
+  "code_blocks": [
+    "read_rtlil <<EOF\r\nmodule \\top\r\n  wire output 1 \\a\r\n  wire width 0 $dummy\r\n  cell \\abc \\abc\r\n    connect \\a \\a\r\n    connect \\b $dummy\r\n  end\r\n  wire width 1 \\foo\r\n  wire width 2 \\bar\r\nend\r\nEOF\r\n\r\nbugpoint -yosys \"./yosys\" -command opt_clean -runner \"timeout 5\"",
+    "autoidx 5\r\nmodule \\top\r\n  wire width 0 $delete_wire$2\r\n  wire $delete_wire$4\r\n  cell \\abc \\abc\r\n    connect \\a $delete_wire$4\r\n    connect \\b $delete_wire$2\r\n  end\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

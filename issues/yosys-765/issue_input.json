@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 765,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/765",
+  "title": "Support for \"don't care\" bit in comb processes",
+  "body": "## Steps to reproduce the issue\r\n\r\n```verilog\r\nmodule top(\r\n    input [3:0] i,\r\n    output [3:0] o\r\n);\r\n\r\n    always @(*)\r\n    begin\r\n        o = 4'b0xxx;\r\n        case (i[3:2])\r\n            2'b00: o = 4'b10xx;\r\n            2'b11: o = { 2'b11, i[1:0] };\r\n        endcase\r\n    end\r\n\r\nendmodule\r\n```\r\n\r\n```\r\nyosys -p 'synth_ice40 -top top -blif test.blif' test.v\r\n```\r\n\r\n## Expected behavior\r\n\r\nThis should generate only 1 LUT4 for o[3] and a pass-through for o[2:0].\r\n\r\n```verilog\r\no[3] = ~(i[3] ^ i[2]);\r\no[2:0] = i[2:0]\r\n````\r\n\r\n## Actual behavior\r\n\r\nThis actually generates 4 LUT4 and completely ignores the \"don't care\" bit I'm trying to convey and treating them as 0 AFAICT.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2018-12-25",
+  "closed_at": "2018-12-31",
+  "code_blocks": [
+    "module top(\r\n    input [3:0] i,\r\n    output [3:0] o\r\n);\r\n\r\n    always @(*)\r\n    begin\r\n        o = 4'b0xxx;\r\n        case (i[3:2])\r\n            2'b00: o = 4'b10xx;\r\n            2'b11: o = { 2'b11, i[1:0] };\r\n        endcase\r\n    end\r\n\r\nendmodule",
+    "o[3] = ~(i[3] ^ i[2]);\r\no[2:0] = i[2:0]"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

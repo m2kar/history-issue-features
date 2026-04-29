@@ -1,0 +1,20 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 1676,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/1676",
+  "title": "Preservation of escaped identifier",
+  "body": "SystemVerilog allows escaped identifiers in Section 5.6.1.\r\nThe rule is that they must start with an backslash and end with a white space. All printable ASCII characters are included in the name.\r\n\r\nYosys can read those identifiers, but when using `write_ilang` or `write_smt2` there is a problem if the identifiers are not in the top level of the hierarchy. This is because the path to the identifier is stored without the direct backslash of the identifier.\r\n\r\nI attached a simple example which will generate a `.ilang` and `.smt2` file of the design.\r\nHere is the gist of it.\r\n```verilog\r\nmodule top ();\r\n  bottom UUT ();\r\nendmodule\r\n\r\nmodule bottom ();\r\n  reg \\escaped[2] ;\r\nendmodule\r\n```\r\n\r\nThe signal is then referred to as `\\UUT.escaped[1]`.\r\nI am not sure if this is correct or incorrect, or the result of some Yosys design choices.\r\nBut if this identifier is used by SymbiYosys, which has the ability to create a Verilog test bench, the resulting identifier is `UUT.escaped[1]`, which will be an invalid path for a simulation.\r\nI included the `.smt2` file as this is the input to sby/Yosys and here both versions of the identifier are stored (`\\UUT.escaped[1]` and `UUT.escaped[1]`). The one without any backslash is part of a Yosys specific comment which is used for the test bench creation.\r\nMy assumption is that Yosys removes all backslashes and uses one in general as a prefix?\r\nThis would be problematic if the original identifier needs to be recreated.\r\n\r\n[escaped_name.zip](https://github.com/YosysHQ/yosys/files/4147990/escaped_name.zip)\r\n\r\n\r\n",
+  "labels": [
+    "enhancement"
+  ],
+  "state": "open",
+  "created_at": "2020-02-03",
+  "closed_at": null,
+  "code_blocks": [
+    "module top ();\r\n  bottom UUT ();\r\nendmodule\r\n\r\nmodule bottom ();\r\n  reg \\escaped[2] ;\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

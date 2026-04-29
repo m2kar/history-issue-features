@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 2264,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/2264",
+  "title": "Revert \"intel_alm: direct M10K instantiation\"",
+  "body": "So, the M10K PR broke the Quartus backend in two ways, one trivial, one substantially less so.\r\n\r\n- the `port_[ab]_last_address` parameters to `cyclonev_ram_block` use `CFG_DBITS` instead of `CFG_ABITS`; this means Quartus can fail to infer the RAM size and then gives up. This by itself is just a single character fix and a regression test to avoid breaking it again.\r\n- all the RAM cells have the same logical RAM name, which worked fine in my own testing until I ran it with a different codebase and it broke horribly because Quartus does *not* like RAMs of different geometries having the same logical RAM name.\r\n\r\nThe problem is that Yosys does not have a way to assign a unique identifier to a cell parameter - even just the cell name would work, I believe. I've been wondering if it would be better to put it in `techmap` (which is already very complicated), or in `chparam`.\r\n\r\nWhile I come up with an acceptable way to solve the logical RAM name problem, the PR should be reverted as to limit the breakage in master.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-07-13",
+  "closed_at": "2020-07-13",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

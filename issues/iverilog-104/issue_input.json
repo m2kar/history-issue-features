@@ -1,0 +1,16 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 104,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/104",
+  "title": "Core dump when assigning hierarchical signal from class task",
+  "body": "I have a task in a class that assigns a register/logic using the absolute hierarchy of the register.  This core dumps during the \"code generation\" phase.  Tracing through, it seems that the LHS signal has the hierarchy intact through the elaboration phase.  To be more specific, when `PEIdent::elaborate_lval` (elab_lval.cc) is called, the NetAssign that is returned **does** have the full scope of the signal set properly.  However, during code generation when `NetAssign::emit_proc` (emit.cc) is called, the NetAssign that is passed to `dll_target::proc_assign` (t-dll-proc.cc) does **NOT** have the full hierarchy set.  Only the signal name remains.  So when it calls `dll_target::find_signal` (t-dll.cc) it fails because that signal does not exist in the class or task itself.\n\nI'm basing this off of dump messages I added to my local source, I didn't actually go in and print every signal, so I could be off on my assessment.\n\nThe error message is:\n\n> ivl: t-dll.cc:299: static ivl_signal_s\\* dll_target::find_signal(ivl_design_s&, const NetNet*): Assertion `scope' failed. \n> Aborted (core dumped)\n\nThe command line is:\n`iverilog -g2012 clock_gen.sv dut.sv top.sv -o a.vvp`\n\nFiles are attached.  Please let me know if you have any questions.\n[test_files.zip](https://github.com/steveicarus/iverilog/files/260843/test_files.zip)\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2016-05-12",
+  "closed_at": "2016-07-26",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 4865,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/4865",
+  "title": "Yosys synth_ice40 -dsp fails on an assertion",
+  "body": "### Version\n\nYosys 0.49+1 (git sha1 3076803c9, aarch64-apple-darwin23.5-clang++ 18.1.8 -fPIC -O3)\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\n* Unzip the zip file below\n* Source oss-cad-suite ``environment``\n* Run build.sh\n\n[yosys-ice40-dsp-error.zip](https://github.com/user-attachments/files/18524355/yosys-ice40-dsp-error.zip)\n\n\nmain.v\n```\nmodule main (\n\n    input  clki,\n    input  user_1,  // serial data in.\n    output reg    user_2,  // serial data out\n\n    // USB Pins (which should be statically driven if not being used).\n    output usb_dp,\n    output usb_dn,\n    output usb_dp_pu\n);\n\n  // Prevent the host from trying to connect to this design.\n  assign usb_dp = 1'b0;\n  assign usb_dn = 1'b0;\n  assign usb_dp_pu = 1'b0;\n\n  // The size of each of the serial registers.\n  // TODO: Why this fails with N = 40.\n  //\n  // localparam N = 38;\n  localparam N = 40;\n  // localparam N = 42;\n\n  // The two words we multiply.\n  reg [N-1:0] reg1;\n  reg [N-1:0] reg2;\n\n  always @(posedge clki) begin\n    // Shift din into 2 x N words \n    reg1   <= {reg1[N-2:0], user_1};\n    reg2   <= {reg1[N-2:0], reg1[N-1]};\n    // Multiply the words, and output the parity of the result.\n    user_2 <= ~^(reg1 * reg2);\n  end\n\nendmodule\n```\n\n\nEntire example:\n\n\n### Expected Behavior\n\nYosys completes successfully and the designs uses the ICESTORM_DSP cells.\n\n### Actual Behavior\n\nYosys fails on an assertion\n\n```\n⦗OSS CAD Suite⦘ ~/work$ ./build.sh \n+ yosys --version\nYosys 0.49+1 (git sha1 3076803c9, aarch64-apple-darwin23.5-clang++ 18.1.8 -fPIC -O3)\n+ yosys -p 'synth_ice40 -top main -dsp -json _build/hardware.json' -q main.v\nERROR: Assert `nusers(O.extract_end(i)) <= 1' failed in ./passes/pmgen/ice40_dsp_pm.h:388.\n⦗OSS CAD Suite⦘ ~/work$ \n```",
+  "labels": [
+    "bug"
+  ],
+  "state": "closed",
+  "created_at": "2025-01-23",
+  "closed_at": "2025-04-23",
+  "code_blocks": [
+    "module main (\n\n    input  clki,\n    input  user_1,  // serial data in.\n    output reg    user_2,  // serial data out\n\n    // USB Pins (which should be statically driven if not being used).\n    output usb_dp,\n    output usb_dn,\n    output usb_dp_pu\n);\n\n  // Prevent the host from trying to connect to this design.\n  assign usb_dp = 1'b0;\n  assign usb_dn = 1'b0;\n  assign usb_dp_pu = 1'b0;\n\n  // The size of each of the serial registers.\n  // TODO: Why this fails with N = 40.\n  //\n  // localparam N = 38;\n  localparam N = 40;\n  // localparam N = 42;\n\n  // The two words we multiply.\n  reg [N-1:0] reg1;\n  reg [N-1:0] reg2;\n\n  always @(posedge clki) begin\n    // Shift din into 2 x N words \n    reg1   <= {reg1[N-2:0], user_1};\n    reg2   <= {reg1[N-2:0], reg1[N-1]};\n    // Multiply the words, and output the parity of the result.\n    user_2 <= ~^(reg1 * reg2);\n  end\n\nendmodule",
+    "⦗OSS CAD Suite⦘ ~/work$ ./build.sh \n+ yosys --version\nYosys 0.49+1 (git sha1 3076803c9, aarch64-apple-darwin23.5-clang++ 18.1.8 -fPIC -O3)\n+ yosys -p 'synth_ice40 -top main -dsp -json _build/hardware.json' -q main.v\nERROR: Assert `nusers(O.extract_end(i)) <= 1' failed in ./passes/pmgen/ice40_dsp_pm.h:388.\n⦗OSS CAD Suite⦘ ~/work$"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

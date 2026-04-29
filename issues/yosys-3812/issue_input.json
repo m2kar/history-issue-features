@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3812,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3812",
+  "title": "proc_prune: avoid using invalidated iterator",
+  "body": "An `std::vector<T>::reverse_iterator` stores the `std::vector<T>::iterator` which points to the (forwards-ordered) *following* item.  Thus while `vec.rbegin()` dereferences to the final item of `vec`, the iterator it wraps (`vec.rbegin().base()`) is equal to `vec.end()`.\r\n\r\nIn the remove case here, we advance `it` (backwards), erasing the item we just advanced past by grabbing its (pre-increment) base forward-iterator and subtracting 1.\r\n\r\nThe iterator maths here is obviously all OK, but the forward-iterator that `it` wraps post-increment actually points to the item we just removed.  That iterator was invalidated by the `erase()` call.\r\n\r\nThat this works anyway is (AFAICT) some combination of luck and/or promises that aren't part of the C++ spec, but MSVC's debug iterator support picks this up.\r\n\r\n`erase()` returns the new iterator that follows the item just erased, which happens to be the exact one we want our reverse-iterator to wrap for the next loop; we get a fresh iterator to the same base, now without the preceding item.\r\n\r\n---\r\n\r\nI've tested that the case documented in #1267 hasn't regressed.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-06-21",
+  "closed_at": "2023-06-21",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 944,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/944",
+  "title": "Add pmux2shiftx command",
+  "body": "Consider the following test design (`tests/various/pmux2shiftx.v` in this branch):\r\n\r\n```\r\nmodule pmux2shiftx_test (\r\n\tinput [2:0] S1,\r\n\tinput [5:0] S2,\r\n\tinput [9:0] A, B, C, D, D, E, F,\r\n\tinput [9:0] G, H, I, J, K, L, M, N,\r\n\toutput reg [9:0] X\r\n);\r\n\talways @* begin\r\n\t\tcase (S1)\r\n\t\t\t3'd0: X = A;\r\n\t\t\t3'd1: X = B;\r\n\t\t\t3'd2: X = C;\r\n\t\t\t3'd3: X = D;\r\n\t\t\t3'd4: X = E;\r\n\t\t\t3'd5: X = F;\r\n\t\t\t3'd6: X = G;\r\n\t\t\t3'd7: X = H;\r\n\t\tendcase\r\n\t\tcase (S2)\r\n\t\t\t6'd46: X = I;\r\n\t\t\t6'd47: X = J;\r\n\t\t\t6'd48: X = K;\r\n\t\t\t6'd52: X = L;\r\n\t\t\t6'd53: X = M;\r\n\t\t\t6'd54: X = N;\r\n\t\tendcase\r\n\tend\r\nendmodule\r\n```\r\n\r\nThe command `./yosys -p 'prep; pmux2shiftx; opt; stat' tests/various/pmux2shiftx.v` synthesizes this into a circuit with the following stats:\r\n\r\n```\r\n=== pmux2shiftx_test ===\r\n\r\n   Number of wires:                 22\r\n   Number of wire bits:            192\r\n   Number of public wires:          17\r\n   Number of public wire bits:     159\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  6\r\n     $mux                            1\r\n     $shift                          1\r\n     $shiftx                         2\r\n     $sub                            1\r\n     $xor                            1\r\n```\r\n\r\nThe first case statement is straight converted into a single `$shiftx` cell.\r\n\r\nThe 2nd case statement is converted into a slightly more complex circuit consisting of a `$shiftx` cell for the data, a `$shift` cell for decoding valid entries. There's also a `$sub` cell for subtracting the offset and a `$xor` cell that flips control bits in an effort to create a denser packing of elements.\r\n\r\nFinally, the `$mux` cell selects the output of one of the two `$shiftx`. The valid-entry decoder for the 2nd case statement drives the select input of that `$mux` cell.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-04-19",
+  "closed_at": "2019-04-22",
+  "code_blocks": [
+    "module pmux2shiftx_test (\r\n\tinput [2:0] S1,\r\n\tinput [5:0] S2,\r\n\tinput [9:0] A, B, C, D, D, E, F,\r\n\tinput [9:0] G, H, I, J, K, L, M, N,\r\n\toutput reg [9:0] X\r\n);\r\n\talways @* begin\r\n\t\tcase (S1)\r\n\t\t\t3'd0: X = A;\r\n\t\t\t3'd1: X = B;\r\n\t\t\t3'd2: X = C;\r\n\t\t\t3'd3: X = D;\r\n\t\t\t3'd4: X = E;\r\n\t\t\t3'd5: X = F;\r\n\t\t\t3'd6: X = G;\r\n\t\t\t3'd7: X = H;\r\n\t\tendcase\r\n\t\tcase (S2)\r\n\t\t\t6'd46: X = I;\r\n\t\t\t6'd47: X = J;\r\n\t\t\t6'd48: X = K;\r\n\t\t\t6'd52: X = L;\r\n\t\t\t6'd53: X = M;\r\n\t\t\t6'd54: X = N;\r\n\t\tendcase\r\n\tend\r\nendmodule",
+    "=== pmux2shiftx_test ===\r\n\r\n   Number of wires:                 22\r\n   Number of wire bits:            192\r\n   Number of public wires:          17\r\n   Number of public wire bits:     159\r\n   Number of memories:               0\r\n   Number of memory bits:            0\r\n   Number of processes:              0\r\n   Number of cells:                  6\r\n     $mux                            1\r\n     $shift                          1\r\n     $shiftx                         2\r\n     $sub                            1\r\n     $xor                            1"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

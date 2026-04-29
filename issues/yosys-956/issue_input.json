@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 956,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/956",
+  "title": "unprocessed 'init' attribute",
+  "body": "## Steps to reproduce the issue\r\n\r\nConsider the following code:\r\n```\r\nmodule inivalue(i_clk, i_val, o_val);\r\n\tinput\twire\ti_clk;\r\n\tinput\twire\t[2:0]\ti_val;\r\n\toutput\treg\t[1:0]\to_val;\r\n\r\n\treg\t[2:0]\tr_val;\r\n\r\n\tinitial\tr_val = 0;\r\n\talways @(posedge i_clk)\r\n\t\tr_val <= r_val + i_val;\r\n\r\n\talways @(*)\r\n\t\to_val = r_val[1:0];\r\n\r\nendmodule\r\n```\r\n\r\nNotice the unused bits of r_val.\r\n\r\nIf you process this code with either `yosys -p 'synth_ice40 -top inivalue' inivalue.v` or `yosys -p 'synth_ecp5 -top inivalue' inivalue.v`, yosys will return the warning:\r\n\r\n```\r\nWarning: Wire inivalue.r_val has an unprocessed 'init' attribute.\r\n```\r\n\r\nThis warning suggests that an `initial` attribute has not been applied, when in reality what's taking place appears to be an appropriate optimization.\r\n\r\n## Expected behavior\r\n\r\nI expect either 1) no warnings if the synthesized design matches the incoming warning, or 2) a more specific warning indicating that the unprocessed init attribute is associated with an unused bit.\r\n\r\n## Actual behavior\r\n\r\nSee the warning above.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-04-23",
+  "closed_at": "2019-05-03",
+  "code_blocks": [
+    "module inivalue(i_clk, i_val, o_val);\r\n\tinput\twire\ti_clk;\r\n\tinput\twire\t[2:0]\ti_val;\r\n\toutput\treg\t[1:0]\to_val;\r\n\r\n\treg\t[2:0]\tr_val;\r\n\r\n\tinitial\tr_val = 0;\r\n\talways @(posedge i_clk)\r\n\t\tr_val <= r_val + i_val;\r\n\r\n\talways @(*)\r\n\t\to_val = r_val[1:0];\r\n\r\nendmodule",
+    "Warning: Wire inivalue.r_val has an unprocessed 'init' attribute."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

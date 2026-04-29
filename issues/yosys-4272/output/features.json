@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 4272,
+  "title": "Keep attribute not working as expected",
+  "features": [
+    {
+      "name": "keep attribute fails to prevent wire aliasing in opt_clean",
+      "category": "preprocess",
+      "description": "Code should include wires with (* keep *) attribute used to prevent optimization of an inverter chain, where the keep attribute fails to prevent opt_clean from aliasing even wires to a single driver",
+      "snippet": "(* keep *) wire [N_DELAY:0] w_delay_sig;\nassign w_delay_sig[0] = i_data;\nassign w_delay_sig[N_DELAY+1] = ~w_delay_sig[N_DELAY];",
+      "tags": ["keep_attribute", "opt_clean", "wire_aliasing"],
+      "source_bug_id": "yosys-4272",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4272",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "generate for loop creating inverter delay chain",
+      "category": "control_flow",
+      "description": "Code should include a generate for loop that instantiates a chain of NOT gates forming a delay line, which gets optimized away despite keep attributes",
+      "snippet": "genvar i;\ngenerate for (i = 0; i <= N_DELAY; i = i + 1) begin : delay_chain\n  not n(w_delay_sig[i+1], w_delay_sig[i]);\nend endgenerate",
+      "tags": ["generate_for", "delay_chain", "not_gate", "optimization"],
+      "source_bug_id": "yosys-4272",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4272",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "blackbox module instantiation as keep attribute workaround",
+      "category": "general",
+      "description": "Code should include a blackbox module definition and instantiation used as a workaround when (* keep *) attribute fails to preserve netlist structure through synthesis",
+      "snippet": "(* blackbox *)\nmodule bb_not(input A, output Y);\nendmodule\n\nbb_not n(w_delay_sig[i], w_delay_sig[i+1]);",
+      "tags": ["blackbox", "workaround", "keep_attribute", "synthesis"],
+      "source_bug_id": "yosys-4272",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/4272",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

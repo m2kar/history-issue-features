@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3051,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3051",
+  "title": "Signed value used for bit select gives unexpected behavior.",
+  "body": "## Steps to reproduce the issue\r\n\r\n`ex.v` source:\r\n```\r\nmodule top (\r\n    input [1:0] i,\r\n    output reg [3:0] result\r\n);\r\n\r\n   wire signed [3:0] idx = {2'b00,i};\r\n\r\n   always @(*) begin\r\n      result = 4'b0000;\r\n      result[idx] = 1'b1;\r\n   end\r\n\r\nendmodule\r\n```\r\nAt the Yosys prompt run the following commands:\r\n```\r\nread_verilog ex.v\r\nsynth\r\nshow\r\n```\r\nYou will see this circuit, in which the high 3 bits of \"result\" are tied to zero:\r\n![bad](https://user-images.githubusercontent.com/63030309/138034567-8a856d7a-854f-4917-886e-b1b8236b5026.png)\r\n\r\n\r\n\r\n\r\n## Expected behavior\r\n\r\nI expected the 2-bit \"i\" input to be decoded into one-hot representation in the 4-bit \"result\" output.\r\n\r\n**If I remove the \"signed\" modifier from `idx` and use the same flow, then I get the decoder that I was expecting**:\r\n\r\n![good](https://user-images.githubusercontent.com/63030309/138035099-6e3b67ec-466c-4e4a-9a23-9d1af6e8d7f5.png)\r\n\r\n\r\n\r\n## Actual behavior\r\n\r\nThe high 3 bits of \"result\" are always zero (incorrectly).   The low bit of \"result\" is asserted only when \"i\" is 2'b00 (correctly).   Refer to the first diagram.\r\n\r\n**Note:** With the original circuit where I think I'm seeing incorrect behavior, the output of `synth_xilinx` is even stranger than the `synth` output shown above.\r\n\r\nOrigin: https://github.com/SymbiFlow/symbiflow-arch-defs/issues/2307\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-10-20",
+  "closed_at": "2022-02-11",
+  "code_blocks": [
+    "module top (\r\n    input [1:0] i,\r\n    output reg [3:0] result\r\n);\r\n\r\n   wire signed [3:0] idx = {2'b00,i};\r\n\r\n   always @(*) begin\r\n      result = 4'b0000;\r\n      result[idx] = 1'b1;\r\n   end\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

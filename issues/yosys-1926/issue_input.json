@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1926,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1926",
+  "title": "abc9: support seq synthesis when module has (* abc9_flop *) and bypass non-combinatorial (* abc9_box *)",
+  "body": "Much less faff-ery to use sequential synthesis now. Experimental support for synchronous flops in xilinx, ecp5 (no flop timings yet), ice40 simply by marking those flops with `(* abc9_flop *)`\r\n\r\nAlso allow `(* abc9_box *)` to be set on whitebox cells that are not fully combinatorial (e.g. LUTRAMs) -- it will now automatically create a bypass cell that captures any combinatorial paths through that cell.\r\n\r\n-----\r\n\r\nThe way it works for `(* abc9_flop *)` is that it performs very light synthesis on the vendor specific flop's simulation model and for those that contain `$dff` or `$_DFF_[NP]_` (synchronous flop) cell it moves all other logic (e.g. clock enable, synchronous set/reset, etc.) into a submodule that will form the _flop whitebox_. Next, `techmap` is invoked to replace all vendor flops in the user design with _flop whitebox_ + `$_DFF_[NP]_`, which will be output by `write_xaiger` in just the right way that ABC9 recognises it as a complex flop. After `abc9_exe` does its thing, such _flop whitebox_-es are then `techmap`-ed again to recover the original vendor flop.\r\nNote that only zero-initialised flops are supported for sequential synthesis (in the ice40/ecp5/xilinx flows, `zinit` is used to ensure that).\r\n\r\nBypassing `(* abc9_box *)` is done similarly: if any sort of state element (e.g. `$dff`, `$dlatch`, `$mem`, etc.) is detected in the simulation model, then a _bypass blackbox_ is created that contains the combinatorial specify paths from the original box, and a `techmap` rule is added such that each box in the user design will expand into the original box wrapped by this _bypass blackbox_, e.g.:\r\nhttps://github.com/YosysHQ/yosys/blob/d6c2e0409d67852a3577cbb89682b98a5bb98f36/passes/techmap/abc9_ops.cc#L284-L292\r\nThe subsequent `techmap` pass, called after `abc9_exe`, reverses this transformation.\r\n\r\n-----\r\n\r\nDependencies ~#1916~ ~#1928~ ~#1929~ ~#1933~ ~#1949~ ~#1950~ ~#2050~\r\n\r\n~One efficiency-TODO left over:~\r\nhttps://github.com/YosysHQ/yosys/blob/071cadbdebc80b4afacef4c7e5c5c96635fcff5f/passes/techmap/abc9_ops.cc#L760-L769\r\n~Is there a better way of building this lookup (necessary to remove init attributes when reintegrating flops) without requiring a `SigMap` of the entire module?~",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2020-04-14",
+  "closed_at": "2020-05-18",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

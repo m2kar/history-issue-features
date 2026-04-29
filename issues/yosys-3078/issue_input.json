@@ -1,0 +1,19 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3078,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3078",
+  "title": "Off-by-one error when indexing individual pins of a bus",
+  "body": "## Steps to reproduce the issue\r\n\r\nVerilog source:\r\n\r\n```\r\nmodule Top(\r\n           output [3:0] LED,\r\n           inout [10:1] JA\r\n           );\r\n   \r\n   wire [3:0]           ROWS = JA[10:7];  \r\n   wire [3:0]           COLS = 4'b1110;\r\n   \r\n   assign LED = ROWS;\r\n   assign JA[4:1] = COLS;   \r\n   \r\nendmodule\r\n```\r\n\r\nI have a keypad connected to the `JA` port, so some of the bits in the `JA` bus are output (to select the scanned columns) and some are input (to read in the currently selected column from all rows).\r\n\r\n## Expected behavior\r\n\r\nThe state of the selected (0-th) column should show up on the LEDs.\r\n\r\n## Actual behavior\r\n\r\nIf we look at the Yosys synthesis result, we can see that `COLS` gets assigned to `JA[3:0]` instead of `JA[4:1]`. Similarly, the pins read from `JA` are off by one, so instead of `10:7`, `ROWS` (and consequently, `LED`) gets assigned from `9:6`:\r\n\r\n```\r\n$ echo 'read_verilog Top.v; synth; show;' | yosys\r\n```\r\n![Screenshot at 2021-11-11 22-41-26](https://user-images.githubusercontent.com/116009/141317153-e8b7c4b8-1535-4d6b-a0da-1dbd12b6dd6e.png)\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2021-11-11",
+  "closed_at": "2021-11-12",
+  "code_blocks": [
+    "module Top(\r\n           output [3:0] LED,\r\n           inout [10:1] JA\r\n           );\r\n   \r\n   wire [3:0]           ROWS = JA[10:7];  \r\n   wire [3:0]           COLS = 4'b1110;\r\n   \r\n   assign LED = ROWS;\r\n   assign JA[4:1] = COLS;   \r\n   \r\nendmodule",
+    "$ echo 'read_verilog Top.v; synth; show;' | yosys"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

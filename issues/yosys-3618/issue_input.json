@@ -1,0 +1,23 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3618,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3618",
+  "title": "Incorrect output when `$clog` used in nested function calls",
+  "body": "### Version\n\nYosys 0.25+3 (git sha1 2677569d4, gcc 9.3.0-22 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n`top.sv`:\r\n```verilog\r\nmodule top (o);\r\n\toutput wire signed [31:0] o;\r\n\tparameter signed [31:0] X = 3;\r\n\tfunction automatic signed [$clog2(X) - 1:0] narrow;\r\n\t\tinput reg signed [$clog2(X) - 1:0] inp;\r\n\t\tnarrow = inp;\r\n\tendfunction\r\n\tfunction automatic signed [31:0] to_int;\r\n\t\tinput reg signed [31:0] inp;\r\n\t\tto_int = inp;\r\n\tendfunction\r\n\tassign o = to_int(narrow(X));\r\nendmodule\r\n```\r\nExecuted commands:\r\n```\r\n$ yosys\r\nyosys> read_verilog top.sv\r\n```\r\n\r\nThis issue doesn't occur when `to_int` is removed or when `$clog2` is replaced by another function which just returns a value like:\r\n```verilog\r\n\tfunction automatic signed [1:0] get_3;\r\n\t\tget_3 = 3;\r\n\tendfunction\r\n```\r\nso use of `$clog2` might be relevant here. \n\n### Expected Behavior\n\nProduced `o` should be 32-bit wide and its value should be `3`, e.g.:\r\n```\r\noutput signed [31:0] o;\r\nassign o = 3;\r\n```\r\n\n\n### Actual Behavior\n\nProduced `o` is 32-bit wide but its value is `-1`, generated `-dump_vlog2`:\r\n```\r\nDumping Verilog AST after simplification:\r\n    module top(o);\r\n      /** AST_PARAMETER **/\r\n      output signed [31:0] o;\r\n      /** AST_FUNCTION **/\r\n      /** AST_FUNCTION **/\r\n      assign o = -1;\r\n    endmodule\r\n--- END OF AST DUMP ---\r\n```\r\n",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-01-10",
+  "closed_at": "2023-01-11",
+  "code_blocks": [
+    "module top (o);\r\n\toutput wire signed [31:0] o;\r\n\tparameter signed [31:0] X = 3;\r\n\tfunction automatic signed [$clog2(X) - 1:0] narrow;\r\n\t\tinput reg signed [$clog2(X) - 1:0] inp;\r\n\t\tnarrow = inp;\r\n\tendfunction\r\n\tfunction automatic signed [31:0] to_int;\r\n\t\tinput reg signed [31:0] inp;\r\n\t\tto_int = inp;\r\n\tendfunction\r\n\tassign o = to_int(narrow(X));\r\nendmodule",
+    "function automatic signed [1:0] get_3;\r\n\t\tget_3 = 3;\r\n\tendfunction",
+    "output signed [31:0] o;\r\nassign o = 3;",
+    "Dumping Verilog AST after simplification:\r\n    module top(o);\r\n      /** AST_PARAMETER **/\r\n      output signed [31:0] o;\r\n      /** AST_FUNCTION **/\r\n      /** AST_FUNCTION **/\r\n      assign o = -1;\r\n    endmodule\r\n--- END OF AST DUMP ---"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

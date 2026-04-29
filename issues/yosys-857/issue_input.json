@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 857,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/857",
+  "title": "Duplicated reg after read_verilog, where task is used inside",
+  "body": "## Steps to reproduce the issue\r\na simple example is like\r\nname: tc.v\r\nmodule tc(data_in,data_out,clk); \r\noutput reg  data_out; \r\ninput  data_in; \r\ninput clk; \r\n\r\nalways @(posedge clk) \r\nbegin \r\n    myTask(data_out,data_in);\r\nend \r\ntask myTask; \r\noutput out; \r\ninput in; \r\n    out = in; \r\nendtask \r\nendmodule\r\n\r\n\r\n## Expected behavior\r\nThis should be 1 FF generated. \r\n*Please describe the behavior you would have expected from the tool.*\r\n\r\n## Actual behavior\r\nThere are 2 FFs generated.\r\nHow to reproduce:\r\nWithin yosys type in the following commands:\r\n###############\r\nread_verilog tc.v\r\nwrite_verilog result.v\r\n###############\r\nYou'll see two REGs. I believe something goes wrong while parsing task in Verilog.\r\nexample:\r\n always @* begin\r\n    _2_ = _4_;\r\n    _0_ = data_in;\r\n    _1_ = data_in;\r\n  end\r\n  always @(posedge clk) begin\r\n      data_out <= _2_;\r\n      _4_ <= _1_;\r\n      _3_ <= 1'hx;\r\n  end\r\nendmodule\r\n\r\n_2_ and _4_ are two REGs I got. At the meantime, commercial tool, such as Vivado generates 1 FF for this Verilog code.\r\n\r\n(You can also go through the whole synthesis process and the see 2 FFs reported at the end of synthesis...)\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-07",
+  "closed_at": "2019-03-08",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

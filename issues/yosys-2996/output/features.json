@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 2996,
+  "title": "Attribute to force a signal to be used \"as-is\" (like if coming from a blackbox).",
+  "features": [
+    {
+      "name": "preserve_wire_definition",
+      "category": "preprocess",
+      "description": "Code should include a wire assignment followed by a downstream wire that uses the first wire, where the first wire's definition should not be substituted into the downstream expression during optimization",
+      "snippet": "wire a, b, c, d;\nwire mysig;\nwire derived;\nassign mysig = a & b & c & d;\nassign derived = ~mysig & b;",
+      "tags": ["wire", "assignment", "optimization", "keep", "preserve"],
+      "source_bug_id": "yosys-2996",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2996",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "blackbox_attribute_on_module",
+      "category": "preprocess",
+      "description": "Code should include a module marked with (* blackbox *) attribute to indicate it should not be synthesized",
+      "snippet": "(* blackbox *)\nmodule bbox_buf(output wire x, input wire a);\n    assign x = a;\nendmodule",
+      "tags": ["blackbox", "module_attribute", "synthesis"],
+      "source_bug_id": "yosys-2996",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2996",
+      "construct_complexity": 1,
+      "ub_type": null,
+      "error_pattern": null
+    },
+    {
+      "name": "keep_attribute_on_wire",
+      "category": "preprocess",
+      "description": "Code should include a wire with the (* keep *) attribute applied, demonstrating that keep alone does not prevent source substitution during optimization",
+      "snippet": "(* keep *) wire mysig;\nwire derived;\nassign mysig = a & b;\nassign derived = ~mysig;",
+      "tags": ["keep", "wire_attribute", "optimization"],
+      "source_bug_id": "yosys-2996",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2996",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "always_block_using_computed_wire",
+      "category": "data_model",
+      "description": "Code should include an always @(posedge clk) block that uses a wire which is computed from other logic, where the wire's definition should not be substituted into the always block during optimization",
+      "snippet": "wire load_n;\nwire derived;\nalways @(posedge clk)\n    derived <= load_n ? (derived + {8{load_n}}) : 8'b0;",
+      "tags": ["always_block", "clocked", "wire_optimization", "keep"],
+      "source_bug_id": "yosys-2996",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/2996",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3545,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3545",
+  "title": "Globally defined SV function breaks CXXRTL export",
+  "body": "### Minimal Working Example:\r\n```systemverilog\r\n//top.sv\r\nfunction int f(input int p);\r\n    f = p;\r\nendfunction\r\n\r\nmodule top(input int i, output int o);\r\nmod m(\r\n    .i(i),\r\n    .o(o)\r\n);\r\nendmodule\r\n\r\n(* cxxrtl_blackbox *)\r\nmodule mod(input int i, output int o);\r\nendmodule\r\n```\r\n```\r\nread_verilog -sv top.sv\r\nwrite_cxxrtl\r\n```\r\n### Expected result:\r\nc++ code with `struct bb_p_mod` and `struct p_top`\r\n\r\n### Actual Result:\r\nc++ code with only `struct p_top`, which is empty\r\n\r\n### Details:\r\nExistence of the function f() ---although not used--- causes `write_cxxrtl` to produce incomplete output.\r\nRemoving `f()` or moving it into `top` or to the end of the file produces expect output.",
+  "labels": [
+    "bug",
+    "cxxrtl"
+  ],
+  "state": "open",
+  "created_at": "2022-11-07",
+  "closed_at": null,
+  "code_blocks": [
+    "//top.sv\r\nfunction int f(input int p);\r\n    f = p;\r\nendfunction\r\n\r\nmodule top(input int i, output int o);\r\nmod m(\r\n    .i(i),\r\n    .o(o)\r\n);\r\nendmodule\r\n\r\n(* cxxrtl_blackbox *)\r\nmodule mod(input int i, output int o);\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

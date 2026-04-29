@@ -1,0 +1,46 @@
+{
+  "tool": "yosys",
+  "issue_number": 3919,
+  "title": "no FSM in design, execute \"synth\" without \"-nofsm\", some logic is recognized as FSM and the number of register will become more",
+  "features": [
+    {
+      "name": "registered output updated via combinational function result",
+      "category": "control_flow",
+      "description": "Code should include a registered output with async reset that is updated with the result of a combinational function, where the FSM extractor misidentifies this as a state machine",
+      "snippet": "always @(posedge clk or negedge rst_n) begin if (!rst_n) out_pre <= 3'b110; else if (|in) out_pre <= covert; end",
+      "tags": ["async_reset", "nonblocking_assignment", "sequential_logic", "fsm_misidentify"],
+      "source_bug_id": "3919",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3919",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "function with integer for-loop and bit indexing returning combinational result",
+      "category": "data_model",
+      "description": "Code should include a function returning integer that uses a for-loop with integer iteration variable and bit indexing to compute a result, feeding registered logic that FSM extractor misidentifies",
+      "snippet": "function integer onehot2bin(input integer onehot); integer i; onehot2bin = 0; for (i=0; i<7; i=i+1) begin if (onehot[i]) onehot2bin = i; end endfunction",
+      "tags": ["function", "for_loop", "integer", "bit_indexing", "combinational"],
+      "source_bug_id": "3919",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3919",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "onehot detection via bit manipulation feeding FSM-misidentified logic",
+      "category": "data_model",
+      "description": "Code should include a one-hot detection pattern using bitwise operations that feeds combinational logic updating a registered output, triggering false FSM extraction",
+      "snippet": "assign in_new = in & (~(in-1)); assign covert = onehot2bin(in_new);",
+      "tags": ["onehot_detection", "bitwise_operations", "combinational", "fsm_misidentify"],
+      "source_bug_id": "3919",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/3919",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ]
+}

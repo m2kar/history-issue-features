@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3795,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3795",
+  "title": "techmap: $DFFSR_NPN_ with combinational logic instead $DFFSR_NNN_",
+  "body": "### Version\n\n0.27-22\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\n### TEST\r\n\r\n    module test_dffsr(clk, data, out, rst, set);\r\n        input clk, data, rst, set;\r\n        output reg out;\r\n        always @(negedge clk, negedge rst, negedge set )\r\n            if (rst == 0)\r\n                out <= 1'b0;\r\n            else if (set == 0)\r\n                out <= 1'b1;\r\n            else \r\n                out <= data;\r\n    endmodule\r\n\r\n### SCRIPT\r\n    read_verilog test_dffsr.v\r\n    hierarchy -check -top test_dffsr\r\n    proc; opt;\r\n    dfflegalize -cell $_DFFSR_NNN_ x;\r\n    techmap; opt;\r\n    write_verilog -noattr -noexpr test_dffsr.syn.v\r\n\n\n### Expected Behavior\n\n    module test_dffsr(clk, data, out, rst, set);\r\n      input clk;\r\n      wire clk;\r\n      input data;\r\n      wire data;\r\n      output out;\r\n      wire out;\r\n      input rst;\r\n      wire rst;\r\n      input set;\r\n      wire set;\r\n      \\$_DFFSR_NNN_  out_reg (\r\n        .C(clk),\r\n        .D(data),\r\n        .Q(out),\r\n        .R(rst),\r\n        .S(set)\r\n      );\r\n    endmodule\n\n### Actual Behavior\n\n      module test_dffsr(clk, data, out, rst, set);\r\n        wire _0_;\r\n        wire _1_;\r\n        input clk;\r\n        wire clk;\r\n        input data;\r\n        wire data;\r\n        output out;\r\n        wire out;\r\n        input rst;\r\n        wire rst;\r\n        input set;\r\n        wire set;\r\n        \\$_DFFSR_NPN_  out_reg /* _2_ */ (\r\n          .C(clk),\r\n          .D(data),\r\n          .Q(out),\r\n          .R(rst),\r\n          .S(_0_)\r\n        );\r\n        \\$_NOT_  _3_ (\r\n          .A(set),\r\n          .Y(_1_)\r\n        );\r\n        \\$_MUX_  _4_ (\r\n          .A(1'h0),\r\n          .B(_1_),\r\n          .S(rst),\r\n          .Y(_0_)\r\n        );\r\n      endmodule",
+  "labels": [
+    "pending-verification"
+  ],
+  "state": "closed",
+  "created_at": "2023-06-06",
+  "closed_at": "2026-01-29",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

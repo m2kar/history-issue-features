@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 4416,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/4416",
+  "title": "fix(#4402):missing sign while for loop iteration variable is signed",
+  "body": "**Reseaon**\r\n issue #4402 \r\n\r\n**RCA**:\r\nLike the code blow, iteration variable `forvar14` is signed. However, the iteration variable lost the signed information during the ast simplify. For example, the value of `forvar14` should be `$signed(3'h0)` instead of `3'h0` in the first loop cycle.\r\n```\r\nreg signed [2:0] forvar14 = (1'h0);\r\nfor (forvar14 = (1'h0); (forvar14 < (1'h1)); forvar14 = (forvar14 + (1'h1)))  begin\r\n      .......\r\nend\r\n```\r\n**Fixes**:\r\n1. backends/verilog/verilog_backend.cc\r\n    Signed should be writed while dump verilog;\r\n\r\n2. frontends/ast/genrtlil.cc\r\n    Before this change, children[0] will use the children[1]'s `width_hint` and `sign_hint` when `genRTLIL`, because they use the same variables and  children[1]'s will overide children[0]'s.\r\n\r\n3. frontends/ast/simplify.cc\r\n    Record iteration variable is signed or not;\r\n\r\n**Test**\r\nA case was provided in #4402 , use PR branch to build a new yosys, read the 'rtl.v' and dump the verilog after synthesis. Then follow the reproduce steps in issue #4402 , result will meet expectations.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-26",
+  "closed_at": "2025-09-23",
+  "code_blocks": [
+    "reg signed [2:0] forvar14 = (1'h0);\r\nfor (forvar14 = (1'h0); (forvar14 < (1'h1)); forvar14 = (forvar14 + (1'h1)))  begin\r\n      .......\r\nend"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

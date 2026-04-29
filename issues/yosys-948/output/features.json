@@ -1,0 +1,51 @@
+{
+  "tool": "yosys",
+  "issue_number": 948,
+  "title": "Valid RTLIL produces invalid Verilog, which Yosys then cannot read back",
+  "features": [
+    {
+      "name": "reduction operator on zero-width signal",
+      "category": "general",
+      "description": "Code should include a reduction OR (or reduce_bool) operation applied to a zero-width signal, which logically evaluates to 0 but may produce invalid Verilog output such as |{ } with an empty concatenation",
+      "snippet": "wire _0_;\nassign _0_ = | {  };",
+      "tags": ["reduction_or", "zero_width", "empty_concatenation", "write_verilog"],
+      "source_bug_id": "948",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/948",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "empty concatenation list in expression",
+      "category": "general",
+      "description": "Code should include an empty concatenation {} used as an operand, which is syntactically illegal in Verilog (IEEE 1364-2005 A.8.1) and can be produced by tools when emitting zero-width signal expressions",
+      "snippet": "assign _0_ = |{  };",
+      "tags": ["concatenation", "empty_concatenation", "syntax_error", "zero_width"],
+      "source_bug_id": "948",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/948",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "cell with zero-width input parameter",
+      "category": "data_model",
+      "description": "Code should include a cell (e.g. reduce_bool) where the A_WIDTH parameter is set to 0 and the input connection is empty, representing a zero-width signal fed into an operator",
+      "snippet": "cell $reduce_bool $2\n  parameter \\A_SIGNED 0\n  parameter \\A_WIDTH 0\n  parameter \\Y_WIDTH 1\n  connect \\A {}\n  connect \\Y $1\nend",
+      "tags": ["rtlil", "zero_width", "cell", "reduce_bool", "empty_connection"],
+      "source_bug_id": "948",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/948",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 4,
+    "features_extracted": 3,
+    "features_after_dedup": 3
+  }
+}

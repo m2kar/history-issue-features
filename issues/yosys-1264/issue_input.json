@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1264,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1264",
+  "title": "opt_lut to ignore LUT cells, or those that drive bits, with (* keep *)",
+  "body": "Fixes #1254 \r\n\r\nBefore, and/or without any `(* keep *)`:\r\n```\r\n   Number of cells:                 71\r\n     SB_CARRY                       22\r\n     SB_DFF                         23\r\n     SB_DFFE                         1\r\n     SB_LUT4                        25\r\n```\r\n\r\nAfter:\r\n```\r\n   Number of cells:                 77\r\n     SB_CARRY                       22\r\n     SB_DFF                         23\r\n     SB_DFFE                         1\r\n     SB_LUT4                        31\r\n```\r\nwhen either of the two `(* keep *)` attributes are present:\r\n```\r\nmodule top (\r\n    output LED\r\n);\r\n        // ring oscillator\r\n\r\n        (* keep *) wire [6:0] buffers_in, buffers_out;\r\n        assign buffers_in = {buffers_out[5:0], buffers_out[6]};\r\n\r\n        (* keep *) SB_LUT4 #(\r\n                .LUT_INIT(16'd1)\r\n        ) buffers [6:0] (\r\n                .O(buffers_out),\r\n                .I0(buffers_in),\r\n                .I1(1'b0),\r\n                .I2(1'b0),\r\n                .I3(1'b0)\r\n        );\r\n\r\n        // frequency counter\r\n\r\n        reg [23:0] counter = 0;\r\n        always @(posedge buffers_out[6]) begin\r\n                counter <= counter + 1;\r\n        end\r\n\r\n        assign LED = counter[23];\r\n\r\nendmodule\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-08-07",
+  "closed_at": "2019-08-08",
+  "code_blocks": [
+    "module top (\r\n    output LED\r\n);\r\n        // ring oscillator\r\n\r\n        (* keep *) wire [6:0] buffers_in, buffers_out;\r\n        assign buffers_in = {buffers_out[5:0], buffers_out[6]};\r\n\r\n        (* keep *) SB_LUT4 #(\r\n                .LUT_INIT(16'd1)\r\n        ) buffers [6:0] (\r\n                .O(buffers_out),\r\n                .I0(buffers_in),\r\n                .I1(1'b0),\r\n                .I2(1'b0),\r\n                .I3(1'b0)\r\n        );\r\n\r\n        // frequency counter\r\n\r\n        reg [23:0] counter = 0;\r\n        always @(posedge buffers_out[6]) begin\r\n                counter <= counter + 1;\r\n        end\r\n\r\n        assign LED = counter[23];\r\n\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 3994,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/3994",
+  "title": "cxxrtl: export wire attributes through the C API",
+  "body": "Among other things this allows retrieving source locations for wires in the simulation, e.g.:\r\n\r\n```c\r\nvoid print_location_cb(void *, const char *name, struct cxxrtl_object *object, size_t parts) {\r\n\tprintf(\"%s:\\n\", name);\r\n\tcxxrtl_attr_set attrs = object->attrs;\r\n\tif (cxxrtl_attr_type(attrs, \"src\") == CXXRTL_ATTR_STRING) {\r\n\t\tconst char *src = cxxrtl_attr_get_string(attrs, \"src\");\r\n\t\twhile (src) {\r\n\t\t\tchar buf[256] = {0};\r\n\t\t\tconst char *next = strchr(src, '|');\r\n\t\t\tif (!next) {\r\n\t\t\t\tprintf(\"\\t%s\\n\", src);\r\n\t\t\t\tsrc = NULL;\r\n\t\t\t} else {\r\n\t\t\t\tstrncpy(buf, src, next - src);\r\n\t\t\t\tprintf(\"\\t%s\\n\", buf);\r\n\t\t\t\tsrc = next + 1;\r\n\t\t\t}\r\n\t\t}\r\n\t} else {\r\n\t\tprintf(\"(missing!)\\n\");\r\n\t}\r\n}\r\n\r\nint main() {\r\n\tcxxrtl_handle top = cxxrtl_create_at(cxxrtl_design_create(), \"toplevel\");\r\n\tcxxrtl_reset(top);\r\n\r\n\tprintf(\"Source location information for this simulation:\\n\");\r\n\tcxxrtl_enum(top, NULL, print_location_cb);\r\n\r\n\treturn 0;\r\n}\r\n```",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2023-10-09",
+  "closed_at": "2023-10-25",
+  "code_blocks": [
+    "void print_location_cb(void *, const char *name, struct cxxrtl_object *object, size_t parts) {\r\n\tprintf(\"%s:\\n\", name);\r\n\tcxxrtl_attr_set attrs = object->attrs;\r\n\tif (cxxrtl_attr_type(attrs, \"src\") == CXXRTL_ATTR_STRING) {\r\n\t\tconst char *src = cxxrtl_attr_get_string(attrs, \"src\");\r\n\t\twhile (src) {\r\n\t\t\tchar buf[256] = {0};\r\n\t\t\tconst char *next = strchr(src, '|');\r\n\t\t\tif (!next) {\r\n\t\t\t\tprintf(\"\\t%s\\n\", src);\r\n\t\t\t\tsrc = NULL;\r\n\t\t\t} else {\r\n\t\t\t\tstrncpy(buf, src, next - src);\r\n\t\t\t\tprintf(\"\\t%s\\n\", buf);\r\n\t\t\t\tsrc = next + 1;\r\n\t\t\t}\r\n\t\t}\r\n\t} else {\r\n\t\tprintf(\"(missing!)\\n\");\r\n\t}\r\n}\r\n\r\nint main() {\r\n\tcxxrtl_handle top = cxxrtl_create_at(cxxrtl_design_create(), \"toplevel\");\r\n\tcxxrtl_reset(top);\r\n\r\n\tprintf(\"Source location information for this simulation:\\n\");\r\n\tcxxrtl_enum(top, NULL, print_location_cb);\r\n\r\n\treturn 0;\r\n}"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

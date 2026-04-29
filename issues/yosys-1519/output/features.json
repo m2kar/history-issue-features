@@ -1,0 +1,59 @@
+{
+  "tool": "yosys",
+  "issue_number": 1519,
+  "title": "submod: several bugfixes",
+  "features": [
+    {
+      "name": "submod attribute on wire passed as submodule input",
+      "category": "data_model",
+      "description": "Code should include a wire marked with (* submod=\"...\" *) attribute that is only used as an input to the submodule, where the wire is actually a primary output driving another signal",
+      "snippet": "module top(input a, output [1:0] b);\nwire c;\n(* submod=\"bar\" *) sub s1(a, c);\nassign b[0] = c;\nendmodule",
+      "tags": ["submod_attribute", "wire", "primary_output", "module_instantiation"],
+      "source_bug_id": "1519",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1519",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "partial bus select in submodule port connection",
+      "category": "data_model",
+      "description": "Code should include a partial bus select (array slice) marked with (* submod=\"...\" *) attribute where the entire bus gets incorrectly promoted to submodule output causing driver conflict",
+      "snippet": "module top(input a, output [1:0] b);\n(* submod=\"bar\" *) sub s1(a, b[1]);\nassign b[0] = 1'b0;\nendmodule",
+      "tags": ["submod_attribute", "partial_bus_select", "driver_conflict", "array_slice"],
+      "source_bug_id": "1519",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1519",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "init attribute on register in submodule extraction",
+      "category": "preprocess",
+      "description": "Code should include a register with (* init = ... *) attribute that is extracted into a submodule, where the attribute should be moved not copied to avoid duplicate initialization",
+      "snippet": "module top(input d, c, (* init = 1'b1 *) output reg q);\n(* submod=\"bar\" *) DFF s1(.D(d), .C(c), .Q(q));\nendmodule\n\nmodule DFF(input D, C, output Q);\nparameter INIT = 1'b0;\nendmodule",
+      "tags": ["init_attribute", "register", "submodule_extraction", "attribute_handling"],
+      "source_bug_id": "1519",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1519",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "wrong_output"
+    },
+    {
+      "name": "submod attribute on module instantiation",
+      "category": "general",
+      "description": "Code should include a module instantiation with (* submod=\"...\" *) attribute applied to mark the instance for submodule extraction with specific naming",
+      "snippet": "(* submod=\"bar\" *) sub s1(a, c);\n(* submod=\"bar\" *) DFF s1(.D(d), .C(c), .Q(q));",
+      "tags": ["submod_attribute", "module_instantiation", "instance_naming"],
+      "source_bug_id": "1519",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/pull/1519",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 5239,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/5239",
+  "title": "In the ABC pass, avoid scanning the entire module for each ABC run",
+  "body": "_What are the reasons/motivation for this change?_\r\n\r\nWe have some large modules where a single ABC pass runs ABC thousands of times. The pass is very slow because in a couple of places it scans the entire module each time it runs ABC. Without too much work we can avoid this and get significant speedups. For example on one of our real-world examples this PR speeds up the ABC pass by 6x.\r\n\r\n_Explain how this is achieved._\r\n\r\nOne problem is rebuilding `assign_map` from scratch for every ABC call. Instead we can build it once and maintain it incrementally as the module is modified.\r\n\r\nAnother problem is scanning all module wires and cells to call `mark_port()`. This is a bit trickier; we need to introduce a reverse map from canonical `SigBit`s to the module wires and cells associated with each bit, and maintain that as the module is modified.\r\n\r\nAnother problem is that constructing `FfInitVals` requires iterating over all module wires, and we were constructing one of these in every ABC run. We don't really need to, because the wires don't meaningfully change during this pass. So just construct a single `FfInitVals` for the module and use it for all ABC runs.\r\n\r\nThe use of global variables and the very large `abc_module()` function make things a bit less clear than they need to be, so I started off the PR by cleaning that up a bit.\r\n\r\n_If applicable, please suggest to reviewers how they can test the change._\r\n\r\nThis PR is intended to not change results at all, and in my limited testing it doesn't. I have checked that some of our very large circuits are not affected by this PR.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2025-07-19",
+  "closed_at": "2025-08-15",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

@@ -1,0 +1,18 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 895,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/895",
+  "title": "Add a pmux-to-shiftx optimisation to proc_mux",
+  "body": "I'd like opinions on this `$pmux` to `$shiftx` optimisation inside `proc_mux`\r\nDoing so transforms the following circuit:\r\n```\r\nmodule top (CLK, SEL, SI, DO);\r\nparameter SELWIDTH = 2;\r\nparameter DATAWIDTH = 1;\r\ninput    CLK;\r\ninput [DATAWIDTH-1:0] SI;\r\ninput [SELWIDTH-1:0] SEL;\r\noutput [DATAWIDTH-1:0] DO;\r\nlocalparam DATADEPTH = 2**SELWIDTH-1; // Note minus 1 so isn't a complete case\r\nreg [DATAWIDTH-1:0] data [DATADEPTH-1:0];\r\n\r\ngenerate\r\n    genvar i;\r\n    for (i = 0; i < DATADEPTH; i=i+1) begin\r\n        always @(posedge CLK)\r\n        begin\r\n            if (i == 0)\r\n                data[i] <= SI[i];\r\n            else\r\n                data[i] <= data[i-1];\r\n        end\r\n    end\r\n    assign DO = data[SEL];\r\nendgenerate\r\nendmodule\r\n```\r\n\r\nfrom creating this on master @ ccfa2fe:\r\n![image](https://user-images.githubusercontent.com/6740044/54873070-43d05e00-4d8c-11e9-87d9-d5fe9bbca9eb.png)\r\n\r\nto creating this:\r\n![image](https://user-images.githubusercontent.com/6740044/54873071-534fa700-4d8c-11e9-8137-8083e3adf942.png)\r\n\r\nAre there any side effects to this?\r\nThe advantage is that this makes analysis much easier downstream...\r\n\r\n",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-03-23",
+  "closed_at": "2019-04-02",
+  "code_blocks": [
+    "module top (CLK, SEL, SI, DO);\r\nparameter SELWIDTH = 2;\r\nparameter DATAWIDTH = 1;\r\ninput    CLK;\r\ninput [DATAWIDTH-1:0] SI;\r\ninput [SELWIDTH-1:0] SEL;\r\noutput [DATAWIDTH-1:0] DO;\r\nlocalparam DATADEPTH = 2**SELWIDTH-1; // Note minus 1 so isn't a complete case\r\nreg [DATAWIDTH-1:0] data [DATADEPTH-1:0];\r\n\r\ngenerate\r\n    genvar i;\r\n    for (i = 0; i < DATADEPTH; i=i+1) begin\r\n        always @(posedge CLK)\r\n        begin\r\n            if (i == 0)\r\n                data[i] <= SI[i];\r\n            else\r\n                data[i] <= data[i-1];\r\n        end\r\n    end\r\n    assign DO = data[SEL];\r\nendgenerate\r\nendmodule"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

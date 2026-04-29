@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 5142,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/5142",
+  "title": "Warning: Ignoring boxed module $paramod\\ALU\\ALU_MODE=s32'00000000000000000000000000000010",
+  "body": "### Version\n\nYosys 0.53+39 (git sha1 388955031, aarch64-apple-darwin23.5-clang++ 18.1.8 -fPIC -O3)\n\n### On which OS did this happen?\n\nmacOS\n\n### Reproduction Steps\n\nTransferring from discussions https://github.com/YosysHQ/yosys/discussions/5136\n\n1. Create a file blinky.sv with the content below.\n\n2. Run the command ``yosys -p \"synth_gowin -top blinky -json _output.json\" -q blinky.sv``\n\n\n\nblinkey.sv:\n```\nmodule blinky #(\n    // Num of click cycle per led toggle.\n    parameter integer DIV = (27000000 / 2)\n) (\n    input        sys_clk,\n    output logic led       // Active low\n);\n\n  // ---- Reset generator.\n\n  logic [3:0] reset_counter = 0;\n  logic sys_reset = 1;\n\n  always_ff @(posedge sys_clk) begin\n    if (reset_counter < 3) begin\n      sys_reset <= 1;\n      reset_counter <= reset_counter + 1;\n    end else begin\n      sys_reset <= 0;\n    end\n  end\n\n  // ---- Blinker\n\n  reg [31:0] blink_counter;\n\n  always_ff @(posedge sys_clk) begin\n    if (sys_reset) begin\n      blink_counter <= 0;\n      led <= 1;\n    end else if (blink_counter < (DIV - 1)) begin\n      blink_counter <= blink_counter + 1;\n    end else begin\n      blink_counter <= 0;\n      led <= ~led;\n    end\n  end\n\nendmodule\n```\n\n### Expected Behavior\n\nYosys completes with no warnings.\n\n### Actual Behavior\n\nThe following warning is printed\n\n```\nWarning: Ignoring boxed module $paramod\\ALU\\ALU_MODE=s32'00000000000000000000000000000010\n```",
+  "labels": [
+    "fix-pending"
+  ],
+  "state": "closed",
+  "created_at": "2025-05-24",
+  "closed_at": "2025-06-08",
+  "code_blocks": [
+    "module blinky #(\n    // Num of click cycle per led toggle.\n    parameter integer DIV = (27000000 / 2)\n) (\n    input        sys_clk,\n    output logic led       // Active low\n);\n\n  // ---- Reset generator.\n\n  logic [3:0] reset_counter = 0;\n  logic sys_reset = 1;\n\n  always_ff @(posedge sys_clk) begin\n    if (reset_counter < 3) begin\n      sys_reset <= 1;\n      reset_counter <= reset_counter + 1;\n    end else begin\n      sys_reset <= 0;\n    end\n  end\n\n  // ---- Blinker\n\n  reg [31:0] blink_counter;\n\n  always_ff @(posedge sys_clk) begin\n    if (sys_reset) begin\n      blink_counter <= 0;\n      led <= 1;\n    end else if (blink_counter < (DIV - 1)) begin\n      blink_counter <= blink_counter + 1;\n    end else begin\n      blink_counter <= 0;\n      led <= ~led;\n    end\n  end\n\nendmodule",
+    "Warning: Ignoring boxed module $paramod\\ALU\\ALU_MODE=s32'00000000000000000000000000000010"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

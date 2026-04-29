@@ -1,0 +1,16 @@
+{
+  "tool": "yosys",
+  "type": "pull_request",
+  "issue_number": 1448,
+  "issue_url": "https://github.com/YosysHQ/yosys/pull/1448",
+  "title": "Typedef support (with wrong syntax)",
+  "body": "This work is based on #1389. In order to decouple the GLR discussion from the rest of the original PR, this adds typedef support with a wrong syntax, that doesn't require a GLR parser, so we can merge the rest of the PR and figure out what to do about GLR later.\r\n\r\nThe following would re-enable the correct syntax, using GLR:\r\n\r\n```\r\n--- frontends/verilog/verilog_parser.y\r\n+++ frontends/verilog/verilog_parser.y\r\n@@ -180,7 +180,9 @@ struct specify_rise_fall {\r\n %right UNARY_OPS\r\n \r\n %define parse.error verbose\r\n-%define parse.lac full\r\n+//%define parse.lac full\r\n+%glr-parser\r\n+%expect 21\r\n \r\n %nonassoc FAKE_THEN\r\n %nonassoc TOK_ELSE\r\n@@ -292,7 +294,7 @@ hierarchical_id:\r\n        };\r\n \r\n hierarchical_type_id:\r\n-       '(' hierarchical_id ')' { $$ = $2; };\r\n+       hierarchical_id { $$ = $1; };\r\n \r\n module:\r\n        attr TOK_MODULE TOK_ID {\r\n```\r\n\r\nCompared to #1389 this version doesn't have the two rr-conflicts.",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2019-10-14",
+  "closed_at": "2019-10-14",
+  "code_blocks": [],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

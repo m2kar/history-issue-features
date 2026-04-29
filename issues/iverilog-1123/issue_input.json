@@ -1,0 +1,19 @@
+{
+  "tool": "iverilog",
+  "type": "issue",
+  "issue_number": 1123,
+  "issue_url": "https://github.com/steveicarus/iverilog/issues/1123",
+  "title": "Arrays can't be used in sensitivity lists",
+  "body": "I tried to compile with `iverilog` the following code:  \r\n```\r\nlocalparam InCnt = 4;\r\nlocalparam CntWdt = 16;\r\nreg [CntWdt-1:0] count [InCnt-1:0];\r\n...<some more code here>...\r\n\r\nalways@(count) begin\r\n\r\n...<and more code here>...\r\n```\r\nand I got the following error:  \r\n```\r\n../sv_src/tb_countones_tst.sv:46: error: Array count needs an array index here.\r\n../sv_src/tb_countones_tst.sv:46: error: Failed to evaluate event expression 'count'.\r\n2 error(s) during elaboration.\r\n```\r\n\r\nFurther details:\r\n* the whole file can be found [here](https://github.com/mzannoni/dig_it_all/blob/0000619b4e37ecb6e8412c5f245b2e23557bcd46/sv_src/tb_countones_tst.sv) (specifically created to test this)\r\n* the command I used: `iverilog -g2012 -o test ../sv_src/tb_countones_tst.sv` (from inside a working sub-dir)\r\n\r\nThe compilation can be successfully completed (and the simulation run) if the line is corrected by _manually_ expanding explicitly the sensitivity list into the array components:\r\n```\r\nalways@(count[0], count[1], count[2], count[3]) begin\r\n```\r\n\r\nIt seems that Icarus can't accept an array in the sensitivity list. The expected behaviour is that each component of the array is part of the sensitivity list. I verified that this can be correctly understood by `verilator`.\r\n\r\nIs this a missing feature that is planned to be implemented?\r\n\r\nI think this should be fixed (added?) to address some specific cases, for instance:\r\n* if the array is very large (the actual use case where I needed it would require me to manually write down 32 signals in the sensitivity list...) then a lot of manual coding (and related error-prone code duplication) is required\r\n* if the array is defined with a parameter, it is essentially not possible to implement this (or is there a way to write an array expansion in a sensitivity list?)",
+  "labels": [],
+  "state": "closed",
+  "created_at": "2024-05-10",
+  "closed_at": "2024-05-18",
+  "code_blocks": [
+    "localparam InCnt = 4;\r\nlocalparam CntWdt = 16;\r\nreg [CntWdt-1:0] count [InCnt-1:0];\r\n...<some more code here>...\r\n\r\nalways@(count) begin\r\n\r\n...<and more code here>...",
+    "always@(count[0], count[1], count[2], count[3]) begin"
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

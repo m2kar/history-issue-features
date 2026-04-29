@@ -1,0 +1,21 @@
+{
+  "tool": "yosys",
+  "type": "issue",
+  "issue_number": 3592,
+  "issue_url": "https://github.com/YosysHQ/yosys/issues/3592",
+  "title": "Wider ports in SystemVerilog interfaces are treated as single bit wire",
+  "body": "### Version\n\nYosys 0.24+10 (git sha1 69cbef966, clang 10.0.0-4ubuntu1 -fPIC -Os)\n\n### On which OS did this happen?\n\nLinux\n\n### Reproduction Steps\n\nWhen a SystemVerilog code contains an interface with wider fields than a single bit, it appears that the bus is being treated as a single bit wire rather than n bits. See the screenshot below.\r\n\r\n1. Create the following `top.sv` file.\r\n```systemverilog\r\ninterface inf;\r\n    logic [7:0] a;\r\n    modport Slave(input a);\r\nendinterface\r\n\r\nmodule top (\r\n    input clk,\r\n    inf.Slave bus    \r\n);\r\n\r\n    logic [7:0] r;\r\n    initial r = '0;\r\n   \r\n    always_ff @(posedge clk) begin\r\n        r <= bus.a; \r\n    end\r\n\r\n    always @(posedge clk) begin\r\n        cover(r == 8'b0000_0001); // cover, since bus.a as treated as a one bit value\r\n        cover(r == 8'b0000_0011); // not cover\r\n    end\r\nendmodule\r\n```\r\n2. Create the following `top.sby` file\r\n```\r\n[options]\r\nmode cover\r\n\r\n[engines]\r\nsmtbmc\r\n\r\n[script]\r\nread -sv -formal top.sv\r\nprep -top top\r\n\r\n[files]\r\ntop.sv\r\n```\r\n3. Execute `sby -f top.sby`\r\n4. Examine the generated waveform `top/engine_0/trace0.vcd`. The `bus.a` is single wire as shown in the following screenshot.\r\n\r\n![gtkwave](https://user-images.githubusercontent.com/4019880/208317967-4fa223c3-f85e-4818-9181-79f8598a22e3.png)\r\n\n\n### Expected Behavior\n\nBoth cover statements should be reached.\n\n### Actual Behavior\n\nOnly the first cover case is reached since the length of the `bus.a` is 1 and not 8. Yosys provide the following output which seems to be related to #1053.\r\n```\r\nSBY 22:27:03 [top] base: top.sv:15: Warning: Identifier `\\bus.a' is implicitly declared.\r\nSBY 22:27:03 [top] base: Warning: Wire top.\\bus.a is used but has no driver.\r\nSBY 22:27:03 [top] base: finished (returncode=0)\r\nSBY 22:27:03 [top] prep: starting process \"cd top/model; yosys -ql design_prep.log design_prep.ys\"\r\nSBY 22:27:03 [top] prep: Warning: Wire top.\\bus.a is used but has no driver.\r\n```\r\nI really don't know the code base but based on the original interface PR, I assume the issue lives in this [area](https://github.com/YosysHQ/yosys/blob/6c65ca4e50cc6712d9293b9630afdf67af89ef61/frontends/ast/genrtlil.cc#L1226-L1254).",
+  "labels": [
+    "SystemVerilog"
+  ],
+  "state": "open",
+  "created_at": "2022-12-18",
+  "closed_at": null,
+  "code_blocks": [
+    "interface inf;\r\n    logic [7:0] a;\r\n    modport Slave(input a);\r\nendinterface\r\n\r\nmodule top (\r\n    input clk,\r\n    inf.Slave bus    \r\n);\r\n\r\n    logic [7:0] r;\r\n    initial r = '0;\r\n   \r\n    always_ff @(posedge clk) begin\r\n        r <= bus.a; \r\n    end\r\n\r\n    always @(posedge clk) begin\r\n        cover(r == 8'b0000_0001); // cover, since bus.a as treated as a one bit value\r\n        cover(r == 8'b0000_0011); // not cover\r\n    end\r\nendmodule",
+    "SBY 22:27:03 [top] base: top.sv:15: Warning: Identifier `\\bus.a' is implicitly declared.\r\nSBY 22:27:03 [top] base: Warning: Wire top.\\bus.a is used but has no driver.\r\nSBY 22:27:03 [top] base: finished (returncode=0)\r\nSBY 22:27:03 [top] prep: starting process \"cd top/model; yosys -ql design_prep.log design_prep.ys\"\r\nSBY 22:27:03 [top] prep: Warning: Wire top.\\bus.a is used but has no driver."
+  ],
+  "linked_pr": null,
+  "pr_files": null,
+  "pr_test_files": null
+}

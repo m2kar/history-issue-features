@@ -1,0 +1,46 @@
+{
+  "tool": "verilator",
+  "issue_number": 226,
+  "title": "SystemVerilog: Assignment to part select of vector within a struct is not supported",
+  "features": [
+    {
+      "name": "nonblocking part select on packed struct vector field",
+      "category": "data_model",
+      "description": "Code should include a packed struct containing a multi-bit vector field, where a non-blocking part-select assignment targets that struct field",
+      "snippet": "struct packed { logic [14:0] example_a; } control;\nalways @(posedge clk) begin\n  if (en) control.example_a[14:7] <= data[31:24];\nend",
+      "tags": ["packed_struct", "part_select", "nonblocking_assignment", "struct_field"],
+      "source_bug_id": "iverilog-226",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/226",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "assert"
+    },
+    {
+      "name": "multiple conditional part selects same struct field",
+      "category": "control_flow",
+      "description": "Code should include multiple conditional non-blocking assignments to different part selects of the same vector field inside a packed struct, within the same always block",
+      "snippet": "if (strb[3]) control.example_a[14:7] <= pdata[31:24];\nif (strb[2]) control.example_a[6:0] <= pdata[23:17];",
+      "tags": ["conditional_assignment", "part_select", "same_field", "multiple_assignments"],
+      "source_bug_id": "iverilog-226",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/226",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "assert"
+    },
+    {
+      "name": "struct concatenation assignment workaround",
+      "category": "control_flow",
+      "description": "Code should include a full packed struct assignment using concatenation with conditional operators as a workaround for unsupported struct field part-select assignments",
+      "snippet": "control.example_a <= {strb[3] ? pdata[31:24] : control.example_a[14:7], strb[2] ? pdata[23:17] : control.example_a[6:0]};",
+      "tags": ["struct_assignment", "concatenation", "conditional_operator", "workaround"],
+      "source_bug_id": "iverilog-226",
+      "tool": "verilator",
+      "issue_url": "https://github.com/steveicarus/iverilog/issues/226",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "tool": "yosys",
+  "issue_number": 5228,
+  "title": "Hang during synthesis: Yosys enters an infinite loop during $dffe enable generation (or other pass), with no termination.",
+  "features": [
+    {
+      "name": "multi_driver_register_with_mixed_sensitivity",
+      "category": "control_flow",
+      "description": "Code should include two always blocks that write to the same register, where one always block is edge-triggered and the other uses a combinational (level-sensitive) sensitivity list",
+      "snippet": "reg r;\nalways @(posedge clk) r = a;\nalways @(sig) r = b;",
+      "tags": ["multiple_drivers", "register", "sensitivity_list", "always_block"],
+      "source_bug_id": "5228",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5228",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "register_driven_by_edge_and_combinational_always",
+      "category": "timing",
+      "description": "Code should include a register that is assigned in both a clocked always block and a separate always block with a different sensitivity list that is not purely edge-triggered",
+      "snippet": "reg r;\nalways @(posedge clk) r <= d;\nalways @(a or b) r <= e;",
+      "tags": ["register", "edge_triggered", "combinational", "multiple_drivers"],
+      "source_bug_id": "5228",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5228",
+      "construct_complexity": 3,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "negedge_in_sensitivity_with_posedge",
+      "category": "timing",
+      "description": "Code should include an always block with mixed posedge and negedge signals in its sensitivity list",
+      "snippet": "always @(posedge clk or negedge rst) begin\n  if (!rst) q <= 0;\n  else q <= d;\nend",
+      "tags": ["sensitivity_list", "posedge", "negedge", "async_reset"],
+      "source_bug_id": "5228",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5228",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": "hang"
+    },
+    {
+      "name": "nested_ternary_in_register_assignment",
+      "category": "control_flow",
+      "description": "Code should include a nested ternary operator (? : ) used in an assignment to a register within an always block",
+      "snippet": "reg r;\nalways @(posedge clk) r = (a | b) ? c ? d : e ? 0 : f : 0;",
+      "tags": ["ternary", "nested", "register_assignment", "operator"],
+      "source_bug_id": "5228",
+      "tool": "yosys",
+      "issue_url": "https://github.com/YosysHQ/yosys/issues/5228",
+      "construct_complexity": 2,
+      "ub_type": null,
+      "error_pattern": null
+    }
+  ],
+  "extraction_summary": {
+    "code_blocks_found": 2,
+    "features_extracted": 4,
+    "features_after_dedup": 4
+  }
+}
