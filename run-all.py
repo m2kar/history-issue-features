@@ -221,7 +221,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config.yaml")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of issues to process")
-    parser.add_argument("--repo", choices=["verilator", "circt"], help="Only process specific repo")
+    parser.add_argument("--repo", choices=["verilator", "circt", "iverilog", "yosys"],
+                        help="Only process specific repo")
     parser.add_argument("--batch", action="store_true",
                         help="Batch mode: prefilter + batch-manager agent")
     parser.add_argument("--batch-size", type=int, default=100,

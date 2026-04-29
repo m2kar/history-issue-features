@@ -346,12 +346,12 @@ def _merge_repo(repo: str, args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", help="Output path")
-    parser.add_argument("--repo", choices=["verilator", "circt"],
+    parser.add_argument("--repo", choices=["verilator", "circt", "iverilog", "yosys"],
                         help="Only merge specific repo")
     parser.add_argument("--stats", action="store_true", help="Print stats only")
     args = parser.parse_args()
 
-    repos = [args.repo] if args.repo else ["verilator", "circt"]
+    repos = [args.repo] if args.repo else ["verilator", "circt", "iverilog", "yosys"]
 
     for repo in repos:
         print(f"\n{'='*60}")

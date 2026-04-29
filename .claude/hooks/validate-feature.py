@@ -55,7 +55,7 @@ if not isinstance(features, list):
     deny("'features' must be a JSON array")
 
 VALID_CATEGORIES = {"preprocess", "timing", "control_flow", "data_model", "general", "sva_property"}
-VALID_TOOLS = {"verilator", "circt"}
+VALID_TOOLS = {"verilator", "circt", "iverilog", "yosys"}
 
 modified = False
 
